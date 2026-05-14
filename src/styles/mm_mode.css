@@ -1,0 +1,222 @@
+.mm-panel {
+    padding: 12px;
+    height: 100%;
+    overflow-y: auto;
+    font-size: 13px;
+    color: var(--text-color, #ddd);
+}
+
+.mm-panel-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+}
+
+.mm-panel-header {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color, #333);
+}
+
+.mm-nav-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.mm-label {
+    font-size: 12px;
+    color: #aaa;
+    min-width: 32px;
+    flex-shrink: 0;
+}
+
+.mm-select {
+    flex: 1;
+    background: var(--input-bg, #2a2a2a);
+    border: 1px solid var(--border-color, #444);
+    color: var(--text-color, #ddd);
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.mm-input {
+    width: 100%;
+    background: var(--input-bg, #2a2a2a);
+    border: 1px solid var(--border-color, #444);
+    color: var(--text-color, #ddd);
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    box-sizing: border-box;
+}
+
+.mm-input:focus {
+    border-color: #4A90D9;
+    outline: none;
+}
+
+.mm-btn {
+    background: var(--btn-bg, #3a3a3a);
+    border: 1px solid var(--border-color, #555);
+    color: var(--text-color, #ddd);
+    padding: 4px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.mm-btn:hover {
+    background: var(--btn-hover-bg, #4a4a4a);
+}
+
+.mm-btn-sm {
+    padding: 2px 8px;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.mm-section {
+    margin-bottom: 16px;
+}
+
+.mm-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-color, #333);
+    color: var(--heading-color, #eee);
+}
+
+.mm-field {
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mm-field label {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 1px;
+}
+
+.mm-field-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.mm-field-row label {
+    margin-bottom: 0;
+}
+
+.mm-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}
+
+.mm-tag {
+    background: var(--tag-bg, #3a6a9a);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.mm-tag-remove {
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.mm-tag-remove:hover {
+    color: #ff6b6b;
+}
+
+.mm-input-tag {
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--border-color, #555);
+    color: var(--text-color, #ddd);
+    padding: 2px 4px;
+    font-size: 11px;
+    min-width: 80px;
+    flex: 1;
+}
+
+.mm-input-tag:focus {
+    outline: none;
+    border-bottom-color: #4A90D9;
+}
+
+.mm-variant-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.mm-variant-list li {
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 3px;
+}
+
+.mm-variant-list li:hover {
+    background: var(--hover-bg, #333);
+}
+
+.mm-variant-list li.active {
+    background: var(--active-bg, #2a4a6a);
+    color: white;
+}
+
+.mm-variant-remove {
+    cursor: pointer;
+    color: #ff6b6b;
+    font-weight: bold;
+}
+
+.mm-element-info {
+    font-size: 11px;
+    color: #888;
+    margin: 2px 0;
+}
+
+.mm-marker-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    color: white;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.mm-panel-hint {
+    color: #666;
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+}
+
+.mm-panel-body {
+    height: calc(100% - 60px);
+    overflow-y: auto;
+}
