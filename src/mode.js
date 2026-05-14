@@ -370,14 +370,11 @@ function registerMode() {
 
     if (!_mmCssInserted) {
         try {
-            const fs = require('fs');
-            const path = require('path');
-            const cssPath = path.join(__dirname, 'styles', 'mm_mode.css');
-            if (fs.existsSync(cssPath)) {
-                const cssContent = fs.readFileSync(cssPath, 'utf-8');
+            const mmCss = CSS_MM_MODE;
+            if (mmCss) {
                 const style = document.createElement('style');
                 style.setAttribute('data-mm-plugin', 'true');
-                style.textContent = cssContent;
+                style.textContent = mmCss;
                 document.head.appendChild(style);
                 _mmCssInserted = true;
             }

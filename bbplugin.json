@@ -4,6 +4,6 @@
     "author": "MachineMax Team",
     "version": "0.1.0",
     "description": "在 Blockbench 中以可视化方式制作 MachineMax 内容包，无需手写 JSON",
-    "main": "src/plugin.js",
+    "main": "dist/machine_max_bb_plugin.js",
     "target": "desktop"
 }
