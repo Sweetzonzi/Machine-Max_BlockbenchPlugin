@@ -1,3 +1,8 @@
+const { createLogger } = require('../utils/logger.js');
+
+/** 模块日志 */
+var log = createLogger('Markers');
+
 const MARKER_TYPES = {
     sub_part: { label: '子零件', icon: 'fa-cube', color: '#4A90D9' },
     hit_box: { label: '碰撞箱', icon: 'fa-shield', color: '#D94A4A' },
@@ -34,6 +39,7 @@ function getMarkerTypesForElement(element) {
 
 function getOrCreatePartConfig(projectConfig, partId) {
     if (!projectConfig.parts[partId]) {
+        log.debug('getOrCreatePartConfig: 零件不存在', { partId: partId });
         return null;
     }
     return projectConfig.parts[partId];
@@ -41,7 +47,10 @@ function getOrCreatePartConfig(projectConfig, partId) {
 
 function setMarker(projectConfig, partId, variantName, uuid, type, configRef) {
     const part = getOrCreatePartConfig(projectConfig, partId);
-    if (!part) return false;
+    if (!part) {
+        log.warn('setMarker: 零件不存在', { partId: partId, uuid: uuid, type: type });
+        return false;
+    }
 
     if (!part.element_markers) {
         part.element_markers = {};
@@ -54,15 +63,23 @@ function setMarker(projectConfig, partId, variantName, uuid, type, configRef) {
         type: type,
         config_ref: configRef || null,
     };
+    log.debug('setMarker: 标记已设置', { partId: partId, variant: variantName, uuid: uuid, type: type });
     return true;
 }
 
 function clearMarker(projectConfig, partId, variantName, uuid) {
     const part = getOrCreatePartConfig(projectConfig, partId);
-    if (!part || !part.element_markers) return false;
-    if (!part.element_markers[variantName]) return false;
+    if (!part || !part.element_markers) {
+        log.debug('clearMarker: 零件或无标记', { partId: partId, uuid: uuid });
+        return false;
+    }
+    if (!part.element_markers[variantName]) {
+        log.debug('clearMarker: 变体无标记', { variant: variantName, uuid: uuid });
+        return false;
+    }
 
     delete part.element_markers[variantName][uuid];
+    log.debug('clearMarker: 标记已清除', { partId: partId, variant: variantName, uuid: uuid });
 
     if (Object.keys(part.element_markers[variantName]).length === 0) {
         delete part.element_markers[variantName];
@@ -80,18 +97,29 @@ function getMarker(projectConfig, partId, variantName, uuid) {
 
 function clearAllMarkers(projectConfig, partId, variantName) {
     const part = getOrCreatePartConfig(projectConfig, partId);
-    if (!part || !part.element_markers) return;
+    if (!part || !part.element_markers) {
+        log.debug('clearAllMarkers: 无可清除标记');
+        return;
+    }
     if (variantName) {
         delete part.element_markers[variantName];
+        log.debug('clearAllMarkers: 已清除变体所有标记', { partId: partId, variant: variantName });
     } else {
         part.element_markers = {};
+        log.debug('clearAllMarkers: 已清除零件所有标记', { partId: partId });
     }
 }
 
 function getMarkersForVariant(projectConfig, partId, variantName) {
     const part = getOrCreatePartConfig(projectConfig, partId);
     if (!part || !part.element_markers) return {};
-    return part.element_markers[variantName] || {};
+    var markers = part.element_markers[variantName] || {};
+    log.debug('getMarkersForVariant: 获取变体标记', {
+        partId: partId,
+        variant: variantName,
+        count: Object.keys(markers).length,
+    });
+    return markers;
 }
 
 if (typeof module !== 'undefined' && module.exports) {

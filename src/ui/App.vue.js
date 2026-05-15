@@ -9,6 +9,16 @@
  *   - 选中连接点 Locator → 连接点属性页
  *   - 选中子系统 Locator → 子系统属性页
  */
+const { getConfig, loadConfig, saveConfig } = require('../utils/persistence.js');
+const { getMarkerInfo } = require('../core/element_markers.js');
+const { createVariantConfig, createPartConfig } = require('../core/config.js');
+const { refreshOutlinerIcons } = require('../mode.js');
+const { showToast } = require('../utils/notify.js');
+const { createLogger } = require('../utils/logger.js');
+
+/** 模块日志 */
+var log = createLogger('UI');
+
 const MMMainPanel = Vue.component('mm-main-panel', {
     template: `
         <div class="mm-panel" v-if="config">
@@ -120,7 +130,8 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             </div>
         </div>
         <div v-else class="mm-panel mm-panel-empty">
-            <p>加载 MachineMax 配置中...</p>
+            <p>初始化 MachineMax 配置中...</p>
+            <p class="mm-element-info">请确保已打开或创建一个 .bbmodel 模型文件</p>
         </div>
     `,
     data: function () {
@@ -162,16 +173,20 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             return '未知';
         },
         getMarkerLabel: function (type) {
-            const info = require('../core/element_markers.js').getMarkerInfo(type);
+            const info = getMarkerInfo(type);
             return info ? info.label : type;
         },
         getMarkerColor: function (type) {
-            const info = require('../core/element_markers.js').getMarkerInfo(type);
+            const info = getMarkerInfo(type);
             return info ? info.color : '#888';
         },
         onPartChange: function () {
-            const config = require('../utils/persistence.js').getConfig();
-            if (!config || !this.activePartId) return;
+            log.debug('onPartChange: 切换零件', { partId: this.activePartId });
+            const config = getConfig();
+            if (!config || !this.activePartId) {
+                log.warn('onPartChange: config 为空或无 activePartId');
+                return;
+            }
             config._uiState.activePartId = this.activePartId;
 
             const part = config.parts[this.activePartId];
@@ -179,51 +194,111 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 const variants = Object.keys(part.variants);
                 this.activeVariantName = variants.length > 0 ? variants[0] : 'default';
                 config._uiState.activeVariantName = this.activeVariantName;
+                log.debug('onPartChange: 变体已切换为', { variant: this.activeVariantName });
             }
 
-            const { refreshOutlinerIcons } = require('../mode.js');
             refreshOutlinerIcons();
             this.selectedElement = null;
             Blockbench.dispatchEvent('update_selection');
         },
         onVariantChange: function () {
-            const config = require('../utils/persistence.js').getConfig();
-            if (!config || !this.activeVariantName) return;
+            log.debug('onVariantChange: 切换变体', { variant: this.activeVariantName });
+            const config = getConfig();
+            if (!config || !this.activeVariantName) {
+                log.warn('onVariantChange: config 为空或无 activeVariantName');
+                return;
+            }
             config._uiState.activeVariantName = this.activeVariantName;
 
-            const { refreshOutlinerIcons } = require('../mode.js');
             refreshOutlinerIcons();
             this.selectedElement = null;
             Blockbench.dispatchEvent('update_selection');
         },
         switchVariant: function (name) {
+            log.debug('switchVariant: 点击切换变体', { name: name });
             this.activeVariantName = name;
             this.onVariantChange();
         },
         addTag: function () {
-            if (!this.newTag.trim() || !this.currentVariant) return;
+            if (!this.newTag.trim() || !this.currentVariant) {
+                log.debug('addTag: 标签为空或无当前变体，跳过');
+                return;
+            }
             if (!this.currentVariant.tags) this.currentVariant.tags = [];
             this.currentVariant.tags.push(this.newTag.trim());
+            log.debug('addTag: 已添加标签', { tag: this.newTag.trim() });
             this.newTag = '';
         },
         removeTag: function (index) {
             if (this.currentVariant && this.currentVariant.tags) {
+                var removed = this.currentVariant.tags[index];
                 this.currentVariant.tags.splice(index, 1);
+                log.debug('removeTag: 已删除标签', { index: index, tag: removed });
             }
         },
         removeVariant: function (name) {
-            const config = require('../utils/persistence.js').getConfig();
-            if (!config || !this.currentPart) return;
+            log.debug('removeVariant: 删除变体', { name: name });
+            const config = getConfig();
+            if (!config || !this.currentPart) {
+                log.warn('removeVariant: config 或 currentPart 为空');
+                return;
+            }
             delete this.currentPart.variants[name];
             const remaining = Object.keys(this.currentPart.variants);
             this.activeVariantName = remaining.length > 0 ? remaining[0] : '';
+            log.debug('removeVariant: 剩余变体', { remaining: remaining });
             this.onVariantChange();
         },
         showNewPartDialog: function () {
-            const action = Action.actions.mm_new_part;
-            if (action) action.click();
+            log.debug('showNewPartDialog: 点击"新建零件"按钮');
+            var config = getConfig();
+            if (!config) {
+                log.error('showNewPartDialog: getConfig() 返回 null');
+                return;
+            }
+            var self = this;
+            try {
+                new Dialog({
+                    title: '新建零件',
+                    form: {
+                        partId: { type: 'text', label: '零件 ID', hint: '如 wine_fox_hull' },
+                        variantName: { type: 'text', label: '初始变体名', value: 'default' },
+                        model: { type: 'text', label: '模型引用', value: 'machine_max:' },
+                    },
+                    onConfirm: function (formData) {
+                        var partId = formData.partId;
+                        var variantName = formData.variantName;
+                        var model = formData.model;
+                        if (!partId) {
+                            showToast('零件 ID 不能为空', 'error');
+                            return false;
+                        }
+                        if (config.parts[partId]) {
+                            showToast('零件 "' + partId + '" 已存在', 'error');
+                            return false;
+                        }
+                        var cfg = require('../core/config.js');
+                        config.parts[partId] = cfg.createPartConfig(partId, variantName);
+                        if (model) {
+                            config.parts[partId].variants[variantName].model = model;
+                        }
+                        config._uiState.activePartId = partId;
+                        config._uiState.activeVariantName = variantName;
+                        log.info('UI新建零件成功', { partId: partId, variant: variantName });
+                        require('../mode.js').refreshOutlinerIcons();
+                        Blockbench.dispatchEvent('update_selection');
+                        showToast('零件 "' + partId + '" 已创建', 'positive');
+                        self.loadConfigData();
+                        this.hide();
+                    }
+                }).show();
+                log.debug('showNewPartDialog: Dialog 已显示');
+            } catch (e) {
+                log.error('showNewPartDialog: 创建 Dialog 异常', e);
+            }
         },
         showNewVariantDialog: function () {
+            log.debug('showNewVariantDialog: 点击"新建变体"按钮');
             const self = this;
             new Dialog({
                 title: '新建变体',
@@ -232,69 +307,126 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                     model: { type: 'text', label: '模型引用', value: 'machine_max:' },
                 },
                 onConfirm: function (formData) {
-                    const { variantName, model } = formData;
+                    var variantName = formData.variantName;
+                    var model = formData.model;
                     if (!variantName) {
-                        Blockbench.showToast('变体名不能为空', 'error');
+                        showToast('变体名不能为空', 'error');
                         return false;
                     }
                     const part = self.currentPart;
-                    if (!part) return false;
+                    if (!part) {
+                        log.warn('showNewVariantDialog: currentPart 为空');
+                        return false;
+                    }
                     if (part.variants[variantName]) {
-                        Blockbench.showToast(`变体 "${variantName}" 已存在`, 'error');
+                        showToast('变体 "' + variantName + '" 已存在', 'error');
                         return false;
                     }
 
-                    const { createVariantConfig } = require('../core/config.js');
                     part.variants[variantName] = createVariantConfig();
                     if (model) part.variants[variantName].model = model;
                     self.activeVariantName = variantName;
+                    log.info('UI新建变体成功', { variant: variantName, partId: self.activePartId });
                     self.onVariantChange();
                     this.hide();
                 }
-            });
+            }).show();
+            log.debug('showNewVariantDialog: Dialog 已显示');
         },
         onSelectionChange: function () {
-            const sel = Outliner?.selected;
-            if (sel && sel.length > 0) {
-                this.selectedElement = sel[0];
-            } else {
+            var sel = Outliner && Outliner.selected;
+            if (!sel || sel.length === 0) {
                 this.selectedElement = null;
+                log.debug('onSelectionChange: 取消选中');
+                return;
             }
+            // Group 不在 Outliner.selected 中（Group 继承自 OutlinerNode 而非 OutlinerElement）
+            // 优先用 Group.first_selected；其次取 Outliner.selected[0]（Cube/Locator 等）
+            var best = (typeof Group !== 'undefined' && Group.first_selected) || sel[0];
+            this.selectedElement = best;
+            log.debug('onSelectionChange: 选中元素', {
+                name: best.name,
+                uuid: best.uuid,
+                type: best.constructor ? best.constructor.name : typeof best,
+                groupSelected: !!(typeof Group !== 'undefined' && Group.first_selected),
+            });
         },
         loadConfigData: function () {
-            const { getConfig } = require('../utils/persistence.js');
-            const config = getConfig();
+            let config = getConfig();
+            if (!config) {
+                config = loadConfig();
+                log.debug('loadConfigData: 重新加载配置');
+            } else {
+                log.debug('loadConfigData: 从缓存获取配置');
+            }
             this.config = config;
             if (config) {
                 this.activePartId = config._uiState?.activePartId || '';
                 this.activeVariantName = config._uiState?.activeVariantName || '';
+                log.debug('loadConfigData: 完成', {
+                    activePartId: this.activePartId,
+                    activeVariantName: this.activeVariantName,
+                });
+            } else {
+                log.warn('loadConfigData: 配置仍为空');
             }
         },
     },
     mounted: function () {
-        this.loadConfigData();
-        this.onSelectionChange();
+        var self = this;
+        log.debug('Vue 组件 mounted');
 
-        this._selectionHandler = Blockbench.on('update_selection', () => {
-            this.onSelectionChange();
+        function initFromProject() {
+            if (!Project || Project === 0) {
+                log.debug('initFromProject: 项目尚未打开');
+                return false;
+            }
+            self.loadConfigData();
+            self.onSelectionChange();
+            log.debug('initFromProject: 项目初始化完成');
+            return true;
+        }
+
+        if (!initFromProject()) {
+            this.$nextTick(function () {
+                log.debug('$nextTick: 重试项目初始化');
+                initFromProject();
+            });
+        }
+
+        this._projectHandler = Blockbench.on('select_project', function () {
+            log.debug('事件: select_project');
+            self.loadConfigData();
+            self.onSelectionChange();
         });
 
-        this._modeHandler = Blockbench.on('select_mode', (modeId) => {
+        this._selectionHandler = Blockbench.on('update_selection', function () {
+            self.onSelectionChange();
+        });
+
+        this._modeHandler = Blockbench.on('select_mode', function (event) {
+            // Blockbench select_mode 事件分发的参数是 {mode: Mode} 对象，不是字符串
+            var modeId = (event && event.mode && event.mode.id) || '';
+            log.debug('事件: select_mode', { modeId: modeId, raw: event });
             if (modeId === 'machine_max_part') {
-                this.loadConfigData();
-                this.onSelectionChange();
+                self.loadConfigData();
+                self.onSelectionChange();
             }
         });
 
-        this._saveHandler = Blockbench.on('save', () => {
-            const { saveConfig } = require('../utils/persistence.js');
+        this._saveHandler = Blockbench.on('save', function () {
+            log.debug('事件: save — 保存配置');
             saveConfig();
         });
+
+        log.debug('Vue 组件挂载完成，已注册事件监听');
     },
     beforeDestroy: function () {
-        if (this._selectionHandler) this._selectionHandler();
-        if (this._modeHandler) this._modeHandler();
-        if (this._saveHandler) this._saveHandler();
+        log.debug('Vue 组件 beforeDestroy — 清理事件监听');
+        if (this._projectHandler) { this._projectHandler(); log.debug('已移除 select_project 监听'); }
+        if (this._selectionHandler) { this._selectionHandler(); log.debug('已移除 update_selection 监听'); }
+        if (this._modeHandler) { this._modeHandler(); log.debug('已移除 select_mode 监听'); }
+        if (this._saveHandler) { this._saveHandler(); log.debug('已移除 save 监听'); }
     },
 });
 

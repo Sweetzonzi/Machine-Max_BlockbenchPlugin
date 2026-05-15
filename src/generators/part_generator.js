@@ -1,3 +1,8 @@
+const { createLogger } = require('../utils/logger.js');
+
+/** 模块日志 */
+var log = createLogger('GenPart');
+
 /**
  * parts/*.json 生成器 — 将 MMProjectConfig.parts 中的零件配置导出为 MachineMax 格式的 JSON 文件
  */
@@ -30,6 +35,7 @@ function generatePartJSON(partId, partConfig, namespace) {
         }
     }
 
+    log.debug('generatePartJSON: 零件 ' + partId + ' 生成完成');
     return output;
 }
 
@@ -88,6 +94,7 @@ function generateAllParts(projectConfig) {
         result[partId] = generatePartJSON(partId, partConfig, ns);
     }
 
+    log.info('generateAllParts: 已生成 ' + Object.keys(result).length + ' 个零件');
     return result;
 }
 

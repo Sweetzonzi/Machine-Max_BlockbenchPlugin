@@ -1,31 +1,52 @@
 const PROPERTY_NAME = 'machine_max_plugin';
 const CONFIG_VERSION = 3;
 const { migrateIfNeeded, createBlankConfig } = require('../core/config.js');
+const { createLogger } = require('./logger.js');
+
+/** 模块日志 */
+var log = createLogger('Persistence');
 
 /**
  * 在插件 onload 时调用。注册 Property 到 ModelProject，
  * Blockbench 自动将 Project[PROPERTY_NAME] 纳入 .bbmodel 的保存/加载循环。
+ *
+ * 注意：new Property() 会将 Project[PROPERTY_NAME] 设为 default 值，
+ * 可能覆盖已由 BB 恢复的保存数据。应在注册前保留已有数据。
  */
 function registerProperty() {
     if (ModelProject.properties[PROPERTY_NAME]) {
-        console.log('[MM Plugin]  Property 已注册，跳过');
+        log.debug('registerProperty: Property 已注册，跳过');
         return;
     }
+
+    // 备份可能已由 BB 恢复的数据（项目先打开后加载插件场景）
+    var existingData = (Project && Project !== 0) ? Project[PROPERTY_NAME] : null;
+    var hasExisting = existingData && typeof existingData === 'object' && Object.keys(existingData).length > 0;
+
     new Property(ModelProject, 'object', PROPERTY_NAME, {
         default: {},
         exposed: false,
     });
-    console.log('[MM Plugin]  Property machine_max_plugin 已注册');
+
+    // 还原备份数据，避免被 default: {} 覆盖
+    if (hasExisting) {
+        Project[PROPERTY_NAME] = existingData;
+        log.info('registerProperty: 已还原已有配置（' + Object.keys(existingData).length + ' 个键）');
+    } else {
+        log.info('registerProperty: Property 已注册（无已有配置）');
+    }
 }
 
 /**
  * 获取 .bbmodel 文件路径（来自 Project）
  */
 function getBBModelPath() {
-    if (Project && Project.file_path) {
-        return Project.file_path;
+    if (!Project || Project === 0 || !Project.file_path) {
+        log.debug('getBBModelPath: 无 .bbmodel 路径');
+        return null;
     }
-    return null;
+    log.debug('getBBModelPath: ' + Project.file_path);
+    return Project.file_path;
 }
 
 /**
@@ -34,13 +55,29 @@ function getBBModelPath() {
  * 备选：独立 .mm_project.json 文件保底
  */
 function loadConfig() {
+    if (!Project || Project === 0) {
+        log.warn('loadConfig: 尚未打开项目，返回空白配置');
+        return createBlankConfig();
+    }
+
     const propData = Project[PROPERTY_NAME];
 
     if (propData && propData.$schema_version) {
-        console.log('[MM Plugin]  从 Property 加载配置，版本:', propData.$schema_version);
-        return migrateIfNeeded(propData);
+        log.info('从 Property 加载配置，版本: ' + propData.$schema_version);
+        var migrated = migrateIfNeeded(propData);
+        Project[PROPERTY_NAME] = migrated;
+        return migrated;
     }
 
+    // 备用方案1：Property 数据存在但无版本号 — 尝试 ensureDefaults 修复
+    if (propData && typeof propData === 'object' && Object.keys(propData).length > 0) {
+        log.info('从 Property 加载配置（无版本号，尝试修复），键: ' + Object.keys(propData).join(','));
+        var repaired = migrateIfNeeded(propData);
+        Project[PROPERTY_NAME] = repaired;
+        return repaired;
+    }
+
+    // 备用方案2：独立 .mm_project.json 文件
     const bbmodelPath = getBBModelPath();
     if (bbmodelPath) {
         const standalonePath = bbmodelPath.replace(/\.bbmodel$/i, '.mm_project.json');
@@ -49,16 +86,16 @@ function loadConfig() {
             if (fs.existsSync(standalonePath)) {
                 const raw = JSON.parse(fs.readFileSync(standalonePath, 'utf-8'));
                 const config = raw.config || raw;
-                console.log('[MM Plugin]  从独立文件加载配置');
+                log.info('从独立文件加载配置: ' + standalonePath);
                 Project[PROPERTY_NAME] = migrateIfNeeded(config);
                 return Project[PROPERTY_NAME];
             }
         } catch (e) {
-            console.warn('[MM Plugin]  备选配置读取失败:', e.message);
+            log.error('备选配置读取失败', e);
         }
     }
 
-    console.log('[MM Plugin]  创建空白配置');
+    log.info('创建空白配置');
     const blank = createBlankConfig();
     Project[PROPERTY_NAME] = blank;
     return blank;
@@ -68,12 +105,15 @@ function loadConfig() {
  * 保存配置到 Property（自动纳入 Ctrl+S）并写独立文件备份
  */
 function saveConfig() {
+    if (!Project || Project === 0 || !Project[PROPERTY_NAME]) {
+        log.debug('saveConfig: 项目或配置不可用，跳过保存');
+        return;
+    }
     const config = Project[PROPERTY_NAME];
-    if (!config) return;
 
     const bbmodelPath = getBBModelPath();
     if (!bbmodelPath) {
-        console.warn('[MM Plugin]  未找到 .bbmodel 路径，跳过独立备份');
+        log.warn('saveConfig: 未找到 .bbmodel 路径，跳过独立备份');
         return;
     }
 
@@ -91,18 +131,25 @@ function saveConfig() {
             }, null, 2),
             'utf-8'
         );
+        log.debug('saveConfig: 独立备份已写入: ' + standalonePath);
     } catch (e) {
-        console.warn('[MM Plugin]  备选配置写入失败:', e.message);
+        log.error('saveConfig: 备选配置写入失败', e);
     }
 
-    console.log('[MM Plugin]  配置已保存');
+    log.info('配置已保存');
 }
 
 /**
  * 获取当前项目的 MM 配置
  */
 function getConfig() {
-    return Project[PROPERTY_NAME] || null;
+    if (!Project || Project === 0) {
+        log.debug('getConfig: 项目不可用');
+        return null;
+    }
+    var cfg = Project[PROPERTY_NAME] || null;
+    log.debug('getConfig: ' + (cfg ? '有配置' : '无配置'));
+    return cfg;
 }
 
 if (typeof module !== 'undefined' && module.exports) {

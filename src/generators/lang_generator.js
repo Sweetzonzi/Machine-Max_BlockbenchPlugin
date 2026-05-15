@@ -1,3 +1,8 @@
+const { createLogger } = require('../utils/logger.js');
+
+/** 模块日志 */
+var log = createLogger('GenLang');
+
 /**
  * lang/*.json 生成器 — 自动生成本地化条目
  * 为每个零件生成 item.machine_max.{partId} 格式的本地化键
@@ -33,6 +38,7 @@ function generateAllLangs(projectConfig) {
         result['en_us'][`item.${ns}.${partId}`] = displayName;
     }
 
+    log.info('generateAllLangs: 已生成本地化，零件数=' + Object.keys(parts).length);
     return result;
 }
 

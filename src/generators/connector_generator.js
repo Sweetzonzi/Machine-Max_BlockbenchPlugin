@@ -1,3 +1,8 @@
+const { createLogger } = require('../utils/logger.js');
+
+/** 模块日志 */
+var log = createLogger('GenConnector');
+
 /**
  * connectors/*.json 生成器 — 将 connector_defs 导出为连接点静态定义文件
  */
@@ -28,6 +33,7 @@ function generateAllConnectors(projectConfig) {
     for (const [defId, def] of Object.entries(defs)) {
         result[defId] = generateConnectorJSON(defId, def);
     }
+    log.info('generateAllConnectors: 已生成 ' + Object.keys(result).length + ' 个连接点定义');
     return result;
 }
 

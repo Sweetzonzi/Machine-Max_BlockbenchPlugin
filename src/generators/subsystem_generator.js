@@ -1,3 +1,8 @@
+const { createLogger } = require('../utils/logger.js');
+
+/** 模块日志 */
+var log = createLogger('GenSubsystem');
+
 /**
  * subsystems/*.json 生成器 — 将 subsystem_defs 导出为子系统静态定义文件
  * 处理 19 种子系统类型及其特有字段
@@ -58,6 +63,7 @@ function generateAllSubsystems(projectConfig) {
     for (const [defId, def] of Object.entries(defs)) {
         result[defId] = generateSubsystemJSON(defId, def);
     }
+    log.info('generateAllSubsystems: 已生成 ' + Object.keys(result).length + ' 个子系统定义');
     return result;
 }
 

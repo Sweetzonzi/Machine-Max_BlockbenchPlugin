@@ -1,3 +1,8 @@
+const { createLogger } = require('../utils/logger.js');
+
+/** 模块日志 */
+var log = createLogger('GenMaterial');
+
 /**
  * materials/*.json 生成器 — 将 material_defs 导出为材料定义文件
  */
@@ -23,6 +28,7 @@ function generateAllMaterials(projectConfig) {
     for (const [defId, def] of Object.entries(defs)) {
         result[defId] = generateMaterialJSON(defId, def);
     }
+    log.info('generateAllMaterials: 已生成 ' + Object.keys(result).length + ' 个材料定义');
     return result;
 }
 

@@ -1,21 +1,24 @@
+const { createPackMeta } = require('../core/config.js');
+const { createLogger } = require('../utils/logger.js');
+
+/** 模块日志 */
+var log = createLogger('GenMeta');
+
 /**
- * meta.json 生成器 — 生成内容包元数据文件
+ * meta.json 生成器 — 生成 Spark-Core 兼容的内容包元数据文件
+ *
+ * 格式来源：SparkPackMetaInfo（Spark-Core pack 系统）
+ * 字段：id (ResourceLocation), version, name, author, description, dependencies, enable_auto_pack
+ *
+ * name/author/description 输出为 Minecraft Component 格式（{"text": "..."}）
  */
-
 function generateMeta(projectConfig) {
-    const ns = projectConfig.namespace || 'machine_max';
-    const parts = projectConfig.parts || {};
-    const partIds = Object.keys(parts);
+    var meta = createPackMeta(projectConfig);
 
-    const meta = {
-        namespace: ns,
-        formats: ['machine_max:part'],
-    };
+    var parts = projectConfig.parts || {};
+    var partIds = Object.keys(parts);
 
-    if (partIds.length > 0) {
-        meta.parts = partIds;
-    }
-
+    log.info('generateMeta: 包ID=' + meta.id + ', 零件数=' + partIds.length);
     return meta;
 }
 
