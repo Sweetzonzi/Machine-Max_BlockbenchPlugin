@@ -5,7 +5,9 @@ const {
     SUB_PART_DEFAULTS,
     CONNECTOR_DEF_DEFAULTS,
     SUBSYSTEM_DEF_DEFAULTS,
+    HIT_BOX_DEFAULTS,
     MATERIAL_DEF_DEFAULTS,
+    PRESET_MATERIAL_DEFS,
     PROJECTILE_DEFAULTS,
 } = require('./config_defaults.js');
 const { createLogger } = require('../utils/logger.js');
@@ -39,7 +41,7 @@ function createBlankConfig() {
         projectiles: {},
         connector_defs: {},
         subsystem_defs: {},
-        material_defs: {},
+        material_defs: JSON.parse(JSON.stringify(PRESET_MATERIAL_DEFS)),
         // 包级元数据（用于导出 Spark-Core 兼容的 meta.json）
         packMeta: {
             id: '',
@@ -130,6 +132,14 @@ function createSubPartConfig() {
 }
 
 /**
+ * 创建新的碰撞箱配置，使用默认值填充
+ */
+function createHitBoxConfig() {
+    log.debug('createHitBoxConfig: 创建碰撞箱配置');
+    return JSON.parse(JSON.stringify(HIT_BOX_DEFAULTS));
+}
+
+/**
  * 创建新的连接点静态定义
  */
 function createConnectorDef(defId) {
@@ -172,7 +182,9 @@ function ensureDefaults(config) {
     if (!result.projectiles) result.projectiles = {};
     if (!result.connector_defs) result.connector_defs = {};
     if (!result.subsystem_defs) result.subsystem_defs = {};
-    if (!result.material_defs) result.material_defs = {};
+    if (!result.material_defs || Object.keys(result.material_defs).length === 0) {
+        result.material_defs = JSON.parse(JSON.stringify(PRESET_MATERIAL_DEFS));
+    }
     if (!result._uiState) {
         result._uiState = { activeMode: 'part', activePartId: '', activeVariantName: '' };
     }
@@ -252,6 +264,7 @@ if (typeof module !== 'undefined' && module.exports) {
         createConnectorDef,
         createSubsystemDef,
         createMaterialDef,
+        createHitBoxConfig,
         ensureDefaults,
         migrateIfNeeded,
         getActivePart,

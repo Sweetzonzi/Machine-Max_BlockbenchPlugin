@@ -1,4 +1,4 @@
-const { getMarkersForVariant, setMarker, clearMarker, getMarker, MARKER_TYPES, getMarkerInfo } = require('./core/element_markers.js');
+const { getMarkersForVariant, setMarker, clearMarker, getMarker, MARKER_TYPES, getMarkerInfo, detectOwnerSubPart, recalcAutoEndBones } = require('./core/element_markers.js');
 const { loadConfig, saveConfig, getConfig } = require('./utils/persistence.js');
 const { showToast } = require('./utils/notify.js');
 const { createLogger } = require('./utils/logger.js');
@@ -38,7 +38,9 @@ function getIconClassForType(type) {
 
 /**
  * 刷新 Outliner 节点图标
- * 遍历当前零件当前变体的 element_markers，修改对应节点的 icon 属性
+ * 遍历当前零件当前变体的 element_markers，修改对应节点的 icon 属性。
+ * 无标记元素恢复为 Blockbench 默认图标（delete 让原型值生效），
+ * 修改后调用 updateElement() 立即刷新 DOM。
  */
 function refreshOutlinerIcons() {
     if (!Project || Project === 0) {
@@ -71,19 +73,27 @@ function refreshOutlinerIcons() {
                 el.icon = iconClass;
             }
         } else {
-            el.icon = '';
+            delete el.icon;
+        }
+        // 强制 Vue 重新渲染该节点（即时生效，不延迟）
+        if (typeof el.updateElement === 'function') {
+            el.updateElement();
         }
     }
 }
 
 /**
- * 恢复所有 Outliner 节点图标为默认
+ * 恢复所有 Outliner 节点图标为 Blockbench 默认值
+ * 使用 delete 删除实例属性，让原型上的默认值（Group:'folder', Locator:'fa-anchor'）自然生效
  */
 function resetOutlinerIcons() {
     if (!Project || Project === 0) return;
     const allElements = [...Group.all, ...Locator.all];
     for (const el of allElements) {
-        el.icon = '';
+        delete el.icon;
+        if (typeof el.updateElement === 'function') {
+            el.updateElement();
+        }
     }
 }
 
@@ -135,7 +145,7 @@ function buildMMMenuItems(el) {
         log.debug('buildMMMenuItems: 无活跃零件/变体，显示提示菜单');
         var hintItems = [];
         hintItems.push(new MenuSeparator('mm_separator', 'MachineMax'));
-        hintItems.push({ name: '⚠️ 请先新建零件', icon: 'add', click: function () {
+        hintItems.push({ name: '请先新建零件', icon: 'add', click: function () {
             log.debug('右键菜单: 点击了"新建零件"');
             var cfg = getConfig();
             if (!cfg) { log.warn('右键菜单新建零件: getConfig() 返回 null'); return; }
@@ -176,14 +186,14 @@ function buildMMMenuItems(el) {
                 log.error('右键菜单新建零件 Dialog 异常', e);
             }
         }});
-        hintItems.push({ name: '📋 项目管理', icon: 'settings', click: function () {
+        hintItems.push({ name: '项目管理', icon: 'settings', click: function () {
             log.debug('右键菜单: 点击了"项目管理"');
             var cfg = getConfig();
             if (!cfg) return;
             var partCount = Object.keys(cfg.parts || {}).length;
             try {
                 new Dialog({
-                    title: '⚙ MachineMax 项目管理',
+                    title: 'MachineMax 项目管理',
                     form: {
                         namespace: { type: 'text', label: '命名空间', value: cfg.namespace },
                         info: { type: 'display', label: '统计', lines: [
@@ -220,28 +230,50 @@ function buildMMMenuItems(el) {
 
     if (el instanceof Group) {
         if (!marker || marker.type !== 'sub_part') {
-            items.push({ name: '📦 标记为子零件', icon: 'inventory_2', click: function () {
+            items.push({ name: '标记为子零件', icon: 'inventory_2', click: function () {
                 log.debug('右键菜单: 标记为子零件', { uuid: el.uuid, name: el.name });
-                setMarker(config, activePartId, activeVariantName, el.uuid, 'sub_part', null);
+                setMarker(config, activePartId, activeVariantName, el.uuid, 'sub_part', el.name);
                 refreshOutlinerIcons();
                 Blockbench.dispatchEvent('update_selection');
             }});
         }
         if (!marker || marker.type !== 'hit_box') {
-            items.push({ name: '🔵 标记为碰撞箱', icon: 'select_all', click: function () {
+            items.push({ name: '标记为碰撞箱', icon: 'select_all', click: function () {
                 log.debug('右键菜单: 标记为碰撞箱', { uuid: el.uuid, name: el.name });
-                setMarker(config, activePartId, activeVariantName, el.uuid, 'hit_box', null);
+                var owner = detectOwnerSubPart(config, activePartId, activeVariantName, el);
+                var spKey = owner ? owner.spKey : null;
+                if (spKey) {
+                    var variant = config.parts[activePartId].variants[activeVariantName];
+                    if (!variant.sub_parts) variant.sub_parts = {};
+                    if (!variant.sub_parts[spKey]) {
+                        var cfgMod = require('./core/config.js');
+                        variant.sub_parts[spKey] = cfgMod.createSubPartConfig();
+                    }
+                    if (!variant.sub_parts[spKey].hit_boxes) {
+                        variant.sub_parts[spKey].hit_boxes = {};
+                    }
+                    var hbName = el.name;
+                    if (!variant.sub_parts[spKey].hit_boxes[hbName]) {
+                        var cfgMod2 = require('./core/config.js');
+                        variant.sub_parts[spKey].hit_boxes[hbName] = cfgMod2.createHitBoxConfig();
+                    }
+                    // 标记完成后在主编辑器通知
+                }
+                setMarker(config, activePartId, activeVariantName, el.uuid, 'hit_box', spKey);
                 refreshOutlinerIcons();
                 Blockbench.dispatchEvent('update_selection');
+                if (!spKey) {
+                    showToast('碰撞箱 "' + el.name + '" 无归属子零件（不受防护计算影响）', 'warning');
+                }
             }});
         }
     } else if (el instanceof Locator) {
         var locatorTypes = ['connector', 'seat', 'lighting', 'subsystem_locator'];
         var labels = {
-            connector: '📌 标记为连接点',
-            seat: '🟡 标记为座位定位点',
-            lighting: '🟠 标记为灯光定位点',
-            subsystem_locator: '⚙ 标记为子系统定位点',
+            connector: '标记为连接点',
+            seat: '标记为座位定位点',
+            lighting: '标记为灯光定位点',
+            subsystem_locator: '标记为子系统定位点',
         };
         var icons = {
             connector: 'link',
@@ -267,12 +299,12 @@ function buildMMMenuItems(el) {
     if (marker) {
         var info = MARKER_TYPES[marker.type];
         if (info) {
-            items.push({ name: '🔍 在属性面板中查看 (' + info.label + ')', icon: 'search', click: function () {
+            items.push({ name: '在属性面板中查看 (' + info.label + ')', icon: 'search', click: function () {
                 log.debug('右键菜单: 在属性面板中查看', { type: marker.type, uuid: el.uuid });
                 Blockbench.dispatchEvent('update_selection');
             }});
         }
-        items.push({ name: '🗑️ 清除 MachineMax 标记', icon: 'delete', click: function () {
+        items.push({ name: '清除 MachineMax 标记', icon: 'delete', click: function () {
             log.debug('右键菜单: 清除标记', { type: marker.type, uuid: el.uuid });
             clearMarker(config, activePartId, activeVariantName, el.uuid);
             refreshOutlinerIcons();
@@ -468,13 +500,16 @@ function patchElementSelect() {
     _originalOutlinerElementSelect = proto.select;
 
     proto.select = function (event, is_outliner_click) {
-        if (Mode.selected && Mode.selected.id === 'machine_max_part' && this.parent instanceof Group) {
+        // 仅 Cube/Mesh 等基础元素选父组，Locator 保持独立选中
+        if (Mode.selected && Mode.selected.id === 'machine_max_part'
+            && this.parent instanceof Group
+            && !(this instanceof Locator)) {
             return this.parent.select(event, is_outliner_click);
         }
         return _originalOutlinerElementSelect.call(this, event, is_outliner_click);
     };
 
-    log.info('patchElementSelect: 已劫持 OutlinerElement.prototype.select — 点cube将自动选组');
+    log.info('patchElementSelect: 已劫持 OutlinerElement.prototype.select — 点Cube/Mesh将自动选组，Locator保持独立选中');
 }
 
 /**
@@ -528,7 +563,7 @@ function registerToolbarActions() {
             const errors = runValidation(config);
             if (errors.length === 0) {
                 log.info('校验通过，无错误');
-                showToast('校验通过 ✅', 'positive');
+                showToast('校验通过', 'positive');
             } else {
                 log.warn('校验发现问题', { count: errors.length, details: errors });
                 showToast('校验发现 ' + errors.length + ' 个问题', 'warning');
@@ -636,7 +671,7 @@ function registerToolbarActions() {
             });
 
             new Dialog({
-                title: '⚙ MachineMax 项目管理',
+                title: 'MachineMax 项目管理',
                 form: {
                     namespace: { type: 'text', label: '命名空间', value: config.namespace },
                     info: { type: 'display', label: '统计', lines: [
@@ -831,6 +866,14 @@ function registerMode() {
             log.debug('onSelect: 调用 patchElementSelect...');
             patchElementSelect();
             Blockbench.dispatchEvent('update_selection');
+
+            // 进入模式时重算所有子零件的 auto_end_bones（处理之前保存的旧配置）
+            var activePId = config._uiState?.activePartId;
+            var activeVName = config._uiState?.activeVariantName;
+            if (activePId && activeVName) {
+                recalcAutoEndBones(config, activePId, activeVName);
+                log.debug('onSelect: auto_end_bones 重算完成');
+            }
         },
         onUnselect: function () {
             log.info('退出零件定义模式');

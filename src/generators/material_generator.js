@@ -1,25 +1,34 @@
 const { createLogger } = require('../utils/logger.js');
 
-/** 模块日志 */
 var log = createLogger('GenMaterial');
 
 /**
- * materials/*.json 生成器 — 将 material_defs 导出为材料定义文件
+ * 递归地移除对象中的空值字段（undefined、null），
+ * 但保留空数组和空对象（在 schema 中有意义）
  */
+function stripUndefined(obj) {
+    if (obj === null || obj === undefined) return undefined;
+    if (Array.isArray(obj)) return obj;
+    if (typeof obj !== 'object') return obj;
+    var result = {};
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            var val = stripUndefined(obj[key]);
+            if (val !== undefined) {
+                result[key] = val;
+            }
+        }
+    }
+    return Object.keys(result).length > 0 ? result : undefined;
+}
 
+/**
+ * materials/*.json 生成器 — 将 material_defs 按完整 schema 导出
+ * 直接透传预设中的所有字段，确保与官方包定义一致
+ */
 function generateMaterialJSON(defId, def) {
-    const output = {};
-
-    if (def.friction !== 0.5) output.friction = def.friction;
-    if (def.restitution !== 0.3) output.restitution = def.restitution;
-    if (def.density !== 1.0) output.density = def.density;
-    if (def.armor_thickness !== 1.0) output.armor_thickness = def.armor_thickness;
-    if (def.armor_toughness !== 0.0) output.armor_toughness = def.armor_toughness;
-    if (def.hit_sound) output.hit_sound = def.hit_sound;
-    if (def.break_sound) output.break_sound = def.break_sound;
-    if (def.particle) output.particle = def.particle;
-
-    return output;
+    var cleaned = stripUndefined(def);
+    return cleaned || {};
 }
 
 function generateAllMaterials(projectConfig) {

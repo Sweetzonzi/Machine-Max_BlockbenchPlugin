@@ -159,7 +159,7 @@ function _showPackSettingsDialog() {
 
     try {
         new Dialog({
-            title: '⚙ MachineMax 内容包设置',
+            title: 'MachineMax 内容包设置',
             width: 520,
             form: {
                 packId: {
@@ -263,8 +263,8 @@ function _showExportDialog() {
     var errors = runValidation(config);
     var errorText = '';
     if (errors.length > 0) {
-        errorText = '\n⚠ 校验发现 ' + errors.length + ' 个问题:\n' +
-            errors.map(function (e) { return '  • ' + e; }).join('\n');
+        errorText = '<br>校验发现 ' + errors.length + ' 个问题:<br>' +
+            errors.map(function (e) { return '&nbsp;&nbsp;• ' + e; }).join('<br>');
     }
 
     // 统计信息
@@ -282,12 +282,12 @@ function _showExportDialog() {
 
     try {
         new Dialog({
-            title: '📦 导出 MachineMax 内容包',
+            title: '导出 MachineMax 内容包',
             width: 580,
             form: {
                 validationInfo: {
                     type: 'info',
-                    text: (errorText || '✅ 校验通过，未发现问题。') + '\n\n' + statLines.join('\n'),
+                    text: (errorText || '校验通过，未发现问题。') + '<br><br>' + statLines.join('<br>'),
                 },
                 exportDir: {
                     type: 'folder',
@@ -408,7 +408,7 @@ function _parseDependencyText(text) {
 function _showPlaceholder(title, description) {
     try {
         new Dialog({
-            title: '⚙ ' + title + '（即将推出）',
+            title: title + '（即将推出）',
             lines: description.split('\n'),
             onConfirm: function () {
                 this.hide();

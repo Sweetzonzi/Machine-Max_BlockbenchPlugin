@@ -1,0 +1,88 @@
+<div class="mm-section">
+    <div class="mm-sticky-title">
+        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">
+            <span class="mm-marker-badge" :style="{ background: badgeColor }">{{ badgeLabel }}</span>
+            {{ elementName }}
+        </h3>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">归属</h4>
+        <div class="mm-field">
+            <label>所属子零件</label>
+            <span class="mm-tag" style="background:#4A90D9;cursor:default" :title="'由骨骼层级自动检测'">
+                {{ parentSubPartKey || '（游离 — 无归属）' }}
+            </span>
+        </div>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">碰撞体属性</h4>
+        <div class="mm-field">
+            <label title="碰撞形状ID，同ID的碰撞体积不会被同一次攻击重复命中">碰撞形状ID</label>
+            <input type="text" class="mm-input" :value="config.id" @input="onFieldChange('id', $event.target.value)" placeholder="part" />
+        </div>
+        <div class="mm-field">
+            <label title="碰撞形状类型">类型</label>
+            <select class="mm-select" :value="config.type" @change="onFieldChange('type', $event.target.value)">
+                <option value="box">box（长方体）</option>
+                <option value="sphere">sphere（球体）</option>
+                <option value="cylinder">cylinder（圆柱体）</option>
+                <option value="capsule">capsule（胶囊体）</option>
+                <option value="wheel">wheel（轮胎）</option>
+            </select>
+        </div>
+        <div class="mm-field">
+            <label title="材料注册ID，控制摩擦、减伤、音效等">材质</label>
+            <select class="mm-select" :value="config.material" @change="onFieldChange('material', $event.target.value)">
+                <option v-for="(mat, matKey) in materialDefs" :key="matKey" :value="matKey">
+                    {{ matKey }}
+                </option>
+            </select>
+        </div>
+        <div class="mm-field">
+            <label title="护甲厚度(mm)，减免伤害并控制碰撞时的能量分配">厚度 (mm)</label>
+            <input type="number" class="mm-input" :value="config.thickness" @input="onFieldChange('thickness', parseFloat($event.target.value) || 1)" step="1" min="0" />
+        </div>
+        <div class="mm-field">
+            <label title="关联子系统名称，碰撞箱受伤时该子系统同步受伤">关联子系统</label>
+            <input type="text" class="mm-input" :value="config.subsystem" @input="onFieldChange('subsystem', $event.target.value)" placeholder="留空则不关联" />
+        </div>
+        <div class="mm-field">
+            <label title="Molang条件表达式，为空则始终生效">条件表达式</label>
+            <input type="text" class="mm-input" :value="config.condition" @input="onFieldChange('condition', $event.target.value)" placeholder="true" />
+        </div>
+    </div>
+
+    <div class="mm-section">
+        <div class="mm-foldable-header" @click="overwriteExpanded = !overwriteExpanded">
+            <h4 class="mm-section-title">材质覆写（可选）</h4>
+            <span class="mm-fold-icon">{{ overwriteExpanded ? '▼' : '▶' }}</span>
+        </div>
+        <div v-if="overwriteExpanded" class="mm-foldable-body">
+            <div class="mm-field">
+                <label title="RHA等效抗穿系数覆写">RHA系数</label>
+                <input type="number" class="mm-input" :value="overwriteVal('rha')" @input="onOverwriteChange('rha', parseFloat($event.target.value) || 1)" step="0.1" min="0" />
+            </div>
+            <div class="mm-field">
+                <label title="方块伤害系数覆写">方块伤害系数</label>
+                <input type="number" class="mm-input" :value="overwriteVal('block_damage_factor')" @input="onOverwriteChange('block_damage_factor', parseFloat($event.target.value) || 1)" step="0.1" min="0" />
+            </div>
+            <div class="mm-field mm-field-row">
+                <label title="等效护甲厚度是否受入射角度影响覆写">角度效应</label>
+                <input type="checkbox" :checked="overwriteVal('angle_effect')" @change="onOverwriteChange('angle_effect', $event.target.checked)" />
+            </div>
+            <div class="mm-field">
+                <label title="未击穿伤害系数覆写">未击穿系数</label>
+                <input type="number" class="mm-input" :value="overwriteVal('un_penetrate_damage_factor')" @input="onOverwriteChange('un_penetrate_damage_factor', parseFloat($event.target.value) || 0)" step="0.1" min="0" />
+            </div>
+        </div>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">骨骼信息（只读）</h4>
+        <p class="mm-element-info">包含方块数: {{ cubeCount }}</p>
+        <p class="mm-element-info" v-if="cubeDimensions">尺寸: {{ cubeDimensions }}</p>
+        <p class="mm-element-info" v-if="cubePosition">位置: {{ cubePosition }}</p>
+    </div>
+</div>

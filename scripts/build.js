@@ -29,12 +29,44 @@ function loadCSS(cssFilePath) {
     return JSON.stringify(css);
 }
 
+/** 读取 HTML 模板文件，转换为 JS 字符串字面量 */
+function loadHTML(htmlFilePath) {
+    if (!fs.existsSync(htmlFilePath)) return '';
+    const html = fs.readFileSync(htmlFilePath, 'utf-8').trim();
+    return JSON.stringify(html);
+}
+
+/**
+ * 批量加载 ui/panels/ 目录下的全部 HTML 模板文件，
+ * 每个文件生成一个独立的 TEMPLATE_XXX 常量。
+ * 主模板 part_definition_panel.html → TEMPLATE_PART_PANEL（保持兼容）
+ * 其他子模板如 sub_part_panel.html → TEMPLATE_SUB_PART_PANEL
+ */
+function loadAllHTMLTemplates(panelsDir) {
+    const result = {};
+    if (!fs.existsSync(panelsDir)) return result;
+    const files = fs.readdirSync(panelsDir).filter(f => f.endsWith('.html') && f !== 'part_definition_panel.html');
+    // 先加载主模板（保持现有常量名 TEMPLATE_PART_PANEL）
+    const mainPath = path.join(panelsDir, 'part_definition_panel.html');
+    if (fs.existsSync(mainPath)) {
+        result['TEMPLATE_PART_PANEL'] = JSON.stringify(fs.readFileSync(mainPath, 'utf-8').trim());
+    }
+    // 加载子模板：sub_part_panel.html → TEMPLATE_SUB_PART_PANEL
+    for (const file of files) {
+        const basename = path.basename(file, '.html');
+        const constName = 'TEMPLATE_' + basename.toUpperCase();
+        result[constName] = JSON.stringify(fs.readFileSync(path.join(panelsDir, file), 'utf-8').trim());
+    }
+    return result;
+}
+
 /** esbuild 构建配置 */
 function getConfig() {
     const cssLiteral = loadCSS(path.join(SRC, 'styles', 'mm_mode.css'));
-    const cssDefine = {
+    const templates = loadAllHTMLTemplates(path.join(SRC, 'ui', 'panels'));
+    const defines = Object.assign({
         'CSS_MM_MODE': cssLiteral || '""',
-    };
+    }, templates);
 
     return {
         entryPoints: [path.join(SRC, 'plugin.js')],
@@ -45,7 +77,7 @@ function getConfig() {
         outfile: OUT_FILE,
         external: ['fs', 'path'],
         legalComments: 'none',
-        define: cssDefine,
+        define: defines,
         banner: {
             js: [
                 '// ============================================================',

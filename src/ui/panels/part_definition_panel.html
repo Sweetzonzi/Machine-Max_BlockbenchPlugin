@@ -1,0 +1,143 @@
+<div class="mm-panel" v-if="config">
+    <div class="mm-panel-header">
+        <div class="mm-nav-row">
+            <label class="mm-label">零件</label>
+            <select v-model="activePartId" @change="onPartChange" class="mm-select">
+                <option v-for="(part, id) in config.parts" :key="id" :value="id">{{ id }}</option>
+            </select>
+            <button class="mm-btn mm-btn-sm" @click="showNewPartDialog" title="新建零件">+</button>
+            <button class="mm-btn mm-btn-sm mm-btn-danger" @click="showDeletePartDialog" title="删除零件" :disabled="!activePartId">✕</button>
+        </div>
+        <div class="mm-nav-row" v-if="currentPart">
+            <label class="mm-label">变体</label>
+            <select v-model="activeVariantName" @change="onVariantChange" class="mm-select">
+                <option v-for="(variant, name) in currentPart.variants" :key="name" :value="name">{{ name }}</option>
+            </select>
+            <button class="mm-btn mm-btn-sm" @click="showNewVariantDialog" title="新建变体">+</button>
+            <button class="mm-btn mm-btn-sm mm-btn-danger" @click="showDeleteVariantDialog" title="删除变体" :disabled="variantCount <= 1">✕</button>
+        </div>
+    </div>
+
+    <div v-if="!selectedElement" class="mm-panel-body">
+        <div class="mm-section" v-if="currentPart">
+            <h3 class="mm-section-title">
+                <span class="mm-marker-badge" style="background:#D97E4A">零件</span>
+                {{ activePartId }}
+            </h3>
+            <div class="mm-field">
+                <label title="零件在物品栏和 UI 中显示的图标，格式为 namespace:path">图标</label>
+                <input type="text" v-model="currentPart.icon" class="mm-input" placeholder="machine_max:textures/icon/..." title="零件在物品栏和 UI 中显示的图标路径，如 machine_max:textures/icon/my_part.png" />
+            </div>
+            <div class="mm-field">
+                <label title="零件耐久度按此比例累加到载具总耐久度。设为 1.0 表示全部贡献给载具">耐久贡献</label>
+                <input type="number" v-model.number="currentPart.vehicle_durability_rate" class="mm-input" step="0.1" min="0" max="1" title="零件耐久度按此比例累加到载具总耐久度。1.0 = 全部贡献" />
+            </div>
+            <div class="mm-field">
+                <label title="零件受到伤害时按此比例传导给载具本体。0.5 表示仅传递 50% 的伤害">伤害传导</label>
+                <input type="number" v-model.number="currentPart.vehicle_damage_rate" class="mm-input" step="0.1" min="0" title="零件受到伤害时按此比例传导给载具本体。0.5 = 传导 50%" />
+            </div>
+            <div class="mm-field">
+                <label title="零件被摧毁后的伤害传导系数。通常设为较低值，避免摧毁后继续承受高额伤害">摧毁伤害</label>
+                <input type="number" v-model.number="currentPart.vehicle_damage_rate_destroyed" class="mm-input" step="0.1" min="0" title="零件被摧毁后向载具传导伤害的比例，通常设低值避免摧毁后继续受高额伤害" />
+            </div>
+            <div class="mm-field">
+                <label title="功能阈值（0~1）。零件组装进度达到该值后子系统可正常工作">功能阈值</label>
+                <input type="number" v-model.number="currentPart.functional_threshold" class="mm-input" step="0.1" min="0" max="1" title="功能阈值（0~1）。组装进度达到此值后子系统即可正常工作" />
+            </div>
+            <div class="mm-field mm-field-row">
+                <label title="是否共享耐久度。true 时所有子零件共享同一耐久度池；false 时每个子零件有独立耐久度">共享耐久</label>
+                <input type="checkbox" v-model="currentPart.share_durability" title="启用后所有子零件共享同一耐久度池，禁用则各自独立" />
+            </div>
+            <div class="mm-field">
+                <label title="零件物品的最大堆叠数量（1~64）。调大此值可使零件在物品栏中可堆叠">最大堆叠</label>
+                <input type="number" v-model.number="currentPart.max_stack_size" class="mm-input" min="1" max="64" title="零件在物品栏中的最大堆叠数（1~64）" />
+            </div>
+        </div>
+
+        <div class="mm-section" v-if="currentVariant">
+            <h3 class="mm-section-title">
+                <span class="mm-marker-badge" style="background:#6A9A9A">变体</span>
+                {{ activeVariantName }}
+            </h3>
+            <div class="mm-field">
+                <label title="基岩版几何模型路径，格式为 namespace:name.geo。如 machine_max:my_part.geo">模型</label>
+                <input type="text" v-model="currentVariant.model" class="mm-input" placeholder="machine_max:..." title="几何模型路径，格式 namespace:name.geo，如 machine_max:wine_fox.geo" />
+            </div>
+            <div class="mm-field">
+                <label title="动画路径。如 machine_max:my_anim。留空则不播放动画">动画</label>
+                <input type="text" v-model="currentVariant.animations" class="mm-input" placeholder="machine_max:..." title="动画路径，如 machine_max:wine_fox_anim。留空则不播动画" />
+            </div>
+            <div class="mm-field">
+                <label title="贴图路径。单一贴图用字符串，多贴图用键值对对象，如 {&quot;default&quot;: &quot;...&quot;}">贴图</label>
+                <input type="text" v-model="currentVariant.textures" class="mm-input" placeholder="default: ..." title="贴图路径。单一贴图直接填路径；多贴图用 JSON 键值对" />
+            </div>
+            <div class="mm-field">
+                <label title="零件标签，格式 namespace:tag_name。用于连接点匹配和功能分类">标签</label>
+                <div class="mm-tags">
+                    <span v-for="(tag, i) in currentVariant.tags" :key="i" class="mm-tag"
+                          :style="{ background: getTagColor(tag) }">
+                        {{ tag }}
+                        <span class="mm-tag-remove" @click="removeTag(i)">×</span>
+                    </span>
+                    <button class="mm-btn mm-btn-sm" @click="showAddTagDialog" title="添加标签">⋯</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-else class="mm-panel-body">
+        <!-- 子零件属性面板 -->
+        <mm-sub-part-panel v-if="isSubPartSelected"
+            :config="selectedSubPartConfig"
+            :element-name="selectedElementName"
+            :hit-boxes="selectedSubPartConfig ? selectedSubPartConfig.hit_boxes || {} : {}"
+            :all-bone-names="allBoneNames"
+            :all-locator-names="ownedLocatorNames"
+            @field-change="updateSubPartField"
+            @projected-area-change="updateProjectedArea"
+            @add-end-bone="addEndBone"
+            @remove-end-bone="removeEndBone" />
+
+        <!-- 碰撞箱属性面板 -->
+        <mm-hit-box-panel v-else-if="isHitBoxSelected"
+            :config="selectedHitBoxConfig"
+            :element-name="selectedElementName"
+            :parent-sub-part-key="hitBoxParentSubPartKey"
+            :material-defs="config ? config.material_defs || {} : {}"
+            @field-change="updateHitBoxField"
+            @overwrite-change="updateHitBoxOverwrite" />
+
+        <!-- 连接点属性（占位，后续阶段实现） -->
+        <div v-else-if="isConnectorSelected" class="mm-section">
+            <div class="mm-sticky-title">
+                <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">
+                    <span class="mm-marker-badge" style="background:#3AA83A">连接点</span>
+                    {{ selectedElementName }}
+                </h3>
+            </div>
+            <p class="mm-element-info">类型: {{ selectedElement ? getElementType(selectedElement) : '未知' }}</p>
+            <p class="mm-element-info">UUID: {{ selectedElement ? selectedElement.uuid : '—' }}</p>
+            <p class="mm-panel-hint">连接点属性编辑将在后续版本实现</p>
+        </div>
+
+        <!-- 未标记或未知类型 -->
+        <div v-else class="mm-section">
+            <div class="mm-sticky-title">
+                <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">
+                    <span class="mm-marker-badge" v-if="selectedMarker"
+                          :style="{ background: getMarkerColor(selectedMarker.type) }">
+                        {{ getMarkerLabel(selectedMarker.type) }}
+                    </span>
+                    {{ selectedElementName || '未命名' }}
+                </h3>
+            </div>
+            <p class="mm-element-info">类型: {{ selectedElement ? getElementType(selectedElement) : '未知' }}</p>
+            <p class="mm-element-info">UUID: {{ selectedElement ? selectedElement.uuid : '—' }}</p>
+            <p class="mm-panel-hint" v-if="!selectedMarker">该元素尚未标记。请在 Outliner 中右键进行标记。</p>
+        </div>
+    </div>
+</div>
+<div v-else class="mm-panel mm-panel-empty">
+    <p>初始化 MachineMax 配置中...</p>
+    <p class="mm-element-info">请确保已打开或创建一个 .bbmodel 模型文件</p>
+</div>

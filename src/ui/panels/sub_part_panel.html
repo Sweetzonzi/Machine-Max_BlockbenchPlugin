@@ -1,0 +1,143 @@
+<div class="mm-section">
+    <div class="mm-sticky-title">
+        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">
+            <span class="mm-marker-badge" :style="{ background: badgeColor }">{{ badgeLabel }}</span>
+            {{ elementName }}
+        </h3>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">骨骼范围</h4>
+        <div class="mm-field">
+            <label title="子部件的起始骨骼名称，输入关键字搜索并选择">起始骨骼</label>
+            <input type="text" class="mm-input"
+                v-model="editingStartBone"
+                @input="onStartBoneInput($event.target.value)"
+                :list="boneListId"
+                placeholder="搜索并选择骨骼…" />
+            <datalist :id="boneListId">
+                <option v-for="(name, idx) in allBoneNames" :key="idx" :value="name" />
+            </datalist>
+        </div>
+        <div class="mm-field">
+            <label title="子级子零件自动生成的排除骨骼（不可更改）">自动排除</label>
+            <div class="mm-tags" v-if="autoEndBones.length > 0">
+                <span v-for="(bone, i) in autoEndBones" :key="'a'+i" class="mm-tag" style="background:#4a4a6a;cursor:default" title="子级子零件自动排除">
+                    {{ bone }}
+                </span>
+            </div>
+            <p v-else class="mm-element-info" style="color:#888;font-size:11px">（无子级子零件）</p>
+        </div>
+        <div class="mm-field">
+            <label title="手动添加的排除骨骼（可增删）">手动排除</label>
+            <div class="mm-tags">
+                <span v-for="(bone, i) in config.end_bones" :key="'m'+i" class="mm-tag" style="background:#6a4a9a">
+                    {{ bone }}
+                    <span class="mm-tag-remove" @click="$emit('remove-end-bone', i)">×</span>
+                </span>
+                <div style="display:flex;gap:4px;align-items:center">
+                    <input type="text" class="mm-input" style="width:80px;font-size:11px"
+                        v-model="newEndBone" @keyup.enter="onAddEndBone"
+                        :list="boneListId"
+                        placeholder="搜索骨骼…" />
+                    <button class="mm-btn mm-btn-sm" @click="onAddEndBone" title="添加排除骨骼" style="font-size:16px">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">物理属性</h4>
+        <div class="mm-field">
+            <label title="子部件基础生命值，降至0时该子部件的所有子系统会瘫痪">耐久度</label>
+            <input type="number" class="mm-input" :value="config.durability" @input="onFieldChange('durability', parseFloat($event.target.value) || 0)" step="1" min="0" />
+        </div>
+        <div class="mm-field">
+            <label title="子部件质量(kg)，必须大于0，用于物理计算">质量 (kg)</label>
+            <input type="number" class="mm-input" :value="config.mass" @input="onFieldChange('mass', parseFloat($event.target.value) || 0)" step="0.5" min="0" />
+        </div>
+        <div class="mm-field">
+            <label title="质心定位器名称，输入关键字搜索并选择">质心</label>
+            <input type="text" class="mm-input"
+                v-model="editingMassCenter"
+                @input="onFieldChange('mass_center', $event.target.value)"
+                :list="locatorListId"
+                placeholder="mass_center" />
+            <datalist :id="locatorListId">
+                <option v-for="(name, idx) in allLocatorNames" :key="idx" :value="name" />
+            </datalist>
+            <p v-if="allLocatorNames.length === 0" class="mm-element-info" style="color:#888;font-size:10px">
+                该子零件的骨骼子树下没有定位器
+            </p>
+        </div>
+        <div class="mm-field">
+            <label title="子部件在三个轴向上的投影面积(m²)，用于计算空气阻力">投影面积 (m²)</label>
+            <div style="display:flex;gap:6px">
+                <div style="flex:1">
+                    <span style="font-size:10px;color:#888">X</span>
+                    <input type="number" class="mm-input" style="width:100%" :value="config.projected_area && config.projected_area[0]" @input="onProjectedAreaChange(0, parseFloat($event.target.value) || 0)" step="0.1" min="0" />
+                </div>
+                <div style="flex:1">
+                    <span style="font-size:10px;color:#888">Y</span>
+                    <input type="number" class="mm-input" style="width:100%" :value="config.projected_area && config.projected_area[1]" @input="onProjectedAreaChange(1, parseFloat($event.target.value) || 0)" step="0.1" min="0" />
+                </div>
+                <div style="flex:1">
+                    <span style="font-size:10px;color:#888">Z</span>
+                    <input type="number" class="mm-input" style="width:100%" :value="config.projected_area && config.projected_area[2]" @input="onProjectedAreaChange(2, parseFloat($event.target.value) || 0)" step="0.1" min="0" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">地形碰撞</h4>
+        <div class="mm-field">
+            <label title="地形碰撞模式：true=与所有方块碰撞，ground=仅与地面碰撞，false=不与任何方块碰撞">碰撞模式</label>
+            <select class="mm-select" :value="config.block_collision" @change="onFieldChange('block_collision', $event.target.value)">
+                <option value="true">true（所有方块）</option>
+                <option value="ground">ground（仅地面）</option>
+                <option value="false">false（无碰撞）</option>
+            </select>
+        </div>
+        <div class="mm-field">
+            <label title="碰撞检测高度(m)，障碍小于此高度时不发生碰撞（仅ground模式有效）。默认-1.0表示所有障碍均碰撞">碰撞高度 (m)</label>
+            <input type="number" class="mm-input" :value="config.collision_height" @input="onFieldChange('collision_height', parseFloat($event.target.value) || -1)" step="0.5" />
+        </div>
+        <div class="mm-field mm-field-row">
+            <label title="是否启用攀爬辅助功能">攀爬辅助</label>
+            <input type="checkbox" :checked="config.climb_assist" @change="onFieldChange('climb_assist', $event.target.checked)" />
+        </div>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">流体动力优先级</h4>
+        <div class="mm-field">
+            <label title="空气阻力计算优先级，值越大优先级越高。优先级高或相等的部件会遮挡优先级低或相等的部件">hydro_priority</label>
+            <input type="number" class="mm-input" :value="config.hydro_priority" @input="onFieldChange('hydro_priority', parseInt($event.target.value) || 0)" step="1" min="0" />
+        </div>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">碰撞箱 ({{ hitBoxCount }})</h4>
+        <div v-if="hitBoxCount === 0" class="mm-element-info" style="color:#888">
+            暂无碰撞箱 — 在 Outliner 中右键骨骼并选择"标记为碰撞箱"
+        </div>
+        <div v-for="(hb, hbKey) in hitBoxes" :key="hbKey" class="mm-sub-item-row" :title="hbKey">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#D94A4A;font-size:10px;padding:0 4px">HB</span>
+                {{ resolveHitBoxName(hbKey) }}
+            </span>
+            <span class="mm-sub-item-meta">{{ hb.type }} | {{ hb.material }} | {{ hb.thickness }}mm</span>
+        </div>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">连接点 ({{ connectorCount }} 个)</h4>
+        <p class="mm-element-info">{{ connectorCount }} 个（后续版本实现列表）</p>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">子系统 ({{ subsystemCount }} 个)</h4>
+        <p class="mm-element-info">{{ subsystemCount }} 个（后续版本实现列表）</p>
+    </div>
+</div>
