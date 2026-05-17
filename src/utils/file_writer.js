@@ -63,6 +63,26 @@ function deleteFile(filePath) {
     }
 }
 
+/**
+ * 将实体 ID 解析为 ResourceLocation（namespace:path）。
+ * 若有冒号，取第一个冒号前后的部分；若无，使用 defaultNs 作为 namespace。
+ *
+ * @param {string} id - 实体 ID，如 'machine_max:steel' 或 'simple_id'
+ * @param {string} defaultNs - 无冒号时的默认 namespace
+ * @returns {{ ns: string, path: string }}
+ */
+function extractResourceLocation(id, defaultNs) {
+    var str = id || '';
+    var colonIdx = str.indexOf(':');
+    if (colonIdx >= 0) {
+        return {
+            ns: str.substring(0, colonIdx),
+            path: str.substring(colonIdx + 1),
+        };
+    }
+    return { ns: defaultNs || '', path: str };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ensureDir, writeJSONFile, writeTextFile, readJSONFile, fileExists, deleteFile };
+    module.exports = { ensureDir, writeJSONFile, writeTextFile, readJSONFile, fileExists, deleteFile, extractResourceLocation };
 }

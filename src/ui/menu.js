@@ -3,6 +3,7 @@ const { getConfig, saveConfig } = require('../utils/persistence.js');
 const { showToast } = require('../utils/notify.js');
 const { runValidation } = require('../mode.js');
 const fileWriter = require('../utils/file_writer.js');
+const { PRESET_MATERIAL_DEFS } = require('../core/config_defaults.js');
 
 /** 模块日志 */
 var log = createLogger('Menu');
@@ -206,6 +207,12 @@ function _showPackSettingsDialog() {
                     value: pm.enable_auto_pack !== false,
                     description: '若启用，Spark-Core 将在启动时自动从 Mod 资源中打包 .zip（仅 Mod 内嵌内容包场景）',
                 },
+                flatExport: {
+                    type: 'checkbox',
+                    label: '扁平化导出',
+                    value: pm.flat_export !== false,
+                    description: '若启用，零件/子系统/连接点将扁平存放；关闭则按模型名分入子文件夹',
+                },
             },
             onConfirm: function (formData) {
                 if (!config.packMeta) config.packMeta = {};
@@ -217,6 +224,7 @@ function _showPackSettingsDialog() {
                 packMeta.description = formData.packDescription || '';
                 packMeta.exportDir = formData.exportDir || defaultExportDir;
                 packMeta.enable_auto_pack = !!formData.enableAutoPack;
+                packMeta.flat_export = !!formData.flatExport;
 
                 saveConfig();
                 showToast('内容包设置已保存', 'positive');
@@ -323,6 +331,18 @@ function _showExportDialog() {
                     value: pm.description || '',
                     height: 90,
                 },
+                packFolderName: {
+                    type: 'text',
+                    label: '包文件夹名称',
+                    value: _sanitizeFolderName(pm.name) || (Project ? Project.name : ''),
+                    description: '内容包在磁盘上的文件夹名称，将作为导出目录下的子文件夹',
+                },
+                flatExport: {
+                    type: 'checkbox',
+                    label: '扁平化导出',
+                    value: pm.flat_export !== false,
+                    description: '若启用，零件/子系统/连接点将扁平存放；关闭则按模型名分入子文件夹',
+                },
                 dependencies: {
                     type: 'textarea',
                     label: '依赖（每行一个）',
@@ -340,6 +360,10 @@ function _showExportDialog() {
                     return;
                 }
 
+                var packFolderName = _sanitizeFolderName(formData.packFolderName)
+                    || _sanitizeFolderName(pm.name)
+                    || (Project ? Project.name : 'content_pack');
+
                 var overriddenMeta = {
                     id: formData.packId || defaultPackId,
                     version: formData.packVersion || '1.0',
@@ -349,13 +373,14 @@ function _showExportDialog() {
                     enable_auto_pack: pm.enable_auto_pack !== false,
                     exportDir: exportDir,
                     dependencies: _parseDependencyText(formData.dependencies || ''),
+                    flat_export: !!formData.flatExport,
                 };
 
                 if (!config.packMeta) config.packMeta = {};
                 Object.assign(config.packMeta, overriddenMeta);
 
                 try {
-                    var stats = _executeExport(config, overriddenMeta, exportDir);
+                    var stats = _executeExport(config, overriddenMeta, exportDir, packFolderName);
                     saveConfig();
                     showToast(
                         '导出成功！\n零件: ' + stats.parts +
@@ -378,6 +403,17 @@ function _showExportDialog() {
         log.error('导出 Dialog 创建失败', e);
         showToast('无法创建导出对话框: ' + (e.message || e), 'error');
     }
+}
+
+/**
+ * 将字符串转换为安全的文件夹名
+ * 替换空格和非法字符为下划线，限制长度 64
+ * @param {string} name
+ * @returns {string}
+ */
+function _sanitizeFolderName(name) {
+    if (!name) return '';
+    return name.replace(/[<>:"/\\|?*\s]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').substring(0, 64);
 }
 
 /**
@@ -426,21 +462,24 @@ function _showPlaceholder(title, description) {
  *
  * 目录结构遵循 Spark-Core pack 系统规范:
  *   {exportDir}/
- *     meta.json
- *     {namespace}/
- *       lang/{locale}.json
- *       models/{partId}.json
- *       recipe/{recipeId}.json
- *       textures/...
- *       sounds/...
- *       animations/...
+ *     {packFolderName}/
+ *       meta.json
+ *       {namespace}/
+ *         lang/{locale}.json
+ *         models/part/{modelName}.geo.json
+ *         parts/{partId}.json
+ *         recipe/{recipeId}.json
+ *         connectors/{connId}.json           （扁平）或 connectors/{model}/{connId}.json（分组）
+ *         subsystems/{subId}.json            （扁平）或 subsystems/{model}/{subId}.json（分组）
+ *         materials/{matId}.json
  *
  * @param {Object} config - MMProjectConfig
  * @param {Object} packMeta - 覆盖的包元数据
- * @param {string} exportDir - 导出根目录
+ * @param {string} exportDir - 用户选择的导出根目录
+ * @param {string} packFolderName - 包文件夹名称
  * @returns {{ parts: number, connectors: number, subsystems: number, materials: number, langs: number }}
  */
-function _executeExport(config, packMeta, exportDir) {
+function _executeExport(config, packMeta, exportDir, packFolderName) {
     var fs = require('fs');
     var path = require('path');
 
@@ -448,8 +487,21 @@ function _executeExport(config, packMeta, exportDir) {
         fs.mkdirSync(exportDir, { recursive: true });
     }
 
+    // 包文件夹根（包装层）
+    var packRoot = path.join(exportDir, packFolderName);
+    if (!fs.existsSync(packRoot)) {
+        fs.mkdirSync(packRoot, { recursive: true });
+    }
+
     var ns = config.namespace || 'machine_max';
     var stats = { parts: 0, connectors: 0, subsystems: 0, materials: 0, langs: 0 };
+    var isFlat = packMeta.flat_export !== false;
+
+    function _resolveTargetDir(baseDir, id, flat) {
+        if (flat) return baseDir;
+        var seg = id.split('_')[0];
+        return (seg && seg.length > 0) ? path.join(baseDir, seg) : baseDir;
+    }
 
     // === meta.json ===
     var genMeta = require('../generators/meta_generator.js');
@@ -457,13 +509,26 @@ function _executeExport(config, packMeta, exportDir) {
     config.packMeta = packMeta;
     var meta = genMeta.generateMeta(config);
     config.packMeta = savedPackMeta;
-    fileWriter.writeJSONFile(exportDir, 'meta.json', meta);
+    fileWriter.writeJSONFile(packRoot, 'meta.json', meta);
+
+    // === {namespace}/models/part/{modelName}.geo.json ===
+    try {
+        if (typeof Codecs !== 'undefined' && Codecs.bedrock && Project) {
+            var modelDir = path.join(packRoot, ns, 'models', 'part');
+            var modelName = Project.geometry_name || Project.name || 'model';
+            var geoContent = Codecs.bedrock.compile();
+            fileWriter.writeTextFile(modelDir, modelName + '.geo.json', geoContent);
+            log.info('已导出 Bedrock 几何体模型: ' + modelName + '.geo.json');
+        }
+    } catch (e) {
+        log.warn('无法导出 Bedrock 几何体模型（可能非 Bedrock 格式）', e);
+    }
 
     // === {namespace}/lang/{locale}.json ===
     var genLang = require('../generators/lang_generator.js');
     var allLangs = genLang.generateAllLangs(config);
     if (allLangs) {
-        var langDir = path.join(exportDir, ns, 'lang');
+        var langDir = path.join(packRoot, ns, 'lang');
         for (var locale in allLangs) {
             if (allLangs.hasOwnProperty(locale)) {
                 fileWriter.writeJSONFile(langDir, locale + '.json', allLangs[locale]);
@@ -472,20 +537,21 @@ function _executeExport(config, packMeta, exportDir) {
         }
     }
 
-    // === {namespace}/models/{partId}.json ===
+    // === {namespace}/parts/{partId}.json ===
     var genParts = require('../generators/part_generator.js');
     var allParts = genParts.generateAllParts(config);
-    var modelsDir = path.join(exportDir, ns, 'models');
+    var partsBaseDir = path.join(packRoot, ns, 'parts');
     for (var partId in allParts) {
         if (allParts.hasOwnProperty(partId)) {
-            fileWriter.writeJSONFile(modelsDir, partId + '.json', allParts[partId]);
+            var partsTargetDir = _resolveTargetDir(partsBaseDir, partId, isFlat);
+            fileWriter.writeJSONFile(partsTargetDir, partId + '.json', allParts[partId]);
             stats.parts++;
         }
     }
 
     // === {namespace}/recipe/（如有） ===
     if (config.recipes && Object.keys(config.recipes).length > 0) {
-        var recipeDir = path.join(exportDir, ns, 'recipe');
+        var recipeDir = path.join(packRoot, ns, 'recipe');
         for (var recipeId in config.recipes) {
             if (config.recipes.hasOwnProperty(recipeId)) {
                 fileWriter.writeJSONFile(recipeDir, recipeId + '.json', config.recipes[recipeId]);
@@ -493,40 +559,62 @@ function _executeExport(config, packMeta, exportDir) {
         }
     }
 
-    // === 连接点、子系统、材料（保留以备后用） ===
+    // === 连接点 ===
     var genConnectors = require('../generators/connector_generator.js');
     var allConnectors = genConnectors.generateAllConnectors(config);
     if (allConnectors && Object.keys(allConnectors).length > 0) {
-        var connDir = path.join(exportDir, ns, 'connectors');
         for (var connId in allConnectors) {
             if (allConnectors.hasOwnProperty(connId)) {
-                fileWriter.writeJSONFile(connDir, connId + '.json', allConnectors[connId]);
+                var connLoc = fileWriter.extractResourceLocation(connId, ns);
+                var connBaseDir = path.join(packRoot, connLoc.ns, 'connectors');
+                fileWriter.writeJSONFile(
+                    _resolveTargetDir(connBaseDir, connLoc.path, isFlat),
+                    connLoc.path + '.json',
+                    allConnectors[connId]
+                );
                 stats.connectors++;
             }
         }
     }
 
+    // === 子系统 ===
     var genSubsystems = require('../generators/subsystem_generator.js');
     var allSubsystems = genSubsystems.generateAllSubsystems(config);
     if (allSubsystems && Object.keys(allSubsystems).length > 0) {
-        var subDir = path.join(exportDir, ns, 'subsystems');
         for (var subId in allSubsystems) {
             if (allSubsystems.hasOwnProperty(subId)) {
-                fileWriter.writeJSONFile(subDir, subId + '.json', allSubsystems[subId]);
+                var subLoc = fileWriter.extractResourceLocation(subId, ns);
+                var subBaseDir = path.join(packRoot, subLoc.ns, 'subsystems');
+                fileWriter.writeJSONFile(
+                    _resolveTargetDir(subBaseDir, subLoc.path, isFlat),
+                    subLoc.path + '.json',
+                    allSubsystems[subId]
+                );
                 stats.subsystems++;
             }
         }
     }
 
+    // === 材料 ===
     var genMaterials = require('../generators/material_generator.js');
     var allMaterials = genMaterials.generateAllMaterials(config);
     if (allMaterials && Object.keys(allMaterials).length > 0) {
-        var matDir = path.join(exportDir, ns, 'materials');
+        var skippedPresets = 0;
         for (var matId in allMaterials) {
             if (allMaterials.hasOwnProperty(matId)) {
-                fileWriter.writeJSONFile(matDir, matId + '.json', allMaterials[matId]);
+                // 跳过预设材料——由官方包定义
+                if (matId in PRESET_MATERIAL_DEFS) {
+                    skippedPresets++;
+                    continue;
+                }
+                var loc = fileWriter.extractResourceLocation(matId, ns);
+                var matDir = path.join(packRoot, loc.ns, 'materials');
+                fileWriter.writeJSONFile(matDir, loc.path + '.json', allMaterials[matId]);
                 stats.materials++;
             }
+        }
+        if (skippedPresets > 0) {
+            log.info('已跳过 ' + skippedPresets + ' 个预设材料定义（由官方包提供）');
         }
     }
 

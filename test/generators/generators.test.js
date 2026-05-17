@@ -429,6 +429,94 @@ describe('Lang Generator', function () {
     });
 });
 
+// ─── Namespace-Aware Export ────────────────────────────────────────────────────
+
+describe('Namespace-Aware Export', function () {
+
+    var fileWriter = require('../../src/utils/file_writer.js');
+    var PRESET_MATERIAL_DEFS = require('../../src/core/config_defaults.js').PRESET_MATERIAL_DEFS;
+
+    describe('extractResourceLocation', function () {
+
+        it('splits "ns:path" into {ns, path}', function () {
+            var loc = fileWriter.extractResourceLocation('mypack:custom', 'machine_max');
+            expect(loc.ns).toBe('mypack');
+            expect(loc.path).toBe('custom');
+        });
+
+        it('uses defaultNs when id has no colon', function () {
+            var loc = fileWriter.extractResourceLocation('simple_mat', 'machine_max');
+            expect(loc.ns).toBe('machine_max');
+            expect(loc.path).toBe('simple_mat');
+        });
+
+        it('uses empty string as fallback defaultNs when omitted', function () {
+            var loc = fileWriter.extractResourceLocation('no_ns');
+            expect(loc.ns).toBe('');
+            expect(loc.path).toBe('no_ns');
+        });
+
+        it('handles multiple colons (only first splits)', function () {
+            var loc = fileWriter.extractResourceLocation('ns:path:extra', 'default');
+            expect(loc.ns).toBe('ns');
+            expect(loc.path).toBe('path:extra');
+        });
+    });
+
+    describe('material preset filtering', function () {
+
+        it('skips materials whose id is in PRESET_MATERIAL_DEFS', function () {
+            // machine_max:structural_steel is a known preset
+            expect('machine_max:structural_steel' in PRESET_MATERIAL_DEFS).toBe(true);
+            // mypack:custom is NOT a preset
+            expect('mypack:custom' in PRESET_MATERIAL_DEFS).toBe(false);
+        });
+
+        it('builds correct directory for custom namespace material', function () {
+            var loc = fileWriter.extractResourceLocation('mypack:custom', 'machine_max');
+            var dir = loc.ns + '/materials';
+            var filename = loc.path + '.json';
+            expect(dir).toBe('mypack/materials');
+            expect(filename).toBe('custom.json');
+        });
+
+        it('builds correct directory for no-colon material (fallback ns)', function () {
+            var loc = fileWriter.extractResourceLocation('simple_mat', 'machine_max');
+            var dir = loc.ns + '/materials';
+            var filename = loc.path + '.json';
+            expect(dir).toBe('machine_max/materials');
+            expect(filename).toBe('simple_mat.json');
+        });
+    });
+
+    describe('connector/subsystem directory construction', function () {
+
+        it('builds connector path with namespace', function () {
+            var loc = fileWriter.extractResourceLocation('other_ns:conn_a', 'machine_max');
+            var dir = loc.ns + '/connectors';
+            var filename = loc.path + '.json';
+            expect(dir).toBe('other_ns/connectors');
+            expect(filename).toBe('conn_a.json');
+        });
+
+        it('builds connector path with fallback namespace', function () {
+            var loc = fileWriter.extractResourceLocation('simple_conn', 'machine_max');
+            var dir = loc.ns + '/connectors';
+            var filename = loc.path + '.json';
+            expect(dir).toBe('machine_max/connectors');
+            expect(filename).toBe('simple_conn.json');
+        });
+
+        it('builds subsystem path with namespace', function () {
+            var loc = fileWriter.extractResourceLocation('ns3:sub_x', 'machine_max');
+            var dir = loc.ns + '/subsystems';
+            var filename = loc.path + '.json';
+            expect(dir).toBe('ns3/subsystems');
+            expect(filename).toBe('sub_x.json');
+        });
+    });
+});
+
 // ─── Meta Generator ───────────────────────────────────────────────────────────
 
 describe('Meta Generator', function () {
