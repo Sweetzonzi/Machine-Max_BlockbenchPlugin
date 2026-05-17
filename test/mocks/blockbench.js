@@ -75,6 +75,7 @@ var Blockbench = {
 
 // ─── Group ───────────────────────────────────────────────────────────────────
 class Group {
+    static all = [];
     constructor(name) {
         this.name = name || 'Group';
         this.type = 'group';
