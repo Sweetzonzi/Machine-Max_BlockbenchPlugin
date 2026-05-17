@@ -62,8 +62,9 @@ function registerToolbarActions() {
         icon: 'fa-save',
         condition: { modes: ['machine_max_part'] },
         click: function () {
-            log.debug('工具栏: 点击"导出内容包"（尚未实现）');
-            showToast('导出功能将在阶段四实现', 'info');
+            log.debug('工具栏: 点击"导出内容包"');
+            var menu = require('../ui/menu.js');
+            menu.showExportDialog();
         }
     }));
 
