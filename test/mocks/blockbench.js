@@ -159,6 +159,7 @@ globalThis.Group = Group;
 globalThis.Locator = Locator;
 globalThis.OutlinerElement = OutlinerElement;
 globalThis.Outliner = Outliner;
+globalThis.Property = Property;
 globalThis.ModelProject = ModelProject;
 globalThis.Project = Project;
 
