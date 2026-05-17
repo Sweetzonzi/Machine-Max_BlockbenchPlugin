@@ -12,7 +12,7 @@
 const { getConfig, loadConfig, saveConfig } = require('../utils/persistence.js');
 const { getMarkerInfo, clearAllMarkers, detectOwnerSubPart } = require('../core/element_markers.js');
 const { createVariantConfig, createPartConfig, createSubPartConfig } = require('../core/config.js');
-const { refreshOutlinerIcons } = require('../mode.js');
+const { refreshOutlinerIcons } = require('../mode/icons.js');
 const { showToast } = require('../utils/notify.js');
 const { createLogger } = require('../utils/logger.js');
 var { showAddTagDialog, _hashTagColor } = require('./tag_dialog_helper.js');
@@ -405,7 +405,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                         config._uiState.activePartId = partId;
                         config._uiState.activeVariantName = variantName;
                         log.info('UI新建零件成功', { partId: partId, variant: variantName });
-                        require('../mode.js').refreshOutlinerIcons();
+                        require('../mode/icons.js').refreshOutlinerIcons();
                         Blockbench.dispatchEvent('update_selection');
                         showToast('零件 "' + partId + '" 已创建', 'positive');
                         self.loadConfigData();
