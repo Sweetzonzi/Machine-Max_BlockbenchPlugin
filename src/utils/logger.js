@@ -7,7 +7,7 @@
  */
 
 /** 全局 Debug 开关 — 设为 false 可在生产构建中关闭所有 Debug 日志 */
-const DEBUG_ENABLED = true;
+const DEBUG_ENABLED = typeof __DEBUG_ENABLED__ !== 'undefined' ? __DEBUG_ENABLED__ : true;
 
 /** 日志级别枚举 */
 const LEVELS = {

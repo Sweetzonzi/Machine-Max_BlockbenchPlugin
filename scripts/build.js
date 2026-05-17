@@ -66,6 +66,7 @@ function getConfig() {
     const templates = loadAllHTMLTemplates(path.join(SRC, 'ui', 'panels'));
     const defines = Object.assign({
         'CSS_MM_MODE': cssLiteral || '""',
+        '__DEBUG_ENABLED__': 'false',
     }, templates);
 
     return {
