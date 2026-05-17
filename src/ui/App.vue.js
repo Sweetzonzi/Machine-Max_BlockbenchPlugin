@@ -586,12 +586,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                     }
 
                     // 更新到 variant.tags
-                    if (!variant.tags) {
-                        self.$set(variant, 'tags', newTagList);
-                    } else {
-                        variant.tags.length = 0;
-                        newTagList.forEach(function (t) { variant.tags.push(t); });
-                    }
+                    self.$set(variant, 'tags', newTagList);
                     log.info('标签添加: 已更新', { tags: newTagList });
                     this.hide();
                 },
@@ -884,8 +879,8 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 var markerData = markers[oldGroup.uuid];
                 if (markerData && markerData.type === 'sub_part') {
                     markerData.config_ref = newBoneName;
-                    markers[newGroup.uuid] = markerData;
-                    delete markers[oldGroup.uuid];
+                    this.$set(markers, newGroup.uuid, markerData);
+                    this.$delete(markers, oldGroup.uuid);
                     log.debug('migrateSubPartStartBone: 标记已从 ' + oldGroup.uuid + ' 迁移到 ' + newGroup.uuid);
                 }
             }
