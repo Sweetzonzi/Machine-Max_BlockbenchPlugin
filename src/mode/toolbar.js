@@ -2,6 +2,7 @@ var { getConfig, saveConfig } = require('../utils/persistence.js');
 var { showToast } = require('../utils/notify.js');
 var { createLogger } = require('../utils/logger.js');
 var { runValidation } = require('./validation.js');
+var { PRESET_MATERIAL_DEFS } = require('../core/config_defaults.js');
 
 var log = createLogger('Mode');
 
@@ -134,7 +135,11 @@ function registerToolbarActions() {
             const partCount = Object.keys(config.parts).length;
             const connCount = Object.keys(config.connector_defs).length;
             const subCount = Object.keys(config.subsystem_defs).length;
-            const matCount = Object.keys(config.material_defs).length;
+            const matDefs = config.material_defs || {};
+            const matTotal = Object.keys(matDefs).length;
+            var matPreset = 0;
+            for (var mid in matDefs) { if (matDefs.hasOwnProperty(mid) && mid in PRESET_MATERIAL_DEFS) matPreset++; }
+            const matCustom = matTotal - matPreset;
 
             const partList = Object.entries(config.parts).map(function (entry) {
                 var id = entry[0];
@@ -148,7 +153,7 @@ function registerToolbarActions() {
                 parts: partCount,
                 connectors: connCount,
                 subsystems: subCount,
-                materials: matCount,
+                materials: matTotal,
             });
 
             new Dialog({
@@ -160,7 +165,7 @@ function registerToolbarActions() {
                         '零件数: ' + partCount,
                         '连接点定义: ' + connCount,
                         '子系统型号: ' + subCount,
-                        '材料定义: ' + matCount,
+                        '材料定义: ' + matTotal + '（' + matPreset + '预设, ' + matCustom + '自定义）',
                         partCount > 0 ? '\n零件列表:\n' + partList : '（暂无零件）',
                     ]},
                 },

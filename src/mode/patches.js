@@ -2,6 +2,7 @@ var { getMarkersForVariant, setMarker, clearMarker, getMarker, MARKER_TYPES, get
 var { getConfig, saveConfig } = require('../utils/persistence.js');
 var { showToast } = require('../utils/notify.js');
 var { createLogger } = require('../utils/logger.js');
+var { PRESET_MATERIAL_DEFS } = require('../core/config_defaults.js');
 
 var log = createLogger('Mode');
 
@@ -124,7 +125,13 @@ function buildMMMenuItems(el) {
                             '零件数: ' + partCount,
                             '连接点定义: ' + Object.keys(cfg.connector_defs || {}).length,
                             '子系统型号: ' + Object.keys(cfg.subsystem_defs || {}).length,
-                            '材料定义: ' + Object.keys(cfg.material_defs || {}).length,
+                            '材料定义: ' + (function () {
+                                var mds = cfg.material_defs || {};
+                                var total = Object.keys(mds).length;
+                                var preset = 0;
+                                for (var mid in mds) { if (mds.hasOwnProperty(mid) && mid in PRESET_MATERIAL_DEFS) preset++; }
+                                return total + '（' + preset + '预设, ' + (total - preset) + '自定义）';
+                            })(),
                         ]},
                     },
                     onConfirm: function (formData) {

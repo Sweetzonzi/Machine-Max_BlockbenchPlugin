@@ -205,7 +205,7 @@ function _showPackSettingsDialog() {
                     type: 'checkbox',
                     label: '启用自动打包',
                     value: pm.enable_auto_pack !== false,
-                    description: '若启用，Spark-Core 将在启动时自动从 Mod 资源中打包 .zip（仅 Mod 内嵌内容包场景）',
+                    description: '仅 Mod 开发需要考虑此选项。若启用，Spark-Core 将在启动时自动从 Mod 资源中打包 .zip。一般内容包作者保持关闭即可。',
                 },
                 flatExport: {
                     type: 'checkbox',
@@ -276,17 +276,23 @@ function _showExportDialog() {
             errors.map(function (e) { return '&nbsp;&nbsp;• ' + e; }).join('<br>');
     }
 
-    // 统计信息
+    // 统计信息 — 区分预设与自定义
     var connCount = Object.keys(config.connector_defs || {}).length;
     var subCount = Object.keys(config.subsystem_defs || {}).length;
-    var matCount = Object.keys(config.material_defs || {}).length;
+    var matDefs = config.material_defs || {};
+    var matTotal = Object.keys(matDefs).length;
+    var matPreset = 0;
+    for (var mid in matDefs) {
+        if (matDefs.hasOwnProperty(mid) && mid in PRESET_MATERIAL_DEFS) matPreset++;
+    }
+    var matCustom = matTotal - matPreset;
     var statLines = [
         '模型: ' + (Project ? Project.name : '未命名'),
         '命名空间: ' + ns,
         '零件: ' + partCount,
         '连接点定义: ' + connCount,
         '子系统型号: ' + subCount,
-        '材料定义: ' + matCount,
+        '材料定义: ' + matTotal + '（' + matPreset + '预设, ' + matCustom + '自定义）',
     ];
 
     try {

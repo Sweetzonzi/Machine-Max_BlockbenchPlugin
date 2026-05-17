@@ -50,7 +50,7 @@ function createBlankConfig() {
             author: '',
             description: '',
             dependencies: [],
-            enable_auto_pack: true,
+            enable_auto_pack: false,
         },
         _uiState: {
             activeMode: 'part',

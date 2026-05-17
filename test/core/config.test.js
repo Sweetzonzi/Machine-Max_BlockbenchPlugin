@@ -43,7 +43,7 @@ describe('Config Factory', function () {
             expect(blank.packMeta.author).toBe('');
             expect(blank.packMeta.description).toBe('');
             expect(Array.isArray(blank.packMeta.dependencies)).toBe(true);
-            expect(blank.packMeta.enable_auto_pack).toBe(true);
+            expect(blank.packMeta.enable_auto_pack).toBe(false);
         });
 
         it('_uiState has correct default structure', function () {

@@ -24,7 +24,7 @@ function createMinimalConfig() {
             author: 'Tester',
             description: 'A test content pack',
             dependencies: [],
-            enable_auto_pack: true,
+            enable_auto_pack: false,
         },
         _uiState: {
             activeMode: 'part',
@@ -78,7 +78,7 @@ function createV1Config() {
             author: 'Legacy Author',
             description: '',
             dependencies: [],
-            enable_auto_pack: true,
+            enable_auto_pack: false,
         },
         _uiState: {
             activeMode: 'part',
