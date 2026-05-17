@@ -2,6 +2,7 @@ const { createLogger } = require('../utils/logger.js');
 const { getConfig, saveConfig } = require('../utils/persistence.js');
 const { showToast } = require('../utils/notify.js');
 const { runValidation } = require('../mode.js');
+const fileWriter = require('../utils/file_writer.js');
 
 /** 模块日志 */
 var log = createLogger('Menu');
@@ -456,7 +457,7 @@ function _executeExport(config, packMeta, exportDir) {
     config.packMeta = packMeta;
     var meta = genMeta.generateMeta(config);
     config.packMeta = savedPackMeta;
-    _ensureWriteJSON(path.join(exportDir, 'meta.json'), meta);
+    fileWriter.writeJSONFile(exportDir, 'meta.json', meta);
 
     // === {namespace}/lang/{locale}.json ===
     var genLang = require('../generators/lang_generator.js');
@@ -465,7 +466,7 @@ function _executeExport(config, packMeta, exportDir) {
         var langDir = path.join(exportDir, ns, 'lang');
         for (var locale in allLangs) {
             if (allLangs.hasOwnProperty(locale)) {
-                _ensureWriteJSON(path.join(langDir, locale + '.json'), allLangs[locale]);
+                fileWriter.writeJSONFile(langDir, locale + '.json', allLangs[locale]);
                 stats.langs++;
             }
         }
@@ -477,7 +478,7 @@ function _executeExport(config, packMeta, exportDir) {
     var modelsDir = path.join(exportDir, ns, 'models');
     for (var partId in allParts) {
         if (allParts.hasOwnProperty(partId)) {
-            _ensureWriteJSON(path.join(modelsDir, partId + '.json'), allParts[partId]);
+            fileWriter.writeJSONFile(modelsDir, partId + '.json', allParts[partId]);
             stats.parts++;
         }
     }
@@ -487,7 +488,7 @@ function _executeExport(config, packMeta, exportDir) {
         var recipeDir = path.join(exportDir, ns, 'recipe');
         for (var recipeId in config.recipes) {
             if (config.recipes.hasOwnProperty(recipeId)) {
-                _ensureWriteJSON(path.join(recipeDir, recipeId + '.json'), config.recipes[recipeId]);
+                fileWriter.writeJSONFile(recipeDir, recipeId + '.json', config.recipes[recipeId]);
             }
         }
     }
@@ -499,7 +500,7 @@ function _executeExport(config, packMeta, exportDir) {
         var connDir = path.join(exportDir, ns, 'connectors');
         for (var connId in allConnectors) {
             if (allConnectors.hasOwnProperty(connId)) {
-                _ensureWriteJSON(path.join(connDir, connId + '.json'), allConnectors[connId]);
+                fileWriter.writeJSONFile(connDir, connId + '.json', allConnectors[connId]);
                 stats.connectors++;
             }
         }
@@ -511,7 +512,7 @@ function _executeExport(config, packMeta, exportDir) {
         var subDir = path.join(exportDir, ns, 'subsystems');
         for (var subId in allSubsystems) {
             if (allSubsystems.hasOwnProperty(subId)) {
-                _ensureWriteJSON(path.join(subDir, subId + '.json'), allSubsystems[subId]);
+                fileWriter.writeJSONFile(subDir, subId + '.json', allSubsystems[subId]);
                 stats.subsystems++;
             }
         }
@@ -523,7 +524,7 @@ function _executeExport(config, packMeta, exportDir) {
         var matDir = path.join(exportDir, ns, 'materials');
         for (var matId in allMaterials) {
             if (allMaterials.hasOwnProperty(matId)) {
-                _ensureWriteJSON(path.join(matDir, matId + '.json'), allMaterials[matId]);
+                fileWriter.writeJSONFile(matDir, matId + '.json', allMaterials[matId]);
                 stats.materials++;
             }
         }
@@ -533,24 +534,10 @@ function _executeExport(config, packMeta, exportDir) {
     return stats;
 }
 
-/**
- * 确保目录存在后写入 JSON 文件
- * @param {string} filePath
- * @param {Object} data
- */
-function _ensureWriteJSON(filePath, data) {
-    var fs = require('fs');
-    var path = require('path');
-    var dir = path.dirname(filePath);
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-}
-
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         registerMachineMaxMenu,
         unregisterMachineMaxMenu,
+        showExportDialog,
     };
 }
