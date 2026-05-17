@@ -667,6 +667,15 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             if (modeId === 'machine_max_part') {
                 self.loadConfigData();
                 self.onSelectionChange();
+                // 首次进入模式时检查内容包路径是否已设置
+                var cfg = getConfig();
+                if (cfg && (!cfg.contentPackPath || cfg.contentPackPath === '')) {
+                    log.info('select_mode: 内容包路径未设置，触发设置向导');
+                    var dialog = require('./dialogs/pack_setup_dialog.js');
+                    dialog.showPackSetupDialog(cfg, function (updatedConfig) {
+                        self.loadConfigData();
+                    });
+                }
             }
         });
 
