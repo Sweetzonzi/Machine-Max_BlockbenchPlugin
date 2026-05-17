@@ -2954,9 +2954,7 @@
       var MARKER_TYPES = {
         sub_part: { label: "\u5B50\u96F6\u4EF6", icon: "fa-cube", color: "#4A90D9" },
         hit_box: { label: "\u78B0\u649E\u7BB1", icon: "fa-shield", color: "#D94A4A" },
-        connector: { label: "\u8FDE\u63A5\u70B9", icon: "fa-plug", color: "#3AA83A" },
-        seat: { label: "\u5EA7\u4F4D", icon: "fa-chair", color: "#D9C94A" },
-        lighting: { label: "\u706F\u5149", icon: "fa-lightbulb", color: "#D97E4A" }
+        connector: { label: "\u8FDE\u63A5\u70B9", icon: "fa-plug", color: "#3AA83A" }
       };
       var MARKER_TYPE_LIST = Object.keys(MARKER_TYPES);
       function getMarkerInfo(type) {
@@ -2972,7 +2970,7 @@
       }
       function getMarkerTypesForElement(element) {
         if (element instanceof Locator) {
-          return ["connector", "seat", "lighting"];
+          return ["connector"];
         } else if (element instanceof Group) {
           return ["sub_part", "hit_box"];
         }
@@ -7401,7 +7399,7 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var { getMarkersForVariant, setMarker, clearMarker, getMarker, MARKER_TYPES, getMarkerInfo, detectOwnerSubPart, recalcAutoEndBones } = require_element_markers();
+      var { getMarkersForVariant, setMarker, clearMarker, getMarker, detectOwnerSubPart, recalcAutoEndBones } = require_element_markers();
       var { getConfig, saveConfig } = require_persistence();
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
@@ -7564,16 +7562,12 @@
             } });
           }
         } else if (el instanceof Locator) {
-          var locatorTypes = ["connector", "seat", "lighting"];
+          var locatorTypes = ["connector"];
           var labels = {
-            connector: "\u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9",
-            seat: "\u6807\u8BB0\u4E3A\u5EA7\u4F4D\u5B9A\u4F4D\u70B9",
-            lighting: "\u6807\u8BB0\u4E3A\u706F\u5149\u5B9A\u4F4D\u70B9"
+            connector: "\u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9"
           };
           var icons = {
-            connector: "link",
-            seat: "event_seat",
-            lighting: "lightbulb"
+            connector: "link"
           };
           for (var t = 0; t < locatorTypes.length; t++) {
             var type = locatorTypes[t];
@@ -7612,13 +7606,6 @@
           }
         }
         if (marker) {
-          var info = MARKER_TYPES[marker.type];
-          if (info) {
-            items.push({ name: "\u5728\u5C5E\u6027\u9762\u677F\u4E2D\u67E5\u770B (" + info.label + ")", icon: "search", click: function() {
-              log2.debug("\u53F3\u952E\u83DC\u5355: \u5728\u5C5E\u6027\u9762\u677F\u4E2D\u67E5\u770B", { type: marker.type, uuid: el.uuid });
-              Blockbench.dispatchEvent("update_selection");
-            } });
-          }
           items.push({ name: "\u6E05\u9664 MachineMax \u6807\u8BB0", icon: "delete", click: function() {
             log2.debug("\u53F3\u952E\u83DC\u5355: \u6E05\u9664\u6807\u8BB0", { type: marker.type, uuid: el.uuid });
             clearMarker(config, activePartId, activeVariantName, el.uuid);

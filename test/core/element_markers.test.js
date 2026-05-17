@@ -14,11 +14,11 @@ describe('element_markers', function () {
     // ─── MARKER_TYPES ─────────────────────────────────────────────────────────
 
     describe('MARKER_TYPES', function () {
-        it('包含全部 5 种标记类型（已移除 subsystem_locator）', function () {
-            var expectedTypes = ['sub_part', 'hit_box', 'connector', 'seat', 'lighting'];
+        it('包含全部 3 种标记类型', function () {
+            var expectedTypes = ['sub_part', 'hit_box', 'connector'];
             var actualTypes = Object.keys(markers.MARKER_TYPES);
-            if (actualTypes.length !== 5) {
-                throw new Error('Expected 5 marker types, got ' + actualTypes.length);
+            if (actualTypes.length !== 3) {
+                throw new Error('Expected 3 marker types, got ' + actualTypes.length);
             }
             expectedTypes.forEach(function (t) {
                 if (actualTypes.indexOf(t) === -1) {
@@ -63,18 +63,6 @@ describe('element_markers', function () {
             if (info.icon !== 'fa-plug') throw new Error('connector icon mismatch');
             if (info.color !== '#3AA83A') throw new Error('connector color mismatch');
         });
-
-        it('seat 的 icon 为 fa-chair, color 为 #D9C94A', function () {
-            var info = markers.MARKER_TYPES.seat;
-            if (info.icon !== 'fa-chair') throw new Error('seat icon mismatch');
-            if (info.color !== '#D9C94A') throw new Error('seat color mismatch');
-        });
-
-        it('lighting 的 icon 为 fa-lightbulb, color 为 #D97E4A', function () {
-            var info = markers.MARKER_TYPES.lighting;
-            if (info.icon !== 'fa-lightbulb') throw new Error('lighting icon mismatch');
-            if (info.color !== '#D97E4A') throw new Error('lighting color mismatch');
-        });
     });
 
     // ─── getMarkerInfo ────────────────────────────────────────────────────────
@@ -117,9 +105,9 @@ describe('element_markers', function () {
 
     describe('getColor', function () {
         it('返回已知类型的颜色', function () {
-            var color = markers.getColor('lighting');
-            if (color !== '#D97E4A') {
-                throw new Error('Expected #D97E4A, got ' + color);
+            var color = markers.getColor('connector');
+            if (color !== '#3AA83A') {
+                throw new Error('Expected #3AA83A, got ' + color);
             }
         });
 
@@ -144,15 +132,13 @@ describe('element_markers', function () {
             if (types.indexOf('hit_box') === -1) throw new Error('Missing hit_box');
         });
 
-        it('Locator 返回 [connector, seat, lighting]（已移除 subsystem_locator）', function () {
+        it('Locator 仅返回 [connector]', function () {
             var locator = new globalThis.Locator('testLocator');
             var types = markers.getMarkerTypesForElement(locator);
-            if (types.length !== 3) {
-                throw new Error('Expected 3 types for Locator, got ' + types.length);
+            if (types.length !== 1) {
+                throw new Error('Expected 1 type for Locator, got ' + types.length);
             }
-            if (types.indexOf('connector') === -1) throw new Error('Missing connector');
-            if (types.indexOf('seat') === -1) throw new Error('Missing seat');
-            if (types.indexOf('lighting') === -1) throw new Error('Missing lighting');
+            if (types[0] !== 'connector') throw new Error('Missing connector');
         });
 
         it('普通对象返回空数组', function () {
@@ -206,12 +192,12 @@ describe('element_markers', function () {
             var config = helpers.createMinimalConfig();
             config.parts['test_part'] = helpers.createSamplePart();
 
+            markers.setMarker(config, 'test_part', 'default', 'uuid-1', 'hit_box', 'sp_1');
             markers.setMarker(config, 'test_part', 'default', 'uuid-1', 'connector', null);
-            markers.setMarker(config, 'test_part', 'default', 'uuid-1', 'seat', 'seat_ref');
 
             var stored = markers.getMarker(config, 'test_part', 'default', 'uuid-1');
-            if (stored.type !== 'seat') throw new Error('Expected type seat after overwrite, got ' + stored.type);
-            if (stored.config_ref !== 'seat_ref') throw new Error('Expected config_ref seat_ref, got ' + stored.config_ref);
+            if (stored.type !== 'connector') throw new Error('Expected type connector after overwrite, got ' + stored.type);
+            if (stored.config_ref !== null) throw new Error('Expected config_ref null, got ' + stored.config_ref);
         });
     });
 
@@ -332,7 +318,7 @@ describe('element_markers', function () {
             var config = helpers.createMinimalConfig();
             config.parts['test_part'] = helpers.createSamplePart();
             markers.setMarker(config, 'test_part', 'default', 'uuid-1', 'connector', null);
-            markers.setMarker(config, 'test_part', 'default', 'uuid-2', 'seat', null);
+            markers.setMarker(config, 'test_part', 'default', 'uuid-2', 'connector', null);
 
             var result = markers.getMarkersForVariant(config, 'test_part', 'default');
             var keys = Object.keys(result);
@@ -367,7 +353,7 @@ describe('element_markers', function () {
             var config = helpers.createMinimalConfig();
             config.parts['test_part'] = helpers.createSamplePart();
             markers.setMarker(config, 'test_part', 'default', 'uuid-1', 'connector', null);
-            markers.setMarker(config, 'test_part', 'default', 'uuid-2', 'seat', null);
+            markers.setMarker(config, 'test_part', 'default', 'uuid-2', 'connector', null);
 
             markers.clearAllMarkers(config, 'test_part', 'default');
 
@@ -389,7 +375,7 @@ describe('element_markers', function () {
                 sub_parts: {},
             };
             markers.setMarker(config, 'test_part', 'default', 'uuid-1', 'connector', null);
-            markers.setMarker(config, 'test_part', 'alt', 'uuid-2', 'seat', null);
+            markers.setMarker(config, 'test_part', 'alt', 'uuid-2', 'connector', null);
 
             markers.clearAllMarkers(config, 'test_part');
 
@@ -525,14 +511,14 @@ describe('element_markers', function () {
     // ─── MARKER_TYPE_LIST ─────────────────────────────────────────────────────
 
     describe('MARKER_TYPE_LIST', function () {
-        it('包含所有 5 种标记类型名称（已移除 subsystem_locator）', function () {
+        it('包含所有 3 种标记类型名称', function () {
             if (!Array.isArray(markers.MARKER_TYPE_LIST)) {
                 throw new Error('MARKER_TYPE_LIST should be an array');
             }
-            if (markers.MARKER_TYPE_LIST.length !== 5) {
-                throw new Error('Expected 5 entries, got ' + markers.MARKER_TYPE_LIST.length);
+            if (markers.MARKER_TYPE_LIST.length !== 3) {
+                throw new Error('Expected 3 entries, got ' + markers.MARKER_TYPE_LIST.length);
             }
-            var expected = ['sub_part', 'hit_box', 'connector', 'seat', 'lighting'];
+            var expected = ['sub_part', 'hit_box', 'connector'];
             expected.forEach(function (t) {
                 if (markers.MARKER_TYPE_LIST.indexOf(t) === -1) {
                     throw new Error('Missing type in MARKER_TYPE_LIST: ' + t);

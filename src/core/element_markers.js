@@ -22,9 +22,6 @@ const MARKER_TYPES = {
     sub_part: { label: '子零件', icon: 'fa-cube', color: '#4A90D9' },
     hit_box: { label: '碰撞箱', icon: 'fa-shield', color: '#D94A4A' },
     connector: { label: '连接点', icon: 'fa-plug', color: '#3AA83A' },
-    seat: { label: '座位', icon: 'fa-chair', color: '#D9C94A' },
-    lighting: { label: '灯光', icon: 'fa-lightbulb', color: '#D97E4A' },
-
 };
 
 const MARKER_TYPE_LIST = Object.keys(MARKER_TYPES);
@@ -45,7 +42,7 @@ function getColor(type) {
 
 function getMarkerTypesForElement(element) {
     if (element instanceof Locator) {
-        return ['connector', 'seat', 'lighting'];
+        return ['connector'];
     } else if (element instanceof Group) {
         return ['sub_part', 'hit_box'];
     }

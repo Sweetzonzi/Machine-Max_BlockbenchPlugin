@@ -1,4 +1,4 @@
-var { getMarkersForVariant, setMarker, clearMarker, getMarker, MARKER_TYPES, getMarkerInfo, detectOwnerSubPart, recalcAutoEndBones } = require('../core/element_markers.js');
+var { getMarkersForVariant, setMarker, clearMarker, getMarker, detectOwnerSubPart, recalcAutoEndBones } = require('../core/element_markers.js');
 var { getConfig, saveConfig } = require('../utils/persistence.js');
 var { showToast } = require('../utils/notify.js');
 var { createLogger } = require('../utils/logger.js');
@@ -191,16 +191,12 @@ function buildMMMenuItems(el) {
             }});
         }
     } else if (el instanceof Locator) {
-        var locatorTypes = ['connector', 'seat', 'lighting'];
+        var locatorTypes = ['connector'];
         var labels = {
             connector: '标记为连接点',
-            seat: '标记为座位定位点',
-            lighting: '标记为灯光定位点',
         };
         var icons = {
             connector: 'link',
-            seat: 'event_seat',
-            lighting: 'lightbulb',
         };
         for (var t = 0; t < locatorTypes.length; t++) {
             var type = locatorTypes[t];
@@ -240,13 +236,6 @@ function buildMMMenuItems(el) {
     }
 
     if (marker) {
-        var info = MARKER_TYPES[marker.type];
-        if (info) {
-            items.push({ name: '在属性面板中查看 (' + info.label + ')', icon: 'search', click: function () {
-                log.debug('右键菜单: 在属性面板中查看', { type: marker.type, uuid: el.uuid });
-                Blockbench.dispatchEvent('update_selection');
-            }});
-        }
         items.push({ name: '清除 MachineMax 标记', icon: 'delete', click: function () {
             log.debug('右键菜单: 清除标记', { type: marker.type, uuid: el.uuid });
             clearMarker(config, activePartId, activeVariantName, el.uuid);
