@@ -78,6 +78,10 @@ Vue.component('mm-sub-part-panel', {
             var el = Group.all.find(function (g) { return g.name === hbKey || g.uuid === hbKey; });
             return el ? el.name : hbKey;
         },
+        resolveConnectorName: function (connKey) {
+            var el = Locator.all.find(function (l) { return l.name === connKey || l.uuid === connKey; });
+            return el ? el.name : connKey;
+        },
     },
 });
 

@@ -191,18 +191,16 @@ function buildMMMenuItems(el) {
             }});
         }
     } else if (el instanceof Locator) {
-        var locatorTypes = ['connector', 'seat', 'lighting', 'subsystem_locator'];
+        var locatorTypes = ['connector', 'seat', 'lighting'];
         var labels = {
             connector: '标记为连接点',
             seat: '标记为座位定位点',
             lighting: '标记为灯光定位点',
-            subsystem_locator: '标记为子系统定位点',
         };
         var icons = {
             connector: 'link',
             seat: 'event_seat',
             lighting: 'lightbulb',
-            subsystem_locator: 'precision_manufacturing',
         };
         for (var t = 0; t < locatorTypes.length; t++) {
             var type = locatorTypes[t];
@@ -210,6 +208,27 @@ function buildMMMenuItems(el) {
                 items.push({ name: labels[type], icon: icons[type], click: (function (capturedType) {
                     return function () {
                         log.debug('右键菜单: 标记为' + capturedType, { uuid: el.uuid, name: el.name });
+                        if (capturedType === 'connector') {
+                            var owner = detectOwnerSubPart(config, activePartId, activeVariantName, el);
+                            var spKey = owner ? owner.spKey : null;
+                            if (spKey) {
+                                var variant = config.parts[activePartId].variants[activeVariantName];
+                                if (!variant.sub_parts) variant.sub_parts = {};
+                                if (!variant.sub_parts[spKey]) {
+                                    var cfgMod2 = require('../core/config.js');
+                                    variant.sub_parts[spKey] = cfgMod2.createSubPartConfig();
+                                }
+                                if (!variant.sub_parts[spKey].connectors) {
+                                    variant.sub_parts[spKey].connectors = {};
+                                }
+                                var locName = el.name;
+                                if (!variant.sub_parts[spKey].connectors[locName]) {
+                                    variant.sub_parts[spKey].connectors[locName] = {
+                                        definition: '',
+                                    };
+                                }
+                            }
+                        }
                         setMarker(config, activePartId, activeVariantName, el.uuid, capturedType, null);
                         var { refreshOutlinerIcons } = require('../mode.js');
                         refreshOutlinerIcons();

@@ -14,11 +14,11 @@ describe('element_markers', function () {
     // ─── MARKER_TYPES ─────────────────────────────────────────────────────────
 
     describe('MARKER_TYPES', function () {
-        it('包含全部 6 种标记类型', function () {
-            var expectedTypes = ['sub_part', 'hit_box', 'connector', 'seat', 'lighting', 'subsystem_locator'];
+        it('包含全部 5 种标记类型（已移除 subsystem_locator）', function () {
+            var expectedTypes = ['sub_part', 'hit_box', 'connector', 'seat', 'lighting'];
             var actualTypes = Object.keys(markers.MARKER_TYPES);
-            if (actualTypes.length !== 6) {
-                throw new Error('Expected 6 marker types, got ' + actualTypes.length);
+            if (actualTypes.length !== 5) {
+                throw new Error('Expected 5 marker types, got ' + actualTypes.length);
             }
             expectedTypes.forEach(function (t) {
                 if (actualTypes.indexOf(t) === -1) {
@@ -74,12 +74,6 @@ describe('element_markers', function () {
             var info = markers.MARKER_TYPES.lighting;
             if (info.icon !== 'fa-lightbulb') throw new Error('lighting icon mismatch');
             if (info.color !== '#D97E4A') throw new Error('lighting color mismatch');
-        });
-
-        it('subsystem_locator 的 icon 为 fa-cog, color 为 #9B4AD9', function () {
-            var info = markers.MARKER_TYPES.subsystem_locator;
-            if (info.icon !== 'fa-cog') throw new Error('subsystem_locator icon mismatch');
-            if (info.color !== '#9B4AD9') throw new Error('subsystem_locator color mismatch');
         });
     });
 
@@ -150,16 +144,15 @@ describe('element_markers', function () {
             if (types.indexOf('hit_box') === -1) throw new Error('Missing hit_box');
         });
 
-        it('Locator 返回 [connector, seat, lighting, subsystem_locator]', function () {
+        it('Locator 返回 [connector, seat, lighting]（已移除 subsystem_locator）', function () {
             var locator = new globalThis.Locator('testLocator');
             var types = markers.getMarkerTypesForElement(locator);
-            if (types.length !== 4) {
-                throw new Error('Expected 4 types for Locator, got ' + types.length);
+            if (types.length !== 3) {
+                throw new Error('Expected 3 types for Locator, got ' + types.length);
             }
             if (types.indexOf('connector') === -1) throw new Error('Missing connector');
             if (types.indexOf('seat') === -1) throw new Error('Missing seat');
             if (types.indexOf('lighting') === -1) throw new Error('Missing lighting');
-            if (types.indexOf('subsystem_locator') === -1) throw new Error('Missing subsystem_locator');
         });
 
         it('普通对象返回空数组', function () {
@@ -532,14 +525,14 @@ describe('element_markers', function () {
     // ─── MARKER_TYPE_LIST ─────────────────────────────────────────────────────
 
     describe('MARKER_TYPE_LIST', function () {
-        it('包含所有 6 种标记类型名称', function () {
+        it('包含所有 5 种标记类型名称（已移除 subsystem_locator）', function () {
             if (!Array.isArray(markers.MARKER_TYPE_LIST)) {
                 throw new Error('MARKER_TYPE_LIST should be an array');
             }
-            if (markers.MARKER_TYPE_LIST.length !== 6) {
-                throw new Error('Expected 6 entries, got ' + markers.MARKER_TYPE_LIST.length);
+            if (markers.MARKER_TYPE_LIST.length !== 5) {
+                throw new Error('Expected 5 entries, got ' + markers.MARKER_TYPE_LIST.length);
             }
-            var expected = ['sub_part', 'hit_box', 'connector', 'seat', 'lighting', 'subsystem_locator'];
+            var expected = ['sub_part', 'hit_box', 'connector', 'seat', 'lighting'];
             expected.forEach(function (t) {
                 if (markers.MARKER_TYPE_LIST.indexOf(t) === -1) {
                     throw new Error('Missing type in MARKER_TYPE_LIST: ' + t);

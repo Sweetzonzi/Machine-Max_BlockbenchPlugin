@@ -24,7 +24,7 @@ const MARKER_TYPES = {
     connector: { label: '连接点', icon: 'fa-plug', color: '#3AA83A' },
     seat: { label: '座位', icon: 'fa-chair', color: '#D9C94A' },
     lighting: { label: '灯光', icon: 'fa-lightbulb', color: '#D97E4A' },
-    subsystem_locator: { label: '子系统', icon: 'fa-cog', color: '#9B4AD9' },
+
 };
 
 const MARKER_TYPE_LIST = Object.keys(MARKER_TYPES);
@@ -45,7 +45,7 @@ function getColor(type) {
 
 function getMarkerTypesForElement(element) {
     if (element instanceof Locator) {
-        return ['connector', 'seat', 'lighting', 'subsystem_locator'];
+        return ['connector', 'seat', 'lighting'];
     } else if (element instanceof Group) {
         return ['sub_part', 'hit_box'];
     }
@@ -188,6 +188,25 @@ function clearMarker(projectConfig, partId, variantName, uuid) {
             if (sp.hit_boxes) {
                 delete sp.hit_boxes[uuid];
                 log.debug('clearMarker: 已清理 hit_boxes 条目', { partId, variant: variantName, spKey: marker.config_ref, uuid: uuid });
+            }
+        }
+    }
+
+    // 清理连接点标记对应的 sub_part.connectors 条目
+    if (marker && marker.type === 'connector') {
+        var variant = part.variants && part.variants[variantName];
+        if (variant && variant.sub_parts) {
+            // 遍历所有子零件，清理包含该 locator 名称的连接点条目
+            for (var sk in variant.sub_parts) {
+                if (variant.sub_parts[sk].connectors) {
+                    // 通过 element_markers 反向查找关联的元素名称比较困难，
+                    // 使用 uuid 在 clearMarker 被调用前获取元素名称
+                    var el = (typeof Locator !== 'undefined') ? Locator.all.find(function(l) { return l.uuid === uuid; }) : null;
+                    if (el && variant.sub_parts[sk].connectors[el.name]) {
+                        delete variant.sub_parts[sk].connectors[el.name];
+                        log.debug('clearMarker: 已清理 connectors 条目', { partId, variant: variantName, spKey: sk, locator: el.name });
+                    }
+                }
             }
         }
     }

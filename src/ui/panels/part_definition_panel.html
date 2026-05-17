@@ -103,22 +103,19 @@
             :config="selectedHitBoxConfig"
             :element-name="selectedElementName"
             :parent-sub-part-key="hitBoxParentSubPartKey"
-            :material-defs="config ? config.material_defs || {} : {}"
+            :material-defs="availableMaterials"
             @field-change="updateHitBoxField"
             @overwrite-change="updateHitBoxOverwrite" />
 
-        <!-- 连接点属性（占位，后续阶段实现） -->
-        <div v-else-if="isConnectorSelected" class="mm-section">
-            <div class="mm-sticky-title">
-                <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">
-                    <span class="mm-marker-badge" style="background:#3AA83A">连接点</span>
-                    {{ selectedElementName }}
-                </h3>
-            </div>
-            <p class="mm-element-info">类型: {{ selectedElement ? getElementType(selectedElement) : '未知' }}</p>
-            <p class="mm-element-info">UUID: {{ selectedElement ? selectedElement.uuid : '—' }}</p>
-            <p class="mm-panel-hint">连接点属性编辑将在后续版本实现</p>
-        </div>
+        <!-- 连接点属性面板 -->
+        <mm-connector-panel v-else-if="isConnectorSelected"
+            :config="selectedConnectorConfig"
+            :element-name="selectedElementName"
+            :parent-sub-part-key="connectorParentSubPartKey"
+            :connector-defs="availableConnectorDefs"
+            :all-locator-names="allLocatorNames"
+            @field-change="updateConnectorField"
+            @locator-change="migrateConnectorLocator" />
 
         <!-- 未标记或未知类型 -->
         <div v-else class="mm-section">

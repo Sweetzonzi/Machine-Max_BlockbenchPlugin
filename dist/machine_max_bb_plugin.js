@@ -2956,8 +2956,7 @@
         hit_box: { label: "\u78B0\u649E\u7BB1", icon: "fa-shield", color: "#D94A4A" },
         connector: { label: "\u8FDE\u63A5\u70B9", icon: "fa-plug", color: "#3AA83A" },
         seat: { label: "\u5EA7\u4F4D", icon: "fa-chair", color: "#D9C94A" },
-        lighting: { label: "\u706F\u5149", icon: "fa-lightbulb", color: "#D97E4A" },
-        subsystem_locator: { label: "\u5B50\u7CFB\u7EDF", icon: "fa-cog", color: "#9B4AD9" }
+        lighting: { label: "\u706F\u5149", icon: "fa-lightbulb", color: "#D97E4A" }
       };
       var MARKER_TYPE_LIST = Object.keys(MARKER_TYPES);
       function getMarkerInfo(type) {
@@ -2973,7 +2972,7 @@
       }
       function getMarkerTypesForElement(element) {
         if (element instanceof Locator) {
-          return ["connector", "seat", "lighting", "subsystem_locator"];
+          return ["connector", "seat", "lighting"];
         } else if (element instanceof Group) {
           return ["sub_part", "hit_box"];
         }
@@ -3087,6 +3086,22 @@
             if (sp.hit_boxes) {
               delete sp.hit_boxes[uuid];
               log2.debug("clearMarker: \u5DF2\u6E05\u7406 hit_boxes \u6761\u76EE", { partId, variant: variantName, spKey: marker.config_ref, uuid });
+            }
+          }
+        }
+        if (marker && marker.type === "connector") {
+          var variant = part.variants && part.variants[variantName];
+          if (variant && variant.sub_parts) {
+            for (var sk in variant.sub_parts) {
+              if (variant.sub_parts[sk].connectors) {
+                var el = typeof Locator !== "undefined" ? Locator.all.find(function(l) {
+                  return l.uuid === uuid;
+                }) : null;
+                if (el && variant.sub_parts[sk].connectors[el.name]) {
+                  delete variant.sub_parts[sk].connectors[el.name];
+                  log2.debug("clearMarker: \u5DF2\u6E05\u7406 connectors \u6761\u76EE", { partId, variant: variantName, spKey: sk, locator: el.name });
+                }
+              }
             }
           }
         }
@@ -3888,7 +3903,35 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
+      var { getMarkersForVariant, detectOwnerSubPart } = require_element_markers();
       var log2 = createLogger2("Validation");
+      function checkOrphanedMarkers(config, partId, vName, errors) {
+        var markers = getMarkersForVariant(config, partId, vName);
+        for (var uuid in markers) {
+          var marker = markers[uuid];
+          if (marker.type === "hit_box") {
+            var group = typeof Group !== "undefined" ? Group.all.find(function(g) {
+              return g.uuid === uuid;
+            }) : null;
+            if (group) {
+              var owner = detectOwnerSubPart(config, partId, vName, group);
+              if (!owner) {
+                errors.push('\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u78B0\u649E\u7BB1 "' + group.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u4E0D\u4F1A\u88AB\u9632\u62A4\u8BA1\u7B97\u5904\u7406\uFF09');
+              }
+            }
+          } else if (marker.type === "connector") {
+            var loc = typeof Locator !== "undefined" ? Locator.all.find(function(l) {
+              return l.uuid === uuid;
+            }) : null;
+            if (loc) {
+              var owner = detectOwnerSubPart(config, partId, vName, loc);
+              if (!owner) {
+                errors.push('\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u8FDE\u63A5\u70B9 "' + loc.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u5C06\u4E0D\u4F1A\u8BA1\u5165\u5BFC\u51FA\uFF09');
+              }
+            }
+          }
+        }
+      }
       function runValidation(config) {
         const errors = [];
         const parts = config.parts || {};
@@ -3918,6 +3961,7 @@
                 errors.push(`\u96F6\u4EF6 "${partId}"/${vName} \u5B50\u96F6\u4EF6 "${spName}"\uFF1A\u8D28\u91CF\u5FC5\u987B\u5927\u4E8E 0`);
               }
             }
+            checkOrphanedMarkers(config, partId, vName, errors);
           }
         }
         return errors;
@@ -7520,18 +7564,16 @@
             } });
           }
         } else if (el instanceof Locator) {
-          var locatorTypes = ["connector", "seat", "lighting", "subsystem_locator"];
+          var locatorTypes = ["connector", "seat", "lighting"];
           var labels = {
             connector: "\u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9",
             seat: "\u6807\u8BB0\u4E3A\u5EA7\u4F4D\u5B9A\u4F4D\u70B9",
-            lighting: "\u6807\u8BB0\u4E3A\u706F\u5149\u5B9A\u4F4D\u70B9",
-            subsystem_locator: "\u6807\u8BB0\u4E3A\u5B50\u7CFB\u7EDF\u5B9A\u4F4D\u70B9"
+            lighting: "\u6807\u8BB0\u4E3A\u706F\u5149\u5B9A\u4F4D\u70B9"
           };
           var icons = {
             connector: "link",
             seat: "event_seat",
-            lighting: "lightbulb",
-            subsystem_locator: "precision_manufacturing"
+            lighting: "lightbulb"
           };
           for (var t = 0; t < locatorTypes.length; t++) {
             var type = locatorTypes[t];
@@ -7539,6 +7581,27 @@
               items.push({ name: labels[type], icon: icons[type], click: /* @__PURE__ */ (function(capturedType) {
                 return function() {
                   log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A" + capturedType, { uuid: el.uuid, name: el.name });
+                  if (capturedType === "connector") {
+                    var owner = detectOwnerSubPart(config, activePartId, activeVariantName, el);
+                    var spKey = owner ? owner.spKey : null;
+                    if (spKey) {
+                      var variant = config.parts[activePartId].variants[activeVariantName];
+                      if (!variant.sub_parts) variant.sub_parts = {};
+                      if (!variant.sub_parts[spKey]) {
+                        var cfgMod2 = require_config();
+                        variant.sub_parts[spKey] = cfgMod2.createSubPartConfig();
+                      }
+                      if (!variant.sub_parts[spKey].connectors) {
+                        variant.sub_parts[spKey].connectors = {};
+                      }
+                      var locName = el.name;
+                      if (!variant.sub_parts[spKey].connectors[locName]) {
+                        variant.sub_parts[spKey].connectors[locName] = {
+                          definition: ""
+                        };
+                      }
+                    }
+                  }
                   setMarker(config, activePartId, activeVariantName, el.uuid, capturedType, null);
                   var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_mode();
                   refreshOutlinerIcons2();
@@ -8125,8 +8188,17 @@
     </div>
 
     <div class="mm-section">
-        <h4 class="mm-section-title">\u8FDE\u63A5\u70B9 ({{ connectorCount }} \u4E2A)</h4>
-        <p class="mm-element-info">{{ connectorCount }} \u4E2A\uFF08\u540E\u7EED\u7248\u672C\u5B9E\u73B0\u5217\u8868\uFF09</p>
+        <h4 class="mm-section-title">\u8FDE\u63A5\u70B9 ({{ connectorCount }})</h4>
+        <div v-if="connectorCount === 0" class="mm-element-info" style="color:#888">
+            \u6682\u65E0\u8FDE\u63A5\u70B9 \u2014 \u5728 Outliner \u4E2D\u53F3\u952E Locator \u5E76\u9009\u62E9"\u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9"
+        </div>
+        <div v-for="(conn, connKey) in config.connectors" :key="connKey" class="mm-sub-item-row" :title="connKey">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#3AA83A;font-size:10px;padding:0 4px">CN</span>
+                {{ resolveConnectorName(connKey) }}
+            </span>
+            <span class="mm-sub-item-meta">{{ conn.definition || '\uFF08\u672A\u6307\u5B9A\u5B9A\u4E49\uFF09' }}</span>
+        </div>
     </div>
 
     <div class="mm-section">
@@ -8212,6 +8284,12 @@
               return g.name === hbKey || g.uuid === hbKey;
             });
             return el ? el.name : hbKey;
+          },
+          resolveConnectorName: function(connKey) {
+            var el = Locator.all.find(function(l) {
+              return l.name === connKey || l.uuid === connKey;
+            });
+            return el ? el.name : connKey;
           }
         }
       });
@@ -8392,6 +8470,112 @@
     }
   });
 
+  // src/ui/ConnectorPanel.vue.js
+  var require_ConnectorPanel_vue = __commonJS({
+    "src/ui/ConnectorPanel.vue.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      Vue.component("mm-connector-panel", {
+        template: true ? `<div class="mm-section">\r
+    <div class="mm-sticky-title">\r
+        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">\r
+            <span class="mm-marker-badge" style="background:#3AA83A">\u8FDE\u63A5\u70B9</span>\r
+            {{ elementName }}\r
+        </h3>\r
+    </div>\r
+\r
+    <div class="mm-section">\r
+        <h4 class="mm-section-title">\u5F52\u5C5E</h4>\r
+        <div class="mm-field">\r
+            <label>\u6240\u5C5E\u5B50\u96F6\u4EF6</label>\r
+            <span class="mm-tag" style="background:#4A90D9;cursor:default" :title="'\u7531\u9AA8\u9ABC\u5C42\u7EA7\u81EA\u52A8\u68C0\u6D4B'">\r
+                {{ parentSubPartKey || '\uFF08\u6E38\u79BB \u2014 \u65E0\u5F52\u5C5E\uFF09' }}\r
+            </span>\r
+        </div>\r
+    </div>\r
+\r
+    <div class="mm-section">\r
+        <h4 class="mm-section-title">\u5B9A\u4F4D\u5668</h4>\r
+        <div class="mm-field">\r
+            <label title="\u8BE5\u8FDE\u63A5\u70B9\u7ED1\u5B9A\u7684\u5B9A\u4F4D\u5668\u540D\u79F0\uFF0C\u4FEE\u6539\u540E\u5C06\u81EA\u52A8\u8FC1\u79FB\u6807\u8BB0\u548C\u914D\u7F6E">\u5173\u8054\u5B9A\u4F4D\u5668</label>\r
+            <input type="text" class="mm-input"\r
+                v-model="editingLocatorName"\r
+                @change="onLocatorInput($event.target.value)"\r
+                :list="locatorListId"\r
+                placeholder="\u641C\u7D22\u5E76\u9009\u62E9\u5B9A\u4F4D\u5668\u2026" />\r
+            <datalist :id="locatorListId">\r
+                <option v-for="(name, idx) in allLocatorNames" :key="idx" :value="name" />\r
+            </datalist>\r
+            <p v-if="allLocatorNames.length === 0" class="mm-element-info" style="color:#888;font-size:10px">\r
+                \u5F53\u524D\u6A21\u578B\u4E2D\u6CA1\u6709\u4EFB\u4F55\u5B9A\u4F4D\u5668\uFF08Locator\uFF09\r
+            </p>\r
+        </div>\r
+    </div>\r
+\r
+    <div class="mm-section">\r
+        <h4 class="mm-section-title">\u8FDE\u63A5\u70B9\u5B9A\u4E49</h4>\r
+        <div class="mm-field">\r
+            <label title="\u8FDE\u63A5\u70B9\u5B9A\u4E49ID\uFF0C\u51B3\u5B9A\u8FDE\u63A5\u70B9\u7684\u7C7B\u578B\u548C\u7269\u7406\u5C5E\u6027">\u5B9A\u4E49</label>\r
+            <select class="mm-select" :value="config.definition" @change="onDefinitionChange($event.target.value)">\r
+                <option value="" disabled>\u2014 \u8BF7\u9009\u62E9\u8FDE\u63A5\u70B9\u5B9A\u4E49 \u2014</option>\r
+                <option v-for="(def, defKey) in connectorDefs" :key="defKey" :value="defKey">\r
+                    {{ defKey }}\r
+                </option>\r
+            </select>\r
+            <p v-if="!config.definition" class="mm-element-info" style="color:#e74c3c;font-size:11px;margin-top:2px">\r
+                \u26A0 \u8BF7\u9009\u62E9\u4E00\u4E2A\u8FDE\u63A5\u70B9\u5B9A\u4E49\r
+            </p>\r
+        </div>\r
+    </div>\r
+</div>` : "<p>\u8FDE\u63A5\u70B9\u9762\u677F\u52A0\u8F7D\u4E2D...</p>",
+        props: {
+          config: { type: Object, required: true },
+          elementName: { type: String, default: "" },
+          parentSubPartKey: { type: String, default: "" },
+          connectorDefs: { type: Object, default: function() {
+            return {};
+          } },
+          allLocatorNames: { type: Array, default: function() {
+            return [];
+          } }
+        },
+        data: function() {
+          return {
+            editingLocatorName: this.elementName || ""
+          };
+        },
+        watch: {
+          elementName: function(val) {
+            if (val !== this.editingLocatorName) {
+              this.editingLocatorName = val;
+            }
+          }
+        },
+        computed: {
+          locatorListId: function() {
+            return "mm-connector-loc-list-" + this._uid;
+          }
+        },
+        methods: {
+          onDefinitionChange: function(value) {
+            this.$emit("field-change", "definition", value);
+          },
+          onLocatorInput: function(value) {
+            if (value !== this.elementName) {
+              this.$emit("locator-change", this.elementName, value);
+            }
+          }
+        }
+      });
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {};
+      }
+    }
+  });
+
   // src/ui/App.vue.js
   var require_App_vue = __commonJS({
     "src/ui/App.vue.js"(exports, module) {
@@ -8406,10 +8590,12 @@
       var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_icons();
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
+      var content_pack_manager = require_content_pack_manager();
       var { showAddTagDialog, _hashTagColor } = require_tag_dialog_helper();
       var log2 = createLogger2("UI");
       require_SubPartPanel_vue();
       require_HitBoxPanel_vue();
+      require_ConnectorPanel_vue();
       var MMMainPanel = Vue.component("mm-main-panel", {
         template: `<div class="mm-panel" v-if="config">
     <div class="mm-panel-header">
@@ -8516,22 +8702,19 @@
             :config="selectedHitBoxConfig"
             :element-name="selectedElementName"
             :parent-sub-part-key="hitBoxParentSubPartKey"
-            :material-defs="config ? config.material_defs || {} : {}"
+            :material-defs="availableMaterials"
             @field-change="updateHitBoxField"
             @overwrite-change="updateHitBoxOverwrite" />
 
-        <!-- \u8FDE\u63A5\u70B9\u5C5E\u6027\uFF08\u5360\u4F4D\uFF0C\u540E\u7EED\u9636\u6BB5\u5B9E\u73B0\uFF09 -->
-        <div v-else-if="isConnectorSelected" class="mm-section">
-            <div class="mm-sticky-title">
-                <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">
-                    <span class="mm-marker-badge" style="background:#3AA83A">\u8FDE\u63A5\u70B9</span>
-                    {{ selectedElementName }}
-                </h3>
-            </div>
-            <p class="mm-element-info">\u7C7B\u578B: {{ selectedElement ? getElementType(selectedElement) : '\u672A\u77E5' }}</p>
-            <p class="mm-element-info">UUID: {{ selectedElement ? selectedElement.uuid : '\u2014' }}</p>
-            <p class="mm-panel-hint">\u8FDE\u63A5\u70B9\u5C5E\u6027\u7F16\u8F91\u5C06\u5728\u540E\u7EED\u7248\u672C\u5B9E\u73B0</p>
-        </div>
+        <!-- \u8FDE\u63A5\u70B9\u5C5E\u6027\u9762\u677F -->
+        <mm-connector-panel v-else-if="isConnectorSelected"
+            :config="selectedConnectorConfig"
+            :element-name="selectedElementName"
+            :parent-sub-part-key="connectorParentSubPartKey"
+            :connector-defs="availableConnectorDefs"
+            :all-locator-names="allLocatorNames"
+            @field-change="updateConnectorField"
+            @locator-change="migrateConnectorLocator" />
 
         <!-- \u672A\u6807\u8BB0\u6216\u672A\u77E5\u7C7B\u578B -->
         <div v-else class="mm-section">
@@ -8616,6 +8799,20 @@
               return l.name;
             });
           },
+          /**
+           * 所有可用材料定义（通过内容包管理器合并加载）
+           */
+          availableMaterials: function() {
+            if (!this.config) return {};
+            return content_pack_manager.loadMergedDefs(this.config, "materials").defs;
+          },
+          /**
+           * 所有可用连接点定义（通过内容包管理器合并加载）
+           */
+          availableConnectorDefs: function() {
+            if (!this.config) return {};
+            return content_pack_manager.loadMergedDefs(this.config, "connectors").defs;
+          },
           selectedMarker: function() {
             if (!this.selectedElement) return null;
             const part = this.currentPart;
@@ -8683,15 +8880,35 @@
             return detectOwnerSubPart(config, this.activePartId, this.activeVariantName, this.selectedElement);
           },
           /**
+           * 动态检测连接点所属子零件（沿父链向上遍历）
+           */
+          connectorOwner: function() {
+            if (!this.selectedElement || !this.isConnectorSelected) return null;
+            if (!this.config) return null;
+            return detectOwnerSubPart(this.config, this.activePartId, this.activeVariantName, this.selectedElement);
+          },
+          /**
+           * 连接点所属子零件的 key
+           */
+          connectorParentSubPartKey: function() {
+            var owner = this.connectorOwner;
+            return owner ? owner.spKey : "";
+          },
+          /**
            * 当前选中碰撞箱的配置对象（从所属子零件的 hit_boxes 中获取）
+           * 无归属时返回游离配置以确保面板正常渲染
            */
           selectedHitBoxConfig: function() {
             if (!this.isHitBoxSelected) return null;
             var variant = this.currentVariant;
-            if (!variant || !variant.sub_parts) return null;
+            if (!variant || !variant.sub_parts) {
+              return { _orphan: true, id: "part", type: "box", material: "", thickness: 1, condition: "true" };
+            }
             var owner = this.hitBoxOwner;
             var spKey = owner ? owner.spKey : null;
-            if (!spKey || !variant.sub_parts[spKey]) return null;
+            if (!spKey || !variant.sub_parts[spKey]) {
+              return { _orphan: true, id: "part", type: "box", material: "", thickness: 1, condition: "true" };
+            }
             var sp = variant.sub_parts[spKey];
             if (!sp.hit_boxes) this.$set(sp, "hit_boxes", {});
             var hbKey = this.selectedElementName;
@@ -8712,6 +8929,41 @@
           hitBoxParentSubPartKey: function() {
             var owner = this.hitBoxOwner;
             return owner ? owner.spKey : "";
+          },
+          /**
+           * 当前选中连接点的配置对象（从所属子零件的 connectors 中获取）
+           * 自动创建缺失条目以保持数据一致。无归属时返回游离配置。
+           */
+          selectedConnectorConfig: function() {
+            if (!this.isConnectorSelected) return null;
+            var marker = this.selectedMarker;
+            if (!marker) return null;
+            var variant = this.currentVariant;
+            if (!variant) return { _orphan: true, definition: marker.config_ref || "" };
+            if (!variant.sub_parts) {
+              this.$set(variant, "sub_parts", {});
+            }
+            var owner = this.connectorOwner;
+            var spKey = owner ? owner.spKey : null;
+            if (!spKey) {
+              return { _orphan: true, definition: marker.config_ref || "" };
+            }
+            if (!variant.sub_parts[spKey]) {
+              var spConfig = createSubPartConfig();
+              spConfig.start_bone = spKey;
+              this.$set(variant.sub_parts, spKey, spConfig);
+            }
+            var sp = variant.sub_parts[spKey];
+            if (!sp.connectors) {
+              this.$set(sp, "connectors", {});
+            }
+            var locatorName = this.selectedElementName;
+            if (!sp.connectors[locatorName]) {
+              this.$set(sp.connectors, locatorName, {
+                definition: marker.config_ref || ""
+              });
+            }
+            return sp.connectors[locatorName] || null;
           }
         },
         methods: {
@@ -9054,6 +9306,52 @@
             log2.info("migrateSubPartStartBone: \u5B8C\u6210");
           },
           /**
+           * 迁移连接点定位器：locator 从旧名称变更为新名称时，
+           * 将 element_marker 和 connectors 中的 key 一并迁移。
+           * @param {string} oldLocName - 旧的定位器名称
+           * @param {string} newLocName - 新的定位器名称
+           */
+          migrateConnectorLocator: function(oldLocName, newLocName) {
+            if (!oldLocName || !newLocName || oldLocName === newLocName) return;
+            var part = this.currentPart;
+            var variant = this.currentVariant;
+            var variantName = this.activeVariantName;
+            if (!variant || !variant.sub_parts || !part) return;
+            var owner = this.selectedElement ? detectOwnerSubPart(this.config, this.activePartId, variantName, this.selectedElement) : null;
+            var spKey = owner ? owner.spKey : null;
+            if (!spKey || !variant.sub_parts[spKey]) return;
+            var sp = variant.sub_parts[spKey];
+            if (!sp.connectors || !sp.connectors[oldLocName]) {
+              log2.warn("migrateConnectorLocator: \u672A\u627E\u5230\u65E7\u8FDE\u63A5\u70B9\u6761\u76EE", { from: oldLocName, spKey });
+              return;
+            }
+            log2.info("migrateConnectorLocator: \u8FC1\u79FB\u8FDE\u63A5\u70B9\u5B9A\u4F4D\u5668", { from: oldLocName, to: newLocName, spKey });
+            var connConfig = sp.connectors[oldLocName];
+            this.$set(sp.connectors, newLocName, connConfig);
+            if (oldLocName !== newLocName) {
+              this.$delete(sp.connectors, oldLocName);
+            }
+            var markers = part.element_markers && part.element_markers[variantName];
+            var oldLoc = typeof Locator !== "undefined" ? Locator.all.find(function(l) {
+              return l.name === oldLocName;
+            }) : null;
+            var newLoc = typeof Locator !== "undefined" ? Locator.all.find(function(l) {
+              return l.name === newLocName;
+            }) : null;
+            if (markers && oldLoc && newLoc && oldLoc !== newLoc) {
+              var markerData = markers[oldLoc.uuid];
+              if (markerData && markerData.type === "connector") {
+                markerData.config_ref = connConfig.definition || "";
+                this.$set(markers, newLoc.uuid, markerData);
+                this.$delete(markers, oldLoc.uuid);
+                log2.debug("migrateConnectorLocator: \u6807\u8BB0\u5DF2\u4ECE " + oldLoc.uuid + " \u8FC1\u79FB\u5230 " + newLoc.uuid);
+              }
+            }
+            refreshOutlinerIcons2();
+            Blockbench.dispatchEvent("update_selection");
+            log2.info("migrateConnectorLocator: \u5B8C\u6210");
+          },
+          /**
            * 更新子零件投影面积的单个轴向分量
            */
           updateProjectedArea: function(axis, value) {
@@ -9099,11 +9397,16 @@
           },
           /**
            * 更新碰撞箱配置中的单个字段
+           * 游离碰撞箱（无归属）可编辑但不会持久化
            */
           updateHitBoxField: function(field, value) {
             const config = this.selectedHitBoxConfig;
             if (!config) {
               log2.warn("updateHitBoxField: selectedHitBoxConfig \u4E3A\u7A7A");
+              return;
+            }
+            if (config._orphan) {
+              log2.warn("updateHitBoxField: \u6E38\u79BB\u78B0\u649E\u7BB1\u4E0D\u53EF\u6301\u4E45\u5316", { field, value });
               return;
             }
             this.$set(config, field, value);
@@ -9118,11 +9421,42 @@
               log2.warn("updateHitBoxOverwrite: selectedHitBoxConfig \u4E3A\u7A7A");
               return;
             }
+            if (config._orphan) {
+              log2.warn("updateHitBoxOverwrite: \u6E38\u79BB\u78B0\u649E\u7BB1\u4E0D\u53EF\u6301\u4E45\u5316", { field, value });
+              return;
+            }
             if (!config.overwrite) {
               this.$set(config, "overwrite", {});
             }
             this.$set(config.overwrite, field, value);
             log2.debug("updateHitBoxOverwrite: \u5DF2\u66F4\u65B0", { field, value });
+          },
+          /**
+           * 更新连接点配置字段，同时同步到标记的 config_ref
+           * 游离连接点（无归属）可编辑定义选择但不会持久化
+           */
+          updateConnectorField: function(field, value) {
+            var config = this.selectedConnectorConfig;
+            if (!config) {
+              log2.warn("updateConnectorField: selectedConnectorConfig \u4E3A\u7A7A");
+              return;
+            }
+            if (config._orphan) {
+              log2.warn("updateConnectorField: \u6E38\u79BB\u8FDE\u63A5\u70B9\u4E0D\u53EF\u6301\u4E45\u5316", { field, value });
+              return;
+            }
+            this.$set(config, field, value);
+            if (field === "definition") {
+              var marker = this.selectedMarker;
+              var part = this.currentPart;
+              if (marker && part && part.element_markers && this.activeVariantName) {
+                var vMarkers = part.element_markers[this.activeVariantName];
+                if (vMarkers && vMarkers[this.selectedElement.uuid]) {
+                  vMarkers[this.selectedElement.uuid].config_ref = value;
+                }
+              }
+            }
+            log2.debug("updateConnectorField: \u5DF2\u66F4\u65B0", { field, value });
           }
         },
         mounted: function() {

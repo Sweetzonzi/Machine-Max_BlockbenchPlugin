@@ -15,6 +15,7 @@ const { createVariantConfig, createPartConfig, createSubPartConfig } = require('
 const { refreshOutlinerIcons } = require('../mode/icons.js');
 const { showToast } = require('../utils/notify.js');
 const { createLogger } = require('../utils/logger.js');
+const content_pack_manager = require('../core/content_pack_manager.js');
 var { showAddTagDialog, _hashTagColor } = require('./tag_dialog_helper.js');
 
 /** 模块日志 */
@@ -23,6 +24,8 @@ var log = createLogger('UI');
 require('./SubPartPanel.vue.js');
 
 require('./HitBoxPanel.vue.js');
+
+require('./ConnectorPanel.vue.js');
 
 const MMMainPanel = Vue.component('mm-main-panel', {
     template: TEMPLATE_PART_PANEL,
@@ -84,6 +87,20 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                     return owner && owner.spKey === spKey;
                 })
                 .map(function (l) { return l.name; });
+        },
+        /**
+         * 所有可用材料定义（通过内容包管理器合并加载）
+         */
+        availableMaterials: function () {
+            if (!this.config) return {};
+            return content_pack_manager.loadMergedDefs(this.config, 'materials').defs;
+        },
+        /**
+         * 所有可用连接点定义（通过内容包管理器合并加载）
+         */
+        availableConnectorDefs: function () {
+            if (!this.config) return {};
+            return content_pack_manager.loadMergedDefs(this.config, 'connectors').defs;
         },
         selectedMarker: function () {
             if (!this.selectedElement) return null;
@@ -157,15 +174,35 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             return detectOwnerSubPart(config, this.activePartId, this.activeVariantName, this.selectedElement);
         },
         /**
+         * 动态检测连接点所属子零件（沿父链向上遍历）
+         */
+        connectorOwner: function () {
+            if (!this.selectedElement || !this.isConnectorSelected) return null;
+            if (!this.config) return null;
+            return detectOwnerSubPart(this.config, this.activePartId, this.activeVariantName, this.selectedElement);
+        },
+        /**
+         * 连接点所属子零件的 key
+         */
+        connectorParentSubPartKey: function () {
+            var owner = this.connectorOwner;
+            return owner ? owner.spKey : '';
+        },
+        /**
          * 当前选中碰撞箱的配置对象（从所属子零件的 hit_boxes 中获取）
+         * 无归属时返回游离配置以确保面板正常渲染
          */
         selectedHitBoxConfig: function () {
             if (!this.isHitBoxSelected) return null;
             var variant = this.currentVariant;
-            if (!variant || !variant.sub_parts) return null;
+            if (!variant || !variant.sub_parts) {
+                return { _orphan: true, id: 'part', type: 'box', material: '', thickness: 1.0, condition: 'true' };
+            }
             var owner = this.hitBoxOwner;
             var spKey = owner ? owner.spKey : null;
-            if (!spKey || !variant.sub_parts[spKey]) return null;
+            if (!spKey || !variant.sub_parts[spKey]) {
+                return { _orphan: true, id: 'part', type: 'box', material: '', thickness: 1.0, condition: 'true' };
+            }
             var sp = variant.sub_parts[spKey];
             if (!sp.hit_boxes) this.$set(sp, 'hit_boxes', {});
             var hbKey = this.selectedElementName;
@@ -184,6 +221,41 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         hitBoxParentSubPartKey: function () {
             var owner = this.hitBoxOwner;
             return owner ? owner.spKey : '';
+        },
+        /**
+         * 当前选中连接点的配置对象（从所属子零件的 connectors 中获取）
+         * 自动创建缺失条目以保持数据一致。无归属时返回游离配置。
+         */
+        selectedConnectorConfig: function () {
+            if (!this.isConnectorSelected) return null;
+            var marker = this.selectedMarker;
+            if (!marker) return null;
+            var variant = this.currentVariant;
+            if (!variant) return { _orphan: true, definition: marker.config_ref || '' };
+            if (!variant.sub_parts) {
+                this.$set(variant, 'sub_parts', {});
+            }
+            var owner = this.connectorOwner;
+            var spKey = owner ? owner.spKey : null;
+            if (!spKey) {
+                return { _orphan: true, definition: marker.config_ref || '' };
+            }
+            if (!variant.sub_parts[spKey]) {
+                var spConfig = createSubPartConfig();
+                spConfig.start_bone = spKey;
+                this.$set(variant.sub_parts, spKey, spConfig);
+            }
+            var sp = variant.sub_parts[spKey];
+            if (!sp.connectors) {
+                this.$set(sp, 'connectors', {});
+            }
+            var locatorName = this.selectedElementName;
+            if (!sp.connectors[locatorName]) {
+                this.$set(sp.connectors, locatorName, {
+                    definition: marker.config_ref || '',
+                });
+            }
+            return sp.connectors[locatorName] || null;
         },
     },
     methods: {
@@ -557,6 +629,58 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             log.info('migrateSubPartStartBone: 完成');
         },
         /**
+         * 迁移连接点定位器：locator 从旧名称变更为新名称时，
+         * 将 element_marker 和 connectors 中的 key 一并迁移。
+         * @param {string} oldLocName - 旧的定位器名称
+         * @param {string} newLocName - 新的定位器名称
+         */
+        migrateConnectorLocator: function (oldLocName, newLocName) {
+            if (!oldLocName || !newLocName || oldLocName === newLocName) return;
+            var part = this.currentPart;
+            var variant = this.currentVariant;
+            var variantName = this.activeVariantName;
+            if (!variant || !variant.sub_parts || !part) return;
+
+            var owner = this.selectedElement ? detectOwnerSubPart(this.config, this.activePartId, variantName, this.selectedElement) : null;
+            var spKey = owner ? owner.spKey : null;
+            if (!spKey || !variant.sub_parts[spKey]) return;
+
+            var sp = variant.sub_parts[spKey];
+            if (!sp.connectors || !sp.connectors[oldLocName]) {
+                log.warn('migrateConnectorLocator: 未找到旧连接点条目', { from: oldLocName, spKey: spKey });
+                return;
+            }
+
+            log.info('migrateConnectorLocator: 迁移连接点定位器', { from: oldLocName, to: newLocName, spKey: spKey });
+
+            // 1) 移动 connectors 条目
+            var connConfig = sp.connectors[oldLocName];
+            this.$set(sp.connectors, newLocName, connConfig);
+            if (oldLocName !== newLocName) {
+                this.$delete(sp.connectors, oldLocName);
+            }
+
+            // 2) 更新 element_marker — 从旧 Locator 迁移到新 Locator
+            var markers = part.element_markers && part.element_markers[variantName];
+            var oldLoc = typeof Locator !== 'undefined' ? Locator.all.find(function (l) { return l.name === oldLocName; }) : null;
+            var newLoc = typeof Locator !== 'undefined' ? Locator.all.find(function (l) { return l.name === newLocName; }) : null;
+
+            if (markers && oldLoc && newLoc && oldLoc !== newLoc) {
+                var markerData = markers[oldLoc.uuid];
+                if (markerData && markerData.type === 'connector') {
+                    markerData.config_ref = connConfig.definition || '';
+                    this.$set(markers, newLoc.uuid, markerData);
+                    this.$delete(markers, oldLoc.uuid);
+                    log.debug('migrateConnectorLocator: 标记已从 ' + oldLoc.uuid + ' 迁移到 ' + newLoc.uuid);
+                }
+            }
+
+            // 3) 同步刷新
+            refreshOutlinerIcons();
+            Blockbench.dispatchEvent('update_selection');
+            log.info('migrateConnectorLocator: 完成');
+        },
+        /**
          * 更新子零件投影面积的单个轴向分量
          */
         updateProjectedArea: function (axis, value) {
@@ -602,11 +726,16 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         },
         /**
          * 更新碰撞箱配置中的单个字段
+         * 游离碰撞箱（无归属）可编辑但不会持久化
          */
         updateHitBoxField: function (field, value) {
             const config = this.selectedHitBoxConfig;
             if (!config) {
                 log.warn('updateHitBoxField: selectedHitBoxConfig 为空');
+                return;
+            }
+            if (config._orphan) {
+                log.warn('updateHitBoxField: 游离碰撞箱不可持久化', { field: field, value: value });
                 return;
             }
             this.$set(config, field, value);
@@ -621,11 +750,42 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 log.warn('updateHitBoxOverwrite: selectedHitBoxConfig 为空');
                 return;
             }
+            if (config._orphan) {
+                log.warn('updateHitBoxOverwrite: 游离碰撞箱不可持久化', { field: field, value: value });
+                return;
+            }
             if (!config.overwrite) {
                 this.$set(config, 'overwrite', {});
             }
             this.$set(config.overwrite, field, value);
             log.debug('updateHitBoxOverwrite: 已更新', { field: field, value: value });
+        },
+        /**
+         * 更新连接点配置字段，同时同步到标记的 config_ref
+         * 游离连接点（无归属）可编辑定义选择但不会持久化
+         */
+        updateConnectorField: function (field, value) {
+            var config = this.selectedConnectorConfig;
+            if (!config) {
+                log.warn('updateConnectorField: selectedConnectorConfig 为空');
+                return;
+            }
+            if (config._orphan) {
+                log.warn('updateConnectorField: 游离连接点不可持久化', { field: field, value: value });
+                return;
+            }
+            this.$set(config, field, value);
+            if (field === 'definition') {
+                var marker = this.selectedMarker;
+                var part = this.currentPart;
+                if (marker && part && part.element_markers && this.activeVariantName) {
+                    var vMarkers = part.element_markers[this.activeVariantName];
+                    if (vMarkers && vMarkers[this.selectedElement.uuid]) {
+                        vMarkers[this.selectedElement.uuid].config_ref = value;
+                    }
+                }
+            }
+            log.debug('updateConnectorField: 已更新', { field: field, value: value });
         },
     },
     mounted: function () {

@@ -132,8 +132,17 @@
     </div>
 
     <div class="mm-section">
-        <h4 class="mm-section-title">连接点 ({{ connectorCount }} 个)</h4>
-        <p class="mm-element-info">{{ connectorCount }} 个（后续版本实现列表）</p>
+        <h4 class="mm-section-title">连接点 ({{ connectorCount }})</h4>
+        <div v-if="connectorCount === 0" class="mm-element-info" style="color:#888">
+            暂无连接点 — 在 Outliner 中右键 Locator 并选择"标记为连接点"
+        </div>
+        <div v-for="(conn, connKey) in config.connectors" :key="connKey" class="mm-sub-item-row" :title="connKey">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#3AA83A;font-size:10px;padding:0 4px">CN</span>
+                {{ resolveConnectorName(connKey) }}
+            </span>
+            <span class="mm-sub-item-meta">{{ conn.definition || '（未指定定义）' }}</span>
+        </div>
     </div>
 
     <div class="mm-section">
