@@ -41,11 +41,18 @@ function registerMachineMaxMenu() {
 
         {
             name: '内容包设置',
-            icon: 'settings',
+            icon: 'fa-folder-open',
             id: 'mm_menu_pack_settings',
             click: function () {
                 log.info('MachineMax 菜单: 点击内容包设置');
-                _showPackSettingsDialog();
+                var config = getConfig();
+                if (!config) {
+                    showToast('请先打开项目', 'warning');
+                    return;
+                }
+                require('./dialogs/pack_setup_dialog.js').showPackSetupDialog(config, function (updatedConfig) {
+                    saveConfig();
+                });
             },
         },
 
@@ -56,14 +63,12 @@ function registerMachineMaxMenu() {
             icon: 'Texture',
             id: 'mm_menu_materials',
             click: function () {
-                _showPlaceholder('材料类型管理',
-                    '在此处可以创建自定义材料（Material），为零件赋予不同的物理属性。\n\n' +
-                    '每个材料定义包含：\n' +
-                    '  • friction — 摩擦系数\n' +
-                    '  • restitution — 弹性恢复\n' +
-                    '  • density — 密度\n' +
-                    '  • armor_thickness / armor_toughness — 装甲参数\n\n' +
-                    '此功能将在后续版本中提供。');
+                var config = getConfig();
+                if (!config) {
+                    showToast('请先打开项目', 'warning');
+                    return;
+                }
+                require('./dialogs/material_dialog.js').showMaterialManagerDialog(config);
             },
         },
         {
@@ -71,13 +76,12 @@ function registerMachineMaxMenu() {
             icon: 'precision_manufacturing',
             id: 'mm_menu_subsystems',
             click: function () {
-                _showPlaceholder('子系统型号管理',
-                    '在此处可以创建并管理子系统型号（Subsystem），定义引擎、变速箱、座椅等\n' +
-                    '功能模块的静态参数。\n\n' +
-                    '支持的子系统类型包括：\n' +
-                    '  engine, motor, gearbox, seat, wheel_driver,\n' +
-                    '  car_controller, lighting, item_storage 等\n\n' +
-                    '此功能将在后续版本中提供。');
+                var config = getConfig();
+                if (!config) {
+                    showToast('请先打开项目', 'warning');
+                    return;
+                }
+                require('./dialogs/subsystem_dialog.js').showSubsystemManagerDialog(config);
             },
         },
         {
@@ -85,15 +89,12 @@ function registerMachineMaxMenu() {
             icon: 'link',
             id: 'mm_menu_connectors',
             click: function () {
-                _showPlaceholder('连接点定义管理',
-                    '在此处可以创建并管理连接点（Connector）静态定义，\n' +
-                    '决定零件之间的连接规则。\n\n' +
-                    '每个连接点定义包含：\n' +
-                    '  • type — 连接类型（Simple/Fixed/Rotational/…）\n' +
-                    '  • direction — 连接方向\n' +
-                    '  • required_tags / accepted_tags / rejected_tags — 标签过滤\n' +
-                    '  • joints — 关节配置\n\n' +
-                    '此功能将在后续版本中提供。');
+                var config = getConfig();
+                if (!config) {
+                    showToast('请先打开项目', 'warning');
+                    return;
+                }
+                require('./dialogs/connector_dialog.js').showConnectorManagerDialog(config);
             },
         },
     ], {
@@ -552,54 +553,67 @@ function _executeExport(config, packMeta, exportDir, packFolderName) {
         }
     }
 
-    // === 连接点 ===
-    var genConnectors = require('../generators/connector_generator.js');
-    var allConnectors = genConnectors.generateAllConnectors(config);
-    if (allConnectors && Object.keys(allConnectors).length > 0) {
-        for (var connId in allConnectors) {
-            if (allConnectors.hasOwnProperty(connId)) {
-                var connLoc = fileWriter.extractResourceLocation(connId, ns);
-                var connBaseDir = path.join(packRoot, connLoc.ns, 'connectors');
-                fileWriter.writeJSONFile(
-                    _resolveTargetDir(connBaseDir, connLoc.path, isFlat),
-                    connLoc.path + '.json',
-                    allConnectors[connId]
-                );
-                stats.connectors++;
+    // === 从内容包目录复制连接点/子系统/材料 ===
+    var packDir = config.contentPackPath;
+    if (packDir && fs.existsSync(packDir)) {
+        // 辅助函数：复制目录中所有 .json 文件到目标目录
+        function _copyJsonFiles(srcDir, targetBaseDir, statsKey, flat) {
+            if (!fs.existsSync(srcDir)) return;
+            var files = fs.readdirSync(srcDir);
+            var i, fileName, srcFile, content, id, loc, targetDir;
+            for (i = 0; i < files.length; i++) {
+                fileName = files[i];
+                if (fileName.indexOf('.json') !== fileName.length - 5) continue;
+                srcFile = path.join(srcDir, fileName);
+                try {
+                    content = JSON.parse(fs.readFileSync(srcFile, 'utf8'));
+                    id = fileName.slice(0, -5); // 去掉 .json
+                    loc = fileWriter.extractResourceLocation(id, ns);
+                    targetDir = _resolveTargetDir(targetBaseDir, loc.path, flat);
+                    fileWriter.writeJSONFile(targetDir, loc.path + '.json', content);
+                    stats[statsKey]++;
+                } catch (e) {
+                    log.warn('复制文件失败: ' + srcFile, e);
+                }
             }
         }
-    }
 
-    // === 子系统 ===
-    var genSubsystems = require('../generators/subsystem_generator.js');
-    var allSubsystems = genSubsystems.generateAllSubsystems(config);
-    if (allSubsystems && Object.keys(allSubsystems).length > 0) {
-        for (var subId in allSubsystems) {
-            if (allSubsystems.hasOwnProperty(subId)) {
-                var subLoc = fileWriter.extractResourceLocation(subId, ns);
-                var subBaseDir = path.join(packRoot, subLoc.ns, 'subsystems');
-                fileWriter.writeJSONFile(
-                    _resolveTargetDir(subBaseDir, subLoc.path, isFlat),
-                    subLoc.path + '.json',
-                    allSubsystems[subId]
-                );
-                stats.subsystems++;
-            }
-        }
-    }
+        // 复制连接点
+        var connSrcDir = path.join(packDir, ns, 'connectors');
+        var connTargetBase = path.join(packRoot, ns, 'connectors');
+        _copyJsonFiles(connSrcDir, connTargetBase, 'connectors', isFlat);
 
-    // === 材料 ===
-    var genMaterials = require('../generators/material_generator.js');
-    var allMaterials = genMaterials.generateAllMaterials(config);
-    if (allMaterials && Object.keys(allMaterials).length > 0) {
-        for (var matId in allMaterials) {
-            if (allMaterials.hasOwnProperty(matId)) {
-                var loc = fileWriter.extractResourceLocation(matId, ns);
-                var matDir = path.join(packRoot, loc.ns, 'materials');
-                fileWriter.writeJSONFile(matDir, loc.path + '.json', allMaterials[matId]);
-                stats.materials++;
+        // 复制子系统
+        var subSrcDir = path.join(packDir, ns, 'subsystems');
+        var subTargetBase = path.join(packRoot, ns, 'subsystems');
+        _copyJsonFiles(subSrcDir, subTargetBase, 'subsystems', isFlat);
+
+        // 复制材料
+        var matSrcDir = path.join(packDir, ns, 'materials');
+        var matTargetDir = path.join(packRoot, ns, 'materials');
+        _copyJsonFiles(matSrcDir, matTargetDir, 'materials', isFlat);
+
+        // 复制依赖包定义（dependency 目录下的所有 .json）
+        var depSrcDir = path.join(packDir, 'dependency');
+        if (fs.existsSync(depSrcDir)) {
+            var depTargetDir = path.join(packRoot, 'dependency');
+            fileWriter.ensureDir(depTargetDir);
+            var depFiles = fs.readdirSync(depSrcDir);
+            var j, depFile, depSrcFile, depContent;
+            for (j = 0; j < depFiles.length; j++) {
+                depFile = depFiles[j];
+                if (depFile.indexOf('.json') !== depFile.length - 5) continue;
+                depSrcFile = path.join(depSrcDir, depFile);
+                try {
+                    depContent = fs.readFileSync(depSrcFile, 'utf8');
+                    fs.writeFileSync(path.join(depTargetDir, depFile), depContent, 'utf8');
+                } catch (e) {
+                    log.warn('复制依赖包定义失败: ' + depSrcFile, e);
+                }
             }
         }
+    } else {
+        log.warn('内容包目录未设置或不存在，跳过连接点/子系统/材料复制: ' + packDir);
     }
 
     log.info('导出完成, 零件=' + stats.parts + ', 连接点=' + stats.connectors + ', 子系统=' + stats.subsystems + ', 材料=' + stats.materials + ', 语言=' + stats.langs);
