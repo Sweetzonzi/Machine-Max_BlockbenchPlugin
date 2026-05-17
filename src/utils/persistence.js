@@ -121,13 +121,21 @@ function saveConfig() {
     try {
         const fs = require('fs');
         const path = require('path');
+        // 侧载文件仅保存 v4 配置子集（不含旧版 *_defs 等废弃字段）
         fs.writeFileSync(
             standalonePath,
             JSON.stringify({
                 $schema_version: config_defaults.CONFIG_VERSION,
                 bbmodel: path.basename(bbmodelPath),
                 timestamp: Date.now(),
-                config: config,
+                config: {
+                    $schema_version: config.$schema_version,
+                    parts: config.parts,
+                    _uiState: config._uiState,
+                    contentPackPath: config.contentPackPath,
+                    dependencyPaths: config.dependencyPaths,
+                    modelFile: config.modelFile,
+                },
             }, null, 2),
             'utf-8'
         );
@@ -137,6 +145,44 @@ function saveConfig() {
     }
 
     log.info('配置已保存');
+}
+
+/**
+ * 设置内容包路径
+ * @param {Object} config - MM 项目配置
+ * @param {string} packPath - 内容包根目录路径
+ * @returns {Object} 修改后的 config
+ */
+function setPackPath(config, packPath) {
+    config.contentPackPath = packPath;
+    return config;
+}
+
+/**
+ * 添加依赖内容包路径（去重）
+ * @param {Object} config - MM 项目配置
+ * @param {string} depPath - 依赖内容包的根目录路径
+ * @returns {Object} 修改后的 config
+ */
+function addDependencyPath(config, depPath) {
+    if (!config.dependencyPaths) config.dependencyPaths = [];
+    if (config.dependencyPaths.indexOf(depPath) === -1) {
+        config.dependencyPaths.push(depPath);
+    }
+    return config;
+}
+
+/**
+ * 移除依赖内容包路径
+ * @param {Object} config - MM 项目配置
+ * @param {string} depPath - 要移除的依赖路径
+ * @returns {Object} 修改后的 config
+ */
+function removeDependencyPath(config, depPath) {
+    if (!config.dependencyPaths) return config;
+    var idx = config.dependencyPaths.indexOf(depPath);
+    if (idx !== -1) config.dependencyPaths.splice(idx, 1);
+    return config;
 }
 
 /**
@@ -159,5 +205,8 @@ if (typeof module !== 'undefined' && module.exports) {
         loadConfig,
         saveConfig,
         getConfig,
+        setPackPath,
+        addDependencyPath,
+        removeDependencyPath,
     };
 }
