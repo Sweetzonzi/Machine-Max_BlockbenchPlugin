@@ -3,7 +3,6 @@ const { getConfig, saveConfig } = require('../utils/persistence.js');
 const { showToast } = require('../utils/notify.js');
 const { runValidation } = require('../mode.js');
 const fileWriter = require('../utils/file_writer.js');
-const { PRESET_MATERIAL_DEFS } = require('../core/config_defaults.js');
 
 /** 模块日志 */
 var log = createLogger('Menu');
@@ -276,23 +275,11 @@ function _showExportDialog() {
             errors.map(function (e) { return '&nbsp;&nbsp;• ' + e; }).join('<br>');
     }
 
-    // 统计信息 — 区分预设与自定义
-    var connCount = Object.keys(config.connector_defs || {}).length;
-    var subCount = Object.keys(config.subsystem_defs || {}).length;
-    var matDefs = config.material_defs || {};
-    var matTotal = Object.keys(matDefs).length;
-    var matPreset = 0;
-    for (var mid in matDefs) {
-        if (matDefs.hasOwnProperty(mid) && mid in PRESET_MATERIAL_DEFS) matPreset++;
-    }
-    var matCustom = matTotal - matPreset;
+    // 统计信息
     var statLines = [
         '模型: ' + (Project ? Project.name : '未命名'),
-        '命名空间: ' + ns,
+        '内容包路径: ' + (config.contentPackPath || '未设置'),
         '零件: ' + partCount,
-        '连接点定义: ' + connCount,
-        '子系统型号: ' + subCount,
-        '材料定义: ' + matTotal + '（' + matPreset + '预设, ' + matCustom + '自定义）',
     ];
 
     try {
@@ -605,22 +592,13 @@ function _executeExport(config, packMeta, exportDir, packFolderName) {
     var genMaterials = require('../generators/material_generator.js');
     var allMaterials = genMaterials.generateAllMaterials(config);
     if (allMaterials && Object.keys(allMaterials).length > 0) {
-        var skippedPresets = 0;
         for (var matId in allMaterials) {
             if (allMaterials.hasOwnProperty(matId)) {
-                // 跳过预设材料——由官方包定义
-                if (matId in PRESET_MATERIAL_DEFS) {
-                    skippedPresets++;
-                    continue;
-                }
                 var loc = fileWriter.extractResourceLocation(matId, ns);
                 var matDir = path.join(packRoot, loc.ns, 'materials');
                 fileWriter.writeJSONFile(matDir, loc.path + '.json', allMaterials[matId]);
                 stats.materials++;
             }
-        }
-        if (skippedPresets > 0) {
-            log.info('已跳过 ' + skippedPresets + ' 个预设材料定义（由官方包提供）');
         }
     }
 

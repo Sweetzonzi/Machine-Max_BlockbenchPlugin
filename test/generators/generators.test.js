@@ -178,6 +178,7 @@ describe('Connector Generator', function () {
 
         it('iterates all connector defs', function () {
             var config = helpers.createMinimalConfig();
+            config.connector_defs = {};
             config.connector_defs['conn_a'] = { type: 'Simple', direction: 'yp' };
             config.connector_defs['conn_b'] = { type: 'Complex', direction: 'xn' };
 
@@ -256,6 +257,7 @@ describe('Subsystem Generator', function () {
 
         it('iterates all subsystem defs', function () {
             var config = helpers.createMinimalConfig();
+            config.subsystem_defs = {};
             config.subsystem_defs['sub_a'] = { type: 'machine_max:engine', max_power: 100 };
             config.subsystem_defs['sub_b'] = { type: 'machine_max:basic' };
 
@@ -308,6 +310,7 @@ describe('Material Generator', function () {
 
         it('iterates all material defs', function () {
             var config = helpers.createMinimalConfig();
+            config.material_defs = {};
             config.material_defs['mat_a'] = { friction: 0.5 };
             config.material_defs['mat_b'] = { friction: 0.9 };
 
@@ -382,13 +385,13 @@ describe('Lang Generator', function () {
 
     describe('generateLangEntries', function () {
 
-        it('returns correct key format item.{namespace}.{partId}', function () {
+        it('returns correct key format item.machine_max.{partId}', function () {
             var config = helpers.createMinimalConfig();
             config.parts['engine_block'] = helpers.createSamplePart();
 
             var result = langGen.generateLangEntries(config, 'en_us');
 
-            expect(result['item.test_namespace.engine_block']).toBeDefined();
+            expect(result['item.machine_max.engine_block']).toBeDefined();
         });
 
         it('converts part ID to display name (underscores → spaces, capitalize)', function () {
@@ -398,13 +401,12 @@ describe('Lang Generator', function () {
 
             var result = langGen.generateLangEntries(config, 'en_us');
 
-            expect(result['item.test_namespace.engine_block']).toBe('Engine Block');
-            expect(result['item.test_namespace.left_front_wheel']).toBe('Left Front Wheel');
+            expect(result['item.machine_max.engine_block']).toBe('Engine Block');
+            expect(result['item.machine_max.left_front_wheel']).toBe('Left Front Wheel');
         });
 
-        it('uses machine_max as default namespace', function () {
+        it('uses machine_max as default namespace when config has no namespace', function () {
             var config = helpers.createMinimalConfig();
-            delete config.namespace;
             config.parts['test_part'] = helpers.createSamplePart();
 
             var result = langGen.generateLangEntries(config, 'en_us');
@@ -423,8 +425,8 @@ describe('Lang Generator', function () {
 
             expect(result.zh_cn).toBeDefined();
             expect(result.en_us).toBeDefined();
-            expect(result.zh_cn['item.test_namespace.test_part']).toBe('Test Part');
-            expect(result.en_us['item.test_namespace.test_part']).toBe('Test Part');
+            expect(result.zh_cn['item.machine_max.test_part']).toBe('Test Part');
+            expect(result.en_us['item.machine_max.test_part']).toBe('Test Part');
         });
     });
 });
@@ -434,7 +436,6 @@ describe('Lang Generator', function () {
 describe('Namespace-Aware Export', function () {
 
     var fileWriter = require('../../src/utils/file_writer.js');
-    var PRESET_MATERIAL_DEFS = require('../../src/core/config_defaults.js').PRESET_MATERIAL_DEFS;
 
     describe('extractResourceLocation', function () {
 
@@ -461,16 +462,6 @@ describe('Namespace-Aware Export', function () {
             expect(loc.ns).toBe('ns');
             expect(loc.path).toBe('path:extra');
         });
-    });
-
-    describe('material preset filtering', function () {
-
-        it('skips materials whose id is in PRESET_MATERIAL_DEFS', function () {
-            // machine_max:structural_steel is a known preset
-            expect('machine_max:structural_steel' in PRESET_MATERIAL_DEFS).toBe(true);
-            // mypack:custom is NOT a preset
-            expect('mypack:custom' in PRESET_MATERIAL_DEFS).toBe(false);
-        });
 
         it('builds correct directory for custom namespace material', function () {
             var loc = fileWriter.extractResourceLocation('mypack:custom', 'machine_max');
@@ -478,14 +469,6 @@ describe('Namespace-Aware Export', function () {
             var filename = loc.path + '.json';
             expect(dir).toBe('mypack/materials');
             expect(filename).toBe('custom.json');
-        });
-
-        it('builds correct directory for no-colon material (fallback ns)', function () {
-            var loc = fileWriter.extractResourceLocation('simple_mat', 'machine_max');
-            var dir = loc.ns + '/materials';
-            var filename = loc.path + '.json';
-            expect(dir).toBe('machine_max/materials');
-            expect(filename).toBe('simple_mat.json');
         });
     });
 
@@ -523,8 +506,17 @@ describe('Meta Generator', function () {
 
     describe('generateMeta', function () {
 
-        it('returns object with id, version, name, author, description', function () {
+        it('returns object with id, version, name, author, description from packMeta', function () {
             var config = helpers.createMinimalConfig();
+            config.packMeta = {
+                id: 'test_namespace:test_pack',
+                version: '1.0',
+                name: 'Test Pack',
+                author: 'Tester',
+                description: 'A test content pack',
+                dependencies: [],
+                enable_auto_pack: false,
+            };
             var result = metaGen.generateMeta(config);
 
             expect(result.id).toBe('test_namespace:test_pack');
@@ -534,9 +526,8 @@ describe('Meta Generator', function () {
             expect(result.description).toEqual({ text: 'A test content pack' });
         });
 
-        it('handles config with no packMeta', function () {
+        it('handles config with no packMeta gracefully', function () {
             var config = helpers.createMinimalConfig();
-            delete config.packMeta;
 
             var result = metaGen.generateMeta(config);
 

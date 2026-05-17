@@ -5,27 +5,15 @@
  */
 
 /**
- * 创建最小有效的 MM 项目配置（v3）
+ * 创建最小有效的 MM 项目配置（v4）
  */
 function createMinimalConfig() {
     return {
-        $schema_version: 3,
-        namespace: 'test_namespace',
+        $schema_version: 4,
         modelFile: 'test_model.bbmodel',
         parts: {},
-        projectiles: {},
-        connector_defs: {},
-        subsystem_defs: {},
-        material_defs: {},
-        packMeta: {
-            id: 'test_namespace:test_pack',
-            version: '1.0',
-            name: 'Test Pack',
-            author: 'Tester',
-            description: 'A test content pack',
-            dependencies: [],
-            enable_auto_pack: false,
-        },
+        contentPackPath: '',
+        dependencyPaths: [],
         _uiState: {
             activeMode: 'part',
             activePartId: '',
@@ -64,22 +52,10 @@ function createSamplePart() {
  */
 function createV1Config() {
     return {
-        namespace: 'legacy_namespace',
         modelFile: 'legacy_model.bbmodel',
         parts: {},
-        projectiles: {},
-        connector_defs: {},
-        subsystem_defs: {},
-        material_defs: {},
-        packMeta: {
-            id: 'legacy:pack',
-            version: '0.1',
-            name: 'Legacy Pack',
-            author: 'Legacy Author',
-            description: '',
-            dependencies: [],
-            enable_auto_pack: false,
-        },
+        contentPackPath: '',
+        dependencyPaths: [],
         _uiState: {
             activeMode: 'part',
             activePartId: '',

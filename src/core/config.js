@@ -3,12 +3,7 @@ const {
     PART_DEFAULTS,
     VARIANT_DEFAULTS,
     SUB_PART_DEFAULTS,
-    CONNECTOR_DEF_DEFAULTS,
-    SUBSYSTEM_DEF_DEFAULTS,
     HIT_BOX_DEFAULTS,
-    MATERIAL_DEF_DEFAULTS,
-    PRESET_MATERIAL_DEFS,
-    PROJECTILE_DEFAULTS,
 } = require('./config_defaults.js');
 const { createLogger } = require('../utils/logger.js');
 
@@ -17,7 +12,8 @@ var log = createLogger('Config');
 
 const MIGRATIONS = {
     2: function (v1config) {
-        const v3 = v1config.project || v1config;
+        // v1 配置（无 $schema_version）或 v2→v3 迁移
+        var v3 = v1config.project || v1config;
         v3.$schema_version = 3;
         v3.projectiles = v3.projectiles || {};
         v3.connector_defs = v3.connector_defs || {};
@@ -25,6 +21,20 @@ const MIGRATIONS = {
         v3.material_defs = v3.material_defs || {};
         log.info('MIGRATIONS: 配置从 v1→v3 迁移完成');
         return v3;
+    },
+    3: function (v3config) {
+        // 移除旧版共享定义字段，添加内容包路径字段
+        delete v3config.connector_defs;
+        delete v3config.subsystem_defs;
+        delete v3config.material_defs;
+        delete v3config.projectiles;
+        delete v3config.namespace;
+        delete v3config.packMeta;
+        v3config.contentPackPath = v3config.contentPackPath || '';
+        v3config.dependencyPaths = v3config.dependencyPaths || [];
+        v3config.$schema_version = 4;
+        log.info('MIGRATIONS: 配置从 v3→v4 迁移完成');
+        return v3config;
     },
 };
 
@@ -35,67 +45,16 @@ function createBlankConfig() {
     log.debug('createBlankConfig: 创建空白配置，版本=' + CONFIG_VERSION);
     return {
         $schema_version: CONFIG_VERSION,
-        namespace: 'machine_max',
         modelFile: '',
         parts: {},
-        projectiles: {},
-        connector_defs: {},
-        subsystem_defs: {},
-        material_defs: JSON.parse(JSON.stringify(PRESET_MATERIAL_DEFS)),
-        // 包级元数据（用于导出 Spark-Core 兼容的 meta.json）
-        packMeta: {
-            id: '',
-            version: '1.0',
-            name: '',
-            author: '',
-            description: '',
-            dependencies: [],
-            enable_auto_pack: false,
-        },
+        contentPackPath: '',
+        dependencyPaths: [],
         _uiState: {
             activeMode: 'part',
             activePartId: '',
             activeVariantName: '',
         },
     };
-}
-
-/**
- * 生成 Spark-Core 兼容的包元数据对象（用于 meta.json）
- * @param {Object} config - 完整的 MMProjectConfig
- * @returns {Object} SparkPackMetaInfo JSON
- */
-function createPackMeta(config) {
-    var pm = config.packMeta || {};
-    var ns = config.namespace || 'machine_max';
-    var packId = pm.id || ns + ':' + (Project ? (Project.name || 'content_pack') : 'content_pack');
-    // ResourceLocation 不允许大写，namespace 和 path 都转小写
-    packId = packId.toLowerCase().replace(/[^a-z0-9_\-.:/]/g, '_');
-
-    var result = {
-        id: packId,
-        version: pm.version || '1.0',
-        name: { text: pm.name || packId.split(':')[1] || packId },
-        author: { text: pm.author || 'Anonymous' },
-        description: { text: pm.description || '' },
-    };
-
-    // 处理依赖列表
-    var deps = pm.dependencies || [];
-    if (deps.length > 0) {
-        result.dependencies = deps.map(function (dep) {
-            var depId = dep.id || dep;
-            var depType = dep.type || 'hard';
-            return { id: depId, type: depType };
-        });
-    }
-
-    if (typeof pm.enable_auto_pack === 'boolean') {
-        result.enable_auto_pack = pm.enable_auto_pack;
-    }
-
-    log.debug('createPackMeta: 包元数据', { packId: result.id, version: result.version });
-    return result;
 }
 
 /**
@@ -140,32 +99,6 @@ function createHitBoxConfig() {
 }
 
 /**
- * 创建新的连接点静态定义
- */
-function createConnectorDef(defId) {
-    log.debug('createConnectorDef: 创建连接点定义', { defId: defId });
-    const def = JSON.parse(JSON.stringify(CONNECTOR_DEF_DEFAULTS));
-    return def;
-}
-
-/**
- * 创建新的子系统静态定义
- */
-function createSubsystemDef(defId) {
-    log.debug('createSubsystemDef: 创建子系统定义', { defId: defId });
-    const def = JSON.parse(JSON.stringify(SUBSYSTEM_DEF_DEFAULTS));
-    return def;
-}
-
-/**
- * 创建新的材料定义
- */
-function createMaterialDef(defId) {
-    log.debug('createMaterialDef: 创建材料定义', { defId: defId });
-    return JSON.parse(JSON.stringify(MATERIAL_DEF_DEFAULTS));
-}
-
-/**
  * 深度合并配置，确保缺少的字段用默认值填充
  * @param {Object} config - 要修复的配置
  * @returns {Object} 修复后的配置
@@ -179,12 +112,6 @@ function ensureDefaults(config) {
     const result = Object.assign({}, createBlankConfig(), config);
 
     if (!result.parts) result.parts = {};
-    if (!result.projectiles) result.projectiles = {};
-    if (!result.connector_defs) result.connector_defs = {};
-    if (!result.subsystem_defs) result.subsystem_defs = {};
-    if (!result.material_defs || Object.keys(result.material_defs).length === 0) {
-        result.material_defs = JSON.parse(JSON.stringify(PRESET_MATERIAL_DEFS));
-    }
     if (!result._uiState) {
         result._uiState = { activeMode: 'part', activePartId: '', activeVariantName: '' };
     }
@@ -257,13 +184,9 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         CONFIG_VERSION,
         createBlankConfig,
-        createPackMeta,
         createPartConfig,
         createVariantConfig,
         createSubPartConfig,
-        createConnectorDef,
-        createSubsystemDef,
-        createMaterialDef,
         createHitBoxConfig,
         ensureDefaults,
         migrateIfNeeded,

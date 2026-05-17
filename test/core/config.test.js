@@ -17,33 +17,18 @@ var helpers = require('../helpers.js');
 describe('Config Factory', function () {
 
     describe('createBlankConfig', function () {
-        it('returns object with $schema_version === 3', function () {
+        it('returns object with $schema_version === 4', function () {
             var blank = config.createBlankConfig();
-            expect(blank.$schema_version).toBe(3);
+            expect(blank.$schema_version).toBe(4);
         });
 
         it('contains all top-level fields', function () {
             var blank = config.createBlankConfig();
-            expect(blank.namespace).toBe('machine_max');
             expect(blank.modelFile).toBe('');
             expect(typeof blank.parts).toBe('object');
-            expect(typeof blank.projectiles).toBe('object');
-            expect(typeof blank.connector_defs).toBe('object');
-            expect(typeof blank.subsystem_defs).toBe('object');
-            expect(typeof blank.material_defs).toBe('object');
-            expect(typeof blank.packMeta).toBe('object');
+            expect(blank.contentPackPath).toBe('');
+            expect(Array.isArray(blank.dependencyPaths)).toBe(true);
             expect(typeof blank._uiState).toBe('object');
-        });
-
-        it('packMeta has correct default structure', function () {
-            var blank = config.createBlankConfig();
-            expect(blank.packMeta.id).toBe('');
-            expect(blank.packMeta.version).toBe('1.0');
-            expect(blank.packMeta.name).toBe('');
-            expect(blank.packMeta.author).toBe('');
-            expect(blank.packMeta.description).toBe('');
-            expect(Array.isArray(blank.packMeta.dependencies)).toBe(true);
-            expect(blank.packMeta.enable_auto_pack).toBe(false);
         });
 
         it('_uiState has correct default structure', function () {
@@ -53,10 +38,14 @@ describe('Config Factory', function () {
             expect(blank._uiState.activeVariantName).toBe('');
         });
 
-        it('material_defs contains preset materials', function () {
+        it('does not contain legacy fields (namespace, packMeta, defs)', function () {
             var blank = config.createBlankConfig();
-            expect(blank.material_defs['machine_max:structural_steel']).toBeDefined();
-            expect(blank.material_defs['machine_max:rha']).toBeDefined();
+            expect(blank.namespace).toBeUndefined();
+            expect(blank.packMeta).toBeUndefined();
+            expect(blank.connector_defs).toBeUndefined();
+            expect(blank.subsystem_defs).toBeUndefined();
+            expect(blank.material_defs).toBeUndefined();
+            expect(blank.projectiles).toBeUndefined();
         });
     });
 
@@ -130,57 +119,12 @@ describe('Config Factory', function () {
         });
     });
 
-    describe('createConnectorDef', function () {
-        it('returns object with all CONNECTOR_DEF_DEFAULTS fields', function () {
-            var def = config.createConnectorDef('test_connector');
-            expect(def.type).toBe('Simple');
-            expect(def.direction).toBe('yp');
-            expect(def.integrity).toBe(20.0);
-            expect(def.damage_reduction).toBe(2.0);
-            expect(def.damage_multiplier).toBe(1.5);
-            expect(def.damage_absorption).toBe(0.2);
-            expect(def.collide_between).toBe(false);
-            expect(Array.isArray(def.required_tags)).toBe(true);
-            expect(Array.isArray(def.accepted_tags)).toBe(true);
-            expect(Array.isArray(def.rejected_tags)).toBe(true);
-            expect(Array.isArray(def.joints)).toBe(true);
-        });
-    });
-
-    describe('createSubsystemDef', function () {
-        it('returns object with all SUBSYSTEM_DEF_DEFAULTS fields', function () {
-            var def = config.createSubsystemDef('test_subsystem');
-            expect(def.type).toBe('machine_max:basic');
-            expect(def.basic_durability).toBe(20.0);
-            expect(def.pass_damage).toBe(true);
-            expect(def.limit_damage).toBe(false);
-            expect(def.hidden).toBe(false);
-            expect(def.destroy_sound_event).toBeNull();
-            expect(def.activate_sound_event).toBeNull();
-            expect(def.deactivate_sound_event).toBeNull();
-        });
-    });
-
-    describe('createMaterialDef', function () {
-        it('returns object with all MATERIAL_DEF_DEFAULTS fields', function () {
-            var def = config.createMaterialDef('test_material');
-            expect(def.friction).toBe(0.5);
-            expect(def.restitution).toBe(0.3);
-            expect(def.density).toBe(1.0);
-            expect(def.armor_thickness).toBe(1.0);
-            expect(def.armor_toughness).toBe(0.0);
-            expect(def.hit_sound).toBeNull();
-            expect(def.break_sound).toBeNull();
-            expect(def.particle).toBeNull();
-        });
-    });
-
     describe('createHitBoxConfig', function () {
         it('returns object with all HIT_BOX_DEFAULTS fields', function () {
             var hb = config.createHitBoxConfig();
             expect(hb.id).toBe('part');
             expect(hb.type).toBe('box');
-            expect(hb.material).toBe('machine_max:default');
+            expect(hb.material).toBe('');
             expect(hb.thickness).toBe(1.0);
             expect(hb.condition).toBe('true');
         });
@@ -219,14 +163,14 @@ describe('Config Factory', function () {
             expect(sp2.end_bones.length).toBe(0);
         });
 
-        it('modifying returned connector def does not affect defaults', function () {
-            var d1 = config.createConnectorDef('c1');
-            d1.type = 'Complex';
-            d1.joints.push({ bone: 'test' });
+        it('modifying returned hit box config does not affect defaults', function () {
+            var hb1 = config.createHitBoxConfig();
+            hb1.material = 'custom:mat';
+            hb1.thickness = 5.0;
 
-            var d2 = config.createConnectorDef('c2');
-            expect(d2.type).toBe('Simple');
-            expect(d2.joints.length).toBe(0);
+            var hb2 = config.createHitBoxConfig();
+            expect(hb2.material).toBe('');
+            expect(hb2.thickness).toBe(1.0);
         });
     });
 });
@@ -235,97 +179,130 @@ describe('Config Factory', function () {
 
 describe('ensureDefaults', function () {
     it('fills missing top-level fields with defaults', function () {
-        var result = config.ensureDefaults({ namespace: 'custom_ns' });
-        expect(result.namespace).toBe('custom_ns');
-        expect(result.$schema_version).toBe(3);
+        var result = config.ensureDefaults({ contentPackPath: '/custom/path' });
+        expect(result.contentPackPath).toBe('/custom/path');
+        expect(result.$schema_version).toBe(4);
         expect(typeof result.parts).toBe('object');
-        expect(typeof result.projectiles).toBe('object');
-        expect(typeof result.connector_defs).toBe('object');
-        expect(typeof result.subsystem_defs).toBe('object');
-        expect(typeof result.material_defs).toBe('object');
-        expect(typeof result.packMeta).toBe('object');
+        expect(result.modelFile).toBe('');
+        expect(Array.isArray(result.dependencyPaths)).toBe(true);
         expect(typeof result._uiState).toBe('object');
     });
 
     it('returns blank config when input is null', function () {
         var result = config.ensureDefaults(null);
-        expect(result.$schema_version).toBe(3);
-        expect(result.namespace).toBe('machine_max');
+        expect(result.$schema_version).toBe(4);
+        expect(result.modelFile).toBe('');
     });
 
     it('returns blank config when input is undefined', function () {
         var result = config.ensureDefaults(undefined);
-        expect(result.$schema_version).toBe(3);
+        expect(result.$schema_version).toBe(4);
     });
 
     it('preserves existing data while filling missing fields', function () {
         var input = {
-            namespace: 'my_ns',
             modelFile: 'my_model.bbmodel',
+            contentPackPath: '/my/pack',
             parts: { my_part: {} },
         };
         var result = config.ensureDefaults(input);
-        expect(result.namespace).toBe('my_ns');
         expect(result.modelFile).toBe('my_model.bbmodel');
+        expect(result.contentPackPath).toBe('/my/pack');
         expect(result.parts.my_part).toBeDefined();
         // Missing fields filled
-        expect(result.$schema_version).toBe(3);
-        expect(typeof result.projectiles).toBe('object');
+        expect(result.$schema_version).toBe(4);
+        expect(Array.isArray(result.dependencyPaths)).toBe(true);
         expect(typeof result._uiState).toBe('object');
     });
 
-    it('fills empty material_defs with presets', function () {
-        var result = config.ensureDefaults({ material_defs: {} });
-        expect(result.material_defs['machine_max:structural_steel']).toBeDefined();
+    it('fills missing _uiState', function () {
+        var result = config.ensureDefaults({ $schema_version: 4 });
+        expect(result._uiState.activeMode).toBe('part');
+    });
+
+    it('fills missing parts', function () {
+        var result = config.ensureDefaults({ $schema_version: 4 });
+        expect(typeof result.parts).toBe('object');
+        expect(Object.keys(result.parts).length).toBe(0);
     });
 });
 
 // ─── migrateIfNeeded ─────────────────────────────────────────────────────────
 
 describe('migrateIfNeeded', function () {
-    it('v3 config passes through unchanged', function () {
+    it('v4 config passes through unchanged', function () {
         var input = helpers.createMinimalConfig();
         var result = config.migrateIfNeeded(input);
-        expect(result.$schema_version).toBe(3);
-        expect(result.namespace).toBe('test_namespace');
+        expect(result.$schema_version).toBe(4);
         expect(result.modelFile).toBe('test_model.bbmodel');
+        expect(result.contentPackPath).toBe('');
     });
 
-    it('v1 config (no $schema_version) gets upgraded to v3', function () {
+    it('v3 config gets upgraded to v4 with legacy fields removed', function () {
+        var input = {
+            $schema_version: 3,
+            namespace: 'legacy_ns',
+            modelFile: 'legacy_model.bbmodel',
+            parts: {},
+            projectiles: {},
+            connector_defs: { c1: { type: 'Simple' } },
+            subsystem_defs: { s1: { type: 'basic' } },
+            material_defs: { m1: { friction: 0.5 } },
+            packMeta: { id: 'test:pack', version: '1.0' },
+            _uiState: { activeMode: 'part', activePartId: '', activeVariantName: '' },
+        };
+        var result = config.migrateIfNeeded(input);
+        expect(result.$schema_version).toBe(4);
+        expect(result.modelFile).toBe('legacy_model.bbmodel');
+        // Legacy fields removed
+        expect(result.namespace).toBeUndefined();
+        expect(result.projectiles).toBeUndefined();
+        expect(result.connector_defs).toBeUndefined();
+        expect(result.subsystem_defs).toBeUndefined();
+        expect(result.material_defs).toBeUndefined();
+        expect(result.packMeta).toBeUndefined();
+        // New fields added
+        expect(result.contentPackPath).toBe('');
+        expect(Array.isArray(result.dependencyPaths)).toBe(true);
+    });
+
+    it('v1 config (no $schema_version) gets upgraded to v4', function () {
         var input = helpers.createV1Config();
         expect(input.$schema_version).toBeUndefined();
 
         var result = config.migrateIfNeeded(input);
-        expect(result.$schema_version).toBe(3);
+        expect(result.$schema_version).toBe(4);
         // Original data preserved
-        expect(result.namespace).toBe('legacy_namespace');
         expect(result.modelFile).toBe('legacy_model.bbmodel');
-        expect(result.packMeta.id).toBe('legacy:pack');
+        // New fields added
+        expect(result.contentPackPath).toBe('');
+        expect(Array.isArray(result.dependencyPaths)).toBe(true);
     });
 
     it('handles null input', function () {
         var result = config.migrateIfNeeded(null);
-        expect(result.$schema_version).toBe(3);
-        expect(result.namespace).toBe('machine_max');
+        expect(result.$schema_version).toBe(4);
+        expect(result.modelFile).toBe('');
     });
 
     it('handles undefined input', function () {
         var result = config.migrateIfNeeded(undefined);
-        expect(result.$schema_version).toBe(3);
+        expect(result.$schema_version).toBe(4);
     });
 
-    it('v1 config gets default fields added after migration', function () {
-        var input = helpers.createV1Config();
-        delete input.projectiles;
-        delete input.connector_defs;
-        delete input.subsystem_defs;
-        delete input.material_defs;
-
+    it('v1 config with project wrapper is merged with defaults', function () {
+        var input = {
+            project: {
+                namespace: 'old_ns',
+                modelFile: 'old_model.bbmodel',
+                parts: {},
+            },
+        };
         var result = config.migrateIfNeeded(input);
-        expect(result.$schema_version).toBe(3);
-        expect(typeof result.projectiles).toBe('object');
-        expect(typeof result.connector_defs).toBe('object');
-        expect(typeof result.subsystem_defs).toBe('object');
-        expect(typeof result.material_defs).toBe('object');
+        // ensureDefaults merges input into blank config without unwrapping project
+        expect(result.$schema_version).toBe(4);
+        // The project wrapper is preserved as-is, but top-level fields are defaults
+        expect(result.modelFile).toBe('');
+        expect(result.contentPackPath).toBe('');
     });
 });

@@ -7,10 +7,10 @@
 var { createMinimalConfig, createSamplePart, createV1Config } = require('./helpers.js');
 
 describe('Smoke Test', function () {
-    it('createMinimalConfig returns v3 config', function () {
+    it('createMinimalConfig returns v4 config', function () {
         var config = createMinimalConfig();
-        if (config.$schema_version !== 3) {
-            throw new Error('Expected $schema_version to be 3, got ' + config.$schema_version);
+        if (config.$schema_version !== 4) {
+            throw new Error('Expected $schema_version to be 4, got ' + config.$schema_version);
         }
     });
 

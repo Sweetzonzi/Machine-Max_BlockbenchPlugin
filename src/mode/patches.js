@@ -2,7 +2,6 @@ var { getMarkersForVariant, setMarker, clearMarker, getMarker, MARKER_TYPES, get
 var { getConfig, saveConfig } = require('../utils/persistence.js');
 var { showToast } = require('../utils/notify.js');
 var { createLogger } = require('../utils/logger.js');
-var { PRESET_MATERIAL_DEFS } = require('../core/config_defaults.js');
 
 var log = createLogger('Mode');
 
@@ -119,24 +118,16 @@ function buildMMMenuItems(el) {
                 new Dialog({
                     title: 'MachineMax 项目管理',
                     form: {
-                        namespace: { type: 'text', label: '命名空间', value: cfg.namespace },
+                        contentPackPath: { type: 'text', label: '内容包路径', value: cfg.contentPackPath || '', description: 'MachineMax 内容包的根目录路径' },
                         info: { type: 'display', label: '统计', lines: [
-                            '模型: ' + (Project.name || '未命名'),
+                            '模型: ' + (Project && Project.name || '未命名'),
+                            '内容包路径: ' + (cfg.contentPackPath || '未设置'),
                             '零件数: ' + partCount,
-                            '连接点定义: ' + Object.keys(cfg.connector_defs || {}).length,
-                            '子系统型号: ' + Object.keys(cfg.subsystem_defs || {}).length,
-                            '材料定义: ' + (function () {
-                                var mds = cfg.material_defs || {};
-                                var total = Object.keys(mds).length;
-                                var preset = 0;
-                                for (var mid in mds) { if (mds.hasOwnProperty(mid) && mid in PRESET_MATERIAL_DEFS) preset++; }
-                                return total + '（' + preset + '预设, ' + (total - preset) + '自定义）';
-                            })(),
                         ]},
                     },
                     onConfirm: function (formData) {
-                        cfg.namespace = formData.namespace;
-                        log.info('项目管理: 命名空间已更新', { namespace: formData.namespace });
+                        cfg.contentPackPath = formData.contentPackPath || '';
+                        log.info('项目管理: 内容包路径已更新', { contentPackPath: formData.contentPackPath });
                         saveConfig();
                         this.hide();
                     }

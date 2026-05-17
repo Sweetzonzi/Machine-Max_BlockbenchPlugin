@@ -2,7 +2,6 @@ var { getConfig, saveConfig } = require('../utils/persistence.js');
 var { showToast } = require('../utils/notify.js');
 var { createLogger } = require('../utils/logger.js');
 var { runValidation } = require('./validation.js');
-var { PRESET_MATERIAL_DEFS } = require('../core/config_defaults.js');
 
 var log = createLogger('Mode');
 
@@ -133,13 +132,6 @@ function registerToolbarActions() {
             }
 
             const partCount = Object.keys(config.parts).length;
-            const connCount = Object.keys(config.connector_defs).length;
-            const subCount = Object.keys(config.subsystem_defs).length;
-            const matDefs = config.material_defs || {};
-            const matTotal = Object.keys(matDefs).length;
-            var matPreset = 0;
-            for (var mid in matDefs) { if (matDefs.hasOwnProperty(mid) && mid in PRESET_MATERIAL_DEFS) matPreset++; }
-            const matCustom = matTotal - matPreset;
 
             const partList = Object.entries(config.parts).map(function (entry) {
                 var id = entry[0];
@@ -151,27 +143,22 @@ function registerToolbarActions() {
 
             log.debug('项目管理: 当前统计', {
                 parts: partCount,
-                connectors: connCount,
-                subsystems: subCount,
-                materials: matTotal,
             });
 
             new Dialog({
                 title: 'MachineMax 项目管理',
                 form: {
-                    namespace: { type: 'text', label: '命名空间', value: config.namespace },
+                    contentPackPath: { type: 'text', label: '内容包路径', value: config.contentPackPath || '', description: 'MachineMax 内容包的根目录路径' },
                     info: { type: 'display', label: '统计', lines: [
-                        '模型: ' + (Project.name || '未命名'),
+                        '模型: ' + (Project && Project.name || '未命名'),
+                        '内容包路径: ' + (config.contentPackPath || '未设置'),
                         '零件数: ' + partCount,
-                        '连接点定义: ' + connCount,
-                        '子系统型号: ' + subCount,
-                        '材料定义: ' + matTotal + '（' + matPreset + '预设, ' + matCustom + '自定义）',
                         partCount > 0 ? '\n零件列表:\n' + partList : '（暂无零件）',
                     ]},
                 },
                 onConfirm: function (formData) {
-                    config.namespace = formData.namespace;
-                    log.info('项目管理: 命名空间已更新', { namespace: formData.namespace });
+                    config.contentPackPath = formData.contentPackPath || '';
+                    log.info('项目管理: 内容包路径已更新', { contentPackPath: formData.contentPackPath });
                     saveConfig();
                     this.hide();
                 }
