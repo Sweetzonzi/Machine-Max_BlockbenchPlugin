@@ -1,0 +1,462 @@
+/**
+ * 核心逻辑单元测试：生成器
+ *
+ * 覆盖 src/generators/ 下所有 6 个生成器模块。
+ * 生成器是纯数据转换函数，无副作用，适合直接测试输出结构。
+ */
+
+// Load mock layer first
+require('../mocks/blockbench.js');
+
+// Now require source modules
+var partGen = require('../../src/generators/part_generator.js');
+var connGen = require('../../src/generators/connector_generator.js');
+var subGen = require('../../src/generators/subsystem_generator.js');
+var matGen = require('../../src/generators/material_generator.js');
+var langGen = require('../../src/generators/lang_generator.js');
+var metaGen = require('../../src/generators/meta_generator.js');
+var helpers = require('../helpers.js');
+
+// ─── Part Generator ───────────────────────────────────────────────────────────
+
+describe('Part Generator', function () {
+
+    describe('generatePartJSON', function () {
+
+        it('flattens single "default" variant (no nesting)', function () {
+            var part = helpers.createSamplePart();
+            var result = partGen.generatePartJSON('test_part', part, 'test_ns');
+
+            // Top-level fields from part config
+            expect(result.icon).toBe('minecraft:iron_ingot');
+            expect(result.vehicle_durability_rate).toBe(0.8);
+            expect(result.vehicle_damage_rate).toBe(1.0);
+            expect(result.vehicle_damage_rate_destroyed).toBe(0.1);
+            expect(result.functional_threshold).toBe(0.3);
+            expect(result.share_durability).toBe(true);
+            expect(result.max_stack_size).toBe(1);
+
+            // Variant fields are at top level (flattened)
+            expect(result.variants.model).toBe('test_model.geo.json');
+            expect(result.variants.textures).toBe('test_textures.png');
+            // tags is empty array → omitted
+            expect(result.variants.tags).toBeUndefined();
+            // sub_parts is empty → omitted
+            expect(result.variants.sub_parts).toBeUndefined();
+        });
+
+        it('produces nested variants for multiple variants', function () {
+            var part = helpers.createSamplePart();
+            part.variants['summer'] = {
+                model: 'summer.geo.json',
+                textures: 'summer_textures.png',
+                animations: null,
+                tags: ['seasonal'],
+                sub_parts: {},
+            };
+            var result = partGen.generatePartJSON('test_part', part, 'test_ns');
+
+            // With multiple variants, output.variants is an object keyed by variant name
+            expect(result.variants.default).toBeDefined();
+            expect(result.variants.summer).toBeDefined();
+
+            // Each variant has its own fields
+            expect(result.variants.default.model).toBe('test_model.geo.json');
+            expect(result.variants.summer.model).toBe('summer.geo.json');
+            expect(result.variants.summer.tags).toEqual(['seasonal']);
+        });
+
+        it('omits null/undefined top-level fields', function () {
+            var part = helpers.createSamplePart();
+            part.icon = undefined;
+            part.share_durability = null;
+            var result = partGen.generatePartJSON('test_part', part, 'test_ns');
+
+            expect(result.icon).toBeUndefined();
+            expect(result.share_durability).toBeUndefined();
+            // Other fields still present
+            expect(result.vehicle_durability_rate).toBe(0.8);
+        });
+    });
+
+    describe('generateAllParts', function () {
+
+        it('iterates all parts in project config', function () {
+            var config = helpers.createMinimalConfig();
+            config.parts['part_a'] = helpers.createSamplePart();
+            config.parts['part_b'] = helpers.createSamplePart();
+
+            var result = partGen.generateAllParts(config);
+
+            expect(Object.keys(result).length).toBe(2);
+            expect(result.part_a).toBeDefined();
+            expect(result.part_b).toBeDefined();
+            expect(result.part_a.icon).toBe('minecraft:iron_ingot');
+        });
+
+        it('returns empty object when no parts', function () {
+            var config = helpers.createMinimalConfig();
+            var result = partGen.generateAllParts(config);
+            expect(Object.keys(result).length).toBe(0);
+        });
+    });
+});
+
+// ─── Connector Generator ──────────────────────────────────────────────────────
+
+describe('Connector Generator', function () {
+
+    describe('generateConnectorJSON', function () {
+
+        it('returns correct fields for a connector definition', function () {
+            var def = {
+                type: 'Simple',
+                direction: 'yp',
+                integrity: 50.0,
+                damage_reduction: 3.0,
+                damage_multiplier: 2.0,
+                damage_absorption: 0.5,
+                required_tags: ['tag_a'],
+                accepted_tags: ['tag_b'],
+                rejected_tags: ['tag_c'],
+                joints: [{ bone: 'joint_1' }],
+            };
+            var result = connGen.generateConnectorJSON('test_connector', def);
+
+            expect(result.type).toBe('Simple');
+            expect(result.direction).toBe('yp');
+            expect(result.integrity).toBe(50.0);
+            expect(result.damage_reduction).toBe(3.0);
+            expect(result.damage_multiplier).toBe(2.0);
+            expect(result.damage_absorption).toBe(0.5);
+            expect(result.required_tags).toEqual(['tag_a']);
+            expect(result.accepted_tags).toEqual(['tag_b']);
+            expect(result.rejected_tags).toEqual(['tag_c']);
+            expect(result.joints).toEqual([{ bone: 'joint_1' }]);
+        });
+
+        it('omits default values (integrity=20, damage_reduction=2, etc.)', function () {
+            var def = {
+                type: 'Simple',
+                direction: 'yp',
+                integrity: 20.0,
+                damage_reduction: 2.0,
+                damage_multiplier: 1.5,
+                damage_absorption: 0.2,
+                collide_between: false,
+            };
+            var result = connGen.generateConnectorJSON('test_connector', def);
+
+            // Default values should be omitted
+            expect(result.integrity).toBeUndefined();
+            expect(result.damage_reduction).toBeUndefined();
+            expect(result.damage_multiplier).toBeUndefined();
+            expect(result.damage_absorption).toBeUndefined();
+            expect(result.collide_between).toBeUndefined();
+
+            // Non-default fields still present
+            expect(result.type).toBe('Simple');
+            expect(result.direction).toBe('yp');
+        });
+
+        it('includes collide_between when true', function () {
+            var def = {
+                type: 'Simple',
+                direction: 'yp',
+                integrity: 20.0,
+                damage_reduction: 2.0,
+                damage_multiplier: 1.5,
+                damage_absorption: 0.2,
+                collide_between: true,
+            };
+            var result = connGen.generateConnectorJSON('test_connector', def);
+            expect(result.collide_between).toBe(true);
+        });
+    });
+
+    describe('generateAllConnectors', function () {
+
+        it('iterates all connector defs', function () {
+            var config = helpers.createMinimalConfig();
+            config.connector_defs['conn_a'] = { type: 'Simple', direction: 'yp' };
+            config.connector_defs['conn_b'] = { type: 'Complex', direction: 'xn' };
+
+            // We need to require generateAllConnectors — it's exported
+            var result = connGen.generateAllConnectors(config);
+
+            expect(Object.keys(result).length).toBe(2);
+            expect(result.conn_a.type).toBe('Simple');
+            expect(result.conn_b.type).toBe('Complex');
+        });
+    });
+});
+
+// ─── Subsystem Generator ──────────────────────────────────────────────────────
+
+describe('Subsystem Generator', function () {
+
+    describe('generateSubsystemJSON', function () {
+
+        it('returns type + type-specific fields for engine', function () {
+            var def = {
+                type: 'machine_max:engine',
+                basic_durability: 50.0,
+                max_power: 200,
+                max_torque: 300,
+                idle_rpm: 800,
+                peak_torque_rpm: 3500,
+                red_line_rpm: 6000,
+                cylinder_count: 8,
+                four_stroke: true,
+            };
+            var result = subGen.generateSubsystemJSON('test_engine', def);
+
+            expect(result.type).toBe('machine_max:engine');
+            expect(result.basic_durability).toBe(50.0);
+            expect(result.max_power).toBe(200);
+            expect(result.max_torque).toBe(300);
+            expect(result.idle_rpm).toBe(800);
+            expect(result.peak_torque_rpm).toBe(3500);
+            expect(result.red_line_rpm).toBe(6000);
+            expect(result.cylinder_count).toBe(8);
+            expect(result.four_stroke).toBe(true);
+        });
+
+        it('omits default basic_durability (20.0)', function () {
+            var def = {
+                type: 'machine_max:basic',
+                basic_durability: 20.0,
+            };
+            var result = subGen.generateSubsystemJSON('test_basic', def);
+
+            expect(result.type).toBe('machine_max:basic');
+            expect(result.basic_durability).toBeUndefined();
+        });
+
+        it('includes pass_damage=false when explicitly set', function () {
+            var def = {
+                type: 'machine_max:basic',
+                pass_damage: false,
+            };
+            var result = subGen.generateSubsystemJSON('test_basic', def);
+            expect(result.pass_damage).toBe(false);
+        });
+
+        it('includes hidden when true', function () {
+            var def = {
+                type: 'machine_max:basic',
+                hidden: true,
+            };
+            var result = subGen.generateSubsystemJSON('test_basic', def);
+            expect(result.hidden).toBe(true);
+        });
+    });
+
+    describe('generateAllSubsystems', function () {
+
+        it('iterates all subsystem defs', function () {
+            var config = helpers.createMinimalConfig();
+            config.subsystem_defs['sub_a'] = { type: 'machine_max:engine', max_power: 100 };
+            config.subsystem_defs['sub_b'] = { type: 'machine_max:basic' };
+
+            var result = subGen.generateAllSubsystems(config);
+
+            expect(Object.keys(result).length).toBe(2);
+            expect(result.sub_a.type).toBe('machine_max:engine');
+            expect(result.sub_b.type).toBe('machine_max:basic');
+        });
+    });
+});
+
+// ─── Material Generator ───────────────────────────────────────────────────────
+
+describe('Material Generator', function () {
+
+    describe('generateMaterialJSON', function () {
+
+        it('returns cleaned material definition', function () {
+            var def = {
+                friction: 0.8,
+                restitution: 0.2,
+                density: 2.0,
+                armor_thickness: 5.0,
+                armor_toughness: 1.0,
+                hit_sound: 'minecraft:block.anvil.hit',
+                break_sound: null,
+                particle: undefined,
+            };
+            var result = matGen.generateMaterialJSON('test_material', def);
+
+            expect(result.friction).toBe(0.8);
+            expect(result.restitution).toBe(0.2);
+            expect(result.density).toBe(2.0);
+            expect(result.armor_thickness).toBe(5.0);
+            expect(result.armor_toughness).toBe(1.0);
+            expect(result.hit_sound).toBe('minecraft:block.anvil.hit');
+            // null and undefined removed
+            expect(result.break_sound).toBeUndefined();
+            expect(result.particle).toBeUndefined();
+        });
+
+        it('returns empty object for null/undefined input', function () {
+            expect(matGen.generateMaterialJSON('test', null)).toEqual({});
+            expect(matGen.generateMaterialJSON('test', undefined)).toEqual({});
+        });
+    });
+
+    describe('generateAllMaterials', function () {
+
+        it('iterates all material defs', function () {
+            var config = helpers.createMinimalConfig();
+            config.material_defs['mat_a'] = { friction: 0.5 };
+            config.material_defs['mat_b'] = { friction: 0.9 };
+
+            var result = matGen.generateAllMaterials(config);
+
+            expect(Object.keys(result).length).toBe(2);
+            expect(result.mat_a.friction).toBe(0.5);
+            expect(result.mat_b.friction).toBe(0.9);
+        });
+    });
+});
+
+// ─── stripUndefined Boundary Tests ────────────────────────────────────────────
+
+describe('stripUndefined (via generateMaterialJSON)', function () {
+
+    it('preserves false, empty arrays, empty objects, and 0', function () {
+        var result = matGen.generateMaterialJSON('test', {
+            a: false,
+            b: undefined,
+            c: null,
+            d: [],
+            e: {},
+            f: 0,
+        });
+
+        // false preserved
+        expect(result.a).toBe(false);
+        // undefined removed
+        expect(result.b).toBeUndefined();
+        // null removed
+        expect(result.c).toBeUndefined();
+        // empty array preserved
+        expect(result.d).toEqual([]);
+        // empty object removed (stripUndefined returns undefined for empty objects)
+        expect(result.e).toBeUndefined();
+        // 0 preserved
+        expect(result.f).toBe(0);
+    });
+
+    it('strips undefined recursively in nested objects', function () {
+        var result = matGen.generateMaterialJSON('test', {
+            outer: {
+                inner: 'keep',
+                remove_me: undefined,
+                deeper: {
+                    value: 42,
+                    gone: null,
+                },
+            },
+        });
+
+        expect(result.outer.inner).toBe('keep');
+        expect(result.outer.remove_me).toBeUndefined();
+        expect(result.outer.deeper.value).toBe(42);
+        expect(result.outer.deeper.gone).toBeUndefined();
+    });
+
+    it('preserves empty string', function () {
+        var result = matGen.generateMaterialJSON('test', {
+            name: '',
+            description: 'hello',
+        });
+        expect(result.name).toBe('');
+        expect(result.description).toBe('hello');
+    });
+});
+
+// ─── Lang Generator ───────────────────────────────────────────────────────────
+
+describe('Lang Generator', function () {
+
+    describe('generateLangEntries', function () {
+
+        it('returns correct key format item.{namespace}.{partId}', function () {
+            var config = helpers.createMinimalConfig();
+            config.parts['engine_block'] = helpers.createSamplePart();
+
+            var result = langGen.generateLangEntries(config, 'en_us');
+
+            expect(result['item.test_namespace.engine_block']).toBeDefined();
+        });
+
+        it('converts part ID to display name (underscores → spaces, capitalize)', function () {
+            var config = helpers.createMinimalConfig();
+            config.parts['engine_block'] = helpers.createSamplePart();
+            config.parts['left_front_wheel'] = helpers.createSamplePart();
+
+            var result = langGen.generateLangEntries(config, 'en_us');
+
+            expect(result['item.test_namespace.engine_block']).toBe('Engine Block');
+            expect(result['item.test_namespace.left_front_wheel']).toBe('Left Front Wheel');
+        });
+
+        it('uses machine_max as default namespace', function () {
+            var config = helpers.createMinimalConfig();
+            delete config.namespace;
+            config.parts['test_part'] = helpers.createSamplePart();
+
+            var result = langGen.generateLangEntries(config, 'en_us');
+
+            expect(result['item.machine_max.test_part']).toBe('Test Part');
+        });
+    });
+
+    describe('generateAllLangs', function () {
+
+        it('returns zh_cn and en_us locales', function () {
+            var config = helpers.createMinimalConfig();
+            config.parts['test_part'] = helpers.createSamplePart();
+
+            var result = langGen.generateAllLangs(config);
+
+            expect(result.zh_cn).toBeDefined();
+            expect(result.en_us).toBeDefined();
+            expect(result.zh_cn['item.test_namespace.test_part']).toBe('Test Part');
+            expect(result.en_us['item.test_namespace.test_part']).toBe('Test Part');
+        });
+    });
+});
+
+// ─── Meta Generator ───────────────────────────────────────────────────────────
+
+describe('Meta Generator', function () {
+
+    describe('generateMeta', function () {
+
+        it('returns object with id, version, name, author, description', function () {
+            var config = helpers.createMinimalConfig();
+            var result = metaGen.generateMeta(config);
+
+            expect(result.id).toBe('test_namespace:test_pack');
+            expect(result.version).toBe('1.0');
+            expect(result.name).toEqual({ text: 'Test Pack' });
+            expect(result.author).toEqual({ text: 'Tester' });
+            expect(result.description).toEqual({ text: 'A test content pack' });
+        });
+
+        it('handles config with no packMeta', function () {
+            var config = helpers.createMinimalConfig();
+            delete config.packMeta;
+
+            var result = metaGen.generateMeta(config);
+
+            expect(result.id).toBeDefined();
+            expect(result.version).toBe('1.0');
+            expect(result.name.text).toBeDefined();
+            expect(result.author.text).toBe('Anonymous');
+            expect(result.description.text).toBe('');
+        });
+    });
+});
