@@ -534,6 +534,10 @@ function _executeExport(config, packMeta, exportDir) {
     return stats;
 }
 
+function showExportDialog() {
+    _showExportDialog();
+}
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         registerMachineMaxMenu,
