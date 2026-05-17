@@ -1,38 +1,21 @@
 const { createLogger } = require('../utils/logger.js');
+const fileWriter = require('../utils/file_writer.js');
+const path = require('path');
+const fs = require('fs');
 
-/** 模块日志 */
 var log = createLogger('GenSubsystem');
 
 /**
- * subsystems/*.json 生成器 — 将 subsystem_defs 导出为子系统静态定义文件
- * 处理 19 种子系统类型及其特有字段
+ * 获取指定子系统类型的特有字段键列表
+ *
+ * 内部维护类型→字段映射表，作为子系统类型定义的唯一真源。
+ * subsystem_manager.getTypeFields() 委托此函数返回。
+ *
+ * @param {string} type - 子系统类型 ID，格式 "machine_max:xxx"
+ * @returns {string[]} 字段键名数组，未知类型返回空数组
  */
-
-function generateSubsystemJSON(defId, def) {
-    const output = {};
-
-    if (def.type) output.type = def.type;
-
-    if (def.basic_durability !== 20.0) output.basic_durability = def.basic_durability;
-    if (!def.pass_damage) output.pass_damage = false;
-    if (def.limit_damage) output.limit_damage = true;
-    if (def.hidden) output.hidden = true;
-    if (def.destroy_sound_event) output.destroy_sound_event = def.destroy_sound_event;
-    if (def.activate_sound_event) output.activate_sound_event = def.activate_sound_event;
-    if (def.deactivate_sound_event) output.deactivate_sound_event = def.deactivate_sound_event;
-
-    const typeSpecificFields = getTypeSpecificFields(def.type);
-    for (const field of typeSpecificFields) {
-        if (def[field] !== undefined && def[field] !== null) {
-            output[field] = def[field];
-        }
-    }
-
-    return output;
-}
-
 function getTypeSpecificFields(type) {
-    const fields = {
+    var fields = {
         'machine_max:engine': ['max_power', 'max_torque', 'idle_rpm', 'idle_torque_ratio', 'peak_torque_rpm', 'red_line_rpm', 'red_line_torque_ratio', 'inertia', 'four_stroke', 'cylinder_count', 'drag_coefficients', 'control_channels', 'sound_map'],
         'machine_max:motor': ['max_power', 'max_torque', 'red_line_rpm', 'inertia'],
         'machine_max:gearbox': ['forward_gears', 'reverse_gears', 'shift_time', 'shift_speed'],
@@ -57,16 +40,51 @@ function getTypeSpecificFields(type) {
     return fields[type] || [];
 }
 
-function generateAllSubsystems(projectConfig) {
-    const defs = projectConfig.subsystem_defs || {};
-    const result = {};
-    for (const [defId, def] of Object.entries(defs)) {
-        result[defId] = generateSubsystemJSON(defId, def);
+/**
+ * 从内容包 subsystems/ 目录复制所有子系统定义到导出目标目录
+ *
+ * 支持扁平存储和按模型分组存储两种模式。
+ *
+ * @param {string} packDir - 内容包根目录
+ * @param {string} ns - 包 namespace
+ * @param {string} targetDir - 导出目标目录（如 {packRoot}/machine_max/subsystems）
+ * @param {boolean} flat - 是否扁平化导出
+ * @returns {number} 复制的文件数量
+ */
+function copySubsystemDefs(packDir, ns, targetDir, flat) {
+    var count = 0;
+    var srcDir = path.join(packDir, ns, 'subsystems');
+    if (!fs.existsSync(srcDir)) {
+        log.warn('copySubsystemDefs: 源目录不存在 ' + srcDir);
+        return 0;
     }
-    log.info('generateAllSubsystems: 已生成 ' + Object.keys(result).length + ' 个子系统定义');
-    return result;
+    var files = fs.readdirSync(srcDir);
+
+    function resolveTarget(baseDir, id, isFlat) {
+        if (isFlat) return baseDir;
+        var seg = id.split('_')[0];
+        return (seg && seg.length > 0) ? path.join(baseDir, seg) : baseDir;
+    }
+
+    for (var i = 0; i < files.length; i++) {
+        var fileName = files[i];
+        if (!fileName.endsWith('.json')) continue;
+        var srcFile = path.join(srcDir, fileName);
+        try {
+            var content = JSON.parse(fs.readFileSync(srcFile, 'utf8'));
+            var id = fileName.slice(0, -5);
+            var loc = fileWriter.extractResourceLocation(id, ns);
+            var tDir = resolveTarget(targetDir, loc.path, flat);
+            fileWriter.writeJSONFile(tDir, loc.path + '.json', content);
+            count++;
+        } catch (e) {
+            log.warn('复制子系统文件失败: ' + srcFile, e);
+        }
+    }
+    log.info('copySubsystemDefs: 已复制 ' + count + ' 个子系统定义');
+    return count;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { generateSubsystemJSON, generateAllSubsystems, getTypeSpecificFields };
+    module.exports = { copySubsystemDefs, getTypeSpecificFields };
 }

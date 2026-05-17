@@ -1,46 +1,44 @@
 const { createLogger } = require('../utils/logger.js');
+const fileWriter = require('../utils/file_writer.js');
+const path = require('path');
+const fs = require('fs');
 
 var log = createLogger('GenMaterial');
 
 /**
- * 递归地移除对象中的空值字段（undefined、null），
- * 但保留空数组和空对象（在 schema 中有意义）
+ * 从内容包 materials/ 目录复制所有材料定义到导出目标目录
+ *
+ * @param {string} packDir - 内容包根目录
+ * @param {string} ns - 包 namespace
+ * @param {string} targetDir - 导出目标目录（如 {packRoot}/machine_max/materials）
+ * @returns {number} 复制的文件数量
  */
-function stripUndefined(obj) {
-    if (obj === null || obj === undefined) return undefined;
-    if (Array.isArray(obj)) return obj;
-    if (typeof obj !== 'object') return obj;
-    var result = {};
-    for (var key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            var val = stripUndefined(obj[key]);
-            if (val !== undefined) {
-                result[key] = val;
-            }
+function copyMaterialDefs(packDir, ns, targetDir) {
+    var count = 0;
+    var srcDir = path.join(packDir, ns, 'materials');
+    if (!fs.existsSync(srcDir)) {
+        log.warn('copyMaterialDefs: 源目录不存在 ' + srcDir);
+        return 0;
+    }
+    var files = fs.readdirSync(srcDir);
+    for (var i = 0; i < files.length; i++) {
+        var fileName = files[i];
+        if (!fileName.endsWith('.json')) continue;
+        var srcFile = path.join(srcDir, fileName);
+        try {
+            var content = JSON.parse(fs.readFileSync(srcFile, 'utf8'));
+            var id = fileName.slice(0, -5);
+            var loc = fileWriter.extractResourceLocation(id, ns);
+            fileWriter.writeJSONFile(targetDir, loc.path + '.json', content);
+            count++;
+        } catch (e) {
+            log.warn('复制材料文件失败: ' + srcFile, e);
         }
     }
-    return Object.keys(result).length > 0 ? result : undefined;
-}
-
-/**
- * materials/*.json 生成器 — 将 material_defs 按完整 schema 导出
- * 直接透传预设中的所有字段，确保与官方包定义一致
- */
-function generateMaterialJSON(defId, def) {
-    var cleaned = stripUndefined(def);
-    return cleaned || {};
-}
-
-function generateAllMaterials(projectConfig) {
-    const defs = projectConfig.material_defs || {};
-    const result = {};
-    for (const [defId, def] of Object.entries(defs)) {
-        result[defId] = generateMaterialJSON(defId, def);
-    }
-    log.info('generateAllMaterials: 已生成 ' + Object.keys(result).length + ' 个材料定义');
-    return result;
+    log.info('copyMaterialDefs: 已复制 ' + count + ' 个材料定义');
+    return count;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { generateMaterialJSON, generateAllMaterials };
+    module.exports = { copyMaterialDefs };
 }

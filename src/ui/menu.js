@@ -1,7 +1,8 @@
 const { createLogger } = require('../utils/logger.js');
-const { getConfig, saveConfig } = require('../utils/persistence.js');
+const { getConfig, saveConfig, addDependencyPath } = require('../utils/persistence.js');
 const { showToast } = require('../utils/notify.js');
 const { runValidation } = require('../mode.js');
+const content_pack = require('../core/content_pack.js');
 const fileWriter = require('../utils/file_writer.js');
 
 /** 模块日志 */
@@ -33,25 +34,71 @@ function registerMachineMaxMenu() {
             id: 'mm_menu_export',
             click: function () {
                 log.info('MachineMax 菜单: 点击导出内容包');
-                _showExportDialog();
+                var config = getConfig();
+                if (!config) {
+                    showToast('请先打开项目', 'warning');
+                    return;
+                }
+                _ensurePackValid(config, function (valid) {
+                    if (valid) {
+                        _showExportDialog();
+                    } else {
+                        showToast('请先设置有效的内容包', 'warning');
+                    }
+                });
             },
         },
 
         '_',
 
         {
-            name: '内容包设置',
-            icon: 'fa-folder-open',
-            id: 'mm_menu_pack_settings',
+            name: '新建并切换至内容包',
+            icon: 'fa-plus-circle',
+            id: 'mm_menu_new_pack',
             click: function () {
-                log.info('MachineMax 菜单: 点击内容包设置');
+                log.info('MachineMax 菜单: 点击新建并切换至内容包');
                 var config = getConfig();
                 if (!config) {
                     showToast('请先打开项目', 'warning');
                     return;
                 }
-                require('./dialogs/pack_setup_dialog.js').showPackSetupDialog(config, function (updatedConfig) {
+                var pd = require('./dialogs/pack_setup_dialog.js');
+                pd.showCreatePackDialog(config, function (updatedConfig) {
+                    // showCreatePackDialog 内部已 saveConfig + toast，此处仅做外部需要的额外操作
+                });
+            },
+        },
+        {
+            name: '切换至已有内容包',
+            icon: 'fa-folder-open',
+            id: 'mm_menu_open_pack',
+            click: function () {
+                log.info('MachineMax 菜单: 点击切换至已有内容包');
+                var config = getConfig();
+                if (!config) {
+                    showToast('请先打开项目', 'warning');
+                    return;
+                }
+                var pd = require('./dialogs/pack_setup_dialog.js');
+                pd.showOpenPackDialog(config, function (updatedConfig) {
                     saveConfig();
+                    showToast('已切换至内容包', 'positive');
+                });
+            },
+        },
+        {
+            name: '编辑内容包信息',
+            icon: 'fa-edit',
+            id: 'mm_menu_edit_meta',
+            click: function () {
+                log.info('MachineMax 菜单: 点击编辑内容包信息');
+                var config = getConfig();
+                if (!config) {
+                    showToast('请先打开项目', 'warning');
+                    return;
+                }
+                _ensurePackValid(config, function () {
+                    _showPackSettingsDialog();
                 });
             },
         },
@@ -100,12 +147,11 @@ function registerMachineMaxMenu() {
     ], {
         name: 'MachineMax',
         icon: 'precision_manufacturing',
-        condition: { modes: ['machine_max_part'] },
     });
 
     MenuBar.addMenu(_machineMaxMenu, 'tools');
 
-    log.info('MachineMax 菜单已注册（位于 Tools 之后）');
+    log.info('MachineMax 常驻菜单已注册（位于 Tools 之后，模式无关）');
     return _machineMaxMenu;
 }
 
@@ -125,6 +171,47 @@ function unregisterMachineMaxMenu() {
 }
 
 /**
+ * 检查内容包路径有效性，若无效则弹出设置向导
+ *
+ * 向导取消后通过回调告知调用方，不阻断用户继续编辑。
+ * 对导出操作：向导取消视为无效，停止导出。
+ * 对编辑信息操作：向导取消仍可继续编辑（仅弹窗提示但无 meta 可编辑）。
+ *
+ * @param {Object} config - MM 项目配置
+ * @param {Function} onResult - 回调 (isValid: boolean, config: Object)
+ */
+function _ensurePackValid(config, onResult) {
+    if (!config) {
+        if (typeof onResult === 'function') onResult(false, config);
+        return;
+    }
+
+    // 快速路径：已有有效路径
+    if (config.contentPackPath) {
+        var result = content_pack.openContentPack(config.contentPackPath);
+        if (result.valid) {
+            if (typeof onResult === 'function') onResult(true, config);
+            return;
+        }
+        // 路径存在但失效，记录日志后弹向导
+        log.warn('内容包路径无效，将弹出向导', { path: config.contentPackPath, error: result.error });
+    }
+
+    // 弹出设置向导
+    var pd = require('./dialogs/pack_setup_dialog.js');
+    pd.showPackSetupDialog(config, function (updatedConfig) {
+        saveConfig();
+        // 向导保存后再次检查
+        if (updatedConfig.contentPackPath) {
+            var checkResult = content_pack.openContentPack(updatedConfig.contentPackPath);
+            if (typeof onResult === 'function') onResult(checkResult.valid, updatedConfig);
+        } else {
+            if (typeof onResult === 'function') onResult(false, updatedConfig);
+        }
+    });
+}
+
+/**
  * 获取默认导出目录（优先 packMeta 缓存 → .bbmodel 同级）
  * @param {Object} pm - config.packMeta
  * @returns {string}
@@ -133,6 +220,11 @@ function _getDefaultExportDir(pm) {
     var path = require('path');
     var cached = pm && pm.exportDir;
     if (cached) return cached;
+    // 优先使用内容包目录的上级目录作为默认导出位置
+    var config = getConfig();
+    if (config && config.contentPackPath) {
+        return path.dirname(config.contentPackPath);
+    }
     var bbmodelPath = Project && Project.file_path ? Project.file_path : '';
     if (bbmodelPath) {
         return path.join(path.dirname(bbmodelPath), 'machine_max_content_pack');
@@ -213,6 +305,12 @@ function _showPackSettingsDialog() {
                     value: pm.flat_export !== false,
                     description: '若启用，零件/子系统/连接点将扁平存放；关闭则按模型名分入子文件夹',
                 },
+                manageDeps: {
+                    type: 'checkbox',
+                    label: '保存后管理依赖包',
+                    value: false,
+                    description: '保存元数据后立即进入依赖管理界面，可添加/移除本地路径依赖及链式解析。',
+                },
             },
             onConfirm: function (formData) {
                 if (!config.packMeta) config.packMeta = {};
@@ -227,14 +325,39 @@ function _showPackSettingsDialog() {
                 packMeta.flat_export = !!formData.flatExport;
 
                 saveConfig();
-                showToast('内容包设置已保存', 'positive');
+                this.hide();
+
+                if (formData.manageDeps) {
+                    // 从已有 dependencyPaths 构建依赖列表，以路径为标识
+                    var existing = (config.dependencyPaths || []).map(function (p) {
+                        return { path: p, type: 'hard' };
+                    });
+                    var pdir = config.contentPackPath ? require('path').dirname(config.contentPackPath) : '';
+                    var pd = require('./dialogs/pack_setup_dialog.js');
+                    pd.showDependencyPathEditor(existing, pdir, function (resolved) {
+                        // 完全重建 dependencyPaths
+                        config.dependencyPaths = [];
+                        var directDeps = resolved.direct || [];
+                        var indirectDeps = resolved.indirect || [];
+                        for (var d = 0; d < directDeps.length; d++) {
+                            addDependencyPath(config, directDeps[d].path);
+                        }
+                        for (var k = 0; k < indirectDeps.length; k++) {
+                            addDependencyPath(config, indirectDeps[k].path);
+                        }
+                        saveConfig();
+                        showToast('内容包设置已保存，依赖已更新', 'positive');
+                    });
+                } else {
+                    showToast('内容包设置已保存', 'positive');
+                }
+
                 log.info('内容包设置已更新', {
                     packId: packMeta.id,
                     version: packMeta.version,
                     name: packMeta.name,
                     exportDir: packMeta.exportDir,
                 });
-                this.hide();
             },
         }).show();
     } catch (e) {
@@ -325,12 +448,6 @@ function _showExportDialog() {
                     value: pm.description || '',
                     height: 90,
                 },
-                packFolderName: {
-                    type: 'text',
-                    label: '包文件夹名称',
-                    value: _sanitizeFolderName(pm.name) || (Project ? Project.name : ''),
-                    description: '内容包在磁盘上的文件夹名称，将作为导出目录下的子文件夹',
-                },
                 flatExport: {
                     type: 'checkbox',
                     label: '扁平化导出',
@@ -340,9 +457,22 @@ function _showExportDialog() {
                 dependencies: {
                     type: 'textarea',
                     label: '依赖（每行一个）',
-                    value: (pm.dependencies || []).map(function (d) {
-                        return (typeof d === 'string' ? d : (d.id + ' ' + (d.type || 'hard')));
-                    }).join('\n'),
+                    value: (function () {
+                        var deps = pm.dependencies || [];
+                        var lines = deps.map(function (d) {
+                            return (typeof d === 'string' ? d : (d.id + ' ' + (d.type || 'hard')));
+                        });
+                        // 默认填充官方内容包为 hard 依赖
+                        var hasOfficial = false;
+                        for (var di = 0; di < deps.length; di++) {
+                            var did = typeof deps[di] === 'string' ? deps[di] : deps[di].id;
+                            if (did === 'machine_max:official') { hasOfficial = true; break; }
+                        }
+                        if (!hasOfficial && pm.id !== 'machine_max:official') {
+                            lines.unshift('machine_max:official hard');
+                        }
+                        return lines.join('\n');
+                    })(),
                     height: 100,
                     description: '格式：每行 "依赖ID 类型"。类型: hard(必需), soft(可选), override(覆盖), conflict(冲突)\n示例: machine_max:core hard',
                 },
@@ -354,7 +484,7 @@ function _showExportDialog() {
                     return;
                 }
 
-                var packFolderName = _sanitizeFolderName(formData.packFolderName)
+                var packFolderName = _sanitizeFolderName(formData.packName)
                     || _sanitizeFolderName(pm.name)
                     || (Project ? Project.name : 'content_pack');
 
@@ -461,11 +591,23 @@ function _showPlaceholder(title, description) {
  *       {namespace}/
  *         lang/{locale}.json
  *         models/part/{modelName}.geo.json
+ *         models/hud/         ← 空目录占位
  *         parts/{partId}.json
  *         recipe/{recipeId}.json
  *         connectors/{connId}.json           （扁平）或 connectors/{model}/{connId}.json（分组）
  *         subsystems/{subId}.json            （扁平）或 subsystems/{model}/{subId}.json（分组）
  *         materials/{matId}.json
+ *         textures/hud/       ← 空目录占位
+ *         textures/icon/      ← 空目录占位
+ *         textures/part/      ← 空目录占位
+ *         huds/               ← 空目录占位
+ *         animations/hud/     ← 空目录占位
+ *         animations/part/    ← 空目录占位
+ *         assemblies/         ← 空目录占位
+ *         font/               ← 空目录占位
+ *         tooltips/           ← 空目录占位
+ *         templates/          ← 空目录占位
+ *         docs/schemas/       ← 从项目 schemas/ 复制
  *
  * @param {Object} config - MMProjectConfig
  * @param {Object} packMeta - 覆盖的包元数据
@@ -497,6 +639,98 @@ function _executeExport(config, packMeta, exportDir, packFolderName) {
         return (seg && seg.length > 0) ? path.join(baseDir, seg) : baseDir;
     }
 
+    /**
+     * 从构建时嵌入的 __SCHEMAS__ 常量写入所有 schema 文件到目标目录
+     * 同时写入 zh_cn/ 和 en_us/ 两份，供不同 locale 的编辑器引用
+     * __SCHEMAS__ 是 { relativePath: fileContent } 映射，由 build.js 注入
+     */
+    function _writeSchemasFromConstant(destBaseDir) {
+        var schemasRaw = (typeof __SCHEMAS__ !== 'undefined') ? __SCHEMAS__ : null;
+        if (!schemasRaw) {
+            log.warn('_writeSchemasFromConstant: __SCHEMAS__ 未注入或为空，Schema 文件将不会写入');
+            return;
+        }
+        var schemas = (typeof schemasRaw === 'string') ? JSON.parse(schemasRaw) : schemasRaw;
+        var keys = Object.keys(schemas);
+        var locales = ['zh_cn', 'en_us'];
+        for (var l = 0; l < locales.length; l++) {
+            var localeDir = path.join(destBaseDir, locales[l], 'schemas');
+            for (var i = 0; i < keys.length; i++) {
+                var relPath = keys[i];
+                var destPath = path.join(localeDir, relPath);
+                fileWriter.ensureDir(path.dirname(destPath));
+                fs.writeFileSync(destPath, schemas[relPath], 'utf-8');
+            }
+        }
+        log.info('_writeSchemasFromConstant: 已写入 ' + locales.length + ' 套 (' + keys.length + ' 个文件/套) schema 文件');
+    }
+
+    /**
+     * 获取当前的 locale，用于决定 $schema 引用到 zh_cn 还是 en_us
+     * 简体/繁体中文 → zh_cn，其他 → en_us
+     */
+    function _getSchemaLocale() {
+        var lang = '';
+        if (typeof navigator !== 'undefined' && navigator.language) {
+            lang = navigator.language;
+        } else if (typeof Blockbench !== 'undefined' && Blockbench.locale) {
+            lang = Blockbench.locale;
+        }
+        return (lang.indexOf('zh') === 0) ? 'zh_cn' : 'en_us';
+    }
+
+    /**
+     * 递归遍历目录，为所有导出 JSON 注入 $schema 引用
+     */
+    function _injectSchemaReferences(nsDir) {
+        var schemaLocale = _getSchemaLocale();
+        var schemaMap = {
+            parts: 'docs/' + schemaLocale + '/schemas/part_definition_schema.json',
+            connectors: 'docs/' + schemaLocale + '/schemas/part/subpart/connector/connector_attr.schema.json',
+            subsystems: 'docs/' + schemaLocale + '/schemas/subsystem/subsystem_static_attr.schema.json',
+            materials: 'docs/' + schemaLocale + '/schemas/base/material_attr.schema.json',
+        };
+        var recipeSchemaMap = {
+            'machine_max:research': 'docs/' + schemaLocale + '/schemas/recipe/research_recipe.schema.json',
+            'machine_max:fabricating': 'docs/' + schemaLocale + '/schemas/recipe/fabricating_recipe.schema.json',
+            'machine_max:blueprint_research': 'docs/' + schemaLocale + '/schemas/recipe/blueprint_research_recipe.schema.json',
+        };
+        var dirs = ['parts', 'connectors', 'subsystems', 'materials', 'recipe'];
+        for (var d = 0; d < dirs.length; d++) {
+            var typeDir = path.join(nsDir, dirs[d]);
+            if (!fs.existsSync(typeDir)) continue;
+            _walkAndInject(typeDir, nsDir, dirs[d], schemaMap, recipeSchemaMap);
+        }
+    }
+
+    function _walkAndInject(currentDir, nsDir, typeName, schemaMap, recipeSchemaMap) {
+        var entries = fs.readdirSync(currentDir);
+        for (var e = 0; e < entries.length; e++) {
+            var fullPath = path.join(currentDir, entries[e]);
+            var stat = fs.statSync(fullPath);
+            if (stat.isDirectory()) {
+                _walkAndInject(fullPath, nsDir, typeName, schemaMap, recipeSchemaMap);
+            } else if (entries[e].endsWith('.json')) {
+                try {
+                    var content = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+                    var schemaRel;
+                    if (typeName === 'recipe') {
+                        schemaRel = recipeSchemaMap[content.type] || 'docs/schemas/recipe/research_recipe.schema.json';
+                    } else {
+                        schemaRel = schemaMap[typeName];
+                    }
+                    if (!schemaRel) continue;
+                    var relDir = path.relative(path.dirname(fullPath), nsDir);
+                    var schemaPath = path.join(relDir, schemaRel).replace(/\\/g, '/');
+                    content['$schema'] = schemaPath;
+                    fs.writeFileSync(fullPath, JSON.stringify(content, null, 2), 'utf8');
+                } catch (_err) {
+                    log.warn('注入 $schema 失败: ' + fullPath, _err);
+                }
+            }
+        }
+    }
+
     // === meta.json ===
     var genMeta = require('../generators/meta_generator.js');
     var savedPackMeta = config.packMeta;
@@ -504,6 +738,23 @@ function _executeExport(config, packMeta, exportDir, packFolderName) {
     var meta = genMeta.generateMeta(config);
     config.packMeta = savedPackMeta;
     fileWriter.writeJSONFile(packRoot, 'meta.json', meta);
+
+    // === 创建完整空目录架构 + 复制 schemas ===
+    var _emptyDirs = [
+        'textures/hud', 'textures/icon', 'textures/part',
+        'models/hud',
+        'huds',
+        'animations/hud', 'animations/part',
+        'assemblies', 'font', 'tooltips', 'templates',
+        'docs',
+    ];
+    var _nsDir = path.join(packRoot, ns);
+    for (var _ei = 0; _ei < _emptyDirs.length; _ei++) {
+        fileWriter.ensureDir(path.join(_nsDir, _emptyDirs[_ei]));
+    }
+
+    // 复制 schemas 到 {namespace}/docs/schemas/（从构建时嵌入的 __SCHEMAS__ 常量）
+    _writeSchemasFromConstant(path.join(_nsDir, 'docs'));
 
     // === {namespace}/models/part/{modelName}.geo.json ===
     try {
@@ -556,42 +807,13 @@ function _executeExport(config, packMeta, exportDir, packFolderName) {
     // === 从内容包目录复制连接点/子系统/材料 ===
     var packDir = config.contentPackPath;
     if (packDir && fs.existsSync(packDir)) {
-        // 辅助函数：复制目录中所有 .json 文件到目标目录
-        function _copyJsonFiles(srcDir, targetBaseDir, statsKey, flat) {
-            if (!fs.existsSync(srcDir)) return;
-            var files = fs.readdirSync(srcDir);
-            var i, fileName, srcFile, content, id, loc, targetDir;
-            for (i = 0; i < files.length; i++) {
-                fileName = files[i];
-                if (fileName.indexOf('.json') !== fileName.length - 5) continue;
-                srcFile = path.join(srcDir, fileName);
-                try {
-                    content = JSON.parse(fs.readFileSync(srcFile, 'utf8'));
-                    id = fileName.slice(0, -5); // 去掉 .json
-                    loc = fileWriter.extractResourceLocation(id, ns);
-                    targetDir = _resolveTargetDir(targetBaseDir, loc.path, flat);
-                    fileWriter.writeJSONFile(targetDir, loc.path + '.json', content);
-                    stats[statsKey]++;
-                } catch (e) {
-                    log.warn('复制文件失败: ' + srcFile, e);
-                }
-            }
-        }
+        var genConn = require('../generators/connector_generator.js');
+        var genSub = require('../generators/subsystem_generator.js');
+        var genMat = require('../generators/material_generator.js');
 
-        // 复制连接点
-        var connSrcDir = path.join(packDir, ns, 'connectors');
-        var connTargetBase = path.join(packRoot, ns, 'connectors');
-        _copyJsonFiles(connSrcDir, connTargetBase, 'connectors', isFlat);
-
-        // 复制子系统
-        var subSrcDir = path.join(packDir, ns, 'subsystems');
-        var subTargetBase = path.join(packRoot, ns, 'subsystems');
-        _copyJsonFiles(subSrcDir, subTargetBase, 'subsystems', isFlat);
-
-        // 复制材料
-        var matSrcDir = path.join(packDir, ns, 'materials');
-        var matTargetDir = path.join(packRoot, ns, 'materials');
-        _copyJsonFiles(matSrcDir, matTargetDir, 'materials', isFlat);
+        stats.connectors = genConn.copyConnectorDefs(packDir, ns, path.join(packRoot, ns, 'connectors'), isFlat);
+        stats.subsystems = genSub.copySubsystemDefs(packDir, ns, path.join(packRoot, ns, 'subsystems'), isFlat);
+        stats.materials = genMat.copyMaterialDefs(packDir, ns, path.join(packRoot, ns, 'materials'));
 
         // 复制依赖包定义（dependency 目录下的所有 .json）
         var depSrcDir = path.join(packDir, 'dependency');
@@ -616,6 +838,9 @@ function _executeExport(config, packMeta, exportDir, packFolderName) {
         log.warn('内容包目录未设置或不存在，跳过连接点/子系统/材料复制: ' + packDir);
     }
 
+    // === 为所有导出文件注入 $schema 引用 ===
+    _injectSchemaReferences(_nsDir);
+
     log.info('导出完成, 零件=' + stats.parts + ', 连接点=' + stats.connectors + ', 子系统=' + stats.subsystems + ', 材料=' + stats.materials + ', 语言=' + stats.langs);
     return stats;
 }
@@ -624,10 +849,20 @@ function showExportDialog() {
     _showExportDialog();
 }
 
+/**
+ * 公开的包有效性检查入口，供 mode.js、toolbar.js 使用
+ * @param {Object} config - MM 项目配置
+ * @param {Function} onResult - 回调 (isValid: boolean, config: Object)
+ */
+function ensurePackValid(config, onResult) {
+    _ensurePackValid(config, onResult);
+}
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         registerMachineMaxMenu,
         unregisterMachineMaxMenu,
         showExportDialog,
+        ensurePackValid,
     };
 }

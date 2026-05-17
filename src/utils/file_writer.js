@@ -17,19 +17,29 @@ function ensureDir(dirPath) {
 }
 
 function writeJSONFile(dir, filename, data) {
-    ensureDir(dir);
-    const filePath = path.join(dir, filename);
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-    log.debug('writeJSONFile: 已写入 ' + filePath);
-    return filePath;
+    try {
+        ensureDir(dir);
+        const filePath = path.join(dir, filename);
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+        log.debug('writeJSONFile: 已写入 ' + filePath);
+        return filePath;
+    } catch (e) {
+        log.error('writeJSONFile: 写入失败 ' + path.join(dir, filename), e);
+        throw e;
+    }
 }
 
 function writeTextFile(dir, filename, text) {
-    ensureDir(dir);
-    const filePath = path.join(dir, filename);
-    fs.writeFileSync(filePath, text, 'utf-8');
-    log.debug('writeTextFile: 已写入 ' + filePath);
-    return filePath;
+    try {
+        ensureDir(dir);
+        const filePath = path.join(dir, filename);
+        fs.writeFileSync(filePath, text, 'utf-8');
+        log.debug('writeTextFile: 已写入 ' + filePath);
+        return filePath;
+    } catch (e) {
+        log.error('writeTextFile: 写入失败 ' + path.join(dir, filename), e);
+        throw e;
+    }
 }
 
 function readJSONFile(filePath) {

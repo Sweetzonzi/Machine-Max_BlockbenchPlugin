@@ -2,6 +2,7 @@ const { getMarkersForVariant, setMarker, clearMarker, getMarker, MARKER_TYPES, g
 const { loadConfig, saveConfig, getConfig } = require('./utils/persistence.js');
 const { showToast } = require('./utils/notify.js');
 const { createLogger } = require('./utils/logger.js');
+const content_pack = require('./core/content_pack.js');
 const { registerToolbarActions, _mmActionInstances } = require('./mode/toolbar.js');
 const { runValidation } = require('./mode/validation.js');
 const { buildMMMenuItems, patchShowContextMenu, restoreShowContextMenu, patchElementSelect, restoreElementSelect } = require('./mode/patches.js');
@@ -118,6 +119,25 @@ function registerMode() {
                 parts: Object.keys(config.parts || {}),
                 _uiState: config._uiState,
             });
+
+            // 检查内容包路径有效性，若无效则弹出设置向导（用户可取消向导继续编辑）
+            if (!config.contentPackPath) {
+                log.info('onSelect: 未设置内容包路径，弹出设置向导');
+                var pd = require('./ui/dialogs/pack_setup_dialog.js');
+                pd.showPackSetupDialog(config, function () {
+                    saveConfig();
+                });
+            } else {
+                var checkResult = content_pack.openContentPack(config.contentPackPath);
+                if (!checkResult.valid) {
+                    log.warn('onSelect: 内容包路径无效，弹出设置向导', { path: config.contentPackPath, error: checkResult.error });
+                    showToast('当前内容包无效: ' + (checkResult.error || '路径不存在'), 'warning');
+                    var pd = require('./ui/dialogs/pack_setup_dialog.js');
+                    pd.showPackSetupDialog(config, function () {
+                        saveConfig();
+                    });
+                }
+            }
 
             if (config._uiState?.activePartId && !config.parts[config._uiState.activePartId]) {
                 log.debug('onSelect: activePartId ' + config._uiState.activePartId + ' 已失效，清空');

@@ -83,6 +83,28 @@ function collectJSONFiles(dir, baseDir) {
 }
 
 /**
+ * 递归收集指定目录下所有文件，返回 { filename: content } 映射。
+ * filename 是相对于 baseDir 的路径（使用 / 分隔），content 是文件原始内容。
+ * 与 collectJSONFiles 不同，不限制扩展名。
+ */
+function collectAllFiles(dir, baseDir) {
+    const result = {};
+    if (!fs.existsSync(dir)) return result;
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            const sub = collectAllFiles(fullPath, baseDir);
+            Object.assign(result, sub);
+        } else if (entry.isFile()) {
+            const relative = path.relative(baseDir, fullPath).replace(/\\/g, '/');
+            result[relative] = fs.readFileSync(fullPath, 'utf-8').trim();
+        }
+    }
+    return result;
+}
+
+/**
  * 加载内置官方内容包（src/builtin/official_pack/），
  * 返回 esbuild define 常量映射。
  * 抛出清晰错误如果目录不存在。
@@ -115,17 +137,35 @@ function loadOfficialPack() {
     };
 }
 
+/**
+ * 加载 schemas/ 目录的所有文件（JSON + Markdown），
+ * 返回 esbuild define 常量映射。
+ */
+function loadSchemas() {
+    const schemasDir = path.join(ROOT, 'schemas');
+    if (!fs.existsSync(schemasDir)) {
+        throw new Error('schemas 目录不存在: ' + schemasDir);
+    }
+    const files = collectAllFiles(schemasDir, schemasDir);
+    const fileCount = Object.keys(files).length;
+    console.log(`📐 Schema 文件: ${fileCount} 个`);
+    return {
+        '__SCHEMAS__': JSON.stringify(files),
+    };
+}
+
 /** esbuild 构建配置 */
 function getConfig() {
     const cssLiteral = loadCSS(path.join(SRC, 'styles', 'mm_mode.css'));
     const templates = loadAllHTMLTemplates(path.join(SRC, 'ui', 'panels'));
     const packDefines = loadOfficialPack();
+    const schemaDefines = loadSchemas();
     const packStats = packDefines._packStats;
     delete packDefines._packStats;
     const defines = Object.assign({
         'CSS_MM_MODE': cssLiteral || '""',
         '__DEBUG_ENABLED__': 'false',
-    }, templates, packDefines);
+    }, templates, packDefines, schemaDefines);
 
     return {
         entryPoints: [path.join(SRC, 'plugin.js')],
@@ -134,7 +174,7 @@ function getConfig() {
         platform: 'browser',
         target: ['es2020'],
         outfile: OUT_FILE,
-        external: ['fs', 'path'],
+        external: ['fs', 'path', 'zlib'],
         legalComments: 'none',
         define: defines,
         _packStats: packStats,

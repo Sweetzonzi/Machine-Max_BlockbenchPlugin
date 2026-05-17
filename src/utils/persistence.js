@@ -134,6 +134,8 @@ function saveConfig() {
                     _uiState: config._uiState,
                     contentPackPath: config.contentPackPath,
                     dependencyPaths: config.dependencyPaths,
+                    packMeta: config.packMeta,
+                    namespace: config.namespace,
                     modelFile: config.modelFile,
                 },
             }, null, 2),

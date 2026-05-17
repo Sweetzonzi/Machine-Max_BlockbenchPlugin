@@ -16,6 +16,8 @@ var matGen = require('../../src/generators/material_generator.js');
 var langGen = require('../../src/generators/lang_generator.js');
 var metaGen = require('../../src/generators/meta_generator.js');
 var helpers = require('../helpers.js');
+var path = require('path');
+var fs = require('fs');
 
 // ─── Part Generator ───────────────────────────────────────────────────────────
 
@@ -106,88 +108,46 @@ describe('Part Generator', function () {
 
 describe('Connector Generator', function () {
 
-    describe('generateConnectorJSON', function () {
+    describe('copyConnectorDefs', function () {
 
-        it('returns correct fields for a connector definition', function () {
-            var def = {
-                type: 'Simple',
-                direction: 'yp',
-                integrity: 50.0,
-                damage_reduction: 3.0,
-                damage_multiplier: 2.0,
-                damage_absorption: 0.5,
-                required_tags: ['tag_a'],
-                accepted_tags: ['tag_b'],
-                rejected_tags: ['tag_c'],
-                joints: [{ bone: 'joint_1' }],
-            };
-            var result = connGen.generateConnectorJSON('test_connector', def);
+        it('从内容包目录复制连接点定义到导出目录（扁平模式）', function () {
+            var tmpDir = helpers.createTempDir();
+            var ns = 'machine_max';
+            var srcDir = path.join(tmpDir, ns, 'connectors');
+            var targetDir = path.join(tmpDir, 'export', ns, 'connectors');
+            fs.mkdirSync(srcDir, { recursive: true });
 
-            expect(result.type).toBe('Simple');
-            expect(result.direction).toBe('yp');
-            expect(result.integrity).toBe(50.0);
-            expect(result.damage_reduction).toBe(3.0);
-            expect(result.damage_multiplier).toBe(2.0);
-            expect(result.damage_absorption).toBe(0.5);
-            expect(result.required_tags).toEqual(['tag_a']);
-            expect(result.accepted_tags).toEqual(['tag_b']);
-            expect(result.rejected_tags).toEqual(['tag_c']);
-            expect(result.joints).toEqual([{ bone: 'joint_1' }]);
+            fs.writeFileSync(path.join(srcDir, 'simple.json'), JSON.stringify({ type: 'Simple', direction: 'yp' }));
+            fs.writeFileSync(path.join(srcDir, 'complex.json'), JSON.stringify({ type: 'Complex', direction: 'xn' }));
+
+            var count = connGen.copyConnectorDefs(tmpDir, ns, targetDir, true);
+
+            expect(count).toBe(2);
+            expect(fs.existsSync(path.join(targetDir, 'simple.json'))).toBe(true);
+            expect(fs.existsSync(path.join(targetDir, 'complex.json'))).toBe(true);
+            expect(JSON.parse(fs.readFileSync(path.join(targetDir, 'simple.json'), 'utf8')).type).toBe('Simple');
+
+            helpers.cleanupTempDir(tmpDir);
         });
 
-        it('omits default values (integrity=20, damage_reduction=2, etc.)', function () {
-            var def = {
-                type: 'Simple',
-                direction: 'yp',
-                integrity: 20.0,
-                damage_reduction: 2.0,
-                damage_multiplier: 1.5,
-                damage_absorption: 0.2,
-                collide_between: false,
-            };
-            var result = connGen.generateConnectorJSON('test_connector', def);
-
-            // Default values should be omitted
-            expect(result.integrity).toBeUndefined();
-            expect(result.damage_reduction).toBeUndefined();
-            expect(result.damage_multiplier).toBeUndefined();
-            expect(result.damage_absorption).toBeUndefined();
-            expect(result.collide_between).toBeUndefined();
-
-            // Non-default fields still present
-            expect(result.type).toBe('Simple');
-            expect(result.direction).toBe('yp');
+        it('源目录不存在时返回 0，不抛错', function () {
+            var count = connGen.copyConnectorDefs('/nonexistent/path', 'ns', '/target', true);
+            expect(count).toBe(0);
         });
 
-        it('includes collide_between when true', function () {
-            var def = {
-                type: 'Simple',
-                direction: 'yp',
-                integrity: 20.0,
-                damage_reduction: 2.0,
-                damage_multiplier: 1.5,
-                damage_absorption: 0.2,
-                collide_between: true,
-            };
-            var result = connGen.generateConnectorJSON('test_connector', def);
-            expect(result.collide_between).toBe(true);
-        });
-    });
+        it('扁平模式下连接点位于目标目录根，不分入子目录', function () {
+            var tmpDir = helpers.createTempDir();
+            var ns = 'machine_max';
+            var srcDir = path.join(tmpDir, ns, 'connectors');
+            var targetDir = path.join(tmpDir, 'export', ns, 'connectors');
+            fs.mkdirSync(srcDir, { recursive: true });
+            fs.writeFileSync(path.join(srcDir, 'simple.json'), JSON.stringify({ type: 'Simple' }));
 
-    describe('generateAllConnectors', function () {
+            connGen.copyConnectorDefs(tmpDir, ns, targetDir, true);
 
-        it('iterates all connector defs', function () {
-            var config = helpers.createMinimalConfig();
-            config.connector_defs = {};
-            config.connector_defs['conn_a'] = { type: 'Simple', direction: 'yp' };
-            config.connector_defs['conn_b'] = { type: 'Complex', direction: 'xn' };
+            expect(fs.existsSync(path.join(targetDir, 'simple.json'))).toBe(true);
 
-            // We need to require generateAllConnectors — it's exported
-            var result = connGen.generateAllConnectors(config);
-
-            expect(Object.keys(result).length).toBe(2);
-            expect(result.conn_a.type).toBe('Simple');
-            expect(result.conn_b.type).toBe('Complex');
+            helpers.cleanupTempDir(tmpDir);
         });
     });
 });
@@ -196,76 +156,51 @@ describe('Connector Generator', function () {
 
 describe('Subsystem Generator', function () {
 
-    describe('generateSubsystemJSON', function () {
+    describe('getTypeSpecificFields', function () {
 
-        it('returns type + type-specific fields for engine', function () {
-            var def = {
-                type: 'machine_max:engine',
-                basic_durability: 50.0,
-                max_power: 200,
-                max_torque: 300,
-                idle_rpm: 800,
-                peak_torque_rpm: 3500,
-                red_line_rpm: 6000,
-                cylinder_count: 8,
-                four_stroke: true,
-            };
-            var result = subGen.generateSubsystemJSON('test_engine', def);
-
-            expect(result.type).toBe('machine_max:engine');
-            expect(result.basic_durability).toBe(50.0);
-            expect(result.max_power).toBe(200);
-            expect(result.max_torque).toBe(300);
-            expect(result.idle_rpm).toBe(800);
-            expect(result.peak_torque_rpm).toBe(3500);
-            expect(result.red_line_rpm).toBe(6000);
-            expect(result.cylinder_count).toBe(8);
-            expect(result.four_stroke).toBe(true);
+        it('engine 类型返回引擎特有字段', function () {
+            var fields = subGen.getTypeSpecificFields('machine_max:engine');
+            expect(fields.indexOf('max_power')).toBeGreaterThan(-1);
+            expect(fields.indexOf('max_torque')).toBeGreaterThan(-1);
+            expect(fields.indexOf('cylinder_count')).toBeGreaterThan(-1);
         });
 
-        it('omits default basic_durability (20.0)', function () {
-            var def = {
-                type: 'machine_max:basic',
-                basic_durability: 20.0,
-            };
-            var result = subGen.generateSubsystemJSON('test_basic', def);
-
-            expect(result.type).toBe('machine_max:basic');
-            expect(result.basic_durability).toBeUndefined();
+        it('basic 类型返回空数组', function () {
+            var fields = subGen.getTypeSpecificFields('machine_max:basic');
+            expect(fields).toEqual([]);
         });
 
-        it('includes pass_damage=false when explicitly set', function () {
-            var def = {
-                type: 'machine_max:basic',
-                pass_damage: false,
-            };
-            var result = subGen.generateSubsystemJSON('test_basic', def);
-            expect(result.pass_damage).toBe(false);
-        });
-
-        it('includes hidden when true', function () {
-            var def = {
-                type: 'machine_max:basic',
-                hidden: true,
-            };
-            var result = subGen.generateSubsystemJSON('test_basic', def);
-            expect(result.hidden).toBe(true);
+        it('未知类型返回空数组', function () {
+            var fields = subGen.getTypeSpecificFields('unknown:type');
+            expect(fields).toEqual([]);
         });
     });
 
-    describe('generateAllSubsystems', function () {
+    describe('copySubsystemDefs', function () {
 
-        it('iterates all subsystem defs', function () {
-            var config = helpers.createMinimalConfig();
-            config.subsystem_defs = {};
-            config.subsystem_defs['sub_a'] = { type: 'machine_max:engine', max_power: 100 };
-            config.subsystem_defs['sub_b'] = { type: 'machine_max:basic' };
+        it('从内容包目录复制子系统定义到导出目录', function () {
+            var tmpDir = helpers.createTempDir();
+            var ns = 'machine_max';
+            var srcDir = path.join(tmpDir, ns, 'subsystems');
+            var targetDir = path.join(tmpDir, 'export', ns, 'subsystems');
+            fs.mkdirSync(srcDir, { recursive: true });
 
-            var result = subGen.generateAllSubsystems(config);
+            fs.writeFileSync(path.join(srcDir, 'engine_v8.json'), JSON.stringify({ type: 'machine_max:engine', max_power: 200 }));
+            fs.writeFileSync(path.join(srcDir, 'seat_basic.json'), JSON.stringify({ type: 'machine_max:seat' }));
 
-            expect(Object.keys(result).length).toBe(2);
-            expect(result.sub_a.type).toBe('machine_max:engine');
-            expect(result.sub_b.type).toBe('machine_max:basic');
+            var count = subGen.copySubsystemDefs(tmpDir, ns, targetDir, true);
+
+            expect(count).toBe(2);
+            expect(fs.existsSync(path.join(targetDir, 'engine_v8.json'))).toBe(true);
+            expect(fs.existsSync(path.join(targetDir, 'seat_basic.json'))).toBe(true);
+            expect(JSON.parse(fs.readFileSync(path.join(targetDir, 'engine_v8.json'), 'utf8')).type).toBe('machine_max:engine');
+
+            helpers.cleanupTempDir(tmpDir);
+        });
+
+        it('源目录不存在时返回 0，不抛错', function () {
+            var count = subGen.copySubsystemDefs('/nonexistent/path', 'ns', '/target', true);
+            expect(count).toBe(0);
         });
     });
 });
@@ -274,108 +209,32 @@ describe('Subsystem Generator', function () {
 
 describe('Material Generator', function () {
 
-    describe('generateMaterialJSON', function () {
+    describe('copyMaterialDefs', function () {
 
-        it('returns cleaned material definition', function () {
-            var def = {
-                friction: 0.8,
-                restitution: 0.2,
-                density: 2.0,
-                armor_thickness: 5.0,
-                armor_toughness: 1.0,
-                hit_sound: 'minecraft:block.anvil.hit',
-                break_sound: null,
-                particle: undefined,
-            };
-            var result = matGen.generateMaterialJSON('test_material', def);
+        it('从内容包目录复制材料定义到导出目录', function () {
+            var tmpDir = helpers.createTempDir();
+            var ns = 'machine_max';
+            var srcDir = path.join(tmpDir, ns, 'materials');
+            var targetDir = path.join(tmpDir, 'export', ns, 'materials');
+            fs.mkdirSync(srcDir, { recursive: true });
 
-            expect(result.friction).toBe(0.8);
-            expect(result.restitution).toBe(0.2);
-            expect(result.density).toBe(2.0);
-            expect(result.armor_thickness).toBe(5.0);
-            expect(result.armor_toughness).toBe(1.0);
-            expect(result.hit_sound).toBe('minecraft:block.anvil.hit');
-            // null and undefined removed
-            expect(result.break_sound).toBeUndefined();
-            expect(result.particle).toBeUndefined();
+            fs.writeFileSync(path.join(srcDir, 'steel.json'), JSON.stringify({ friction: 0.8, restitution: 0.2 }));
+            fs.writeFileSync(path.join(srcDir, 'rubber.json'), JSON.stringify({ friction: 0.9, restitution: 0.5 }));
+
+            var count = matGen.copyMaterialDefs(tmpDir, ns, targetDir);
+
+            expect(count).toBe(2);
+            expect(fs.existsSync(path.join(targetDir, 'steel.json'))).toBe(true);
+            expect(fs.existsSync(path.join(targetDir, 'rubber.json'))).toBe(true);
+            expect(JSON.parse(fs.readFileSync(path.join(targetDir, 'steel.json'), 'utf8')).friction).toBe(0.8);
+
+            helpers.cleanupTempDir(tmpDir);
         });
 
-        it('returns empty object for null/undefined input', function () {
-            expect(matGen.generateMaterialJSON('test', null)).toEqual({});
-            expect(matGen.generateMaterialJSON('test', undefined)).toEqual({});
+        it('源目录不存在时返回 0，不抛错', function () {
+            var count = matGen.copyMaterialDefs('/nonexistent/path', 'ns', '/target');
+            expect(count).toBe(0);
         });
-    });
-
-    describe('generateAllMaterials', function () {
-
-        it('iterates all material defs', function () {
-            var config = helpers.createMinimalConfig();
-            config.material_defs = {};
-            config.material_defs['mat_a'] = { friction: 0.5 };
-            config.material_defs['mat_b'] = { friction: 0.9 };
-
-            var result = matGen.generateAllMaterials(config);
-
-            expect(Object.keys(result).length).toBe(2);
-            expect(result.mat_a.friction).toBe(0.5);
-            expect(result.mat_b.friction).toBe(0.9);
-        });
-    });
-});
-
-// ─── stripUndefined Boundary Tests ────────────────────────────────────────────
-
-describe('stripUndefined (via generateMaterialJSON)', function () {
-
-    it('preserves false, empty arrays, empty objects, and 0', function () {
-        var result = matGen.generateMaterialJSON('test', {
-            a: false,
-            b: undefined,
-            c: null,
-            d: [],
-            e: {},
-            f: 0,
-        });
-
-        // false preserved
-        expect(result.a).toBe(false);
-        // undefined removed
-        expect(result.b).toBeUndefined();
-        // null removed
-        expect(result.c).toBeUndefined();
-        // empty array preserved
-        expect(result.d).toEqual([]);
-        // empty object removed (stripUndefined returns undefined for empty objects)
-        expect(result.e).toBeUndefined();
-        // 0 preserved
-        expect(result.f).toBe(0);
-    });
-
-    it('strips undefined recursively in nested objects', function () {
-        var result = matGen.generateMaterialJSON('test', {
-            outer: {
-                inner: 'keep',
-                remove_me: undefined,
-                deeper: {
-                    value: 42,
-                    gone: null,
-                },
-            },
-        });
-
-        expect(result.outer.inner).toBe('keep');
-        expect(result.outer.remove_me).toBeUndefined();
-        expect(result.outer.deeper.value).toBe(42);
-        expect(result.outer.deeper.gone).toBeUndefined();
-    });
-
-    it('preserves empty string', function () {
-        var result = matGen.generateMaterialJSON('test', {
-            name: '',
-            description: 'hello',
-        });
-        expect(result.name).toBe('');
-        expect(result.description).toBe('hello');
     });
 });
 

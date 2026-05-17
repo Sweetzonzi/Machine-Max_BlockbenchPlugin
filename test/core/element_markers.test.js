@@ -454,6 +454,79 @@ describe('element_markers', function () {
                 throw new Error('sub_parts entry not cleaned up');
             }
         });
+
+        it('先标碰撞箱再标子零件再清除 —— 碰撞箱不残留', function () {
+            var config = helpers.createMinimalConfig();
+            config.parts['test_part'] = helpers.createSamplePart();
+            var variant = config.parts['test_part'].variants['default'];
+
+            // 1. 先创建父子零件，以便碰撞箱有归属
+            markers.setMarker(config, 'test_part', 'default', 'uuid-parent-sp', 'sub_part', 'parent_bone');
+            var parentSp = variant.sub_parts['parent_bone'];
+            parentSp.hit_boxes = {};
+
+            // 2. 标记同一组为碰撞箱（归属 parent_bone）
+            parentSp.hit_boxes['uuid-target'] = { name: 'hitbox_entry' };
+            markers.setMarker(config, 'test_part', 'default', 'uuid-target', 'hit_box', 'parent_bone');
+
+            // 3. 覆盖标记为子零件（这会触发旧 hit_box 副作用的清理）
+            markers.setMarker(config, 'test_part', 'default', 'uuid-target', 'sub_part', 'target_bone');
+
+            // 验证：旧的 hit_boxes 条目已被清理
+            if (parentSp.hit_boxes && parentSp.hit_boxes['uuid-target']) {
+                throw new Error('hit_box 残留: 覆盖标记后旧 hit_boxes 条目未被清理');
+            }
+
+            // 4. 清除标记
+            markers.clearMarker(config, 'test_part', 'default', 'uuid-target');
+
+            // 验证：sub_parts 条目被清理
+            if (variant.sub_parts && variant.sub_parts['target_bone']) {
+                throw new Error('sub_part 残留: 清除标记后 sub_parts 条目未被清理');
+            }
+            // 验证：旧的 hit_boxes 也没有残留
+            if (parentSp.hit_boxes && parentSp.hit_boxes['uuid-target']) {
+                throw new Error('hit_box 残留: 清除标记后旧 hit_boxes 条目仍存在');
+            }
+        });
+
+        it('先标子零件再标碰撞箱再清除 —— 子零件不残留', function () {
+            var config = helpers.createMinimalConfig();
+            config.parts['test_part'] = helpers.createSamplePart();
+            var variant = config.parts['test_part'].variants['default'];
+
+            // 1. 先创建父子零件，以便碰撞箱有归属
+            markers.setMarker(config, 'test_part', 'default', 'uuid-parent-sp', 'sub_part', 'parent_bone');
+            var parentSp = variant.sub_parts['parent_bone'];
+            parentSp.hit_boxes = {};
+
+            // 2. 标记同一组为子零件 → 自动创建 sub_parts 条目
+            markers.setMarker(config, 'test_part', 'default', 'uuid-target', 'sub_part', 'target_bone');
+            if (!variant.sub_parts['target_bone']) {
+                throw new Error('前置条件失败: sub_parts 条目未创建');
+            }
+
+            // 3. 覆盖标记为碰撞箱（这会触发旧 sub_part 副作用的清理）
+            parentSp.hit_boxes['uuid-target'] = { name: 'new_hitbox' };
+            markers.setMarker(config, 'test_part', 'default', 'uuid-target', 'hit_box', 'parent_bone');
+
+            // 验证：旧的 sub_parts 条目已被清理
+            if (variant.sub_parts && variant.sub_parts['target_bone']) {
+                throw new Error('sub_part 残留: 覆盖标记后旧 sub_parts 条目未被清理');
+            }
+
+            // 4. 清除标记
+            markers.clearMarker(config, 'test_part', 'default', 'uuid-target');
+
+            // 验证：hit_boxes 条目被清理
+            if (parentSp.hit_boxes && parentSp.hit_boxes['uuid-target']) {
+                throw new Error('hit_box 残留: 清除标记后 hit_boxes 条目未被清理');
+            }
+            // 验证：旧的 sub_parts 也没有残留
+            if (variant.sub_parts && variant.sub_parts['target_bone']) {
+                throw new Error('sub_part 残留: 清除标记后旧 sub_parts 条目仍存在');
+            }
+        });
     });
 
     // ─── MARKER_TYPE_LIST ─────────────────────────────────────────────────────

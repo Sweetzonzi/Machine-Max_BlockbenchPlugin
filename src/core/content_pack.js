@@ -22,6 +22,7 @@ const {
     fileExists,
     deleteFile,
 } = require('../utils/file_writer.js');
+const zip_reader = require('./zip_reader.js');
 
 /** 模块日志 */
 var log = createLogger('ContentPack');
@@ -92,10 +93,84 @@ function copyDirRecursive(srcDir, destDir) {
         if (stat.isDirectory()) {
             copyDirRecursive(srcPath, destPath);
         } else {
-            fs.writeFileSync(destPath, fs.readFileSync(srcPath));
-            log.debug('copyDirRecursive: 已复制 ' + srcPath + ' → ' + destPath);
+            try {
+                fs.writeFileSync(destPath, fs.readFileSync(srcPath));
+                log.debug('copyDirRecursive: 已复制 ' + srcPath + ' → ' + destPath);
+            } catch (e) {
+                log.warn('copyDirRecursive: 复制文件失败 ' + srcPath, e);
+            }
         }
     }
+}
+
+// =============================================================================
+// ZIP 内容包辅助函数
+// =============================================================================
+
+/**
+ * 判断给定路径是否指向 ZIP 格式的内容包
+ * @param {string} p - 文件系统路径
+ * @returns {boolean}
+ */
+function _isZipPath(p) {
+    if (!p || typeof p !== 'string') return false;
+    return p.toLowerCase().endsWith('.zip');
+}
+
+/**
+ * 从 ZIP 内容包中递归收集指定类型的所有定义文件
+ *
+ * 列出 ZIP 中所有文件，筛选路径匹配 {namespace}/{type}/ 前缀且
+ * 以 .json 结尾的文件，读取并解析每个 .json 文件。
+ *
+ * @param {string} zipPath - ZIP 文件的绝对路径
+ * @param {string} namespace - 命名空间
+ * @param {'materials'|'connectors'|'subsystems'} type - 定义类型
+ * @returns {Object<string, Object>} { [defId]: parsedData }
+ */
+function _readZipDefs(zipPath, namespace, type) {
+    var handle, allFiles, prefix, i, filePath, contentStr, defId, parsed;
+    var result = {};
+
+    handle = zip_reader.openZip(zipPath);
+    if (!handle) {
+        log.warn('_readZipDefs: 无法打开 ZIP ' + zipPath);
+        return result;
+    }
+
+    allFiles = handle.listFiles();
+    prefix = namespace + '/' + type + '/';
+
+    for (i = 0; i < allFiles.length; i++) {
+        filePath = allFiles[i];
+
+        // 筛选：路径以 {ns}/{type}/ 开头且以 .json 结尾
+        if (filePath.indexOf(prefix) !== 0) continue;
+        if (!filePath.endsWith('.json')) continue;
+
+        // 提取定义 ID：去掉前缀和扩展名，取文件名部分
+        // 例如 "machine_max/materials/steel.json" → "steel"
+        // 例如 "machine_max/materials/subdir/alloy.json" → "alloy"
+        defId = path.basename(filePath, '.json');
+        if (!defId) continue;
+
+        // 读取并解析 JSON
+        try {
+            contentStr = handle.getContent(filePath);
+            if (!contentStr) {
+                log.warn('_readZipDefs: 无法读取 ' + filePath);
+                continue;
+            }
+            parsed = JSON.parse(contentStr.toString('utf-8'));
+            result[defId] = parsed;
+            log.debug('_readZipDefs: 已读取 ' + filePath);
+        } catch (e) {
+            log.warn('_readZipDefs: JSON 解析失败，跳过 ' + filePath, e);
+        }
+    }
+
+    log.info('_readZipDefs: ' + type + ' 从 ZIP 读取完成，共 ' + Object.keys(result).length + ' 个定义');
+    return result;
 }
 
 // =============================================================================
@@ -122,14 +197,36 @@ function resolveNamespace(packId) {
 
 /**
  * 读取内容包的 meta.json
- * 返回解析后的对象，读取失败则返回 null 并记录警告日志
  *
- * @param {string} dirPath - 内容包根目录
+ * 支持目录形式和 ZIP 文件形式的内容包。
+ * 读取失败则返回 null 并记录警告日志。
+ *
+ * @param {string} packPath - 内容包根目录或 ZIP 文件路径
  * @returns {Object|null} meta 对象或 null
  */
-function readPackMeta(dirPath) {
-    var metaPath = path.join(dirPath, 'meta.json');
-    var meta = readJSONFile(metaPath);
+function readPackMeta(packPath) {
+    var metaPath, meta, raw;
+
+    // ZIP 形式：从压缩包根目录读取 meta.json
+    if (_isZipPath(packPath)) {
+        raw = zip_reader.readFileContent(packPath, 'meta.json');
+        if (!raw) {
+            log.warn('readPackMeta: ZIP 中未找到 meta.json: ' + packPath);
+            return null;
+        }
+        try {
+            meta = JSON.parse(raw.toString('utf-8'));
+            log.debug('readPackMeta: 已从 ZIP 读取 meta.json: ' + packPath);
+            return meta;
+        } catch (e) {
+            log.warn('readPackMeta: ZIP 中 meta.json 解析失败: ' + packPath, e);
+            return null;
+        }
+    }
+
+    // 目录形式
+    metaPath = path.join(packPath, 'meta.json');
+    meta = readJSONFile(metaPath);
     if (meta === null) {
         log.warn('readPackMeta: 读取失败或文件不存在 ' + metaPath);
     } else {
@@ -209,16 +306,66 @@ function createContentPack(dirPath, meta) {
 /**
  * 打开并校验已有的内容包
  *
- * 验证 meta.json 可读且 id 有效，并检查必要的子目录（materials/、connectors/、subsystems/）存在。
+ * 支持目录形式和 ZIP 文件形式的内容包。
+ * 验证 meta.json 可读且 id 有效，并检查必要的子目录存在。
  *
- * @param {string} dirPath - 内容包根目录
+ * @param {string} packPath - 内容包根目录或 ZIP 文件路径
  * @returns {{valid: boolean, meta: Object|null, namespace: string, error: string|null}} 校验结果
  */
-function openContentPack(dirPath) {
-    var meta, namespace, requiredDirs, i;
+function openContentPack(packPath) {
+    var meta, namespace, allFiles, i, hasMat, hasConn, hasSub;
 
+    // ZIP 形式
+    if (_isZipPath(packPath)) {
+        try {
+            // 校验 meta.json
+            meta = readPackMeta(packPath);
+            if (meta === null) {
+                return { valid: false, meta: null, namespace: '', error: 'ZIP 中 meta.json 读取失败或不存在' };
+            }
+
+            if (!meta.id) {
+                return { valid: false, meta: meta, namespace: '', error: 'meta.id 为空' };
+            }
+
+            namespace = resolveNamespace(meta.id);
+            if (!namespace) {
+                return { valid: false, meta: meta, namespace: '', error: '无法从 meta.id 解析 namespace' };
+            }
+
+            // 验证必要的"目录"在 ZIP 中存在（检查是否有文件以对应前缀开头）
+            allFiles = zip_reader.listFiles(packPath);
+            hasMat = false;
+            hasConn = false;
+            hasSub = false;
+
+            for (i = 0; i < allFiles.length; i++) {
+                if (allFiles[i].indexOf(namespace + '/materials/') === 0) hasMat = true;
+                if (allFiles[i].indexOf(namespace + '/connectors/') === 0) hasConn = true;
+                if (allFiles[i].indexOf(namespace + '/subsystems/') === 0) hasSub = true;
+            }
+
+            if (!hasMat) {
+                return { valid: false, meta: meta, namespace: namespace, error: 'ZIP 中缺少 materials/ 目录' };
+            }
+            if (!hasConn) {
+                return { valid: false, meta: meta, namespace: namespace, error: 'ZIP 中缺少 connectors/ 目录' };
+            }
+            if (!hasSub) {
+                return { valid: false, meta: meta, namespace: namespace, error: 'ZIP 中缺少 subsystems/ 目录' };
+            }
+
+            log.info('openContentPack: ZIP 内容包验证通过', { path: packPath, namespace: namespace });
+            return { valid: true, meta: meta, namespace: namespace, error: null };
+        } catch (e) {
+            log.error('openContentPack: 打开 ZIP 失败 ' + packPath, e);
+            return { valid: false, meta: null, namespace: '', error: e.message };
+        }
+    }
+
+    // 目录形式（原有逻辑）
     try {
-        meta = readPackMeta(dirPath);
+        meta = readPackMeta(packPath);
         if (meta === null) {
             return { valid: false, meta: null, namespace: '', error: 'meta.json 读取失败或不存在' };
         }
@@ -233,10 +380,10 @@ function openContentPack(dirPath) {
         }
 
         // 验证必要子目录存在
-        requiredDirs = [
-            path.join(dirPath, namespace, 'materials'),
-            path.join(dirPath, namespace, 'connectors'),
-            path.join(dirPath, namespace, 'subsystems'),
+        var requiredDirs = [
+            path.join(packPath, namespace, 'materials'),
+            path.join(packPath, namespace, 'connectors'),
+            path.join(packPath, namespace, 'subsystems'),
         ];
 
         for (i = 0; i < requiredDirs.length; i++) {
@@ -250,10 +397,10 @@ function openContentPack(dirPath) {
             }
         }
 
-        log.info('openContentPack: 内容包验证通过', { path: dirPath, namespace: namespace });
+        log.info('openContentPack: 内容包验证通过', { path: packPath, namespace: namespace });
         return { valid: true, meta: meta, namespace: namespace, error: null };
     } catch (e) {
-        log.error('openContentPack: 打开失败 ' + dirPath, e);
+        log.error('openContentPack: 打开失败 ' + packPath, e);
         return { valid: false, meta: null, namespace: '', error: e.message };
     }
 }
@@ -261,18 +408,25 @@ function openContentPack(dirPath) {
 /**
  * 读取指定类型的所有定义文件
  *
- * 递归扫描 {packDir}/{namespace}/{type}/ 目录及所有子目录，
- * 解析每个 .json 文件，以文件名（不含扩展名）为 key 返回。
- * JSON 解析失败的文件被跳过并记录警告。
+ * 支持目录形式和 ZIP 文件形式的内容包。
+ * 目录形式：递归扫描 {packDir}/{namespace}/{type}/ 及所有子目录。
+ * ZIP 形式：从压缩包中筛选匹配路径前缀的 .json 文件。
  *
- * @param {string} packDir - 内容包根目录
+ * @param {string} packDir - 内容包根目录或 ZIP 文件路径
  * @param {string} namespace - 命名空间
  * @param {'materials'|'connectors'|'subsystems'} type - 定义类型
  * @returns {Object<string, Object>} { [defId]: parsedData }，目录不存在时返回 {}
  */
 function readAllDefs(packDir, namespace, type) {
-    var typeDir = path.join(packDir, namespace, type);
-    var files, result, i, raw;
+    var typeDir, files, result, i, raw;
+
+    // ZIP 形式
+    if (_isZipPath(packDir)) {
+        return _readZipDefs(packDir, namespace, type);
+    }
+
+    // 目录形式（原有逻辑）
+    typeDir = path.join(packDir, namespace, type);
 
     if (!fs.existsSync(typeDir)) {
         log.debug('readAllDefs: 目录不存在 ' + typeDir);

@@ -63,8 +63,19 @@ function registerToolbarActions() {
         condition: { modes: ['machine_max_part'] },
         click: function () {
             log.debug('工具栏: 点击"导出内容包"');
+            var config = getConfig();
+            if (!config) {
+                showToast('没有可导出的配置', 'warning');
+                return;
+            }
             var menu = require('../ui/menu.js');
-            menu.showExportDialog();
+            menu.ensurePackValid(config, function (valid) {
+                if (valid) {
+                    menu.showExportDialog();
+                } else {
+                    showToast('请先设置有效的内容包', 'warning');
+                }
+            });
         }
     }));
 

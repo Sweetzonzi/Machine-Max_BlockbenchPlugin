@@ -1,42 +1,57 @@
 const { createLogger } = require('../utils/logger.js');
+const fileWriter = require('../utils/file_writer.js');
+const path = require('path');
+const fs = require('fs');
 
-/** 模块日志 */
 var log = createLogger('GenConnector');
 
 /**
- * connectors/*.json 生成器 — 将 connector_defs 导出为连接点静态定义文件
+ * 从内容包 connectors/ 目录复制所有连接点定义到导出目标目录
+ *
+ * 支持扁平存储（flat=true）和按模型分组存储（flat=false）两种模式：
+ * - flat=true: connectors/{connId}.json
+ * - flat=false: connectors/{model}/{connId}.json
+ *
+ * @param {string} packDir - 内容包根目录
+ * @param {string} ns - 包 namespace
+ * @param {string} targetDir - 导出目标目录（如 {packRoot}/machine_max/connectors）
+ * @param {boolean} flat - 是否扁平化导出
+ * @returns {number} 复制的文件数量
  */
-
-function generateConnectorJSON(defId, def) {
-    const output = {};
-
-    if (def.type) output.type = def.type;
-    if (def.direction) output.direction = def.direction;
-
-    if (def.integrity !== 20.0) output.integrity = def.integrity;
-    if (def.damage_reduction !== 2.0) output.damage_reduction = def.damage_reduction;
-    if (def.damage_multiplier !== 1.5) output.damage_multiplier = def.damage_multiplier;
-    if (def.damage_absorption !== 0.2) output.damage_absorption = def.damage_absorption;
-    if (def.collide_between) output.collide_between = true;
-
-    if (def.required_tags && def.required_tags.length > 0) output.required_tags = def.required_tags;
-    if (def.accepted_tags && def.accepted_tags.length > 0) output.accepted_tags = def.accepted_tags;
-    if (def.rejected_tags && def.rejected_tags.length > 0) output.rejected_tags = def.rejected_tags;
-    if (def.joints && def.joints.length > 0) output.joints = def.joints;
-
-    return output;
-}
-
-function generateAllConnectors(projectConfig) {
-    const defs = projectConfig.connector_defs || {};
-    const result = {};
-    for (const [defId, def] of Object.entries(defs)) {
-        result[defId] = generateConnectorJSON(defId, def);
+function copyConnectorDefs(packDir, ns, targetDir, flat) {
+    var count = 0;
+    var srcDir = path.join(packDir, ns, 'connectors');
+    if (!fs.existsSync(srcDir)) {
+        log.warn('copyConnectorDefs: 源目录不存在 ' + srcDir);
+        return 0;
     }
-    log.info('generateAllConnectors: 已生成 ' + Object.keys(result).length + ' 个连接点定义');
-    return result;
+    var files = fs.readdirSync(srcDir);
+
+    function resolveTarget(baseDir, id, isFlat) {
+        if (isFlat) return baseDir;
+        var seg = id.split('_')[0];
+        return (seg && seg.length > 0) ? path.join(baseDir, seg) : baseDir;
+    }
+
+    for (var i = 0; i < files.length; i++) {
+        var fileName = files[i];
+        if (!fileName.endsWith('.json')) continue;
+        var srcFile = path.join(srcDir, fileName);
+        try {
+            var content = JSON.parse(fs.readFileSync(srcFile, 'utf8'));
+            var id = fileName.slice(0, -5);
+            var loc = fileWriter.extractResourceLocation(id, ns);
+            var tDir = resolveTarget(targetDir, loc.path, flat);
+            fileWriter.writeJSONFile(tDir, loc.path + '.json', content);
+            count++;
+        } catch (e) {
+            log.warn('复制连接点文件失败: ' + srcFile, e);
+        }
+    }
+    log.info('copyConnectorDefs: 已复制 ' + count + ' 个连接点定义');
+    return count;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { generateConnectorJSON, generateAllConnectors };
+    module.exports = { copyConnectorDefs };
 }

@@ -104,6 +104,31 @@ function setMarker(projectConfig, partId, variantName, uuid, type, configRef) {
         part.element_markers[variantName] = {};
     }
 
+    // 覆盖标记前，先清理旧标记类型的副作用（防止类型变更后残留）
+    var oldMarker = part.element_markers[variantName][uuid];
+    if (oldMarker && oldMarker.type !== type) {
+        if (oldMarker.type === 'hit_box' && oldMarker.config_ref) {
+            var oldVariant = part.variants && part.variants[variantName];
+            if (oldVariant && oldVariant.sub_parts && oldVariant.sub_parts[oldMarker.config_ref]) {
+                var oldSp = oldVariant.sub_parts[oldMarker.config_ref];
+                if (oldSp.hit_boxes && oldSp.hit_boxes[uuid]) {
+                    delete oldSp.hit_boxes[uuid];
+                    log.debug('setMarker: 覆盖旧 hit_box 标记，已清理 hit_boxes 条目', {
+                        partId, variant: variantName, spKey: oldMarker.config_ref, uuid: uuid,
+                    });
+                }
+            }
+        } else if (oldMarker.type === 'sub_part' && oldMarker.config_ref) {
+            var oldVariant2 = part.variants && part.variants[variantName];
+            if (oldVariant2 && oldVariant2.sub_parts && oldVariant2.sub_parts[oldMarker.config_ref]) {
+                delete oldVariant2.sub_parts[oldMarker.config_ref];
+                log.debug('setMarker: 覆盖旧 sub_part 标记，已清理 sub_parts 条目', {
+                    partId, variant: variantName, spKey: oldMarker.config_ref,
+                });
+            }
+        }
+    }
+
     // 标记为子零件时自动在 variant.sub_parts 中创建配置对象
     if (type === 'sub_part' && configRef) {
         const variant = part.variants && part.variants[variantName];
