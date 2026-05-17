@@ -120,6 +120,20 @@ var Outliner = {
     updateElement: function (el) {},
 };
 
+// ─── Property ─────────────────────────────────────────────────────────────────
+class Property {
+    constructor(target, type, name, options) {
+        this.name = name;
+        this.type = type;
+        this.options = options || {};
+        // Set default value on target (mimics Blockbench behavior where new Property() resets)
+        target[name] = (this.options.default !== undefined) ? this.options.default : {};
+        // Register in properties map
+        if (!ModelProject.properties) ModelProject.properties = {};
+        ModelProject.properties[name] = this;
+    }
+}
+
 // ─── ModelProject ────────────────────────────────────────────────────────────
 class ModelProject {
     constructor() {
@@ -133,6 +147,7 @@ ModelProject.properties = {};
 var Project = {
     file_path: '',
     name: 'Test Project',
+    machine_max_plugin: null,
 };
 
 // ─── Register globals ────────────────────────────────────────────────────────

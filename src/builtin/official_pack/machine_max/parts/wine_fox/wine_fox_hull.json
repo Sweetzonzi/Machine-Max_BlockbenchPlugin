@@ -1,0 +1,413 @@
+{
+  "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",
+  "icon": "machine_max:textures/icon/wine_fox/wine_fox_hull_icon.png",
+  "vehicle_durability_rate": 0.6,
+  "vehicle_damage_rate": 1.0,
+  "vehicle_damage_rate_destroyed": 0.1,
+  "variants": {
+    "model": "machine_max:wine_fox.geo",
+    "textures": "machine_max:textures/part/wine_fox/wine_fox.png",
+    "animations": "machine_max:wine_fox",
+    "tags": ["machine_max:hull", "machine_max:wine_fox", "machine_max:storage"],
+    "sub_parts": {
+      "sub_part.machine_max.main": {
+        "start_bone": "AllHull", // (可选，默认空)起始骨骼名称，此骨骼及其包含的骨骼才会被作为零件的渲染与定义用模型
+        "end_bones": [], // (可选，默认空)终止骨骼列表, 此骨骼及其包含的骨骼会被排除到渲染与定义用模型之外，配合start_bone选定零件对应的骨骼范围
+        "mass_center": "hull_mass_center",
+        "durability": 250.0,
+        "mass": 400.0,
+        "block_collision": "ground",
+        "collision_height": 1.5,
+        "hit_boxes": { //键:骨骼名称, 会寻找名称匹配的骨骼, 并根据其中的方块创建不同形状的碰撞体, 以及将此骨骼下的定位器储存起来供子系统等使用
+          "HullCollision": { //值:碰撞形状属性
+            "type": "box", //碰撞形状类型, 支持box、sphere、cylinder
+            "material": "machine_max:structural_steel",
+            "thickness": 3 //(可选, 默认1)等效护甲厚度, 单位mm, 减免伤害并控制碰撞时的能量分配情况
+          },
+          "EngineCollision": { // 挡风玻璃
+            "id": "engine",
+            "type": "box",
+            "material": "machine_max:structural_steel",
+            "thickness": 1,
+            "subsystem": "subsystem.machine_max.engine"
+          },
+          "FrontGlass": { // 挡风玻璃
+            "id": "front_glass",
+            "type": "box",
+            "material": "machine_max:glass",
+            "thickness": 1,
+            "subsystem": "subsystem.machine_max.front_glass",
+            "condition": "!subpart.subsystem_destroyed('subsystem.machine_max.front_glass')" // 仅当前挡风玻璃未被摧毁时才生效
+          },
+          "LeftBackGlass": { // 左后车窗玻璃
+            "id": "left_back_glass",
+            "type": "box",
+            "material": "machine_max:glass",
+            "thickness": 1,
+            "subsystem": "subsystem.machine_max.left_back_glass",
+            "condition": "!subpart.subsystem_destroyed('subsystem.machine_max.left_back_glass')" // 仅当前左后车窗玻璃未被摧毁时才生效
+          },
+          "RightBackGlass": { // 右后车窗玻璃
+            "id": "right_back_glass",
+            "type": "box",
+            "material": "machine_max:glass",
+            "thickness": 1,
+            "subsystem": "subsystem.machine_max.right_back_glass",
+            "condition": "!subpart.subsystem_destroyed('subsystem.machine_max.right_back_glass')" // 仅当前右后车窗玻璃未被摧毁时才生效
+          },
+          "LeftFrontHeadLight": {
+            "type": "box",
+            "subsystem": "subsystem.machine_max.left_front_light",
+            "condition": "!subpart.subsystem_destroyed('subsystem.machine_max.left_front_light')",
+            "material": "machine_max:glass",
+            "thickness": 1
+          },
+          "RightFrontHeadLight": {
+            "type": "box",
+            "subsystem": "subsystem.machine_max.right_front_light",
+            "condition": "!subpart.subsystem_destroyed('subsystem.machine_max.right_front_light')",
+            "material": "machine_max:glass",
+            "thickness": 1
+          },
+          "LeftRearLight": {
+            "type": "box",
+            "subsystem": "subsystem.machine_max.left_back_light",
+            "condition": "!subpart.subsystem_destroyed('subsystem.machine_max.left_back_light')",
+            "material": "machine_max:glass",
+            "thickness": 1
+          },
+          "RightRearLight": {
+            "type": "box",
+            "subsystem": "subsystem.machine_max.right_back_light",
+            "condition": "!subpart.subsystem_destroyed('subsystem.machine_max.right_back_light')",
+            "material": "machine_max:glass",
+            "thickness": 1
+          },
+          "ysmGlowLeftFogLight": {
+            "type": "box",
+            "subsystem": "subsystem.machine_max.left_front_fog_light",
+            "condition": "!subpart.subsystem_destroyed('subsystem.machine_max.left_front_fog_light')",
+            "material": "machine_max:glass"
+          },
+          "ysmGlowRightFogLight": {
+            "type": "box",
+            "subsystem": "subsystem.machine_max.right_front_fog_light",
+            "condition": "!subpart.subsystem_destroyed('subsystem.machine_max.right_front_fog_light')",
+            "material": "machine_max:glass"
+          }
+        },
+        "interact_boxes": { //交互判定区列表
+          "interact.machine_max.left_seat": { //键:交互判定区名称
+            "bone": "LeftSeatInteract", //骨骼名称, 会寻找名称匹配的骨骼, 以其内部方块的位置与姿态作为交互判定区体积的位置和姿态
+            "signal_targets": {
+              "left_seat_interact": ["subsystem.machine_max.driver_seat"] //将交互信号转发给驾驶座
+            },
+            "interact_mode": "accurate" //(可选, 默认fast)交互模式, fast为玩家碰撞箱与交互区碰撞时按下交互键触发, accurate为玩家瞄准交互区按下交互键触发
+          },
+          "interact.machine_max.right_seat": { //键:交互判定区名称
+            "bone": "RightSeatInteract", //骨骼名称, 会寻找名称匹配的骨骼, 以其内部方块的位置与姿态作为交互判定区体积的位置和姿态
+            "signal_targets": {
+              "left_seat_interact": ["subsystem.machine_max.copilot_seat"] //将交互信号转发给副驾驶座
+            },
+            "interact_mode": "accurate" //(可选, 默认fast)交互模式, fast为玩家碰撞箱与交互区碰撞时按下交互键触发, accurate为玩家瞄准交互区按下交互键触发
+          },
+          "interact.machine_max.left_seat_fast": { //键:交互判定区名称
+            "bone": "LeftSeatOnBoard", //骨骼名称, 会寻找名称匹配的骨骼, 以其内部方块的位置与姿态作为交互判定区体积的位置和姿态
+            "signal_targets": {
+              "right_seat_interact": ["subsystem.machine_max.driver_seat"] //将交互信号转发给后排座椅
+            },
+            "interact_mode": "fast" //(可选, 默认fast)交互模式, fast为玩家碰撞箱与交互区碰撞时按下交互键触发, accurate为玩家瞄准交互区按下交互键触发
+          },
+          "interact.machine_max.right_seat_fast": { //键:交互判定区名称
+            "bone": "RightSeatOnBoard", //骨骼名称, 会寻找名称匹配的骨骼, 以其内部方块的位置与姿态作为交互判定区体积的位置和姿态
+            "signal_targets": {
+              "right_seat_interact": ["subsystem.machine_max.copilot_seat"] //将交互信号转发给后排座椅
+            },
+            "interact_mode": "fast" //(可选, 默认fast)交互模式, fast为玩家碰撞箱与交互区碰撞时按下交互键触发, accurate为玩家瞄准交互区按下交互键触发
+          },
+          "interact.machine_max.glove_box": { //键:交互判定区名称
+            "bone": "GloveBoxInteract", //骨骼名称, 会寻找名称匹配的骨骼, 以其内部方块的位置与姿态作为交互判定区体积的位置和姿态
+            "signal_targets": {
+              "glove_box_interact": ["subsystem.machine_max.glove_box"] //将交互信号转发给储物子系统
+            },
+            "interact_mode": "accurate" //(可选, 默认fast)交互模式, fast为玩家碰撞箱与交互区碰撞时按下交互键触发, accurate为玩家瞄准交互区按下交互键触发
+          },
+          "interact.machine_max.trunk": { //键:交互判定区名称
+            "bone": "TrunkInteract", //骨骼名称, 会寻找名称匹配的骨骼, 以其内部方块的位置与姿态作为交互判定区体积的位置和姿态
+            "signal_targets": {
+              "trunk_interact": ["subsystem.machine_max.trunk"] //将交互信号转发给储物子系统
+            },
+            "interact_mode": "accurate" //(可选, 默认fast)交互模式, fast为玩家碰撞箱与交互区碰撞时按下交互键触发, accurate为玩家瞄准交互区按下交互键触发
+          }
+        },
+        "subsystems": {
+          "subsystem.machine_max.driver_seat": {
+            "type": "machine_max:seat", //子系统类型
+            "definition": "machine_max:default_seat", //子系统型号, 需要与子系统类型相匹配
+            "locator": "LeftFrontSeatPoint", //乘坐点定位器名称, 该定位器需要位于任意零件的碰撞箱骨骼中, 乘客将被定位于此
+            "move_outputs": { //(可选,默认为空)子系统移动控制输出列表
+              "move_control": ["subsystem.machine_max.car_controller"] //将控制信号转发给车辆控制系统
+            },
+            "regular_outputs": { //(可选,默认为空)子系统常规按键输出列表
+              "regular_control": ["subsystem.machine_max.car_controller"] //将控制信号转发给车辆控制系统
+            },
+            "aim_outputs": { //(可选,默认为空)子系统视角控制输出列表
+              "aim_control": ["subsystem.machine_max.car_controller"]
+            },
+            "passenger_num_outputs": {
+              "occupied": ["interact.machine_max.left_seat", "interact.machine_max.left_seat_fast"]
+            }
+          },
+          "subsystem.machine_max.copilot_seat": {
+            "type": "machine_max:seat", //子系统类型
+            "definition": "machine_max:default_passenger_seat", //子系统型号, 需要与子系统类型相匹配
+            "locator": "RightFrontSeatPoint", //乘坐点定位器名称, 该定位器需要位于任意零件的碰撞箱骨骼中, 乘客将被定位于此
+            "passenger_num_outputs": {
+              "occupied": ["interact.machine_max.right_seat", "interact.machine_max.right_seat_fast"]
+            }
+          },
+          "subsystem.machine_max.car_controller": {
+            "type": "machine_max:car_controller", //子系统类型
+            "definition": "machine_max:wine_fox_car_controller",//子系统型号, 需要与子系统类型相匹配
+            "control_outputs": {
+              "car_control": [
+                "subsystem.machine_max.engine",
+                "subsystem.machine_max.gearbox",
+                "subsystem.machine_max.left_back_wheel_driver",
+                "subsystem.machine_max.left_front_wheel_driver",
+                "subsystem.machine_max.right_back_wheel_driver",
+                "subsystem.machine_max.right_front_wheel_driver"
+              ]
+            },
+            "speed_outputs": { //(可选, 默认将移动速度(m/s)发至部件和载具的vehicle_speed频道)移动速度信号输出频道及目标
+              "vehicle_speed": ["subpart", "vehicle"]
+            },
+            "throttle_outputs": { //(可选, 默认将油门[0,1]发至部件和载具的throttle频道)油门信号输出频道及目标
+              "throttle": ["subpart", "vehicle"]
+            },
+            "brake_outputs": { //(可选, 默认将制动程度[0,1]发至部件和载具的brake频道)制动信号输出频道及目标
+              "brake": ["subpart", "vehicle"]
+            },
+            "steering_outputs": { //(可选, 默认将转向程度[-1,1]发至部件和载具的steering频道)转向角度信号输出频道及目标
+              "steering": ["subpart", "vehicle"]
+            },
+            "handbrake_outputs": { //(可选, 默认将手刹程度[0,1]发至部件和载具的handbrake频道)手刹器开关信号输出频道及目标
+              "handbrake": ["subpart", "vehicle"]
+            }
+          },
+          "subsystem.machine_max.engine": {
+            "type": "machine_max:engine", //电动机子系统, 低速下恒扭矩, 高速下恒功率
+            "definition": "machine_max:wine_fox_engine",//子系统型号, 需要与子系统类型相匹配
+            "power_output": "subsystem.machine_max.gearbox", //功率输出目标, 可填写任意本部件内其他子系统名称、部件连接点名称, 或“part”, 或“vehicle”
+            "speed_outputs": { //(可选, 默认将引擎转速(rad/s)发至部件和载具的engine_speed频道)引擎转速信号输出频道及目标
+              "engine_speed": ["subpart", "vehicle"]
+            }
+          },
+          "subsystem.machine_max.gearbox": {
+            "type": "machine_max:gearbox", //变速箱子系统, 改变收到的功率信号的扭矩和转速
+            "definition": "machine_max:wine_fox_gearbox", //子系统型号, 需要与子系统类型相匹配
+            "power_output": "subsystem.machine_max.transmission", //功率输出目标, 子系统或部件连接点名
+            "gear_outputs": { //(可选, 默认将当前挡位名称发至部件和载具的gear频道)挡位名称输出频道及目标
+              "gear": ["subpart", "vehicle"]
+            }
+          },
+          "subsystem.machine_max.transmission": {
+            "type": "machine_max:transmission", //传动子系统, 将接收到的功率分配至各个输出目标
+            "definition": "machine_max:wine_fox_transmission", //子系统型号, 需要与子系统类型相匹配
+            "power_outputs": { //动力输出目标及减速比
+              "subsystem.machine_max.left_back_wheel_driver": 1,
+              "subsystem.machine_max.right_back_wheel_driver": 1
+            }
+          },
+          "subsystem.machine_max.glove_box": {
+            "type": "machine_max:item_storage", //储物子系统, 互动可打开存储容器
+            "definition": "machine_max:glove_box" //子系统型号, 需要与子系统类型相匹配
+          },
+          "subsystem.machine_max.trunk": {
+            "type": "machine_max:item_storage", //储物子系统, 互动可打开存储容器
+            "definition": "machine_max:default_trunk" //子系统型号, 需要与子系统类型相匹配
+          },
+          "subsystem.machine_max.left_front_wheel_driver": {
+            "type": "machine_max:wheel_driver", //轮胎驱动子系统, 驱动连接点上的部件滚动和转向
+            "definition": "machine_max:wine_fox_front_wheel_driver", //子系统型号, 需要与子系统类型相匹配
+            "connector": "connector.machine_max.left_front_wheel" //控制的连接点名称
+          },
+          "subsystem.machine_max.right_front_wheel_driver": {
+            "type": "machine_max:wheel_driver", //轮胎驱动子系统, 驱动连接点上的部件滚动和转向
+            "definition": "machine_max:wine_fox_front_wheel_driver", //子系统型号, 需要与子系统类型相匹配
+            "connector": "connector.machine_max.right_front_wheel" //控制的连接点名称
+          },
+          "subsystem.machine_max.left_back_wheel_driver": {
+            "type": "machine_max:wheel_driver",
+            "definition": "machine_max:wine_fox_back_wheel_driver",
+            "connector": "connector.machine_max.left_back_wheel"
+          },
+          "subsystem.machine_max.right_back_wheel_driver": {
+            "type": "machine_max:wheel_driver",
+            "definition": "machine_max:wine_fox_back_wheel_driver",
+            "connector": "connector.machine_max.right_back_wheel"
+          },
+          "subsystem.machine_max.front_glass": {
+            "type": "machine_max:basic", //无功能子系统, 仅用于表示玻璃是否被摧毁
+            "definition": "machine_max:default_glass"
+          },
+          "subsystem.machine_max.left_back_glass": {
+            "type": "machine_max:basic", //无功能子系统, 仅用于表示玻璃是否被摧毁
+            "definition": "machine_max:default_glass"
+          },
+          "subsystem.machine_max.right_back_glass": {
+            "type": "machine_max:basic", //无功能子系统, 仅用于表示玻璃是否被摧毁
+            "definition": "machine_max:default_glass"
+          },
+          "subsystem.machine_max.left_front_light": {
+            "type": "machine_max:lighting",
+            "definition": "machine_max:dummy_light"
+          },
+          "subsystem.machine_max.right_front_light": {
+            "type": "machine_max:lighting",
+            "definition": "machine_max:dummy_light"
+          },
+          "subsystem.machine_max.left_back_light": {
+            "type": "machine_max:lighting",
+            "definition": "machine_max:dummy_light"
+          },
+          "subsystem.machine_max.right_back_light": {
+            "type": "machine_max:lighting",
+            "definition": "machine_max:dummy_light"
+          },
+          "subsystem.machine_max.left_front_fog_light": {
+            "type": "machine_max:basic", //无功能子系统, 仅用于表示是否被摧毁
+            "definition": "machine_max:default_glass"
+          },
+          "subsystem.machine_max.right_front_fog_light": {
+            "type": "machine_max:basic", //无功能子系统, 仅用于表示是否被摧毁
+            "definition": "machine_max:default_glass"
+          }
+        },
+        "connectors": {
+          "connector.machine_max.left_front_wheel": {
+            "locator": "left_front_wheel",
+            "definition": "machine_max:wine_fox_left_front_wheel"
+          },
+          "connector.machine_max.left_back_wheel": {
+            "locator": "left_back_wheel",
+            "definition": "machine_max:wine_fox_left_back_wheel"
+          },
+          "connector.machine_max.right_front_wheel": {
+            "locator": "right_front_wheel",
+            "definition": "machine_max:wine_fox_right_front_wheel"
+          },
+          "connector.machine_max.right_back_wheel": {
+            "locator": "right_back_wheel",
+            "definition": "machine_max:wine_fox_right_back_wheel"
+          },
+          "connector.machine_max.front_bumper_left": {
+            "locator": "hull_front_bumper_left",
+            "definition": "machine_max:wine_fox_front_bumper_left"
+          },
+          "connector.machine_max.front_bumper_right": {
+            "locator": "hull_front_bumper_right",
+            "definition": "machine_max:wine_fox_front_bumper_right"
+          },
+          "connector.machine_max.front_light_left": {
+            "locator": "hull_front_light_left",
+            "definition": "machine_max:wine_fox_front_light_left"
+          },
+          "connector.machine_max.front_light_right": {
+            "locator": "hull_front_light_right",
+            "definition": "machine_max:wine_fox_front_light_right"
+          },
+          "connector.machine_max.back_bumper_left": {
+            "locator": "hull_back_bumper_left",
+            "definition": "machine_max:wine_fox_back_bumper_left"
+          },
+          "connector.machine_max.back_bumper_right": {
+            "locator": "hull_back_bumper_right",
+            "definition": "machine_max:wine_fox_back_bumper_right"
+          },
+          "connector.machine_max.left_door_axis": {
+            "locator": "hull_left_door_axis",
+            "definition": "machine_max:wine_fox_left_door_axis"
+          },
+          "connector.machine_max.left_door_lock": {
+            "locator": "hull_left_door_lock",
+            "definition": "machine_max:fixed_up",
+            "overwrite": {
+              "integrity": 5
+            }
+          },
+          "connector.machine_max.right_door_axis": {
+            "locator": "hull_right_door_axis",
+            "definition": "machine_max:wine_fox_right_door_axis"
+          },
+          "connector.machine_max.right_door_lock": {
+            "locator": "hull_right_door_lock",
+            "definition": "machine_max:fixed_up",
+            "overwrite": {
+              "integrity": 5
+            }
+          },
+          "connector.machine_max.trunk_door_axis": {
+            "locator": "hull_trunk_door_axis",
+            "definition": "machine_max:wine_fox_trunk_door_axis"
+          },
+          "connector.machine_max.trunk_door_lock": {
+            "locator": "hull_trunk_door_lock",
+            "definition": "machine_max:fixed_up",
+            "overwrite": {
+              "integrity": 5
+            }
+          },
+          "connector.machine_max.hood_axis": {
+            "locator": "hull_hood_axis",
+            "definition": "machine_max:wine_fox_hood_axis"
+          },
+          "connector.machine_max.hood_lock": {
+            "locator": "hull_hood_lock",
+            "definition": "machine_max:fixed_up",
+            "overwrite": {
+              "integrity": 5
+            }
+          },
+          "connector.machine_max.top_left_front": {
+            "locator": "hull_top_left_front",
+            "definition": "machine_max:fixed_up",
+            "overwrite": {
+              "integrity": 5
+            }
+          },
+          "connector.machine_max.top_left_back": {
+            "locator": "hull_top_left_back",
+            "definition": "machine_max:fixed_up",
+            "overwrite": {
+              "integrity": 5
+            }
+          },
+          "connector.machine_max.top_right_front": {
+            "locator": "hull_top_right_front",
+            "definition": "machine_max:fixed_up",
+            "overwrite": {
+              "integrity": 5
+            }
+          },
+          "connector.machine_max.top_right_back": {
+            "locator": "hull_top_right_back",
+            "definition": "machine_max:fixed_up",
+            "overwrite": {
+              "integrity": 5
+            }
+          }
+        },
+        "projected_area": [8.6, 13.9, 6.5],
+        "hydro_priority": 10,
+        "hydrodynamics": {
+          "": {
+            "front_drag": [0.0, 0.3],
+            "back_drag": [0.0, 0.5]
+          }
+        }
+      }
+    }
+  }
+}
+

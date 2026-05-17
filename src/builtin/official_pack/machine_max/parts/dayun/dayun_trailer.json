@@ -1,0 +1,131 @@
+{
+  "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",
+  "icon": "machine_max:textures/icon/dayun/dayun_trailer_icon.png",
+  "vehicle_durability_rate": 1.0,
+  "vehicle_damage_rate": 0.1,
+  "vehicle_damage_rate_destroyed": 0.1,
+  "variants": {
+    "model": "machine_max:dayun.geo",
+    "textures": {
+      "print.machine_max.dayun.1": "machine_max:textures/part/dayun/dayun.png",
+      "print.machine_max.dayun.2": "machine_max:textures/part/dayun/dayun2.png",
+      "print.machine_max.dayun.4": "machine_max:textures/part/dayun/dayun4.png",
+      "print.machine_max.dayun.6": "machine_max:textures/part/dayun/dayun6.png"
+    },
+    "animations": "machine_max:dayun",
+    "tags": ["machine_max:dayun", "machine_max:chassis", "machine_max:storage"],
+    "sub_parts": {
+      "sub_part.machine_max.main": {
+        "start_bone": "AllTrailer",
+        "end_bones": ["SteelCoil", "HianQiaoGulu3", "HianQiaoGulu5", "HianQiaoGulu7"],
+        "durability": 3000.0,
+        "mass": 6000.0,
+        "mass_center": "trailer_mass_center",
+        "block_collision": "ground",
+        "collision_height": 1.5,
+        "hit_boxes": {
+          "TrailerHitBox": {
+            "type": "box",
+            "material": "machine_max:structural_steel",
+            "thickness": 10
+          },
+          "TrailerSupportHitBox": {
+            "type": "box",
+            "material": "machine_max:structural_steel",
+            "condition": "!subpart.has_connector('connector.machine_max.chassis_connection')"
+          }
+        },
+        "connectors": {
+          "connector.machine_max.chassis_connection": {
+            "locator": "trailer_hull_axis",
+            "definition": "machine_max:fixed_down"
+          },
+          "connector.machine_max.left_wheel_1": {
+            "locator": "wheel_left_1",
+            "definition": "machine_max:dayun_left_wheel"
+          },
+          "connector.machine_max.left_wheel_2": {
+            "locator": "wheel_left_2",
+            "definition": "machine_max:dayun_left_wheel"
+          },
+          "connector.machine_max.left_wheel_3": {
+            "locator": "wheel_left_3",
+            "definition": "machine_max:dayun_left_wheel"
+          },
+          "connector.machine_max.right_wheel_1": {
+            "locator": "wheel_right_1",
+            "definition": "machine_max:dayun_right_wheel"
+          },
+          "connector.machine_max.right_wheel_2": {
+            "locator": "wheel_right_2",
+            "definition": "machine_max:dayun_right_wheel"
+          },
+          "connector.machine_max.right_wheel_3": {
+            "locator": "wheel_right_3",
+            "definition": "machine_max:dayun_right_wheel"
+          },
+          "connector.machine_max.left_1": {
+            "locator": "left1",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.mid_1": {
+            "locator": "mid1",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.right_1": {
+            "locator": "right1",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.left_2": {
+            "locator": "left2",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.mid_2": {
+            "locator": "mid2",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.right_2": {
+            "locator": "right2",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.left_3": {
+            "locator": "left3",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.mid_3": {
+            "locator": "mid3",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.right_3": {
+            "locator": "right3",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.left_4": {
+            "locator": "left4",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.mid_4": {
+            "locator": "mid4",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.right_4": {
+            "locator": "right4",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.left_5": {
+            "locator": "left5",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.mid_5": {
+            "locator": "mid5",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.right_5": {
+            "locator": "right5",
+            "definition": "machine_max:fixed_up"
+          }
+        }
+      }
+    }
+  }
+}

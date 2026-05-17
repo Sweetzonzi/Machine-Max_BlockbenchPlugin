@@ -88,10 +88,35 @@ function createV1Config() {
     };
 }
 
+/**
+ * 创建临时目录
+ * @param {string} [prefix='mm-test-'] 目录名前缀
+ * @returns {string} 临时目录路径
+ */
+function createTempDir(prefix) {
+    prefix = prefix || 'mm-test-';
+    return require('fs').mkdtempSync(require('path').join(require('os').tmpdir(), prefix));
+}
+
+/**
+ * 递归删除临时目录
+ * @param {string} dirPath 目录路径
+ */
+function cleanupTempDir(dirPath) {
+    if (!dirPath) return;
+    try {
+        require('fs').rmSync(dirPath, { recursive: true, force: true });
+    } catch (e) {
+        // ignore cleanup errors
+    }
+}
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         createMinimalConfig,
         createSamplePart,
         createV1Config,
+        createTempDir,
+        cleanupTempDir,
     };
 }

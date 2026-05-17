@@ -1,0 +1,234 @@
+{
+  "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",
+  "icon": "machine_max:textures/icon/jeep/jeep_chassis_icon.png",
+  "vehicle_durability_rate": 1.0,
+  "vehicle_damage_rate": 1.0,
+  "vehicle_damage_rate_destroyed": 0.1,
+  "variants": {
+    "model": "machine_max:jeep_chassis.geo",
+    "textures": {
+      "print.machine_max.yellow": "machine_max:textures/part/jeep/jeep1.png",
+      "print.machine_max.white": "machine_max:textures/part/jeep/jeep2.png"
+    },
+    "animations": "machine_max:jeep",
+    "tags": ["machine_max:jeep", "machine_max:chassis", "machine_max:storage"],
+    "sub_parts": {
+      "sub_part.machine_max.main": {
+        "durability": 900.0,
+        "mass": 950.0,
+        "block_collision": "ground",
+        "collision_height": 2.5,
+        "hit_boxes": {
+          "collision": {
+            "type": "box",
+            "material": "machine_max:structural_steel",
+            "thickness": 5
+          },
+          "collision_engine": {
+            "type": "box",
+            "subsystem": "subsystem.machine_max.engine",
+            "material": "machine_max:structural_steel",
+            "thickness": 2
+          }
+        },
+        "interact_boxes": {
+          "interact.machine_max.left_seat": {
+            "bone": "interact_left_seat",
+            "signal_targets": {
+              "left_seat_interact": ["subsystem.machine_max.driver_seat"]
+            },
+            "interact_mode": "accurate"
+          },
+          "interact.machine_max.right_seat": {
+            "bone": "interact_right_seat",
+            "signal_targets": {
+              "right_seat_interact": ["subsystem.machine_max.copilot_seat"]
+            },
+            "interact_mode": "accurate"
+          },
+          "interact.machine_max.left_glove_box": {
+            "bone": "interact_left_glove_box",
+            "signal_targets": {
+              "left_glove_box_interact": ["subsystem.machine_max.left_glove_box"]
+            },
+            "interact_mode": "accurate"
+          },
+          "interact.machine_max.right_glove_box": {
+            "bone": "interact_right_glove_box",
+            "signal_targets": {
+              "right_glove_box_interact": ["subsystem.machine_max.right_glove_box"]
+            },
+            "interact_mode": "accurate"
+          }
+        },
+        "subsystems": {
+          "subsystem.machine_max.driver_seat": {
+            "type": "machine_max:seat",
+            "definition": "machine_max:default_seat",
+            "locator": "seat_point_left",
+            "move_outputs": {
+              "move_control": [
+                "subsystem.machine_max.car_controller"
+              ]
+            },
+            "regular_outputs": {
+              "regular_control": [
+                "subsystem.machine_max.car_controller"
+              ]
+            },
+            "aim_outputs": {
+              "aim_control": [
+                "subsystem.machine_max.car_controller"
+              ]
+            },
+            "passenger_num_outputs": {
+              "driver_occupied": ["interact.machine_max.left_seat", "connector.machine_max.hull_connection"]
+            }
+          },
+          "subsystem.machine_max.copilot_seat": {
+            "type": "machine_max:seat",
+            "definition": "machine_max:default_passenger_seat",
+            "locator": "seat_point_right",
+            "passenger_num_outputs": {
+              "copilot_occupied": ["interact.machine_max.right_seat", "connector.machine_max.hull_connection"]
+            }
+          },
+          "subsystem.machine_max.car_controller": {
+            "type": "machine_max:car_controller",
+            "definition": "machine_max:jeep_car_controller",
+            "control_outputs": {
+              "car_control": [
+                "subsystem.machine_max.engine",
+                "subsystem.machine_max.gearbox",
+                "subsystem.machine_max.left_back_wheel_driver",
+                "subsystem.machine_max.left_front_wheel_driver",
+                "subsystem.machine_max.right_back_wheel_driver",
+                "subsystem.machine_max.right_front_wheel_driver"
+              ]
+            },
+            "speed_outputs": {
+              "vehicle_speed": [
+                "vehicle"
+              ]
+            },
+            "throttle_outputs": {
+              "throttle": [
+                "vehicle"
+              ]
+            },
+            "brake_outputs": {
+              "brake": [
+                "vehicle"
+              ]
+            },
+            "steering_outputs": {
+              "steering": [
+                "vehicle"
+              ]
+            },
+            "handbrake_outputs": {
+              "handbrake": [
+                "vehicle"
+              ]
+            }
+          },
+          "subsystem.machine_max.engine": {
+            "type": "machine_max:engine",
+            "definition": "machine_max:jeep_engine",
+            "power_output": "subsystem.machine_max.gearbox",
+            "speed_outputs": {
+              "engine_speed": [
+                "vehicle"
+              ]
+            }
+          },
+          "subsystem.machine_max.gearbox": {
+            "type": "machine_max:gearbox",
+            "definition": "machine_max:jeep_gearbox",
+            "power_output": "subsystem.machine_max.transmission",
+            "gear_outputs": {
+              "gear": [
+                "vehicle"
+              ]
+            }
+          },
+          "subsystem.machine_max.transmission": {
+            "type": "machine_max:transmission",
+            "definition": "machine_max:jeep_transmission",
+            "power_outputs": {
+              "subsystem.machine_max.left_front_wheel_driver": 1.0,
+              "subsystem.machine_max.right_front_wheel_driver": 1.0,
+              "subsystem.machine_max.left_back_wheel_driver": 1.0,
+              "subsystem.machine_max.right_back_wheel_driver": 1.0
+            }
+          },
+          "subsystem.machine_max.left_front_wheel_driver": {
+            "type": "machine_max:wheel_driver",
+            "definition": "machine_max:jeep_front_wheel_driver",
+            "connector": "connector.machine_max.left_front_wheel"
+          },
+          "subsystem.machine_max.right_front_wheel_driver": {
+            "type": "machine_max:wheel_driver",
+            "definition": "machine_max:jeep_front_wheel_driver",
+            "connector": "connector.machine_max.right_front_wheel"
+          },
+          "subsystem.machine_max.left_back_wheel_driver": {
+            "type": "machine_max:wheel_driver",
+            "definition": "machine_max:jeep_back_wheel_driver",
+            "connector": "connector.machine_max.left_back_wheel"
+          },
+          "subsystem.machine_max.right_back_wheel_driver": {
+            "type": "machine_max:wheel_driver",
+            "definition": "machine_max:jeep_back_wheel_driver",
+            "connector": "connector.machine_max.right_back_wheel"
+          },
+          "subsystem.machine_max.left_glove_box": {
+            "type": "machine_max:item_storage",
+            "definition": "machine_max:glove_box"
+          },
+          "subsystem.machine_max.right_glove_box": {
+            "type": "machine_max:item_storage",
+            "definition": "machine_max:glove_box"
+          }
+        },
+        "connectors": {
+          "connector.machine_max.left_front_wheel": {
+            "locator": "left_front_wheel",
+            "definition": "machine_max:jeep_left_steering_wheel"
+          },
+          "connector.machine_max.left_back_wheel": {
+            "locator": "left_back_wheel",
+            "definition": "machine_max:jeep_left_wheel"
+          },
+          "connector.machine_max.right_back_wheel": {
+            "locator": "right_back_wheel",
+            "definition": "machine_max:jeep_right_wheel"
+          },
+          "connector.machine_max.right_front_wheel": {
+            "locator": "right_front_wheel",
+            "definition": "machine_max:jeep_right_steering_wheel"
+          },
+          "connector.machine_max.hull_connection": {
+            "locator": "hull",
+            "definition": "machine_max:fixed_up",
+            "signal_targets": {
+              "interact_left_door": ["subsystem.machine_max.driver_seat"],
+              "interact_right_door": ["subsystem.machine_max.copilot_seat"]
+            }
+          },
+          "connector.machine_max.trunk": {
+            "locator": "trunk",
+            "definition": "machine_max:fixed_up"
+          }
+        },
+        "hydro_priority": 1,
+        "hydrodynamics": {
+          "": {
+            "front_drag": [0.1, 0.2],
+            "back_drag": [0.1, 0.4]
+          }
+        }
+      }
+    }
+  }
+}

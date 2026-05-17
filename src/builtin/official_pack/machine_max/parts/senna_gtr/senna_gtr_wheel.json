@@ -1,0 +1,162 @@
+{
+  "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",
+  "icon": "machine_max:textures/icon/senna_gtr/senna_gtr_wheel_icon.png",
+  "vehicle_durability_rate": 1.0,//(可选, 默认1.0)载具耐久贡献系数, 部件耐久度按此比例贡献给载具总耐久度
+  "vehicle_damage_rate": 0.5,//(可选, 默认1.0)常态载具伤害传导系数, 部件受到伤害时按此比例传导给载具
+  "vehicle_damage_rate_destroyed": 0.1,//(可选, 默认0.5)部件被摧毁后的载具伤害传导系数, 部件被摧毁后受到伤害时按此比例传导给载具
+  "max_stack_size": 4,
+  "variants": {//部件变体列表, 支持单值或多键值对
+    "left_front": {//变体名称
+      "model": "machine_max:senna_gtr_wheel_left_front.geo",
+      "textures": "machine_max:textures/part/senna_gtr/senna_gtr.png",
+      "animations": "machine_max:empty", //(可选, 留空则不播放动画)动画路径
+      "tags": ["machine_max:wheel", "machine_max:senna_gtr", "machine_max:left", "machine_max:front"],//(可选)部件标签列表
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "durability": 80.0,
+          "mass": 32.0,
+          "block_collision": "ground",
+          "collision_height": 1.5,
+          "climb_assist": true,
+          "hit_boxes": {
+            "Collision": {
+              "type": "wheel",
+              "material": "machine_max:racing_tire"
+            }
+          },
+          "connectors": {
+            "connector.machine_max.chassis_connection": {
+              "locator": "chassis_connection",
+              "definition": "machine_max:fixed_right"
+            }
+          },
+          "projected_area": [0.82, 0.0, 0.0],
+          "hydrodynamics": {
+            "": {
+              "front_drag": [0.0, 0.0],
+              "back_drag": [0.0, 0.0],
+              "left_drag": [0.0, 0.35],
+              "right_drag": [0.0, 0.35],
+              "up_drag": [0.0, 0.0],
+              "down_drag": [0.0, 0.0]
+            }
+          }
+        }
+      }
+    },
+    "right_front": {//变体名称
+      "model": "machine_max:senna_gtr_wheel_right_front.geo",
+      "textures": "machine_max:textures/part/senna_gtr/senna_gtr.png",
+      "animations": "machine_max:empty",
+      "tags": ["machine_max:wheel", "machine_max:senna_gtr", "machine_max:right", "machine_max:front"],
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "durability": 80.0,
+          "mass": 32.0,
+          "block_collision": "ground",
+          "collision_height": 1.5,
+          "climb_assist": true,
+          "hit_boxes": {
+            "Collision": {
+              "type": "wheel",
+              "material": "machine_max:racing_tire"
+            }
+          },
+          "connectors": {
+            "connector.machine_max.chassis_connection": {
+              "locator": "chassis_connection",
+              "definition": "machine_max:fixed_left"
+            }
+          },
+          "projected_area": [0.82, 0.0, 0.0],
+          "hydrodynamics": {
+            "": {
+              "front_drag": [0.0, 0.0],
+              "back_drag": [0.0, 0.0],
+              "left_drag": [0.0, 0.35],
+              "right_drag": [0.0, 0.35],
+              "up_drag": [0.0, 0.0],
+              "down_drag": [0.0, 0.0]
+            }
+          }
+        }
+      }
+    },
+    "left_back": {//变体名称
+      "model": "machine_max:senna_gtr_wheel_left_back.geo",
+      "textures": "machine_max:textures/part/senna_gtr/senna_gtr.png",
+      "animations": "machine_max:empty", //(可选, 留空则不播放动画)动画路径
+      "tags": ["machine_max:wheel", "machine_max:senna_gtr", "machine_max:left", "machine_max:back"],//(可选)部件标签列表
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "durability": 80.0,
+          "mass": 35.0,
+          "block_collision": "ground",
+          "collision_height": 1.5,
+          "climb_assist": true,
+          "hit_boxes": {
+            "Collision": {
+              "type": "wheel",
+              "material": "machine_max:racing_tire"
+            }
+          },
+          "connectors": {
+            "connector.machine_max.chassis_connection": {
+              "locator": "chassis_connection",
+              "definition": "machine_max:fixed_right"
+            }
+          },
+          "projected_area": [0.82, 0.0, 0.0],
+          "hydrodynamics": {
+            "": {
+              "front_drag": [0.0, 0.0],
+              "back_drag": [0.0, 0.0],
+              "left_drag": [0.0, 0.35],
+              "right_drag": [0.0, 0.35],
+              "up_drag": [0.0, 0.0],
+              "down_drag": [0.0, 0.0]
+            }
+          }
+        }
+      }
+    },
+    "right_back": {//变体名称
+      "model": "machine_max:senna_gtr_wheel_right_back.geo",
+      "textures": "machine_max:textures/part/senna_gtr/senna_gtr.png",
+      "animations": "machine_max:empty",
+      "tags": ["machine_max:wheel", "machine_max:senna_gtr", "machine_max:right", "machine_max:back"],
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "durability": 80.0,
+          "mass": 35.0,
+          "block_collision": "ground",
+          "collision_height": 1.5,
+          "climb_assist": true,
+          "hit_boxes": {
+            "Collision": {
+              "type": "wheel",
+              "material": "machine_max:racing_tire"
+            }
+          },
+          "connectors": {
+            "connector.machine_max.chassis_connection": {
+              "locator": "chassis_connection",
+              "definition": "machine_max:fixed_left"
+            }
+          },
+          "projected_area": [0.82, 0.0, 0.0],
+          "hydrodynamics": {
+            "": {
+              "front_drag": [0.0, 0.0],
+              "back_drag": [0.0, 0.0],
+              "left_drag": [0.0, 0.35],
+              "right_drag": [0.0, 0.35],
+              "up_drag": [0.0, 0.0],
+              "down_drag": [0.0, 0.0]
+            }
+          }
+        }
+      }
+    }
+  }
+}

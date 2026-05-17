@@ -60,14 +60,72 @@ function loadAllHTMLTemplates(panelsDir) {
     return result;
 }
 
+/**
+ * 递归收集指定目录下所有 .json 文件，返回 { filename: content } 映射。
+ * filename 是相对于 baseDir 的路径（使用 / 分隔），content 是文件原始内容。
+ */
+function collectJSONFiles(dir, baseDir) {
+    const result = {};
+    if (!fs.existsSync(dir)) return result;
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            // 递归子目录，合并结果
+            const sub = collectJSONFiles(fullPath, baseDir);
+            Object.assign(result, sub);
+        } else if (entry.isFile() && entry.name.endsWith('.json')) {
+            const relative = path.relative(baseDir, fullPath).replace(/\\/g, '/');
+            result[relative] = fs.readFileSync(fullPath, 'utf-8').trim();
+        }
+    }
+    return result;
+}
+
+/**
+ * 加载内置官方内容包（src/builtin/official_pack/），
+ * 返回 esbuild define 常量映射。
+ * 抛出清晰错误如果目录不存在。
+ */
+function loadOfficialPack() {
+    const packDir = path.join(SRC, 'builtin', 'official_pack');
+    if (!fs.existsSync(packDir)) {
+        throw new Error(
+            '内置官方内容包目录不存在: ' + packDir + '\n' +
+            '请确保 src/builtin/official_pack/ 已正确复制。'
+        );
+    }
+
+    // 读取 meta.json
+    const metaPath = path.join(packDir, 'meta.json');
+    const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+
+    // 递归收集 materials / connectors / subsystems
+    const machineMaxDir = path.join(packDir, 'machine_max');
+    const materials = collectJSONFiles(path.join(machineMaxDir, 'materials'), path.join(machineMaxDir, 'materials'));
+    const connectors = collectJSONFiles(path.join(machineMaxDir, 'connectors'), path.join(machineMaxDir, 'connectors'));
+    const subsystems = collectJSONFiles(path.join(machineMaxDir, 'subsystems'), path.join(machineMaxDir, 'subsystems'));
+
+    return {
+        '__BUILTIN_PACK_META__': JSON.stringify(meta),
+        '__BUILTIN_MATERIALS__': JSON.stringify(materials),
+        '__BUILTIN_CONNECTORS__': JSON.stringify(connectors),
+        '__BUILTIN_SUBSYSTEMS__': JSON.stringify(subsystems),
+        _packStats: { materials: Object.keys(materials).length, connectors: Object.keys(connectors).length, subsystems: Object.keys(subsystems).length },
+    };
+}
+
 /** esbuild 构建配置 */
 function getConfig() {
     const cssLiteral = loadCSS(path.join(SRC, 'styles', 'mm_mode.css'));
     const templates = loadAllHTMLTemplates(path.join(SRC, 'ui', 'panels'));
+    const packDefines = loadOfficialPack();
+    const packStats = packDefines._packStats;
+    delete packDefines._packStats;
     const defines = Object.assign({
         'CSS_MM_MODE': cssLiteral || '""',
         '__DEBUG_ENABLED__': 'false',
-    }, templates);
+    }, templates, packDefines);
 
     return {
         entryPoints: [path.join(SRC, 'plugin.js')],
@@ -79,6 +137,7 @@ function getConfig() {
         external: ['fs', 'path'],
         legalComments: 'none',
         define: defines,
+        _packStats: packStats,
         banner: {
             js: [
                 '// ============================================================',
@@ -113,8 +172,16 @@ async function buildOnce() {
             fs.mkdirSync(DIST, { recursive: true });
         }
 
-        const result = await esbuild.build(getConfig());
+        const config = getConfig();
+        const packStats = config._packStats;
+        delete config._packStats;
+        const result = await esbuild.build(config);
         const warnings = result.warnings || [];
+
+        // 输出内置包统计
+        if (packStats) {
+            console.log(`📦 内置包: ${packStats.materials} materials, ${packStats.connectors} connectors, ${packStats.subsystems} subsystems`);
+        }
 
         if (warnings.length > 0) {
             console.warn('⚠️  构建警告:');

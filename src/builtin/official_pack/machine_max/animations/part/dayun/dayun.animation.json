@@ -1,0 +1,19 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"parallel0": {
+			"loop": true,
+			"bones": {
+				"FXP": {
+					"rotation": [0, 0, 0]
+				},
+				"base": {
+					"scale": "subpart.has_connector('connector.machine_max.bottom')"
+				},
+				"TrailerSupportHitBox": {
+					"position": [0, "11 * subpart.has_connector('connector.machine_max.chassis_connection')", 0]
+				}
+			}
+		}
+	}
+}

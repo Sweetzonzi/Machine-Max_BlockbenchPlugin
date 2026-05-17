@@ -1,0 +1,768 @@
+{
+  "max": [
+    3.184312582015991,
+    1.4462199211120605,
+    1.6352877616882324
+  ],
+  "hp": 1465.0,
+  "parts": {
+    "ae379755-9e25-42cb-bb53-b9abcaabcb48": {
+      "material_assembling_progress": 14,
+      "render_wireframe": false,
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "texture_name": "print.machine_max.ae86.1",
+          "connector_data": {
+            "connector.machine_max.front_engine": {
+              "integrity": 400.0
+            },
+            "connector.machine_max.chassis_connection": {
+              "integrity": 400.0
+            },
+            "connector.machine_max.upper_engine": {
+              "integrity": 400.0
+            },
+            "connector.machine_max.right_back": {
+              "integrity": 400.0
+            },
+            "connector.machine_max.left_back": {
+              "integrity": 400.0
+            }
+          },
+          "subsystem_data": {
+            "subsystem.machine_max.trunk": {
+              "Items": [],
+              "durability": 100.0
+            }
+          },
+          "id": 1,
+          "durability": 400.0,
+          "pos_rot_vel_vel": {
+            "position": [
+              447.20306,
+              -59.1722,
+              656.2561
+            ],
+            "rotation": [
+              1.0999752E-4,
+              0.70399845,
+              -9.7038595E-5,
+              0.7102015
+            ],
+            "linear_vel": [
+              7.423231E-4,
+              -2.38128E-4,
+              0.0044909683
+            ],
+            "angular_vel": [
+              4.4196114E-4,
+              -1.1225208E-4,
+              -1.4743087E-4
+            ]
+          }
+        }
+      },
+      "custom_recipe": "machine_max:ae86_hull",
+      "registry_key": "machine_max:ae86_hull",
+      "name": "AE86车壳",
+      "uuid": "ae379755-9e25-42cb-bb53-b9abcaabcb48",
+      "variant": "default"
+    },
+    "a0f755df-70dc-4382-8b0b-7a70673e639f": {
+      "material_assembling_progress": 4,
+      "render_wireframe": false,
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "connector_data": {
+            "connector.machine_max.chassis_connection": {
+              "integrity": 40.0
+            }
+          },
+          "id": 2,
+          "durability": 150.0,
+          "pos_rot_vel_vel": {
+            "position": [
+              449.19327,
+              -59.53222,
+              657.36725
+            ],
+            "rotation": [
+              -0.28755388,
+              0.65048236,
+              0.2694773,
+              0.6492823
+            ],
+            "linear_vel": [
+              -1.00739446E-4,
+              -7.5258315E-5,
+              0.0075145583
+            ],
+            "angular_vel": [
+              0.16909121,
+              2.4849833E-6,
+              6.955232E-10
+            ]
+          }
+        }
+      },
+      "custom_recipe": "machine_max:ae86_wheel",
+      "registry_key": "machine_max:ae86_wheel",
+      "name": "AE86车轮",
+      "uuid": "a0f755df-70dc-4382-8b0b-7a70673e639f",
+      "variant": "left"
+    },
+    "b2c7057f-dc09-4f3e-bb56-e1e39b2f4f43": {
+      "material_assembling_progress": 8,
+      "render_wireframe": false,
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "connector_data": {
+            "connector.machine_max.chassis_connection": {
+              "integrity": 40.0
+            }
+          },
+          "subsystem_data": {
+            "subsystem.machine_max.left_seat": {
+              "durability": 20.0
+            },
+            "subsystem.machine_max.right_seat": {
+              "durability": 20.0
+            }
+          },
+          "id": 5,
+          "durability": 100.0,
+          "pos_rot_vel_vel": {
+            "position": [
+              448.39053,
+              -59.078796,
+              656.2665
+            ],
+            "rotation": [
+              1.1023265E-4,
+              0.7039983,
+              -9.680352E-5,
+              0.7102016
+            ],
+            "linear_vel": [
+              7.5411075E-4,
+              -4.1784346E-4,
+              0.005888814
+            ],
+            "angular_vel": [
+              4.5902556E-4,
+              -1.2300012E-4,
+              -1.4770588E-4
+            ]
+          }
+        }
+      },
+      "custom_recipe": "machine_max:ae86_back_seat",
+      "registry_key": "machine_max:ae86_back_seat",
+      "name": "AE86后排座椅",
+      "uuid": "b2c7057f-dc09-4f3e-bb56-e1e39b2f4f43",
+      "variant": "default"
+    },
+    "25ef2d56-fa15-4462-95fa-c2c971a355c4": {
+      "material_assembling_progress": 2147483647,
+      "render_wireframe": false,
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "connector_data": {
+            "connector.machine_max.chassis_connection": {
+              "integrity": 20.0
+            }
+          },
+          "id": 19,
+          "durability": 150.0,
+          "pos_rot_vel_vel": {
+            "position": [
+              445.38092,
+              -59.53225,
+              657.33386
+            ],
+            "rotation": [
+              0.0015516367,
+              0.7038702,
+              -0.013611443,
+              0.7101965
+            ],
+            "linear_vel": [
+              2.8845682E-4,
+              5.711615E-5,
+              0.0034558845
+            ],
+            "angular_vel": [
+              0.007373225,
+              -7.2585254E-7,
+              -2.910383E-10
+            ]
+          }
+        }
+      },
+      "custom_recipe": "machine_max:ae86_wheel",
+      "registry_key": "machine_max:ae86_wheel",
+      "name": "machine_max.ae86_wheel",
+      "uuid": "25ef2d56-fa15-4462-95fa-c2c971a355c4",
+      "variant": "left"
+    },
+    "64cfb167-fedb-47d8-a30f-10b22f2a1004": {
+      "material_assembling_progress": 5,
+      "render_wireframe": false,
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "connector_data": {
+            "connector.machine_max.chassis_connection": {
+              "integrity": 40.0
+            }
+          },
+          "subsystem_data": {
+            "subsystem.machinemax.seat": {
+              "durability": 20.0
+            }
+          },
+          "id": 6,
+          "durability": 75.0,
+          "pos_rot_vel_vel": {
+            "position": [
+              447.44815,
+              -58.95353,
+              656.82074
+            ],
+            "rotation": [
+              1.0990926E-4,
+              0.7039987,
+              -9.714462E-5,
+              0.71020126
+            ],
+            "linear_vel": [
+              7.128624E-4,
+              -5.1303953E-4,
+              0.0058524283
+            ],
+            "angular_vel": [
+              4.3632797E-4,
+              -1.0377161E-4,
+              -1.4848134E-4
+            ]
+          }
+        }
+      },
+      "custom_recipe": "machine_max:ae86_seat",
+      "registry_key": "machine_max:ae86_seat",
+      "name": "AE86座椅",
+      "uuid": "64cfb167-fedb-47d8-a30f-10b22f2a1004",
+      "variant": "default"
+    },
+    "ecbc97d3-2f7a-4600-97ae-5399e317148d": {
+      "material_assembling_progress": 2147483647,
+      "render_wireframe": false,
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "connector_data": {
+            "connector.machine_max.chassis_connection": {
+              "integrity": 20.0
+            }
+          },
+          "id": 21,
+          "durability": 150.0,
+          "pos_rot_vel_vel": {
+            "position": [
+              445.40012,
+              -59.532246,
+              655.1465
+            ],
+            "rotation": [
+              0.010505689,
+              0.7039951,
+              0.0018734556,
+              0.71012473
+            ],
+            "linear_vel": [
+              5.028895E-4,
+              1.2516975E-5,
+              0.0041298154
+            ],
+            "angular_vel": [
+              -1.9158618E-8,
+              5.5835635E-8,
+              0.0044188527
+            ]
+          }
+        }
+      },
+      "custom_recipe": "machine_max:ae86_wheel",
+      "registry_key": "machine_max:ae86_wheel",
+      "name": "machine_max.ae86_wheel",
+      "uuid": "ecbc97d3-2f7a-4600-97ae-5399e317148d",
+      "variant": "right"
+    },
+    "94a5e83d-ca23-44ac-9cb5-3cae720663cb": {
+      "material_assembling_progress": 5,
+      "render_wireframe": false,
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "connector_data": {
+            "connector.machine_max.chassis_connection": {
+              "integrity": 40.0
+            }
+          },
+          "subsystem_data": {
+            "subsystem.machinemax.seat": {
+              "durability": 20.0
+            }
+          },
+          "id": 7,
+          "durability": 75.0,
+          "pos_rot_vel_vel": {
+            "position": [
+              447.45807,
+              -58.95351,
+              655.6958
+            ],
+            "rotation": [
+              1.09908055E-4,
+              0.7039987,
+              -9.714582E-5,
+              0.71020126
+            ],
+            "linear_vel": [
+              2.1228053E-4,
+              -3.8400292E-5,
+              0.005853812
+            ],
+            "angular_vel": [
+              4.362039E-4,
+              -1.0373831E-4,
+              -1.4850235E-4
+            ]
+          }
+        }
+      },
+      "custom_recipe": "machine_max:ae86_seat",
+      "registry_key": "machine_max:ae86_seat",
+      "name": "AE86座椅",
+      "uuid": "94a5e83d-ca23-44ac-9cb5-3cae720663cb",
+      "variant": "default"
+    },
+    "6c3c6ef6-ae66-4238-ac2a-be2dfb418bc5": {
+      "material_assembling_progress": 13,
+      "render_wireframe": false,
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "texture_name": "print.machine_max.white",
+          "connector_data": {
+            "connector.machine_max.left_front_wheel": {
+              "integrity": 40.0
+            },
+            "connector.machine_max.right_back_wheel": {
+              "integrity": 40.0
+            },
+            "connector.machine_max.left_back_wheel": {
+              "integrity": 40.0
+            },
+            "connector.machine_max.copilot_seat": {
+              "integrity": 20.0
+            },
+            "connector.machine_max.right_front_wheel": {
+              "integrity": 40.0
+            },
+            "connector.machine_max.driver_seat": {
+              "integrity": 20.0
+            },
+            "connector.machine_max.hull": {
+              "integrity": 20.0
+            },
+            "connector.machine_max.back_seat": {
+              "integrity": 20.0
+            }
+          },
+          "subsystem_data": {
+            "subsystem.machine_max.left_front_wheel_driver": {
+              "durability": 300.0
+            },
+            "subsystem.machine_max.right_back_wheel_driver": {
+              "durability": 300.0
+            },
+            "subsystem.machine_max.engine": {
+              "durability": 220.0
+            },
+            "subsystem.machine_max.gearbox": {
+              "durability": 120.0
+            },
+            "subsystem.machine_max.car_controller": {
+              "durability": 150.0
+            },
+            "subsystem.machine_max.right_front_wheel_driver": {
+              "durability": 300.0
+            },
+            "subsystem.machine_max.transmission": {
+              "durability": 400.0
+            },
+            "subsystem.machine_max.left_back_wheel_driver": {
+              "durability": 300.0
+            }
+          },
+          "id": 8,
+          "durability": 350.0,
+          "pos_rot_vel_vel": {
+            "position": [
+              447.20294,
+              -59.51595,
+              656.2561
+            ],
+            "rotation": [
+              1.1013428E-4,
+              0.7039985,
+              -9.691297E-5,
+              0.71020144
+            ],
+            "linear_vel": [
+              6.824216E-4,
+              -2.366975E-4,
+              0.0043320362
+            ],
+            "angular_vel": [
+              4.5169322E-4,
+              -1.1349618E-4,
+              -1.487938E-4
+            ]
+          }
+        }
+      },
+      "custom_recipe": "machine_max:ae86_chassis",
+      "registry_key": "machine_max:ae86_chassis",
+      "name": "AE86车架",
+      "uuid": "6c3c6ef6-ae66-4238-ac2a-be2dfb418bc5",
+      "variant": "default"
+    },
+    "3385f601-980c-4152-92c4-b7ecb279d1df": {
+      "material_assembling_progress": 4,
+      "render_wireframe": false,
+      "sub_parts": {
+        "sub_part.machine_max.main": {
+          "connector_data": {
+            "connector.machine_max.chassis_connection": {
+              "integrity": 40.0
+            }
+          },
+          "id": 9,
+          "durability": 150.0,
+          "pos_rot_vel_vel": {
+            "position": [
+              449.2125,
+              -59.53222,
+              655.17993
+            ],
+            "rotation": [
+              -0.17709313,
+              0.67759174,
+              0.19126672,
+              0.687695
+            ],
+            "linear_vel": [
+              7.1129034E-5,
+              1.4998019E-5,
+              0.005462815
+            ],
+            "angular_vel": [
+              -0.10048359,
+              1.5976327E-6,
+              -1.9645086E-10
+            ]
+          }
+        }
+      },
+      "custom_recipe": "machine_max:ae86_wheel",
+      "registry_key": "machine_max:ae86_wheel",
+      "name": "AE86车轮",
+      "uuid": "3385f601-980c-4152-92c4-b7ecb279d1df",
+      "variant": "right"
+    }
+  },
+  "connections": [
+    {
+      "partUuidS": "3385f601-980c-4152-92c4-b7ecb279d1df",
+      "subPartNameS": "sub_part.machine_max.main",
+      "simplePointConnectorName": "connector.machine_max.chassis_connection",
+      "posRotS": {
+        "position": [
+          -0.125,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "partUuidA": "6c3c6ef6-ae66-4238-ac2a-be2dfb418bc5",
+      "subPartNameA": "sub_part.machine_max.main",
+      "advConnectorName": "connector.machine_max.right_back_wheel",
+      "posRotA": {
+        "position": [
+          0.96875,
+          0.03125,
+          2.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "partUuidS": "a0f755df-70dc-4382-8b0b-7a70673e639f",
+      "subPartNameS": "sub_part.machine_max.main",
+      "simplePointConnectorName": "connector.machine_max.chassis_connection",
+      "posRotS": {
+        "position": [
+          0.125,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "partUuidA": "6c3c6ef6-ae66-4238-ac2a-be2dfb418bc5",
+      "subPartNameA": "sub_part.machine_max.main",
+      "advConnectorName": "connector.machine_max.left_back_wheel",
+      "posRotA": {
+        "position": [
+          -0.96875,
+          0.03125,
+          2.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "partUuidS": "64cfb167-fedb-47d8-a30f-10b22f2a1004",
+      "subPartNameS": "sub_part.machine_max.main",
+      "simplePointConnectorName": "connector.machine_max.chassis_connection",
+      "posRotS": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "partUuidA": "6c3c6ef6-ae66-4238-ac2a-be2dfb418bc5",
+      "subPartNameA": "sub_part.machine_max.main",
+      "advConnectorName": "connector.machine_max.copilot_seat",
+      "posRotA": {
+        "position": [
+          -0.5625,
+          0.5625,
+          0.25
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "partUuidS": "94a5e83d-ca23-44ac-9cb5-3cae720663cb",
+      "subPartNameS": "sub_part.machine_max.main",
+      "simplePointConnectorName": "connector.machine_max.chassis_connection",
+      "posRotS": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "partUuidA": "6c3c6ef6-ae66-4238-ac2a-be2dfb418bc5",
+      "subPartNameA": "sub_part.machine_max.main",
+      "advConnectorName": "connector.machine_max.driver_seat",
+      "posRotA": {
+        "position": [
+          0.5625,
+          0.5625,
+          0.25
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "partUuidS": "b2c7057f-dc09-4f3e-bb56-e1e39b2f4f43",
+      "subPartNameS": "sub_part.machine_max.main",
+      "simplePointConnectorName": "connector.machine_max.chassis_connection",
+      "posRotS": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "partUuidA": "6c3c6ef6-ae66-4238-ac2a-be2dfb418bc5",
+      "subPartNameA": "sub_part.machine_max.main",
+      "advConnectorName": "connector.machine_max.back_seat",
+      "posRotA": {
+        "position": [
+          0.0,
+          0.4375,
+          1.1875
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "partUuidS": "ae379755-9e25-42cb-bb53-b9abcaabcb48",
+      "subPartNameS": "sub_part.machine_max.main",
+      "simplePointConnectorName": "connector.machine_max.chassis_connection",
+      "posRotS": {
+        "position": [
+          0.0,
+          0.28125,
+          0.375
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "partUuidA": "6c3c6ef6-ae66-4238-ac2a-be2dfb418bc5",
+      "subPartNameA": "sub_part.machine_max.main",
+      "advConnectorName": "connector.machine_max.hull",
+      "posRotA": {
+        "position": [
+          0.0,
+          0.625,
+          0.375
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "partUuidS": "25ef2d56-fa15-4462-95fa-c2c971a355c4",
+      "subPartNameS": "sub_part.machine_max.main",
+      "simplePointConnectorName": "connector.machine_max.chassis_connection",
+      "posRotS": {
+        "position": [
+          -0.0625,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "partUuidA": "6c3c6ef6-ae66-4238-ac2a-be2dfb418bc5",
+      "subPartNameA": "sub_part.machine_max.main",
+      "advConnectorName": "connector.machine_max.left_front_wheel",
+      "posRotA": {
+        "position": [
+          -1.15625,
+          0.03125,
+          -1.8125
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "partUuidS": "ecbc97d3-2f7a-4600-97ae-5399e317148d",
+      "subPartNameS": "sub_part.machine_max.main",
+      "simplePointConnectorName": "connector.machine_max.chassis_connection",
+      "posRotS": {
+        "position": [
+          0.0625,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "partUuidA": "6c3c6ef6-ae66-4238-ac2a-be2dfb418bc5",
+      "subPartNameA": "sub_part.machine_max.main",
+      "advConnectorName": "connector.machine_max.right_front_wheel",
+      "posRotA": {
+        "position": [
+          1.15625,
+          0.03125,
+          -1.8125
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  ],
+  "name": "ae86",
+  "uuid": "dba0cfb7-6665-4210-8d6a-019d71573aca",
+  "pos": [
+    447.4321594238281,
+    -59.31143569946289,
+    656.258056640625
+  ],
+  "min": [
+    -3.233106851577759,
+    -0.9521335959434509,
+    -1.6335110664367676
+  ]
+}

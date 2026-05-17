@@ -1,0 +1,231 @@
+{
+  "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",
+  "icon": "machine_max:textures/icon/senna_gtr/senna_gtr_chassis_icon.png",
+  "vehicle_durability_rate": 0.6,
+  "vehicle_damage_rate": 1.0,
+  "vehicle_damage_rate_destroyed": 0.1,
+  "variants": {
+    "model": "machine_max:senna_gtr_chassis.geo",
+    "textures": "machine_max:textures/part/senna_gtr/senna_gtr.png",
+    "animations": "machine_max:senna_gtr",
+    "tags": ["machine_max:chassis", "machine_max:senna_gtr", "machine_max:storage"],
+    "sub_parts": {
+      "sub_part.machine_max.main": {
+        "durability": 120.0,
+        "mass": 930.0,
+        "block_collision": "ground",
+        "collision_height": 1.5,
+        "hit_boxes": {
+          "Collision": {
+            "id": "part",
+            "type": "box",
+            "material": "machine_max:7035_aluminum_alloy",
+            "thickness": 3
+          },
+          "EngineCollision": {
+            "id": "engine",
+            "type": "box",
+            "subsystem": "subsystem.machine_max.engine",
+            "material": "machine_max:structural_steel",
+            "thickness": 1
+          }
+        },
+        "interact_boxes": {
+          "interact.machine_max.left_seat": { //键:交互判定区名称
+            "bone": "LeftSeatInteract", //骨骼名称, 会寻找名称匹配的骨骼, 以其内部方块的位置与姿态作为交互判定区体积的位置和姿态
+            "signal_targets": {
+              "left_seat_interact": ["subsystem.machine_max.driver_seat"] //将交互信号转发给驾驶座
+            },
+            "interact_mode": "accurate" //(可选, 默认fast)交互模式, fast为玩家碰撞箱与交互区碰撞时按下交互键触发, accurate为玩家瞄准交互区按下交互键触发
+          },
+          "interact.machine_max.right_seat": { //键:交互判定区名称
+            "bone": "RightSeatInteract", //骨骼名称, 会寻找名称匹配的骨骼, 以其内部方块的位置与姿态作为交互判定区体积的位置和姿态
+            "signal_targets": {
+              "left_seat_interact": ["subsystem.machine_max.copilot_seat"] //将交互信号转发给副驾驶座
+            },
+            "interact_mode": "accurate" //(可选, 默认fast)交互模式, fast为玩家碰撞箱与交互区碰撞时按下交互键触发, accurate为玩家瞄准交互区按下交互键触发
+          },
+          "interact.machine_max.left_seat_fast": { //键:交互判定区名称
+            "bone": "LeftSeatOnBoard", //骨骼名称, 会寻找名称匹配的骨骼, 以其内部方块的位置与姿态作为交互判定区体积的位置和姿态
+            "signal_targets": {
+              "right_seat_interact": ["subsystem.machine_max.driver_seat"]
+            },
+            "interact_mode": "fast" //(可选, 默认fast)交互模式, fast为玩家碰撞箱与交互区碰撞时按下交互键触发, accurate为玩家瞄准交互区按下交互键触发
+          },
+          "interact.machine_max.right_seat_fast": { //键:交互判定区名称
+            "bone": "RightSeatOnBoard", //骨骼名称, 会寻找名称匹配的骨骼, 以其内部方块的位置与姿态作为交互判定区体积的位置和姿态
+            "signal_targets": {
+              "right_seat_interact": ["subsystem.machine_max.copilot_seat"]
+            },
+            "interact_mode": "fast" //(可选, 默认fast)交互模式, fast为玩家碰撞箱与交互区碰撞时按下交互键触发, accurate为玩家瞄准交互区按下交互键触发
+          },
+          "interact.machine_max.glove_box": { //键:交互判定区名称
+            "bone": "GloveBoxInteract", //骨骼名称, 会寻找名称匹配的骨骼, 以其内部方块的位置与姿态作为交互判定区体积的位置和姿态
+            "signal_targets": {
+              "glove_box_interact": ["subsystem.machine_max.glove_box"] //将交互信号转发给储物子系统
+            },
+            "interact_mode": "accurate" //(可选, 默认fast)交互模式, fast为玩家碰撞箱与交互区碰撞时按下交互键触发, accurate为玩家瞄准交互区按下交互键触发
+          }
+        },
+        "subsystems": {
+          "subsystem.machine_max.driver_seat": {
+            "type": "machine_max:seat", //子系统类型
+            "definition": "machine_max:senna_gtr_seat", //子系统型号, 需要与子系统类型相匹配
+            "locator": "left_seat", //乘坐点定位器名称, 该定位器需要位于任意零件的碰撞箱骨骼中, 乘客将被定位于此
+            "move_outputs": { //(可选,默认为空)子系统移动控制输出列表
+              "move_control": ["subsystem.machine_max.car_controller"] //将控制信号转发给车辆控制系统
+            },
+            "regular_outputs": { //(可选,默认为空)子系统常规按键输出列表
+              "regular_control": ["subsystem.machine_max.car_controller"] //将控制信号转发给车辆控制系统
+            },
+            "aim_outputs": { //(可选,默认为空)子系统视角控制输出列表
+              "aim_control": ["subsystem.machine_max.car_controller"]
+            },
+            "passenger_num_outputs": {
+              "occupied": ["interact.machine_max.left_seat", "interact.machine_max.left_seat_fast"]
+            }
+          },
+          "subsystem.machine_max.copilot_seat": {
+            "type": "machine_max:seat", //子系统类型
+            "definition": "machine_max:senna_gtr_seat", //子系统型号, 需要与子系统类型相匹配
+            "locator": "right_seat", //乘坐点定位器名称, 该定位器需要位于任意零件的碰撞箱骨骼中, 乘客将被定位于此
+            "passenger_num_outputs": {
+              "occupied": ["interact.machine_max.right_seat", "interact.machine_max.right_seat_fast"]
+            }
+          },
+          "subsystem.machine_max.car_controller": {
+            "type": "machine_max:car_controller", //子系统类型
+            "definition": "machine_max:senna_gtr_car_controller",//子系统型号, 需要与子系统类型相匹配
+            "control_outputs": {
+              "car_control": [
+                "subsystem.machine_max.engine",
+                "subsystem.machine_max.gearbox",
+                "subsystem.machine_max.left_back_wheel_driver",
+                "subsystem.machine_max.left_front_wheel_driver",
+                "subsystem.machine_max.right_back_wheel_driver",
+                "subsystem.machine_max.right_front_wheel_driver"
+              ]
+            },
+            "gearbox_outputs": {
+              "gearbox_control": ["subsystem.machine_max.gearbox"]
+            }
+          },
+          "subsystem.machine_max.engine": {
+            "type": "machine_max:engine",
+            "definition": "machine_max:senna_gtr_engine",
+            "power_output": "subsystem.machine_max.gearbox"
+          },
+          "subsystem.machine_max.gearbox": {
+            "type": "machine_max:gearbox",
+            "definition": "machine_max:senna_gtr_gearbox",
+            "power_output": "subsystem.machine_max.transmission"
+          },
+          "subsystem.machine_max.transmission": {
+            "type": "machine_max:transmission",
+            "definition": "machine_max:senna_gtr_transmission",
+            "power_outputs": { //动力输出目标及减速比
+              "subsystem.machine_max.left_back_wheel_driver": 1,
+              "subsystem.machine_max.right_back_wheel_driver": 1
+            }
+          },
+          "subsystem.machine_max.glove_box": {
+            "type": "machine_max:item_storage",
+            "definition": "machine_max:glove_box"
+          },
+          "subsystem.machine_max.left_front_wheel_driver": {
+            "type": "machine_max:wheel_driver",
+            "definition": "machine_max:senna_gtr_front_wheel_driver",
+            "connector": "connector.machine_max.left_front_wheel"
+          },
+          "subsystem.machine_max.right_front_wheel_driver": {
+            "type": "machine_max:wheel_driver",
+            "definition": "machine_max:senna_gtr_front_wheel_driver",
+            "connector": "connector.machine_max.right_front_wheel"
+          },
+          "subsystem.machine_max.left_back_wheel_driver": {
+            "type": "machine_max:wheel_driver",
+            "definition": "machine_max:senna_gtr_back_wheel_driver",
+            "connector": "connector.machine_max.left_back_wheel"
+          },
+          "subsystem.machine_max.right_back_wheel_driver": {
+            "type": "machine_max:wheel_driver",
+            "definition": "machine_max:senna_gtr_back_wheel_driver",
+            "connector": "connector.machine_max.right_back_wheel"
+          }
+        },
+        "connectors": {
+          "connector.machine_max.left_front_wheel": {
+            "locator": "left_front_wheel",
+            "definition": "machine_max:senna_gtr_left_steering_wheel"
+          },
+          "connector.machine_max.left_back_wheel": {
+            "locator": "left_back_wheel",
+            "definition": "machine_max:senna_gtr_left_wheel"
+          },
+          "connector.machine_max.right_front_wheel": {
+            "locator": "right_front_wheel",
+            "definition": "machine_max:senna_gtr_right_steering_wheel"
+          },
+          "connector.machine_max.right_back_wheel": {
+            "locator": "right_back_wheel",
+            "definition": "machine_max:senna_gtr_right_wheel"
+          },
+          "connector.machine_max.front_bumper_left": {
+            "locator": "chassis_front_bumper_left",
+            "definition": "machine_max:senna_gtr_front_bumper_left"
+          },
+          "connector.machine_max.front_bumper_right": {
+            "locator": "chassis_front_bumper_right",
+            "definition": "machine_max:senna_gtr_front_bumper_right"
+          },
+          "connector.machine_max.back_bumper_left": {
+            "locator": "chassis_back_bumper_left",
+            "definition": "machine_max:senna_gtr_back_bumper_left"
+          },
+          "connector.machine_max.back_bumper_right": {
+            "locator": "chassis_back_bumper_right",
+            "definition": "machine_max:senna_gtr_back_bumper_right"
+          },
+          "connector.machine_max.hull_front": {
+            "locator": "chassis_hull_front",
+            "definition": "machine_max:fixed_up"
+          },
+          "connector.machine_max.hull_back": {
+            "locator": "chassis_hull_back",
+            "definition": "machine_max:fixed_up"
+          }
+        },
+        "projected_area": [4.8, 10.25, 2.46],
+        "hydrodynamics": {
+          "front_hydro": { // 车头气动计算点，主要提供前、上和侧向的阻力
+            "front_drag": [0.0, 0.4],
+            "back_drag": [0.0, 0.0],
+            "up_drag": [0.0, 0.25], // 两个气动提供向上的阻力计算点，因此阻力系数取一半，下同
+            "down_drag": [0.0, 0.0],
+            "left_drag": [0.0, 0.25],
+            "right_drag": [0.0, 0.25],
+            "y_lift": 0.06
+          },
+          "back_hydro": { // 车尾气动计算点，主要提供后、上和侧向的阻力
+            "front_drag": [0.0, 0.0],
+            "back_drag": [0.0, 0.5], // 启动修型稍差，阻力系数略大
+            "up_drag": [0.0, 0.25], // 两个气动提供向上的阻力计算点，因此阻力系数取一半，下同
+            "down_drag": [0.0, 0.0],
+            "left_drag": [0.0, 0.25],
+            "right_drag": [0.0, 0.25],
+            "y_lift": 0.06
+          },
+          "DownHydro": { // 车底气动计算点组，包含两个气动计算点，提供下向的阻力
+            "scale": 0.5, // 包含两个气动计算点，因此总阻力值需要缩小一半
+            "front_drag": [0.0, 0.0],
+            "back_drag": [0.0, 0.0],
+            "up_drag": [0.0, 0.0],
+            "down_drag": [0.0, 0.5],
+            "left_drag": [0.0, 0.0],
+            "right_drag": [0.0, 0.0]
+          }
+        }
+      }
+    }
+  }
+}
