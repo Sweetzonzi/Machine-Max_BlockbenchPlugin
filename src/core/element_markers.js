@@ -1,6 +1,20 @@
 const { createLogger } = require('../utils/logger.js');
 const { createSubPartConfig } = require('./config.js');
 
+/**
+ * Vue 2 响应式说明
+ * =================
+ * 本模块直接操作 config 对象的属性增删（obj.prop = val、delete obj.prop）,
+ * 这些操作在 Vue 2 中理论上是非响应式的，不会自动触发 UI 刷新。
+ *
+ * 然而在实际调用链路中，所有标记操作完成后调用方（mode.js / App.vue.js）
+ * 会立即调用 saveConfig() + refreshOutlinerIcons() 强制更新 UI，
+ * 因此实践中不会出现"UI 冻结"的问题。
+ *
+ * 本模块属于 core/ 层，不应依赖 Vue，因此保留直接赋值模式。
+ * 如需在 Vue 组件外部使用，请确保调用链中包含 saveConfig + refreshOutlinerIcons。
+ */
+
 /** 模块日志 */
 var log = createLogger('Markers');
 
@@ -72,6 +86,10 @@ function detectOwnerSubPart(projectConfig, partId, variantName, element) {
     return null;
 }
 
+// 注：本函数对 config.parts[partId].element_markers 使用了直接属性赋值
+// （line 83-84: part.element_markers = {} / ...variantName = {}）
+// Vue 2 中这些是"非响应式"的，但调用方(mode.js)会在之后调用 saveConfig() + refreshOutlinerIcons()
+// 因此 UI 可以正常刷新。详见文件顶部注释。
 function setMarker(projectConfig, partId, variantName, uuid, type, configRef) {
     const part = getOrCreatePartConfig(projectConfig, partId);
     if (!part) {
@@ -120,6 +138,9 @@ function setMarker(projectConfig, partId, variantName, uuid, type, configRef) {
     return true;
 }
 
+// 注：本函数使用 delete 操作符（lines 143, 154, 160, 164）删除对象属性，
+// Vue 2 无法拦截 delete 操作，但调用方随后会调用 saveConfig() 保存配置
+// 并通过 refreshOutlinerIcons() 触发 UI 重绘。详见文件顶部注释。
 function clearMarker(projectConfig, partId, variantName, uuid) {
     const part = getOrCreatePartConfig(projectConfig, partId);
     if (!part || !part.element_markers) {
@@ -170,6 +191,10 @@ function clearMarker(projectConfig, partId, variantName, uuid) {
  * 根据当前所有子零件标记，重新计算各个子零件的 auto_end_bones
  * 子零件 B 是子零件 A 的后代 → B 的名称自动加入 A 的 auto_end_bones
  */
+// 注：本函数使用直接赋值修改 variant.sub_parts[key].auto_end_bones（line 196），
+// 以及在循环中对 auto_end_bones 数组使用 push（line 210）。
+// push 在 Vue 2 中是响应式的，但直接赋值需要调用方后续触发 saveConfig。
+// 详见文件顶部注释。
 function recalcAutoEndBones(projectConfig, partId, variantName) {
     var part = getOrCreatePartConfig(projectConfig, partId);
     if (!part) return;
@@ -234,6 +259,8 @@ function getMarker(projectConfig, partId, variantName, uuid) {
     return variantMarkers[uuid] || null;
 }
 
+// 注：本函数使用 delete 操作符（line 244）和直接赋值（line 247: part.element_markers = {}），
+// Vue 2 无法拦截这些操作，但调用方随后会触发 UI 刷新。详见文件顶部注释。
 function clearAllMarkers(projectConfig, partId, variantName) {
     const part = getOrCreatePartConfig(projectConfig, partId);
     if (!part || !part.element_markers) {
