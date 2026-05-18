@@ -300,3 +300,122 @@
 .mm-btn-sm.mm-btn-danger-light:hover {
     color: #ff9999;
 }
+
+/* ===== 信号流图面板 ===== */
+.mm-signal-flow {
+    padding: 8px 12px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-size: 13px;
+    color: var(--text-color, #ddd);
+}
+
+.mm-signal-flow-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-size: 12px;
+}
+
+.mm-signal-flow-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border-color, #333);
+    flex-shrink: 0;
+}
+
+.mm-signal-flow-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--heading-color, #eee);
+}
+
+.mm-flow-icon {
+    font-size: 16px;
+    color: #4A90D9;
+}
+
+.mm-signal-flow-meta {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #888;
+}
+
+.mm-flow-meta-item {
+    background: #2a2a2a;
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: #aaa;
+}
+
+.mm-flow-meta-sep {
+    color: #555;
+}
+
+.mm-signal-flow-body {
+    flex: 1;
+    display: flex;
+    overflow: auto;
+}
+
+.mm-signal-flow-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 12px;
+}
+
+.mm-flow-placeholder-icon {
+    font-size: 36px;
+    color: #4a4a4a;
+    opacity: 0.5;
+}
+
+.mm-flow-placeholder-text {
+    font-size: 13px;
+    color: #666;
+}
+
+.mm-flow-placeholder-hint {
+    font-size: 11px;
+    color: #555;
+    text-align: center;
+}
+
+.mm-flow-stats {
+    display: flex;
+    gap: 24px;
+    margin: 8px 0;
+}
+
+.mm-flow-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.mm-flow-stat-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #4A90D9;
+}
+
+.mm-flow-stat-label {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+}

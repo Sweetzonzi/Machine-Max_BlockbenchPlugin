@@ -1,0 +1,46 @@
+<div class="mm-signal-flow" v-if="config">
+    <div class="mm-signal-flow-header">
+        <div class="mm-signal-flow-title">
+            <span class="mm-flow-icon">⬡</span>
+            信号流图
+        </div>
+        <div class="mm-signal-flow-meta" v-if="hasActiveSelection">
+            <span class="mm-flow-meta-item">{{ activePartId }}</span>
+            <span class="mm-flow-meta-sep">/</span>
+            <span class="mm-flow-meta-item">{{ activeVariantName }}</span>
+        </div>
+    </div>
+
+    <div class="mm-signal-flow-body">
+        <!-- Phase 1: 空壳占位 — 显示统计信息 -->
+        <div class="mm-signal-flow-placeholder" v-if="hasActiveSelection">
+            <div class="mm-flow-placeholder-icon">⊞</div>
+            <div class="mm-flow-placeholder-text">信号拓扑预览 (Phase 2 — 待实现)</div>
+            <div class="mm-flow-stats">
+                <div class="mm-flow-stat">
+                    <span class="mm-flow-stat-value">{{ topologyStats.subParts }}</span>
+                    <span class="mm-flow-stat-label">子零件</span>
+                </div>
+                <div class="mm-flow-stat">
+                    <span class="mm-flow-stat-value">{{ topologyStats.connectors }}</span>
+                    <span class="mm-flow-stat-label">连接点</span>
+                </div>
+                <div class="mm-flow-stat">
+                    <span class="mm-flow-stat-value">{{ topologyStats.subsystems }}</span>
+                    <span class="mm-flow-stat-label">子系统</span>
+                </div>
+            </div>
+            <p class="mm-flow-placeholder-hint">
+                后续将在此处展示当前零件变体内的信号流向拓扑图
+            </p>
+        </div>
+
+        <!-- 未选中零件时 -->
+        <div class="mm-signal-flow-empty" v-else>
+            <p>请选择或新建一个零件</p>
+        </div>
+    </div>
+</div>
+<div class="mm-signal-flow mm-signal-flow-empty" v-else>
+    <p>正在加载配置...</p>
+</div>

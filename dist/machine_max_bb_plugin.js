@@ -11646,6 +11646,113 @@
     }
   });
 
+  // src/ui/SignalFlowPanel.vue.js
+  var require_SignalFlowPanel_vue = __commonJS({
+    "src/ui/SignalFlowPanel.vue.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { getConfig, loadConfig } = require_persistence();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("SignalFlow");
+      Vue.component("mm-signal-flow-panel", {
+        template: true ? '<div class="mm-signal-flow" v-if="config">\n    <div class="mm-signal-flow-header">\n        <div class="mm-signal-flow-title">\n            <span class="mm-flow-icon">\u2B21</span>\n            \u4FE1\u53F7\u6D41\u56FE\n        </div>\n        <div class="mm-signal-flow-meta" v-if="hasActiveSelection">\n            <span class="mm-flow-meta-item">{{ activePartId }}</span>\n            <span class="mm-flow-meta-sep">/</span>\n            <span class="mm-flow-meta-item">{{ activeVariantName }}</span>\n        </div>\n    </div>\n\n    <div class="mm-signal-flow-body">\n        <!-- Phase 1: \u7A7A\u58F3\u5360\u4F4D \u2014 \u663E\u793A\u7EDF\u8BA1\u4FE1\u606F -->\n        <div class="mm-signal-flow-placeholder" v-if="hasActiveSelection">\n            <div class="mm-flow-placeholder-icon">\u229E</div>\n            <div class="mm-flow-placeholder-text">\u4FE1\u53F7\u62D3\u6251\u9884\u89C8 (Phase 2 \u2014 \u5F85\u5B9E\u73B0)</div>\n            <div class="mm-flow-stats">\n                <div class="mm-flow-stat">\n                    <span class="mm-flow-stat-value">{{ topologyStats.subParts }}</span>\n                    <span class="mm-flow-stat-label">\u5B50\u96F6\u4EF6</span>\n                </div>\n                <div class="mm-flow-stat">\n                    <span class="mm-flow-stat-value">{{ topologyStats.connectors }}</span>\n                    <span class="mm-flow-stat-label">\u8FDE\u63A5\u70B9</span>\n                </div>\n                <div class="mm-flow-stat">\n                    <span class="mm-flow-stat-value">{{ topologyStats.subsystems }}</span>\n                    <span class="mm-flow-stat-label">\u5B50\u7CFB\u7EDF</span>\n                </div>\n            </div>\n            <p class="mm-flow-placeholder-hint">\n                \u540E\u7EED\u5C06\u5728\u6B64\u5904\u5C55\u793A\u5F53\u524D\u96F6\u4EF6\u53D8\u4F53\u5185\u7684\u4FE1\u53F7\u6D41\u5411\u62D3\u6251\u56FE\n            </p>\n        </div>\n\n        <!-- \u672A\u9009\u4E2D\u96F6\u4EF6\u65F6 -->\n        <div class="mm-signal-flow-empty" v-else>\n            <p>\u8BF7\u9009\u62E9\u6216\u65B0\u5EFA\u4E00\u4E2A\u96F6\u4EF6</p>\n        </div>\n    </div>\n</div>\n<div class="mm-signal-flow mm-signal-flow-empty" v-else>\n    <p>\u6B63\u5728\u52A0\u8F7D\u914D\u7F6E...</p>\n</div>' : '<div class="mm-signal-flow"><p>\u4FE1\u53F7\u6D41\u56FE\u52A0\u8F7D\u4E2D...</p></div>',
+        data: function() {
+          return {
+            config: null,
+            activePartId: "",
+            activeVariantName: "",
+            selectedElement: null
+          };
+        },
+        computed: {
+          hasActiveSelection: function() {
+            return !!(this.activePartId && this.activeVariantName);
+          },
+          currentPart: function() {
+            if (!this.config || !this.activePartId) return null;
+            return this.config.parts[this.activePartId] || null;
+          },
+          currentVariant: function() {
+            if (!this.currentPart || !this.activeVariantName) return null;
+            return this.currentPart.variants[this.activeVariantName] || null;
+          },
+          /**
+           * 当前变体内所有子零件的子系统/连接点统计（后续用于信号图数据模型）
+           */
+          topologyStats: function() {
+            if (!this.currentVariant || !this.currentVariant.sub_parts) {
+              return { subParts: 0, subsystems: 0, connectors: 0 };
+            }
+            var sps = this.currentVariant.sub_parts;
+            var ssCount = 0;
+            var connCount = 0;
+            for (var spKey in sps) {
+              var sp = sps[spKey];
+              if (sp.subsystems) ssCount += Object.keys(sp.subsystems).length;
+              if (sp.connectors) connCount += Object.keys(sp.connectors).length;
+            }
+            return {
+              subParts: Object.keys(sps).length,
+              subsystems: ssCount,
+              connectors: connCount
+            };
+          }
+        },
+        methods: {
+          loadConfigData: function() {
+            var cfg = getConfig();
+            if (!cfg) cfg = loadConfig();
+            this.config = cfg;
+            if (cfg) {
+              this.activePartId = cfg._uiState?.activePartId || "";
+              this.activeVariantName = cfg._uiState?.activeVariantName || "";
+            }
+          },
+          onSelectionChange: function() {
+            var sel = Outliner && Outliner.selected;
+            if (!sel || sel.length === 0) {
+              this.selectedElement = null;
+              return;
+            }
+            var best = typeof Group !== "undefined" && Group.first_selected || sel[0];
+            this.selectedElement = best;
+          }
+        },
+        mounted: function() {
+          var self = this;
+          log2.debug("\u4FE1\u53F7\u6D41\u56FE\u9762\u677F\u5DF2\u6302\u8F7D");
+          self.loadConfigData();
+          self.onSelectionChange();
+          this._projectHandler = Blockbench.on("select_project", function() {
+            self.loadConfigData();
+            self.onSelectionChange();
+          });
+          this._selectionHandler = Blockbench.on("update_selection", function() {
+            self.onSelectionChange();
+          });
+          this._modeHandler = Blockbench.on("select_mode", function() {
+            self.loadConfigData();
+          });
+          this._saveHandler = Blockbench.on("save", function() {
+            self.loadConfigData();
+          });
+        },
+        beforeDestroy: function() {
+          if (this._projectHandler) this._projectHandler();
+          if (this._selectionHandler) this._selectionHandler();
+          if (this._modeHandler) this._modeHandler();
+          if (this._saveHandler) this._saveHandler();
+        }
+      });
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = Vue.component("mm-signal-flow-panel");
+      }
+    }
+  });
+
   // src/mode.js
   var require_mode = __commonJS({
     "src/mode.js"(exports, module) {
@@ -11664,6 +11771,7 @@
       var { buildMMMenuItems, patchShowContextMenu, restoreShowContextMenu, patchElementSelect, restoreElementSelect } = require_patches();
       var { getIconClassForType, refreshOutlinerIcons: refreshOutlinerIcons2, resetOutlinerIcons } = require_icons();
       var _mmVueComponent = null;
+      var _mmSignalFlowComponent = null;
       var _mmCssInserted = false;
       var log2 = createLogger2("Mode");
       function registerMode2() {
@@ -11678,6 +11786,15 @@
           } catch (e) {
             log2.error("registerMode: Vue \u7EC4\u4EF6\u52A0\u8F7D\u5931\u8D25", e);
             _mmVueComponent = null;
+          }
+        }
+        if (!_mmSignalFlowComponent) {
+          try {
+            _mmSignalFlowComponent = require_SignalFlowPanel_vue();
+            log2.debug("registerMode: \u4FE1\u53F7\u6D41\u56FE\u7EC4\u4EF6\u5DF2\u52A0\u8F7D");
+          } catch (e) {
+            log2.error("registerMode: \u4FE1\u53F7\u6D41\u56FE\u7EC4\u4EF6\u52A0\u8F7D\u5931\u8D25", e);
+            _mmSignalFlowComponent = null;
           }
         }
         if (Panels && Panels["mm_properties"]) {
@@ -11716,9 +11833,35 @@
             log2.error("registerMode: Panel \u6CE8\u518C\u5931\u8D25", e);
           }
         }
+        if (!(Panels && Panels["mm_signal_flow"])) {
+          try {
+            var PanelClass = typeof Panel !== "undefined" ? Panel : typeof Blockbench !== "undefined" ? Blockbench.Panel : null;
+            if (!PanelClass) {
+              log2.warn("registerMode: Panel \u7C7B\u4E0D\u53EF\u7528\uFF0C\u8DF3\u8FC7\u4FE1\u53F7\u6D41\u56FE\u9762\u677F\u6CE8\u518C");
+            } else {
+              new PanelClass("mm_signal_flow", {
+                name: "\u4FE1\u53F7\u6D41\u56FE",
+                icon: "fa-bezier-curve",
+                condition: { modes: ["machine_max_part"] },
+                default_position: {
+                  slot: "bottom_bar",
+                  height: 200
+                },
+                growable: true,
+                resizable: true,
+                component: _mmSignalFlowComponent || (function() {
+                  return { template: '<div class="mm-signal-flow"><p>\u4FE1\u53F7\u6D41\u56FE\u52A0\u8F7D\u4E2D...</p></div>' };
+                })
+              });
+              log2.info('registerMode: Panel "\u4FE1\u53F7\u6D41\u56FE" \u5DF2\u6CE8\u518C\u5230\u5E95\u90E8\u680F');
+            }
+          } catch (e) {
+            log2.error("registerMode: \u4FE1\u53F7\u6D41\u56FE Panel \u6CE8\u518C\u5931\u8D25", e);
+          }
+        }
         if (!_mmCssInserted) {
           try {
-            const mmCss = ".mm-panel {\n    padding: 12px;\n    height: 100%;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n}\n\n.mm-panel-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n}\n\n.mm-panel-header {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n.mm-nav-row {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    margin-bottom: 6px;\n}\n\n.mm-label {\n    font-size: 12px;\n    color: #aaa;\n    min-width: 32px;\n    flex-shrink: 0;\n}\n\n.mm-select {\n    flex: 1;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    cursor: pointer;\n}\n\n.mm-input {\n    width: 100%;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    box-sizing: border-box;\n}\n\n.mm-input:focus {\n    border-color: #4A90D9;\n    outline: none;\n}\n\n.mm-btn {\n    background: var(--btn-bg, #3a3a3a);\n    border: 1px solid var(--border-color, #555);\n    color: var(--text-color, #ddd);\n    border-radius: 3px;\n    cursor: pointer;\n    font-size: 12px;\n    white-space: nowrap;\n}\n\n.mm-btn:hover {\n    background: var(--btn-hover-bg, #4a4a4a);\n}\n\n.mm-btn-sm {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    padding: 0;\n    font-size: 14px;\n    line-height: 1;\n    width: 30px;\n    height: 30px;\n    min-width: 30px;\n    min-height: 30px;\n    box-sizing: border-box;\n}\n\n.mm-btn-danger {\n    background: var(--btn-danger-bg, #5a2a2a);\n    border-color: var(--btn-danger-border, #8a3a3a);\n    color: #ff6b6b;\n}\n\n.mm-btn-danger:hover:not(:disabled) {\n    background: var(--btn-danger-hover-bg, #7a3a3a);\n    color: #ff9999;\n}\n\n.mm-btn-danger:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n\n.mm-section {\n    margin-bottom: 16px;\n}\n\n.mm-section-title {\n    font-size: 13px;\n    font-weight: 600;\n    margin: 0 0 8px 0;\n    padding-bottom: 4px;\n    border-bottom: 1px solid var(--border-color, #333);\n    color: var(--heading-color, #eee);\n}\n\n.mm-field {\n    margin-bottom: 8px;\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n\n.mm-field label {\n    font-size: 11px;\n    color: #999;\n    margin-bottom: 1px;\n}\n\n.mm-field-row {\n    flex-direction: row;\n    align-items: center;\n    gap: 8px;\n}\n\n.mm-field-row label {\n    margin-bottom: 0;\n}\n\n.mm-tags {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-tag {\n    background: var(--tag-bg, #3a6a9a);\n    color: white;\n    padding: 2px 8px;\n    border-radius: 3px;\n    font-size: 11px;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n\n.mm-tag-remove {\n    cursor: pointer;\n    font-weight: bold;\n    font-size: 14px;\n    line-height: 1;\n}\n\n.mm-tag-remove:hover {\n    color: #ff6b6b;\n}\n\n.mm-variant-list {\n    list-style: none;\n    padding: 0;\n    margin: 0;\n}\n\n.mm-variant-list li {\n    padding: 4px 8px;\n    cursor: pointer;\n    font-size: 12px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    border-radius: 3px;\n}\n\n.mm-variant-list li:hover {\n    background: var(--hover-bg, #333);\n}\n\n.mm-variant-list li.active {\n    background: var(--active-bg, #2a4a6a);\n    color: white;\n}\n\n.mm-variant-remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-weight: bold;\n}\n\n.mm-element-info {\n    font-size: 11px;\n    color: #888;\n    margin: 2px 0;\n}\n\n.mm-marker-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: white;\n    margin-left: 6px;\n    vertical-align: middle;\n}\n\n.mm-panel-hint {\n    color: #666;\n    font-size: 12px;\n    text-align: center;\n    padding: 20px;\n}\n\n.mm-panel-body {\n    flex: 1;\n    overflow-y: auto;\n}\n\n/* \u56FA\u5B9A\u5728\u9762\u677F\u9876\u90E8\u7684\u6807\u9898\u680F\uFF0C\u6EDA\u52A8\u65F6\u59CB\u7EC8\u53EF\u89C1 */\n.mm-sticky-title {\n    position: sticky;\n    top: 0;\n    z-index: 1;\n    background: var(--panel-bg, #1e1e1e);\n    padding: 8px 0 4px 0;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u6761\u76EE\u884C */\n.mm-sub-item-row {\n    display: flex;\n    flex-direction: column;\n    padding: 4px 8px;\n    border-radius: 3px;\n    margin-bottom: 2px;\n}\n.mm-sub-item-row.mm-clickable {\n    cursor: pointer;\n}\n.mm-sub-item-row.mm-clickable:hover {\n    background: var(--hover-bg, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u540D\u79F0\u884C */\n.mm-sub-item-name {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 12px;\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u5143\u4FE1\u606F\u884C */\n.mm-sub-item-meta {\n    font-size: 10px;\n    color: #888;\n    margin-left: 4px;\n}\n\n/* \u53EF\u70B9\u51FB\u7684\u5F52\u5C5E\u6807\u7B7E */\n.mm-clickable-tag:hover {\n    filter: brightness(1.3);\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5361\u7247 */\n.mm-signal-card {\n    margin-bottom: 4px;\n    padding: 4px;\n    background: #252525;\n    border-radius: 3px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5934\u90E8 */\n.mm-signal-header {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n    margin-bottom: 2px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u5220\u9664\u6309\u94AE */\n.mm-btn-sm.mm-btn-danger-light {\n    color: #ff6b6b;\n}\n\n.mm-btn-sm.mm-btn-danger-light:hover {\n    color: #ff9999;\n}";
+            const mmCss = ".mm-panel {\n    padding: 12px;\n    height: 100%;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n}\n\n.mm-panel-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n}\n\n.mm-panel-header {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n.mm-nav-row {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    margin-bottom: 6px;\n}\n\n.mm-label {\n    font-size: 12px;\n    color: #aaa;\n    min-width: 32px;\n    flex-shrink: 0;\n}\n\n.mm-select {\n    flex: 1;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    cursor: pointer;\n}\n\n.mm-input {\n    width: 100%;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    box-sizing: border-box;\n}\n\n.mm-input:focus {\n    border-color: #4A90D9;\n    outline: none;\n}\n\n.mm-btn {\n    background: var(--btn-bg, #3a3a3a);\n    border: 1px solid var(--border-color, #555);\n    color: var(--text-color, #ddd);\n    border-radius: 3px;\n    cursor: pointer;\n    font-size: 12px;\n    white-space: nowrap;\n}\n\n.mm-btn:hover {\n    background: var(--btn-hover-bg, #4a4a4a);\n}\n\n.mm-btn-sm {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    padding: 0;\n    font-size: 14px;\n    line-height: 1;\n    width: 30px;\n    height: 30px;\n    min-width: 30px;\n    min-height: 30px;\n    box-sizing: border-box;\n}\n\n.mm-btn-danger {\n    background: var(--btn-danger-bg, #5a2a2a);\n    border-color: var(--btn-danger-border, #8a3a3a);\n    color: #ff6b6b;\n}\n\n.mm-btn-danger:hover:not(:disabled) {\n    background: var(--btn-danger-hover-bg, #7a3a3a);\n    color: #ff9999;\n}\n\n.mm-btn-danger:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n\n.mm-section {\n    margin-bottom: 16px;\n}\n\n.mm-section-title {\n    font-size: 13px;\n    font-weight: 600;\n    margin: 0 0 8px 0;\n    padding-bottom: 4px;\n    border-bottom: 1px solid var(--border-color, #333);\n    color: var(--heading-color, #eee);\n}\n\n.mm-field {\n    margin-bottom: 8px;\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n\n.mm-field label {\n    font-size: 11px;\n    color: #999;\n    margin-bottom: 1px;\n}\n\n.mm-field-row {\n    flex-direction: row;\n    align-items: center;\n    gap: 8px;\n}\n\n.mm-field-row label {\n    margin-bottom: 0;\n}\n\n.mm-tags {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-tag {\n    background: var(--tag-bg, #3a6a9a);\n    color: white;\n    padding: 2px 8px;\n    border-radius: 3px;\n    font-size: 11px;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n\n.mm-tag-remove {\n    cursor: pointer;\n    font-weight: bold;\n    font-size: 14px;\n    line-height: 1;\n}\n\n.mm-tag-remove:hover {\n    color: #ff6b6b;\n}\n\n.mm-variant-list {\n    list-style: none;\n    padding: 0;\n    margin: 0;\n}\n\n.mm-variant-list li {\n    padding: 4px 8px;\n    cursor: pointer;\n    font-size: 12px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    border-radius: 3px;\n}\n\n.mm-variant-list li:hover {\n    background: var(--hover-bg, #333);\n}\n\n.mm-variant-list li.active {\n    background: var(--active-bg, #2a4a6a);\n    color: white;\n}\n\n.mm-variant-remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-weight: bold;\n}\n\n.mm-element-info {\n    font-size: 11px;\n    color: #888;\n    margin: 2px 0;\n}\n\n.mm-marker-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: white;\n    margin-left: 6px;\n    vertical-align: middle;\n}\n\n.mm-panel-hint {\n    color: #666;\n    font-size: 12px;\n    text-align: center;\n    padding: 20px;\n}\n\n.mm-panel-body {\n    flex: 1;\n    overflow-y: auto;\n}\n\n/* \u56FA\u5B9A\u5728\u9762\u677F\u9876\u90E8\u7684\u6807\u9898\u680F\uFF0C\u6EDA\u52A8\u65F6\u59CB\u7EC8\u53EF\u89C1 */\n.mm-sticky-title {\n    position: sticky;\n    top: 0;\n    z-index: 1;\n    background: var(--panel-bg, #1e1e1e);\n    padding: 8px 0 4px 0;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u6761\u76EE\u884C */\n.mm-sub-item-row {\n    display: flex;\n    flex-direction: column;\n    padding: 4px 8px;\n    border-radius: 3px;\n    margin-bottom: 2px;\n}\n.mm-sub-item-row.mm-clickable {\n    cursor: pointer;\n}\n.mm-sub-item-row.mm-clickable:hover {\n    background: var(--hover-bg, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u540D\u79F0\u884C */\n.mm-sub-item-name {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 12px;\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u5143\u4FE1\u606F\u884C */\n.mm-sub-item-meta {\n    font-size: 10px;\n    color: #888;\n    margin-left: 4px;\n}\n\n/* \u53EF\u70B9\u51FB\u7684\u5F52\u5C5E\u6807\u7B7E */\n.mm-clickable-tag:hover {\n    filter: brightness(1.3);\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5361\u7247 */\n.mm-signal-card {\n    margin-bottom: 4px;\n    padding: 4px;\n    background: #252525;\n    border-radius: 3px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5934\u90E8 */\n.mm-signal-header {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n    margin-bottom: 2px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u5220\u9664\u6309\u94AE */\n.mm-btn-sm.mm-btn-danger-light {\n    color: #ff6b6b;\n}\n\n.mm-btn-sm.mm-btn-danger-light:hover {\n    color: #ff9999;\n}\n\n/* ===== \u4FE1\u53F7\u6D41\u56FE\u9762\u677F ===== */\n.mm-signal-flow {\n    padding: 8px 12px;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n}\n\n.mm-signal-flow-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n    font-size: 12px;\n}\n\n.mm-signal-flow-header {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding-bottom: 8px;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n}\n\n.mm-signal-flow-title {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 14px;\n    font-weight: 600;\n    color: var(--heading-color, #eee);\n}\n\n.mm-flow-icon {\n    font-size: 16px;\n    color: #4A90D9;\n}\n\n.mm-signal-flow-meta {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 11px;\n    color: #888;\n}\n\n.mm-flow-meta-item {\n    background: #2a2a2a;\n    padding: 1px 6px;\n    border-radius: 3px;\n    color: #aaa;\n}\n\n.mm-flow-meta-sep {\n    color: #555;\n}\n\n.mm-signal-flow-body {\n    flex: 1;\n    display: flex;\n    overflow: auto;\n}\n\n.mm-signal-flow-placeholder {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    width: 100%;\n    gap: 12px;\n}\n\n.mm-flow-placeholder-icon {\n    font-size: 36px;\n    color: #4a4a4a;\n    opacity: 0.5;\n}\n\n.mm-flow-placeholder-text {\n    font-size: 13px;\n    color: #666;\n}\n\n.mm-flow-placeholder-hint {\n    font-size: 11px;\n    color: #555;\n    text-align: center;\n}\n\n.mm-flow-stats {\n    display: flex;\n    gap: 24px;\n    margin: 8px 0;\n}\n\n.mm-flow-stat {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    gap: 2px;\n}\n\n.mm-flow-stat-value {\n    font-size: 18px;\n    font-weight: 600;\n    color: #4A90D9;\n}\n\n.mm-flow-stat-label {\n    font-size: 10px;\n    color: #888;\n    text-transform: uppercase;\n}";
             if (mmCss) {
               const style = document.createElement("style");
               style.setAttribute("data-mm-plugin", "true");

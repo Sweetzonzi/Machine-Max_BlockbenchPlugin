@@ -9,6 +9,7 @@ const { buildMMMenuItems, patchShowContextMenu, restoreShowContextMenu, patchEle
 const { getIconClassForType, refreshOutlinerIcons, resetOutlinerIcons } = require('./mode/icons.js');
 
 let _mmVueComponent = null;
+let _mmSignalFlowComponent = null;
 let _mmCssInserted = false;
 
 /** 模块日志 */
@@ -31,6 +32,16 @@ function registerMode() {
         } catch (e) {
             log.error('registerMode: Vue 组件加载失败', e);
             _mmVueComponent = null;
+        }
+    }
+
+    if (!_mmSignalFlowComponent) {
+        try {
+            _mmSignalFlowComponent = require('./ui/SignalFlowPanel.vue.js');
+            log.debug('registerMode: 信号流图组件已加载');
+        } catch (e) {
+            log.error('registerMode: 信号流图组件加载失败', e);
+            _mmSignalFlowComponent = null;
         }
     }
 
@@ -70,6 +81,32 @@ function registerMode() {
             }
         } catch (e) {
             log.error('registerMode: Panel 注册失败', e);
+        }
+    }
+
+    // 注册信号流图底部 Panel
+    if (!(Panels && Panels['mm_signal_flow'])) {
+        try {
+            var PanelClass = typeof Panel !== 'undefined' ? Panel : (typeof Blockbench !== 'undefined' ? Blockbench.Panel : null);
+            if (!PanelClass) {
+                log.warn('registerMode: Panel 类不可用，跳过信号流图面板注册');
+            } else {
+                new PanelClass('mm_signal_flow', {
+                    name: '信号流图',
+                    icon: 'fa-bezier-curve',
+                    condition: { modes: ['machine_max_part'] },
+                    default_position: {
+                        slot: 'bottom_bar',
+                        height: 200,
+                    },
+                    growable: true,
+                    resizable: true,
+                    component: _mmSignalFlowComponent || (function () { return { template: '<div class="mm-signal-flow"><p>信号流图加载中...</p></div>' }; }),
+                });
+                log.info('registerMode: Panel "信号流图" 已注册到底部栏');
+            }
+        } catch (e) {
+            log.error('registerMode: 信号流图 Panel 注册失败', e);
         }
     }
 
