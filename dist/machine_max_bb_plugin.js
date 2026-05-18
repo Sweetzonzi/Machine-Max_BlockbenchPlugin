@@ -11646,6 +11646,273 @@
     }
   });
 
+  // src/lib/signal_graph.js
+  var require_signal_graph = __commonJS({
+    "src/lib/signal_graph.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      function extractSignalGraph(variant) {
+        var nodes = [];
+        var edges = [];
+        var nodeMap = {};
+        var seenSpecialTargets = {};
+        if (!variant || !variant.sub_parts) return { nodes: [], edges: [] };
+        for (var spKey in variant.sub_parts) {
+          var sp = variant.sub_parts[spKey];
+          if (!sp) continue;
+          if (sp.connectors) {
+            for (var connKey in sp.connectors) {
+              var conn = sp.connectors[connKey];
+              if (!conn) continue;
+              if (!nodeMap[connKey]) {
+                nodeMap[connKey] = true;
+                nodes.push({
+                  id: connKey,
+                  type: "connector",
+                  subPart: spKey,
+                  label: _shortName(connKey),
+                  locator: conn.locator || ""
+                });
+              }
+              if (conn.signal_targets) {
+                for (var channel in conn.signal_targets) {
+                  var targets = conn.signal_targets[channel];
+                  if (!targets || !Array.isArray(targets)) continue;
+                  for (var ti = 0; ti < targets.length; ti++) {
+                    var tgt = targets[ti];
+                    if (!tgt) continue;
+                    _ensureNodeForTarget(tgt, sp, nodeMap, nodes, seenSpecialTargets, spKey);
+                    edges.push({ from: connKey, to: tgt, channel, type: "signal" });
+                  }
+                }
+              }
+              if (conn.power_target) {
+                var pt = conn.power_target;
+                _ensureNodeForTarget(pt, sp, nodeMap, nodes, seenSpecialTargets, spKey);
+                edges.push({ from: connKey, to: pt, channel: "power", type: "power" });
+              }
+            }
+          }
+          if (sp.subsystems) {
+            for (var ssKey in sp.subsystems) {
+              var ss = sp.subsystems[ssKey];
+              if (!ss) continue;
+              if (!nodeMap[ssKey]) {
+                nodeMap[ssKey] = true;
+                nodes.push({
+                  id: ssKey,
+                  type: "subsystem",
+                  subPart: spKey,
+                  label: _shortName(ssKey),
+                  subType: ss.type || ""
+                });
+              }
+              var outputFields = _getSignalOutputFields(ss);
+              for (var fi = 0; fi < outputFields.length; fi++) {
+                var field = outputFields[fi];
+                var val = ss[field];
+                if (!val) continue;
+                if (typeof val === "string") {
+                  if (val) {
+                    _ensureNodeForTarget(val, sp, nodeMap, nodes, seenSpecialTargets, spKey);
+                    edges.push({ from: ssKey, to: val, channel: field, type: _edgeTypeForField(field) });
+                  }
+                } else if (typeof val === "object" && !Array.isArray(val)) {
+                  for (var ch in val) {
+                    var tgts = val[ch];
+                    if (!tgts) continue;
+                    if (Array.isArray(tgts)) {
+                      for (var tji = 0; tji < tgts.length; tji++) {
+                        var t = tgts[tji];
+                        if (!t) continue;
+                        _ensureNodeForTarget(t, sp, nodeMap, nodes, seenSpecialTargets, spKey);
+                        edges.push({ from: ssKey, to: t, channel: ch, type: _edgeTypeForField(field) });
+                      }
+                    } else if (typeof tgts === "string") {
+                      _ensureNodeForTarget(tgts, sp, nodeMap, nodes, seenSpecialTargets, spKey);
+                      edges.push({ from: ssKey, to: tgts, channel: ch, type: _edgeTypeForField(field) });
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        return { nodes, edges };
+      }
+      function _ensureNodeForTarget(target, sp, nodeMap, nodes, seenSpecialTargets, currentSpKey) {
+        if (!target) return;
+        if (target === "subpart" || target === "vehicle") {
+          if (!seenSpecialTargets[target]) {
+            seenSpecialTargets[target] = true;
+            nodeMap[target] = true;
+            nodes.push({
+              id: target,
+              type: "special",
+              subPart: currentSpKey,
+              label: target
+            });
+          }
+          return;
+        }
+        if (!nodeMap[target]) {
+          nodeMap[target] = true;
+          nodes.push({
+            id: target,
+            type: "unresolved",
+            subPart: currentSpKey,
+            label: _shortName(target)
+          });
+        }
+      }
+      function _getSignalOutputFields(ss) {
+        var knownOutputs = [
+          "power_output",
+          "power_outputs",
+          "control_outputs",
+          "speed_outputs",
+          "throttle_outputs",
+          "brake_outputs",
+          "steering_outputs",
+          "handbrake_outputs",
+          "gear_outputs",
+          "move_outputs",
+          "regular_outputs",
+          "aim_outputs",
+          "passenger_num_outputs",
+          "fire_outputs"
+        ];
+        var result = [];
+        for (var i = 0; i < knownOutputs.length; i++) {
+          if (ss[knownOutputs[i]] !== void 0 && ss[knownOutputs[i]] !== null) {
+            result.push(knownOutputs[i]);
+          }
+        }
+        return result;
+      }
+      function _edgeTypeForField(field) {
+        if (field === "power_output" || field === "power_outputs") return "power";
+        if (field === "speed_outputs" || field === "speed_output") return "speed";
+        return "control";
+      }
+      function _shortName(fullKey) {
+        if (!fullKey) return "";
+        var parts = fullKey.split(".");
+        if (parts.length <= 1) {
+          return fullKey.length > 16 ? fullKey.substring(0, 14) + "\u2026" : fullKey;
+        }
+        var last = parts[parts.length - 1];
+        if (last.length > 18) return last.substring(0, 16) + "\u2026";
+        return last;
+      }
+      function forceLayout(nodes, edges, options) {
+        if (!nodes || nodes.length === 0) return nodes || [];
+        var opts = options || {};
+        var width = opts.width || 600;
+        var height = opts.height || 300;
+        var repulsion = opts.repulsion || 2e3;
+        var attraction = opts.attraction || 5e-3;
+        var idealLength = opts.idealLength || 140;
+        var iterations = opts.iterations || 80;
+        var damping = opts.damping || 0.85;
+        for (var i = 0; i < nodes.length; i++) {
+          var n = nodes[i];
+          if (n.x === void 0 || n.y === void 0) {
+            var angle = i / nodes.length * Math.PI * 2;
+            var radius = Math.min(width, height) * 0.3;
+            n.x = width / 2 + Math.cos(angle) * radius * (0.5 + Math.random() * 0.5);
+            n.y = height / 2 + Math.sin(angle) * radius * (0.5 + Math.random() * 0.5);
+          }
+          n.vx = 0;
+          n.vy = 0;
+        }
+        var nodeCount = nodes.length;
+        var edgeMap = {};
+        for (var ei = 0; ei < edges.length; ei++) {
+          var e = edges[ei];
+          if (!edgeMap[e.from]) edgeMap[e.from] = {};
+          if (!edgeMap[e.to]) edgeMap[e.to] = {};
+          edgeMap[e.from][e.to] = true;
+          edgeMap[e.to][e.from] = true;
+        }
+        for (var iter = 0; iter < iterations; iter++) {
+          for (var ai = 0; ai < nodeCount; ai++) {
+            for (var aj = ai + 1; aj < nodeCount; aj++) {
+              var na = nodes[ai];
+              var nb = nodes[aj];
+              var dx = nb.x - na.x;
+              var dy = nb.y - na.y;
+              var dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < 1) dist = 1;
+              var force = repulsion / (dist * dist);
+              var fx = force * (dx / dist);
+              var fy = force * (dy / dist);
+              na.vx -= fx;
+              na.vy -= fy;
+              nb.vx += fx;
+              nb.vy += fy;
+            }
+          }
+          for (var eji = 0; eji < edges.length; eji++) {
+            var edge = edges[eji];
+            var src = _findNode(nodes, edge.from);
+            var tgt = _findNode(nodes, edge.to);
+            if (!src || !tgt) continue;
+            var ex = tgt.x - src.x;
+            var ey = tgt.y - src.y;
+            var ed = Math.sqrt(ex * ex + ey * ey);
+            if (ed < 1) ed = 1;
+            var springForce = attraction * (ed - idealLength);
+            var sfx = springForce * (ex / ed);
+            var sfy = springForce * (ey / ed);
+            src.vx += sfx;
+            src.vy += sfy;
+            tgt.vx -= sfx;
+            tgt.vy -= sfy;
+          }
+          var cx = width / 2;
+          var cy = height / 2;
+          for (var ci = 0; ci < nodeCount; ci++) {
+            var nc = nodes[ci];
+            nc.vx += (cx - nc.x) * 2e-3;
+            nc.vy += (cy - nc.y) * 2e-3;
+          }
+          var margin = 30;
+          for (var ui = 0; ui < nodeCount; ui++) {
+            var nu = nodes[ui];
+            nu.vx *= damping;
+            nu.vy *= damping;
+            nu.x += nu.vx;
+            nu.y += nu.vy;
+            nu.x = Math.max(margin, Math.min(width - margin, nu.x));
+            nu.y = Math.max(margin, Math.min(height - margin, nu.y));
+          }
+        }
+        for (var cli = 0; cli < nodeCount; cli++) {
+          delete nodes[cli].vx;
+          delete nodes[cli].vy;
+        }
+        return nodes;
+      }
+      function _findNode(nodes, id) {
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].id === id) return nodes[i];
+        }
+        return null;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          extractSignalGraph,
+          forceLayout,
+          _shortName
+        };
+      }
+    }
+  });
+
   // src/ui/SignalFlowPanel.vue.js
   var require_SignalFlowPanel_vue = __commonJS({
     "src/ui/SignalFlowPanel.vue.js"(exports, module) {
@@ -11655,17 +11922,170 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { getConfig, loadConfig } = require_persistence();
+      var { extractSignalGraph, forceLayout } = require_signal_graph();
+      var { getTypeColor } = require_subsystem_types();
+      var ssTypes = require_subsystem_types();
       var { createLogger: createLogger2 } = require_logger();
       var log2 = createLogger2("SignalFlow");
-      console.warn("[MM][SignalFlow] \u6A21\u5757\u52A0\u8F7D\uFF0CVue=" + typeof Vue + ", TEMPLATE_SIGNAL_FLOW_PANEL=" + (true ? "defined" : "undefined"));
       Vue.component("mm-signal-flow-panel", {
-        template: true ? '<div class="mm-signal-flow" v-if="config">\n    <div class="mm-signal-flow-header">\n        <div class="mm-signal-flow-title">\n            <span class="mm-flow-icon">\u2B21</span>\n            \u4FE1\u53F7\u6D41\u56FE\n        </div>\n        <div class="mm-signal-flow-meta" v-if="hasActiveSelection">\n            <span class="mm-flow-meta-item">{{ activePartId }}</span>\n            <span class="mm-flow-meta-sep">/</span>\n            <span class="mm-flow-meta-item">{{ activeVariantName }}</span>\n        </div>\n    </div>\n\n    <div class="mm-signal-flow-body">\n        <!-- Phase 1: \u7A7A\u58F3\u5360\u4F4D \u2014 \u663E\u793A\u7EDF\u8BA1\u4FE1\u606F -->\n        <div class="mm-signal-flow-placeholder" v-if="hasActiveSelection">\n            <div class="mm-flow-placeholder-icon">\u229E</div>\n            <div class="mm-flow-placeholder-text">\u4FE1\u53F7\u62D3\u6251\u9884\u89C8 (Phase 2 \u2014 \u5F85\u5B9E\u73B0)</div>\n            <div class="mm-flow-stats">\n                <div class="mm-flow-stat">\n                    <span class="mm-flow-stat-value">{{ topologyStats.subParts }}</span>\n                    <span class="mm-flow-stat-label">\u5B50\u96F6\u4EF6</span>\n                </div>\n                <div class="mm-flow-stat">\n                    <span class="mm-flow-stat-value">{{ topologyStats.connectors }}</span>\n                    <span class="mm-flow-stat-label">\u8FDE\u63A5\u70B9</span>\n                </div>\n                <div class="mm-flow-stat">\n                    <span class="mm-flow-stat-value">{{ topologyStats.subsystems }}</span>\n                    <span class="mm-flow-stat-label">\u5B50\u7CFB\u7EDF</span>\n                </div>\n            </div>\n            <p class="mm-flow-placeholder-hint">\n                \u540E\u7EED\u5C06\u5728\u6B64\u5904\u5C55\u793A\u5F53\u524D\u96F6\u4EF6\u53D8\u4F53\u5185\u7684\u4FE1\u53F7\u6D41\u5411\u62D3\u6251\u56FE\n            </p>\n        </div>\n\n        <!-- \u672A\u9009\u4E2D\u96F6\u4EF6\u65F6 -->\n        <div class="mm-signal-flow-empty" v-else>\n            <p>\u8BF7\u9009\u62E9\u6216\u65B0\u5EFA\u4E00\u4E2A\u96F6\u4EF6</p>\n        </div>\n    </div>\n</div>\n<div class="mm-signal-flow mm-signal-flow-empty" v-else>\n    <p>\u6B63\u5728\u52A0\u8F7D\u914D\u7F6E...</p>\n</div>' : '<div class="mm-signal-flow"><p>\u4FE1\u53F7\u6D41\u56FE\u52A0\u8F7D\u4E2D...</p></div>',
+        template: true ? `<div class="mm-signal-flow" v-if="config">
+    <div class="mm-signal-flow-header">
+        <div class="mm-signal-flow-title">
+            <span class="mm-flow-icon">\u2B21</span>
+            \u4FE1\u53F7\u6D41\u56FE
+        </div>
+        <div class="mm-signal-flow-meta" v-if="hasActiveSelection">
+            <span class="mm-flow-meta-item">{{ activePartId }}</span>
+            <span class="mm-flow-meta-sep">/</span>
+            <span class="mm-flow-meta-item">{{ activeVariantName }}</span>
+            <span class="mm-flow-meta-sep">|</span>
+            <span class="mm-flow-meta-item" title="\u8282\u70B9\u6570">{{ numNodes }} \u8282\u70B9</span>
+            <span class="mm-flow-meta-sep">\xB7</span>
+            <span class="mm-flow-meta-item" title="\u8FB9\u6570">{{ numEdges }} \u8FB9</span>
+        </div>
+        <div class="mm-signal-flow-actions" v-if="hasGraph">
+            <button class="mm-btn mm-btn-sm" @click="onRelayout" title="\u91CD\u65B0\u5E03\u5C40">\u27F3 \u91CD\u6392</button>
+        </div>
+    </div>
+
+    <div class="mm-signal-flow-body">
+        <!-- SVG \u62D3\u6251\u56FE -->
+        <div class="mm-flow-canvas" v-if="hasGraph"
+            @mousedown="onPanStart"
+            @mousemove="onPanMove"
+            @mouseup="onPanEnd"
+            @mouseleave="onPanEnd">
+            <svg :width="svgWidth" :height="svgHeight"
+                @wheel.prevent="onWheel"
+                style="display:block;cursor:grab">
+                <defs>
+                    <!-- \u666E\u901A\u7BAD\u5934 -->
+                    <marker id="mm-flow-arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                        <polygon points="0 0, 8 3, 0 6" fill="#888" />
+                    </marker>
+                    <!-- \u52A8\u529B\u7BAD\u5934\uFF08\u6A59\u8272\uFF09 -->
+                    <marker id="mm-flow-arrow-power" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                        <polygon points="0 0, 8 3, 0 6" fill="#e67e22" />
+                    </marker>
+                    <!-- \u8F6C\u901F\u7BAD\u5934\uFF08\u84DD\u8272\uFF09 -->
+                    <marker id="mm-flow-arrow-speed" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                        <polygon points="0 0, 8 3, 0 6" fill="#3498db" />
+                    </marker>
+                    <!-- \u63A7\u5236\u7BAD\u5934\uFF08\u7EFF\u8272\uFF09 -->
+                    <marker id="mm-flow-arrow-control" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                        <polygon points="0 0, 8 3, 0 6" fill="#2ecc71" />
+                    </marker>
+                </defs>
+                <g :transform="'translate('+panX+','+panY+') scale('+zoom+')'">
+                    <!-- \u8FDE\u7EBF\u5C42 -->
+                    <g class="mm-flow-edges">
+                        <g v-for="(edge, ei) in layoutEdges" :key="'e'+ei">
+                            <path :d="computeEdgePath(edge)"
+                                :stroke="edgeColor(edge)"
+                                :stroke-width="hoveredEdge === edge ? 3 : 1.5"
+                                :marker-end="'url(#mm-flow-arrow-' + edge.type + ')'"
+                                fill="none" stroke-opacity="0.7"
+                                :class="{ 'mm-flow-edge-hovered': hoveredEdge === edge }"
+                                @mouseenter="hoveredEdge = edge"
+                                @mouseleave="hoveredEdge = null"
+                                style="cursor:pointer" />
+                            <!-- \u9891\u9053\u540D\u6807\u7B7E -->
+                            <text :x="edgeLabelPos(edge).x" :y="edgeLabelPos(edge).y"
+                                :fill="edgeColor(edge)"
+                                :font-size="hoveredEdge === edge ? 11 : 9"
+                                text-anchor="middle"
+                                :font-weight="hoveredEdge === edge ? 'bold' : 'normal'"
+                                style="pointer-events:none;user-select:none">
+                                {{ edge.channel }}
+                            </text>
+                        </g>
+                    </g>
+                    <!-- \u8282\u70B9\u5C42 -->
+                    <g class="mm-flow-nodes">
+                        <g v-for="(node, ni) in layoutNodes" :key="'n'+ni"
+                            :transform="'translate(' + node.x + ',' + node.y + ')'"
+                            @click="onNodeClick(node)"
+                            @mouseenter="hoveredNode = node"
+                            @mouseleave="hoveredNode = null"
+                            style="cursor:pointer">
+                            <!-- \u7279\u7279\u6B8A\u76EE\u6807\u7528\u7EBF\u6846 -->
+                            <rect v-if="node.type === 'special'"
+                                width="130" height="32" rx="4"
+                                :fill="nodeColor(node)" fill-opacity="0.15"
+                                :stroke="nodeColor(node)" stroke-width="1.5"
+                                stroke-dasharray="4,3" />
+                            <!-- \u672A\u89E3\u6790\u76EE\u6807\u7528\u865A\u7EBF -->
+                            <rect v-else-if="node.type === 'unresolved'"
+                                width="130" height="32" rx="4"
+                                :fill="nodeColor(node)" fill-opacity="0.2"
+                                :stroke="nodeColor(node)" stroke-width="1"
+                                stroke-dasharray="3,2" />
+                            <!-- \u666E\u901A\u8282\u70B9 -->
+                            <rect v-else
+                                width="130" height="32" rx="4"
+                                :fill="nodeColor(node)" fill-opacity="0.85"
+                                stroke="#fff" stroke-width="0.5"
+                                :class="{ 'mm-flow-node-hovered': hoveredNode === node }" />
+                            <!-- \u8282\u70B9\u6807\u7B7E -->
+                            <text x="65" y="20"
+                                fill="#fff" font-size="11"
+                                text-anchor="middle" style="pointer-events:none;user-select:none"
+                                :font-weight="hoveredNode === node ? 'bold' : 'normal'">
+                                {{ node.label }}
+                            </text>
+                            <!-- \u60AC\u505C Tooltip -->
+                            <title>{{ nodeTooltip(node) }}</title>
+                        </g>
+                    </g>
+                </g>
+            </svg>
+        </div>
+
+        <!-- \u7A7A\u56FE\u72B6\u6001\uFF1A\u6709\u914D\u7F6E\u4F46\u65E0\u4FE1\u53F7\u62D3\u6251 -->
+        <div class="mm-signal-flow-empty" v-else-if="hasEmptyGraph">
+            <div class="mm-flow-placeholder-text">\u5F53\u524D\u96F6\u4EF6\u53D8\u4F53\u4E2D\u6CA1\u6709\u4FE1\u53F7\u8DEF\u7531\u914D\u7F6E</div>
+            <p class="mm-flow-placeholder-hint">\u5728\u8FDE\u63A5\u70B9\u9762\u677F\u4E2D\u914D\u7F6E signal_targets\uFF0C\u6216\u5728\u5B50\u7CFB\u7EDF\u4E2D\u914D\u7F6E\u4FE1\u53F7\u8F93\u51FA\u540E\uFF0C\u6B64\u5904\u5C06\u663E\u793A\u4FE1\u53F7\u6D41\u5411\u56FE</p>
+        </div>
+
+        <!-- \u672A\u9009\u4E2D\u96F6\u4EF6\u65F6 -->
+        <div class="mm-signal-flow-empty" v-else>
+            <p>\u8BF7\u9009\u62E9\u6216\u65B0\u5EFA\u4E00\u4E2A\u96F6\u4EF6</p>
+        </div>
+    </div>
+
+    <!-- \u56FE\u4F8B -->
+    <div class="mm-signal-flow-legend" v-if="hasGraph">
+        <span class="mm-flow-legend-item" title="\u8FDE\u63A5\u70B9"><span class="mm-flow-legend-dot" style="background:#3AA83A"></span>\u8FDE\u63A5\u70B9</span>
+        <span class="mm-flow-legend-item" title="\u5B50\u7CFB\u7EDF\uFF08\u6309\u7C7B\u578B\u7740\u8272\uFF09"><span class="mm-flow-legend-dot" style="background:#4A90D9"></span>\u5B50\u7CFB\u7EDF</span>
+        <span class="mm-flow-legend-item" title="\u7279\u6B8A\u76EE\u6807\uFF08subpart/vehicle\uFF09"><span class="mm-flow-legend-dot" style="background:#666;opacity:0.5"></span>\u7279\u6B8A\u76EE\u6807</span>
+        <span class="mm-flow-legend-item" title="\u4FE1\u53F7/\u63A7\u5236\u4FE1\u53F7"><span class="mm-flow-legend-line" style="background:#7f8c8d"></span>\u4FE1\u53F7</span>
+        <span class="mm-flow-legend-item" title="\u52A8\u529B\u4F20\u8F93"><span class="mm-flow-legend-line" style="background:#e67e22"></span>\u52A8\u529B</span>
+        <span class="mm-flow-legend-item" title="\u8F6C\u901F\u4FE1\u53F7"><span class="mm-flow-legend-line" style="background:#3498db"></span>\u8F6C\u901F</span>
+        <span class="mm-flow-legend-item" title="\u63A7\u5236\u4FE1\u53F7"><span class="mm-flow-legend-line" style="background:#2ecc71"></span>\u63A7\u5236</span>
+    </div>
+</div>
+<div class="mm-signal-flow mm-signal-flow-empty" v-else>
+    <p>\u6B63\u5728\u52A0\u8F7D\u914D\u7F6E...</p>
+</div>` : '<div class="mm-signal-flow"><p>\u4FE1\u53F7\u6D41\u56FE\u52A0\u8F7D\u4E2D...</p></div>',
         data: function() {
           return {
             config: null,
             activePartId: "",
             activeVariantName: "",
-            selectedElement: null
+            // 拓扑图状态
+            nodes: [],
+            edges: [],
+            hoveredNode: null,
+            hoveredEdge: null,
+            // 画布变换
+            panX: 0,
+            panY: 0,
+            zoom: 1,
+            isPanning: false,
+            panStartX: 0,
+            panStartY: 0,
+            panStartPanX: 0,
+            panStartPanY: 0
           };
         },
         computed: {
@@ -11680,26 +12100,29 @@
             if (!this.currentPart || !this.activeVariantName) return null;
             return this.currentPart.variants[this.activeVariantName] || null;
           },
-          /**
-           * 当前变体内所有子零件的子系统/连接点统计（后续用于信号图数据模型）
-           */
-          topologyStats: function() {
-            if (!this.currentVariant || !this.currentVariant.sub_parts) {
-              return { subParts: 0, subsystems: 0, connectors: 0 };
-            }
-            var sps = this.currentVariant.sub_parts;
-            var ssCount = 0;
-            var connCount = 0;
-            for (var spKey in sps) {
-              var sp = sps[spKey];
-              if (sp.subsystems) ssCount += Object.keys(sp.subsystems).length;
-              if (sp.connectors) connCount += Object.keys(sp.connectors).length;
-            }
-            return {
-              subParts: Object.keys(sps).length,
-              subsystems: ssCount,
-              connectors: connCount
-            };
+          numNodes: function() {
+            return this.nodes.length;
+          },
+          numEdges: function() {
+            return this.edges.length;
+          },
+          svgWidth: function() {
+            return 800;
+          },
+          svgHeight: function() {
+            return 350;
+          },
+          hasEmptyGraph: function() {
+            return this.hasActiveSelection && this.nodes.length === 0 && this.edges.length === 0;
+          },
+          hasGraph: function() {
+            return this.nodes.length > 0;
+          },
+          layoutNodes: function() {
+            return this.nodes;
+          },
+          layoutEdges: function() {
+            return this.edges;
           }
         },
         methods: {
@@ -11711,38 +12134,265 @@
               this.activePartId = cfg._uiState?.activePartId || "";
               this.activeVariantName = cfg._uiState?.activeVariantName || "";
             }
+            this.rebuildGraph();
           },
           onSelectionChange: function() {
-            var sel = Outliner && Outliner.selected;
-            if (!sel || sel.length === 0) {
-              this.selectedElement = null;
+          },
+          /**
+           * 根据当前变体重建信号拓扑图（数据提取 → 力导向布局）
+           */
+          rebuildGraph: function() {
+            var variant = this.currentVariant;
+            if (!variant) {
+              this.nodes = [];
+              this.edges = [];
               return;
             }
-            var best = typeof Group !== "undefined" && Group.first_selected || sel[0];
-            this.selectedElement = best;
+            var graph = extractSignalGraph(variant);
+            log2.debug("rebuildGraph: \u4FE1\u53F7\u62D3\u6251\u63D0\u53D6\u5B8C\u6210", {
+              nodes: graph.nodes.length,
+              edges: graph.edges.length
+            });
+            forceLayout(graph.nodes, graph.edges, {
+              width: this.svgWidth,
+              height: this.svgHeight,
+              iterations: 60
+            });
+            this.nodes = graph.nodes;
+            this.edges = graph.edges;
+          },
+          /**
+           * 获取节点的 SVG 填充颜色
+           */
+          nodeColor: function(node) {
+            if (!node) return "#555";
+            switch (node.type) {
+              case "connector":
+                return "#3AA83A";
+              case "subsystem":
+                if (node.subType) return getTypeColor(node.subType) || "#4A90D9";
+                return "#4A90D9";
+              case "special":
+                return "#666";
+              case "unresolved":
+                return "#555";
+              default:
+                return "#555";
+            }
+          },
+          /**
+           * 获取节点类型的中文名
+           */
+          nodeTypeLabel: function(node) {
+            if (!node) return "";
+            switch (node.type) {
+              case "connector":
+                return "\u8FDE\u63A5\u70B9";
+              case "subsystem":
+                if (node.subType) {
+                  var meta = ssTypes.getTypeMeta(node.subType);
+                  return meta ? meta.displayName : node.subType;
+                }
+                return "\u5B50\u7CFB\u7EDF";
+              case "special":
+                return "\u7279\u6B8A\u76EE\u6807";
+              case "unresolved":
+                return "\u672A\u89E3\u6790\u76EE\u6807";
+              default:
+                return "\u8282\u70B9";
+            }
+          },
+          /**
+           * 获取边的颜色
+           */
+          edgeColor: function(edge) {
+            if (!edge) return "#555";
+            switch (edge.type) {
+              case "power":
+                return "#e67e22";
+              case "speed":
+                return "#3498db";
+              case "signal":
+                return "#7f8c8d";
+              case "control":
+                return "#2ecc71";
+              default:
+                return "#7f8c8d";
+            }
+          },
+          /**
+           * 获取边的类型中文名
+           */
+          edgeTypeLabel: function(edge) {
+            if (!edge) return "";
+            switch (edge.type) {
+              case "power":
+                return "\u52A8\u529B";
+              case "speed":
+                return "\u8F6C\u901F";
+              case "signal":
+                return "\u4FE1\u53F7";
+              case "control":
+                return "\u63A7\u5236";
+              default:
+                return "\u8FDE\u63A5";
+            }
+          },
+          /**
+           * 计算两个节点之间的连线路径（直线）
+           * 节点宽度 ~130px, 高度 ~32px
+           */
+          computeEdgePath: function(edge) {
+            var NODE_W = 130;
+            var NODE_H = 32;
+            var src = this._findNode(edge.from);
+            var tgt = this._findNode(edge.to);
+            if (!src || !tgt) return "";
+            var x1 = src.x + NODE_W;
+            var y1 = src.y + NODE_H / 2;
+            var x2 = tgt.x;
+            var y2 = tgt.y + NODE_H / 2;
+            if (tgt.x + NODE_W < src.x) {
+              x1 = src.x;
+              y1 = src.y + NODE_H / 2;
+              x2 = tgt.x + NODE_W;
+              y2 = tgt.y + NODE_H / 2;
+            }
+            return "M" + x1.toFixed(1) + "," + y1.toFixed(1) + " L" + x2.toFixed(1) + "," + y2.toFixed(1);
+          },
+          /**
+           * 计算连线标签位置（中点偏上）
+           */
+          edgeLabelPos: function(edge) {
+            var NODE_W = 130;
+            var NODE_H = 32;
+            var src = this._findNode(edge.from);
+            var tgt = this._findNode(edge.to);
+            if (!src || !tgt) return { x: 0, y: 0 };
+            var x1 = src.x + NODE_W;
+            var y1 = src.y + NODE_H / 2;
+            var x2 = tgt.x;
+            var y2 = tgt.y + NODE_H / 2;
+            if (tgt.x + NODE_W < src.x) {
+              x1 = src.x;
+              y1 = src.y + NODE_H / 2;
+              x2 = tgt.x + NODE_W;
+              y2 = tgt.y + NODE_H / 2;
+            }
+            return {
+              x: (x1 + x2) / 2,
+              y: (y1 + y2) / 2 - 8
+            };
+          },
+          /**
+           * 在数组中按 id 查找节点
+           */
+          _findNode: function(id) {
+            var nodes = this.nodes;
+            for (var i = 0; i < nodes.length; i++) {
+              if (nodes[i].id === id) return nodes[i];
+            }
+            return null;
+          },
+          /**
+           * 显示节点完整信息（悬停 tooltip 用）
+           */
+          nodeTooltip: function(node) {
+            if (!node) return "";
+            var lines = [node.id];
+            lines.push("\u7C7B\u578B: " + this.nodeTypeLabel(node));
+            lines.push("\u6240\u5C5E: " + node.subPart);
+            if (node.locator) lines.push("locator: " + node.locator);
+            if (node.subType) lines.push("subType: " + node.subType);
+            return lines.join("\n");
+          },
+          /**
+           * 点击节点 → 导航到对应属性面板
+           * 子系统 → 设置 subsystemSelection 触发子系统面板
+           * 连接点 → 选中对应的 Locator
+           */
+          onNodeClick: function(node) {
+            if (!node) return;
+            if (node.type === "subsystem") {
+              this.$root.subsystemSelection = { spKey: node.subPart, subsystemKey: node.id };
+              Blockbench.dispatchEvent("update_selection");
+            } else if (node.type === "connector") {
+              var locName = node.locator;
+              if (locName && typeof Locator !== "undefined") {
+                var loc = Locator.all.find(function(l) {
+                  return l.name === locName;
+                });
+                if (loc) {
+                  loc.select();
+                  loc.showInOutliner();
+                  Blockbench.dispatchEvent("update_selection");
+                }
+              }
+            }
+          },
+          /**
+           * 画布缩放（滚轮）
+           */
+          onWheel: function(event) {
+            event.preventDefault();
+            var delta = event.deltaY > 0 ? 0.9 : 1.1;
+            var newZoom = Math.max(0.3, Math.min(3, this.zoom * delta));
+            this.zoom = newZoom;
+          },
+          /**
+           * 画布平移（鼠标拖拽）
+           */
+          onPanStart: function(event) {
+            this.isPanning = true;
+            this.panStartX = event.clientX;
+            this.panStartY = event.clientY;
+            this.panStartPanX = this.panX;
+            this.panStartPanY = this.panY;
+          },
+          onPanMove: function(event) {
+            if (!this.isPanning) return;
+            var dx = event.clientX - this.panStartX;
+            var dy = event.clientY - this.panStartY;
+            this.panX = this.panStartPanX + dx;
+            this.panY = this.panStartPanY + dy;
+          },
+          onPanEnd: function() {
+            this.isPanning = false;
+          },
+          /**
+           * 重新布局（重跑力导向算法）
+           */
+          onRelayout: function() {
+            var variant = this.currentVariant;
+            if (!variant) return;
+            var graph = extractSignalGraph(variant);
+            forceLayout(graph.nodes, graph.edges, {
+              width: this.svgWidth,
+              height: this.svgHeight,
+              iterations: 60
+            });
+            this.nodes = graph.nodes;
+            this.edges = graph.edges;
           }
         },
         mounted: function() {
           var self = this;
-          console.warn("[MM][SignalFlow] \u7EC4\u4EF6\u5DF2\u6302\u8F7D mounted()", {
-            hasConfig: !!this.config,
-            hasTemplate: true
-          });
           log2.debug("\u4FE1\u53F7\u6D41\u56FE\u9762\u677F\u5DF2\u6302\u8F7D");
           self.loadConfigData();
-          self.onSelectionChange();
           this._projectHandler = Blockbench.on("select_project", function() {
             self.loadConfigData();
-            self.onSelectionChange();
           });
           this._selectionHandler = Blockbench.on("update_selection", function() {
-            self.onSelectionChange();
+            self.loadConfigData();
           });
           this._modeHandler = Blockbench.on("select_mode", function() {
             self.loadConfigData();
           });
           this._saveHandler = Blockbench.on("save", function() {
-            self.loadConfigData();
+            var variant = self.currentVariant;
+            if (variant) {
+              self.rebuildGraph();
+            }
           });
         },
         beforeDestroy: function() {
@@ -11862,6 +12512,14 @@
                 })
               });
               log2.info('registerMode: Panel "\u4FE1\u53F7\u6D41\u56FE" \u5DF2\u6CE8\u518C\u5230\u5E95\u90E8\u680F');
+              if (typeof Interface !== "undefined") {
+                try {
+                  Interface.bottom_panel_height = 200;
+                  log2.debug("registerMode: \u5DF2\u5C55\u5F00\u5E95\u90E8\u9762\u677F\u533A\u57DF");
+                } catch (e) {
+                  log2.debug("registerMode: \u5C55\u5F00\u5E95\u90E8\u9762\u677F\u5931\u8D25", e);
+                }
+              }
               if (Panels && Panels["mm_signal_flow"]) {
                 try {
                   Panels["mm_signal_flow"].show();
@@ -11881,7 +12539,7 @@
         }
         if (!_mmCssInserted) {
           try {
-            const mmCss = ".mm-panel {\n    padding: 12px;\n    height: 100%;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n}\n\n.mm-panel-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n}\n\n.mm-panel-header {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n.mm-nav-row {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    margin-bottom: 6px;\n}\n\n.mm-label {\n    font-size: 12px;\n    color: #aaa;\n    min-width: 32px;\n    flex-shrink: 0;\n}\n\n.mm-select {\n    flex: 1;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    cursor: pointer;\n}\n\n.mm-input {\n    width: 100%;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    box-sizing: border-box;\n}\n\n.mm-input:focus {\n    border-color: #4A90D9;\n    outline: none;\n}\n\n.mm-btn {\n    background: var(--btn-bg, #3a3a3a);\n    border: 1px solid var(--border-color, #555);\n    color: var(--text-color, #ddd);\n    border-radius: 3px;\n    cursor: pointer;\n    font-size: 12px;\n    white-space: nowrap;\n}\n\n.mm-btn:hover {\n    background: var(--btn-hover-bg, #4a4a4a);\n}\n\n.mm-btn-sm {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    padding: 0;\n    font-size: 14px;\n    line-height: 1;\n    width: 30px;\n    height: 30px;\n    min-width: 30px;\n    min-height: 30px;\n    box-sizing: border-box;\n}\n\n.mm-btn-danger {\n    background: var(--btn-danger-bg, #5a2a2a);\n    border-color: var(--btn-danger-border, #8a3a3a);\n    color: #ff6b6b;\n}\n\n.mm-btn-danger:hover:not(:disabled) {\n    background: var(--btn-danger-hover-bg, #7a3a3a);\n    color: #ff9999;\n}\n\n.mm-btn-danger:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n\n.mm-section {\n    margin-bottom: 16px;\n}\n\n.mm-section-title {\n    font-size: 13px;\n    font-weight: 600;\n    margin: 0 0 8px 0;\n    padding-bottom: 4px;\n    border-bottom: 1px solid var(--border-color, #333);\n    color: var(--heading-color, #eee);\n}\n\n.mm-field {\n    margin-bottom: 8px;\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n\n.mm-field label {\n    font-size: 11px;\n    color: #999;\n    margin-bottom: 1px;\n}\n\n.mm-field-row {\n    flex-direction: row;\n    align-items: center;\n    gap: 8px;\n}\n\n.mm-field-row label {\n    margin-bottom: 0;\n}\n\n.mm-tags {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-tag {\n    background: var(--tag-bg, #3a6a9a);\n    color: white;\n    padding: 2px 8px;\n    border-radius: 3px;\n    font-size: 11px;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n\n.mm-tag-remove {\n    cursor: pointer;\n    font-weight: bold;\n    font-size: 14px;\n    line-height: 1;\n}\n\n.mm-tag-remove:hover {\n    color: #ff6b6b;\n}\n\n.mm-variant-list {\n    list-style: none;\n    padding: 0;\n    margin: 0;\n}\n\n.mm-variant-list li {\n    padding: 4px 8px;\n    cursor: pointer;\n    font-size: 12px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    border-radius: 3px;\n}\n\n.mm-variant-list li:hover {\n    background: var(--hover-bg, #333);\n}\n\n.mm-variant-list li.active {\n    background: var(--active-bg, #2a4a6a);\n    color: white;\n}\n\n.mm-variant-remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-weight: bold;\n}\n\n.mm-element-info {\n    font-size: 11px;\n    color: #888;\n    margin: 2px 0;\n}\n\n.mm-marker-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: white;\n    margin-left: 6px;\n    vertical-align: middle;\n}\n\n.mm-panel-hint {\n    color: #666;\n    font-size: 12px;\n    text-align: center;\n    padding: 20px;\n}\n\n.mm-panel-body {\n    flex: 1;\n    overflow-y: auto;\n}\n\n/* \u56FA\u5B9A\u5728\u9762\u677F\u9876\u90E8\u7684\u6807\u9898\u680F\uFF0C\u6EDA\u52A8\u65F6\u59CB\u7EC8\u53EF\u89C1 */\n.mm-sticky-title {\n    position: sticky;\n    top: 0;\n    z-index: 1;\n    background: var(--panel-bg, #1e1e1e);\n    padding: 8px 0 4px 0;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u6761\u76EE\u884C */\n.mm-sub-item-row {\n    display: flex;\n    flex-direction: column;\n    padding: 4px 8px;\n    border-radius: 3px;\n    margin-bottom: 2px;\n}\n.mm-sub-item-row.mm-clickable {\n    cursor: pointer;\n}\n.mm-sub-item-row.mm-clickable:hover {\n    background: var(--hover-bg, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u540D\u79F0\u884C */\n.mm-sub-item-name {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 12px;\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u5143\u4FE1\u606F\u884C */\n.mm-sub-item-meta {\n    font-size: 10px;\n    color: #888;\n    margin-left: 4px;\n}\n\n/* \u53EF\u70B9\u51FB\u7684\u5F52\u5C5E\u6807\u7B7E */\n.mm-clickable-tag:hover {\n    filter: brightness(1.3);\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5361\u7247 */\n.mm-signal-card {\n    margin-bottom: 4px;\n    padding: 4px;\n    background: #252525;\n    border-radius: 3px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5934\u90E8 */\n.mm-signal-header {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n    margin-bottom: 2px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u5220\u9664\u6309\u94AE */\n.mm-btn-sm.mm-btn-danger-light {\n    color: #ff6b6b;\n}\n\n.mm-btn-sm.mm-btn-danger-light:hover {\n    color: #ff9999;\n}\n\n/* ===== \u4FE1\u53F7\u6D41\u56FE\u9762\u677F ===== */\n.mm-signal-flow {\n    padding: 8px 12px;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n}\n\n.mm-signal-flow-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n    font-size: 12px;\n}\n\n.mm-signal-flow-header {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding-bottom: 8px;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n}\n\n.mm-signal-flow-title {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 14px;\n    font-weight: 600;\n    color: var(--heading-color, #eee);\n}\n\n.mm-flow-icon {\n    font-size: 16px;\n    color: #4A90D9;\n}\n\n.mm-signal-flow-meta {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 11px;\n    color: #888;\n}\n\n.mm-flow-meta-item {\n    background: #2a2a2a;\n    padding: 1px 6px;\n    border-radius: 3px;\n    color: #aaa;\n}\n\n.mm-flow-meta-sep {\n    color: #555;\n}\n\n.mm-signal-flow-body {\n    flex: 1;\n    display: flex;\n    overflow: auto;\n}\n\n.mm-signal-flow-placeholder {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    width: 100%;\n    gap: 12px;\n}\n\n.mm-flow-placeholder-icon {\n    font-size: 36px;\n    color: #4a4a4a;\n    opacity: 0.5;\n}\n\n.mm-flow-placeholder-text {\n    font-size: 13px;\n    color: #666;\n}\n\n.mm-flow-placeholder-hint {\n    font-size: 11px;\n    color: #555;\n    text-align: center;\n}\n\n.mm-flow-stats {\n    display: flex;\n    gap: 24px;\n    margin: 8px 0;\n}\n\n.mm-flow-stat {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    gap: 2px;\n}\n\n.mm-flow-stat-value {\n    font-size: 18px;\n    font-weight: 600;\n    color: #4A90D9;\n}\n\n.mm-flow-stat-label {\n    font-size: 10px;\n    color: #888;\n    text-transform: uppercase;\n}";
+            const mmCss = ".mm-panel {\n    padding: 12px;\n    height: 100%;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n}\n\n.mm-panel-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n}\n\n.mm-panel-header {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n.mm-nav-row {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    margin-bottom: 6px;\n}\n\n.mm-label {\n    font-size: 12px;\n    color: #aaa;\n    min-width: 32px;\n    flex-shrink: 0;\n}\n\n.mm-select {\n    flex: 1;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    cursor: pointer;\n}\n\n.mm-input {\n    width: 100%;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    box-sizing: border-box;\n}\n\n.mm-input:focus {\n    border-color: #4A90D9;\n    outline: none;\n}\n\n.mm-btn {\n    background: var(--btn-bg, #3a3a3a);\n    border: 1px solid var(--border-color, #555);\n    color: var(--text-color, #ddd);\n    border-radius: 3px;\n    cursor: pointer;\n    font-size: 12px;\n    white-space: nowrap;\n}\n\n.mm-btn:hover {\n    background: var(--btn-hover-bg, #4a4a4a);\n}\n\n.mm-btn-sm {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    padding: 0;\n    font-size: 14px;\n    line-height: 1;\n    width: 30px;\n    height: 30px;\n    min-width: 30px;\n    min-height: 30px;\n    box-sizing: border-box;\n}\n\n.mm-btn-danger {\n    background: var(--btn-danger-bg, #5a2a2a);\n    border-color: var(--btn-danger-border, #8a3a3a);\n    color: #ff6b6b;\n}\n\n.mm-btn-danger:hover:not(:disabled) {\n    background: var(--btn-danger-hover-bg, #7a3a3a);\n    color: #ff9999;\n}\n\n.mm-btn-danger:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n\n.mm-section {\n    margin-bottom: 16px;\n}\n\n.mm-section-title {\n    font-size: 13px;\n    font-weight: 600;\n    margin: 0 0 8px 0;\n    padding-bottom: 4px;\n    border-bottom: 1px solid var(--border-color, #333);\n    color: var(--heading-color, #eee);\n}\n\n.mm-field {\n    margin-bottom: 8px;\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n\n.mm-field label {\n    font-size: 11px;\n    color: #999;\n    margin-bottom: 1px;\n}\n\n.mm-field-row {\n    flex-direction: row;\n    align-items: center;\n    gap: 8px;\n}\n\n.mm-field-row label {\n    margin-bottom: 0;\n}\n\n.mm-tags {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-tag {\n    background: var(--tag-bg, #3a6a9a);\n    color: white;\n    padding: 2px 8px;\n    border-radius: 3px;\n    font-size: 11px;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n\n.mm-tag-remove {\n    cursor: pointer;\n    font-weight: bold;\n    font-size: 14px;\n    line-height: 1;\n}\n\n.mm-tag-remove:hover {\n    color: #ff6b6b;\n}\n\n.mm-variant-list {\n    list-style: none;\n    padding: 0;\n    margin: 0;\n}\n\n.mm-variant-list li {\n    padding: 4px 8px;\n    cursor: pointer;\n    font-size: 12px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    border-radius: 3px;\n}\n\n.mm-variant-list li:hover {\n    background: var(--hover-bg, #333);\n}\n\n.mm-variant-list li.active {\n    background: var(--active-bg, #2a4a6a);\n    color: white;\n}\n\n.mm-variant-remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-weight: bold;\n}\n\n.mm-element-info {\n    font-size: 11px;\n    color: #888;\n    margin: 2px 0;\n}\n\n.mm-marker-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: white;\n    margin-left: 6px;\n    vertical-align: middle;\n}\n\n.mm-panel-hint {\n    color: #666;\n    font-size: 12px;\n    text-align: center;\n    padding: 20px;\n}\n\n.mm-panel-body {\n    flex: 1;\n    overflow-y: auto;\n}\n\n/* \u56FA\u5B9A\u5728\u9762\u677F\u9876\u90E8\u7684\u6807\u9898\u680F\uFF0C\u6EDA\u52A8\u65F6\u59CB\u7EC8\u53EF\u89C1 */\n.mm-sticky-title {\n    position: sticky;\n    top: 0;\n    z-index: 1;\n    background: var(--panel-bg, #1e1e1e);\n    padding: 8px 0 4px 0;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u6761\u76EE\u884C */\n.mm-sub-item-row {\n    display: flex;\n    flex-direction: column;\n    padding: 4px 8px;\n    border-radius: 3px;\n    margin-bottom: 2px;\n}\n.mm-sub-item-row.mm-clickable {\n    cursor: pointer;\n}\n.mm-sub-item-row.mm-clickable:hover {\n    background: var(--hover-bg, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u540D\u79F0\u884C */\n.mm-sub-item-name {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 12px;\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u5143\u4FE1\u606F\u884C */\n.mm-sub-item-meta {\n    font-size: 10px;\n    color: #888;\n    margin-left: 4px;\n}\n\n/* \u53EF\u70B9\u51FB\u7684\u5F52\u5C5E\u6807\u7B7E */\n.mm-clickable-tag:hover {\n    filter: brightness(1.3);\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5361\u7247 */\n.mm-signal-card {\n    margin-bottom: 4px;\n    padding: 4px;\n    background: #252525;\n    border-radius: 3px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5934\u90E8 */\n.mm-signal-header {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n    margin-bottom: 2px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u5220\u9664\u6309\u94AE */\n.mm-btn-sm.mm-btn-danger-light {\n    color: #ff6b6b;\n}\n\n.mm-btn-sm.mm-btn-danger-light:hover {\n    color: #ff9999;\n}\n\n/* ===== \u4FE1\u53F7\u6D41\u56FE\u9762\u677F ===== */\n.mm-signal-flow {\n    padding: 8px 12px;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n}\n\n.mm-signal-flow-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n    font-size: 12px;\n}\n\n.mm-signal-flow-header {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding-bottom: 8px;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n}\n\n.mm-signal-flow-title {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 14px;\n    font-weight: 600;\n    color: var(--heading-color, #eee);\n}\n\n.mm-flow-icon {\n    font-size: 16px;\n    color: #4A90D9;\n}\n\n.mm-signal-flow-meta {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 11px;\n    color: #888;\n}\n\n.mm-flow-meta-item {\n    background: #2a2a2a;\n    padding: 1px 6px;\n    border-radius: 3px;\n    color: #aaa;\n}\n\n.mm-flow-meta-sep {\n    color: #555;\n}\n\n.mm-signal-flow-body {\n    flex: 1;\n    display: flex;\n    overflow: auto;\n}\n\n.mm-signal-flow-placeholder {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    width: 100%;\n    gap: 12px;\n}\n\n.mm-flow-placeholder-icon {\n    font-size: 36px;\n    color: #4a4a4a;\n    opacity: 0.5;\n}\n\n.mm-flow-placeholder-text {\n    font-size: 13px;\n    color: #666;\n}\n\n.mm-flow-placeholder-hint {\n    font-size: 11px;\n    color: #555;\n    text-align: center;\n}\n\n.mm-flow-stats {\n    display: flex;\n    gap: 24px;\n    margin: 8px 0;\n}\n\n.mm-flow-stat {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    gap: 2px;\n}\n\n.mm-flow-stat-value {\n    font-size: 18px;\n    font-weight: 600;\n    color: #4A90D9;\n}\n\n.mm-flow-stat-label {\n    font-size: 10px;\n    color: #888;\n    text-transform: uppercase;\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u753B\u5E03 */\n.mm-flow-canvas {\n    flex: 1;\n    overflow: hidden;\n    background: #1a1a1a;\n    border-radius: 4px;\n    border: 1px solid var(--border-color, #333);\n    min-height: 200px;\n}\n\n.mm-flow-canvas svg {\n    display: block;\n}\n\n/* \u8FDE\u7EBF\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-edge-hovered {\n    stroke-opacity: 1 !important;\n}\n\n/* \u8282\u70B9\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-node-hovered {\n    stroke: #fff !important;\n    stroke-width: 1.5 !important;\n    filter: brightness(1.2);\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u64CD\u4F5C\u6309\u94AE */\n.mm-signal-flow-actions {\n    margin-left: auto;\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n/* \u56FE\u4F8B */\n.mm-signal-flow-legend {\n    display: flex;\n    gap: 12px;\n    padding-top: 6px;\n    margin-top: 4px;\n    border-top: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n    flex-wrap: wrap;\n}\n\n.mm-flow-legend-item {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 10px;\n    color: #999;\n    cursor: default;\n}\n\n.mm-flow-legend-item:hover {\n    color: #ccc;\n}\n\n.mm-flow-legend-dot {\n    width: 8px;\n    height: 8px;\n    border-radius: 2px;\n    flex-shrink: 0;\n}\n\n.mm-flow-legend-line {\n    width: 14px;\n    height: 3px;\n    border-radius: 1px;\n    flex-shrink: 0;\n}";
             if (mmCss) {
               const style = document.createElement("style");
               style.setAttribute("data-mm-plugin", "true");

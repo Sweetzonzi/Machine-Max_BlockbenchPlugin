@@ -419,3 +419,75 @@
     color: #888;
     text-transform: uppercase;
 }
+
+/* 信号流图画布 */
+.mm-flow-canvas {
+    flex: 1;
+    overflow: hidden;
+    background: #1a1a1a;
+    border-radius: 4px;
+    border: 1px solid var(--border-color, #333);
+    min-height: 200px;
+}
+
+.mm-flow-canvas svg {
+    display: block;
+}
+
+/* 连线悬停高亮 */
+.mm-flow-edge-hovered {
+    stroke-opacity: 1 !important;
+}
+
+/* 节点悬停高亮 */
+.mm-flow-node-hovered {
+    stroke: #fff !important;
+    stroke-width: 1.5 !important;
+    filter: brightness(1.2);
+}
+
+/* 信号流图操作按钮 */
+.mm-signal-flow-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+/* 图例 */
+.mm-signal-flow-legend {
+    display: flex;
+    gap: 12px;
+    padding-top: 6px;
+    margin-top: 4px;
+    border-top: 1px solid var(--border-color, #333);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.mm-flow-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: #999;
+    cursor: default;
+}
+
+.mm-flow-legend-item:hover {
+    color: #ccc;
+}
+
+.mm-flow-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.mm-flow-legend-line {
+    width: 14px;
+    height: 3px;
+    border-radius: 1px;
+    flex-shrink: 0;
+}

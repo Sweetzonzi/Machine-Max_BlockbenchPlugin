@@ -107,6 +107,15 @@ function registerMode() {
                     component: _mmSignalFlowComponent || (function () { return { template: '<div class="mm-signal-flow"><p>信号流图加载中...</p></div>' }; }),
                 });
                 log.info('registerMode: Panel "信号流图" 已注册到底部栏');
+                // 注册后确保底部面板区域可见（默认可能折叠）
+                if (typeof Interface !== 'undefined') {
+                    try {
+                        Interface.bottom_panel_height = 200;
+                        log.debug('registerMode: 已展开底部面板区域');
+                    } catch (e) {
+                        log.debug('registerMode: 展开底部面板失败', e);
+                    }
+                }
                 // 注册后立即显示，防止因条件评估时机问题导致不可见
                 if (Panels && Panels['mm_signal_flow']) {
                     try { Panels['mm_signal_flow'].show(); } catch (e) { log.debug('show() 不可用'); }
