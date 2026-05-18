@@ -11079,6 +11079,18 @@
           },
           onSelectionChange: function() {
             var sel = Outliner && Outliner.selected;
+            var pendingNav = this.config && this.config._uiState && this.config._uiState._pendingSubsystemNav;
+            if (pendingNav && pendingNav.subsystemKey) {
+              this.subsystemSelection = { spKey: pendingNav.spKey, subsystemKey: pendingNav.subsystemKey };
+              this.config._uiState._pendingSubsystemNav = null;
+              this.selectedElement = null;
+              this._markerVersion++;
+              log2.debug("onSelectionChange: \u4FE1\u53F7\u6D41\u56FE\u89E6\u53D1\u5B50\u7CFB\u7EDF\u5BFC\u822A", {
+                spKey: pendingNav.spKey,
+                subsystemKey: pendingNav.subsystemKey
+              });
+              return;
+            }
             if (!sel || sel.length === 0) {
               this.selectedElement = null;
               this._markerVersion++;
@@ -12314,7 +12326,10 @@
           onNodeClick: function(node) {
             if (!node) return;
             if (node.type === "subsystem") {
-              this.$root.subsystemSelection = { spKey: node.subPart, subsystemKey: node.id };
+              var cfg = getConfig();
+              if (cfg && cfg._uiState) {
+                cfg._uiState._pendingSubsystemNav = { spKey: node.subPart, subsystemKey: node.id };
+              }
               Blockbench.dispatchEvent("update_selection");
             } else if (node.type === "connector") {
               var locName = node.locator;

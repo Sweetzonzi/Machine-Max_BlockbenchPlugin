@@ -648,6 +648,21 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         },
         onSelectionChange: function () {
             var sel = Outliner && Outliner.selected;
+
+            // 检查 SignalFlowPanel 发起的子系统导航请求（通过 config 共享）
+            var pendingNav = this.config && this.config._uiState && this.config._uiState._pendingSubsystemNav;
+            if (pendingNav && pendingNav.subsystemKey) {
+                this.subsystemSelection = { spKey: pendingNav.spKey, subsystemKey: pendingNav.subsystemKey };
+                this.config._uiState._pendingSubsystemNav = null;
+                this.selectedElement = null; // 清空 Outliner 选中，让子系统面板优先显示
+                this._markerVersion++;
+                log.debug('onSelectionChange: 信号流图触发子系统导航', {
+                    spKey: pendingNav.spKey,
+                    subsystemKey: pendingNav.subsystemKey,
+                });
+                return;
+            }
+
             if (!sel || sel.length === 0) {
                 this.selectedElement = null;
                 this._markerVersion++;

@@ -249,9 +249,11 @@ Vue.component('mm-signal-flow-panel', {
         onNodeClick: function (node) {
             if (!node) return;
             if (node.type === 'subsystem') {
-                // 触发子系统虚拟选择
-                this.$root.subsystemSelection = { spKey: node.subPart, subsystemKey: node.id };
-                // 通知左侧面板更新
+                // 通过共享的 config._uiState 通信（SignalFlowPanel 和 App.vue 是不同的 Vue root）
+                var cfg = getConfig();
+                if (cfg && cfg._uiState) {
+                    cfg._uiState._pendingSubsystemNav = { spKey: node.subPart, subsystemKey: node.id };
+                }
                 Blockbench.dispatchEvent('update_selection');
             } else if (node.type === 'connector') {
                 // 选中对应的 Locator
