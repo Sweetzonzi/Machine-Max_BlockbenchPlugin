@@ -7001,10 +7001,36 @@
         if (sp.hydro_priority !== 0) out.hydro_priority = sp.hydro_priority;
         if (sp.hit_boxes && Object.keys(sp.hit_boxes).length > 0) out.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
         if (sp.interact_boxes && Object.keys(sp.interact_boxes).length > 0) out.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
-        if (sp.connectors && Object.keys(sp.connectors).length > 0) out.connectors = sp.connectors;
+        if (sp.connectors && Object.keys(sp.connectors).length > 0) out.connectors = _cleanConnectors(sp.connectors);
         if (sp.subsystems && Object.keys(sp.subsystems).length > 0) out.subsystems = sp.subsystems;
         if (sp.hydrodynamics) out.hydrodynamics = sp.hydrodynamics;
         return out;
+      }
+      function _cleanConnectors(connectors) {
+        var result = {};
+        for (var key in connectors) {
+          var conn = connectors[key];
+          var cleaned = {};
+          if (conn.locator) cleaned.locator = conn.locator;
+          if (conn.definition) cleaned.definition = conn.definition;
+          if (conn.signal_targets && Object.keys(conn.signal_targets).length > 0) {
+            cleaned.signal_targets = conn.signal_targets;
+          }
+          if (conn.signal_translations && Object.keys(conn.signal_translations).length > 0) {
+            cleaned.signal_translations = conn.signal_translations;
+          }
+          if (conn.power_target) {
+            cleaned.power_target = conn.power_target;
+          }
+          if (conn.internal) {
+            cleaned.internal = true;
+          }
+          if (conn.overwrite && Object.keys(conn.overwrite).length > 0) {
+            cleaned.overwrite = conn.overwrite;
+          }
+          result[key] = cleaned;
+        }
+        return result;
       }
       function _resolveUUIDKeys(obj) {
         var resolved = {};
@@ -8461,10 +8487,10 @@
                       var baseName = generateDefaultName("connector", { namespace: ns, boneName: locName });
                       var connName = ensureUniqueName("connector", variant, spKey, baseName);
                       if (!variant.sub_parts[spKey].connectors[connName]) {
-                        variant.sub_parts[spKey].connectors[connName] = {
-                          locator: locName,
-                          definition: ""
-                        };
+                        var connDefaults = require_config_defaults().CONNECTOR_INSTANCE_DEFAULTS;
+                        variant.sub_parts[spKey].connectors[connName] = Object.assign({}, connDefaults, {
+                          locator: locName
+                        });
                         log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9 \u2014 \u5728 sub_parts \u4E2D\u521B\u5EFA\u6761\u76EE", {
                           spKey,
                           connKey: connName,
@@ -9536,6 +9562,99 @@
             </p>
         </div>
     </div>
+
+    <!-- === \u4FE1\u53F7\u76EE\u6807 (signal_targets) === -->
+    <div class="mm-section">
+        <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>\u4FE1\u53F7\u76EE\u6807</span>
+            <button class="mm-btn mm-btn-sm" @click="addSignalTargetChannel" title="\u6DFB\u52A0\u4FE1\u53F7\u9891\u9053" style="font-size:18px;font-weight:bold">+</button>
+        </h4>
+        <div v-if="signalTargetChannelCount === 0" class="mm-element-info" style="color:#888;font-size:11px">
+            \u65E0\u4FE1\u53F7\u76EE\u6807 \u2014 \u70B9\u51FB [+ ] \u6DFB\u52A0\u9891\u9053
+        </div>
+        <div v-for="(targets, channel, ci) in signalTargetEntries" :key="ci" class="mm-signal-card">
+            <div class="mm-signal-header">
+                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel"
+                    @change="onSignalTargetChannelChange(channel, $event.target.value)"
+                    :list="'cn-sig-chan-'+_uid" placeholder="\u9891\u9053\u540D" />
+                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetChannel(channel)" title="\u5220\u9664\u9891\u9053">\xD7</button>
+            </div>
+            <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
+                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
+                    @change="updateSignalTargetItem(channel, ti, $event.target.value)"
+                    :list="'cn-sig-tgt-'+_uid" placeholder="\u76EE\u6807\uFF08\u5B50\u7CFB\u7EDF\u540D / subpart / vehicle / \u8FDE\u63A5\u70B9\u540D\uFF09" />
+                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
+            </div>
+            <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTargetItem(channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
+        </div>
+        <datalist :id="'cn-sig-chan-'+_uid">
+            <option v-for="h in channelHints" :key="h" :value="h" />
+        </datalist>
+        <datalist :id="'cn-sig-tgt-'+_uid">
+            <option v-for="h in signalTargetHints" :key="h" :value="h" />
+        </datalist>
+    </div>
+
+    <!-- === \u4FE1\u53F7\u8F6C\u8BD1 (signal_translations) === -->
+    <div class="mm-section">
+        <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>\u4FE1\u53F7\u8F6C\u8BD1</span>
+            <button class="mm-btn mm-btn-sm" @click="addTranslation" title="\u6DFB\u52A0\u8F6C\u8BD1\u89C4\u5219" style="font-size:18px;font-weight:bold">+</button>
+        </h4>
+        <div v-if="translationCount === 0" class="mm-element-info" style="color:#888;font-size:11px">
+            \u65E0\u4FE1\u53F7\u8F6C\u8BD1\u89C4\u5219 \u2014 \u70B9\u51FB [+ ] \u6DFB\u52A0
+        </div>
+        <div v-for="(targetChan, sourceChan, ti) in translationEntries" :key="ti" style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+            <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="sourceChan"
+                @change="onTranslationSourceChange(sourceChan, $event.target.value)"
+                :list="'cn-trans-src-'+_uid" placeholder="\u6E90\u9891\u9053" />
+            <span style="color:#888;font-size:14px">\u2192</span>
+            <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="targetChan"
+                @change="onTranslationTargetChange(sourceChan, $event.target.value)"
+                :list="'cn-trans-tgt-'+_uid" placeholder="\u76EE\u6807\u9891\u9053" />
+            <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeTranslation(sourceChan)" title="\u5220\u9664\u8F6C\u8BD1\u89C4\u5219">\xD7</button>
+        </div>
+        <datalist :id="'cn-trans-src-'+_uid">
+            <option v-for="h in channelHints" :key="h" :value="h" />
+        </datalist>
+        <datalist :id="'cn-trans-tgt-'+_uid">
+            <option v-for="h in channelHints" :key="h" :value="h" />
+        </datalist>
+    </div>
+
+    <!-- === \u673A\u68B0\u80FD\u4E0E\u5185\u90E8 === -->
+    <div class="mm-section">
+        <h4 class="mm-section-title">\u673A\u68B0\u80FD\u4E0E\u5185\u90E8</h4>
+        <div class="mm-field">
+            <label title="\u673A\u68B0\u80FD\u8F93\u51FA\u76EE\u6807\uFF1A\u9009\u62E9\u672C\u5B50\u96F6\u4EF6\u5185\u7684\u5B50\u7CFB\u7EDF\uFF0C\u6216\u7559\u7A7A\u8868\u793A\u65E0\u8F93\u51FA">\u673A\u68B0\u80FD\u8F93\u51FA\u76EE\u6807</label>
+            <select class="mm-select" :value="config.power_target" @change="onFieldChange('power_target', $event.target.value)">
+                <option value="">\uFF08\u65E0\uFF09</option>
+                <option v-for="(ss, ssKey) in subsystemKeys" :key="ssKey" :value="ssKey">{{ ssKey }}</option>
+            </select>
+        </div>
+        <div class="mm-field mm-field-row" style="margin-top:4px">
+            <label title="\u5185\u90E8\u8FDE\u63A5\u70B9\uFF1A\u52FE\u9009\u540E\u8BE5\u8FDE\u63A5\u70B9\u4EC5\u7528\u4E8E\u5185\u90E8\u4FE1\u53F7\u8DEF\u7531\uFF0C\u4E0D\u53C2\u4E0E\u5916\u90E8\u8FDE\u63A5">\u5185\u90E8\u8FDE\u63A5\u70B9</label>
+            <input type="checkbox" :checked="config.internal" @change="onFieldChange('internal', $event.target.checked)" />
+        </div>
+    </div>
+
+    <!-- === \u5C5E\u6027\u8986\u5199 (overwrite) === -->
+    <div class="mm-section">
+        <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>\u5C5E\u6027\u8986\u5199</span>
+            <button class="mm-btn mm-btn-sm" @click="addOverwriteField" title="\u6DFB\u52A0\u8986\u5199\u5B57\u6BB5" style="font-size:18px;font-weight:bold">+</button>
+        </h4>
+        <div v-if="overwriteCount === 0" class="mm-element-info" style="color:#888;font-size:11px">
+            \u65E0\u5C5E\u6027\u8986\u5199 \u2014 \u70B9\u51FB [+ ] \u6DFB\u52A0
+        </div>
+        <div v-for="(val, field, oi) in overwriteEntries" :key="oi" style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+            <input type="text" class="mm-input" style="flex:0.4;font-size:11px" :value="field"
+                @change="onOverwriteFieldChange(field, $event.target.value, val)" placeholder="\u5B57\u6BB5\u540D" />
+            <input type="text" class="mm-input" style="flex:0.6;font-size:11px" :value="val"
+                @change="onOverwriteValueChange(field, $event.target.value)" placeholder="\u8986\u5199\u503C" />
+            <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeOverwriteField(field)" title="\u5220\u9664\u8986\u5199">\xD7</button>
+        </div>
+    </div>
 </div>` : "<p>\u8FDE\u63A5\u70B9\u9762\u677F\u52A0\u8F7D\u4E2D...</p>",
         props: {
           config: { type: Object, required: true },
@@ -9546,6 +9665,14 @@
             return {};
           } },
           allLocatorNames: { type: Array, default: function() {
+            return [];
+          } },
+          /** 当前子零件内的子系统映射，用于 power_target 下拉选择 */
+          subsystemKeys: { type: Object, default: function() {
+            return {};
+          } },
+          /** 信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'） */
+          signalTargetHints: { type: Array, default: function() {
             return [];
           } }
         },
@@ -9565,10 +9692,6 @@
             if (val !== this.editingLocator) {
               this.editingLocator = val;
             }
-          },
-          elementName: function(val) {
-            if (this.config.locator && val !== this.editingLocator) {
-            }
           }
         },
         computed: {
@@ -9577,6 +9700,65 @@
           },
           hasDefinition: function() {
             return !!(this.config && this.config.definition);
+          },
+          /**
+           * 信号目标条目映射
+           */
+          signalTargetEntries: function() {
+            return this.config && this.config.signal_targets || {};
+          },
+          signalTargetChannelCount: function() {
+            return Object.keys(this.signalTargetEntries).length;
+          },
+          /**
+           * 信号转译条目映射
+           */
+          translationEntries: function() {
+            return this.config && this.config.signal_translations || {};
+          },
+          translationCount: function() {
+            return Object.keys(this.translationEntries).length;
+          },
+          /**
+           * 属性覆写条目映射
+           */
+          overwriteEntries: function() {
+            return this.config && this.config.overwrite || {};
+          },
+          overwriteCount: function() {
+            return Object.keys(this.overwriteEntries).length;
+          },
+          /**
+           * 常用频道名补全列表
+           */
+          channelHints: function() {
+            return [
+              "move_control",
+              "regular_control",
+              "engine_control",
+              "wheel_control",
+              "steering",
+              "throttle",
+              "brake",
+              "handbrake",
+              "engine_speed",
+              "wheel_speed",
+              "vehicle_speed",
+              "gear",
+              "clutch",
+              "parking_brake",
+              "power",
+              "interact_left_front_door",
+              "interact_right_front_door",
+              "interact_left_back_door",
+              "interact_right_back_door",
+              "interact_hood",
+              "interact_trunk",
+              "interact_left_front",
+              "interact_right_front",
+              "interact_left_back",
+              "interact_right_back"
+            ];
           }
         },
         methods: {
@@ -9594,6 +9776,12 @@
               this.$emit("locator-change", this.elementName, value);
             }
           },
+          /**
+           * 通用字段变更处理
+           */
+          onFieldChange: function(field, value) {
+            this.$emit("field-change", field, value);
+          },
           onDefinitionChange: function(value) {
             this.$emit("field-change", "definition", value);
           },
@@ -9602,6 +9790,180 @@
            */
           navigateToSubPart: function() {
             this.$emit("navigate-to-sub-part", this.parentSubPartKey);
+          },
+          // ===== 信号目标编辑 =====
+          /**
+           * 添加新的信号频道
+           */
+          addSignalTargetChannel: function() {
+            var entries = this.signalTargetEntries;
+            var newChan = "new_channel";
+            var idx = 1;
+            while (entries[newChan]) {
+              newChan = "new_channel_" + idx;
+              idx++;
+            }
+            this.$set(entries, newChan, []);
+            this.emitSignalTargets(entries);
+          },
+          /**
+           * 删除信号频道
+           */
+          removeSignalTargetChannel: function(channel) {
+            var entries = this.signalTargetEntries;
+            this.$delete(entries, channel);
+            this.emitSignalTargets(entries);
+          },
+          /**
+           * 重命名信号频道
+           */
+          onSignalTargetChannelChange: function(oldChannel, newChannel) {
+            if (!newChannel || oldChannel === newChannel) return;
+            var entries = this.signalTargetEntries;
+            var targets = entries[oldChannel];
+            if (targets === void 0) return;
+            this.$delete(entries, oldChannel);
+            this.$set(entries, newChannel, targets);
+            this.emitSignalTargets(entries);
+          },
+          /**
+           * 为指定频道添加信号目标项
+           */
+          addSignalTargetItem: function(channel) {
+            var entries = this.signalTargetEntries;
+            if (!entries[channel]) {
+              this.$set(entries, channel, []);
+            }
+            entries[channel].push("");
+            this.emitSignalTargets(entries);
+          },
+          /**
+           * 删除信号频道的指定目标项
+           */
+          removeSignalTargetItem: function(channel, index) {
+            var entries = this.signalTargetEntries;
+            if (entries[channel]) {
+              entries[channel].splice(index, 1);
+              this.emitSignalTargets(entries);
+            }
+          },
+          /**
+           * 更新信号频道的指定目标值
+           */
+          updateSignalTargetItem: function(channel, index, value) {
+            var entries = this.signalTargetEntries;
+            if (entries[channel]) {
+              this.$set(entries[channel], index, value);
+              this.emitSignalTargets(entries);
+            }
+          },
+          /**
+           * 触发 signal_targets 字段变更事件
+           */
+          emitSignalTargets: function(entries) {
+            this.$emit("field-change", "signal_targets", JSON.parse(JSON.stringify(entries)));
+          },
+          // ===== 信号转译编辑 =====
+          /**
+           * 添加新的转译规则
+           */
+          addTranslation: function() {
+            var entries = this.translationEntries;
+            var newSrc = "new_source";
+            var idx = 1;
+            while (entries[newSrc]) {
+              newSrc = "new_source_" + idx;
+              idx++;
+            }
+            this.$set(entries, newSrc, "new_target");
+            this.emitTranslations(entries);
+          },
+          /**
+           * 删除转译规则
+           */
+          removeTranslation: function(sourceChan) {
+            var entries = this.translationEntries;
+            this.$delete(entries, sourceChan);
+            this.emitTranslations(entries);
+          },
+          /**
+           * 修改转译规则的源频道名（重命名 key）
+           */
+          onTranslationSourceChange: function(oldSource, newSource) {
+            if (!newSource || oldSource === newSource) return;
+            var entries = this.translationEntries;
+            var target = entries[oldSource];
+            if (target === void 0) return;
+            this.$delete(entries, oldSource);
+            this.$set(entries, newSource, target);
+            this.emitTranslations(entries);
+          },
+          /**
+           * 修改转译规则的目标频道值
+           */
+          onTranslationTargetChange: function(sourceChan, newTarget) {
+            var entries = this.translationEntries;
+            if (entries[sourceChan] !== void 0) {
+              this.$set(entries, sourceChan, newTarget);
+              this.emitTranslations(entries);
+            }
+          },
+          /**
+           * 触发 signal_translations 字段变更事件
+           */
+          emitTranslations: function(entries) {
+            this.$emit("field-change", "signal_translations", JSON.parse(JSON.stringify(entries)));
+          },
+          // ===== 属性覆写编辑 =====
+          /**
+           * 添加新的覆写字段
+           */
+          addOverwriteField: function() {
+            var entries = this.overwriteEntries;
+            var newField = "new_field";
+            var idx = 1;
+            while (entries[newField] !== void 0) {
+              newField = "new_field_" + idx;
+              idx++;
+            }
+            this.$set(entries, newField, "");
+            this.emitOverwrite(entries);
+          },
+          /**
+           * 删除覆写字段
+           */
+          removeOverwriteField: function(field) {
+            var entries = this.overwriteEntries;
+            this.$delete(entries, field);
+            this.emitOverwrite(entries);
+          },
+          /**
+           * 修改覆写字段名（重命名 key）
+           */
+          onOverwriteFieldChange: function(oldField, newField, currentVal) {
+            if (!newField || oldField === newField) return;
+            var entries = this.overwriteEntries;
+            var val = entries[oldField];
+            if (val === void 0) return;
+            this.$delete(entries, oldField);
+            this.$set(entries, newField, val);
+            this.emitOverwrite(entries);
+          },
+          /**
+           * 修改覆写字段的值
+           */
+          onOverwriteValueChange: function(field, value) {
+            var entries = this.overwriteEntries;
+            if (entries[field] !== void 0) {
+              this.$set(entries, field, value);
+              this.emitOverwrite(entries);
+            }
+          },
+          /**
+           * 触发 overwrite 字段变更事件
+           */
+          emitOverwrite: function(entries) {
+            this.$emit("field-change", "overwrite", JSON.parse(JSON.stringify(entries)));
           }
         }
       });
@@ -10102,6 +10464,8 @@
             :parent-sub-part-key="connectorParentSubPartKey"
             :connector-defs="availableConnectorDefs"
             :all-locator-names="allLocatorNames"
+            :subsystem-keys="connectorParentSubsystems"
+            :signal-target-hints="connectorParentSignalTargetHints"
             @field-change="updateConnectorField"
             @locator-change="migrateConnectorLocator"
             @name-change="renameConnector"
@@ -10372,6 +10736,32 @@
               return sp.connectors[k].locator === locatorName;
             });
             return found || "";
+          },
+          /**
+           * 连接点所属子零件内的子系统映射（用于 power_target 下拉选择）
+           */
+          connectorParentSubsystems: function() {
+            var spKey = this.connectorParentSubPartKey;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return {};
+            var sp = this.currentVariant.sub_parts[spKey];
+            return sp && sp.subsystems || {};
+          },
+          /**
+           * 连接点所属子零件内的信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'）
+           */
+          connectorParentSignalTargetHints: function() {
+            var spKey = this.connectorParentSubPartKey;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return ["subpart", "vehicle"];
+            var sp = this.currentVariant.sub_parts[spKey];
+            if (!sp) return ["subpart", "vehicle"];
+            var hints = ["subpart", "vehicle"];
+            if (sp.connectors) {
+              hints = hints.concat(Object.keys(sp.connectors));
+            }
+            if (sp.subsystems) {
+              hints = hints.concat(Object.keys(sp.subsystems));
+            }
+            return hints;
           },
           /**
            * 当前选中碰撞箱的配置对象（从所属子零件的 hit_boxes 中获取）

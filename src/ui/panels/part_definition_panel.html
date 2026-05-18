@@ -141,6 +141,8 @@
             :parent-sub-part-key="connectorParentSubPartKey"
             :connector-defs="availableConnectorDefs"
             :all-locator-names="allLocatorNames"
+            :subsystem-keys="connectorParentSubsystems"
+            :signal-target-hints="connectorParentSignalTargetHints"
             @field-change="updateConnectorField"
             @locator-change="migrateConnectorLocator"
             @name-change="renameConnector"

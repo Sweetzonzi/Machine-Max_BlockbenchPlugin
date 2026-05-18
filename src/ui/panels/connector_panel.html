@@ -61,4 +61,97 @@
             </p>
         </div>
     </div>
+
+    <!-- === 信号目标 (signal_targets) === -->
+    <div class="mm-section">
+        <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>信号目标</span>
+            <button class="mm-btn mm-btn-sm" @click="addSignalTargetChannel" title="添加信号频道" style="font-size:18px;font-weight:bold">+</button>
+        </h4>
+        <div v-if="signalTargetChannelCount === 0" class="mm-element-info" style="color:#888;font-size:11px">
+            无信号目标 — 点击 [+ ] 添加频道
+        </div>
+        <div v-for="(targets, channel, ci) in signalTargetEntries" :key="ci" class="mm-signal-card">
+            <div class="mm-signal-header">
+                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel"
+                    @change="onSignalTargetChannelChange(channel, $event.target.value)"
+                    :list="'cn-sig-chan-'+_uid" placeholder="频道名" />
+                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetChannel(channel)" title="删除频道">×</button>
+            </div>
+            <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
+                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
+                    @change="updateSignalTargetItem(channel, ti, $event.target.value)"
+                    :list="'cn-sig-tgt-'+_uid" placeholder="目标（子系统名 / subpart / vehicle / 连接点名）" />
+                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="删除目标">×</button>
+            </div>
+            <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTargetItem(channel)">+ 添加目标</button>
+        </div>
+        <datalist :id="'cn-sig-chan-'+_uid">
+            <option v-for="h in channelHints" :key="h" :value="h" />
+        </datalist>
+        <datalist :id="'cn-sig-tgt-'+_uid">
+            <option v-for="h in signalTargetHints" :key="h" :value="h" />
+        </datalist>
+    </div>
+
+    <!-- === 信号转译 (signal_translations) === -->
+    <div class="mm-section">
+        <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>信号转译</span>
+            <button class="mm-btn mm-btn-sm" @click="addTranslation" title="添加转译规则" style="font-size:18px;font-weight:bold">+</button>
+        </h4>
+        <div v-if="translationCount === 0" class="mm-element-info" style="color:#888;font-size:11px">
+            无信号转译规则 — 点击 [+ ] 添加
+        </div>
+        <div v-for="(targetChan, sourceChan, ti) in translationEntries" :key="ti" style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+            <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="sourceChan"
+                @change="onTranslationSourceChange(sourceChan, $event.target.value)"
+                :list="'cn-trans-src-'+_uid" placeholder="源频道" />
+            <span style="color:#888;font-size:14px">→</span>
+            <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="targetChan"
+                @change="onTranslationTargetChange(sourceChan, $event.target.value)"
+                :list="'cn-trans-tgt-'+_uid" placeholder="目标频道" />
+            <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeTranslation(sourceChan)" title="删除转译规则">×</button>
+        </div>
+        <datalist :id="'cn-trans-src-'+_uid">
+            <option v-for="h in channelHints" :key="h" :value="h" />
+        </datalist>
+        <datalist :id="'cn-trans-tgt-'+_uid">
+            <option v-for="h in channelHints" :key="h" :value="h" />
+        </datalist>
+    </div>
+
+    <!-- === 机械能与内部 === -->
+    <div class="mm-section">
+        <h4 class="mm-section-title">机械能与内部</h4>
+        <div class="mm-field">
+            <label title="机械能输出目标：选择本子零件内的子系统，或留空表示无输出">机械能输出目标</label>
+            <select class="mm-select" :value="config.power_target" @change="onFieldChange('power_target', $event.target.value)">
+                <option value="">（无）</option>
+                <option v-for="(ss, ssKey) in subsystemKeys" :key="ssKey" :value="ssKey">{{ ssKey }}</option>
+            </select>
+        </div>
+        <div class="mm-field mm-field-row" style="margin-top:4px">
+            <label title="内部连接点：勾选后该连接点仅用于内部信号路由，不参与外部连接">内部连接点</label>
+            <input type="checkbox" :checked="config.internal" @change="onFieldChange('internal', $event.target.checked)" />
+        </div>
+    </div>
+
+    <!-- === 属性覆写 (overwrite) === -->
+    <div class="mm-section">
+        <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>属性覆写</span>
+            <button class="mm-btn mm-btn-sm" @click="addOverwriteField" title="添加覆写字段" style="font-size:18px;font-weight:bold">+</button>
+        </h4>
+        <div v-if="overwriteCount === 0" class="mm-element-info" style="color:#888;font-size:11px">
+            无属性覆写 — 点击 [+ ] 添加
+        </div>
+        <div v-for="(val, field, oi) in overwriteEntries" :key="oi" style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+            <input type="text" class="mm-input" style="flex:0.4;font-size:11px" :value="field"
+                @change="onOverwriteFieldChange(field, $event.target.value, val)" placeholder="字段名" />
+            <input type="text" class="mm-input" style="flex:0.6;font-size:11px" :value="val"
+                @change="onOverwriteValueChange(field, $event.target.value)" placeholder="覆写值" />
+            <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeOverwriteField(field)" title="删除覆写">×</button>
+        </div>
+    </div>
 </div>

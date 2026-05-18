@@ -79,11 +79,46 @@ function buildSubPartOutput(sp) {
     // 导出碰撞箱时将 UUID key 解析为骨骼名（游戏运行时使用骨骼名作为 key）
     if (sp.hit_boxes && Object.keys(sp.hit_boxes).length > 0) out.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
     if (sp.interact_boxes && Object.keys(sp.interact_boxes).length > 0) out.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
-    if (sp.connectors && Object.keys(sp.connectors).length > 0) out.connectors = sp.connectors;
+    if (sp.connectors && Object.keys(sp.connectors).length > 0) out.connectors = _cleanConnectors(sp.connectors);
     if (sp.subsystems && Object.keys(sp.subsystems).length > 0) out.subsystems = sp.subsystems;
     if (sp.hydrodynamics) out.hydrodynamics = sp.hydrodynamics;
 
     return out;
+}
+
+/**
+ * 清理连接点导出数据：移除所有空值/默认值的信号字段，
+ * 避免生成无意义的空对象冗余
+ * @param {Object<string, Object>} connectors - 连接点映射
+ * @returns {Object<string, Object>} 清理后的连接点映射
+ */
+function _cleanConnectors(connectors) {
+    var result = {};
+    for (var key in connectors) {
+        var conn = connectors[key];
+        var cleaned = {};
+        // 保留必需字段
+        if (conn.locator) cleaned.locator = conn.locator;
+        if (conn.definition) cleaned.definition = conn.definition;
+        // 信号字段：空对象/空字符串/默认 false 不导出
+        if (conn.signal_targets && Object.keys(conn.signal_targets).length > 0) {
+            cleaned.signal_targets = conn.signal_targets;
+        }
+        if (conn.signal_translations && Object.keys(conn.signal_translations).length > 0) {
+            cleaned.signal_translations = conn.signal_translations;
+        }
+        if (conn.power_target) {
+            cleaned.power_target = conn.power_target;
+        }
+        if (conn.internal) {
+            cleaned.internal = true;
+        }
+        if (conn.overwrite && Object.keys(conn.overwrite).length > 0) {
+            cleaned.overwrite = conn.overwrite;
+        }
+        result[key] = cleaned;
+    }
+    return result;
 }
 
 /**

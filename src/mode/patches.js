@@ -284,10 +284,10 @@ function buildMMMenuItems(el) {
                                 var baseName = generateDefaultName('connector', { namespace: ns, boneName: locName });
                                 var connName = ensureUniqueName('connector', variant, spKey, baseName);
                                 if (!variant.sub_parts[spKey].connectors[connName]) {
-                                    variant.sub_parts[spKey].connectors[connName] = {
+                                    var connDefaults = require('../core/config_defaults.js').CONNECTOR_INSTANCE_DEFAULTS;
+                                    variant.sub_parts[spKey].connectors[connName] = Object.assign({}, connDefaults, {
                                         locator: locName,
-                                        definition: '',
-                                    };
+                                    });
                                     log.debug('右键菜单: 标记为连接点 — 在 sub_parts 中创建条目', {
                                         spKey: spKey, connKey: connName, locatorName: locName,
                                     });

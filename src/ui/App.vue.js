@@ -277,6 +277,32 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             return found || '';
         },
         /**
+         * 连接点所属子零件内的子系统映射（用于 power_target 下拉选择）
+         */
+        connectorParentSubsystems: function () {
+            var spKey = this.connectorParentSubPartKey;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return {};
+            var sp = this.currentVariant.sub_parts[spKey];
+            return (sp && sp.subsystems) || {};
+        },
+        /**
+         * 连接点所属子零件内的信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'）
+         */
+        connectorParentSignalTargetHints: function () {
+            var spKey = this.connectorParentSubPartKey;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return ['subpart', 'vehicle'];
+            var sp = this.currentVariant.sub_parts[spKey];
+            if (!sp) return ['subpart', 'vehicle'];
+            var hints = ['subpart', 'vehicle'];
+            if (sp.connectors) {
+                hints = hints.concat(Object.keys(sp.connectors));
+            }
+            if (sp.subsystems) {
+                hints = hints.concat(Object.keys(sp.subsystems));
+            }
+            return hints;
+        },
+        /**
          * 当前选中碰撞箱的配置对象（从所属子零件的 hit_boxes 中获取）
          * 无归属时返回游离配置以确保面板正常渲染
          */
