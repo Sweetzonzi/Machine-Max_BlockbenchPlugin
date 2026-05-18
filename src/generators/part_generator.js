@@ -87,11 +87,69 @@ function buildSubPartOutput(sp) {
 }
 
 /**
- * 清理子系统导出数据：只保留实例级别的字段，过滤静态属性。
+ * 各子系统类型的动态属性字段映射表
  *
- * MachineMax 数据模型中，子系统的静态属性（如 max_power、max_torque）
- * 属于 subsystem_defs 定义文件，不应出现在子零件 subsystems 中。
- * 子系统实例只应有：type/definition/locator/connector + 信号路由字段。
+ * 定义依据：Java 端 common/mech/subsystem/attr/dynamic_attr/ 下各 *SubsystemAttr
+ * 类的 RecordCodecBuilder 中定义的 JSON 字段名（fieldOf / optionalFieldOf）。
+ * 每个子系统实例在 parts/*.json 的 subsystems 中只应包含其类型对应的字段。
+ */
+var SUBSYSTEM_DYNAMIC_FIELDS = {
+    // 基础类型：仅 type + definition
+    'machine_max:basic': ['type', 'definition'],
+    'machine_max:item_storage': ['type', 'definition'],
+    'machine_max:battery': ['type', 'definition'],
+    'machine_max:camera': ['type', 'definition'],
+    'machine_max:signal_convert': ['type', 'definition'],
+    // 动力源（引擎/电机/电机控制器）：definition + power_output + speed_outputs
+    'machine_max:engine': ['type', 'definition', 'power_output', 'speed_outputs'],
+    'machine_max:motor': ['type', 'definition', 'power_output', 'speed_outputs'],
+    'machine_max:motor_controller': ['type', 'definition', 'power_output', 'speed_outputs'],
+    // 变速箱：definition + power_output + gear_outputs
+    'machine_max:gearbox': ['type', 'definition', 'power_output', 'gear_outputs'],
+    // 分动器：definition + power_outputs（Map<String, Float>）
+    'machine_max:transmission': ['type', 'definition', 'power_outputs'],
+    // 控制器（轿车/摩托）：definition + 多路控制信号输出
+    'machine_max:car_controller': [
+        'type', 'definition',
+        'control_outputs', 'speed_outputs', 'throttle_outputs',
+        'steering_outputs', 'brake_outputs', 'handbrake_outputs'
+    ],
+    'machine_max:motorbike_controller': [
+        'type', 'definition',
+        'control_outputs', 'speed_outputs', 'throttle_outputs',
+        'steering_outputs', 'brake_outputs', 'handbrake_outputs'
+    ],
+    // 火控系统：definition + control_outputs
+    'machine_max:fire_controller': ['type', 'definition', 'control_outputs'],
+    // 轮驱动：definition + connector + 滚动/转向信号
+    'machine_max:wheel_driver': [
+        'type', 'definition', 'connector',
+        'roll_speed_outputs', 'steering_angle_outputs'
+    ],
+    // 炮塔驱动：definition + connector + rotation_outputs
+    'machine_max:turret': ['type', 'definition', 'connector', 'rotation_outputs'],
+    // 座椅：definition + locator + 多路控制信号
+    'machine_max:seat': [
+        'type', 'definition', 'locator',
+        'move_outputs', 'aim_outputs', 'regular_outputs', 'passenger_num_outputs'
+    ],
+    // 车灯：definition + locator
+    'machine_max:lighting': ['type', 'definition', 'locator'],
+    // 关节驱动（JSON 中字段名为 locator，非 connector）：definition + locator + rotation_order + axes
+    'machine_max:joint': ['type', 'definition', 'locator', 'rotation_order', 'axes'],
+    // 发射器：definition + locator + ammo_outputs
+    'machine_max:launcher': ['type', 'definition', 'locator', 'ammo_outputs'],
+    // 脚本：definition + script
+    'machine_max:javascript': ['type', 'definition', 'script'],
+};
+
+/**
+ * 清理子系统导出数据：按子系统类型分派字段白名单。
+ *
+ * MachineMax 数据模型中，每个子系统类型有独立的动态属性 schema，
+ * 对应 Java 端 *SubsystemAttr 的 RecordCodecBuilder 定义。
+ * 导出时根据 type 字段查表，只保留该类型允许的实例级字段，
+ * 防止静态属性（如 max_power、max_torque 等属于 subsystem_defs）混入。
  *
  * @param {Object<string, Object>} subsystems - 子系统映射
  * @returns {Object<string, Object>} 清理后的子系统映射
@@ -100,25 +158,48 @@ function _cleanSubsystems(subsystems) {
     var result = {};
     for (var key in subsystems) {
         var ss = subsystems[key];
-        var cleaned = {};
-        // 实例白名单字段
-        if (ss.type) cleaned.type = ss.type;
-        if (ss.definition) cleaned.definition = ss.definition;
-        if (ss.locator) cleaned.locator = ss.locator;
-        if (ss.connector) cleaned.connector = ss.connector;
-        // 信号路由字段：所有以 _outputs/_inputs 结尾的字段 + power_output
-        for (var sf in ss) {
-            if (sf.endsWith('_outputs') || sf.endsWith('_inputs') || sf === 'power_output') {
-                var val = ss[sf];
-                if (val === undefined || val === null) continue;
-                if (val === '') continue;
-                if (typeof val === 'object' && Object.keys(val).length === 0) continue;
-                cleaned[sf] = val;
-            }
+        var typeId = ss.type;
+        var allowedFields = SUBSYSTEM_DYNAMIC_FIELDS[typeId];
+
+        // 未知类型：回退到通用信号字段启发式过滤
+        if (!allowedFields) {
+            log.warn('_cleanSubsystems: 未知子系统类型 "' + typeId + '"，使用回退过滤策略');
+            allowedFields = _inferDynamicFields(ss);
         }
+
+        var cleaned = {};
+        for (var fi = 0; fi < allowedFields.length; fi++) {
+            var field = allowedFields[fi];
+            var val = ss[field];
+            if (val === undefined || val === null) continue;
+            // 空对象不导出（如空的信号映射）
+            if (typeof val === 'object' && !Array.isArray(val) && Object.keys(val).length === 0) continue;
+            // 空字符串不导出
+            if (typeof val === 'string' && val === '') continue;
+            cleaned[field] = val;
+        }
+
         result[key] = cleaned;
     }
     return result;
+}
+
+/**
+ * 回退策略：对未知类型使用启发式规则推断动态属性字段。
+ * 保留 type、definition、字段名为 *_outputs / *_inputs 或 power_output 的值。
+ *
+ * @param {Object} ss - 子系统实例
+ * @returns {string[]} 推断出的字段名列表
+ */
+function _inferDynamicFields(ss) {
+    var fields = ['type', 'definition'];
+    for (var sf in ss) {
+        if (sf === 'type' || sf === 'definition') continue;
+        if (sf.endsWith('_outputs') || sf.endsWith('_inputs') || sf === 'power_output') {
+            fields.push(sf);
+        }
+    }
+    return fields;
 }
 
 /**
