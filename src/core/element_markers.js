@@ -104,17 +104,28 @@ function setMarker(projectConfig, partId, variantName, uuid, type, configRef) {
     // 覆盖标记前，先清理旧标记类型的副作用（防止类型变更后残留）
     var oldMarker = part.element_markers[variantName][uuid];
     if (oldMarker && oldMarker.type !== type) {
+        log.debug('setMarker: 检测到标记类型变更，清理旧标记副作用', {
+            partId, variant: variantName, uuid, oldType: oldMarker.type, newType: type,
+            oldConfigRef: oldMarker.config_ref,
+        });
         if (oldMarker.type === 'hit_box' && oldMarker.config_ref) {
             var oldVariant = part.variants && part.variants[variantName];
             if (oldVariant && oldVariant.sub_parts && oldVariant.sub_parts[oldMarker.config_ref]) {
                 var oldSp = oldVariant.sub_parts[oldMarker.config_ref];
-                if (oldSp.hit_boxes && oldSp.hit_boxes[uuid]) {
-                    delete oldSp.hit_boxes[uuid];
-                    log.debug('setMarker: 覆盖旧 hit_box 标记，已清理 hit_boxes 条目', {
-                        partId, variant: variantName, spKey: oldMarker.config_ref, uuid: uuid,
-                    });
+                if (oldSp.hit_boxes) {
+                    if (oldSp.hit_boxes[uuid] !== undefined) {
+                        delete oldSp.hit_boxes[uuid];
+                        log.debug('setMarker: 覆盖旧 hit_box 标记，已清理 hit_boxes 条目', {
+                            partId, variant: variantName, spKey: oldMarker.config_ref, uuid: uuid,
+                        });
+                    }
                 }
             }
+        } else if (oldMarker.type === 'connector') {
+            // 旧标记为连接点但没有清理连接的 connectors 条目的逻辑（已知问题）
+            log.warn('setMarker: 覆盖旧 connector 标记，但未清理 connectors 条目', {
+                partId, variant: variantName, uuid, oldConfigRef: oldMarker.config_ref,
+            });
         } else if (oldMarker.type === 'sub_part' && oldMarker.config_ref) {
             var oldVariant2 = part.variants && part.variants[variantName];
             if (oldVariant2 && oldVariant2.sub_parts && oldVariant2.sub_parts[oldMarker.config_ref]) {
@@ -122,11 +133,14 @@ function setMarker(projectConfig, partId, variantName, uuid, type, configRef) {
                 log.debug('setMarker: 覆盖旧 sub_part 标记，已清理 sub_parts 条目', {
                     partId, variant: variantName, spKey: oldMarker.config_ref,
                 });
+                // 删除子零件后重算 auto_end_bones，确保上级子零件的自动排除列表更新
+                recalcAutoEndBones(projectConfig, partId, variantName);
             }
         }
     }
 
     // 标记为子零件时自动在 variant.sub_parts 中创建配置对象
+    // configRef 为翻译键格式（如 sub_part.machine_max.main）
     if (type === 'sub_part' && configRef) {
         const variant = part.variants && part.variants[variantName];
         if (variant) {
@@ -135,10 +149,12 @@ function setMarker(projectConfig, partId, variantName, uuid, type, configRef) {
                 variant.sub_parts = {};
             }
             if (!variant.sub_parts[spKey]) {
+                // 从 Group UUID 查找实际骨骼名用于 start_bone
+                var groupEl = (typeof Group !== 'undefined') ? Group.all.find(function(g) { return g.uuid === uuid; }) : null;
                 const spConfig = createSubPartConfig();
-                spConfig.start_bone = configRef;
+                spConfig.start_bone = groupEl ? groupEl.name : configRef;
                 variant.sub_parts[spKey] = spConfig;
-                log.debug('setMarker: 已创建子零件配置', { partId, variant: variantName, key: spKey });
+                log.debug('setMarker: 已创建子零件配置', { partId, variant: variantName, key: spKey, start_bone: spConfig.start_bone });
             }
             configRef = spKey;
         }
@@ -176,35 +192,89 @@ function clearMarker(projectConfig, partId, variantName, uuid) {
 
     // 删除元素标记前获取标记信息，用于清理下级配置
     var marker = part.element_markers[variantName][uuid];
+    log.debug('clearMarker: 开始清除标记', {
+        partId, variant: variantName, uuid, markerType: marker ? marker.type : 'N/A',
+        configRef: marker ? marker.config_ref : 'N/A',
+    });
 
     // 清理碰撞箱标记对应的 sub_part.hit_boxes 条目
+    // hit_boxes 的 key 现在是 UUID，直接通过 uuid 删除
     if (marker && marker.type === 'hit_box' && marker.config_ref) {
         var variant = part.variants && part.variants[variantName];
         if (variant && variant.sub_parts && variant.sub_parts[marker.config_ref]) {
             var sp = variant.sub_parts[marker.config_ref];
+            var hitBoxesBefore = sp.hit_boxes ? Object.keys(sp.hit_boxes) : [];
             if (sp.hit_boxes) {
+                var found = sp.hit_boxes[uuid] !== undefined;
                 delete sp.hit_boxes[uuid];
-                log.debug('clearMarker: 已清理 hit_boxes 条目', { partId, variant: variantName, spKey: marker.config_ref, uuid: uuid });
+                log.debug('clearMarker: 碰撞箱条目清理', {
+                    partId, variant: variantName, spKey: marker.config_ref, uuid,
+                    wasFound: found,
+                    hitBoxesBefore: hitBoxesBefore,
+                    hitBoxesAfter: Object.keys(sp.hit_boxes),
+                    stillHasKey: sp.hit_boxes[uuid] !== undefined,
+                });
             }
+        } else {
+            log.debug('clearMarker: 碰撞箱所属子零件不存在，跳过', {
+                partId, variant: variantName, spKey: marker.config_ref,
+                variantExists: !!variant,
+                subPartsExists: variant ? !!variant.sub_parts : false,
+                spExists: variant && variant.sub_parts ? !!variant.sub_parts[marker.config_ref] : false,
+            });
         }
     }
 
     // 清理连接点标记对应的 sub_part.connectors 条目
     if (marker && marker.type === 'connector') {
         var variant = part.variants && part.variants[variantName];
+        var foundAnyMatch = false;
         if (variant && variant.sub_parts) {
-            // 遍历所有子零件，清理包含该 locator 名称的连接点条目
-            for (var sk in variant.sub_parts) {
-                if (variant.sub_parts[sk].connectors) {
-                    // 通过 element_markers 反向查找关联的元素名称比较困难，
-                    // 使用 uuid 在 clearMarker 被调用前获取元素名称
-                    var el = (typeof Locator !== 'undefined') ? Locator.all.find(function(l) { return l.uuid === uuid; }) : null;
-                    if (el && variant.sub_parts[sk].connectors[el.name]) {
-                        delete variant.sub_parts[sk].connectors[el.name];
-                        log.debug('clearMarker: 已清理 connectors 条目', { partId, variant: variantName, spKey: sk, locator: el.name });
+            var el = (typeof Locator !== 'undefined' && Locator.all) ? Locator.all.find(function(l) { return l.uuid === uuid; }) : null;
+            log.debug('clearMarker: 连接点 Locator 查找结果', {
+                uuid, locatorFound: !!el, locatorName: el ? el.name : null,
+                subPartCount: Object.keys(variant.sub_parts).length,
+                subPartKeys: Object.keys(variant.sub_parts),
+            });
+            if (el) {
+                // 遍历所有子零件，通过 locator 字段匹配连接点条目
+                for (var sk in variant.sub_parts) {
+                    if (variant.sub_parts[sk].connectors) {
+                        var connKeysBefore = Object.keys(variant.sub_parts[sk].connectors);
+                        // 连接点 key 现在是翻译键格式，通过 locator 字段匹配
+                        for (var connKey in variant.sub_parts[sk].connectors) {
+                            var conn = variant.sub_parts[sk].connectors[connKey];
+                            if (conn.locator === el.name) {
+                                delete variant.sub_parts[sk].connectors[connKey];
+                                foundAnyMatch = true;
+                                log.debug('clearMarker: 连接点条目清理', {
+                                    partId, variant: variantName, spKey: sk, connKey: connKey,
+                                    locator: el.name,
+                                    connKeysBefore: connKeysBefore,
+                                    connKeysAfter: Object.keys(variant.sub_parts[sk].connectors),
+                                });
+                                break;
+                            }
+                        }
+                        // 如果没有匹配到，记录每个条目的 locator 以便调试
+                        if (!foundAnyMatch) {
+                            var connEntries = {};
+                            for (var ck in variant.sub_parts[sk].connectors) {
+                                connEntries[ck] = variant.sub_parts[sk].connectors[ck].locator;
+                            }
+                            log.debug('clearMarker: 连接点未匹配到任何条目（子零件 ' + sk + '）', {
+                                targetLocator: el.name,
+                                existingConnectorLocators: connEntries,
+                            });
+                        }
                     }
                 }
             }
+        }
+        if (!foundAnyMatch) {
+            log.warn('clearMarker: 连接点标记清除但未找到匹配的子零件连接点条目', {
+                partId, variant: variantName, uuid, locatorName: el ? el.name : 'unknown',
+            });
         }
     }
 
@@ -220,11 +290,32 @@ function clearMarker(projectConfig, partId, variantName, uuid) {
     }
 
     delete part.element_markers[variantName][uuid];
-    log.debug('clearMarker: 标记已清除', { partId: partId, variant: variantName, uuid: uuid });
+    log.debug('clearMarker: 标记已从 element_markers 字典删除', {
+        partId: partId, variant: variantName, uuid,
+        remainingMarkers: Object.keys(part.element_markers[variantName] || {}),
+    });
 
     if (Object.keys(part.element_markers[variantName]).length === 0) {
         delete part.element_markers[variantName];
+        log.debug('clearMarker: 变体标记字典已清空', { partId: partId, variant: variantName });
     }
+
+    // 输出最终状态摘要：记录当前 variant.sub_parts 下所有子零件的 hit_boxes 和 connectors 状态
+    var variant = part.variants && part.variants[variantName];
+    if (variant && variant.sub_parts) {
+        var stateSummary = {};
+        for (var spKey in variant.sub_parts) {
+            var sp = variant.sub_parts[spKey];
+            stateSummary[spKey] = {
+                hitBoxKeys: sp.hit_boxes ? Object.keys(sp.hit_boxes) : [],
+                connectorKeys: sp.connectors ? Object.keys(sp.connectors) : [],
+            };
+        }
+        log.debug('clearMarker: 清理后 sub_parts 状态摘要', {
+            partId: partId, variant: variantName, subParts: stateSummary,
+        });
+    }
+
     return true;
 }
 

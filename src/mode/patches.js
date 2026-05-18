@@ -2,6 +2,7 @@ var { getMarkersForVariant, setMarker, clearMarker, getMarker, detectOwnerSubPar
 var { getConfig, saveConfig } = require('../utils/persistence.js');
 var { showToast } = require('../utils/notify.js');
 var { createLogger } = require('../utils/logger.js');
+var { generateDefaultName, ensureUniqueName } = require('../core/naming.js');
 
 var log = createLogger('Mode');
 
@@ -153,7 +154,12 @@ function buildMMMenuItems(el) {
         if (!marker || marker.type !== 'sub_part') {
             items.push({ name: '标记为子零件', icon: 'inventory_2', click: function () {
                 log.debug('右键菜单: 标记为子零件', { uuid: el.uuid, name: el.name });
-                setMarker(config, activePartId, activeVariantName, el.uuid, 'sub_part', el.name);
+                // 生成默认名称（翻译键格式），自动去重
+                var variant = config.parts[activePartId].variants[activeVariantName];
+                var ns = config.namespace || 'machine_max';
+                var baseName = generateDefaultName('sub_part', { namespace: ns });
+                var spName = ensureUniqueName('sub_part', variant, null, baseName);
+                setMarker(config, activePartId, activeVariantName, el.uuid, 'sub_part', spName);
                 var { refreshOutlinerIcons } = require('../mode.js');
                 refreshOutlinerIcons();
                 Blockbench.dispatchEvent('update_selection');
@@ -162,7 +168,10 @@ function buildMMMenuItems(el) {
         if (!marker || marker.type !== 'hit_box') {
             items.push({ name: '标记为碰撞箱', icon: 'select_all', click: function () {
                 log.debug('右键菜单: 标记为碰撞箱', { uuid: el.uuid, name: el.name });
-                var owner = detectOwnerSubPart(config, activePartId, activeVariantName, el);
+                // 若当前骨骼本身就是子零件，跳过自身从父级开始查找上级子零件，
+                // 避免碰撞箱条目创建到即将被删除的子零件配置中而丢失
+                var searchEl = (marker && marker.type === 'sub_part') ? (el.parent || null) : el;
+                var owner = detectOwnerSubPart(config, activePartId, activeVariantName, searchEl);
                 var spKey = owner ? owner.spKey : null;
                 if (spKey) {
                     var variant = config.parts[activePartId].variants[activeVariantName];
@@ -174,12 +183,14 @@ function buildMMMenuItems(el) {
                     if (!variant.sub_parts[spKey].hit_boxes) {
                         variant.sub_parts[spKey].hit_boxes = {};
                     }
-                    var hbName = el.name;
-                    if (!variant.sub_parts[spKey].hit_boxes[hbName]) {
+                    var hbUuid = el.uuid;
+                    if (!variant.sub_parts[spKey].hit_boxes[hbUuid]) {
                         var cfgMod2 = require('../core/config.js');
-                        variant.sub_parts[spKey].hit_boxes[hbName] = cfgMod2.createHitBoxConfig();
+                        variant.sub_parts[spKey].hit_boxes[hbUuid] = cfgMod2.createHitBoxConfig();
+                        log.debug('右键菜单: 标记为碰撞箱 — 在 sub_parts 中创建条目', {
+                            spKey: spKey, hbUuid: hbUuid, elementName: el.name,
+                        });
                     }
-                    // 标记完成后在主编辑器通知
                 }
                 setMarker(config, activePartId, activeVariantName, el.uuid, 'hit_box', spKey);
                 var { refreshOutlinerIcons } = require('../mode.js');
@@ -217,11 +228,19 @@ function buildMMMenuItems(el) {
                                 if (!variant.sub_parts[spKey].connectors) {
                                     variant.sub_parts[spKey].connectors = {};
                                 }
+                                // 使用翻译键格式的名称作为 key，locator 作为独立绑定字段
                                 var locName = el.name;
-                                if (!variant.sub_parts[spKey].connectors[locName]) {
-                                    variant.sub_parts[spKey].connectors[locName] = {
+                                var ns = config.namespace || 'machine_max';
+                                var baseName = generateDefaultName('connector', { namespace: ns, boneName: locName });
+                                var connName = ensureUniqueName('connector', variant, spKey, baseName);
+                                if (!variant.sub_parts[spKey].connectors[connName]) {
+                                    variant.sub_parts[spKey].connectors[connName] = {
+                                        locator: locName,
                                         definition: '',
                                     };
+                                    log.debug('右键菜单: 标记为连接点 — 在 sub_parts 中创建条目', {
+                                        spKey: spKey, connKey: connName, locatorName: locName,
+                                    });
                                 }
                             }
                         }
@@ -237,11 +256,43 @@ function buildMMMenuItems(el) {
 
     if (marker) {
         items.push({ name: '清除 MachineMax 标记', icon: 'delete', click: function () {
-            log.debug('右键菜单: 清除标记', { type: marker.type, uuid: el.uuid });
+            log.debug('右键菜单: 清除标记 — 开始', {
+                type: marker.type, uuid: el.uuid, name: el.name,
+                configRef: marker.config_ref, activePartId: activePartId,
+                variantName: activeVariantName,
+            });
+            // 清除前记录 config 状态快照
+            var oldVariant = config.parts[activePartId] && config.parts[activePartId].variants[activeVariantName];
+            var oldSubPartsSnapshot = {};
+            if (oldVariant && oldVariant.sub_parts) {
+                for (var spk in oldVariant.sub_parts) {
+                    oldSubPartsSnapshot[spk] = {
+                        hitBoxKeys: oldVariant.sub_parts[spk].hit_boxes ? Object.keys(oldVariant.sub_parts[spk].hit_boxes) : [],
+                        connectorKeys: oldVariant.sub_parts[spk].connectors ? Object.keys(oldVariant.sub_parts[spk].connectors) : [],
+                    };
+                }
+            }
+            log.debug('右键菜单: 清除标记 — 清除前 sub_parts 快照', { subParts: oldSubPartsSnapshot });
+
             clearMarker(config, activePartId, activeVariantName, el.uuid);
+
+            // 清除后记录 config 状态快照
+            var newVariant = config.parts[activePartId] && config.parts[activePartId].variants[activeVariantName];
+            var newSubPartsSnapshot = {};
+            if (newVariant && newVariant.sub_parts) {
+                for (var spk2 in newVariant.sub_parts) {
+                    newSubPartsSnapshot[spk2] = {
+                        hitBoxKeys: newVariant.sub_parts[spk2].hit_boxes ? Object.keys(newVariant.sub_parts[spk2].hit_boxes) : [],
+                        connectorKeys: newVariant.sub_parts[spk2].connectors ? Object.keys(newVariant.sub_parts[spk2].connectors) : [],
+                    };
+                }
+            }
+            log.debug('右键菜单: 清除标记 — 清除后 sub_parts 快照', { subParts: newSubPartsSnapshot });
+
             var { refreshOutlinerIcons } = require('../mode.js');
             refreshOutlinerIcons();
             Blockbench.dispatchEvent('update_selection');
+            log.debug('右键菜单: 清除标记 — 完成（已触发 update_selection）');
         }});
     }
 

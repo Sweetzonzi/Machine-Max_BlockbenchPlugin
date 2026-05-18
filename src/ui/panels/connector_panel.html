@@ -1,17 +1,29 @@
 <div class="mm-section">
     <div class="mm-sticky-title">
-        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">
+        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
             <span class="mm-marker-badge" style="background:#3AA83A">连接点</span>
-            {{ elementName }}
+            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:0;border:1px solid transparent;background:transparent;"
+                v-model="editingName"
+                @focus="$event.target.style.border='1px solid #555';$event.target.style.background='#2a2a2a'"
+                @blur="onNameBlur($event)"
+                @change="onNameChange($event.target.value)"
+                placeholder="connector.machine_max.xxx"
+                title="连接点名称（字典 key），修改后自动迁移字典" />
         </h3>
     </div>
 
     <div class="mm-section">
         <h4 class="mm-section-title">归属</h4>
-        <div class="mm-field">
-            <label>所属子零件</label>
-            <span class="mm-tag" style="background:#4A90D9;cursor:default" :title="'由骨骼层级自动检测'">
-                {{ parentSubPartKey || '（游离 — 无归属）' }}
+        <div v-if="parentSubPartKey" class="mm-sub-item-row mm-clickable" :title="'点击跳转到子零件 ' + parentSubPartKey" @click="navigateToSubPart">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
+                {{ parentSubPartKey }}
+            </span>
+        </div>
+        <div v-else class="mm-sub-item-row" title="由骨骼层级自动检测" style="cursor:default">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
+                （游离 — 无归属）
             </span>
         </div>
     </div>
@@ -19,10 +31,10 @@
     <div class="mm-section">
         <h4 class="mm-section-title">定位器</h4>
         <div class="mm-field">
-            <label title="该连接点绑定的定位器名称，修改后将自动迁移标记和配置">关联定位器</label>
+            <label title="该连接点绑定的定位器名称，决定连接点在 3D 空间中的位置和朝向">绑定定位器</label>
             <input type="text" class="mm-input"
-                v-model="editingLocatorName"
-                @change="onLocatorInput($event.target.value)"
+                v-model="editingLocator"
+                @change="onLocatorChange($event.target.value)"
                 :list="locatorListId"
                 placeholder="搜索并选择定位器…" />
             <datalist :id="locatorListId">

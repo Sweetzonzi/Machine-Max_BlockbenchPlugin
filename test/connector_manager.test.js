@@ -50,7 +50,7 @@ describe('ConnectorManager', function () {
 
                 var connectors = cm.listConnectors(config);
                 expect(connectors.length).toBe(1);
-                expect(connectors[0].id).toBe('standard_joint');
+                expect(connectors[0].id).toBe('test:standard_joint');
                 expect(connectors[0].data.type).toBe('Simple');
                 expect(connectors[0].source).toBe('current');
                 expect(connectors[0].editable).toBe(true);
@@ -73,7 +73,7 @@ describe('ConnectorManager', function () {
 
                 var connectors = cm.listConnectors(config);
                 expect(connectors.length).toBe(1);
-                expect(connectors[0].id).toBe('dep_conn');
+                expect(connectors[0].id).toBe('dep:dep_conn');
                 expect(connectors[0].source).toBe('dependency:0');
                 expect(connectors[0].editable).toBe(false);
             } finally {
@@ -106,7 +106,7 @@ describe('ConnectorManager', function () {
 
                 // 验证可通过 listConnectors 读取
                 var connectors = cm.listConnectors(config);
-                var conn = connectors.find(function (c) { return c.id === 'my_new_conn'; });
+                var conn = connectors.find(function (c) { return c.id === 'test:my_new_conn'; });
                 expect(conn).toBeDefined();
                 expect(conn.data.type).toBe('Simple');
                 expect(conn.data.direction).toBe('xn');
@@ -138,30 +138,31 @@ describe('ConnectorManager', function () {
 
                 expect(function () {
                     cm.createConnector(config, 'existing_conn', { type: 'Advanced' });
-                }).toThrow('连接器 "existing_conn" 已存在，请使用更新操作');
+                }).toThrow('连接器 "test:existing_conn" 已存在，请使用更新操作');
             } finally {
                 cleanupTempDir(tmpDir);
             }
         });
 
-        test('#7 throws when connector exists in dependency pack', function () {
+        test('#7 throws when connector exists in dependency pack (same namespace)', function () {
             var depDir = createTempDir('mm-cm-');
             var curDir = createTempDir('mm-cm-');
             try {
                 var config = createMinimalConfig();
-                cp.createContentPack(depDir, { id: 'dep:pack', version: '1.0', name: 'D', author: 'A', description: '' });
-                cp.createContentPack(curDir, { id: 'cur:pack', version: '1.0', name: 'C', author: 'A', description: '' });
+                // 使用相同 namespace 的两个包，冲突检测基于 namespaced 键
+                cp.createContentPack(depDir, { id: 'test:dep', version: '1.0', name: 'D', author: 'A', description: '' });
+                cp.createContentPack(curDir, { id: 'test:cur', version: '1.0', name: 'C', author: 'A', description: '' });
                 config.dependencyPaths = [depDir];
                 config.contentPackPath = curDir;
 
-                cp.writeDef(depDir, 'dep', 'connectors', 'dep_conn', {
+                cp.writeDef(depDir, 'test', 'connectors', 'dep_conn', {
                     type: 'Advanced',
                     direction: 'yn',
                 });
 
                 expect(function () {
                     cm.createConnector(config, 'dep_conn', { type: 'Simple' });
-                }).toThrow('不能覆盖依赖包中的连接器 "dep_conn"');
+                }).toThrow('不能覆盖依赖包中的连接器 "test:dep_conn"');
             } finally {
                 cleanupTempDir(depDir);
                 cleanupTempDir(curDir);
@@ -187,14 +188,14 @@ describe('ConnectorManager', function () {
                     position: [0, 0, 0],
                 });
 
-                cm.updateConnector(config, 'my_conn', {
+                cm.updateConnector(config, 'test:my_conn', {
                     type: 'Advanced',
                     direction: 'xn',
                     position: [10, 20, 30],
                 });
 
                 var connectors = cm.listConnectors(config);
-                var conn = connectors.find(function (c) { return c.id === 'my_conn'; });
+                var conn = connectors.find(function (c) { return c.id === 'test:my_conn'; });
                 expect(conn.data.type).toBe('Advanced');
                 expect(conn.data.direction).toBe('xn');
                 expect(conn.data.position[0]).toBe(10);
@@ -216,8 +217,8 @@ describe('ConnectorManager', function () {
                 });
 
                 expect(function () {
-                    cm.updateConnector(config, 'dep_conn', { type: 'Advanced' });
-                }).toThrow('不能修改内置或依赖包的连接器 "dep_conn"');
+                    cm.updateConnector(config, 'dep:dep_conn', { type: 'Advanced' });
+                }).toThrow('不能修改内置或依赖包的连接器 "dep:dep_conn"');
             } finally {
                 cleanupTempDir(depDir);
             }
@@ -243,7 +244,7 @@ describe('ConnectorManager', function () {
 
                 expect(cm.listConnectors(config).length).toBe(1);
 
-                cm.deleteConnector(config, 'to_delete');
+                cm.deleteConnector(config, 'test:to_delete');
 
                 expect(cm.listConnectors(config).length).toBe(0);
             } finally {
@@ -264,8 +265,8 @@ describe('ConnectorManager', function () {
                 });
 
                 expect(function () {
-                    cm.deleteConnector(config, 'dep_conn');
-                }).toThrow('不能删除内置或依赖包的连接器 "dep_conn"');
+                    cm.deleteConnector(config, 'dep:dep_conn');
+                }).toThrow('不能删除内置或依赖包的连接器 "dep:dep_conn"');
             } finally {
                 cleanupTempDir(depDir);
             }

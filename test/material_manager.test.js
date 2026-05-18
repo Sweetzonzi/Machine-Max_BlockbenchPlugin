@@ -48,7 +48,7 @@ describe('MaterialManager', function () {
 
                 var materials = mm.listMaterials(config);
                 expect(materials.length).toBe(1);
-                expect(materials[0].id).toBe('structural_steel');
+                expect(materials[0].id).toBe('test:structural_steel');
                 expect(materials[0].data.friction[0]).toBe(0.5);
                 expect(materials[0].source).toBe('current');
                 expect(materials[0].editable).toBe(true);
@@ -70,7 +70,7 @@ describe('MaterialManager', function () {
 
                 var materials = mm.listMaterials(config);
                 expect(materials.length).toBe(1);
-                expect(materials[0].id).toBe('dep_mat');
+                expect(materials[0].id).toBe('dep:dep_mat');
                 expect(materials[0].source).toBe('dependency:0');
                 expect(materials[0].editable).toBe(false);
             } finally {
@@ -102,7 +102,7 @@ describe('MaterialManager', function () {
 
                 // 验证可通过 listMaterials 读取
                 var materials = mm.listMaterials(config);
-                var mat = materials.find(function (m) { return m.id === 'my_new_mat'; });
+                var mat = materials.find(function (m) { return m.id === 'test:my_new_mat'; });
                 expect(mat).toBeDefined();
                 expect(mat.data.friction[0]).toBe(0.6);
                 expect(mat.data.restitution).toBe(0.4);
@@ -132,29 +132,30 @@ describe('MaterialManager', function () {
 
                 expect(function () {
                     mm.createMaterial(config, 'existing_mat', { friction: [0.5, 0.5, 0.5] });
-                }).toThrow('材料 "existing_mat" 已存在，请使用更新操作');
+                }).toThrow('材料 "test:existing_mat" 已存在，请使用更新操作');
             } finally {
                 cleanupTempDir(tmpDir);
             }
         });
 
-        test('#7 throws when material exists in dependency pack', function () {
+        test('#7 throws when material exists in dependency pack (same namespace)', function () {
             var depDir = createTempDir('mm-mm-');
             var curDir = createTempDir('mm-mm-');
             try {
                 var config = createMinimalConfig();
-                cp.createContentPack(depDir, { id: 'dep:pack', version: '1.0', name: 'D', author: 'A', description: '' });
-                cp.createContentPack(curDir, { id: 'cur:pack', version: '1.0', name: 'C', author: 'A', description: '' });
+                // 使用相同 namespace 的两个包，冲突检测基于 namespaced 键
+                cp.createContentPack(depDir, { id: 'test:dep', version: '1.0', name: 'D', author: 'A', description: '' });
+                cp.createContentPack(curDir, { id: 'test:cur', version: '1.0', name: 'C', author: 'A', description: '' });
                 config.dependencyPaths = [depDir];
                 config.contentPackPath = curDir;
 
-                cp.writeDef(depDir, 'dep', 'materials', 'dep_mat', {
+                cp.writeDef(depDir, 'test', 'materials', 'dep_mat', {
                     friction: [0.2, 0.2, 0.2],
                 });
 
                 expect(function () {
                     mm.createMaterial(config, 'dep_mat', { friction: [0.5, 0.5, 0.5] });
-                }).toThrow('不能覆盖依赖包中的材料 "dep_mat"');
+                }).toThrow('不能覆盖依赖包中的材料 "test:dep_mat"');
             } finally {
                 cleanupTempDir(depDir);
                 cleanupTempDir(curDir);
@@ -179,13 +180,13 @@ describe('MaterialManager', function () {
                     restitution: 0.2,
                 });
 
-                mm.updateMaterial(config, 'my_mat', {
+                mm.updateMaterial(config, 'test:my_mat', {
                     friction: [0.9, 0.9, 0.9],
                     restitution: 0.8,
                 });
 
                 var materials = mm.listMaterials(config);
-                var mat = materials.find(function (m) { return m.id === 'my_mat'; });
+                var mat = materials.find(function (m) { return m.id === 'test:my_mat'; });
                 expect(mat.data.friction[0]).toBe(0.9);
                 expect(mat.data.restitution).toBe(0.8);
             } finally {
@@ -205,8 +206,8 @@ describe('MaterialManager', function () {
                 });
 
                 expect(function () {
-                    mm.updateMaterial(config, 'dep_mat', { friction: [0.5, 0.5, 0.5] });
-                }).toThrow('不能修改内置或依赖包的材料 "dep_mat"');
+                    mm.updateMaterial(config, 'dep:dep_mat', { friction: [0.5, 0.5, 0.5] });
+                }).toThrow('不能修改内置或依赖包的材料 "dep:dep_mat"');
             } finally {
                 cleanupTempDir(depDir);
             }
@@ -231,7 +232,7 @@ describe('MaterialManager', function () {
 
                 expect(mm.listMaterials(config).length).toBe(1);
 
-                mm.deleteMaterial(config, 'to_delete');
+                mm.deleteMaterial(config, 'test:to_delete');
 
                 expect(mm.listMaterials(config).length).toBe(0);
             } finally {
@@ -251,8 +252,8 @@ describe('MaterialManager', function () {
                 });
 
                 expect(function () {
-                    mm.deleteMaterial(config, 'dep_mat');
-                }).toThrow('不能删除内置或依赖包的材料 "dep_mat"');
+                    mm.deleteMaterial(config, 'dep:dep_mat');
+                }).toThrow('不能删除内置或依赖包的材料 "dep:dep_mat"');
             } finally {
                 cleanupTempDir(depDir);
             }

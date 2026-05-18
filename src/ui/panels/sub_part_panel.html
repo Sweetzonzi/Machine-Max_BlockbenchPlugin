@@ -1,15 +1,21 @@
 <div class="mm-section">
     <div class="mm-sticky-title">
-        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">
+        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
             <span class="mm-marker-badge" :style="{ background: badgeColor }">{{ badgeLabel }}</span>
-            {{ elementName }}
+            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:0;border:1px solid transparent;background:transparent;"
+                v-model="editingName"
+                @focus="$event.target.style.border='1px solid #555';$event.target.style.background='#2a2a2a'"
+                @blur="onNameBlur($event)"
+                @change="onNameChange($event.target.value)"
+                placeholder="sub_part.machine_max.main"
+                title="子零件名称（字典 key），修改后自动迁移字典" />
         </h3>
     </div>
 
     <div class="mm-section">
         <h4 class="mm-section-title">骨骼范围</h4>
         <div class="mm-field">
-            <label title="子部件的起始骨骼名称，输入关键字搜索并选择">起始骨骼</label>
+            <label title="子部件的起始骨骼名称，输入关键字搜索并选择">绑定骨骼</label>
             <input type="text" class="mm-input"
                 v-model="editingStartBone"
                 @input="onStartBoneInput($event.target.value)"
@@ -122,7 +128,7 @@
         <div v-if="hitBoxCount === 0" class="mm-element-info" style="color:#888">
             暂无碰撞箱 — 在 Outliner 中右键骨骼并选择"标记为碰撞箱"
         </div>
-        <div v-for="(hb, hbKey) in hitBoxes" :key="hbKey" class="mm-sub-item-row" :title="hbKey">
+        <div v-for="(hb, hbKey) in hitBoxes" :key="hbKey" class="mm-sub-item-row mm-clickable" :title="'点击跳转到碰撞箱 ' + resolveHitBoxName(hbKey)" @click="navigateToHitBox(hbKey)">
             <span class="mm-sub-item-name">
                 <span class="mm-marker-badge" style="background:#D94A4A;font-size:10px;padding:0 4px">HB</span>
                 {{ resolveHitBoxName(hbKey) }}
@@ -136,7 +142,7 @@
         <div v-if="connectorCount === 0" class="mm-element-info" style="color:#888">
             暂无连接点 — 在 Outliner 中右键 Locator 并选择"标记为连接点"
         </div>
-        <div v-for="(conn, connKey) in config.connectors" :key="connKey" class="mm-sub-item-row" :title="connKey">
+        <div v-for="(conn, connKey) in config.connectors" :key="connKey" class="mm-sub-item-row mm-clickable" :title="'点击跳转到连接点 ' + connKey" @click="navigateToConnector(connKey)">
             <span class="mm-sub-item-name">
                 <span class="mm-marker-badge" style="background:#3AA83A;font-size:10px;padding:0 4px">CN</span>
                 {{ resolveConnectorName(connKey) }}

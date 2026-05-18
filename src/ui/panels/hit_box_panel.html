@@ -8,10 +8,16 @@
 
     <div class="mm-section">
         <h4 class="mm-section-title">归属</h4>
-        <div class="mm-field">
-            <label>所属子零件</label>
-            <span class="mm-tag" style="background:#4A90D9;cursor:default" :title="'由骨骼层级自动检测'">
-                {{ parentSubPartKey || '（游离 — 无归属）' }}
+        <div v-if="parentSubPartKey" class="mm-sub-item-row mm-clickable" :title="'点击跳转到子零件 ' + parentSubPartKey" @click="navigateToSubPart">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
+                {{ parentSubPartKey }}
+            </span>
+        </div>
+        <div v-else class="mm-sub-item-row" title="由骨骼层级自动检测" style="cursor:default">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
+                （游离 — 无归属）
             </span>
         </div>
     </div>

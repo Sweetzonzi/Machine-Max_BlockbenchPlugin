@@ -105,9 +105,92 @@ function collectAllFiles(dir, baseDir) {
 }
 
 /**
+ * 剥离 JSON 内容中的 // 单行注释（支持 inline 和独立行注释）。
+ *
+ * 通过跟踪双引号的奇偶性来判断 // 是否出现在字符串字面量内部，
+ * 避免误删 URL（如 "http://example.com"）中的 //。
+ *
+ * @param {string} content - 包含 // 注释的类 JSON 文本
+ * @returns {string} 剥离注释后的纯 JSON 文本
+ */
+function stripJsonComments(content) {
+    const lines = content.split('\n');
+    const result = [];
+
+    for (const line of lines) {
+        let inString = false;
+        let commentStart = -1;
+
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === '"' && (i === 0 || line[i - 1] !== '\\')) {
+                inString = !inString;
+            } else if (ch === '/' && line[i + 1] === '/' && !inString) {
+                commentStart = i;
+                break;
+            }
+        }
+
+        if (commentStart >= 0) {
+            const stripped = line.substring(0, commentStart);
+            // 保留非空白行（可能是注释行，去掉注释后为空则跳过）
+            if (stripped.trim().length > 0) {
+                result.push(stripped);
+            }
+        } else {
+            result.push(line);
+        }
+    }
+
+    return result.join('\n');
+}
+
+/**
+ * 将 collectJSONFiles 产出的原始映射规范化为与 content_pack.readAllDefs() 一致的格式。
+ *
+ * collectJSONFiles 产出格式：
+ *   { "subdir/file.json": "{\"key\":\"value\"}" }
+ *
+ * 规范化后格式：
+ *   { "file": { key: "value } }
+ *
+ * 操作：(1) 去除键的 .json 扩展名 (2) 去除键的子目录前缀 (3) 剥离注释后 JSON.parse 为对象
+ *
+ * @param {Object<string, string>} raw - collectJSONFiles 返回的原始映射
+ * @returns {Object<string, Object>} 规范化后的映射
+ */
+function normalizeDefFiles(raw) {
+    const result = {};
+    for (const [key, value] of Object.entries(raw)) {
+        // 去除 .json 扩展名
+        let defId = key.endsWith('.json') ? key.slice(0, -5) : key;
+        // 去除子目录前缀（仅保留文件名）
+        const lastSlash = defId.lastIndexOf('/');
+        if (lastSlash >= 0) {
+            defId = defId.substring(lastSlash + 1);
+        }
+        // 剥离注释后解析 JSON 字符串为对象
+        let parsedValue = value;
+        if (typeof value === 'string') {
+            try {
+                const stripped = stripJsonComments(value);
+                parsedValue = JSON.parse(stripped);
+            } catch (e) {
+                console.warn('normalizeDefFiles: JSON 解析失败，保留原值 ' + key + ': ' + e.message);
+            }
+        }
+        result[defId] = parsedValue;
+    }
+    return result;
+}
+
+/**
  * 加载内置官方内容包（src/builtin/official_pack/），
  * 返回 esbuild define 常量映射。
  * 抛出清晰错误如果目录不存在。
+ *
+ * 规范化后的 define 常量值为 JSON 对象字符串，
+ * 格式与 content_pack.readAllDefs() 输出一致。
  */
 function loadOfficialPack() {
     const packDir = path.join(SRC, 'builtin', 'official_pack');
@@ -122,11 +205,15 @@ function loadOfficialPack() {
     const metaPath = path.join(packDir, 'meta.json');
     const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
 
-    // 递归收集 materials / connectors / subsystems
+    // 递归收集 materials / connectors / subsystems 并规范化
     const machineMaxDir = path.join(packDir, 'machine_max');
-    const materials = collectJSONFiles(path.join(machineMaxDir, 'materials'), path.join(machineMaxDir, 'materials'));
-    const connectors = collectJSONFiles(path.join(machineMaxDir, 'connectors'), path.join(machineMaxDir, 'connectors'));
-    const subsystems = collectJSONFiles(path.join(machineMaxDir, 'subsystems'), path.join(machineMaxDir, 'subsystems'));
+    const materialsRaw = collectJSONFiles(path.join(machineMaxDir, 'materials'), path.join(machineMaxDir, 'materials'));
+    const connectorsRaw = collectJSONFiles(path.join(machineMaxDir, 'connectors'), path.join(machineMaxDir, 'connectors'));
+    const subsystemsRaw = collectJSONFiles(path.join(machineMaxDir, 'subsystems'), path.join(machineMaxDir, 'subsystems'));
+
+    const materials = normalizeDefFiles(materialsRaw);
+    const connectors = normalizeDefFiles(connectorsRaw);
+    const subsystems = normalizeDefFiles(subsystemsRaw);
 
     return {
         '__BUILTIN_PACK_META__': JSON.stringify(meta),

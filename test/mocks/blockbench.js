@@ -76,8 +76,9 @@ var Blockbench = {
 // ─── Group ───────────────────────────────────────────────────────────────────
 class Group {
     static all = [];
-    constructor(name) {
+    constructor(name, uuid) {
         this.name = name || 'Group';
+        this.uuid = uuid || 'uuid-' + Math.random().toString(36).substring(2, 10);
         this.type = 'group';
         this.children = [];
         this.parent = null;

@@ -63,28 +63,13 @@ function listConnectors(config) {
  * @throws {Error} 未关联内容包、ID 冲突或写入失败
  */
 function createConnector(config, id, data) {
-    var source, meta, ns;
+    var source, meta, ns, lookupId;
 
     if (!config || !config.contentPackPath) {
         throw new Error('当前没有关联的内容包，无法创建连接器');
     }
 
-    // 冲突检测：检查 ID 在各包中的存在情况
-    source = content_pack_manager.resolveDefSource(config, 'connectors', id);
-
-    // source === 'current' → 已在当前包中，应使用更新操作
-    if (source === 'current') {
-        throw new Error('连接器 "' + id + '" 已存在，请使用更新操作');
-    }
-
-    // source 以 'dependency:' 开头 → 在依赖包中，不可覆盖
-    if (source && source.indexOf('dependency:') === 0) {
-        throw new Error('不能覆盖依赖包中的连接器 "' + id + '"');
-    }
-
-    // source === 'builtin' 或 source === null → 允许写入当前包覆盖/新建
-
-    // 获取当前包 namespace
+    // 获取当前包 namespace，用于 ID 归一化
     meta = content_pack.readPackMeta(config.contentPackPath);
     if (!meta) {
         throw new Error('无法读取内容包 meta.json: ' + config.contentPackPath);
@@ -94,9 +79,22 @@ function createConnector(config, id, data) {
         throw new Error('无法从 meta.id 解析 namespace: ' + meta.id);
     }
 
+    // 归一化：用户输入的裸 ID（如 "fixed_front"）转为完整 resource location（如 "machine_max:fixed_front"）
+    lookupId = id.indexOf(':') >= 0 ? id : ns + ':' + id;
+
+    // 冲突检测
+    source = content_pack_manager.resolveDefSource(config, 'connectors', lookupId);
+
+    if (source === 'current') {
+        throw new Error('连接器 "' + lookupId + '" 已存在，请使用更新操作');
+    }
+    if (source && source.indexOf('dependency:') === 0) {
+        throw new Error('不能覆盖依赖包中的连接器 "' + lookupId + '"');
+    }
+
     content_pack.writeDef(config.contentPackPath, ns, 'connectors', id, data);
     content_pack_manager.invalidateCache();
-    log.info('createConnector: 已创建连接器 "' + id + '"');
+    log.info('createConnector: 已创建连接器 "' + lookupId + '"');
 }
 
 /**

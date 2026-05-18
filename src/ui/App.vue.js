@@ -12,9 +12,9 @@
 const { getConfig, loadConfig, saveConfig } = require('../utils/persistence.js');
 const { getMarkerInfo, clearAllMarkers, detectOwnerSubPart } = require('../core/element_markers.js');
 const { createVariantConfig, createPartConfig, createSubPartConfig } = require('../core/config.js');
+const { createLogger } = require('../utils/logger.js');
 const { refreshOutlinerIcons } = require('../mode/icons.js');
 const { showToast } = require('../utils/notify.js');
-const { createLogger } = require('../utils/logger.js');
 const content_pack_manager = require('../core/content_pack_manager.js');
 var { showAddTagDialog, _hashTagColor } = require('./tag_dialog_helper.js');
 
@@ -35,6 +35,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             activePartId: '',
             activeVariantName: '',
             selectedElement: null,
+            _markerVersion: 0, // 标记更新版本号，右键菜单 delete 操作后递增，强制计算属性重新求值
         };
     },
     computed: {
@@ -104,11 +105,22 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         },
         selectedMarker: function () {
             if (!this.selectedElement) return null;
+            // 读取版本号作为虚拟依赖：右键菜单通过 delete 修改 element_markers 时
+            // Vue 2 无法检测，通过自增 _markerVersion 强制该计算属性重新求值
+            void this._markerVersion;
             const part = this.currentPart;
             if (!part || !part.element_markers) return null;
             const vMarkers = part.element_markers[this.activeVariantName];
             if (!vMarkers) return null;
-            return vMarkers[this.selectedElement.uuid] || null;
+            var result = vMarkers[this.selectedElement.uuid] || null;
+            log.debug('selectedMarker 计算属性', {
+                uuid: this.selectedElement.uuid,
+                markerVersion: this._markerVersion,
+                hasElementMarkers: !!part.element_markers,
+                variantMarkersKeys: Object.keys(vMarkers),
+                result: result ? (result.type + ' / ' + result.config_ref) : 'null',
+            });
+            return result;
         },
         /**
          * 当前选中元素的显示名称
@@ -123,24 +135,21 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             if (!this.selectedMarker || this.selectedMarker.type !== 'sub_part') return null;
             const variant = this.currentVariant;
             if (!variant) return null;
-            // 确保 sub_parts 容器存在（向后兼容旧配置）
             if (!variant.sub_parts) {
                 this.$set(variant, 'sub_parts', {});
             }
-            // 用骨骼名称（含 fallback）作为 sub_parts 中的 key
-            const spKey = this.selectedMarker.config_ref || this.selectedElementName;
+            // config_ref 存储翻译键格式的名称（如 sub_part.machine_max.main），同时也是 sub_parts 的 key
+            const spKey = this.selectedMarker.config_ref;
             if (!spKey) return null;
-            // 自动创建缺失的配置（向后兼容已存在的旧标记）
+            // 自动创建缺失的配置（存量标记可能没有对应的配置条目）
             if (!variant.sub_parts[spKey]) {
+                // 从标记的 Group 获取实际骨骼名
+                var groupEl = this.selectedElement;
                 const spConfig = createSubPartConfig();
-                spConfig.start_bone = spKey;
+                spConfig.start_bone = groupEl ? groupEl.name : spKey;
                 this.$set(variant.sub_parts, spKey, spConfig);
-                // 回填标记的 config_ref 以便后续快速索引
-                if (!this.selectedMarker.config_ref) {
-                    this.$set(this.selectedMarker, 'config_ref', spKey);
-                }
+                log.debug('selectedSubPartConfig: 自动创建配置', { spKey: spKey, start_bone: spConfig.start_bone });
             }
-            // 向后兼容：确保 auto_end_bones 字段存在
             if (!variant.sub_parts[spKey].auto_end_bones) {
                 this.$set(variant.sub_parts[spKey], 'auto_end_bones', []);
             }
@@ -189,11 +198,27 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             return owner ? owner.spKey : '';
         },
         /**
+         * 当前连接点在 connectors 字典中的 key（即翻译键格式的名称）
+         * 用于属性面板显示和编辑
+         */
+        connectorKeyName: function () {
+            if (!this.isConnectorSelected) return '';
+            var sp = this.connectorOwner ? this.currentVariant.sub_parts[this.connectorOwner.spKey] : null;
+            if (!sp || !sp.connectors) return '';
+            var locatorName = this.selectedElementName;
+            var found = Object.keys(sp.connectors).find(function(k) {
+                return sp.connectors[k].locator === locatorName;
+            });
+            return found || '';
+        },
+        /**
          * 当前选中碰撞箱的配置对象（从所属子零件的 hit_boxes 中获取）
          * 无归属时返回游离配置以确保面板正常渲染
          */
         selectedHitBoxConfig: function () {
-            if (!this.isHitBoxSelected) return null;
+            if (!this.isHitBoxSelected) {
+                return null;
+            }
             var variant = this.currentVariant;
             if (!variant || !variant.sub_parts) {
                 return { _orphan: true, id: 'part', type: 'box', material: '', thickness: 1.0, condition: 'true' };
@@ -205,15 +230,11 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             }
             var sp = variant.sub_parts[spKey];
             if (!sp.hit_boxes) this.$set(sp, 'hit_boxes', {});
-            var hbKey = this.selectedElementName;
-            if (!sp.hit_boxes[hbKey]) {
-                this.$set(sp.hit_boxes, hbKey, {
-                    id: 'part', type: 'box',
-                    material: 'machine_max:default',
-                    thickness: 1.0, condition: 'true',
-                });
-            }
-            return sp.hit_boxes[hbKey] || null;
+            var hbKey = this.selectedElement.uuid;
+            // 注意：此处不自动重建条目。若 sp.hit_boxes[hbKey] 不存在，
+            // 说明标记配置不同步（通常由清除 marker 后 Vue 重算导致）。
+            // 返回游离配置允许面板正常渲染，但不修改 config。
+            return sp.hit_boxes[hbKey] || { _orphan: true, id: 'part', type: 'box', material: '', thickness: 1.0, condition: 'true' };
         },
         /**
          * 碰撞箱所属子零件的 key
@@ -227,9 +248,13 @@ const MMMainPanel = Vue.component('mm-main-panel', {
          * 自动创建缺失条目以保持数据一致。无归属时返回游离配置。
          */
         selectedConnectorConfig: function () {
-            if (!this.isConnectorSelected) return null;
+            if (!this.isConnectorSelected) {
+                return null;
+            }
             var marker = this.selectedMarker;
-            if (!marker) return null;
+            if (!marker) {
+                return null;
+            }
             var variant = this.currentVariant;
             if (!variant) return { _orphan: true, definition: marker.config_ref || '' };
             if (!variant.sub_parts) {
@@ -250,12 +275,17 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 this.$set(sp, 'connectors', {});
             }
             var locatorName = this.selectedElementName;
-            if (!sp.connectors[locatorName]) {
-                this.$set(sp.connectors, locatorName, {
-                    definition: marker.config_ref || '',
-                });
+            // 通过 locator 字段查找已有的连接点条目（key 现在是翻译键格式）
+            var connKey = Object.keys(sp.connectors).find(function(k) {
+                return sp.connectors[k].locator === locatorName;
+            });
+            // 注意：此处不自动重建条目。若未找到匹配的连接点条目，
+            // 说明标记配置不同步（通常由清除 marker 后 Vue 重算导致）。
+            // 返回游离配置允许面板正常渲染，但不修改 config。
+            if (!connKey) {
+                return { _orphan: true, locator: locatorName, definition: marker.config_ref || '' };
             }
-            return sp.connectors[locatorName] || null;
+            return sp.connectors[connKey] || null;
         },
     },
     methods: {
@@ -529,18 +559,26 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             var sel = Outliner && Outliner.selected;
             if (!sel || sel.length === 0) {
                 this.selectedElement = null;
-                log.debug('onSelectionChange: 取消选中');
+                this._markerVersion++;
+                log.debug('onSelectionChange: 取消选中', {
+                    markerVersion: this._markerVersion,
+                    markerVersionAfter: this._markerVersion,
+                });
                 return;
             }
             // Group 不在 Outliner.selected 中（Group 继承自 OutlinerNode 而非 OutlinerElement）
             // 优先用 Group.first_selected；其次取 Outliner.selected[0]（Cube/Locator 等）
             var best = (typeof Group !== 'undefined' && Group.first_selected) || sel[0];
+            var sameElement = this.selectedElement && this.selectedElement.uuid === best.uuid;
             this.selectedElement = best;
+            this._markerVersion++;
             log.debug('onSelectionChange: 选中元素', {
                 name: best.name,
                 uuid: best.uuid,
                 type: best.constructor ? best.constructor.name : typeof best,
                 groupSelected: !!(typeof Group !== 'undefined' && Group.first_selected),
+                sameElementAsBefore: sameElement,
+                markerVersion: this._markerVersion,
             });
         },
         loadConfigData: function () {
@@ -564,8 +602,57 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             }
         },
         /**
+         * 导航到碰撞箱：选中碰撞箱对应的 Group 骨骼，切换到碰撞箱属性面板
+         */
+        navigateToHitBox: function (hbKey) {
+            if (!hbKey) return;
+            var el = Group.all.find(function (g) { return g.name === hbKey || g.uuid === hbKey; });
+            if (el) {
+                el.select();
+                el.showInOutliner();
+                Blockbench.dispatchEvent('update_selection');
+            }
+        },
+        /**
+         * 导航到连接点：选中连接点对应的 Locator，切换到连接点属性面板
+         */
+        navigateToConnector: function (connKey) {
+            if (!connKey) return;
+            var spConfig = this.selectedSubPartConfig;
+            if (!spConfig || !spConfig.connectors || !spConfig.connectors[connKey]) return;
+            var locatorName = spConfig.connectors[connKey].locator;
+            if (!locatorName) return;
+            var loc = typeof Locator !== 'undefined' ? Locator.all.find(function (l) { return l.name === locatorName; }) : null;
+            if (loc) {
+                loc.select();
+                loc.showInOutliner();
+                Blockbench.dispatchEvent('update_selection');
+            }
+        },
+        /**
+         * 导航到子零件：根据 subPartKey 找到对应的子零件标记 Group 并选中，切换回子零件属性面板
+         */
+        navigateToSubPart: function (spKey) {
+            if (!spKey) return;
+            var part = this.currentPart;
+            var variantName = this.activeVariantName;
+            if (!part || !part.element_markers || !part.element_markers[variantName]) return;
+            var markers = part.element_markers[variantName];
+            for (var uuid in markers) {
+                if (markers[uuid].type === 'sub_part' && markers[uuid].config_ref === spKey) {
+                    var group = Group.all.find(function (g) { return g.uuid === uuid; });
+                    if (group) {
+                        group.select();
+                        group.showInOutliner();
+                        Blockbench.dispatchEvent('update_selection');
+                    }
+                    return;
+                }
+            }
+        },
+        /**
          * 更新子零件配置中的单个字段。
-         * start_bone 变动时需连带迁移子零件标记和 sub_parts key。
+         * start_bone 变动时需连带迁移子零件标记。
          */
         updateSubPartField: function (field, value) {
             const config = this.selectedSubPartConfig;
@@ -573,12 +660,65 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 log.warn('updateSubPartField: selectedSubPartConfig 为空');
                 return;
             }
-            // 起始骨骼变化 → 标记也需迁移到新骨骼上
             if (field === 'start_bone' && config.start_bone !== value) {
                 this.migrateSubPartStartBone(config.start_bone, value);
             }
             this.$set(config, field, value);
             log.debug('updateSubPartField: 已更新', { field: field, value: value });
+        },
+        /**
+         * 重命名子零件：修改 sub_parts 字典的 key
+         * 同时更新 element_markers 中的 config_ref
+         */
+        renameSubPart: function (oldKey, newKey) {
+            if (!oldKey || !newKey || oldKey === newKey) return;
+            var variant = this.currentVariant;
+            var part = this.currentPart;
+            var variantName = this.activeVariantName;
+            if (!variant || !variant.sub_parts || !part) return;
+
+            var spConfig = variant.sub_parts[oldKey];
+            if (!spConfig) {
+                log.warn('renameSubPart: 未找到子零件', { oldKey: oldKey });
+                return;
+            }
+
+            // 校验唯一性
+            var ns = (this.config && this.config.namespace) || 'machine_max';
+            var { validateNameUniqueness } = require('../core/naming.js');
+            var check = validateNameUniqueness(variant, 'sub_part', null, newKey, oldKey);
+            if (!check.valid) {
+                showToast(check.message, 'error');
+                return;
+            }
+
+            log.info('renameSubPart: 重命名', { from: oldKey, to: newKey });
+
+            // 迁移字典 key
+            this.$set(variant.sub_parts, newKey, spConfig);
+            this.$delete(variant.sub_parts, oldKey);
+
+            // 更新 element_markers 中的 config_ref
+            var markers = part.element_markers && part.element_markers[variantName];
+            if (markers) {
+                for (var uuid in markers) {
+                    if (markers[uuid].type === 'sub_part' && markers[uuid].config_ref === oldKey) {
+                        this.$set(markers, uuid, { type: 'sub_part', config_ref: newKey });
+                    }
+                }
+            }
+
+            // 重算 auto_end_bones（子零件 key 变了）
+            var em = require('../core/element_markers.js');
+            var cfg = getConfig();
+            if (cfg) {
+                em.recalcAutoEndBones(cfg, this.activePartId, variantName);
+            }
+
+            refreshOutlinerIcons();
+            Blockbench.dispatchEvent('update_selection');
+            showToast('子零件已重命名为 "' + newKey + '"', 'positive');
+            log.info('renameSubPart: 完成');
         },
         /**
          * 迁移子零件标记：start_bone 从旧骨骼名变更为新骨骼名时，
@@ -592,18 +732,12 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             var variantName = this.activeVariantName;
             if (!variant || !variant.sub_parts || !part) return;
 
-            var spConfig = variant.sub_parts[oldBoneName];
-            if (!spConfig) return;
+            var spKey = this.selectedMarker ? this.selectedMarker.config_ref : null;
+            if (!spKey || !variant.sub_parts[spKey]) return;
 
-            log.info('migrateSubPartStartBone: 迁移标记', { from: oldBoneName, to: newBoneName });
+            log.info('migrateSubPartStartBone: start_bone 变更', { from: oldBoneName, to: newBoneName, spKey: spKey });
 
-            // 1) 移动 sub_parts 条目
-            this.$set(variant.sub_parts, newBoneName, spConfig);
-            if (oldBoneName !== newBoneName) {
-                this.$delete(variant.sub_parts, oldBoneName);
-            }
-
-            // 2) 更新 element_marker — 从旧 Group 迁移到新 Group
+            // 子零件 key 是翻译键（不与 start_bone 绑定），仅迁移 element_marker 到新骨骼
             var markers = part.element_markers && part.element_markers[variantName];
             var oldGroup = Group.all.find(function (g) { return g.name === oldBoneName; });
             var newGroup = Group.all.find(function (g) { return g.name === newBoneName; });
@@ -611,14 +745,13 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             if (markers && oldGroup && newGroup && oldGroup !== newGroup) {
                 var markerData = markers[oldGroup.uuid];
                 if (markerData && markerData.type === 'sub_part') {
-                    markerData.config_ref = newBoneName;
+                    markerData.config_ref = spKey;
                     this.$set(markers, newGroup.uuid, markerData);
                     this.$delete(markers, oldGroup.uuid);
-                    log.debug('migrateSubPartStartBone: 标记已从 ' + oldGroup.uuid + ' 迁移到 ' + newGroup.uuid);
+                    log.debug('migrateSubPartStartBone: 标记已迁移', { from: oldGroup.uuid, to: newGroup.uuid });
                 }
             }
 
-            // 3) 同步刷新大纲图标和 auto_end_bones
             refreshOutlinerIcons();
             var em = require('../core/element_markers.js');
             var cfg = getConfig();
@@ -646,21 +779,23 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             if (!spKey || !variant.sub_parts[spKey]) return;
 
             var sp = variant.sub_parts[spKey];
-            if (!sp.connectors || !sp.connectors[oldLocName]) {
-                log.warn('migrateConnectorLocator: 未找到旧连接点条目', { from: oldLocName, spKey: spKey });
+            if (!sp.connectors) return;
+
+            // 查找当前连接点条目（通过旧 locator 名匹配）
+            var connKey = Object.keys(sp.connectors).find(function(k) {
+                return sp.connectors[k].locator === oldLocName;
+            });
+            if (!connKey) {
+                log.warn('migrateConnectorLocator: 未找到连接点条目', { locator: oldLocName, spKey: spKey });
                 return;
             }
 
-            log.info('migrateConnectorLocator: 迁移连接点定位器', { from: oldLocName, to: newLocName, spKey: spKey });
+            log.info('migrateConnectorLocator: 变更定位器绑定', { from: oldLocName, to: newLocName, connKey: connKey, spKey: spKey });
 
-            // 1) 移动 connectors 条目
-            var connConfig = sp.connectors[oldLocName];
-            this.$set(sp.connectors, newLocName, connConfig);
-            if (oldLocName !== newLocName) {
-                this.$delete(sp.connectors, oldLocName);
-            }
+            // 更新 locator 字段（key 不变，key 是翻译键名称）
+            sp.connectors[connKey].locator = newLocName;
 
-            // 2) 更新 element_marker — 从旧 Locator 迁移到新 Locator
+            // 迁移 element_marker — 从旧 Locator 到新 Locator
             var markers = part.element_markers && part.element_markers[variantName];
             var oldLoc = typeof Locator !== 'undefined' ? Locator.all.find(function (l) { return l.name === oldLocName; }) : null;
             var newLoc = typeof Locator !== 'undefined' ? Locator.all.find(function (l) { return l.name === newLocName; }) : null;
@@ -668,14 +803,12 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             if (markers && oldLoc && newLoc && oldLoc !== newLoc) {
                 var markerData = markers[oldLoc.uuid];
                 if (markerData && markerData.type === 'connector') {
-                    markerData.config_ref = connConfig.definition || '';
                     this.$set(markers, newLoc.uuid, markerData);
                     this.$delete(markers, oldLoc.uuid);
-                    log.debug('migrateConnectorLocator: 标记已从 ' + oldLoc.uuid + ' 迁移到 ' + newLoc.uuid);
+                    log.debug('migrateConnectorLocator: 标记已迁移', { from: oldLoc.uuid, to: newLoc.uuid });
                 }
             }
 
-            // 3) 同步刷新
             refreshOutlinerIcons();
             Blockbench.dispatchEvent('update_selection');
             log.info('migrateConnectorLocator: 完成');
@@ -762,7 +895,6 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         },
         /**
          * 更新连接点配置字段，同时同步到标记的 config_ref
-         * 游离连接点（无归属）可编辑定义选择但不会持久化
          */
         updateConnectorField: function (field, value) {
             var config = this.selectedConnectorConfig;
@@ -786,6 +918,43 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 }
             }
             log.debug('updateConnectorField: 已更新', { field: field, value: value });
+        },
+        /**
+         * 重命名连接点：修改 connectors 字典的 key
+         * 需要先找到当前连接点（通过 locator 字段），然后迁移 key
+         */
+        renameConnector: function (oldKey, newKey) {
+            if (!oldKey || !newKey || oldKey === newKey) return;
+            var variant = this.currentVariant;
+            if (!variant) return;
+
+            var owner = this.connectorOwner;
+            var spKey = owner ? owner.spKey : null;
+            if (!spKey || !variant.sub_parts[spKey]) return;
+            var sp = variant.sub_parts[spKey];
+            if (!sp.connectors || !sp.connectors[oldKey]) {
+                log.warn('renameConnector: 未找到连接点', { oldKey: oldKey });
+                return;
+            }
+
+            // 校验唯一性
+            var { validateNameUniqueness } = require('../core/naming.js');
+            var check = validateNameUniqueness(variant, 'connector', spKey, newKey, oldKey);
+            if (!check.valid) {
+                showToast(check.message, 'error');
+                return;
+            }
+
+            log.info('renameConnector: 重命名', { from: oldKey, to: newKey });
+
+            // 迁移字典 key
+            this.$set(sp.connectors, newKey, sp.connectors[oldKey]);
+            this.$delete(sp.connectors, oldKey);
+
+            refreshOutlinerIcons();
+            Blockbench.dispatchEvent('update_selection');
+            showToast('连接点已重命名为 "' + newKey + '"', 'positive');
+            log.info('renameConnector: 完成');
         },
     },
     mounted: function () {

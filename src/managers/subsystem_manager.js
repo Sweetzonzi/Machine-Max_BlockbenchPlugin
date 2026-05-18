@@ -99,7 +99,7 @@ function listSubsystems(config) {
  * @returns {{success: boolean, error: string|null}} 操作结果
  */
 function createSubsystem(config, id, data) {
-    var packInfo;
+    var packInfo, ns, lookupId, q;
 
     if (!id || typeof id !== 'string') {
         return { success: false, error: '子系统 ID 无效' };
@@ -110,10 +110,27 @@ function createSubsystem(config, id, data) {
         return { success: false, error: packInfo.error };
     }
 
+    // 归一化：用户输入的裸 ID 转为完整 resource location
+    ns = packInfo.namespace;
+    lookupId = id.indexOf(':') >= 0 ? id : ns + ':' + id;
+
+    // 冲突检测
+    try {
+        q = content_pack_manager.resolveDefSource(config, DEF_TYPE, lookupId);
+        if (q === 'current') {
+            return { success: false, error: '子系统定义 "' + lookupId + '" 已存在，请使用更新操作' };
+        }
+        if (q && q.indexOf('dependency:') === 0) {
+            return { success: false, error: '不能覆盖依赖包中的子系统定义 "' + lookupId + '"' };
+        }
+    } catch (e) {
+        log.warn('createSubsystem: resolveDefSource 异常，跳过冲突检测', e);
+    }
+
     try {
         content_pack.writeDef(packInfo.packDir, packInfo.namespace, DEF_TYPE, id, data);
         content_pack_manager.invalidateCache();
-        log.info('createSubsystem: 已创建子系统定义 ' + id);
+        log.info('createSubsystem: 已创建子系统定义 ' + lookupId);
         return { success: true, error: null };
     } catch (e) {
         log.error('createSubsystem: 写入失败', e);

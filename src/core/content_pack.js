@@ -21,6 +21,7 @@ const {
     readJSONFile,
     fileExists,
     deleteFile,
+    extractResourceLocation,
 } = require('../utils/file_writer.js');
 const zip_reader = require('./zip_reader.js');
 
@@ -462,8 +463,10 @@ function readAllDefs(packDir, namespace, type) {
  * @param {Object} data - 要写入的数据
  */
 function writeDef(packDir, namespace, type, defId, data) {
+    // 支持 namespaced ID（如 "machine_max:steel"），自动提取裸文件名
+    var loc = extractResourceLocation(defId, namespace);
     var defDir = path.join(packDir, namespace, type);
-    var filename = defId + '.json';
+    var filename = loc.path + '.json';
     writeJSONFile(defDir, filename, data);
     log.debug('writeDef: 已写入 ' + path.join(defDir, filename));
 }
@@ -477,7 +480,9 @@ function writeDef(packDir, namespace, type, defId, data) {
  * @param {string} defId - 定义 ID（文件名，不含扩展名）
  */
 function deleteDef(packDir, namespace, type, defId) {
-    var filePath = path.join(packDir, namespace, type, defId + '.json');
+    // 支持 namespaced ID（如 "machine_max:steel"），自动提取裸文件名
+    var loc = extractResourceLocation(defId, namespace);
+    var filePath = path.join(packDir, namespace, type, loc.path + '.json');
     deleteFile(filePath);
     log.debug('deleteDef: ' + filePath);
 }

@@ -95,11 +95,13 @@ function loadMergedDefs(config, type) {
         builtinDefs = builtin[type] || {};
         for (bKey in builtinDefs) {
             if (hasOwn(builtinDefs, bKey)) {
-                defs[bKey] = builtinDefs[bKey];
-                sources[bKey] = 'builtin';
+                // 内置包键为裸文件名（如"structural_steel"），加上 namespace 前缀
+                var namespacedKey = builtin.namespace + ':' + bKey;
+                defs[namespacedKey] = builtinDefs[bKey];
+                sources[namespacedKey] = 'builtin';
             }
         }
-        log.debug('loadMergedDefs: 内置包 ' + type + ' 加载完成，共 ' + Object.keys(builtinDefs).length + ' 个定义');
+        log.info('loadMergedDefs: 内置包 ' + type + ' 加载完成，共 ' + Object.keys(builtinDefs).length + ' 个定义');
     } catch (e) {
         log.warn('loadMergedDefs: 内置包读取失败，作为空包处理', e);
     }
@@ -126,8 +128,9 @@ function loadMergedDefs(config, type) {
                 depDefs = content_pack.readAllDefs(depPath, openResult.namespace, type);
                 for (depKey in depDefs) {
                     if (hasOwn(depDefs, depKey)) {
-                        defs[depKey] = depDefs[depKey];
-                        sources[depKey] = 'dependency:' + i;
+                        var namespacedDepKey = openResult.namespace + ':' + depKey;
+                        defs[namespacedDepKey] = depDefs[depKey];
+                        sources[namespacedDepKey] = 'dependency:' + i;
                     }
                 }
                 log.debug('loadMergedDefs: 依赖包 ' + depPath + ' ' + type + ' 加载完成，共 ' + Object.keys(depDefs).length + ' 个定义');
@@ -148,8 +151,9 @@ function loadMergedDefs(config, type) {
                 curDefs = content_pack.readAllDefs(currentPath, curOpenResult.namespace, type);
                 for (curKey in curDefs) {
                     if (hasOwn(curDefs, curKey)) {
-                        defs[curKey] = curDefs[curKey];
-                        sources[curKey] = 'current';
+                        var namespacedCurKey = curOpenResult.namespace + ':' + curKey;
+                        defs[namespacedCurKey] = curDefs[curKey];
+                        sources[namespacedCurKey] = 'current';
                     }
                 }
                 log.debug('loadMergedDefs: 当前包 ' + currentPath + ' ' + type + ' 加载完成，共 ' + Object.keys(curDefs).length + ' 个定义');

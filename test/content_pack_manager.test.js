@@ -51,9 +51,9 @@ describe('ContentPackManager', function () {
 
                 var result = manager.loadMergedDefs(config, 'materials');
 
-                expect(result.defs.my_custom_mat).toBeDefined();
-                expect(result.defs.my_custom_mat.friction[0]).toBe(0.3);
-                expect(result.sources.my_custom_mat).toBe('current');
+                expect(result.defs['test:my_custom_mat']).toBeDefined();
+                expect(result.defs['test:my_custom_mat'].friction[0]).toBe(0.3);
+                expect(result.sources['test:my_custom_mat']).toBe('current');
             } finally {
                 cleanupTempDir(tmpDir);
             }
@@ -83,8 +83,13 @@ describe('ContentPackManager', function () {
 
                 var result = manager.loadMergedDefs(config, 'materials');
 
-                expect(result.sources.shared_mat).toBe('current');
-                expect(result.defs.shared_mat.friction[0]).toBe(0.8);
+                // 不同 namespace 的包不覆盖，两个定义独立存在
+                expect(result.defs['dep:shared_mat']).toBeDefined();
+                expect(result.defs['dep:shared_mat'].friction[0]).toBe(0.2);
+                expect(result.sources['dep:shared_mat']).toBe('dependency:0');
+                expect(result.defs['cur:shared_mat']).toBeDefined();
+                expect(result.defs['cur:shared_mat'].friction[0]).toBe(0.8);
+                expect(result.sources['cur:shared_mat']).toBe('current');
             } finally {
                 cleanupTempDir(depDir);
                 cleanupTempDir(curDir);
@@ -105,9 +110,9 @@ describe('ContentPackManager', function () {
 
                 var result = manager.loadMergedDefs(config, 'materials');
 
-                expect(result.defs.dep_mat).toBeDefined();
-                expect(result.sources.dep_mat).toBe('dependency:0');
-                expect(result.defs.dep_mat.friction[0]).toBe(0.1);
+                expect(result.defs['dep:dep_mat']).toBeDefined();
+                expect(result.sources['dep:dep_mat']).toBe('dependency:0');
+                expect(result.defs['dep:dep_mat'].friction[0]).toBe(0.1);
             } finally {
                 cleanupTempDir(tmpDir);
             }
@@ -135,15 +140,19 @@ describe('ContentPackManager', function () {
 
                 var result = manager.loadMergedDefs(config, 'materials');
 
-                expect(result.sources.shared_mat).toBe('current');
-                expect(result.defs.shared_mat.friction[0]).toBe(0.8);
+                // 不同 namespace 的包不覆盖，两个定义独立存在
+                expect(result.defs['dep:shared_mat']).toBeDefined();
+                expect(result.sources['dep:shared_mat']).toBe('dependency:0');
+                expect(result.defs['cur:shared_mat']).toBeDefined();
+                expect(result.defs['cur:shared_mat'].friction[0]).toBe(0.8);
+                expect(result.sources['cur:shared_mat']).toBe('current');
             } finally {
                 cleanupTempDir(depDir);
                 cleanupTempDir(curDir);
             }
         });
 
-        test('#7 multiple dependency packs — later overrides earlier', function () {
+        test('#7 multiple dependency packs — later does not override (different namespaces)', function () {
             var dep1Dir = createTempDir('mm-cpm-');
             var dep2Dir = createTempDir('mm-cpm-');
             try {
@@ -164,8 +173,13 @@ describe('ContentPackManager', function () {
 
                 var result = manager.loadMergedDefs(config, 'materials');
 
-                expect(result.sources.shared_mat).toBe('dependency:1');
-                expect(result.defs.shared_mat.friction[0]).toBe(0.7);
+                // 不同 namespace 的包不覆盖，两个定义独立存在
+                expect(result.defs['dep1:shared_mat']).toBeDefined();
+                expect(result.defs['dep1:shared_mat'].friction[0]).toBe(0.3);
+                expect(result.sources['dep1:shared_mat']).toBe('dependency:0');
+                expect(result.defs['dep2:shared_mat']).toBeDefined();
+                expect(result.defs['dep2:shared_mat'].friction[0]).toBe(0.7);
+                expect(result.sources['dep2:shared_mat']).toBe('dependency:1');
             } finally {
                 cleanupTempDir(dep1Dir);
                 cleanupTempDir(dep2Dir);
@@ -213,7 +227,7 @@ describe('ContentPackManager', function () {
                     friction: [0.5, 0.5, 0.5],
                 });
 
-                var source = manager.resolveDefSource(config, 'materials', 'my_mat');
+                var source = manager.resolveDefSource(config, 'materials', 'test:my_mat');
                 expect(source).toBe('current');
             } finally {
                 cleanupTempDir(tmpDir);
@@ -243,8 +257,8 @@ describe('ContentPackManager', function () {
                     friction: [0.4, 0.4, 0.4],
                 });
 
-                expect(manager.isDefEditable(config, 'materials', 'editable_mat')).toBe(true);
-                expect(manager.isDefEditable(config, 'materials', 'rha')).toBe(false);
+                expect(manager.isDefEditable(config, 'materials', 'test:editable_mat')).toBe(true);
+                expect(manager.isDefEditable(config, 'materials', 'test:rha')).toBe(false);
             } finally {
                 cleanupTempDir(tmpDir);
             }
@@ -261,7 +275,7 @@ describe('ContentPackManager', function () {
                     friction: [0.2, 0.2, 0.2],
                 });
 
-                expect(manager.isDefEditable(config, 'materials', 'dep_mat')).toBe(false);
+                expect(manager.isDefEditable(config, 'materials', 'dep:dep_mat')).toBe(false);
             } finally {
                 cleanupTempDir(depDir);
             }
@@ -314,7 +328,7 @@ describe('ContentPackManager', function () {
 
                 var defs = manager.getAvailableDefsForType(config, 'materials');
                 expect(defs).toBeDefined();
-                expect(defs.some_mat).toBeDefined();
+                expect(defs['test:some_mat']).toBeDefined();
                 expect(defs.sources).toBeUndefined();
             } finally {
                 cleanupTempDir(tmpDir);
@@ -335,21 +349,21 @@ describe('ContentPackManager', function () {
                 config.contentPackPath = tmpDir;
 
                 var result1 = manager.loadMergedDefs(config, 'materials');
-                expect(result1.defs.my_new_mat).toBeUndefined();
+                expect(result1.defs['test:my_new_mat']).toBeUndefined();
 
                 cp.writeDef(tmpDir, 'test', 'materials', 'my_new_mat', {
                     friction: [0.6, 0.6, 0.6],
                 });
 
                 var result2 = manager.loadMergedDefs(config, 'materials');
-                expect(result2.defs.my_new_mat).toBeUndefined();
+                expect(result2.defs['test:my_new_mat']).toBeUndefined();
 
                 manager.invalidateCache();
 
                 var result3 = manager.loadMergedDefs(config, 'materials');
-                expect(result3.defs.my_new_mat).toBeDefined();
-                expect(result3.defs.my_new_mat.friction[0]).toBe(0.6);
-                expect(result3.sources.my_new_mat).toBe('current');
+                expect(result3.defs['test:my_new_mat']).toBeDefined();
+                expect(result3.defs['test:my_new_mat'].friction[0]).toBe(0.6);
+                expect(result3.sources['test:my_new_mat']).toBe('current');
             } finally {
                 cleanupTempDir(tmpDir);
             }
@@ -373,7 +387,7 @@ describe('ContentPackManager', function () {
                 manager.invalidateCache();
 
                 var result = manager.loadMergedDefs(config, 'materials');
-                expect(result.defs.mat_a).toBeDefined();
+                expect(result.defs['test:mat_a']).toBeDefined();
             } finally {
                 cleanupTempDir(tmpDir);
             }
@@ -396,12 +410,12 @@ describe('ContentPackManager', function () {
                 cp.writeDef(tmpDir, 'test', 'subsystems', 'engine', { type: 'engine' });
 
                 var connResult = manager.loadMergedDefs(config, 'connectors');
-                expect(connResult.defs.wheel_hub).toBeDefined();
-                expect(connResult.sources.wheel_hub).toBe('current');
+                expect(connResult.defs['test:wheel_hub']).toBeDefined();
+                expect(connResult.sources['test:wheel_hub']).toBe('current');
 
                 var subResult = manager.loadMergedDefs(config, 'subsystems');
-                expect(subResult.defs.engine).toBeDefined();
-                expect(subResult.sources.engine).toBe('current');
+                expect(subResult.defs['test:engine']).toBeDefined();
+                expect(subResult.sources['test:engine']).toBe('current');
             } finally {
                 cleanupTempDir(tmpDir);
             }

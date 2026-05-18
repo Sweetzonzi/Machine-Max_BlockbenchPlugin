@@ -240,3 +240,38 @@
     margin-bottom: 8px;
     border-bottom: 1px solid var(--border-color, #333);
 }
+
+/* 子零件面板中的碰撞箱/连接点条目行 */
+.mm-sub-item-row {
+    display: flex;
+    flex-direction: column;
+    padding: 4px 8px;
+    border-radius: 3px;
+    margin-bottom: 2px;
+}
+.mm-sub-item-row.mm-clickable {
+    cursor: pointer;
+}
+.mm-sub-item-row.mm-clickable:hover {
+    background: var(--hover-bg, #333);
+}
+
+/* 子零件条目名称行 */
+.mm-sub-item-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+/* 子零件条目元信息行 */
+.mm-sub-item-meta {
+    font-size: 10px;
+    color: #888;
+    margin-left: 4px;
+}
+
+/* 可点击的归属标签 */
+.mm-clickable-tag:hover {
+    filter: brightness(1.3);
+}

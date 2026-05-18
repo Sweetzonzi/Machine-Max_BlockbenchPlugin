@@ -112,22 +112,24 @@ describe('Connector Generator', function () {
 
         it('从内容包目录复制连接点定义到导出目录（扁平模式）', function () {
             var tmpDir = helpers.createTempDir();
-            var ns = 'machine_max';
-            var srcDir = path.join(tmpDir, ns, 'connectors');
-            var targetDir = path.join(tmpDir, 'export', ns, 'connectors');
-            fs.mkdirSync(srcDir, { recursive: true });
+            try {
+                var ns = 'machine_max';
+                var srcDir = path.join(tmpDir, ns, 'connectors');
+                var targetDir = path.join(tmpDir, 'export', ns, 'connectors');
+                fs.mkdirSync(srcDir, { recursive: true });
 
-            fs.writeFileSync(path.join(srcDir, 'simple.json'), JSON.stringify({ type: 'Simple', direction: 'yp' }));
-            fs.writeFileSync(path.join(srcDir, 'complex.json'), JSON.stringify({ type: 'Complex', direction: 'xn' }));
+                fs.writeFileSync(path.join(srcDir, 'simple.json'), JSON.stringify({ type: 'Simple', direction: 'yp' }));
+                fs.writeFileSync(path.join(srcDir, 'complex.json'), JSON.stringify({ type: 'Complex', direction: 'xn' }));
 
-            var count = connGen.copyConnectorDefs(tmpDir, ns, targetDir, true);
+                var count = connGen.copyConnectorDefs(tmpDir, ns, targetDir, true);
 
-            expect(count).toBe(2);
-            expect(fs.existsSync(path.join(targetDir, 'simple.json'))).toBe(true);
-            expect(fs.existsSync(path.join(targetDir, 'complex.json'))).toBe(true);
-            expect(JSON.parse(fs.readFileSync(path.join(targetDir, 'simple.json'), 'utf8')).type).toBe('Simple');
-
-            helpers.cleanupTempDir(tmpDir);
+                expect(count).toBe(2);
+                expect(fs.existsSync(path.join(targetDir, 'simple.json'))).toBe(true);
+                expect(fs.existsSync(path.join(targetDir, 'complex.json'))).toBe(true);
+                expect(JSON.parse(fs.readFileSync(path.join(targetDir, 'simple.json'), 'utf8')).type).toBe('Simple');
+            } finally {
+                helpers.cleanupTempDir(tmpDir);
+            }
         });
 
         it('源目录不存在时返回 0，不抛错', function () {
@@ -137,17 +139,19 @@ describe('Connector Generator', function () {
 
         it('扁平模式下连接点位于目标目录根，不分入子目录', function () {
             var tmpDir = helpers.createTempDir();
-            var ns = 'machine_max';
-            var srcDir = path.join(tmpDir, ns, 'connectors');
-            var targetDir = path.join(tmpDir, 'export', ns, 'connectors');
-            fs.mkdirSync(srcDir, { recursive: true });
-            fs.writeFileSync(path.join(srcDir, 'simple.json'), JSON.stringify({ type: 'Simple' }));
+            try {
+                var ns = 'machine_max';
+                var srcDir = path.join(tmpDir, ns, 'connectors');
+                var targetDir = path.join(tmpDir, 'export', ns, 'connectors');
+                fs.mkdirSync(srcDir, { recursive: true });
+                fs.writeFileSync(path.join(srcDir, 'simple.json'), JSON.stringify({ type: 'Simple' }));
 
-            connGen.copyConnectorDefs(tmpDir, ns, targetDir, true);
+                connGen.copyConnectorDefs(tmpDir, ns, targetDir, true);
 
-            expect(fs.existsSync(path.join(targetDir, 'simple.json'))).toBe(true);
-
-            helpers.cleanupTempDir(tmpDir);
+                expect(fs.existsSync(path.join(targetDir, 'simple.json'))).toBe(true);
+            } finally {
+                helpers.cleanupTempDir(tmpDir);
+            }
         });
     });
 });
@@ -180,22 +184,24 @@ describe('Subsystem Generator', function () {
 
         it('从内容包目录复制子系统定义到导出目录', function () {
             var tmpDir = helpers.createTempDir();
-            var ns = 'machine_max';
-            var srcDir = path.join(tmpDir, ns, 'subsystems');
-            var targetDir = path.join(tmpDir, 'export', ns, 'subsystems');
-            fs.mkdirSync(srcDir, { recursive: true });
+            try {
+                var ns = 'machine_max';
+                var srcDir = path.join(tmpDir, ns, 'subsystems');
+                var targetDir = path.join(tmpDir, 'export', ns, 'subsystems');
+                fs.mkdirSync(srcDir, { recursive: true });
 
-            fs.writeFileSync(path.join(srcDir, 'engine_v8.json'), JSON.stringify({ type: 'machine_max:engine', max_power: 200 }));
-            fs.writeFileSync(path.join(srcDir, 'seat_basic.json'), JSON.stringify({ type: 'machine_max:seat' }));
+                fs.writeFileSync(path.join(srcDir, 'engine_v8.json'), JSON.stringify({ type: 'machine_max:engine', max_power: 200 }));
+                fs.writeFileSync(path.join(srcDir, 'seat_basic.json'), JSON.stringify({ type: 'machine_max:seat' }));
 
-            var count = subGen.copySubsystemDefs(tmpDir, ns, targetDir, true);
+                var count = subGen.copySubsystemDefs(tmpDir, ns, targetDir, true);
 
-            expect(count).toBe(2);
-            expect(fs.existsSync(path.join(targetDir, 'engine_v8.json'))).toBe(true);
-            expect(fs.existsSync(path.join(targetDir, 'seat_basic.json'))).toBe(true);
-            expect(JSON.parse(fs.readFileSync(path.join(targetDir, 'engine_v8.json'), 'utf8')).type).toBe('machine_max:engine');
-
-            helpers.cleanupTempDir(tmpDir);
+                expect(count).toBe(2);
+                expect(fs.existsSync(path.join(targetDir, 'engine_v8.json'))).toBe(true);
+                expect(fs.existsSync(path.join(targetDir, 'seat_basic.json'))).toBe(true);
+                expect(JSON.parse(fs.readFileSync(path.join(targetDir, 'engine_v8.json'), 'utf8')).type).toBe('machine_max:engine');
+            } finally {
+                helpers.cleanupTempDir(tmpDir);
+            }
         });
 
         it('源目录不存在时返回 0，不抛错', function () {
@@ -213,22 +219,24 @@ describe('Material Generator', function () {
 
         it('从内容包目录复制材料定义到导出目录', function () {
             var tmpDir = helpers.createTempDir();
-            var ns = 'machine_max';
-            var srcDir = path.join(tmpDir, ns, 'materials');
-            var targetDir = path.join(tmpDir, 'export', ns, 'materials');
-            fs.mkdirSync(srcDir, { recursive: true });
+            try {
+                var ns = 'machine_max';
+                var srcDir = path.join(tmpDir, ns, 'materials');
+                var targetDir = path.join(tmpDir, 'export', ns, 'materials');
+                fs.mkdirSync(srcDir, { recursive: true });
 
-            fs.writeFileSync(path.join(srcDir, 'steel.json'), JSON.stringify({ friction: 0.8, restitution: 0.2 }));
-            fs.writeFileSync(path.join(srcDir, 'rubber.json'), JSON.stringify({ friction: 0.9, restitution: 0.5 }));
+                fs.writeFileSync(path.join(srcDir, 'steel.json'), JSON.stringify({ friction: 0.8, restitution: 0.2 }));
+                fs.writeFileSync(path.join(srcDir, 'rubber.json'), JSON.stringify({ friction: 0.9, restitution: 0.5 }));
 
-            var count = matGen.copyMaterialDefs(tmpDir, ns, targetDir);
+                var count = matGen.copyMaterialDefs(tmpDir, ns, targetDir);
 
-            expect(count).toBe(2);
-            expect(fs.existsSync(path.join(targetDir, 'steel.json'))).toBe(true);
-            expect(fs.existsSync(path.join(targetDir, 'rubber.json'))).toBe(true);
-            expect(JSON.parse(fs.readFileSync(path.join(targetDir, 'steel.json'), 'utf8')).friction).toBe(0.8);
-
-            helpers.cleanupTempDir(tmpDir);
+                expect(count).toBe(2);
+                expect(fs.existsSync(path.join(targetDir, 'steel.json'))).toBe(true);
+                expect(fs.existsSync(path.join(targetDir, 'rubber.json'))).toBe(true);
+                expect(JSON.parse(fs.readFileSync(path.join(targetDir, 'steel.json'), 'utf8')).friction).toBe(0.8);
+            } finally {
+                helpers.cleanupTempDir(tmpDir);
+            }
         });
 
         it('源目录不存在时返回 0，不抛错', function () {

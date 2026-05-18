@@ -62,6 +62,12 @@ Vue.component('mm-hit-box-panel', {
         overwriteVal: function (field) {
             return this.config.overwrite ? this.config.overwrite[field] : undefined;
         },
+        /**
+         * 导航到归属子零件：点击归属标签时选中对应的子零件 Group，切换回子零件属性面板
+         */
+        navigateToSubPart: function () {
+            this.$emit('navigate-to-sub-part', this.parentSubPartKey);
+        },
     },
 });
 

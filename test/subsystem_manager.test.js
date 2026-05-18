@@ -55,7 +55,7 @@ describe('SubsystemManager', function () {
                 var result = manager.listSubsystems(config);
 
                 expect(result.length).toBe(1);
-                expect(result[0].id).toBe('test_engine');
+                expect(result[0].id).toBe('test:test_engine');
                 expect(result[0].data.type).toBe('machine_max:engine');
                 expect(result[0].source).toBe('current');
                 expect(result[0].editable).toBe(true);
@@ -79,7 +79,7 @@ describe('SubsystemManager', function () {
                 var result = manager.listSubsystems(config);
 
                 expect(result.length).toBe(1);
-                expect(result[0].id).toBe('dep_engine');
+                expect(result[0].id).toBe('dep:dep_engine');
                 expect(result[0].source).toBe('dependency:0');
                 expect(result[0].editable).toBe(false);
             } finally {
@@ -111,7 +111,7 @@ describe('SubsystemManager', function () {
 
                 // Verify it was actually written
                 var listed = manager.listSubsystems(config);
-                expect(listed.some(function (s) { return s.id === 'new_engine'; })).toBe(true);
+                expect(listed.some(function (s) { return s.id === 'test:new_engine'; })).toBe(true);
             } finally {
                 cleanupTempDir(tmpDir);
             }
@@ -148,7 +148,7 @@ describe('SubsystemManager', function () {
                     max_power: 100,
                 });
 
-                var result = manager.updateSubsystem(config, 'updatable_engine', {
+                var result = manager.updateSubsystem(config, 'test:updatable_engine', {
                     type: 'machine_max:engine',
                     max_power: 999,
                 });
@@ -158,7 +158,7 @@ describe('SubsystemManager', function () {
 
                 // Verify the update
                 var listed = manager.listSubsystems(config);
-                var found = listed.filter(function (s) { return s.id === 'updatable_engine'; });
+                var found = listed.filter(function (s) { return s.id === 'test:updatable_engine'; });
                 expect(found.length).toBe(1);
                 expect(found[0].data.max_power).toBe(999);
             } finally {
@@ -184,7 +184,7 @@ describe('SubsystemManager', function () {
                     max_power: 50,
                 });
 
-                var result = manager.updateSubsystem(config, 'dep_engine', {
+                var result = manager.updateSubsystem(config, 'dep:dep_engine', {
                     type: 'machine_max:engine',
                     max_power: 999,
                 });
@@ -214,14 +214,14 @@ describe('SubsystemManager', function () {
                     max_power: 100,
                 });
 
-                var result = manager.deleteSubsystem(config, 'delete_me');
+                var result = manager.deleteSubsystem(config, 'test:delete_me');
 
                 expect(result.success).toBe(true);
                 expect(result.error).toBe(null);
 
                 // Verify it's gone
                 var listed = manager.listSubsystems(config);
-                expect(listed.some(function (s) { return s.id === 'delete_me'; })).toBe(false);
+                expect(listed.some(function (s) { return s.id === 'test:delete_me'; })).toBe(false);
             } finally {
                 cleanupTempDir(tmpDir);
             }
@@ -244,7 +244,7 @@ describe('SubsystemManager', function () {
                     type: 'machine_max:engine',
                 });
 
-                var result = manager.deleteSubsystem(config, 'dep_engine');
+                var result = manager.deleteSubsystem(config, 'dep:dep_engine');
 
                 expect(result.success).toBe(false);
                 expect(result.error).toMatch(/不可删除/);

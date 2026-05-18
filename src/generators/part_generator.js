@@ -76,13 +76,33 @@ function buildSubPartOutput(sp) {
     if (sp.climb_assist) out.climb_assist = true;
     if (sp.hydro_priority !== 0) out.hydro_priority = sp.hydro_priority;
 
-    if (sp.hit_boxes && Object.keys(sp.hit_boxes).length > 0) out.hit_boxes = sp.hit_boxes;
-    if (sp.interact_boxes && Object.keys(sp.interact_boxes).length > 0) out.interact_boxes = sp.interact_boxes;
+    // 导出碰撞箱时将 UUID key 解析为骨骼名（游戏运行时使用骨骼名作为 key）
+    if (sp.hit_boxes && Object.keys(sp.hit_boxes).length > 0) out.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
+    if (sp.interact_boxes && Object.keys(sp.interact_boxes).length > 0) out.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
     if (sp.connectors && Object.keys(sp.connectors).length > 0) out.connectors = sp.connectors;
     if (sp.subsystems && Object.keys(sp.subsystems).length > 0) out.subsystems = sp.subsystems;
     if (sp.hydrodynamics) out.hydrodynamics = sp.hydrodynamics;
 
     return out;
+}
+
+/**
+ * 将对象中的 UUID key 解析为 Blueprint 元素的骨骼名（Group.name）
+ * 运行时数据使用骨骼名而不是 UUID 作为 hit_boxes/interact_boxes 的键
+ * @param {Object<string, *>} obj - UUID 为 key 的对象
+ * @returns {Object<string, *>} 骨骼名为 key 的新对象
+ */
+function _resolveUUIDKeys(obj) {
+    var resolved = {};
+    for (var key in obj) {
+        var boneName = key;
+        if (typeof Group !== 'undefined' && Group.all) {
+            var group = Group.all.find(function(g) { return g.uuid === key; });
+            if (group) boneName = group.name;
+        }
+        resolved[boneName] = obj[key];
+    }
+    return resolved;
 }
 
 function generateAllParts(projectConfig) {

@@ -90,13 +90,18 @@
         <mm-sub-part-panel v-if="isSubPartSelected"
             :config="selectedSubPartConfig"
             :element-name="selectedElementName"
+            :sp-name="selectedMarker ? selectedMarker.config_ref : ''"
             :hit-boxes="selectedSubPartConfig ? selectedSubPartConfig.hit_boxes || {} : {}"
             :all-bone-names="allBoneNames"
             :all-locator-names="ownedLocatorNames"
+            :refresh-key="_markerVersion"
             @field-change="updateSubPartField"
             @projected-area-change="updateProjectedArea"
             @add-end-bone="addEndBone"
-            @remove-end-bone="removeEndBone" />
+            @remove-end-bone="removeEndBone"
+            @name-change="renameSubPart"
+            @navigate-to-hit-box="navigateToHitBox"
+            @navigate-to-connector="navigateToConnector" />
 
         <!-- 碰撞箱属性面板 -->
         <mm-hit-box-panel v-else-if="isHitBoxSelected"
@@ -105,17 +110,21 @@
             :parent-sub-part-key="hitBoxParentSubPartKey"
             :material-defs="availableMaterials"
             @field-change="updateHitBoxField"
-            @overwrite-change="updateHitBoxOverwrite" />
+            @overwrite-change="updateHitBoxOverwrite"
+            @navigate-to-sub-part="navigateToSubPart" />
 
         <!-- 连接点属性面板 -->
         <mm-connector-panel v-else-if="isConnectorSelected"
             :config="selectedConnectorConfig"
             :element-name="selectedElementName"
+            :connector-name="connectorKeyName"
             :parent-sub-part-key="connectorParentSubPartKey"
             :connector-defs="availableConnectorDefs"
             :all-locator-names="allLocatorNames"
             @field-change="updateConnectorField"
-            @locator-change="migrateConnectorLocator" />
+            @locator-change="migrateConnectorLocator"
+            @name-change="renameConnector"
+            @navigate-to-sub-part="navigateToSubPart" />
 
         <!-- 未标记或未知类型 -->
         <div v-else class="mm-section">
