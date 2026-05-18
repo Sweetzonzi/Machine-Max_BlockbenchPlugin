@@ -3,7 +3,14 @@
  *
  * 纯函数模块，不依赖 Vue / Blockbench。
  * 输入当前变体配置，输出 { nodes, edges } 供 SVG 渲染。
+ *
+ * 节点创建使用两遍扫描策略：
+ *   第1遍：创建所有子系统和连接点节点
+ *   第2遍：处理信号边，仅在目标是真正的"特殊目标"（subpart/vehicle）
+ *          或完全无法匹配时才创建特殊/未解析节点
+ * 避免因迭代顺序导致的"子系统被抢注为未解析节点"问题。
  */
+var subsystemTypes = require('../core/subsystem_types.js');
 
 /**
  * 从变体配置中提取信号拓扑图的节点集和边集
@@ -16,16 +23,18 @@
 function extractSignalGraph(variant) {
     var nodes = [];
     var edges = [];
-    var nodeMap = {}; // id → true，去重
-    var seenSpecialTargets = {}; // 特殊目标去重
+    var nodeMap = {}; // id → true，去重（仅追踪 type=subsystem/connector 的节点）
 
     if (!variant || !variant.sub_parts) return { nodes: [], edges: [] };
 
+    // ====================================================================
+    // 第1遍：创建所有已知节点（子系统 + 连接点），不受顺序影响
+    // ====================================================================
     for (var spKey in variant.sub_parts) {
         var sp = variant.sub_parts[spKey];
         if (!sp) continue;
 
-        // === 连接点 → 节点 + 边 ===
+        // 连接点
         if (sp.connectors) {
             for (var connKey in sp.connectors) {
                 var conn = sp.connectors[connKey];
@@ -40,29 +49,10 @@ function extractSignalGraph(variant) {
                         locator: conn.locator || '',
                     });
                 }
-                // signal_targets: { channel → [targets] }
-                if (conn.signal_targets) {
-                    for (var channel in conn.signal_targets) {
-                        var targets = conn.signal_targets[channel];
-                        if (!targets || !Array.isArray(targets)) continue;
-                        for (var ti = 0; ti < targets.length; ti++) {
-                            var tgt = targets[ti];
-                            if (!tgt) continue;
-                            _ensureNodeForTarget(tgt, sp, nodeMap, nodes, seenSpecialTargets, spKey);
-                            edges.push({ from: connKey, to: tgt, channel: channel, type: 'signal' });
-                        }
-                    }
-                }
-                // power_target
-                if (conn.power_target) {
-                    var pt = conn.power_target;
-                    _ensureNodeForTarget(pt, sp, nodeMap, nodes, seenSpecialTargets, spKey);
-                    edges.push({ from: connKey, to: pt, channel: 'power', type: 'power' });
-                }
             }
         }
 
-        // === 子系统 → 节点 + 边 ===
+        // 子系统
         if (sp.subsystems) {
             for (var ssKey in sp.subsystems) {
                 var ss = sp.subsystems[ssKey];
@@ -77,34 +67,91 @@ function extractSignalGraph(variant) {
                         subType: ss.type || '',
                     });
                 }
-                // 遍历子系统所有 *_outputs 字段
+            }
+        }
+    }
+
+    // ====================================================================
+    // 第2遍：处理信号边（此时所有已知节点已就位）
+    // ====================================================================
+    var seenSpecialTargets = {}; // 'subpart' / 'vehicle' 去重
+
+    for (var spKey in variant.sub_parts) {
+        var sp = variant.sub_parts[spKey];
+        if (!sp) continue;
+
+        // === 连接点的边 ===
+        if (sp.connectors) {
+            for (var connKey in sp.connectors) {
+                var conn = sp.connectors[connKey];
+                if (!conn) continue;
+
+                // signal_targets: { channel → [targets] }
+                if (conn.signal_targets) {
+                    for (var channel in conn.signal_targets) {
+                        var targets = conn.signal_targets[channel];
+                        if (!targets || !Array.isArray(targets)) continue;
+                        for (var ti = 0; ti < targets.length; ti++) {
+                            var tgt = targets[ti];
+                            if (!tgt) continue;
+                            _ensureTargetNode(tgt, nodeMap, nodes, seenSpecialTargets, spKey);
+                            edges.push({ from: connKey, to: tgt, channel: channel, type: 'signal' });
+                        }
+                    }
+                }
+                // power_target
+                if (conn.power_target) {
+                    var pt = conn.power_target;
+                    _ensureTargetNode(pt, nodeMap, nodes, seenSpecialTargets, spKey);
+                    edges.push({ from: connKey, to: pt, channel: 'power', type: 'power' });
+                }
+            }
+        }
+
+        // === 子系统的边 ===
+        if (sp.subsystems) {
+            for (var ssKey in sp.subsystems) {
+                var ss = sp.subsystems[ssKey];
+                if (!ss) continue;
+
+                // 从 subsystem_types.js 注册表获取该类型的所有信号输出字段
                 var outputFields = _getSignalOutputFields(ss);
                 for (var fi = 0; fi < outputFields.length; fi++) {
                     var field = outputFields[fi];
                     var val = ss[field];
                     if (!val) continue;
+
                     if (typeof val === 'string') {
-                        // 单值目标：power_output, 部分场景
+                        // 单值目标：power_output
                         if (val) {
-                            _ensureNodeForTarget(val, sp, nodeMap, nodes, seenSpecialTargets, spKey);
+                            _ensureTargetNode(val, nodeMap, nodes, seenSpecialTargets, spKey);
                             edges.push({ from: ssKey, to: val, channel: field, type: _edgeTypeForField(field) });
                         }
                     } else if (typeof val === 'object' && !Array.isArray(val)) {
-                        // 键值对：{ channel → [targets] }
+                        // 键值对：
+                        //   { channel: [targets] }  — signal_targets 系列
+                        //   { target: ratio }       — transmission.power_outputs
                         for (var ch in val) {
                             var tgts = val[ch];
-                            if (!tgts) continue;
+                            if (tgts === undefined || tgts === null) continue;
+
                             if (Array.isArray(tgts)) {
+                                // signal_targets: { channel: [target1, target2, ...] }
                                 for (var tji = 0; tji < tgts.length; tji++) {
                                     var t = tgts[tji];
                                     if (!t) continue;
-                                    _ensureNodeForTarget(t, sp, nodeMap, nodes, seenSpecialTargets, spKey);
+                                    _ensureTargetNode(t, nodeMap, nodes, seenSpecialTargets, spKey);
                                     edges.push({ from: ssKey, to: t, channel: ch, type: _edgeTypeForField(field) });
                                 }
                             } else if (typeof tgts === 'string') {
-                                // power_outputs: { target: ratio }
-                                _ensureNodeForTarget(tgts, sp, nodeMap, nodes, seenSpecialTargets, spKey);
+                                // 单个字符串目标
+                                _ensureTargetNode(tgts, nodeMap, nodes, seenSpecialTargets, spKey);
                                 edges.push({ from: ssKey, to: tgts, channel: ch, type: _edgeTypeForField(field) });
+                            } else if (typeof tgts === 'number') {
+                                // power_outputs 的值为减速比 (Map<string, Float>)
+                                // ch 本身就是目标名（如 "subsystem.machine_max.left_front_wheel_driver"）
+                                _ensureTargetNode(ch, nodeMap, nodes, seenSpecialTargets, spKey);
+                                edges.push({ from: ssKey, to: ch, channel: field, type: _edgeTypeForField(field) });
                             }
                         }
                     }
@@ -117,12 +164,18 @@ function extractSignalGraph(variant) {
 }
 
 /**
- * 确保目标节点存在于 nodes 数组中
- * 特殊目标 'subpart' / 'vehicle' 自动创建
- * 其他目标尝试在当前子零件或全局查找对应节点
+ * 确保目标节点存在。
+ *
+ * 第2遍处理边时：
+ * - 第1遍已创建的 subsystem/connector 节点 → nodeMap 命中，跳过
+ * - 'subpart' / 'vehicle' → 创建特殊节点
+ * - 其他未识别的目标 → 创建未解析节点（灰色）
  */
-function _ensureNodeForTarget(target, sp, nodeMap, nodes, seenSpecialTargets, currentSpKey) {
+function _ensureTargetNode(target, nodeMap, nodes, seenSpecialTargets, currentSpKey) {
     if (!target) return;
+    // 第1遍已创建的子系统/连接点 → 无需操作
+    if (nodeMap[target]) return;
+    // 内置特殊目标
     if (target === 'subpart' || target === 'vehicle') {
         if (!seenSpecialTargets[target]) {
             seenSpecialTargets[target] = true;
@@ -136,23 +189,42 @@ function _ensureNodeForTarget(target, sp, nodeMap, nodes, seenSpecialTargets, cu
         }
         return;
     }
-    // 其他目标名：可能指向子系统或连接点，如果在节点映射中不存在，
-    // 也作为未解析的灰色节点创建
-    if (!nodeMap[target]) {
-        nodeMap[target] = true;
-        nodes.push({
-            id: target,
-            type: 'unresolved',
-            subPart: currentSpKey,
-            label: _shortName(target),
-        });
-    }
+    // 不在已知节点列表中 → 创建未解析节点
+    nodeMap[target] = true;
+    nodes.push({
+        id: target,
+        type: 'unresolved',
+        subPart: currentSpKey,
+        label: _shortName(target),
+    });
 }
 
 /**
  * 获取子系统的信号输出字段列表
+ *
+ * 优先从 subsystem_types.js 注册表读取该类型的动态属性字段，
+ * 只返回 editor 为 signal_targets / power_target / power_outputs_map 的字段。
+ * 若类型未知或未注册，回退到硬编码的通用字段推断。
  */
 function _getSignalOutputFields(ss) {
+    var typeId = ss.type;
+    if (typeId) {
+        var fields = subsystemTypes.getDynamicFields(typeId);
+        if (fields && fields.length > 0) {
+            var result = [];
+            for (var i = 0; i < fields.length; i++) {
+                var f = fields[i];
+                // 只有信号路由/功率输出类的字段才生成边
+                if (f.editor === 'signal_targets' || f.editor === 'power_target' || f.editor === 'power_outputs_map') {
+                    if (ss[f.field] !== undefined && ss[f.field] !== null) {
+                        result.push(f.field);
+                    }
+                }
+            }
+            return result;
+        }
+    }
+    // 回退：未知类型，按通用规则扫描 *_outputs / power_output
     var knownOutputs = [
         'power_output', 'power_outputs',
         'control_outputs', 'speed_outputs',
@@ -160,7 +232,7 @@ function _getSignalOutputFields(ss) {
         'steering_outputs', 'handbrake_outputs',
         'gear_outputs', 'move_outputs',
         'regular_outputs', 'aim_outputs',
-        'passenger_num_outputs', 'fire_outputs',
+        'passenger_num_outputs',
     ];
     var result = [];
     for (var i = 0; i < knownOutputs.length; i++) {
@@ -189,10 +261,8 @@ function _shortName(fullKey) {
     if (!fullKey) return '';
     var parts = fullKey.split('.');
     if (parts.length <= 1) {
-        // 短名截取最后 16 字符
         return fullKey.length > 16 ? fullKey.substring(0, 14) + '…' : fullKey;
     }
-    // 取最后一段（通常是名称）
     var last = parts[parts.length - 1];
     if (last.length > 18) return last.substring(0, 16) + '…';
     return last;

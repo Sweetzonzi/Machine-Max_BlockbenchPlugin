@@ -263,7 +263,7 @@ function getSubsystemTypes() {
  *
  * 示例:
  *   getTypeFields('machine_max:engine')
- *   → ['max_power', 'max_torque', 'idle_rpm', 'idle_torque_ratio', ...]
+ *   → ['definition', 'power_output', 'speed_outputs']
  */
 function getTypeFields(type) {
     var fields = getTypeSpecificFields(type);
