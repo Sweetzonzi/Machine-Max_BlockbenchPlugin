@@ -27,23 +27,31 @@
             @mouseleave="onPanEnd">
             <svg :width="svgWidth" :height="svgHeight"
                 @wheel.prevent="onWheel"
-                style="display:block;cursor:grab">
+                style="display:block;cursor:grab;background:#1a1a2e;border-radius:6px">
                 <defs>
+                    <!-- 节点投影阴影 -->
+                    <filter id="mm-flow-shadow" x="-10%" y="-10%" width="130%" height="130%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.4" />
+                    </filter>
+                    <!-- 悬停发光阴影 -->
+                    <filter id="mm-flow-shadow-hover" x="-20%" y="-20%" width="150%" height="150%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="#fff" flood-opacity="0.25" />
+                    </filter>
                     <!-- 普通箭头 -->
-                    <marker id="mm-flow-arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                        <polygon points="0 0, 8 3, 0 6" fill="#888" />
+                    <marker id="mm-flow-arrow" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+                        <polygon points="0 0, 10 4, 0 8" fill="#888" />
                     </marker>
                     <!-- 动力箭头（橙色） -->
-                    <marker id="mm-flow-arrow-power" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                        <polygon points="0 0, 8 3, 0 6" fill="#e67e22" />
+                    <marker id="mm-flow-arrow-power" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+                        <polygon points="0 0, 10 4, 0 8" fill="#e67e22" />
                     </marker>
                     <!-- 转速箭头（蓝色） -->
-                    <marker id="mm-flow-arrow-speed" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                        <polygon points="0 0, 8 3, 0 6" fill="#3498db" />
+                    <marker id="mm-flow-arrow-speed" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+                        <polygon points="0 0, 10 4, 0 8" fill="#3498db" />
                     </marker>
                     <!-- 控制箭头（绿色） -->
-                    <marker id="mm-flow-arrow-control" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                        <polygon points="0 0, 8 3, 0 6" fill="#2ecc71" />
+                    <marker id="mm-flow-arrow-control" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+                        <polygon points="0 0, 10 4, 0 8" fill="#2ecc71" />
                     </marker>
                 </defs>
                 <g :transform="'translate('+panX+','+panY+') scale('+zoom+')'">
@@ -80,24 +88,32 @@
                             style="cursor:pointer">
                             <!-- 特特殊目标用线框 -->
                             <rect v-if="node.type === 'special'"
-                                width="130" height="32" rx="4"
+                                width="140" height="32" rx="6"
                                 :fill="nodeColor(node)" fill-opacity="0.15"
                                 :stroke="nodeColor(node)" stroke-width="1.5"
-                                stroke-dasharray="4,3" />
+                                stroke-dasharray="4,3"
+                                :class="{ 'mm-flow-node-hovered': hoveredNode === node }" />
                             <!-- 未解析目标用虚线 -->
                             <rect v-else-if="node.type === 'unresolved'"
-                                width="130" height="32" rx="4"
+                                width="140" height="32" rx="6"
                                 :fill="nodeColor(node)" fill-opacity="0.2"
                                 :stroke="nodeColor(node)" stroke-width="1"
-                                stroke-dasharray="3,2" />
+                                stroke-dasharray="3,2"
+                                :class="{ 'mm-flow-node-hovered': hoveredNode === node }" />
                             <!-- 普通节点 -->
                             <rect v-else
-                                width="130" height="32" rx="4"
+                                width="140" height="32" rx="6"
                                 :fill="nodeColor(node)" fill-opacity="0.85"
                                 stroke="#fff" stroke-width="0.5"
+                                filter="url(#mm-flow-shadow)"
                                 :class="{ 'mm-flow-node-hovered': hoveredNode === node }" />
+                            <!-- 悬停高亮光晕（叠加层） -->
+                            <rect v-if="hoveredNode === node"
+                                width="144" height="36" rx="8" x="-2" y="-2"
+                                fill="none" stroke="#fff" stroke-width="1.5" stroke-opacity="0.4"
+                                filter="url(#mm-flow-shadow-hover)" />
                             <!-- 节点标签 -->
-                            <text x="65" y="20"
+                            <text x="70" y="20"
                                 fill="#fff" font-size="11"
                                 text-anchor="middle" style="pointer-events:none;user-select:none"
                                 :font-weight="hoveredNode === node ? 'bold' : 'normal'">

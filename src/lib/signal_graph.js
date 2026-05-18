@@ -275,32 +275,33 @@ function _shortName(fullKey) {
  * @param {Object[]} nodes - 节点数组（原样扩展 x/y/vx/vy）
  * @param {Object[]} edges - 边数组
  * @param {Object} [options]
- * @param {number} [options.width=600] - 画布宽度
- * @param {number} [options.height=300] - 画布高度
- * @param {number} [options.repulsion=2000] - 电荷斥力强度
- * @param {number} [options.attraction=0.005] - 弹簧引力系数
- * @param {number} [options.idealLength=140] - 期望边长(px)
- * @param {number} [options.iterations=80] - 迭代次数
- * @param {number} [options.damping=0.85] - 阻尼系数
+ * @param {number} [options.width=800] - 画布宽度
+ * @param {number} [options.height=400] - 画布高度
+ * @param {number} [options.repulsion=4000] - 电荷斥力强度
+ * @param {number} [options.attraction=0.004] - 弹簧引力系数
+ * @param {number} [options.idealLength=180] - 期望边长(px)
+ * @param {number} [options.iterations=100] - 迭代次数
+ * @param {number} [options.damping=0.82] - 阻尼系数
  * @returns {Object[]} 布局后的 nodes（含 x/y 坐标）
  */
 function forceLayout(nodes, edges, options) {
     if (!nodes || nodes.length === 0) return nodes || [];
     var opts = options || {};
-    var width = opts.width || 600;
-    var height = opts.height || 300;
-    var repulsion = opts.repulsion || 2000;
-    var attraction = opts.attraction || 0.005;
-    var idealLength = opts.idealLength || 140;
-    var iterations = opts.iterations || 80;
-    var damping = opts.damping || 0.85;
+    var width = opts.width || 800;
+    var height = opts.height || 400;
+    var repulsion = opts.repulsion || 4000;
+    var attraction = opts.attraction || 0.004;
+    var idealLength = opts.idealLength || 180;
+    var iterations = opts.iterations || 100;
+    var damping = opts.damping || 0.82;
+    var NODE_MIN_DIST = 50; // 节点间最小间距（斥力饱和阈值）
 
     // 初始化随机位置（用简单种子分散，避免全部叠在中心）
     for (var i = 0; i < nodes.length; i++) {
         var n = nodes[i];
         if (n.x === undefined || n.y === undefined) {
             var angle = (i / nodes.length) * Math.PI * 2;
-            var radius = Math.min(width, height) * 0.3;
+            var radius = Math.min(width, height) * 0.35;
             n.x = width / 2 + Math.cos(angle) * radius * (0.5 + Math.random() * 0.5);
             n.y = height / 2 + Math.sin(angle) * radius * (0.5 + Math.random() * 0.5);
         }
@@ -328,7 +329,7 @@ function forceLayout(nodes, edges, options) {
                 var dx = nb.x - na.x;
                 var dy = nb.y - na.y;
                 var dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 1) dist = 1;
+                if (dist < NODE_MIN_DIST) dist = NODE_MIN_DIST;
                 var force = repulsion / (dist * dist);
                 var fx = force * (dx / dist);
                 var fy = force * (dy / dist);

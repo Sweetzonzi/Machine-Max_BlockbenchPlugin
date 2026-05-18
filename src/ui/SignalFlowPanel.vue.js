@@ -58,7 +58,7 @@ Vue.component('mm-signal-flow-panel', {
             return 800;
         },
         svgHeight: function () {
-            return 350;
+            return 420;
         },
         hasEmptyGraph: function () {
             return this.hasActiveSelection && this.nodes.length === 0 && this.edges.length === 0;
@@ -105,8 +105,10 @@ Vue.component('mm-signal-flow-panel', {
             forceLayout(graph.nodes, graph.edges, {
                 width: this.svgWidth,
                 height: this.svgHeight,
-                iterations: 60,
+                iterations: 80,
             });
+            // 计算平行边索引（同一对节点之间的边在渲染时错开）
+            _assignParallelIndices(graph.edges);
             this.nodes = graph.nodes;
             this.edges = graph.edges;
         },
@@ -170,36 +172,51 @@ Vue.component('mm-signal-flow-panel', {
             }
         },
         /**
-         * 计算两个节点之间的连线路径（直线）
-         * 节点宽度 ~130px, 高度 ~32px
+         * 计算两个节点之间的连线路径（三次贝塞尔曲线，带平行边偏移）
+         * 节点宽度 ~140px, 高度 ~32px
          */
         computeEdgePath: function (edge) {
-            var NODE_W = 130;
+            var NODE_W = 140;
             var NODE_H = 32;
             var src = this._findNode(edge.from);
             var tgt = this._findNode(edge.to);
             if (!src || !tgt) return '';
-            // 起点：源节点右侧中心
+
+            // 源节点右边缘中点，目标节点左边缘中点
             var x1 = src.x + NODE_W;
             var y1 = src.y + NODE_H / 2;
-            // 终点：目标节点左侧中心
             var x2 = tgt.x;
             var y2 = tgt.y + NODE_H / 2;
-            // 如果目标在源左侧，使用源左侧 / 目标右侧
+
+            // 如果目标在源左侧，交换端点
             if (tgt.x + NODE_W < src.x) {
                 x1 = src.x;
                 y1 = src.y + NODE_H / 2;
                 x2 = tgt.x + NODE_W;
                 y2 = tgt.y + NODE_H / 2;
             }
-            // 简单直线
-            return 'M' + x1.toFixed(1) + ',' + y1.toFixed(1) + ' L' + x2.toFixed(1) + ',' + y2.toFixed(1);
+
+            // 平行边偏移：同一对节点间若有多个边，在垂直方向上错开
+            var parallelOffset = 0;
+            if (edge._parallelIndex !== undefined) {
+                parallelOffset = (edge._parallelIndex - 0) * 10;
+            }
+
+            // 贝塞尔曲线控制点偏移
+            var dx = x2 - x1;
+            var cpOffset = Math.max(30, Math.abs(dx) * 0.3);
+            var cpx = (x1 + x2) / 2;
+            var cpy = (y1 + y2) / 2 - cpOffset + parallelOffset;
+
+            return 'M' + x1.toFixed(1) + ',' + (y1 + parallelOffset).toFixed(1)
+                + ' Q' + cpx.toFixed(1) + ',' + cpy.toFixed(1)
+                + ' ' + x2.toFixed(1) + ',' + (y2 + parallelOffset).toFixed(1);
         },
         /**
-         * 计算连线标签位置（中点偏上）
+         * 计算连线标签位置（贝塞尔曲线中点偏上）
          */
         edgeLabelPos: function (edge) {
-            var NODE_W = 130;
+            var NODE_W = 140;
             var NODE_H = 32;
             var src = this._findNode(edge.from);
             var tgt = this._findNode(edge.to);
@@ -214,9 +231,18 @@ Vue.component('mm-signal-flow-panel', {
                 x2 = tgt.x + NODE_W;
                 y2 = tgt.y + NODE_H / 2;
             }
+            var dx = x2 - x1;
+            var cpOffset = Math.max(30, Math.abs(dx) * 0.3);
+            var parallelOffset = 0;
+            if (edge._parallelIndex !== undefined) {
+                parallelOffset = (edge._parallelIndex - 0) * 10;
+            }
+            // 贝塞尔曲线 Q 的中点近似
+            var cpx = (x1 + x2) / 2;
+            var cpy = (y1 + y2) / 2 - cpOffset * 0.6 + parallelOffset;
             return {
-                x: (x1 + x2) / 2,
-                y: (y1 + y2) / 2 - 8,
+                x: cpx,
+                y: cpy - 10,
             };
         },
         /**
@@ -307,8 +333,9 @@ Vue.component('mm-signal-flow-panel', {
             forceLayout(graph.nodes, graph.edges, {
                 width: this.svgWidth,
                 height: this.svgHeight,
-                iterations: 60,
+                iterations: 80,
             });
+            _assignParallelIndices(graph.edges);
             this.nodes = graph.nodes;
             this.edges = graph.edges;
         },
@@ -343,6 +370,31 @@ Vue.component('mm-signal-flow-panel', {
     },
 });
 
+/**
+ * 为平行边（同一对节点间的多条边）分配索引，用于渲染时垂直错开
+ * @param {Object[]} edges - 边数组，每条边有 {from, to}
+ */
+function _assignParallelIndices(edges) {
+    var groups = {};
+    for (var i = 0; i < edges.length; i++) {
+        var e = edges[i];
+        // 用有序 key 保证 (A→B) 和 (B→A) 归入同一组
+        var key = e.from < e.to ? e.from + '::' + e.to : e.to + '::' + e.from;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(e);
+    }
+    for (var k in groups) {
+        var group = groups[k];
+        if (group.length > 1) {
+            // 同一组内的边从 -n/2 到 +n/2 均匀偏移
+            var mid = (group.length - 1) / 2;
+            for (var gi = 0; gi < group.length; gi++) {
+                group[gi]._parallelIndex = gi - mid;
+            }
+        }
+    }
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = Vue.component('mm-signal-flow-panel');
+    module.exports = {};
 }
