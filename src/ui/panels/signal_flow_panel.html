@@ -112,6 +112,13 @@
                                 width="144" height="36" rx="8" x="-2" y="-2"
                                 fill="none" stroke="#fff" stroke-width="1.5" stroke-opacity="0.4"
                                 filter="url(#mm-flow-shadow-hover)" />
+                            <!-- 端口小圆圈（输出=橙色，输入=绿色） -->
+                            <g v-if="node._ports">
+                                <circle v-for="(p, pi) in node._ports" :key="'p'+pi"
+                                    :cx="portX(p.port)" :cy="portY(p.port)" r="4"
+                                    :fill="p.isOutput ? '#e67e22' : '#2ecc71'"
+                                    stroke="#1a1a2e" stroke-width="1" />
+                            </g>
                             <!-- 节点标签 -->
                             <text x="70" y="20"
                                 fill="#fff" font-size="11"

@@ -116,8 +116,9 @@ Vue.component('mm-signal-flow-panel', {
                 height: this.svgHeight,
                 iterations: 80,
             });
-            // 计算平行边索引（同一对节点之间的边在渲染时错开）
+            // 计算平行边索引 + 端口分派
             _assignParallelIndices(graph.edges);
+            _assignPortRoles(graph.nodes, graph.edges);
             this.nodes = graph.nodes;
             this.edges = graph.edges;
         },
@@ -181,78 +182,119 @@ Vue.component('mm-signal-flow-panel', {
             }
         },
         /**
-         * 计算两个节点之间的连线路径（三次贝塞尔曲线，带平行边偏移）
-         * 节点宽度 ~140px, 高度 ~32px
+         * 获取端口相对节点的偏移坐标
+         * @param {string} port - 'right' | 'bottom' | 'left' | 'top'
+         * @param {number} index - 该端口上第几条边（0-based），用于平行偏移
+         * @returns {{x: number, y: number}}
          */
-        computeEdgePath: function (edge) {
+        _portOffset: function (port, index) {
             var NODE_W = 140;
             var NODE_H = 32;
+            var parallelStep = 6;
+            var offset = (index || 0) * parallelStep;
+            switch (port) {
+                case 'right':  return { x: NODE_W, y: 16 + offset - 6 };
+                case 'bottom': return { x: 70 + offset - 6, y: NODE_H };
+                case 'left':   return { x: 0,   y: 16 + offset - 6 };
+                case 'top':    return { x: 70 + offset - 6, y: 0 };
+                default:       return { x: NODE_W, y: 16 };
+            }
+        },
+
+        /**
+         * 端口小圆圈的 X 坐标（相对节点左上角，模板用 v-for 调用）
+         */
+        portX: function (port) {
+            switch (port) {
+                case 'right':  return 140;
+                case 'left':   return 0;
+                case 'bottom': return 70;
+                case 'top':    return 70;
+                default:       return 0;
+            }
+        },
+
+        /**
+         * 端口小圆圈的 Y 坐标（相对节点左上角）
+         */
+        portY: function (port) {
+            switch (port) {
+                case 'right':  return 16;
+                case 'left':   return 16;
+                case 'bottom': return 32;
+                case 'top':    return 0;
+                default:       return 0;
+            }
+        },
+
+        /**
+         * 计算两个节点之间的连线路径（贝塞尔曲线，按端口分派）
+         * 输出端口：右侧（主）或底部（次）
+         * 输入端口：左侧（主）或顶部（次）
+         */
+        computeEdgePath: function (edge) {
             var src = this._findNode(edge.from);
             var tgt = this._findNode(edge.to);
             if (!src || !tgt) return '';
 
-            // 源节点右边缘中点，目标节点左边缘中点
-            var x1 = src.x + NODE_W;
-            var y1 = src.y + NODE_H / 2;
-            var x2 = tgt.x;
-            var y2 = tgt.y + NODE_H / 2;
+            var sp = this._portOffset(edge._outPort || 'right', edge._outIdx || 0);
+            var tp = this._portOffset(edge._inPort || 'left', edge._inIdx || 0);
 
-            // 如果目标在源左侧，交换端点
-            if (tgt.x + NODE_W < src.x) {
-                x1 = src.x;
-                y1 = src.y + NODE_H / 2;
-                x2 = tgt.x + NODE_W;
-                y2 = tgt.y + NODE_H / 2;
-            }
+            var x1 = src.x + sp.x;
+            var y1 = src.y + sp.y;
+            var x2 = tgt.x + tp.x;
+            var y2 = tgt.y + tp.y;
 
-            // 平行边偏移：同一对节点间若有多个边，在垂直方向上错开
-            var parallelOffset = 0;
-            if (edge._parallelIndex !== undefined) {
-                parallelOffset = (edge._parallelIndex - 0) * 10;
-            }
-
-            // 贝塞尔曲线控制点偏移
+            // 贝塞尔控制点：从端口法线方向延伸
+            // 右侧/左侧端口 → 水平控制点；底部/顶部端口 → 垂直控制点
             var dx = x2 - x1;
-            var cpOffset = Math.max(30, Math.abs(dx) * 0.3);
-            var cpx = (x1 + x2) / 2;
-            var cpy = (y1 + y2) / 2 - cpOffset + parallelOffset;
+            var dy = y2 - y1;
+            var cpLen = Math.max(40, Math.abs(dx) * 0.4, Math.abs(dy) * 0.4);
 
-            return 'M' + x1.toFixed(1) + ',' + (y1 + parallelOffset).toFixed(1)
-                + ' Q' + cpx.toFixed(1) + ',' + cpy.toFixed(1)
-                + ' ' + x2.toFixed(1) + ',' + (y2 + parallelOffset).toFixed(1);
+            var cpx1, cpy1, cpx2, cpy2;
+            if (edge._outPort === 'bottom' || edge._inPort === 'top') {
+                // 垂直走向端口：主要用垂直控制点
+                cpx1 = x1;
+                cpy1 = y1 + cpLen;
+                cpx2 = x2;
+                cpy2 = y2 - cpLen;
+            } else {
+                // 水平走向端口（默认）：主要用水平控制点
+                cpx1 = x1 + cpLen;
+                cpy1 = y1;
+                cpx2 = x2 - cpLen;
+                cpy2 = y2;
+            }
+
+            return 'M' + x1.toFixed(1) + ',' + y1.toFixed(1)
+                + ' C' + cpx1.toFixed(1) + ',' + cpy1.toFixed(1)
+                + ' ' + cpx2.toFixed(1) + ',' + cpy2.toFixed(1)
+                + ' ' + x2.toFixed(1) + ',' + y2.toFixed(1);
         },
         /**
          * 计算连线标签位置（贝塞尔曲线中点偏上）
          */
         edgeLabelPos: function (edge) {
-            var NODE_W = 140;
-            var NODE_H = 32;
             var src = this._findNode(edge.from);
             var tgt = this._findNode(edge.to);
             if (!src || !tgt) return { x: 0, y: 0 };
-            var x1 = src.x + NODE_W;
-            var y1 = src.y + NODE_H / 2;
-            var x2 = tgt.x;
-            var y2 = tgt.y + NODE_H / 2;
-            if (tgt.x + NODE_W < src.x) {
-                x1 = src.x;
-                y1 = src.y + NODE_H / 2;
-                x2 = tgt.x + NODE_W;
-                y2 = tgt.y + NODE_H / 2;
+            var sp = this._portOffset(edge._outPort || 'right', edge._outIdx || 0);
+            var tp = this._portOffset(edge._inPort || 'left', edge._inIdx || 0);
+            var x1 = src.x + sp.x;
+            var y1 = src.y + sp.y;
+            var x2 = tgt.x + tp.x;
+            var y2 = tgt.y + tp.y;
+            // 贝塞尔曲线中点近似
+            var cpLen = Math.max(40, Math.abs(x2 - x1) * 0.4, Math.abs(y2 - y1) * 0.4);
+            var cpx, cpy;
+            if (edge._outPort === 'bottom' || edge._inPort === 'top') {
+                cpx = (x1 + x2) / 2;
+                cpy = (y1 + y2) / 2 + cpLen * 0.3;
+            } else {
+                cpx = (x1 + x2) / 2;
+                cpy = (y1 + y2) / 2 - cpLen * 0.15;
             }
-            var dx = x2 - x1;
-            var cpOffset = Math.max(30, Math.abs(dx) * 0.3);
-            var parallelOffset = 0;
-            if (edge._parallelIndex !== undefined) {
-                parallelOffset = (edge._parallelIndex - 0) * 10;
-            }
-            // 贝塞尔曲线 Q 的中点近似
-            var cpx = (x1 + x2) / 2;
-            var cpy = (y1 + y2) / 2 - cpOffset * 0.6 + parallelOffset;
-            return {
-                x: cpx,
-                y: cpy - 10,
-            };
+            return { x: cpx, y: cpy - 10 };
         },
         /**
          * 在数组中按 id 查找节点
@@ -345,6 +387,7 @@ Vue.component('mm-signal-flow-panel', {
                 iterations: 80,
             });
             _assignParallelIndices(graph.edges);
+            _assignPortRoles(graph.nodes, graph.edges);
             this.nodes = graph.nodes;
             this.edges = graph.edges;
         },
@@ -390,7 +433,6 @@ function _assignParallelIndices(edges) {
     var groups = {};
     for (var i = 0; i < edges.length; i++) {
         var e = edges[i];
-        // 用有序 key 保证 (A→B) 和 (B→A) 归入同一组
         var key = e.from < e.to ? e.from + '::' + e.to : e.to + '::' + e.from;
         if (!groups[key]) groups[key] = [];
         groups[key].push(e);
@@ -398,11 +440,90 @@ function _assignParallelIndices(edges) {
     for (var k in groups) {
         var group = groups[k];
         if (group.length > 1) {
-            // 同一组内的边从 -n/2 到 +n/2 均匀偏移
             var mid = (group.length - 1) / 2;
             for (var gi = 0; gi < group.length; gi++) {
                 group[gi]._parallelIndex = gi - mid;
             }
+        }
+    }
+}
+
+/**
+ * 为每条边分派输入/输出端口（端口渲染位置），让信号流图更直观。
+ *
+ * 输出端口（信号从此离开）：
+ *   - 前一半 → 右侧（水平方向主输出）
+ *   - 后一半 → 底部（垂直方向次输出）
+ * 输入端口（信号从此到达）：
+ *   - 前一半 → 左侧（水平方向主输入）
+ *   - 后一半 → 顶部（垂直方向次输入）
+ *
+ * 每条边获得 _outPort/_outIdx（源节点的端口+序号）和 _inPort/_inIdx（目标节点的端口+序号）。
+ *
+ * @param {Object[]} nodes - 节点数组
+ * @param {Object[]} edges - 边数组
+ */
+function _assignPortRoles(nodes, edges) {
+    // 统计每个节点作为源/目标的边
+    var outEdges = {}; // nodeId → [edge, ...]
+    var inEdges = {};  // nodeId → [edge, ...]
+    for (var i = 0; i < edges.length; i++) {
+        var e = edges[i];
+        if (!outEdges[e.from]) outEdges[e.from] = [];
+        outEdges[e.from].push(e);
+        if (!inEdges[e.to]) inEdges[e.to] = [];
+        inEdges[e.to].push(e);
+    }
+
+    // 分配输出端口
+    for (var srcId in outEdges) {
+        var list = outEdges[srcId];
+        var half = Math.ceil(list.length / 2);
+        for (var oi = 0; oi < list.length; oi++) {
+            var oe = list[oi];
+            oe._outPort = oi < half ? 'right' : 'bottom';
+            oe._outIdx = oi < half ? oi : oi - half;
+            // 在节点上标记端口活跃数
+            _markNodePort(nodes, srcId, oe._outPort, true);
+        }
+    }
+
+    // 分配输入端口
+    for (var tgtId in inEdges) {
+        var list = inEdges[tgtId];
+        var half = Math.ceil(list.length / 2);
+        for (var ii = 0; ii < list.length; ii++) {
+            var ie = list[ii];
+            ie._inPort = ii < half ? 'left' : 'top';
+            ie._inIdx = ii < half ? ii : ii - half;
+            _markNodePort(nodes, tgtId, ie._inPort, false);
+        }
+    }
+}
+
+/**
+ * 在节点上标记端口的活跃状态，供模板渲染端口小圆圈
+ * @param {Object[]} nodes
+ * @param {string} nodeId
+ * @param {string} port - 'right'|'bottom'|'left'|'top'
+ * @param {boolean} isOutput
+ */
+function _markNodePort(nodes, nodeId, port, isOutput) {
+    for (var ni = 0; ni < nodes.length; ni++) {
+        if (nodes[ni].id === nodeId) {
+            if (!nodes[ni]._ports) nodes[ni]._ports = [];
+            // 去重
+            var exists = false;
+            for (var pi = 0; pi < nodes[ni]._ports.length; pi++) {
+                if (nodes[ni]._ports[pi].port === port) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                nodes[ni]._ports.push({ port: port, isOutput: isOutput });
+            }
+            break;
         }
     }
 }
