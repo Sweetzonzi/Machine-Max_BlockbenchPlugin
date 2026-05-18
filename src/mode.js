@@ -85,18 +85,21 @@ function registerMode() {
     }
 
     // 注册信号流图底部 Panel
+    console.warn('[MM][Mode] 尝试注册信号流图 Panel, exists=' + !!(Panels && Panels['mm_signal_flow']));
     if (!(Panels && Panels['mm_signal_flow'])) {
         try {
             var PanelClass = typeof Panel !== 'undefined' ? Panel : (typeof Blockbench !== 'undefined' ? Blockbench.Panel : null);
             if (!PanelClass) {
                 log.warn('registerMode: Panel 类不可用，跳过信号流图面板注册');
+                console.warn('[MM][Mode] Panel 类不可用');
             } else {
+                console.warn('[MM][Mode] 注册信号流图 Panel, component=' + (typeof _mmSignalFlowComponent));
                 new PanelClass('mm_signal_flow', {
                     name: '信号流图',
                     icon: 'fa-bezier-curve',
                     condition: { modes: ['machine_max_part'] },
                     default_position: {
-                        slot: 'bottom_bar',
+                        slot: 'bottom',
                         height: 200,
                     },
                     growable: true,
@@ -104,6 +107,15 @@ function registerMode() {
                     component: _mmSignalFlowComponent || (function () { return { template: '<div class="mm-signal-flow"><p>信号流图加载中...</p></div>' }; }),
                 });
                 log.info('registerMode: Panel "信号流图" 已注册到底部栏');
+                // 注册后立即显示，防止因条件评估时机问题导致不可见
+                if (Panels && Panels['mm_signal_flow']) {
+                    try { Panels['mm_signal_flow'].show(); } catch (e) { log.debug('show() 不可用'); }
+                    log.debug('registerMode: mm_signal_flow 状态', {
+                        exists: true,
+                        slot: Panels['mm_signal_flow'].slot,
+                        visible: Panels['mm_signal_flow'].visible,
+                    });
+                }
             }
         } catch (e) {
             log.error('registerMode: 信号流图 Panel 注册失败', e);
@@ -232,8 +244,60 @@ function registerMode() {
 
     registerToolbarActions();
 
+    // 将我们的模式移到模式选择栏最前面（最左侧）
+    moveModeToFront('machine_max_part');
+
     log.info('registerMode: 模式 "零件定义" 已注册');
     return mmMode;
+}
+
+/**
+ * 将指定模式移到模式选择栏最前面（最左侧）
+ *
+ * Blockbench 模式栏使用 Vue 2 的 v-for 遍历 Modes.options 对象，
+ * 渲染顺序由 Object.keys() 的返回顺序决定（即属性插入顺序）。
+ * 由于插件模式总是在内置模式之后注册，会出现在最右侧。
+ * 本函数通过重建对象重排属性顺序，将目标模式置顶。
+ *
+ * @param {string} modeId - 要置顶的模式 ID
+ */
+function moveModeToFront(modeId) {
+    if (typeof Modes === 'undefined' || !Modes.options || !Modes.options[modeId]) {
+        log.warn('moveModeToFront: 模式不可用', { modeId: modeId });
+        return;
+    }
+
+    var keys = Object.keys(Modes.options);
+    if (keys.length <= 1 || keys[0] === modeId) {
+        log.debug('moveModeToFront: 无需调整顺序');
+        return;
+    }
+
+    log.debug('moveModeToFront: 开始重排模式顺序', { modeId: modeId, before: keys });
+
+    // 创建新对象，把目标模式放在最前
+    var ordered = {};
+    ordered[modeId] = Modes.options[modeId];
+    for (var i = 0; i < keys.length; i++) {
+        if (keys[i] !== modeId) {
+            ordered[keys[i]] = Modes.options[keys[i]];
+        }
+    }
+
+    // 更新全局引用
+    Modes.options = ordered;
+
+    // 更新 Vue 响应式数据，触发模式栏 UI 重渲染
+    if (Modes.vue) {
+        if (typeof Vue !== 'undefined' && Vue.set) {
+            Vue.set(Modes.vue, 'options', ordered);
+        } else {
+            Modes.vue.options = ordered;
+        }
+        log.info('moveModeToFront: 模式 "' + modeId + '" 已移至最前', { newOrder: Object.keys(ordered) });
+    } else {
+        log.warn('moveModeToFront: Modes.vue 不可用，UI 可能不会立即更新');
+    }
 }
 
 if (typeof module !== 'undefined' && module.exports) {

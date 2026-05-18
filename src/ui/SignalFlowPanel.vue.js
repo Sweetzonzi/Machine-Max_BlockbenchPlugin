@@ -12,6 +12,8 @@ const { createLogger } = require('../utils/logger.js');
 
 var log = createLogger('SignalFlow');
 
+console.warn('[MM][SignalFlow] 模块加载，Vue=' + (typeof Vue) + ', TEMPLATE_SIGNAL_FLOW_PANEL=' + (typeof TEMPLATE_SIGNAL_FLOW_PANEL !== 'undefined' ? 'defined' : 'undefined'));
+
 Vue.component('mm-signal-flow-panel', {
     template: typeof TEMPLATE_SIGNAL_FLOW_PANEL !== 'undefined' ? TEMPLATE_SIGNAL_FLOW_PANEL : '<div class="mm-signal-flow"><p>信号流图加载中...</p></div>',
     data: function () {
@@ -78,6 +80,10 @@ Vue.component('mm-signal-flow-panel', {
     },
     mounted: function () {
         var self = this;
+        console.warn('[MM][SignalFlow] 组件已挂载 mounted()', {
+            hasConfig: !!this.config,
+            hasTemplate: typeof TEMPLATE_SIGNAL_FLOW_PANEL !== 'undefined',
+        });
         log.debug('信号流图面板已挂载');
         self.loadConfigData();
         self.onSelectionChange();

@@ -11657,6 +11657,7 @@
       var { getConfig, loadConfig } = require_persistence();
       var { createLogger: createLogger2 } = require_logger();
       var log2 = createLogger2("SignalFlow");
+      console.warn("[MM][SignalFlow] \u6A21\u5757\u52A0\u8F7D\uFF0CVue=" + typeof Vue + ", TEMPLATE_SIGNAL_FLOW_PANEL=" + (true ? "defined" : "undefined"));
       Vue.component("mm-signal-flow-panel", {
         template: true ? '<div class="mm-signal-flow" v-if="config">\n    <div class="mm-signal-flow-header">\n        <div class="mm-signal-flow-title">\n            <span class="mm-flow-icon">\u2B21</span>\n            \u4FE1\u53F7\u6D41\u56FE\n        </div>\n        <div class="mm-signal-flow-meta" v-if="hasActiveSelection">\n            <span class="mm-flow-meta-item">{{ activePartId }}</span>\n            <span class="mm-flow-meta-sep">/</span>\n            <span class="mm-flow-meta-item">{{ activeVariantName }}</span>\n        </div>\n    </div>\n\n    <div class="mm-signal-flow-body">\n        <!-- Phase 1: \u7A7A\u58F3\u5360\u4F4D \u2014 \u663E\u793A\u7EDF\u8BA1\u4FE1\u606F -->\n        <div class="mm-signal-flow-placeholder" v-if="hasActiveSelection">\n            <div class="mm-flow-placeholder-icon">\u229E</div>\n            <div class="mm-flow-placeholder-text">\u4FE1\u53F7\u62D3\u6251\u9884\u89C8 (Phase 2 \u2014 \u5F85\u5B9E\u73B0)</div>\n            <div class="mm-flow-stats">\n                <div class="mm-flow-stat">\n                    <span class="mm-flow-stat-value">{{ topologyStats.subParts }}</span>\n                    <span class="mm-flow-stat-label">\u5B50\u96F6\u4EF6</span>\n                </div>\n                <div class="mm-flow-stat">\n                    <span class="mm-flow-stat-value">{{ topologyStats.connectors }}</span>\n                    <span class="mm-flow-stat-label">\u8FDE\u63A5\u70B9</span>\n                </div>\n                <div class="mm-flow-stat">\n                    <span class="mm-flow-stat-value">{{ topologyStats.subsystems }}</span>\n                    <span class="mm-flow-stat-label">\u5B50\u7CFB\u7EDF</span>\n                </div>\n            </div>\n            <p class="mm-flow-placeholder-hint">\n                \u540E\u7EED\u5C06\u5728\u6B64\u5904\u5C55\u793A\u5F53\u524D\u96F6\u4EF6\u53D8\u4F53\u5185\u7684\u4FE1\u53F7\u6D41\u5411\u62D3\u6251\u56FE\n            </p>\n        </div>\n\n        <!-- \u672A\u9009\u4E2D\u96F6\u4EF6\u65F6 -->\n        <div class="mm-signal-flow-empty" v-else>\n            <p>\u8BF7\u9009\u62E9\u6216\u65B0\u5EFA\u4E00\u4E2A\u96F6\u4EF6</p>\n        </div>\n    </div>\n</div>\n<div class="mm-signal-flow mm-signal-flow-empty" v-else>\n    <p>\u6B63\u5728\u52A0\u8F7D\u914D\u7F6E...</p>\n</div>' : '<div class="mm-signal-flow"><p>\u4FE1\u53F7\u6D41\u56FE\u52A0\u8F7D\u4E2D...</p></div>',
         data: function() {
@@ -11723,6 +11724,10 @@
         },
         mounted: function() {
           var self = this;
+          console.warn("[MM][SignalFlow] \u7EC4\u4EF6\u5DF2\u6302\u8F7D mounted()", {
+            hasConfig: !!this.config,
+            hasTemplate: true
+          });
           log2.debug("\u4FE1\u53F7\u6D41\u56FE\u9762\u677F\u5DF2\u6302\u8F7D");
           self.loadConfigData();
           self.onSelectionChange();
@@ -11833,18 +11838,21 @@
             log2.error("registerMode: Panel \u6CE8\u518C\u5931\u8D25", e);
           }
         }
+        console.warn("[MM][Mode] \u5C1D\u8BD5\u6CE8\u518C\u4FE1\u53F7\u6D41\u56FE Panel, exists=" + !!(Panels && Panels["mm_signal_flow"]));
         if (!(Panels && Panels["mm_signal_flow"])) {
           try {
             var PanelClass = typeof Panel !== "undefined" ? Panel : typeof Blockbench !== "undefined" ? Blockbench.Panel : null;
             if (!PanelClass) {
               log2.warn("registerMode: Panel \u7C7B\u4E0D\u53EF\u7528\uFF0C\u8DF3\u8FC7\u4FE1\u53F7\u6D41\u56FE\u9762\u677F\u6CE8\u518C");
+              console.warn("[MM][Mode] Panel \u7C7B\u4E0D\u53EF\u7528");
             } else {
+              console.warn("[MM][Mode] \u6CE8\u518C\u4FE1\u53F7\u6D41\u56FE Panel, component=" + typeof _mmSignalFlowComponent);
               new PanelClass("mm_signal_flow", {
                 name: "\u4FE1\u53F7\u6D41\u56FE",
                 icon: "fa-bezier-curve",
                 condition: { modes: ["machine_max_part"] },
                 default_position: {
-                  slot: "bottom_bar",
+                  slot: "bottom",
                   height: 200
                 },
                 growable: true,
@@ -11854,6 +11862,18 @@
                 })
               });
               log2.info('registerMode: Panel "\u4FE1\u53F7\u6D41\u56FE" \u5DF2\u6CE8\u518C\u5230\u5E95\u90E8\u680F');
+              if (Panels && Panels["mm_signal_flow"]) {
+                try {
+                  Panels["mm_signal_flow"].show();
+                } catch (e) {
+                  log2.debug("show() \u4E0D\u53EF\u7528");
+                }
+                log2.debug("registerMode: mm_signal_flow \u72B6\u6001", {
+                  exists: true,
+                  slot: Panels["mm_signal_flow"].slot,
+                  visible: Panels["mm_signal_flow"].visible
+                });
+              }
             }
           } catch (e) {
             log2.error("registerMode: \u4FE1\u53F7\u6D41\u56FE Panel \u6CE8\u518C\u5931\u8D25", e);
@@ -11972,8 +11992,39 @@
           }
         });
         registerToolbarActions();
+        moveModeToFront("machine_max_part");
         log2.info('registerMode: \u6A21\u5F0F "\u96F6\u4EF6\u5B9A\u4E49" \u5DF2\u6CE8\u518C');
         return mmMode;
+      }
+      function moveModeToFront(modeId) {
+        if (typeof Modes === "undefined" || !Modes.options || !Modes.options[modeId]) {
+          log2.warn("moveModeToFront: \u6A21\u5F0F\u4E0D\u53EF\u7528", { modeId });
+          return;
+        }
+        var keys = Object.keys(Modes.options);
+        if (keys.length <= 1 || keys[0] === modeId) {
+          log2.debug("moveModeToFront: \u65E0\u9700\u8C03\u6574\u987A\u5E8F");
+          return;
+        }
+        log2.debug("moveModeToFront: \u5F00\u59CB\u91CD\u6392\u6A21\u5F0F\u987A\u5E8F", { modeId, before: keys });
+        var ordered = {};
+        ordered[modeId] = Modes.options[modeId];
+        for (var i = 0; i < keys.length; i++) {
+          if (keys[i] !== modeId) {
+            ordered[keys[i]] = Modes.options[keys[i]];
+          }
+        }
+        Modes.options = ordered;
+        if (Modes.vue) {
+          if (typeof Vue !== "undefined" && Vue.set) {
+            Vue.set(Modes.vue, "options", ordered);
+          } else {
+            Modes.vue.options = ordered;
+          }
+          log2.info('moveModeToFront: \u6A21\u5F0F "' + modeId + '" \u5DF2\u79FB\u81F3\u6700\u524D', { newOrder: Object.keys(ordered) });
+        } else {
+          log2.warn("moveModeToFront: Modes.vue \u4E0D\u53EF\u7528\uFF0CUI \u53EF\u80FD\u4E0D\u4F1A\u7ACB\u5373\u66F4\u65B0");
+        }
       }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
