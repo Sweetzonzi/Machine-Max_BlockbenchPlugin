@@ -7002,9 +7002,31 @@
         if (sp.hit_boxes && Object.keys(sp.hit_boxes).length > 0) out.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
         if (sp.interact_boxes && Object.keys(sp.interact_boxes).length > 0) out.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
         if (sp.connectors && Object.keys(sp.connectors).length > 0) out.connectors = _cleanConnectors(sp.connectors);
-        if (sp.subsystems && Object.keys(sp.subsystems).length > 0) out.subsystems = sp.subsystems;
+        if (sp.subsystems && Object.keys(sp.subsystems).length > 0) out.subsystems = _cleanSubsystems(sp.subsystems);
         if (sp.hydrodynamics) out.hydrodynamics = sp.hydrodynamics;
         return out;
+      }
+      function _cleanSubsystems(subsystems) {
+        var result = {};
+        for (var key in subsystems) {
+          var ss = subsystems[key];
+          var cleaned = {};
+          if (ss.type) cleaned.type = ss.type;
+          if (ss.definition) cleaned.definition = ss.definition;
+          if (ss.locator) cleaned.locator = ss.locator;
+          if (ss.connector) cleaned.connector = ss.connector;
+          for (var sf in ss) {
+            if (sf.endsWith("_outputs") || sf.endsWith("_inputs") || sf === "power_output") {
+              var val = ss[sf];
+              if (val === void 0 || val === null) continue;
+              if (val === "") continue;
+              if (typeof val === "object" && Object.keys(val).length === 0) continue;
+              cleaned[sf] = val;
+            }
+          }
+          result[key] = cleaned;
+        }
+        return result;
       }
       function _cleanConnectors(connectors) {
         var result = {};

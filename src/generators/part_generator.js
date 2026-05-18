@@ -80,10 +80,45 @@ function buildSubPartOutput(sp) {
     if (sp.hit_boxes && Object.keys(sp.hit_boxes).length > 0) out.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
     if (sp.interact_boxes && Object.keys(sp.interact_boxes).length > 0) out.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
     if (sp.connectors && Object.keys(sp.connectors).length > 0) out.connectors = _cleanConnectors(sp.connectors);
-    if (sp.subsystems && Object.keys(sp.subsystems).length > 0) out.subsystems = sp.subsystems;
+    if (sp.subsystems && Object.keys(sp.subsystems).length > 0) out.subsystems = _cleanSubsystems(sp.subsystems);
     if (sp.hydrodynamics) out.hydrodynamics = sp.hydrodynamics;
 
     return out;
+}
+
+/**
+ * 清理子系统导出数据：只保留实例级别的字段，过滤静态属性。
+ *
+ * MachineMax 数据模型中，子系统的静态属性（如 max_power、max_torque）
+ * 属于 subsystem_defs 定义文件，不应出现在子零件 subsystems 中。
+ * 子系统实例只应有：type/definition/locator/connector + 信号路由字段。
+ *
+ * @param {Object<string, Object>} subsystems - 子系统映射
+ * @returns {Object<string, Object>} 清理后的子系统映射
+ */
+function _cleanSubsystems(subsystems) {
+    var result = {};
+    for (var key in subsystems) {
+        var ss = subsystems[key];
+        var cleaned = {};
+        // 实例白名单字段
+        if (ss.type) cleaned.type = ss.type;
+        if (ss.definition) cleaned.definition = ss.definition;
+        if (ss.locator) cleaned.locator = ss.locator;
+        if (ss.connector) cleaned.connector = ss.connector;
+        // 信号路由字段：所有以 _outputs/_inputs 结尾的字段 + power_output
+        for (var sf in ss) {
+            if (sf.endsWith('_outputs') || sf.endsWith('_inputs') || sf === 'power_output') {
+                var val = ss[sf];
+                if (val === undefined || val === null) continue;
+                if (val === '') continue;
+                if (typeof val === 'object' && Object.keys(val).length === 0) continue;
+                cleaned[sf] = val;
+            }
+        }
+        result[key] = cleaned;
+    }
+    return result;
 }
 
 /**
