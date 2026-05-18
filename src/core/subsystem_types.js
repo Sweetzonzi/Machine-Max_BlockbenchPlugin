@@ -1,25 +1,28 @@
 /**
- * 子系统类型注册表
+ * 子系统类型注册表（统一数据源）
  *
- * 定义所有子系统类型的元数据：名称、分类、字段列表、默认值、
- * 需要的绑定类型（locator/connector）、信号输出/输入字段。
+ * 每个条目的 dynamicFields 定义了该子系统类型的动态属性字段列表，
+ * 与 Java 端 common/mech/subsystem/attr/dynamic_attr/ 下各 *SubsystemAttr
+ * 类的 RecordCodecBuilder 一一对应。
  *
- * 从 generators/subsystem_generator.js 的 getTypeSpecificFields() 抽离并扩展。
- * generator 改为委托本模块的函数。
+ * 面板、导出过滤器、创建对话框均透过本模块提供的 API 读取字段定义，
+ * 新增类型只需在本数组末尾追加一条，无需修改任何其他文件。
  */
 
 /**
  * 子系统类型元数据条目结构：
  * {
- *   id: 'machine_max:engine',           // 类型 ID
+ *   id: 'machine_max:engine',           // 类型 ID，与 Java SubsystemTypes 枚举 + 资源位置对应
  *   displayName: '发动机',               // 中文显示名
  *   category: 'power',                  // 分类：power | control | utility | experimental
- *   fields: [...],                      // 类型专属字段列表
- *   defaults: {...},                    // 类型专属字段默认值
- *   needsLocator: false,                // 是否需要 locator 字段
- *   needsConnector: false,              // 是否需要 connector 字段
- *   signalOutputs: [...],               // 信号输出字段名列表
- *   signalInputs: [],                   // 信号输入字段名列表
+ *   dynamicFields: [{                   // 动态属性字段描述符列表
+ *       field: string,                  //   JSON 键名，与 Java RecordCodecBuilder.fieldOf() 一致
+ *       label: string,                  //   面板中文标签
+ *       editor: string,                 //   编辑器类型（见 EDITOR_LABELS）
+ *       required: boolean,              //   Java 端 fieldOf（必填）或 optionalFieldOf（可选）
+ *       defaultValue: any,              //   创建实例时的默认值
+ *       options: string[],              //   (仅 editor === 'enum_selector') 可选值列表
+ *   }],
  * }
  */
 
@@ -29,265 +32,204 @@ var SUBSYSTEM_TYPES = [
         id: 'machine_max:engine',
         displayName: '发动机',
         category: 'power',
-        fields: ['max_power', 'max_torque', 'idle_rpm', 'idle_torque_ratio', 'peak_torque_rpm', 'red_line_rpm', 'red_line_torque_ratio', 'inertia', 'four_stroke', 'cylinder_count', 'drag_coefficients', 'control_channels', 'sound_map'],
-        defaults: {
-            max_power: 100.0, max_torque: 200.0, idle_rpm: 800,
-            idle_torque_ratio: 0.15, peak_torque_rpm: 3500,
-            red_line_rpm: 7000, red_line_torque_ratio: 0.85,
-            inertia: 0.3, four_stroke: true, cylinder_count: 4,
-        },
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: ['power_output', 'speed_outputs'],
-        signalInputs: [],
+        dynamicFields: [
+            { field: 'definition',    label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'power_output',  label: '功率输出目标',  editor: 'power_target',        required: true,  defaultValue: '' },
+            { field: 'speed_outputs', label: '转速信号输出',  editor: 'signal_targets',       required: false, defaultValue: { engine_speed: ['subpart', 'vehicle'] } },
+        ],
     },
     {
         id: 'machine_max:motor',
         displayName: '电动机',
         category: 'power',
-        fields: ['max_power', 'max_torque', 'red_line_rpm', 'inertia'],
-        defaults: {
-            max_power: 50.0, max_torque: 100.0, red_line_rpm: 8000, inertia: 0.1,
-        },
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: ['power_output', 'speed_outputs'],
-        signalInputs: [],
+        dynamicFields: [
+            { field: 'definition',    label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'power_output',  label: '功率输出目标',  editor: 'power_target',        required: true,  defaultValue: '' },
+            { field: 'speed_outputs', label: '转速信号输出',  editor: 'signal_targets',       required: false, defaultValue: { motor_speed: ['subpart', 'vehicle'] } },
+        ],
     },
     {
         id: 'machine_max:battery',
         displayName: '电池',
         category: 'power',
-        fields: ['capacity', 'voltage', 'max_discharge', 'max_charge'],
-        defaults: {
-            capacity: 10000, voltage: 48, max_discharge: 500, max_charge: 500,
-        },
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: ['power_output'],
-        signalInputs: [],
+        dynamicFields: [
+            { field: 'definition',    label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
+        ],
+    },
+    {
+        id: 'machine_max:gearbox',
+        displayName: '变速箱',
+        category: 'power',
+        dynamicFields: [
+            { field: 'definition',    label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'power_output',  label: '功率输出目标', editor: 'power_target',        required: true,  defaultValue: '' },
+            { field: 'gear_outputs',  label: '挡位信号输出', editor: 'signal_targets',       required: false, defaultValue: { gear: ['subpart', 'vehicle'] } },
+        ],
+    },
+    {
+        id: 'machine_max:transmission',
+        displayName: '分动箱',
+        category: 'power',
+        dynamicFields: [
+            { field: 'definition',    label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'power_outputs', label: '功率输出分配', editor: 'power_outputs_map',    required: true,  defaultValue: {} },
+        ],
+    },
+    {
+        id: 'machine_max:motor_controller',
+        displayName: '电机控制器',
+        category: 'power',
+        dynamicFields: [
+            { field: 'definition',    label: '型号定义',    editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'power_output',  label: '功率输出目标',editor: 'power_target',        required: true,  defaultValue: '' },
+            { field: 'speed_outputs', label: '转速信号输出',editor: 'signal_targets',       required: false, defaultValue: { motor_speed: ['subpart', 'vehicle'] } },
+        ],
     },
     // ===== control 分类 =====
     {
         id: 'machine_max:car_controller',
         displayName: '车辆控制器',
         category: 'control',
-        fields: ['steer_speed', 'steer_return_speed', 'max_steer_angle'],
-        defaults: {
-            steer_speed: 5.0, steer_return_speed: 10.0, max_steer_angle: 35.0,
-        },
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: ['control_outputs', 'speed_outputs', 'throttle_outputs', 'brake_outputs', 'steering_outputs', 'handbrake_outputs'],
-        signalInputs: [],
+        dynamicFields: [
+            { field: 'definition',       label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'control_outputs',  label: '控制信号输出',  editor: 'signal_targets',      required: true,  defaultValue: { car_control: [] } },
+            { field: 'speed_outputs',    label: '速度信号输出',  editor: 'signal_targets',      required: false, defaultValue: { vehicle_speed: ['subpart', 'vehicle'] } },
+            { field: 'throttle_outputs', label: '油门信号输出',  editor: 'signal_targets',      required: false, defaultValue: { throttle: ['subpart', 'vehicle'] } },
+            { field: 'steering_outputs', label: '转向信号输出',  editor: 'signal_targets',      required: false, defaultValue: { steering: ['subpart', 'vehicle'] } },
+            { field: 'brake_outputs',    label: '刹车信号输出',  editor: 'signal_targets',      required: false, defaultValue: { brake: ['subpart', 'vehicle'] } },
+            { field: 'handbrake_outputs',label: '手刹信号输出',  editor: 'signal_targets',      required: false, defaultValue: { handbrake: ['subpart', 'vehicle'] } },
+        ],
     },
     {
         id: 'machine_max:motorbike_controller',
         displayName: '摩托车控制器',
         category: 'control',
-        fields: ['lean_angle_max', 'lean_speed'],
-        defaults: {
-            lean_angle_max: 30.0, lean_speed: 5.0,
-        },
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: ['control_outputs', 'speed_outputs', 'throttle_outputs', 'brake_outputs', 'steering_outputs'],
-        signalInputs: [],
+        dynamicFields: [
+            { field: 'definition',       label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'control_outputs',  label: '控制信号输出',  editor: 'signal_targets',      required: true,  defaultValue: { car_control: [] } },
+            { field: 'speed_outputs',    label: '速度信号输出',  editor: 'signal_targets',      required: false, defaultValue: { vehicle_speed: ['subpart', 'vehicle'] } },
+            { field: 'throttle_outputs', label: '油门信号输出',  editor: 'signal_targets',      required: false, defaultValue: { throttle: ['subpart', 'vehicle'] } },
+            { field: 'steering_outputs', label: '转向信号输出',  editor: 'signal_targets',      required: false, defaultValue: { steering: ['subpart', 'vehicle'] } },
+            { field: 'brake_outputs',    label: '刹车信号输出',  editor: 'signal_targets',      required: false, defaultValue: { brake: ['subpart', 'vehicle'] } },
+            { field: 'handbrake_outputs',label: '手刹信号输出',  editor: 'signal_targets',      required: false, defaultValue: { handbrake: ['subpart', 'vehicle'] } },
+        ],
     },
     {
         id: 'machine_max:signal_convert',
         displayName: '信号转换器',
         category: 'control',
-        fields: ['mappings'],
-        defaults: {},
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: [],
-        signalInputs: ['control_inputs'],
-    },
-    {
-        id: 'machine_max:motor_controller',
-        displayName: '电机控制器',
-        category: 'control',
-        fields: ['power_distribution', 'speed_control'],
-        defaults: {
-            power_distribution: 1.0, speed_control: 'rpm',
-        },
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: ['power_output', 'speed_outputs'],
-        signalInputs: ['control_inputs'],
+        dynamicFields: [
+            { field: 'definition', label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
+        ],
     },
     // ===== utility 分类 =====
     {
-        id: 'machine_max:gearbox',
-        displayName: '变速箱',
-        category: 'power',
-        fields: ['forward_gears', 'reverse_gears', 'shift_time', 'shift_speed'],
-        defaults: {
-            forward_gears: 6, reverse_gears: 1, shift_time: 0.3, shift_speed: 0.0,
-        },
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: ['power_output', 'gear_outputs'],
-        signalInputs: ['control_inputs'],
-    },
-    {
-        id: 'machine_max:transmission',
-        displayName: '分动箱',
-        category: 'power',
-        fields: ['efficiency', 'front_split', 'rear_split', 'center_split'],
-        defaults: {
-            efficiency: 0.95, front_split: 0.5, rear_split: 0.5, center_split: 0.5,
-        },
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: ['power_outputs'],
-        signalInputs: ['control_inputs'],
-    },
-    {
         id: 'machine_max:wheel_driver',
         displayName: '轮胎驱动器',
-        category: 'power',
-        fields: ['friction', 'suspension_stiffness', 'suspension_damping', 'suspension_travel', 'wheel_radius', 'wheel_width'],
-        defaults: {
-            friction: 1.0, suspension_stiffness: 100.0, suspension_damping: 10.0,
-            suspension_travel: 0.2, wheel_radius: 0.35, wheel_width: 0.2,
-        },
-        needsLocator: false,
-        needsConnector: true,
-        signalOutputs: [],
-        signalInputs: ['control_inputs'],
+        category: 'utility',
+        dynamicFields: [
+            { field: 'definition',             label: '型号定义',        editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'connector',              label: '关联连接点',      editor: 'connector_selector',  required: true,  defaultValue: '' },
+            { field: 'roll_speed_outputs',     label: '滚动速度信号输出',editor: 'signal_targets',      required: false, defaultValue: {} },
+            { field: 'steering_angle_outputs', label: '转向角度信号输出',editor: 'signal_targets',      required: false, defaultValue: {} },
+        ],
     },
     {
         id: 'machine_max:seat',
         displayName: '座位',
         category: 'utility',
-        fields: ['mount_offset', 'view_offset', 'eye_offset', 'player_scale'],
-        defaults: {
-            mount_offset: [0, 0, 0], view_offset: [0, 0, 0],
-            eye_offset: [0, 0, 0], player_scale: 1.0,
-        },
-        needsLocator: true,
-        needsConnector: false,
-        signalOutputs: ['move_outputs', 'regular_outputs', 'aim_outputs', 'passenger_num_outputs'],
-        signalInputs: [],
+        dynamicFields: [
+            { field: 'definition',           label: '型号定义',    editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'locator',              label: '关联定位器',  editor: 'locator_selector',    required: true,  defaultValue: '' },
+            { field: 'move_outputs',         label: '移动信号输出',editor: 'signal_targets',      required: false, defaultValue: { move_control: [] } },
+            { field: 'aim_outputs',          label: '瞄准信号输出',editor: 'signal_targets',      required: false, defaultValue: { aim: [] } },
+            { field: 'regular_outputs',      label: '常规信号输出',editor: 'signal_targets',      required: false, defaultValue: { regular_control: [] } },
+            { field: 'passenger_num_outputs',label: '乘客数信号输出',editor: 'signal_targets',     required: false, defaultValue: { passenger_num: ['subpart', 'vehicle'] } },
+        ],
     },
     {
         id: 'machine_max:lighting',
         displayName: '灯光',
         category: 'utility',
-        fields: ['radius', 'color', 'intensity', 'falloff', 'flicker', 'shadow'],
-        defaults: {
-            radius: 10.0, color: '#ffffff', intensity: 1.0, falloff: 1.0, flicker: false, shadow: false,
-        },
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: [],
-        signalInputs: ['control_inputs'],
+        dynamicFields: [
+            { field: 'definition', label: '型号定义',   editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'locator',    label: '光源定位器', editor: 'locator_selector',    required: false, defaultValue: '' },
+        ],
     },
     {
         id: 'machine_max:item_storage',
         displayName: '物品存储',
         category: 'utility',
-        fields: ['rows', 'columns', 'filter'],
-        defaults: {
-            rows: 3, columns: 9, filter: '',
-        },
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: [],
-        signalInputs: [],
+        dynamicFields: [
+            { field: 'definition', label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
+        ],
     },
     {
         id: 'machine_max:basic',
         displayName: '基础（无额外面板）',
         category: 'utility',
-        fields: [],
-        defaults: {},
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: [],
-        signalInputs: [],
+        dynamicFields: [
+            { field: 'definition', label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
+        ],
     },
     {
         id: 'machine_max:joint',
         displayName: '关节',
         category: 'utility',
-        fields: ['torque', 'speed', 'angle_limit', 'axis'],
-        defaults: {
-            torque: 100.0, speed: 1.0, angle_limit: 90.0, axis: 'y',
-        },
-        needsLocator: false,
-        needsConnector: true,
-        signalOutputs: [],
-        signalInputs: ['control_inputs'],
+        dynamicFields: [
+            { field: 'definition',      label: '型号定义',   editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'locator',         label: '关联定位器', editor: 'locator_selector',    required: true,  defaultValue: '' },
+            { field: 'rotation_order',  label: '旋转顺序',   editor: 'enum_selector',       required: true,  defaultValue: 'XYZ',
+              options: ['XYZ', 'XZY', 'YXZ', 'ZYX', 'ZXY', 'YZX'] },
+            { field: 'axes',            label: '关节轴参数', editor: 'json_textarea',        required: true,  defaultValue: {} },
+        ],
     },
     // ===== experimental 分类 =====
     {
         id: 'machine_max:camera',
         displayName: '摄像头',
         category: 'experimental',
-        fields: ['fov', 'clip_near', 'clip_far', 'follow'],
-        defaults: {
-            fov: 70.0, clip_near: 0.1, clip_far: 100.0, follow: '',
-        },
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: [],
-        signalInputs: [],
+        dynamicFields: [
+            { field: 'definition', label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
+        ],
     },
     {
         id: 'machine_max:javascript',
         displayName: 'JavaScript 脚本',
         category: 'experimental',
-        fields: ['script'],
-        defaults: {
-            script: '',
-        },
-        needsLocator: false,
-        needsConnector: false,
-        signalOutputs: [],
-        signalInputs: [],
+        dynamicFields: [
+            { field: 'definition', label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'script',     label: '脚本内容', editor: 'text_input',           required: false, defaultValue: '' },
+        ],
     },
     {
         id: 'machine_max:turret',
         displayName: '炮塔',
         category: 'experimental',
-        fields: ['yaw_speed', 'pitch_speed', 'yaw_limit', 'pitch_limit'],
-        defaults: {
-            yaw_speed: 30.0, pitch_speed: 20.0, yaw_limit: 180.0, pitch_limit: 45.0,
-        },
-        needsLocator: true,
-        needsConnector: true,
-        signalOutputs: [],
-        signalInputs: ['control_inputs'],
+        dynamicFields: [
+            { field: 'definition',       label: '型号定义',    editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'connector',        label: '关联连接点',  editor: 'connector_selector',  required: true,  defaultValue: '' },
+            { field: 'rotation_outputs', label: '角度反馈输出',editor: 'signal_targets',       required: false, defaultValue: {} },
+        ],
     },
     {
         id: 'machine_max:fire_controller',
         displayName: '火控系统',
         category: 'experimental',
-        fields: ['fire_modes', 'rate_of_fire', 'ammo_types'],
-        defaults: {
-            fire_modes: ['single'], rate_of_fire: 1.0, ammo_types: [],
-        },
-        needsLocator: true,
-        needsConnector: true,
-        signalOutputs: ['fire_outputs'],
-        signalInputs: ['control_inputs'],
+        dynamicFields: [
+            { field: 'definition',      label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'control_outputs', label: '控制信号输出', editor: 'signal_targets',       required: false, defaultValue: { fire_control: [] } },
+        ],
     },
     {
         id: 'machine_max:launcher',
         displayName: '发射器',
         category: 'experimental',
-        fields: ['launch_speed', 'ammo_type', 'reload_time'],
-        defaults: {
-            launch_speed: 20.0, ammo_type: '', reload_time: 2.0,
-        },
-        needsLocator: true,
-        needsConnector: true,
-        signalOutputs: [],
-        signalInputs: ['control_inputs'],
+        dynamicFields: [
+            { field: 'definition',    label: '型号定义',   editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'locator',       label: '发射点定位器',editor: 'locator_selector',    required: true,  defaultValue: '' },
+            { field: 'ammo_outputs',  label: '弹药反馈输出',editor: 'signal_targets',       required: false, defaultValue: {} },
+        ],
     },
 ];
 
@@ -298,6 +240,10 @@ var TYPE_MAP = {};
         TYPE_MAP[SUBSYSTEM_TYPES[i].id] = SUBSYSTEM_TYPES[i];
     }
 })();
+
+// =============================================================================
+// 公共工具函数
+// =============================================================================
 
 /**
  * 获取指定子系统类型的完整元数据
@@ -310,7 +256,7 @@ function getTypeMeta(typeId) {
 
 /**
  * 获取所有子系统类型列表
- * @returns {Object[]} 全部类型条目数组
+ * @returns {Object[]} 全部类型条目数组（浅拷贝）
  */
 function getAllTypes() {
     return SUBSYSTEM_TYPES.slice();
@@ -318,32 +264,11 @@ function getAllTypes() {
 
 /**
  * 按分类筛选子系统类型
- * @param {string} category - 分类名：'power' | 'control' | 'utility' | 'experimental'
+ * @param {string} category - 分类名
  * @returns {Object[]} 筛选后的类型条目数组
  */
 function getTypesByCategory(category) {
     return SUBSYSTEM_TYPES.filter(function (t) { return t.category === category; });
-}
-
-/**
- * 获取指定子系统类型的特有字段列表（兼容旧接口）
- * @param {string} typeId - 类型 ID
- * @returns {string[]} 字段键名数组
- */
-function getTypeSpecificFields(typeId) {
-    var meta = TYPE_MAP[typeId];
-    return meta ? meta.fields.slice() : [];
-}
-
-/**
- * 获取指定子系统类型的默认值
- * @param {string} typeId - 类型 ID
- * @returns {Object} 默认值对象（深拷贝）
- */
-function getTypeDefaults(typeId) {
-    var meta = TYPE_MAP[typeId];
-    if (!meta) return {};
-    return JSON.parse(JSON.stringify(meta.defaults));
 }
 
 /**
@@ -362,30 +287,161 @@ function getTypesGroupedByCategory() {
 }
 
 /**
+ * 获取指定子系统类型的动态属性字段描述符列表
+ * @param {string} typeId - 类型 ID
+ * @returns {Object[]} 字段描述符数组，未知类型返回空数组
+ */
+function getDynamicFields(typeId) {
+    var meta = TYPE_MAP[typeId];
+    return meta ? meta.dynamicFields.slice() : [];
+}
+
+/**
+ * 获取指定子系统类型的动态属性字段名列表
+ * 供导出过滤器等只关心字段名而不关心元数据的地方使用
+ * @param {string} typeId - 类型 ID
+ * @returns {string[]} 字段名数组
+ */
+function getDynamicFieldNames(typeId) {
+    var fields = getDynamicFields(typeId);
+    var names = [];
+    for (var i = 0; i < fields.length; i++) {
+        names.push(fields[i].field);
+    }
+    return names;
+}
+
+/**
+ * 获取指定子系统类型的字段默认值对象（兼容旧接口 getTypeDefaults）
+ * @param {string} typeId - 类型 ID
+ * @returns {Object} 默认值对象（深拷贝，不包含 definition 和 type）
+ */
+function getTypeDefaults(typeId) {
+    var fields = getDynamicFields(typeId);
+    var result = {};
+    for (var i = 0; i < fields.length; i++) {
+        var f = fields[i];
+        if (f.field === 'definition') continue;
+        result[f.field] = JSON.parse(JSON.stringify(f.defaultValue));
+    }
+    return result;
+}
+
+/**
+ * 获取指定子系统类型的特有字段列表（兼容旧接口 getTypeSpecificFields）
+ * @param {string} typeId - 类型 ID
+ * @returns {string[]} 字段键名数组
+ */
+function getTypeSpecificFields(typeId) {
+    return getDynamicFieldNames(typeId);
+}
+
+/**
+ * 判断子系统类型是否需要选择定位器（locator）
+ * @param {string} typeId
+ * @returns {boolean}
+ */
+function needsLocator(typeId) {
+    var fields = getDynamicFields(typeId);
+    for (var i = 0; i < fields.length; i++) {
+        if (fields[i].editor === 'locator_selector') return true;
+    }
+    return false;
+}
+
+/**
+ * 判断子系统类型是否需要选择连接点（connector）
+ * @param {string} typeId
+ * @returns {boolean}
+ */
+function needsConnector(typeId) {
+    var fields = getDynamicFields(typeId);
+    for (var i = 0; i < fields.length; i++) {
+        if (fields[i].editor === 'connector_selector') return true;
+    }
+    return false;
+}
+
+/**
+ * 获取子系统类型需要显示信号编辑器字段名列表（兼容旧接口 signalOutputs）
+ *
+ * 返回 editor 为 signal_targets 或 power_target 或 power_outputs_map 的字段名，
+ * 这些字段需要信号频道编辑器或目标选择器 UI。
+ *
+ * @param {string} typeId
+ * @returns {string[]}
+ */
+function getSignalOutputFieldNames(typeId) {
+    var fields = getDynamicFields(typeId);
+    var result = [];
+    for (var i = 0; i < fields.length; i++) {
+        var f = fields[i];
+        // 只有非 definition/非引用选择器的字段需要信号编辑器
+        if (f.editor === 'signal_targets' || f.editor === 'power_target' || f.editor === 'power_outputs_map') {
+            result.push(f.field);
+        }
+    }
+    return result;
+}
+
+/**
+ * 编辑器类型的中文标签
+ */
+var EDITOR_LABELS = {
+    definition_selector: '型号定义选择器',
+    locator_selector: '定位器选择器',
+    connector_selector: '连接点选择器',
+    power_target: '功率目标选择器',
+    signal_targets: '信号频道编辑器',
+    power_outputs_map: '功率输出映射编辑器',
+    enum_selector: '枚举下拉菜单',
+    text_input: '文本输入框',
+    json_textarea: 'JSON 编辑框',
+};
+
+/**
+ * 获取编辑器类型的中文标签
+ * @param {string} editorType - 编辑器类型标识
+ * @returns {string}
+ */
+function getEditorLabel(editorType) {
+    return EDITOR_LABELS[editorType] || editorType;
+}
+
+/** 分类颜色映射 */
+var CATEGORY_COLORS = {
+    power: '#e67e22',
+    control: '#3498db',
+    utility: '#2ecc71',
+    experimental: '#9b59b6',
+};
+
+/**
+ * 获取类型在面板上的显示颜色
+ * @param {string} typeId
+ * @returns {string} CSS 色值
+ */
+function getTypeColor(typeId) {
+    var meta = TYPE_MAP[typeId];
+    if (!meta) return '#888';
+    return CATEGORY_COLORS[meta.category] || '#888';
+}
+
+/** 分类中文标签 */
+var CATEGORY_LABELS = {
+    power: '动力',
+    control: '控制',
+    utility: '功能',
+    experimental: '实验',
+};
+
+/**
  * 获取类型分类的中文标签
  * @param {string} category
  * @returns {string}
  */
 function getCategoryLabel(category) {
-    var labels = {
-        power: '动力',
-        control: '控制',
-        utility: '功能',
-        experimental: '实验',
-    };
-    return labels[category] || category;
-}
-
-function getTypeColor(typeId) {
-    var categoryColors = {
-        power: '#e67e22',
-        control: '#3498db',
-        utility: '#2ecc71',
-        experimental: '#9b59b6',
-    };
-    var meta = TYPE_MAP[typeId];
-    if (!meta) return '#888';
-    return categoryColors[meta.category] || '#888';
+    return CATEGORY_LABELS[category] || category;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -394,10 +450,16 @@ if (typeof module !== 'undefined' && module.exports) {
         getTypeMeta: getTypeMeta,
         getAllTypes: getAllTypes,
         getTypesByCategory: getTypesByCategory,
-        getTypeSpecificFields: getTypeSpecificFields,
-        getTypeDefaults: getTypeDefaults,
         getTypesGroupedByCategory: getTypesGroupedByCategory,
-        getCategoryLabel: getCategoryLabel,
+        getDynamicFields: getDynamicFields,
+        getDynamicFieldNames: getDynamicFieldNames,
+        getTypeDefaults: getTypeDefaults,
+        getTypeSpecificFields: getTypeSpecificFields,
+        needsLocator: needsLocator,
+        needsConnector: needsConnector,
+        getSignalOutputFieldNames: getSignalOutputFieldNames,
+        getEditorLabel: getEditorLabel,
         getTypeColor: getTypeColor,
+        getCategoryLabel: getCategoryLabel,
     };
 }

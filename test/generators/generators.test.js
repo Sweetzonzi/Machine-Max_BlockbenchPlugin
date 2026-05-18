@@ -162,16 +162,16 @@ describe('Subsystem Generator', function () {
 
     describe('getTypeSpecificFields', function () {
 
-        it('engine 类型返回引擎特有字段', function () {
+        it('engine 类型返回引擎动态属性字段', function () {
             var fields = subGen.getTypeSpecificFields('machine_max:engine');
-            expect(fields.indexOf('max_power')).toBeGreaterThan(-1);
-            expect(fields.indexOf('max_torque')).toBeGreaterThan(-1);
-            expect(fields.indexOf('cylinder_count')).toBeGreaterThan(-1);
+            expect(fields.indexOf('definition')).toBeGreaterThan(-1);
+            expect(fields.indexOf('power_output')).toBeGreaterThan(-1);
+            expect(fields.indexOf('speed_outputs')).toBeGreaterThan(-1);
         });
 
-        it('basic 类型返回空数组', function () {
+        it('basic 类型返回基础动态属性字段', function () {
             var fields = subGen.getTypeSpecificFields('machine_max:basic');
-            expect(fields).toEqual([]);
+            expect(fields).toEqual(['definition']);
         });
 
         it('未知类型返回空数组', function () {

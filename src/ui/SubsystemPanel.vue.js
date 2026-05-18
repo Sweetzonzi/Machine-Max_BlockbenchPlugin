@@ -2,13 +2,13 @@
  * 子系统实例属性面板子组件
  * 在子零件面板中点击子系统条目时（虚拟选择）显示
  *
- * 根据子系统 type 动态渲染：
- * - 归属 + 类型 + 型号定义（按类型筛选）
- * - 可选引用字段（locator/connector，仅特定类型）
- * - 信号输出编辑器（来自 subsystem_types.js 的 signalOutputs）
+ * 由 subsystem_types.js 的 dynamicFields 注册表驱动渲染，
+ * 新增子系统类型只需在注册表中添加 dynamicFields 条目，
+ * 无需修改本文件或模板。
  *
- * 静态属性（功率、扭矩等）在型号定义中编辑，
- * 本面板只负责动态属性（信号路由、可选引用）。
+ * 支持编辑器类型：definition_selector, locator_selector, connector_selector,
+ * enum_selector, power_target, power_outputs_map, signal_targets,
+ * text_input, json_textarea。
  */
 var ssTypes = require('../core/subsystem_types.js');
 
@@ -56,10 +56,7 @@ Vue.component('mm-subsystem-panel', {
             var parts = meta.id.split(':');
             return (parts.length > 1 ? parts[1] : parts[0]).substring(0, 6);
         },
-        /**
-         * 按当前子系统类型筛选可用的型号定义
-         * subsystemDefs 中的每个定义都有 type 字段，匹配则纳入
-         */
+        /** 按当前子系统类型筛选可用的型号定义 */
         filteredSubsystemDefs: function () {
             if (!this.typeId || !this.subsystemDefs) return {};
             var result = {};
@@ -75,6 +72,17 @@ Vue.component('mm-subsystem-panel', {
         },
         filteredSubsystemDefsCount: function () {
             return Object.keys(this.filteredSubsystemDefs).length;
+        },
+        /** 排除 definition 后的动态属性字段列表，用于面板循环渲染 */
+        nonDefFields: function () {
+            var meta = this.typeMeta;
+            if (!meta || !meta.dynamicFields) return [];
+            return meta.dynamicFields.filter(function (f) { return f.field !== 'definition'; });
+        },
+        /** 动态属性区块的标题，包含字段数量提示 */
+        dynamicAttrsTitle: function () {
+            var count = this.nonDefFields.length;
+            return '动态属性 (' + count + ' 项)';
         },
         channelHints: function () {
             return [
@@ -110,31 +118,7 @@ Vue.component('mm-subsystem-panel', {
             this.$emit('navigate-to-sub-part', this.parentSubPartKey);
         },
 
-        getSignalLabel: function (sigField) {
-            var labels = {
-                power_output: '功率输出目标',
-                power_outputs: '功率输出分配',
-                speed_outputs: '转速信号输出',
-                control_outputs: '控制信号输出',
-                throttle_outputs: '油门信号输出',
-                brake_outputs: '刹车信号输出',
-                steering_outputs: '转向信号输出',
-                handbrake_outputs: '手刹信号输出',
-                gear_outputs: '挡位信号输出',
-                move_outputs: '移动信号输出',
-                regular_outputs: '常规信号输出',
-                aim_outputs: '瞄准信号输出',
-                passenger_num_outputs: '乘客数信号输出',
-                fire_outputs: '开火信号输出',
-            };
-            return labels[sigField] || sigField;
-        },
-        isSingleTargetSignal: function (sigField) {
-            return sigField === 'power_output';
-        },
-        getSignalValue: function (sigField) {
-            return this.config[sigField] || '';
-        },
+        // ─── 信号频道编辑器（signal_targets） ─────────────────────────────
         getSignalEntries: function (sigField) {
             var val = this.config[sigField];
             if (val && typeof val === 'object' && !Array.isArray(val)) {
@@ -187,6 +171,69 @@ Vue.component('mm-subsystem-panel', {
             if (entries[channel]) {
                 this.$set(entries[channel], index, value);
                 this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
+            }
+        },
+
+        // ─── 功率输出映射编辑器（power_outputs_map，Map<string, number>） ──
+        getPowerOutputEntries: function (field) {
+            var val = this.config[field];
+            if (val && typeof val === 'object') return val;
+            return {};
+        },
+        addPowerOutput: function (field) {
+            var entries = this.getPowerOutputEntries(field);
+            var newName = 'new_target';
+            var idx = 1;
+            while (entries[newName] !== undefined) {
+                newName = 'new_target_' + idx;
+                idx++;
+            }
+            entries[newName] = 1.0;
+            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+        },
+        removePowerOutput: function (field, targetName) {
+            var entries = this.getPowerOutputEntries(field);
+            this.$delete(entries, targetName);
+            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+        },
+        onPowerOutputTargetChange: function (field, oldName, newName) {
+            if (!newName || oldName === newName) return;
+            var entries = this.getPowerOutputEntries(field);
+            var ratio = entries[oldName];
+            if (ratio === undefined) return;
+            this.$delete(entries, oldName);
+            this.$set(entries, newName, ratio);
+            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+        },
+        onPowerOutputRatioChange: function (field, targetName, ratio) {
+            var entries = this.getPowerOutputEntries(field);
+            if (entries[targetName] !== undefined) {
+                this.$set(entries, targetName, ratio);
+                this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            }
+        },
+
+        // ─── JSON 编辑框（json_textarea） ────────────────────────────────
+        formatJsonValue: function (field) {
+            var val = this.config[field];
+            if (val === undefined || val === null) return '';
+            if (typeof val === 'string') return val;
+            try {
+                return JSON.stringify(val, null, 2);
+            } catch (_e) {
+                return String(val);
+            }
+        },
+        onJsonChange: function (field, text) {
+            if (!text || text.trim() === '') {
+                this.onFieldChange(field, {});
+                return;
+            }
+            try {
+                var parsed = JSON.parse(text);
+                this.onFieldChange(field, parsed);
+            } catch (_e) {
+                // JSON 解析失败，暂不报错，允许用户继续编辑
             }
         },
     },

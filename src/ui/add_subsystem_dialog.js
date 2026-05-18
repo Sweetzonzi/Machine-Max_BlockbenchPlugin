@@ -89,45 +89,8 @@ function showAddSubsystemDialog(options) {
                     ssConfig[f] = JSON.parse(JSON.stringify(typeDefaults[f]));
                 }
             }
-            if (meta.needsLocator) {
-                ssConfig.locator = '';
-            }
-            if (meta.needsConnector) {
-                ssConfig.connector = '';
-            }
-            // 按模组惯例初始化信号输出字段的默认频道值
-            var sigOutputs = meta.signalOutputs || [];
-            var sigDefaults = {
-                speed_outputs: { engine_speed: ['subpart', 'vehicle'] },
-                control_outputs: { car_control: [] },
-                throttle_outputs: { throttle: ['subpart', 'vehicle'] },
-                brake_outputs: { brake: ['subpart', 'vehicle'] },
-                steering_outputs: { steering: ['subpart', 'vehicle'] },
-                handbrake_outputs: { handbrake: ['subpart', 'vehicle'] },
-                gear_outputs: { gear: ['subpart', 'vehicle'] },
-                move_outputs: { move_control: [] },
-                regular_outputs: { regular_control: [] },
-                aim_outputs: { aim: [] },
-                passenger_num_outputs: { passenger_num: ['subpart', 'vehicle'] },
-                power_outputs: {},
-                fire_outputs: {},
-            };
-            // 按类型覆盖 speed_outputs 的默认频道名
-            if (typeId === 'machine_max:motorbike_controller' || typeId === 'machine_max:car_controller') {
-                sigDefaults.speed_outputs = { vehicle_speed: ['subpart', 'vehicle'] };
-            } else if (typeId === 'machine_max:motor' || typeId === 'machine_max:motor_controller') {
-                sigDefaults.speed_outputs = { motor_speed: ['subpart', 'vehicle'] };
-            }
-            for (var si = 0; si < sigOutputs.length; si++) {
-                var sf = sigOutputs[si];
-                if (sf === 'power_output') {
-                    ssConfig[sf] = '';
-                } else if (sigDefaults[sf] !== undefined) {
-                    ssConfig[sf] = JSON.parse(JSON.stringify(sigDefaults[sf]));
-                } else {
-                    ssConfig[sf] = {};
-                }
-            }
+            // getTypeDefaults() 已从 dynamicFields[].defaultValue 读取所有非 definition 字段的默认值，
+            // 包括 locator/connector 的 ''、signal_targets 的默认频道映射、power_output 的 '' 等
             beforeSet(sp, instanceName, ssConfig);
             onCreated(spKey, instanceName);
             // 持久化并触发 UI 刷新

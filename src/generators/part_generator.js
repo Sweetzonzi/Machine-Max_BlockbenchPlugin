@@ -1,4 +1,5 @@
 const { createLogger } = require('../utils/logger.js');
+const subsystemTypes = require('../core/subsystem_types.js');
 
 /** 模块日志 */
 var log = createLogger('GenPart');
@@ -87,69 +88,13 @@ function buildSubPartOutput(sp) {
 }
 
 /**
- * 各子系统类型的动态属性字段映射表
- *
- * 定义依据：Java 端 common/mech/subsystem/attr/dynamic_attr/ 下各 *SubsystemAttr
- * 类的 RecordCodecBuilder 中定义的 JSON 字段名（fieldOf / optionalFieldOf）。
- * 每个子系统实例在 parts/*.json 的 subsystems 中只应包含其类型对应的字段。
- */
-var SUBSYSTEM_DYNAMIC_FIELDS = {
-    // 基础类型：仅 type + definition
-    'machine_max:basic': ['type', 'definition'],
-    'machine_max:item_storage': ['type', 'definition'],
-    'machine_max:battery': ['type', 'definition'],
-    'machine_max:camera': ['type', 'definition'],
-    'machine_max:signal_convert': ['type', 'definition'],
-    // 动力源（引擎/电机/电机控制器）：definition + power_output + speed_outputs
-    'machine_max:engine': ['type', 'definition', 'power_output', 'speed_outputs'],
-    'machine_max:motor': ['type', 'definition', 'power_output', 'speed_outputs'],
-    'machine_max:motor_controller': ['type', 'definition', 'power_output', 'speed_outputs'],
-    // 变速箱：definition + power_output + gear_outputs
-    'machine_max:gearbox': ['type', 'definition', 'power_output', 'gear_outputs'],
-    // 分动器：definition + power_outputs（Map<String, Float>）
-    'machine_max:transmission': ['type', 'definition', 'power_outputs'],
-    // 控制器（轿车/摩托）：definition + 多路控制信号输出
-    'machine_max:car_controller': [
-        'type', 'definition',
-        'control_outputs', 'speed_outputs', 'throttle_outputs',
-        'steering_outputs', 'brake_outputs', 'handbrake_outputs'
-    ],
-    'machine_max:motorbike_controller': [
-        'type', 'definition',
-        'control_outputs', 'speed_outputs', 'throttle_outputs',
-        'steering_outputs', 'brake_outputs', 'handbrake_outputs'
-    ],
-    // 火控系统：definition + control_outputs
-    'machine_max:fire_controller': ['type', 'definition', 'control_outputs'],
-    // 轮驱动：definition + connector + 滚动/转向信号
-    'machine_max:wheel_driver': [
-        'type', 'definition', 'connector',
-        'roll_speed_outputs', 'steering_angle_outputs'
-    ],
-    // 炮塔驱动：definition + connector + rotation_outputs
-    'machine_max:turret': ['type', 'definition', 'connector', 'rotation_outputs'],
-    // 座椅：definition + locator + 多路控制信号
-    'machine_max:seat': [
-        'type', 'definition', 'locator',
-        'move_outputs', 'aim_outputs', 'regular_outputs', 'passenger_num_outputs'
-    ],
-    // 车灯：definition + locator
-    'machine_max:lighting': ['type', 'definition', 'locator'],
-    // 关节驱动（JSON 中字段名为 locator，非 connector）：definition + locator + rotation_order + axes
-    'machine_max:joint': ['type', 'definition', 'locator', 'rotation_order', 'axes'],
-    // 发射器：definition + locator + ammo_outputs
-    'machine_max:launcher': ['type', 'definition', 'locator', 'ammo_outputs'],
-    // 脚本：definition + script
-    'machine_max:javascript': ['type', 'definition', 'script'],
-};
-
-/**
  * 清理子系统导出数据：按子系统类型分派字段白名单。
  *
- * MachineMax 数据模型中，每个子系统类型有独立的动态属性 schema，
- * 对应 Java 端 *SubsystemAttr 的 RecordCodecBuilder 定义。
- * 导出时根据 type 字段查表，只保留该类型允许的实例级字段，
- * 防止静态属性（如 max_power、max_torque 等属于 subsystem_defs）混入。
+ * 从 subsystem_types.js 统一注册表读取各类型允许的动态属性字段，
+ * 只保留实例级字段，防止静态属性（如 max_power、max_torque 等属于
+ * subsystem_defs 定义文件）混入导出 JSON。
+ *
+ * 未知类型回退到启发式推断（_inferDynamicFields）。
  *
  * @param {Object<string, Object>} subsystems - 子系统映射
  * @returns {Object<string, Object>} 清理后的子系统映射
@@ -159,10 +104,15 @@ function _cleanSubsystems(subsystems) {
     for (var key in subsystems) {
         var ss = subsystems[key];
         var typeId = ss.type;
-        var allowedFields = SUBSYSTEM_DYNAMIC_FIELDS[typeId];
+        // 从注册表获取字段名列表，并补上 type（type 是 discriminator，不属于 dynamicFields）
+        var allowedFields = subsystemTypes.getDynamicFieldNames(typeId);
+        if (allowedFields.length > 0) {
+            // 确保 type 排在第一位
+            allowedFields.unshift('type');
+        }
 
         // 未知类型：回退到通用信号字段启发式过滤
-        if (!allowedFields) {
+        if (allowedFields.length <= 1) {
             log.warn('_cleanSubsystems: 未知子系统类型 "' + typeId + '"，使用回退过滤策略');
             allowedFields = _inferDynamicFields(ss);
         }

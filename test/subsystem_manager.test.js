@@ -287,8 +287,9 @@ describe('SubsystemManager', function () {
             var fields = manager.getTypeFields('machine_max:engine');
             expect(Array.isArray(fields)).toBe(true);
             expect(fields.length).toBeGreaterThan(0);
-            expect(fields.indexOf('max_power')).not.toBe(-1);
-            expect(fields.indexOf('max_torque')).not.toBe(-1);
+            expect(fields.indexOf('definition')).not.toBe(-1);
+            expect(fields.indexOf('power_output')).not.toBe(-1);
+            expect(fields.indexOf('speed_outputs')).not.toBe(-1);
         });
 
         test('#18 returns empty array for unknown type', function () {

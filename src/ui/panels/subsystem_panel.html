@@ -43,56 +43,79 @@
         </div>
     </div>
 
-    <div class="mm-section" v-if="typeMeta && typeMeta.needsLocator">
-        <h4 class="mm-section-title">空间引用（此类型需要定位器）</h4>
-        <div class="mm-field">
-            <label title="选择模型中所有 Locator">关联定位器 (locator)</label>
-            <select class="mm-select" :value="config.locator" @change="onFieldChange('locator', $event.target.value)">
+    <!-- 动态属性字段：由 subsystem_types.js 的 dynamicFields 注册表驱动 -->
+    <div class="mm-section" v-if="nonDefFields.length > 0">
+        <h4 class="mm-section-title">{{ dynamicAttrsTitle }}</h4>
+        <div v-for="field in nonDefFields" :key="field.field" class="mm-field">
+            <label :title="field.field">{{ field.label }}</label>
+
+            <!-- 定位器选择器 -->
+            <select v-if="field.editor === 'locator_selector'" class="mm-select"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)">
                 <option value="">（无）</option>
                 <option v-for="(l, i) in allLocatorNames" :key="i" :value="l">{{ l }}</option>
             </select>
-        </div>
-    </div>
 
-    <div class="mm-section" v-if="typeMeta && typeMeta.needsConnector">
-        <h4 class="mm-section-title">连接点引用（此类型需要连接点）</h4>
-        <div class="mm-field">
-            <label title="选择本子零件中的连接点">关联连接点 (connector)</label>
-            <select class="mm-select" :value="config.connector" @change="onFieldChange('connector', $event.target.value)">
+            <!-- 连接点选择器 -->
+            <select v-else-if="field.editor === 'connector_selector'" class="mm-select"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)">
                 <option value="">（无）</option>
                 <option v-for="(conn, connKey) in connectorKeys" :key="connKey" :value="connKey">{{ connKey }}</option>
             </select>
-        </div>
-    </div>
 
-    <div class="mm-section" v-if="typeMeta && typeMeta.signalOutputs.length > 0">
-        <h4 class="mm-section-title">信号输出</h4>
-        <div v-for="sigField in typeMeta.signalOutputs" :key="sigField" class="mm-field">
-            <label>{{ getSignalLabel(sigField) }}</label>
-            <div v-if="isSingleTargetSignal(sigField)" style="display:flex;gap:4px;align-items:center">
-                <select class="mm-select" :value="getSignalValue(sigField)"
-                    @change="onFieldChange(sigField, $event.target.value)">
-                    <option value="">（无）</option>
-                    <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target">{{ target }}</option>
-                </select>
+            <!-- 枚举下拉菜单 -->
+            <select v-else-if="field.editor === 'enum_selector'" class="mm-select"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)">
+                <option value="">（无）</option>
+                <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+            </select>
+
+            <!-- 单目标功率输出选择器（如 power_output） -->
+            <select v-else-if="field.editor === 'power_target'" class="mm-select"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)">
+                <option value="">（无）</option>
+                <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target">{{ target }}</option>
+            </select>
+
+            <!-- 功率输出映射编辑器（power_outputs_map，值类型为 <string, number>） -->
+            <div v-else-if="field.editor === 'power_outputs_map'" class="mm-power-outputs-editor">
+                <div v-for="(ratio, targetName, pi) in getPowerOutputEntries(field.field)" :key="pi" style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+                    <input type="text" class="mm-input" style="flex:1;font-size:11px;min-width:80px"
+                        :value="targetName"
+                        @change="onPowerOutputTargetChange(field.field, targetName, $event.target.value)"
+                        placeholder="目标名称" />
+                    <input type="number" class="mm-input" style="width:80px;font-size:11px;text-align:right"
+                        step="0.01" min="-999" max="999"
+                        :value="ratio"
+                        @change="onPowerOutputRatioChange(field.field, targetName, parseFloat($event.target.value) || 0)"
+                        placeholder="减速比" />
+                    <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removePowerOutput(field.field, targetName)" title="删除">×</button>
+                </div>
+                <button class="mm-btn" style="font-size:11px" @click="addPowerOutput(field.field)">+ 添加输出目标</button>
             </div>
-            <div v-else>
-                <div v-for="(targets, channel, ci) in getSignalEntries(sigField)" :key="ci" class="mm-signal-card">
+
+            <!-- 信号频道编辑器（signal_targets，值类型为 <string, string[]>） -->
+            <div v-else-if="field.editor === 'signal_targets'" class="mm-signal-editor">
+                <div v-for="(targets, channel, ci) in getSignalEntries(field.field)" :key="ci" class="mm-signal-card">
                     <div class="mm-signal-header">
                         <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel"
-                            @change="onSignalChannelChange(sigField, channel, $event.target.value)"
+                            @change="onSignalChannelChange(field.field, channel, $event.target.value)"
                             :list="'sig-channel-hints-'+_uid" placeholder="频道名" />
-                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalChannel(sigField, channel)" title="删除频道">×</button>
+                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalChannel(field.field, channel)" title="删除频道">×</button>
                     </div>
                     <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
                         <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
-                            @change="updateSignalTarget(sigField, channel, ti, $event.target.value)"
+                            @change="updateSignalTarget(field.field, channel, ti, $event.target.value)"
                             :list="'sig-target-hints-'+_uid" placeholder="目标" />
-                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTarget(sigField, channel, ti)" title="删除目标">×</button>
+                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTarget(field.field, channel, ti)" title="删除目标">×</button>
                     </div>
-                    <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTarget(sigField, channel)">+ 添加目标</button>
+                    <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTarget(field.field, channel)">+ 添加目标</button>
                 </div>
-                <button class="mm-btn" style="font-size:11px" @click="addSignalChannel(sigField)">+ 添加频道</button>
+                <button class="mm-btn" style="font-size:11px" @click="addSignalChannel(field.field)">+ 添加频道</button>
                 <datalist :id="'sig-channel-hints-'+_uid">
                     <option v-for="h in channelHints" :key="h" :value="h" />
                 </datalist>
@@ -100,6 +123,24 @@
                     <option v-for="h in signalTargetOptions" :key="h" :value="h" />
                 </datalist>
             </div>
+
+            <!-- 文本输入 -->
+            <input v-else-if="field.editor === 'text_input'" type="text" class="mm-input"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)"
+                :placeholder="'(默认)'" />
+
+            <!-- JSON 编辑框 -->
+            <textarea v-else-if="field.editor === 'json_textarea'" class="mm-input mm-textarea"
+                :value="formatJsonValue(field.field)"
+                @change="onJsonChange(field.field, $event.target.value)"
+                rows="4" placeholder="请输入 JSON"></textarea>
+
+            <!-- 未知编辑器类型（回退） -->
+            <input v-else type="text" class="mm-input"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)"
+                :placeholder="'(' + field.editor + ')'" />
         </div>
     </div>
 
