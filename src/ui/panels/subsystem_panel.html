@@ -1,0 +1,111 @@
+<div class="mm-section">
+    <div class="mm-sticky-title">
+        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
+            <span class="mm-marker-badge" :style="{ background: typeColor }">SS</span>
+            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:0;border:1px solid transparent;background:transparent;"
+                v-model="editingName"
+                @focus="$event.target.style.border='1px solid #555';$event.target.style.background='#2a2a2a'"
+                @blur="onNameBlur($event)"
+                @change="onNameChange($event.target.value)"
+                :placeholder="subsystemKey"
+                title="子系统名称（字典 key），修改后自动迁移字典" />
+        </h3>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">归属</h4>
+        <div v-if="parentSubPartKey" class="mm-sub-item-row mm-clickable" :title="'点击跳转到子零件 ' + parentSubPartKey" @click="navigateToSubPart">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
+                {{ parentSubPartKey }}
+            </span>
+        </div>
+        <div v-else class="mm-sub-item-row" title="由创建时所属子零件决定" style="cursor:default">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
+                （游离 — 无归属）
+            </span>
+        </div>
+        <div class="mm-field">
+            <label>类型</label>
+            <div style="display:flex;align-items:center;gap:6px">
+                <span class="mm-marker-badge" :style="{ background: typeColor }" style="font-size:10px">{{ typeShortLabel }}</span>
+                <span style="font-size:12px;color:#ccc">{{ typeDisplayName }} ({{ typeId }})</span>
+            </div>
+        </div>
+        <div class="mm-field">
+            <label title="从 subsystem_defs 中选择型号定义">型号定义</label>
+            <select class="mm-select" :value="config.definition" @change="onFieldChange('definition', $event.target.value)">
+                <option value="">（无）</option>
+                <option v-for="(def, defId) in filteredSubsystemDefs" :key="defId" :value="defId">{{ defId }}</option>
+            </select>
+            <span class="mm-element-info" v-if="filteredSubsystemDefsCount === 0" style="font-size:10px;color:#ff6b6b">无匹配的<span style="color:#888">{{ typeDisplayName }}</span>型号定义</span>
+        </div>
+    </div>
+
+    <div class="mm-section" v-if="typeMeta && typeMeta.needsLocator">
+        <h4 class="mm-section-title">空间引用（此类型需要定位器）</h4>
+        <div class="mm-field">
+            <label title="选择模型中所有 Locator">关联定位器 (locator)</label>
+            <select class="mm-select" :value="config.locator" @change="onFieldChange('locator', $event.target.value)">
+                <option value="">（无）</option>
+                <option v-for="(l, i) in allLocatorNames" :key="i" :value="l">{{ l }}</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="mm-section" v-if="typeMeta && typeMeta.needsConnector">
+        <h4 class="mm-section-title">连接点引用（此类型需要连接点）</h4>
+        <div class="mm-field">
+            <label title="选择本子零件中的连接点">关联连接点 (connector)</label>
+            <select class="mm-select" :value="config.connector" @change="onFieldChange('connector', $event.target.value)">
+                <option value="">（无）</option>
+                <option v-for="(conn, connKey) in connectorKeys" :key="connKey" :value="connKey">{{ connKey }}</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="mm-section" v-if="typeMeta && typeMeta.signalOutputs.length > 0">
+        <h4 class="mm-section-title">信号输出</h4>
+        <div v-for="sigField in typeMeta.signalOutputs" :key="sigField" class="mm-field">
+            <label>{{ getSignalLabel(sigField) }}</label>
+            <div v-if="isSingleTargetSignal(sigField)" style="display:flex;gap:4px;align-items:center">
+                <select class="mm-select" :value="getSignalValue(sigField)"
+                    @change="onFieldChange(sigField, $event.target.value)">
+                    <option value="">（无）</option>
+                    <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target">{{ target }}</option>
+                </select>
+            </div>
+            <div v-else>
+                <div v-for="(targets, channel, ci) in getSignalEntries(sigField)" :key="ci" class="mm-signal-card">
+                    <div class="mm-signal-header">
+                        <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel"
+                            @change="onSignalChannelChange(sigField, channel, $event.target.value)"
+                            :list="'sig-channel-hints-'+_uid" placeholder="频道名" />
+                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalChannel(sigField, channel)" title="删除频道">×</button>
+                    </div>
+                    <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
+                        <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
+                            @change="updateSignalTarget(sigField, channel, ti, $event.target.value)"
+                            :list="'sig-target-hints-'+_uid" placeholder="目标" />
+                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTarget(sigField, channel, ti)" title="删除目标">×</button>
+                    </div>
+                    <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTarget(sigField, channel)">+ 添加目标</button>
+                </div>
+                <button class="mm-btn" style="font-size:11px" @click="addSignalChannel(sigField)">+ 添加频道</button>
+                <datalist :id="'sig-channel-hints-'+_uid">
+                    <option v-for="h in channelHints" :key="h" :value="h" />
+                </datalist>
+                <datalist :id="'sig-target-hints-'+_uid">
+                    <option v-for="h in signalTargetOptions" :key="h" :value="h" />
+                </datalist>
+            </div>
+        </div>
+    </div>
+
+    <div class="mm-section" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border-color,#333)">
+        <button class="mm-btn mm-btn-danger" @click="onDelete" :disabled="!subsystemKey" title="删除此子系统">
+            ✕ 删除此子系统
+        </button>
+    </div>
+</div>

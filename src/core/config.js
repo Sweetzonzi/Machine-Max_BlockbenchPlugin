@@ -4,6 +4,8 @@ const {
     VARIANT_DEFAULTS,
     SUB_PART_DEFAULTS,
     HIT_BOX_DEFAULTS,
+    SUBSYSTEM_INSTANCE_DEFAULTS,
+    CONNECTOR_INSTANCE_DEFAULTS,
 } = require('./config_defaults.js');
 const { createLogger } = require('../utils/logger.js');
 
@@ -99,6 +101,23 @@ function createHitBoxConfig() {
 }
 
 /**
+ * 创建新的子系统实例配置，使用默认值填充
+ * 类型专属字段的默认值由调用方按 type 从 subsystem_types.js 合并
+ */
+function createSubsystemConfig() {
+    log.debug('createSubsystemConfig: 创建子系统配置');
+    return JSON.parse(JSON.stringify(SUBSYSTEM_INSTANCE_DEFAULTS));
+}
+
+/**
+ * 创建新的连接点实例配置（含信号字段），使用默认值填充
+ */
+function createConnectorInstanceConfig() {
+    log.debug('createConnectorInstanceConfig: 创建连接点实例配置');
+    return JSON.parse(JSON.stringify(CONNECTOR_INSTANCE_DEFAULTS));
+}
+
+/**
  * 深度合并配置，确保缺少的字段用默认值填充
  * @param {Object} config - 要修复的配置
  * @returns {Object} 修复后的配置
@@ -188,6 +207,8 @@ if (typeof module !== 'undefined' && module.exports) {
         createVariantConfig,
         createSubPartConfig,
         createHitBoxConfig,
+        createSubsystemConfig,
+        createConnectorInstanceConfig,
         ensureDefaults,
         migrateIfNeeded,
         getActivePart,

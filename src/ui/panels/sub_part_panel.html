@@ -152,7 +152,22 @@
     </div>
 
     <div class="mm-section">
-        <h4 class="mm-section-title">子系统 ({{ subsystemCount }} 个)</h4>
-        <p class="mm-element-info">{{ subsystemCount }} 个（后续版本实现列表）</p>
+        <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>子系统 ({{ subsystemCount }})</span>
+            <button class="mm-btn mm-btn-sm" @click="addSubsystem" title="添加子系统" style="font-size:18px;font-weight:bold">+</button>
+        </h4>
+        <div v-if="subsystemCount === 0" class="mm-element-info" style="color:#888">
+            暂无子系统 — 点击 [+ ] 添加
+        </div>
+        <div v-for="ssKey in subsystemKeys" :key="ssKey" class="mm-sub-item-row mm-clickable" :title="'点击查看子系统 ' + ssKey" @click="navigateToSubsystem(ssKey)">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+                <span class="mm-sub-item-name">
+                    <span class="mm-marker-badge" :style="{ background: resolveSubsystemTypeColor(ssKey) }" style="font-size:10px;padding:0 4px">SS</span>
+                    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :title="ssKey">{{ ssKey }}</span>
+                </span>
+                <button class="mm-btn mm-btn-sm" @click.stop="deleteSubsystem(ssKey)" title="删除子系统" style="color:#ff6b6b;font-size:14px;width:24px;height:24px;min-width:24px;min-height:24px">×</button>
+            </div>
+            <span class="mm-sub-item-meta">{{ resolveSubsystemTypeName(ssKey) }}</span>
+        </div>
     </div>
 </div>

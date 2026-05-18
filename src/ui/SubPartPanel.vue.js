@@ -65,7 +65,14 @@ Vue.component('mm-sub-part-panel', {
             return this.config.connectors ? Object.keys(this.config.connectors).length : 0;
         },
         subsystemCount: function () {
+            // 读取 refreshKey 作为版本号：外部因非响应式操作（delete）改变 subsystems 时强制重算
+            void this.refreshKey;
             return this.config.subsystems ? Object.keys(this.config.subsystems).length : 0;
+        },
+        subsystemKeys: function () {
+            // 读取 refreshKey 作为版本号：外部因非响应式操作改变 subsystems 时强制重算
+            void this.refreshKey;
+            return this.config.subsystems ? Object.keys(this.config.subsystems) : [];
         },
     },
     methods: {
@@ -101,6 +108,43 @@ Vue.component('mm-sub-part-panel', {
         resolveConnectorName: function (connKey) {
             // 连接点 key 现在是翻译键格式，直接显示
             return connKey;
+        },
+        /**
+         * 解析子系统类型的中文显示名
+         */
+        resolveSubsystemTypeName: function (ssKey) {
+            var ss = this.config.subsystems && this.config.subsystems[ssKey];
+            if (!ss || !ss.type) return '未指定类型';
+            var ssTypes = require('../core/subsystem_types.js');
+            var meta = ssTypes.getTypeMeta(ss.type);
+            return meta ? meta.displayName : ss.type;
+        },
+        /**
+         * 获取子系统类型的颜色
+         */
+        resolveSubsystemTypeColor: function (ssKey) {
+            var ss = this.config.subsystems && this.config.subsystems[ssKey];
+            if (!ss || !ss.type) return '#888';
+            var ssTypes = require('../core/subsystem_types.js');
+            return ssTypes.getTypeColor(ss.type);
+        },
+        /**
+         * 导航到子系统：点击子系统条目时切换到子系统属性面板（虚拟选择）
+         */
+        navigateToSubsystem: function (ssKey) {
+            this.$emit('navigate-to-subsystem', ssKey);
+        },
+        /**
+         * 添加子系统：弹出类型选择对话框
+         */
+        addSubsystem: function () {
+            this.$emit('add-subsystem');
+        },
+        /**
+         * 删除子系统：确认后删除
+         */
+        deleteSubsystem: function (ssKey) {
+            this.$emit('delete-subsystem', { spKey: this.spName, ssKey: ssKey });
         },
         /**
          * 导航到碰撞箱：点击碰撞箱条目时选中对应的 Group 骨骼，切换到碰撞箱属性面板

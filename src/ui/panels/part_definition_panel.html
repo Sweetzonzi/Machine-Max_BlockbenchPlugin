@@ -18,7 +18,24 @@
         </div>
     </div>
 
-    <div v-if="!selectedElement" class="mm-panel-body">
+    <!-- 子系统属性面板（虚拟选择优先，当从子零件面板点击子系统条目时显示） -->
+    <div v-if="isSubsystemSelected" class="mm-panel-body">
+        <mm-subsystem-panel
+            v-if="selectedSubsystemConfig"
+            :config="selectedSubsystemConfig"
+            :subsystem-key="selectedSubsystemKey"
+            :parent-sub-part-key="selectedSubsystemParentSpKey"
+            :subsystem-defs="availableSubsystemDefs"
+            :all-locator-names="allLocatorNames"
+            :connector-keys="currentConnectorKeys"
+            :signal-target-options="currentSignalTargetOptions"
+            @field-change="updateSubsystemField"
+            @name-change="renameSubsystem"
+            @delete-subsystem="deleteSubsystem"
+            @navigate-to-sub-part="navigateToSubPart" />
+    </div>
+
+    <div v-else-if="!selectedElement" class="mm-panel-body">
         <div class="mm-section" v-if="currentPart">
             <h3 class="mm-section-title">
                 <span class="mm-marker-badge" style="background:#D97E4A">零件</span>
@@ -101,7 +118,10 @@
             @remove-end-bone="removeEndBone"
             @name-change="renameSubPart"
             @navigate-to-hit-box="navigateToHitBox"
-            @navigate-to-connector="navigateToConnector" />
+            @navigate-to-connector="navigateToConnector"
+            @navigate-to-subsystem="selectSubsystem({ subsystemKey: $event, spKey: selectedMarker.config_ref })"
+            @add-subsystem="addSubsystem(selectedMarker.config_ref)"
+            @delete-subsystem="deleteSubsystem($event.spKey || selectedMarker.config_ref, $event.ssKey)" />
 
         <!-- 碰撞箱属性面板 -->
         <mm-hit-box-panel v-else-if="isHitBoxSelected"

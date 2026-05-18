@@ -275,3 +275,28 @@
 .mm-clickable-tag:hover {
     filter: brightness(1.3);
 }
+
+/* 子系统面板中的信号频道卡片 */
+.mm-signal-card {
+    margin-bottom: 4px;
+    padding: 4px;
+    background: #252525;
+    border-radius: 3px;
+}
+
+/* 子系统面板中的信号频道头部 */
+.mm-signal-header {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+/* 子系统面板中的删除按钮 */
+.mm-btn-sm.mm-btn-danger-light {
+    color: #ff6b6b;
+}
+
+.mm-btn-sm.mm-btn-danger-light:hover {
+    color: #ff9999;
+}

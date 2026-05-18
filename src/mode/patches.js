@@ -3,6 +3,7 @@ var { getConfig, saveConfig } = require('../utils/persistence.js');
 var { showToast } = require('../utils/notify.js');
 var { createLogger } = require('../utils/logger.js');
 var { generateDefaultName, ensureUniqueName } = require('../core/naming.js');
+var ssTypes = require('../core/subsystem_types.js');
 
 var log = createLogger('Mode');
 
@@ -200,6 +201,55 @@ function buildMMMenuItems(el) {
                     showToast('碰撞箱 "' + el.name + '" 无归属子零件（不受防护计算影响）', 'warning');
                 }
             }});
+        }
+        // 已标记为子零件的 Group 显示"添加子系统"二级菜单
+        if (marker && marker.type === 'sub_part') {
+            var buildSubsystemSubmenu = function (spKey) {
+                var logSubSys = function (typeId, displayName) {
+                    log.debug('右键菜单: 添加 ' + typeId + ' 子系统', { spKey: spKey });
+                };
+                var catOrder = ['power', 'control', 'utility', 'experimental'];
+                var catItems = [];
+                for (var ci = 0; ci < catOrder.length; ci++) {
+                    var cat = catOrder[ci];
+                    var types = ssTypes.getTypesByCategory(cat);
+                    if (!types || types.length === 0) continue;
+                    var catLabel = ssTypes.getCategoryLabel(cat);
+                    var typeItems = [];
+                    for (var ti = 0; ti < types.length; ti++) {
+                        var t = types[ti];
+                        (function (capturedTypeId, capturedDisplayName) {
+                            typeItems.push({
+                                name: capturedDisplayName,
+                                click: function () {
+                                    logSubSys(capturedTypeId, capturedDisplayName);
+                                    var variant = config.parts[activePartId].variants[activeVariantName];
+                                    if (!variant.sub_parts) variant.sub_parts = {};
+                                    if (!variant.sub_parts[spKey]) {
+                                        var cfgMod = require('../core/config.js');
+                                        variant.sub_parts[spKey] = cfgMod.createSubPartConfig();
+                                    }
+                                    var { showAddSubsystemDialog } = require('../ui/add_subsystem_dialog.js');
+                                    showAddSubsystemDialog({
+                                        config: config,
+                                        variant: variant,
+                                        spKey: spKey,
+                                        preSelectedType: capturedTypeId,
+                                    });
+                                },
+                            });
+                        })(t.id, t.displayName);
+                    }
+                    catItems.push({ name: '[' + catLabel + ']', children: typeItems });
+                }
+                return catItems;
+            };
+
+            items.push({
+                name: '添加子系统',
+                icon: 'add',
+                children: buildSubsystemSubmenu(marker.config_ref || el.name),
+            });
         }
     } else if (el instanceof Locator) {
         var locatorTypes = ['connector'];

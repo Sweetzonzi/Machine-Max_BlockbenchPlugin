@@ -122,7 +122,7 @@ var SUBSYSTEM_TYPES = [
     {
         id: 'machine_max:gearbox',
         displayName: '变速箱',
-        category: 'utility',
+        category: 'power',
         fields: ['forward_gears', 'reverse_gears', 'shift_time', 'shift_speed'],
         defaults: {
             forward_gears: 6, reverse_gears: 1, shift_time: 0.3, shift_speed: 0.0,
@@ -135,7 +135,7 @@ var SUBSYSTEM_TYPES = [
     {
         id: 'machine_max:transmission',
         displayName: '分动箱',
-        category: 'utility',
+        category: 'power',
         fields: ['efficiency', 'front_split', 'rear_split', 'center_split'],
         defaults: {
             efficiency: 0.95, front_split: 0.5, rear_split: 0.5, center_split: 0.5,
@@ -148,7 +148,7 @@ var SUBSYSTEM_TYPES = [
     {
         id: 'machine_max:wheel_driver',
         displayName: '轮胎驱动器',
-        category: 'utility',
+        category: 'power',
         fields: ['friction', 'suspension_stiffness', 'suspension_damping', 'suspension_travel', 'wheel_radius', 'wheel_width'],
         defaults: {
             friction: 1.0, suspension_stiffness: 100.0, suspension_damping: 10.0,
@@ -369,4 +369,35 @@ function getTypesGroupedByCategory() {
 function getCategoryLabel(category) {
     var labels = {
         power: '动力',
-        control:
+        control: '控制',
+        utility: '功能',
+        experimental: '实验',
+    };
+    return labels[category] || category;
+}
+
+function getTypeColor(typeId) {
+    var categoryColors = {
+        power: '#e67e22',
+        control: '#3498db',
+        utility: '#2ecc71',
+        experimental: '#9b59b6',
+    };
+    var meta = TYPE_MAP[typeId];
+    if (!meta) return '#888';
+    return categoryColors[meta.category] || '#888';
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        SUBSYSTEM_TYPES: SUBSYSTEM_TYPES,
+        getTypeMeta: getTypeMeta,
+        getAllTypes: getAllTypes,
+        getTypesByCategory: getTypesByCategory,
+        getTypeSpecificFields: getTypeSpecificFields,
+        getTypeDefaults: getTypeDefaults,
+        getTypesGroupedByCategory: getTypesGroupedByCategory,
+        getCategoryLabel: getCategoryLabel,
+        getTypeColor: getTypeColor,
+    };
+}

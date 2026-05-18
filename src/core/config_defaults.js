@@ -47,6 +47,23 @@ const HIT_BOX_DEFAULTS = {
     condition: 'true',
 };
 
+/** 子系统实例基础默认值（不含类型专属字段） */
+const SUBSYSTEM_INSTANCE_DEFAULTS = {
+    type: '',
+    definition: '',
+};
+
+/** 连接点实例完整默认值（含信号字段） */
+const CONNECTOR_INSTANCE_DEFAULTS = {
+    locator: '',
+    definition: '',
+    power_target: '',
+    signal_translations: {},
+    signal_targets: {},
+    internal: false,
+    overwrite: {},
+};
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         CONFIG_VERSION,
@@ -54,5 +71,7 @@ if (typeof module !== 'undefined' && module.exports) {
         VARIANT_DEFAULTS,
         SUB_PART_DEFAULTS,
         HIT_BOX_DEFAULTS,
+        SUBSYSTEM_INSTANCE_DEFAULTS,
+        CONNECTOR_INSTANCE_DEFAULTS,
     };
 }

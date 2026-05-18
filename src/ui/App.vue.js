@@ -27,6 +27,8 @@ require('./HitBoxPanel.vue.js');
 
 require('./ConnectorPanel.vue.js');
 
+require('./SubsystemPanel.vue.js');
+
 const MMMainPanel = Vue.component('mm-main-panel', {
     template: TEMPLATE_PART_PANEL,
     data: function () {
@@ -36,6 +38,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             activeVariantName: '',
             selectedElement: null,
             _markerVersion: 0, // 标记更新版本号，右键菜单 delete 操作后递增，强制计算属性重新求值
+            subsystemSelection: { spKey: '', subsystemKey: '' }, // 虚拟选择的子系统
         };
     },
     computed: {
@@ -172,6 +175,68 @@ const MMMainPanel = Vue.component('mm-main-panel', {
          */
         isConnectorSelected: function () {
             return this.selectedMarker && this.selectedMarker.type === 'connector';
+        },
+        /**
+         * 子系统虚拟选择状态
+         */
+        isSubsystemSelected: function () {
+            return !!(this.subsystemSelection && this.subsystemSelection.subsystemKey);
+        },
+        /**
+         * 当前虚拟选中的子系统 key
+         */
+        selectedSubsystemKey: function () {
+            return this.subsystemSelection.subsystemKey || '';
+        },
+        /**
+         * 当前虚拟选中的子零件 key
+         */
+        selectedSubsystemParentSpKey: function () {
+            return this.subsystemSelection.spKey || '';
+        },
+        /**
+         * 当前虚拟选中的子系统配置对象
+         */
+        selectedSubsystemConfig: function () {
+            if (!this.isSubsystemSelected) return null;
+            var variant = this.currentVariant;
+            if (!variant || !variant.sub_parts) return null;
+            var sp = variant.sub_parts[this.subsystemSelection.spKey];
+            if (!sp || !sp.subsystems) return null;
+            return sp.subsystems[this.subsystemSelection.subsystemKey] || null;
+        },
+        /**
+         * 当前子零件内所有子系统对应的子系统定义（用于型号下拉选择）
+         */
+        availableSubsystemDefs: function () {
+            if (!this.config) return {};
+            var cp = require('../core/content_pack_manager.js');
+            return cp.loadMergedDefs(this.config, 'subsystems').defs;
+        },
+        /**
+         * 当前子零件内所有连接点名称列表（用于 connector 下拉选择）
+         */
+        currentConnectorKeys: function () {
+            if (!this.isSubsystemSelected || !this.currentVariant) return {};
+            var sp = this.currentVariant.sub_parts[this.subsystemSelection.spKey];
+            if (!sp || !sp.connectors) return {};
+            return sp.connectors;
+        },
+        /**
+         * 当前子零件内所有子系统 key 列表 + 特殊目标（用于信号目标下拉选择）
+         */
+        currentSignalTargetOptions: function () {
+            if (!this.isSubsystemSelected || !this.currentVariant) return [];
+            var sp = this.currentVariant.sub_parts[this.subsystemSelection.spKey];
+            if (!sp) return ['subpart', 'vehicle'];
+            var targets = ['subpart', 'vehicle'];
+            if (sp.connectors) {
+                targets = targets.concat(Object.keys(sp.connectors));
+            }
+            if (sp.subsystems) {
+                targets = targets.concat(Object.keys(sp.subsystems));
+            }
+            return targets;
         },
         /**
          * 动态检测碰撞箱所属子零件（沿父链向上遍历）
@@ -566,6 +631,8 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 });
                 return;
             }
+            // 选中 Outliner 元素时清空子系统虚拟选择
+            this.subsystemSelection = { spKey: '', subsystemKey: '' };
             // Group 不在 Outliner.selected 中（Group 继承自 OutlinerNode 而非 OutlinerElement）
             // 优先用 Group.first_selected；其次取 Outliner.selected[0]（Cube/Locator 等）
             var best = (typeof Group !== 'undefined' && Group.first_selected) || sel[0];
@@ -918,6 +985,121 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 }
             }
             log.debug('updateConnectorField: 已更新', { field: field, value: value });
+        },
+        /**
+         * 添加子系统：弹出类型选择对话框，用户选择类型并输入名称后在指定子零件下创建子系统实例
+         * @param {string} spKey - 子零件 key
+         * @param {string} [preSelectedType] - 预选的子系统类型 ID（右键菜单直接跳转时使用）
+         */
+        addSubsystem: function (spKey, preSelectedType) {
+            if (!spKey) {
+                spKey = this.subsystemSelection.spKey;
+            }
+            if (!spKey) {
+                var marker = this.selectedMarker;
+                if (!marker || marker.type !== 'sub_part') return;
+                spKey = marker.config_ref;
+            }
+            var variant = this.currentVariant;
+            if (!variant || !variant.sub_parts || !variant.sub_parts[spKey]) return;
+            var self = this;
+            var { showAddSubsystemDialog } = require('./add_subsystem_dialog.js');
+            showAddSubsystemDialog({
+                config: this.config,
+                variant: variant,
+                spKey: spKey,
+                preSelectedType: preSelectedType,
+                beforeSet: function (sp, instanceName, ssConfig) {
+                    if (!sp.subsystems) {
+                        self.$set(sp, 'subsystems', {});
+                    }
+                    self.$set(sp.subsystems, instanceName, ssConfig);
+                },
+                onCreated: function (createdSpKey, instanceName) {
+                    self.subsystemSelection = { spKey: createdSpKey, subsystemKey: instanceName };
+                    self._markerVersion++;
+                    log.info('addSubsystem: 已创建子系统', { spKey: createdSpKey, instanceName: instanceName });
+                },
+            });
+        },
+        /**
+         * 删除子系统：确认后从 sub_parts 中移除
+         */
+        deleteSubsystem: function (spKey, ssKey) {
+            if (!spKey || !ssKey) return;
+            var variant = this.currentVariant;
+            if (!variant || !variant.sub_parts) return;
+            var sp = variant.sub_parts[spKey];
+            if (!sp || !sp.subsystems || !sp.subsystems[ssKey]) return;
+            var self = this;
+            new Dialog({
+                title: '确认删除子系统',
+                form: {
+                    info: {
+                        type: 'info',
+                        text: '确认删除子系统 "' + ssKey + '" ？<br><br>此操作不可撤销！',
+                    },
+                },
+                onConfirm: function () {
+                    self.$delete(sp.subsystems, ssKey);
+                    self.subsystemSelection = { spKey: '', subsystemKey: '' };
+                    self._markerVersion++;
+                    log.info('deleteSubsystem: 已删除子系统', { spKey: spKey, subsystemKey: ssKey });
+                    showToast('子系统 "' + ssKey + '" 已删除', 'warning');
+                    this.hide();
+                }
+            }).show();
+        },
+        /**
+         * 选择子系统：设置虚拟选择状态，切换到子系统属性面板
+         */
+        selectSubsystem: function (params) {
+            var spKey = params.spKey || this.subsystemSelection.spKey;
+            var ssKey = params.subsystemKey;
+            if (!spKey || !ssKey) return;
+            this.subsystemSelection = { spKey: spKey, subsystemKey: ssKey };
+            // 清空 Outliner 选中，让子系统面板优先显示
+            this.selectedElement = null;
+            log.debug('selectSubsystem: 选中子系统', { spKey: spKey, subsystemKey: ssKey });
+        },
+        /**
+         * 重命名子系统：修改 subsystems 字典的 key
+         */
+        renameSubsystem: function (oldKey, newKey) {
+            if (!oldKey || !newKey || oldKey === newKey) return;
+            var spKey = this.subsystemSelection.spKey;
+            if (!spKey) return;
+            var variant = this.currentVariant;
+            if (!variant || !variant.sub_parts) return;
+            var sp = variant.sub_parts[spKey];
+            if (!sp || !sp.subsystems) return;
+            if (!sp.subsystems[oldKey]) {
+                log.warn('renameSubsystem: 未找到子系统', { oldKey: oldKey });
+                return;
+            }
+            if (sp.subsystems[newKey]) {
+                showToast('子系统 "' + newKey + '" 已存在', 'error');
+                return;
+            }
+            log.info('renameSubsystem: 重命名', { from: oldKey, to: newKey });
+            this.$set(sp.subsystems, newKey, sp.subsystems[oldKey]);
+            this.$delete(sp.subsystems, oldKey);
+            this.subsystemSelection.subsystemKey = newKey;
+            showToast('子系统已重命名为 "' + newKey + '"', 'positive');
+        },
+        /**
+         * 更新子系统配置中的单个字段
+         */
+        updateSubsystemField: function (ssKey, field, value) {
+            if (!ssKey || !field) return;
+            var spKey = this.subsystemSelection.spKey;
+            if (!spKey) return;
+            var variant = this.currentVariant;
+            if (!variant || !variant.sub_parts) return;
+            var sp = variant.sub_parts[spKey];
+            if (!sp || !sp.subsystems || !sp.subsystems[ssKey]) return;
+            this.$set(sp.subsystems[ssKey], field, value);
+            log.debug('updateSubsystemField: 已更新', { ssKey: ssKey, field: field, value: value });
         },
         /**
          * 重命名连接点：修改 connectors 字典的 key
