@@ -81,6 +81,14 @@ Vue.component('mm-signal-flow-panel', {
             if (cfg) {
                 this.activePartId = cfg._uiState?.activePartId || '';
                 this.activeVariantName = cfg._uiState?.activeVariantName || '';
+                log.info('loadConfigData: 配置已加载', {
+                    partId: this.activePartId,
+                    variant: this.activeVariantName,
+                    hasParts: !!cfg.parts,
+                    partCount: cfg.parts ? Object.keys(cfg.parts).length : 0,
+                });
+            } else {
+                log.warn('loadConfigData: 无有效配置');
             }
             this.rebuildGraph();
         },
@@ -93,12 +101,13 @@ Vue.component('mm-signal-flow-panel', {
         rebuildGraph: function () {
             var variant = this.currentVariant;
             if (!variant) {
+                log.info('rebuildGraph: 无有效变体，清空图表');
                 this.nodes = [];
                 this.edges = [];
                 return;
             }
             var graph = extractSignalGraph(variant);
-            log.debug('rebuildGraph: 信号拓扑提取完成', {
+            log.info('rebuildGraph: 信号拓扑提取完成', {
                 nodes: graph.nodes.length,
                 edges: graph.edges.length,
             });
@@ -342,20 +351,23 @@ Vue.component('mm-signal-flow-panel', {
     },
     mounted: function () {
         var self = this;
-        log.debug('信号流图面板已挂载');
+        log.info('信号流图面板已挂载');
         self.loadConfigData();
 
         this._projectHandler = Blockbench.on('select_project', function () {
+            log.info('信号流图: select_project 事件');
             self.loadConfigData();
         });
         this._selectionHandler = Blockbench.on('update_selection', function () {
+            log.info('信号流图: update_selection 事件');
             self.loadConfigData();
         });
         this._modeHandler = Blockbench.on('select_mode', function () {
+            log.info('信号流图: select_mode 事件');
             self.loadConfigData();
         });
         this._saveHandler = Blockbench.on('save', function () {
-            // 保存后重建（配置可能已变更）
+            log.info('信号流图: save 事件');
             var variant = self.currentVariant;
             if (variant) {
                 self.rebuildGraph();
@@ -396,5 +408,5 @@ function _assignParallelIndices(edges) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {};
+    module.exports = Vue.component('mm-signal-flow-panel');
 }
