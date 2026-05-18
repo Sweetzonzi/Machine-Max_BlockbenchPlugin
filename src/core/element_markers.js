@@ -22,6 +22,7 @@ const MARKER_TYPES = {
     sub_part: { label: '子零件', icon: 'fa-cube', color: '#4A90D9' },
     hit_box: { label: '碰撞箱', icon: 'fa-shield', color: '#D94A4A' },
     connector: { label: '连接点', icon: 'fa-plug', color: '#3AA83A' },
+    interact_box: { label: '交互区', icon: 'fa-hand-pointer', color: '#D9A441' },
 };
 
 const MARKER_TYPE_LIST = Object.keys(MARKER_TYPES);
@@ -44,7 +45,7 @@ function getMarkerTypesForElement(element) {
     if (element instanceof Locator) {
         return ['connector'];
     } else if (element instanceof Group) {
-        return ['sub_part', 'hit_box'];
+        return ['sub_part', 'hit_box', 'interact_box'];
     }
     return [];
 }
@@ -118,6 +119,24 @@ function setMarker(projectConfig, partId, variantName, uuid, type, configRef) {
                         log.debug('setMarker: 覆盖旧 hit_box 标记，已清理 hit_boxes 条目', {
                             partId, variant: variantName, spKey: oldMarker.config_ref, uuid: uuid,
                         });
+                    }
+                }
+            }
+        } else if (oldMarker.type === 'interact_box') {
+            // 按 _uuid 清理旧条目
+            var oldVariantIb = part.variants && part.variants[variantName];
+            if (oldVariantIb && oldVariantIb.sub_parts) {
+                for (var skIb in oldVariantIb.sub_parts) {
+                    var spIb = oldVariantIb.sub_parts[skIb];
+                    if (spIb && spIb.interact_boxes) {
+                        for (var ibKey in spIb.interact_boxes) {
+                            if (spIb.interact_boxes[ibKey]._uuid === uuid) {
+                                delete spIb.interact_boxes[ibKey];
+                                log.debug('setMarker: 覆盖旧 interact_box 标记，已清理 interact_boxes 条目', {
+                                    partId, variant: variantName, spKey: skIb, ibKey: ibKey,
+                                });
+                            }
+                        }
                     }
                 }
             }
@@ -225,6 +244,36 @@ function clearMarker(projectConfig, partId, variantName, uuid) {
         }
     }
 
+    // 清理交互区标记对应的 sub_part.interact_boxes 条目
+    if (marker && marker.type === 'interact_box') {
+        var variantIb = part.variants && part.variants[variantName];
+        var foundIb = false;
+        if (variantIb && variantIb.sub_parts) {
+            for (var skIb in variantIb.sub_parts) {
+                var spIb = variantIb.sub_parts[skIb];
+                if (spIb && spIb.interact_boxes) {
+                    for (var ibKey in spIb.interact_boxes) {
+                        if (spIb.interact_boxes[ibKey]._uuid === uuid) {
+                            delete spIb.interact_boxes[ibKey];
+                            foundIb = true;
+                            log.debug('clearMarker: 交互区条目清理', {
+                                partId, variant: variantName, spKey: skIb,
+                                ibKey: ibKey, uuid: uuid,
+                            });
+                            break;
+                        }
+                    }
+                }
+                if (foundIb) break;
+            }
+        }
+        if (!foundIb) {
+            log.debug('clearMarker: 交互区未找到匹配条目', {
+                partId, variant: variantName, uuid,
+            });
+        }
+    }
+
     // 清理连接点标记对应的 sub_part.connectors 条目
     if (marker && marker.type === 'connector') {
         var variant = part.variants && part.variants[variantName];
@@ -308,6 +357,7 @@ function clearMarker(projectConfig, partId, variantName, uuid) {
             var sp = variant.sub_parts[spKey];
             stateSummary[spKey] = {
                 hitBoxKeys: sp.hit_boxes ? Object.keys(sp.hit_boxes) : [],
+                interactBoxKeys: sp.interact_boxes ? Object.keys(sp.interact_boxes) : [],
                 connectorKeys: sp.connectors ? Object.keys(sp.connectors) : [],
             };
         }

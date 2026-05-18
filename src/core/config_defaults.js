@@ -47,6 +47,13 @@ const HIT_BOX_DEFAULTS = {
     condition: 'true',
 };
 
+const INTERACT_BOX_DEFAULTS = {
+    bone: '',
+    interact_mode: 'fast',
+    condition: 'NOR',
+    signal_targets: {},
+};
+
 /** 子系统实例基础默认值（不含类型专属字段） */
 const SUBSYSTEM_INSTANCE_DEFAULTS = {
     type: '',
@@ -71,6 +78,7 @@ if (typeof module !== 'undefined' && module.exports) {
         VARIANT_DEFAULTS,
         SUB_PART_DEFAULTS,
         HIT_BOX_DEFAULTS,
+        INTERACT_BOX_DEFAULTS,
         SUBSYSTEM_INSTANCE_DEFAULTS,
         CONNECTOR_INSTANCE_DEFAULTS,
     };

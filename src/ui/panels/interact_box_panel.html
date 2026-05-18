@@ -1,0 +1,108 @@
+<div class="mm-section">
+    <div class="mm-sticky-title">
+        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
+            <span class="mm-marker-badge" :style="{ background: badgeColor }">{{ badgeLabel }}</span>
+            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:0;border:1px solid transparent;background:transparent;"
+                v-model="editingName"
+                @focus="$event.target.style.border='1px solid #555';$event.target.style.background='#2a2a2a'"
+                @blur="onNameBlur($event)"
+                @change="onNameChange($event.target.value)"
+                placeholder="interact.machine_max.xxx"
+                title="交互区名称（字典 key），修改后自动迁移字典" />
+        </h3>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">归属</h4>
+        <div v-if="parentSubPartKey" class="mm-sub-item-row mm-clickable" :title="'点击跳转到子零件 ' + parentSubPartKey" @click="navigateToSubPart">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
+                {{ parentSubPartKey }}
+            </span>
+        </div>
+        <div v-else class="mm-sub-item-row" title="由骨骼层级自动检测" style="cursor:default">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
+                （游离 — 无归属）
+            </span>
+        </div>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">绑定骨骼</h4>
+        <div class="mm-field">
+            <label title="该交互区绑定的骨骼名称，决定交互区在 3D 空间中的位置和姿态">骨骼</label>
+            <input type="text" class="mm-input"
+                v-model="editingBone"
+                @change="onBoneChange($event.target.value)"
+                :list="boneListId"
+                placeholder="搜索并选择骨骼…" />
+            <datalist :id="boneListId">
+                <option v-for="(name, idx) in allBoneNames" :key="idx" :value="name" />
+            </datalist>
+            <p v-if="allBoneNames.length === 0" class="mm-element-info" style="color:#888;font-size:10px">
+                当前模型中没有任何骨骼（Group）
+            </p>
+        </div>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">交互区属性</h4>
+        <div class="mm-field">
+            <label title="交互模式。fast：玩家碰撞箱与交互区碰撞时按下交互键触发；accurate：需要玩家瞄准交互区">交互模式</label>
+            <select class="mm-select" :value="config.interact_mode" @change="onFieldChange('interact_mode', $event.target.value)">
+                <option value="fast">fast（快速）</option>
+                <option value="accurate">accurate（精确）</option>
+            </select>
+        </div>
+        <div class="mm-field">
+            <label title="交互区启用条件逻辑。AND：所有输入信号都不为0时启用；NOR：任意一个输入信号为0时启用（默认）">条件逻辑</label>
+            <select class="mm-select" :value="config.condition" @change="onFieldChange('condition', $event.target.value)">
+                <option value="AND">AND（全真则真）</option>
+                <option value="OR">OR（有真则真）</option>
+                <option value="NAND">NAND（全真则假）</option>
+                <option value="NOR">NOR（有真则假）</option>
+                <option value="XOR">XOR（奇真则真）</option>
+                <option value="XNOR">XNOR（偶真则真）</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- === 信号目标 (signal_targets) === -->
+    <div class="mm-section">
+        <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>信号目标</span>
+            <button class="mm-btn mm-btn-sm" @click="addSignalTargetChannel" title="添加信号频道" style="font-size:18px;font-weight:bold">+</button>
+        </h4>
+        <div v-if="signalTargetChannelCount === 0" class="mm-element-info" style="color:#888;font-size:11px">
+            无信号目标 — 点击 [+ ] 添加频道
+        </div>
+        <div v-for="(targets, channel, ci) in signalTargetEntries" :key="ci" class="mm-signal-card">
+            <div class="mm-signal-header">
+                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel"
+                    @change="onSignalTargetChannelChange(channel, $event.target.value)"
+                    :list="'ib-sig-chan-'+_uid" placeholder="频道名" />
+                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetChannel(channel)" title="删除频道">×</button>
+            </div>
+            <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
+                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
+                    @change="updateSignalTargetItem(channel, ti, $event.target.value)"
+                    :list="'ib-sig-tgt-'+_uid" placeholder="目标（子系统名 / subpart / vehicle / 连接点名）" />
+                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="删除目标">×</button>
+            </div>
+            <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTargetItem(channel)">+ 添加目标</button>
+        </div>
+        <datalist :id="'ib-sig-chan-'+_uid">
+            <option v-for="h in channelHints" :key="h" :value="h" />
+        </datalist>
+        <datalist :id="'ib-sig-tgt-'+_uid">
+            <option v-for="h in signalTargetHints" :key="h" :value="h" />
+        </datalist>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">骨骼信息（只读）</h4>
+        <p class="mm-element-info">当前选中骨骼: {{ elementName }}</p>
+        <p class="mm-element-info" v-if="config.bone">绑定骨骼: {{ config.bone }}</p>
+    </div>
+</div>

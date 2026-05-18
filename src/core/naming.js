@@ -24,10 +24,10 @@ function toSnakeCase(str) {
 /**
  * 根据实体类型和上下文生成默认名称（翻译键格式）
  *
- * @param {'sub_part'|'connector'|'subsystem'} entityType - 实体类型
+ * @param {'sub_part'|'connector'|'interact_box'|'subsystem'} entityType - 实体类型
  * @param {Object} context - 生成上下文
  * @param {string} [context.namespace='machine_max'] - 命名空间
- * @param {string} [context.boneName] - 骨骼/Locator 名称（用于 connector）
+ * @param {string} [context.boneName] - 骨骼/Locator 名称（用于 connector/interact_box）
  * @param {string} [context.typeShortName] - type 短名（用于 subsystem）
  * @param {number} [context.index=1] - 序号（用于 subsystem 去重）
  * @returns {string} 默认名称
@@ -43,6 +43,10 @@ function generateDefaultName(entityType, context) {
             var locName = context.boneName || 'connector';
             return 'connector.' + ns + '.' + toSnakeCase(locName);
 
+        case 'interact_box':
+            var boneName = context.boneName || 'interact';
+            return 'interact.' + ns + '.' + toSnakeCase(boneName);
+
         case 'subsystem':
             var shortName = context.typeShortName || 'subsystem';
             var idx = context.index || 1;
@@ -57,8 +61,8 @@ function generateDefaultName(entityType, context) {
  * 校验名称在当前作用域下是否唯一
  *
  * @param {Object} variant - 当前变体配置
- * @param {'sub_part'|'connector'|'subsystem'} scope - 校验作用域
- * @param {string} subPartKey - 当前子零件 key（connector/subsystem 需此参数）
+ * @param {'sub_part'|'connector'|'interact_box'|'subsystem'} scope - 校验作用域
+ * @param {string} subPartKey - 当前子零件 key（connector/subsystem/interact_box 需此参数）
  * @param {string} name - 要校验的名称
  * @param {string} [excludeKey] - 排除的 key（用于编辑已有项时，不与自己冲突）
  * @returns {{ valid: boolean, message: string }}
@@ -75,6 +79,10 @@ function validateNameUniqueness(variant, scope, subPartKey, name, excludeKey) {
         case 'connector':
             var spConns = (variant.sub_parts && variant.sub_parts[subPartKey] && variant.sub_parts[subPartKey].connectors) || {};
             existingKeys = Object.keys(spConns);
+            break;
+        case 'interact_box':
+            var spIbs = (variant.sub_parts && variant.sub_parts[subPartKey] && variant.sub_parts[subPartKey].interact_boxes) || {};
+            existingKeys = Object.keys(spIbs);
             break;
         case 'subsystem':
             var spSubs = (variant.sub_parts && variant.sub_parts[subPartKey] && variant.sub_parts[subPartKey].subsystems) || {};

@@ -15,6 +15,7 @@ Vue.component('mm-sub-part-panel', {
         badgeColor: { type: String, default: '#4A90D9' },
         badgeLabel: { type: String, default: '子零件' },
         hitBoxes: { type: Object, default: function() { return {}; } },
+        interactBoxes: { type: Object, default: function() { return {}; } },
         allBoneNames: { type: Array, default: function() { return []; } },
         allLocatorNames: { type: Array, default: function() { return []; } },
         refreshKey: { type: Number, default: 0 },
@@ -58,6 +59,10 @@ Vue.component('mm-sub-part-panel', {
             // 读取 refreshKey 作为版本号：外部因非响应式操作（delete）改变 hitBoxes 时强制重算
             void this.refreshKey;
             return this.hitBoxes ? Object.keys(this.hitBoxes).length : 0;
+        },
+        interactBoxCount: function () {
+            void this.refreshKey;
+            return this.interactBoxes ? Object.keys(this.interactBoxes).length : 0;
         },
         connectorCount: function () {
             // 读取 refreshKey 作为版本号：外部因非响应式操作（delete）改变 connectors 时强制重算
@@ -105,6 +110,10 @@ Vue.component('mm-sub-part-panel', {
             var el = Group.all.find(function (g) { return g.name === hbKey || g.uuid === hbKey; });
             return el ? el.name : hbKey;
         },
+        resolveInteractBoxName: function (ibKey) {
+            // 交互区 key 是翻译键格式（如 interact.machine_max.left_seat），直接显示
+            return ibKey;
+        },
         resolveConnectorName: function (connKey) {
             // 连接点 key 现在是翻译键格式，直接显示
             return connKey;
@@ -151,6 +160,16 @@ Vue.component('mm-sub-part-panel', {
          */
         navigateToHitBox: function (hbKey) {
             this.$emit('navigate-to-hit-box', hbKey);
+        },
+        /**
+         * 导航到交互区：点击交互区条目时选中对应的 Group 骨骼，切换到交互区属性面板
+         */
+        navigateToInteractBox: function (ibKey) {
+            var ib = this.interactBoxes && this.interactBoxes[ibKey];
+            var boneName = ib ? ib.bone : '';
+            if (boneName) {
+                this.$emit('navigate-to-hit-box', boneName);
+            }
         },
         /**
          * 导航到连接点：点击连接点条目时选中对应的 Locator，切换到连接点属性面板

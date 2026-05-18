@@ -9,6 +9,7 @@ Vue.component('mm-hit-box-panel', {
         elementName: { type: String, default: '' },
         parentSubPartKey: { type: String, default: '' },
         materialDefs: { type: Object, default: function() { return {}; } },
+        parentSubsystems: { type: Object, default: function() { return {}; } },
     },
     data: function () {
         return {
@@ -18,6 +19,19 @@ Vue.component('mm-hit-box-panel', {
     computed: {
         badgeColor: function () { return '#D94A4A'; },
         badgeLabel: function () { return '碰撞箱'; },
+        /**
+         * 所属子零件内的子系统列表，用于关联子系统下拉选择
+         * 格式: { subsystemKey: subsystemKey }，供 v-for 遍历
+         */
+        subsystemOptions: function () {
+            var options = { '': '（无）' };
+            for (var key in this.parentSubsystems) {
+                if (this.parentSubsystems.hasOwnProperty(key)) {
+                    options[key] = key;
+                }
+            }
+            return options;
+        },
         cubeCount: function () {
             if (!this._parentGroup || !this._parentGroup.children) return 0;
             return this._parentGroup.children.filter(function(c) { return c instanceof Cube; }).length;

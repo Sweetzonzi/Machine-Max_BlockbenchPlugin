@@ -81,13 +81,16 @@
                 <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target">{{ target }}</option>
             </select>
 
-            <!-- 功率输出映射编辑器（power_outputs_map，值类型为 <string, number>） -->
+            <!-- 功率输出映射编辑器（power_outputs_map，值类型为 <string, number>）
+                 目标名从 signalTargetOptions 下拉选择，同 power_target 的选项来源 -->
             <div v-else-if="field.editor === 'power_outputs_map'" class="mm-power-outputs-editor">
                 <div v-for="(ratio, targetName, pi) in getPowerOutputEntries(field.field)" :key="pi" style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
-                    <input type="text" class="mm-input" style="flex:1;font-size:11px;min-width:80px"
+                    <select class="mm-select" style="flex:1;min-width:80px"
                         :value="targetName"
-                        @change="onPowerOutputTargetChange(field.field, targetName, $event.target.value)"
-                        placeholder="目标名称" />
+                        @change="onPowerOutputTargetChange(field.field, targetName, $event.target.value)">
+                        <option value="">（无）</option>
+                        <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target">{{ target }}</option>
+                    </select>
                     <input type="number" class="mm-input" style="width:80px;font-size:11px;text-align:right"
                         step="0.01" min="-999" max="999"
                         :value="ratio"

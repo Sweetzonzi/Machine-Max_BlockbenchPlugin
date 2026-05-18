@@ -277,9 +277,9 @@ function _shortName(fullKey) {
  * @param {Object} [options]
  * @param {number} [options.width=800] - 画布宽度
  * @param {number} [options.height=400] - 画布高度
- * @param {number} [options.repulsion=4000] - 电荷斥力强度
+ * @param {number} [options.repulsion=7000] - 电荷斥力强度
  * @param {number} [options.attraction=0.004] - 弹簧引力系数
- * @param {number} [options.idealLength=180] - 期望边长(px)
+ * @param {number} [options.idealLength=280] - 期望边长(px)
  * @param {number} [options.iterations=100] - 迭代次数
  * @param {number} [options.damping=0.82] - 阻尼系数
  * @returns {Object[]} 布局后的 nodes（含 x/y 坐标）
@@ -289,9 +289,9 @@ function forceLayout(nodes, edges, options) {
     var opts = options || {};
     var width = opts.width || 800;
     var height = opts.height || 400;
-    var repulsion = opts.repulsion || 4000;
+    var repulsion = opts.repulsion || 7000;
     var attraction = opts.attraction || 0.004;
-    var idealLength = opts.idealLength || 180;
+    var idealLength = opts.idealLength || 280;
     var iterations = opts.iterations || 100;
     var damping = opts.damping || 0.82;
     var NODE_MIN_DIST = 50; // 节点间最小间距（斥力饱和阈值）

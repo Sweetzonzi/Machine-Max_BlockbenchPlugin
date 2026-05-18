@@ -202,6 +202,45 @@ function buildMMMenuItems(el) {
                 }
             }});
         }
+        if (!marker || marker.type !== 'interact_box') {
+            items.push({ name: '标记为交互区', icon: 'pan_tool', click: function () {
+                log.debug('右键菜单: 标记为交互区', { uuid: el.uuid, name: el.name });
+                var searchEl = (marker && marker.type === 'sub_part') ? (el.parent || null) : el;
+                var owner = detectOwnerSubPart(config, activePartId, activeVariantName, searchEl);
+                var spKey = owner ? owner.spKey : null;
+                if (spKey) {
+                    var variant = config.parts[activePartId].variants[activeVariantName];
+                    if (!variant.sub_parts) variant.sub_parts = {};
+                    if (!variant.sub_parts[spKey]) {
+                        var cfgMod = require('../core/config.js');
+                        variant.sub_parts[spKey] = cfgMod.createSubPartConfig();
+                    }
+                    if (!variant.sub_parts[spKey].interact_boxes) {
+                        variant.sub_parts[spKey].interact_boxes = {};
+                    }
+                    // 生成唯一名称（翻译键格式），如 interact.machine_max.left_seat
+                    var ns = config.namespace || 'machine_max';
+                    var baseName = generateDefaultName('interact_box', { namespace: ns, boneName: el.name });
+                    var ibName = ensureUniqueName('interact_box', variant, spKey, baseName);
+                    if (!variant.sub_parts[spKey].interact_boxes[ibName]) {
+                        var cfgMod2 = require('../core/config.js');
+                        variant.sub_parts[spKey].interact_boxes[ibName] = cfgMod2.createInteractBoxConfig();
+                        variant.sub_parts[spKey].interact_boxes[ibName].bone = el.name;
+                        variant.sub_parts[spKey].interact_boxes[ibName]._uuid = el.uuid;
+                        log.debug('右键菜单: 标记为交互区 — 在 sub_parts 中创建条目', {
+                            spKey: spKey, ibName: ibName, boneName: el.name,
+                        });
+                    }
+                }
+                setMarker(config, activePartId, activeVariantName, el.uuid, 'interact_box', spKey);
+                var { refreshOutlinerIcons } = require('../mode.js');
+                refreshOutlinerIcons();
+                Blockbench.dispatchEvent('update_selection');
+                if (!spKey) {
+                    showToast('交互区 "' + el.name + '" 无归属子零件', 'warning');
+                }
+            }});
+        }
         // 已标记为子零件的 Group 显示"添加子系统"二级菜单
         if (marker && marker.type === 'sub_part') {
             var buildSubsystemSubmenu = function (spKey) {
@@ -318,6 +357,7 @@ function buildMMMenuItems(el) {
                 for (var spk in oldVariant.sub_parts) {
                     oldSubPartsSnapshot[spk] = {
                         hitBoxKeys: oldVariant.sub_parts[spk].hit_boxes ? Object.keys(oldVariant.sub_parts[spk].hit_boxes) : [],
+                        interactBoxKeys: oldVariant.sub_parts[spk].interact_boxes ? Object.keys(oldVariant.sub_parts[spk].interact_boxes) : [],
                         connectorKeys: oldVariant.sub_parts[spk].connectors ? Object.keys(oldVariant.sub_parts[spk].connectors) : [],
                     };
                 }
@@ -333,6 +373,7 @@ function buildMMMenuItems(el) {
                 for (var spk2 in newVariant.sub_parts) {
                     newSubPartsSnapshot[spk2] = {
                         hitBoxKeys: newVariant.sub_parts[spk2].hit_boxes ? Object.keys(newVariant.sub_parts[spk2].hit_boxes) : [],
+                        interactBoxKeys: newVariant.sub_parts[spk2].interact_boxes ? Object.keys(newVariant.sub_parts[spk2].interact_boxes) : [],
                         connectorKeys: newVariant.sub_parts[spk2].connectors ? Object.keys(newVariant.sub_parts[spk2].connectors) : [],
                     };
                 }

@@ -4,6 +4,7 @@ const {
     VARIANT_DEFAULTS,
     SUB_PART_DEFAULTS,
     HIT_BOX_DEFAULTS,
+    INTERACT_BOX_DEFAULTS,
     SUBSYSTEM_INSTANCE_DEFAULTS,
     CONNECTOR_INSTANCE_DEFAULTS,
 } = require('./config_defaults.js');
@@ -98,6 +99,14 @@ function createSubPartConfig() {
 function createHitBoxConfig() {
     log.debug('createHitBoxConfig: 创建碰撞箱配置');
     return JSON.parse(JSON.stringify(HIT_BOX_DEFAULTS));
+}
+
+/**
+ * 创建新的交互区配置，使用默认值填充
+ */
+function createInteractBoxConfig() {
+    log.debug('createInteractBoxConfig: 创建交互区配置');
+    return JSON.parse(JSON.stringify(INTERACT_BOX_DEFAULTS));
 }
 
 /**
@@ -207,6 +216,7 @@ if (typeof module !== 'undefined' && module.exports) {
         createVariantConfig,
         createSubPartConfig,
         createHitBoxConfig,
+        createInteractBoxConfig,
         createSubsystemConfig,
         createConnectorInstanceConfig,
         ensureDefaults,

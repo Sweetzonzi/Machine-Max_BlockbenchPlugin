@@ -2615,6 +2615,12 @@
         thickness: 1,
         condition: "true"
       };
+      var INTERACT_BOX_DEFAULTS = {
+        bone: "",
+        interact_mode: "fast",
+        condition: "NOR",
+        signal_targets: {}
+      };
       var SUBSYSTEM_INSTANCE_DEFAULTS = {
         type: "",
         definition: ""
@@ -2635,6 +2641,7 @@
           VARIANT_DEFAULTS,
           SUB_PART_DEFAULTS,
           HIT_BOX_DEFAULTS,
+          INTERACT_BOX_DEFAULTS,
           SUBSYSTEM_INSTANCE_DEFAULTS,
           CONNECTOR_INSTANCE_DEFAULTS
         };
@@ -2656,6 +2663,7 @@
         VARIANT_DEFAULTS,
         SUB_PART_DEFAULTS,
         HIT_BOX_DEFAULTS,
+        INTERACT_BOX_DEFAULTS,
         SUBSYSTEM_INSTANCE_DEFAULTS,
         CONNECTOR_INSTANCE_DEFAULTS
       } = require_config_defaults();
@@ -2721,6 +2729,10 @@
       function createHitBoxConfig() {
         log2.debug("createHitBoxConfig: \u521B\u5EFA\u78B0\u649E\u7BB1\u914D\u7F6E");
         return JSON.parse(JSON.stringify(HIT_BOX_DEFAULTS));
+      }
+      function createInteractBoxConfig() {
+        log2.debug("createInteractBoxConfig: \u521B\u5EFA\u4EA4\u4E92\u533A\u914D\u7F6E");
+        return JSON.parse(JSON.stringify(INTERACT_BOX_DEFAULTS));
       }
       function createSubsystemConfig() {
         log2.debug("createSubsystemConfig: \u521B\u5EFA\u5B50\u7CFB\u7EDF\u914D\u7F6E");
@@ -2797,6 +2809,7 @@
           createVariantConfig,
           createSubPartConfig,
           createHitBoxConfig,
+          createInteractBoxConfig,
           createSubsystemConfig,
           createConnectorInstanceConfig,
           ensureDefaults,
@@ -2981,7 +2994,8 @@
       var MARKER_TYPES = {
         sub_part: { label: "\u5B50\u96F6\u4EF6", icon: "fa-cube", color: "#4A90D9" },
         hit_box: { label: "\u78B0\u649E\u7BB1", icon: "fa-shield", color: "#D94A4A" },
-        connector: { label: "\u8FDE\u63A5\u70B9", icon: "fa-plug", color: "#3AA83A" }
+        connector: { label: "\u8FDE\u63A5\u70B9", icon: "fa-plug", color: "#3AA83A" },
+        interact_box: { label: "\u4EA4\u4E92\u533A", icon: "fa-hand-pointer", color: "#D9A441" }
       };
       var MARKER_TYPE_LIST = Object.keys(MARKER_TYPES);
       function getMarkerInfo(type) {
@@ -2999,7 +3013,7 @@
         if (element instanceof Locator) {
           return ["connector"];
         } else if (element instanceof Group) {
-          return ["sub_part", "hit_box"];
+          return ["sub_part", "hit_box", "interact_box"];
         }
         return [];
       }
@@ -3062,6 +3076,26 @@
                     spKey: oldMarker.config_ref,
                     uuid
                   });
+                }
+              }
+            }
+          } else if (oldMarker.type === "interact_box") {
+            var oldVariantIb = part.variants && part.variants[variantName];
+            if (oldVariantIb && oldVariantIb.sub_parts) {
+              for (var skIb in oldVariantIb.sub_parts) {
+                var spIb = oldVariantIb.sub_parts[skIb];
+                if (spIb && spIb.interact_boxes) {
+                  for (var ibKey in spIb.interact_boxes) {
+                    if (spIb.interact_boxes[ibKey]._uuid === uuid) {
+                      delete spIb.interact_boxes[ibKey];
+                      log2.debug("setMarker: \u8986\u76D6\u65E7 interact_box \u6807\u8BB0\uFF0C\u5DF2\u6E05\u7406 interact_boxes \u6761\u76EE", {
+                        partId,
+                        variant: variantName,
+                        spKey: skIb,
+                        ibKey
+                      });
+                    }
+                  }
                 }
               }
             }
@@ -3162,6 +3196,39 @@
             });
           }
         }
+        if (marker && marker.type === "interact_box") {
+          var variantIb = part.variants && part.variants[variantName];
+          var foundIb = false;
+          if (variantIb && variantIb.sub_parts) {
+            for (var skIb in variantIb.sub_parts) {
+              var spIb = variantIb.sub_parts[skIb];
+              if (spIb && spIb.interact_boxes) {
+                for (var ibKey in spIb.interact_boxes) {
+                  if (spIb.interact_boxes[ibKey]._uuid === uuid) {
+                    delete spIb.interact_boxes[ibKey];
+                    foundIb = true;
+                    log2.debug("clearMarker: \u4EA4\u4E92\u533A\u6761\u76EE\u6E05\u7406", {
+                      partId,
+                      variant: variantName,
+                      spKey: skIb,
+                      ibKey,
+                      uuid
+                    });
+                    break;
+                  }
+                }
+              }
+              if (foundIb) break;
+            }
+          }
+          if (!foundIb) {
+            log2.debug("clearMarker: \u4EA4\u4E92\u533A\u672A\u627E\u5230\u5339\u914D\u6761\u76EE", {
+              partId,
+              variant: variantName,
+              uuid
+            });
+          }
+        }
         if (marker && marker.type === "connector") {
           var variant = part.variants && part.variants[variantName];
           var foundAnyMatch = false;
@@ -3247,6 +3314,7 @@
             var sp = variant.sub_parts[spKey];
             stateSummary[spKey] = {
               hitBoxKeys: sp.hit_boxes ? Object.keys(sp.hit_boxes) : [],
+              interactBoxKeys: sp.interact_boxes ? Object.keys(sp.interact_boxes) : [],
               connectorKeys: sp.connectors ? Object.keys(sp.connectors) : []
             };
           }
@@ -5386,313 +5454,210 @@
           id: "machine_max:engine",
           displayName: "\u53D1\u52A8\u673A",
           category: "power",
-          fields: ["max_power", "max_torque", "idle_rpm", "idle_torque_ratio", "peak_torque_rpm", "red_line_rpm", "red_line_torque_ratio", "inertia", "four_stroke", "cylinder_count", "drag_coefficients", "control_channels", "sound_map"],
-          defaults: {
-            max_power: 100,
-            max_torque: 200,
-            idle_rpm: 800,
-            idle_torque_ratio: 0.15,
-            peak_torque_rpm: 3500,
-            red_line_rpm: 7e3,
-            red_line_torque_ratio: 0.85,
-            inertia: 0.3,
-            four_stroke: true,
-            cylinder_count: 4
-          },
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: ["power_output", "speed_outputs"],
-          signalInputs: []
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
+            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { engine_speed: ["subpart", "vehicle"] } }
+          ]
         },
         {
           id: "machine_max:motor",
           displayName: "\u7535\u52A8\u673A",
           category: "power",
-          fields: ["max_power", "max_torque", "red_line_rpm", "inertia"],
-          defaults: {
-            max_power: 50,
-            max_torque: 100,
-            red_line_rpm: 8e3,
-            inertia: 0.1
-          },
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: ["power_output", "speed_outputs"],
-          signalInputs: []
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
+            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { motor_speed: ["subpart", "vehicle"] } }
+          ]
         },
         {
           id: "machine_max:battery",
           displayName: "\u7535\u6C60",
           category: "power",
-          fields: ["capacity", "voltage", "max_discharge", "max_charge"],
-          defaults: {
-            capacity: 1e4,
-            voltage: 48,
-            max_discharge: 500,
-            max_charge: 500
-          },
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: ["power_output"],
-          signalInputs: []
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+          ]
+        },
+        {
+          id: "machine_max:gearbox",
+          displayName: "\u53D8\u901F\u7BB1",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
+            { field: "gear_outputs", label: "\u6321\u4F4D\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { gear: ["subpart", "vehicle"] } }
+          ]
+        },
+        {
+          id: "machine_max:transmission",
+          displayName: "\u5206\u52A8\u7BB1",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_outputs", label: "\u529F\u7387\u8F93\u51FA\u5206\u914D", editor: "power_outputs_map", required: true, defaultValue: {} }
+          ]
+        },
+        {
+          id: "machine_max:motor_controller",
+          displayName: "\u7535\u673A\u63A7\u5236\u5668",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
+            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { motor_speed: ["subpart", "vehicle"] } }
+          ]
         },
         // ===== control 分类 =====
         {
           id: "machine_max:car_controller",
           displayName: "\u8F66\u8F86\u63A7\u5236\u5668",
           category: "control",
-          fields: ["steer_speed", "steer_return_speed", "max_steer_angle"],
-          defaults: {
-            steer_speed: 5,
-            steer_return_speed: 10,
-            max_steer_angle: 35
-          },
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: ["control_outputs", "speed_outputs", "throttle_outputs", "brake_outputs", "steering_outputs", "handbrake_outputs"],
-          signalInputs: []
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { car_control: [] } },
+            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["subpart", "vehicle"] } },
+            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["subpart", "vehicle"] } },
+            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["subpart", "vehicle"] } },
+            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["subpart", "vehicle"] } },
+            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["subpart", "vehicle"] } }
+          ]
         },
         {
           id: "machine_max:motorbike_controller",
           displayName: "\u6469\u6258\u8F66\u63A7\u5236\u5668",
           category: "control",
-          fields: ["lean_angle_max", "lean_speed"],
-          defaults: {
-            lean_angle_max: 30,
-            lean_speed: 5
-          },
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: ["control_outputs", "speed_outputs", "throttle_outputs", "brake_outputs", "steering_outputs"],
-          signalInputs: []
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { car_control: [] } },
+            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["subpart", "vehicle"] } },
+            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["subpart", "vehicle"] } },
+            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["subpart", "vehicle"] } },
+            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["subpart", "vehicle"] } },
+            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["subpart", "vehicle"] } }
+          ]
         },
         {
           id: "machine_max:signal_convert",
           displayName: "\u4FE1\u53F7\u8F6C\u6362\u5668",
           category: "control",
-          fields: ["mappings"],
-          defaults: {},
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: [],
-          signalInputs: ["control_inputs"]
-        },
-        {
-          id: "machine_max:motor_controller",
-          displayName: "\u7535\u673A\u63A7\u5236\u5668",
-          category: "control",
-          fields: ["power_distribution", "speed_control"],
-          defaults: {
-            power_distribution: 1,
-            speed_control: "rpm"
-          },
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: ["power_output", "speed_outputs"],
-          signalInputs: ["control_inputs"]
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+          ]
         },
         // ===== utility 分类 =====
         {
-          id: "machine_max:gearbox",
-          displayName: "\u53D8\u901F\u7BB1",
-          category: "power",
-          fields: ["forward_gears", "reverse_gears", "shift_time", "shift_speed"],
-          defaults: {
-            forward_gears: 6,
-            reverse_gears: 1,
-            shift_time: 0.3,
-            shift_speed: 0
-          },
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: ["power_output", "gear_outputs"],
-          signalInputs: ["control_inputs"]
-        },
-        {
-          id: "machine_max:transmission",
-          displayName: "\u5206\u52A8\u7BB1",
-          category: "power",
-          fields: ["efficiency", "front_split", "rear_split", "center_split"],
-          defaults: {
-            efficiency: 0.95,
-            front_split: 0.5,
-            rear_split: 0.5,
-            center_split: 0.5
-          },
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: ["power_outputs"],
-          signalInputs: ["control_inputs"]
-        },
-        {
           id: "machine_max:wheel_driver",
           displayName: "\u8F6E\u80CE\u9A71\u52A8\u5668",
-          category: "power",
-          fields: ["friction", "suspension_stiffness", "suspension_damping", "suspension_travel", "wheel_radius", "wheel_width"],
-          defaults: {
-            friction: 1,
-            suspension_stiffness: 100,
-            suspension_damping: 10,
-            suspension_travel: 0.2,
-            wheel_radius: 0.35,
-            wheel_width: 0.2
-          },
-          needsLocator: false,
-          needsConnector: true,
-          signalOutputs: [],
-          signalInputs: ["control_inputs"]
+          category: "utility",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
+            { field: "roll_speed_outputs", label: "\u6EDA\u52A8\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} },
+            { field: "steering_angle_outputs", label: "\u8F6C\u5411\u89D2\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
+          ]
         },
         {
           id: "machine_max:seat",
           displayName: "\u5EA7\u4F4D",
           category: "utility",
-          fields: ["mount_offset", "view_offset", "eye_offset", "player_scale"],
-          defaults: {
-            mount_offset: [0, 0, 0],
-            view_offset: [0, 0, 0],
-            eye_offset: [0, 0, 0],
-            player_scale: 1
-          },
-          needsLocator: true,
-          needsConnector: false,
-          signalOutputs: ["move_outputs", "regular_outputs", "aim_outputs", "passenger_num_outputs"],
-          signalInputs: []
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
+            { field: "move_outputs", label: "\u79FB\u52A8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { move_control: [] } },
+            { field: "aim_outputs", label: "\u7784\u51C6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { aim: [] } },
+            { field: "regular_outputs", label: "\u5E38\u89C4\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { regular_control: [] } },
+            { field: "passenger_num_outputs", label: "\u4E58\u5BA2\u6570\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { passenger_num: ["subpart", "vehicle"] } }
+          ]
         },
         {
           id: "machine_max:lighting",
           displayName: "\u706F\u5149",
           category: "utility",
-          fields: ["radius", "color", "intensity", "falloff", "flicker", "shadow"],
-          defaults: {
-            radius: 10,
-            color: "#ffffff",
-            intensity: 1,
-            falloff: 1,
-            flicker: false,
-            shadow: false
-          },
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: [],
-          signalInputs: ["control_inputs"]
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u5149\u6E90\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: "" }
+          ]
         },
         {
           id: "machine_max:item_storage",
           displayName: "\u7269\u54C1\u5B58\u50A8",
           category: "utility",
-          fields: ["rows", "columns", "filter"],
-          defaults: {
-            rows: 3,
-            columns: 9,
-            filter: ""
-          },
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: [],
-          signalInputs: []
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+          ]
         },
         {
           id: "machine_max:basic",
           displayName: "\u57FA\u7840\uFF08\u65E0\u989D\u5916\u9762\u677F\uFF09",
           category: "utility",
-          fields: [],
-          defaults: {},
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: [],
-          signalInputs: []
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+          ]
         },
         {
           id: "machine_max:joint",
           displayName: "\u5173\u8282",
           category: "utility",
-          fields: ["torque", "speed", "angle_limit", "axis"],
-          defaults: {
-            torque: 100,
-            speed: 1,
-            angle_limit: 90,
-            axis: "y"
-          },
-          needsLocator: false,
-          needsConnector: true,
-          signalOutputs: [],
-          signalInputs: ["control_inputs"]
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
+            {
+              field: "rotation_order",
+              label: "\u65CB\u8F6C\u987A\u5E8F",
+              editor: "enum_selector",
+              required: true,
+              defaultValue: "XYZ",
+              options: ["XYZ", "XZY", "YXZ", "ZYX", "ZXY", "YZX"]
+            },
+            { field: "axes", label: "\u5173\u8282\u8F74\u53C2\u6570", editor: "json_textarea", required: true, defaultValue: {} }
+          ]
         },
         // ===== experimental 分类 =====
         {
           id: "machine_max:camera",
           displayName: "\u6444\u50CF\u5934",
           category: "experimental",
-          fields: ["fov", "clip_near", "clip_far", "follow"],
-          defaults: {
-            fov: 70,
-            clip_near: 0.1,
-            clip_far: 100,
-            follow: ""
-          },
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: [],
-          signalInputs: []
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+          ]
         },
         {
           id: "machine_max:javascript",
           displayName: "JavaScript \u811A\u672C",
           category: "experimental",
-          fields: ["script"],
-          defaults: {
-            script: ""
-          },
-          needsLocator: false,
-          needsConnector: false,
-          signalOutputs: [],
-          signalInputs: []
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "script", label: "\u811A\u672C\u5185\u5BB9", editor: "text_input", required: false, defaultValue: "" }
+          ]
         },
         {
           id: "machine_max:turret",
           displayName: "\u70AE\u5854",
           category: "experimental",
-          fields: ["yaw_speed", "pitch_speed", "yaw_limit", "pitch_limit"],
-          defaults: {
-            yaw_speed: 30,
-            pitch_speed: 20,
-            yaw_limit: 180,
-            pitch_limit: 45
-          },
-          needsLocator: true,
-          needsConnector: true,
-          signalOutputs: [],
-          signalInputs: ["control_inputs"]
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
+            { field: "rotation_outputs", label: "\u89D2\u5EA6\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
+          ]
         },
         {
           id: "machine_max:fire_controller",
           displayName: "\u706B\u63A7\u7CFB\u7EDF",
           category: "experimental",
-          fields: ["fire_modes", "rate_of_fire", "ammo_types"],
-          defaults: {
-            fire_modes: ["single"],
-            rate_of_fire: 1,
-            ammo_types: []
-          },
-          needsLocator: true,
-          needsConnector: true,
-          signalOutputs: ["fire_outputs"],
-          signalInputs: ["control_inputs"]
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { fire_control: [] } }
+          ]
         },
         {
           id: "machine_max:launcher",
           displayName: "\u53D1\u5C04\u5668",
           category: "experimental",
-          fields: ["launch_speed", "ammo_type", "reload_time"],
-          defaults: {
-            launch_speed: 20,
-            ammo_type: "",
-            reload_time: 2
-          },
-          needsLocator: true,
-          needsConnector: true,
-          signalOutputs: [],
-          signalInputs: ["control_inputs"]
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u53D1\u5C04\u70B9\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
+            { field: "ammo_outputs", label: "\u5F39\u836F\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
+          ]
         }
       ];
       var TYPE_MAP = {};
@@ -5712,15 +5677,6 @@
           return t.category === category;
         });
       }
-      function getTypeSpecificFields(typeId) {
-        var meta = TYPE_MAP[typeId];
-        return meta ? meta.fields.slice() : [];
-      }
-      function getTypeDefaults(typeId) {
-        var meta = TYPE_MAP[typeId];
-        if (!meta) return {};
-        return JSON.parse(JSON.stringify(meta.defaults));
-      }
       function getTypesGroupedByCategory() {
         var result = { power: [], control: [], utility: [], experimental: [] };
         for (var i = 0; i < SUBSYSTEM_TYPES.length; i++) {
@@ -5731,25 +5687,89 @@
         }
         return result;
       }
-      function getCategoryLabel(category) {
-        var labels = {
-          power: "\u52A8\u529B",
-          control: "\u63A7\u5236",
-          utility: "\u529F\u80FD",
-          experimental: "\u5B9E\u9A8C"
-        };
-        return labels[category] || category;
+      function getDynamicFields(typeId) {
+        var meta = TYPE_MAP[typeId];
+        return meta ? meta.dynamicFields.slice() : [];
       }
+      function getDynamicFieldNames(typeId) {
+        var fields = getDynamicFields(typeId);
+        var names = [];
+        for (var i = 0; i < fields.length; i++) {
+          names.push(fields[i].field);
+        }
+        return names;
+      }
+      function getTypeDefaults(typeId) {
+        var fields = getDynamicFields(typeId);
+        var result = {};
+        for (var i = 0; i < fields.length; i++) {
+          var f = fields[i];
+          if (f.field === "definition") continue;
+          result[f.field] = JSON.parse(JSON.stringify(f.defaultValue));
+        }
+        return result;
+      }
+      function getTypeSpecificFields(typeId) {
+        return getDynamicFieldNames(typeId);
+      }
+      function needsLocator(typeId) {
+        var fields = getDynamicFields(typeId);
+        for (var i = 0; i < fields.length; i++) {
+          if (fields[i].editor === "locator_selector") return true;
+        }
+        return false;
+      }
+      function needsConnector(typeId) {
+        var fields = getDynamicFields(typeId);
+        for (var i = 0; i < fields.length; i++) {
+          if (fields[i].editor === "connector_selector") return true;
+        }
+        return false;
+      }
+      function getSignalOutputFieldNames(typeId) {
+        var fields = getDynamicFields(typeId);
+        var result = [];
+        for (var i = 0; i < fields.length; i++) {
+          var f = fields[i];
+          if (f.editor === "signal_targets" || f.editor === "power_target" || f.editor === "power_outputs_map") {
+            result.push(f.field);
+          }
+        }
+        return result;
+      }
+      var EDITOR_LABELS = {
+        definition_selector: "\u578B\u53F7\u5B9A\u4E49\u9009\u62E9\u5668",
+        locator_selector: "\u5B9A\u4F4D\u5668\u9009\u62E9\u5668",
+        connector_selector: "\u8FDE\u63A5\u70B9\u9009\u62E9\u5668",
+        power_target: "\u529F\u7387\u76EE\u6807\u9009\u62E9\u5668",
+        signal_targets: "\u4FE1\u53F7\u9891\u9053\u7F16\u8F91\u5668",
+        power_outputs_map: "\u529F\u7387\u8F93\u51FA\u6620\u5C04\u7F16\u8F91\u5668",
+        enum_selector: "\u679A\u4E3E\u4E0B\u62C9\u83DC\u5355",
+        text_input: "\u6587\u672C\u8F93\u5165\u6846",
+        json_textarea: "JSON \u7F16\u8F91\u6846"
+      };
+      function getEditorLabel(editorType) {
+        return EDITOR_LABELS[editorType] || editorType;
+      }
+      var CATEGORY_COLORS = {
+        power: "#e67e22",
+        control: "#3498db",
+        utility: "#2ecc71",
+        experimental: "#9b59b6"
+      };
       function getTypeColor(typeId) {
-        var categoryColors = {
-          power: "#e67e22",
-          control: "#3498db",
-          utility: "#2ecc71",
-          experimental: "#9b59b6"
-        };
         var meta = TYPE_MAP[typeId];
         if (!meta) return "#888";
-        return categoryColors[meta.category] || "#888";
+        return CATEGORY_COLORS[meta.category] || "#888";
+      }
+      var CATEGORY_LABELS = {
+        power: "\u52A8\u529B",
+        control: "\u63A7\u5236",
+        utility: "\u529F\u80FD",
+        experimental: "\u5B9E\u9A8C"
+      };
+      function getCategoryLabel(category) {
+        return CATEGORY_LABELS[category] || category;
       }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
@@ -5757,11 +5777,17 @@
           getTypeMeta,
           getAllTypes,
           getTypesByCategory,
-          getTypeSpecificFields,
-          getTypeDefaults,
           getTypesGroupedByCategory,
-          getCategoryLabel,
-          getTypeColor
+          getDynamicFields,
+          getDynamicFieldNames,
+          getTypeDefaults,
+          getTypeSpecificFields,
+          needsLocator,
+          needsConnector,
+          getSignalOutputFieldNames,
+          getEditorLabel,
+          getTypeColor,
+          getCategoryLabel
         };
       }
     }
@@ -6938,6 +6964,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
+      var subsystemTypes = require_subsystem_types();
       var log2 = createLogger2("GenPart");
       function generatePartJSON(partId, partConfig, namespace) {
         const ns = namespace || "machine_max";
@@ -7000,7 +7027,12 @@
         if (sp.climb_assist) out.climb_assist = true;
         if (sp.hydro_priority !== 0) out.hydro_priority = sp.hydro_priority;
         if (sp.hit_boxes && Object.keys(sp.hit_boxes).length > 0) out.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
-        if (sp.interact_boxes && Object.keys(sp.interact_boxes).length > 0) out.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
+        if (sp.interact_boxes && Object.keys(sp.interact_boxes).length > 0) {
+          out.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
+          for (var ibKey in out.interact_boxes) {
+            delete out.interact_boxes[ibKey]._uuid;
+          }
+        }
         if (sp.connectors && Object.keys(sp.connectors).length > 0) out.connectors = _cleanConnectors(sp.connectors);
         if (sp.subsystems && Object.keys(sp.subsystems).length > 0) out.subsystems = _cleanSubsystems(sp.subsystems);
         if (sp.hydrodynamics) out.hydrodynamics = sp.hydrodynamics;
@@ -7010,23 +7042,37 @@
         var result = {};
         for (var key in subsystems) {
           var ss = subsystems[key];
+          var typeId = ss.type;
+          var allowedFields = subsystemTypes.getDynamicFieldNames(typeId);
+          if (allowedFields.length > 0) {
+            allowedFields.unshift("type");
+          }
+          if (allowedFields.length <= 1) {
+            log2.warn('_cleanSubsystems: \u672A\u77E5\u5B50\u7CFB\u7EDF\u7C7B\u578B "' + typeId + '"\uFF0C\u4F7F\u7528\u56DE\u9000\u8FC7\u6EE4\u7B56\u7565');
+            allowedFields = _inferDynamicFields(ss);
+          }
           var cleaned = {};
-          if (ss.type) cleaned.type = ss.type;
-          if (ss.definition) cleaned.definition = ss.definition;
-          if (ss.locator) cleaned.locator = ss.locator;
-          if (ss.connector) cleaned.connector = ss.connector;
-          for (var sf in ss) {
-            if (sf.endsWith("_outputs") || sf.endsWith("_inputs") || sf === "power_output") {
-              var val = ss[sf];
-              if (val === void 0 || val === null) continue;
-              if (val === "") continue;
-              if (typeof val === "object" && Object.keys(val).length === 0) continue;
-              cleaned[sf] = val;
-            }
+          for (var fi = 0; fi < allowedFields.length; fi++) {
+            var field = allowedFields[fi];
+            var val = ss[field];
+            if (val === void 0 || val === null) continue;
+            if (typeof val === "object" && !Array.isArray(val) && Object.keys(val).length === 0) continue;
+            if (typeof val === "string" && val === "") continue;
+            cleaned[field] = val;
           }
           result[key] = cleaned;
         }
         return result;
+      }
+      function _inferDynamicFields(ss) {
+        var fields = ["type", "definition"];
+        for (var sf in ss) {
+          if (sf === "type" || sf === "definition") continue;
+          if (sf.endsWith("_outputs") || sf.endsWith("_inputs") || sf === "power_output") {
+            fields.push(sf);
+          }
+        }
+        return fields;
       }
       function _cleanConnectors(connectors) {
         var result = {};
@@ -8066,6 +8112,9 @@
           case "connector":
             var locName = context.boneName || "connector";
             return "connector." + ns + "." + toSnakeCase(locName);
+          case "interact_box":
+            var boneName = context.boneName || "interact";
+            return "interact." + ns + "." + toSnakeCase(boneName);
           case "subsystem":
             var shortName = context.typeShortName || "subsystem";
             var idx = context.index || 1;
@@ -8084,6 +8133,10 @@
           case "connector":
             var spConns = variant.sub_parts && variant.sub_parts[subPartKey] && variant.sub_parts[subPartKey].connectors || {};
             existingKeys = Object.keys(spConns);
+            break;
+          case "interact_box":
+            var spIbs = variant.sub_parts && variant.sub_parts[subPartKey] && variant.sub_parts[subPartKey].interact_boxes || {};
+            existingKeys = Object.keys(spIbs);
             break;
           case "subsystem":
             var spSubs = variant.sub_parts && variant.sub_parts[subPartKey] && variant.sub_parts[subPartKey].subsystems || {};
@@ -8194,43 +8247,6 @@
             for (var f in typeDefaults) {
               if (typeDefaults.hasOwnProperty(f)) {
                 ssConfig[f] = JSON.parse(JSON.stringify(typeDefaults[f]));
-              }
-            }
-            if (meta.needsLocator) {
-              ssConfig.locator = "";
-            }
-            if (meta.needsConnector) {
-              ssConfig.connector = "";
-            }
-            var sigOutputs = meta.signalOutputs || [];
-            var sigDefaults = {
-              speed_outputs: { engine_speed: ["subpart", "vehicle"] },
-              control_outputs: { car_control: [] },
-              throttle_outputs: { throttle: ["subpart", "vehicle"] },
-              brake_outputs: { brake: ["subpart", "vehicle"] },
-              steering_outputs: { steering: ["subpart", "vehicle"] },
-              handbrake_outputs: { handbrake: ["subpart", "vehicle"] },
-              gear_outputs: { gear: ["subpart", "vehicle"] },
-              move_outputs: { move_control: [] },
-              regular_outputs: { regular_control: [] },
-              aim_outputs: { aim: [] },
-              passenger_num_outputs: { passenger_num: ["subpart", "vehicle"] },
-              power_outputs: {},
-              fire_outputs: {}
-            };
-            if (typeId === "machine_max:motorbike_controller" || typeId === "machine_max:car_controller") {
-              sigDefaults.speed_outputs = { vehicle_speed: ["subpart", "vehicle"] };
-            } else if (typeId === "machine_max:motor" || typeId === "machine_max:motor_controller") {
-              sigDefaults.speed_outputs = { motor_speed: ["subpart", "vehicle"] };
-            }
-            for (var si = 0; si < sigOutputs.length; si++) {
-              var sf = sigOutputs[si];
-              if (sf === "power_output") {
-                ssConfig[sf] = "";
-              } else if (sigDefaults[sf] !== void 0) {
-                ssConfig[sf] = JSON.parse(JSON.stringify(sigDefaults[sf]));
-              } else {
-                ssConfig[sf] = {};
               }
             }
             beforeSet(sp, instanceName, ssConfig);
@@ -8430,6 +8446,46 @@
               }
             } });
           }
+          if (!marker || marker.type !== "interact_box") {
+            items.push({ name: "\u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A", icon: "pan_tool", click: function() {
+              log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A", { uuid: el.uuid, name: el.name });
+              var searchEl = marker && marker.type === "sub_part" ? el.parent || null : el;
+              var owner = detectOwnerSubPart(config, activePartId, activeVariantName, searchEl);
+              var spKey = owner ? owner.spKey : null;
+              if (spKey) {
+                var variant = config.parts[activePartId].variants[activeVariantName];
+                if (!variant.sub_parts) variant.sub_parts = {};
+                if (!variant.sub_parts[spKey]) {
+                  var cfgMod = require_config();
+                  variant.sub_parts[spKey] = cfgMod.createSubPartConfig();
+                }
+                if (!variant.sub_parts[spKey].interact_boxes) {
+                  variant.sub_parts[spKey].interact_boxes = {};
+                }
+                var ns = config.namespace || "machine_max";
+                var baseName = generateDefaultName("interact_box", { namespace: ns, boneName: el.name });
+                var ibName = ensureUniqueName("interact_box", variant, spKey, baseName);
+                if (!variant.sub_parts[spKey].interact_boxes[ibName]) {
+                  var cfgMod2 = require_config();
+                  variant.sub_parts[spKey].interact_boxes[ibName] = cfgMod2.createInteractBoxConfig();
+                  variant.sub_parts[spKey].interact_boxes[ibName].bone = el.name;
+                  variant.sub_parts[spKey].interact_boxes[ibName]._uuid = el.uuid;
+                  log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A \u2014 \u5728 sub_parts \u4E2D\u521B\u5EFA\u6761\u76EE", {
+                    spKey,
+                    ibName,
+                    boneName: el.name
+                  });
+                }
+              }
+              setMarker(config, activePartId, activeVariantName, el.uuid, "interact_box", spKey);
+              var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_mode();
+              refreshOutlinerIcons2();
+              Blockbench.dispatchEvent("update_selection");
+              if (!spKey) {
+                showToast2('\u4EA4\u4E92\u533A "' + el.name + '" \u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6', "warning");
+              }
+            } });
+          }
           if (marker && marker.type === "sub_part") {
             var buildSubsystemSubmenu = function(spKey) {
               var logSubSys = function(typeId, displayName) {
@@ -8546,6 +8602,7 @@
               for (var spk in oldVariant.sub_parts) {
                 oldSubPartsSnapshot[spk] = {
                   hitBoxKeys: oldVariant.sub_parts[spk].hit_boxes ? Object.keys(oldVariant.sub_parts[spk].hit_boxes) : [],
+                  interactBoxKeys: oldVariant.sub_parts[spk].interact_boxes ? Object.keys(oldVariant.sub_parts[spk].interact_boxes) : [],
                   connectorKeys: oldVariant.sub_parts[spk].connectors ? Object.keys(oldVariant.sub_parts[spk].connectors) : []
                 };
               }
@@ -8558,6 +8615,7 @@
               for (var spk2 in newVariant.sub_parts) {
                 newSubPartsSnapshot[spk2] = {
                   hitBoxKeys: newVariant.sub_parts[spk2].hit_boxes ? Object.keys(newVariant.sub_parts[spk2].hit_boxes) : [],
+                  interactBoxKeys: newVariant.sub_parts[spk2].interact_boxes ? Object.keys(newVariant.sub_parts[spk2].interact_boxes) : [],
                   connectorKeys: newVariant.sub_parts[spk2].connectors ? Object.keys(newVariant.sub_parts[spk2].connectors) : []
                 };
               }
@@ -9136,6 +9194,20 @@
     </div>
 
     <div class="mm-section">
+        <h4 class="mm-section-title">\u4EA4\u4E92\u533A ({{ interactBoxCount }})</h4>
+        <div v-if="interactBoxCount === 0" class="mm-element-info" style="color:#888">
+            \u6682\u65E0\u4EA4\u4E92\u533A \u2014 \u5728 Outliner \u4E2D\u53F3\u952E\u9AA8\u9ABC\u5E76\u9009\u62E9"\u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A"
+        </div>
+        <div v-for="(ib, ibKey) in interactBoxes" :key="ibKey" class="mm-sub-item-row mm-clickable" :title="'\u70B9\u51FB\u8DF3\u8F6C\u5230\u4EA4\u4E92\u533A ' + resolveInteractBoxName(ibKey)" @click="navigateToInteractBox(ibKey)">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#D9A441;font-size:10px;padding:0 4px">IB</span>
+                {{ resolveInteractBoxName(ibKey) }}
+            </span>
+            <span class="mm-sub-item-meta">{{ ib.interact_mode || 'fast' }} | {{ ib.bone || '\uFF08\u672A\u6307\u5B9A\u9AA8\u9ABC\uFF09' }}</span>
+        </div>
+    </div>
+
+    <div class="mm-section">
         <h4 class="mm-section-title">\u8FDE\u63A5\u70B9 ({{ connectorCount }})</h4>
         <div v-if="connectorCount === 0" class="mm-element-info" style="color:#888">
             \u6682\u65E0\u8FDE\u63A5\u70B9 \u2014 \u5728 Outliner \u4E2D\u53F3\u952E Locator \u5E76\u9009\u62E9"\u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9"
@@ -9176,6 +9248,9 @@
           badgeColor: { type: String, default: "#4A90D9" },
           badgeLabel: { type: String, default: "\u5B50\u96F6\u4EF6" },
           hitBoxes: { type: Object, default: function() {
+            return {};
+          } },
+          interactBoxes: { type: Object, default: function() {
             return {};
           } },
           allBoneNames: { type: Array, default: function() {
@@ -9225,6 +9300,10 @@
             void this.refreshKey;
             return this.hitBoxes ? Object.keys(this.hitBoxes).length : 0;
           },
+          interactBoxCount: function() {
+            void this.refreshKey;
+            return this.interactBoxes ? Object.keys(this.interactBoxes).length : 0;
+          },
           connectorCount: function() {
             void this.refreshKey;
             return this.config.connectors ? Object.keys(this.config.connectors).length : 0;
@@ -9268,6 +9347,9 @@
               return g.name === hbKey || g.uuid === hbKey;
             });
             return el ? el.name : hbKey;
+          },
+          resolveInteractBoxName: function(ibKey) {
+            return ibKey;
           },
           resolveConnectorName: function(connKey) {
             return connKey;
@@ -9314,6 +9396,16 @@
            */
           navigateToHitBox: function(hbKey) {
             this.$emit("navigate-to-hit-box", hbKey);
+          },
+          /**
+           * 导航到交互区：点击交互区条目时选中对应的 Group 骨骼，切换到交互区属性面板
+           */
+          navigateToInteractBox: function(ibKey) {
+            var ib = this.interactBoxes && this.interactBoxes[ibKey];
+            var boneName = ib ? ib.bone : "";
+            if (boneName) {
+              this.$emit("navigate-to-hit-box", boneName);
+            }
           },
           /**
            * 导航到连接点：点击连接点条目时选中对应的 Locator，切换到连接点属性面板
@@ -9392,7 +9484,9 @@
         </div>
         <div class="mm-field">
             <label title="\u5173\u8054\u5B50\u7CFB\u7EDF\u540D\u79F0\uFF0C\u78B0\u649E\u7BB1\u53D7\u4F24\u65F6\u8BE5\u5B50\u7CFB\u7EDF\u540C\u6B65\u53D7\u4F24">\u5173\u8054\u5B50\u7CFB\u7EDF</label>
-            <input type="text" class="mm-input" :value="config.subsystem" @input="onFieldChange('subsystem', $event.target.value)" placeholder="\u7559\u7A7A\u5219\u4E0D\u5173\u8054" />
+            <select class="mm-select" :value="config.subsystem || ''" @change="onFieldChange('subsystem', $event.target.value || '')">
+                <option v-for="(label, key) in subsystemOptions" :key="key" :value="key">{{ label }}</option>
+            </select>
         </div>
         <div class="mm-field">
             <label title="Molang\u6761\u4EF6\u8868\u8FBE\u5F0F\uFF0C\u4E3A\u7A7A\u5219\u59CB\u7EC8\u751F\u6548">\u6761\u4EF6\u8868\u8FBE\u5F0F</label>
@@ -9438,6 +9532,9 @@
           parentSubPartKey: { type: String, default: "" },
           materialDefs: { type: Object, default: function() {
             return {};
+          } },
+          parentSubsystems: { type: Object, default: function() {
+            return {};
           } }
         },
         data: function() {
@@ -9451,6 +9548,19 @@
           },
           badgeLabel: function() {
             return "\u78B0\u649E\u7BB1";
+          },
+          /**
+           * 所属子零件内的子系统列表，用于关联子系统下拉选择
+           * 格式: { subsystemKey: subsystemKey }，供 v-for 遍历
+           */
+          subsystemOptions: function() {
+            var options = { "": "\uFF08\u65E0\uFF09" };
+            for (var key in this.parentSubsystems) {
+              if (this.parentSubsystems.hasOwnProperty(key)) {
+                options[key] = key;
+              }
+            }
+            return options;
           },
           cubeCount: function() {
             if (!this._parentGroup || !this._parentGroup.children) return 0;
@@ -9509,6 +9619,305 @@
         }
       });
       module.exports = {};
+    }
+  });
+
+  // src/ui/InteractBoxPanel.vue.js
+  var require_InteractBoxPanel_vue = __commonJS({
+    "src/ui/InteractBoxPanel.vue.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      Vue.component("mm-interact-box-panel", {
+        template: true ? `<div class="mm-section">
+    <div class="mm-sticky-title">
+        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
+            <span class="mm-marker-badge" :style="{ background: badgeColor }">{{ badgeLabel }}</span>
+            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:0;border:1px solid transparent;background:transparent;"
+                v-model="editingName"
+                @focus="$event.target.style.border='1px solid #555';$event.target.style.background='#2a2a2a'"
+                @blur="onNameBlur($event)"
+                @change="onNameChange($event.target.value)"
+                placeholder="interact.machine_max.xxx"
+                title="\u4EA4\u4E92\u533A\u540D\u79F0\uFF08\u5B57\u5178 key\uFF09\uFF0C\u4FEE\u6539\u540E\u81EA\u52A8\u8FC1\u79FB\u5B57\u5178" />
+        </h3>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">\u5F52\u5C5E</h4>
+        <div v-if="parentSubPartKey" class="mm-sub-item-row mm-clickable" :title="'\u70B9\u51FB\u8DF3\u8F6C\u5230\u5B50\u96F6\u4EF6 ' + parentSubPartKey" @click="navigateToSubPart">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
+                {{ parentSubPartKey }}
+            </span>
+        </div>
+        <div v-else class="mm-sub-item-row" title="\u7531\u9AA8\u9ABC\u5C42\u7EA7\u81EA\u52A8\u68C0\u6D4B" style="cursor:default">
+            <span class="mm-sub-item-name">
+                <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
+                \uFF08\u6E38\u79BB \u2014 \u65E0\u5F52\u5C5E\uFF09
+            </span>
+        </div>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">\u7ED1\u5B9A\u9AA8\u9ABC</h4>
+        <div class="mm-field">
+            <label title="\u8BE5\u4EA4\u4E92\u533A\u7ED1\u5B9A\u7684\u9AA8\u9ABC\u540D\u79F0\uFF0C\u51B3\u5B9A\u4EA4\u4E92\u533A\u5728 3D \u7A7A\u95F4\u4E2D\u7684\u4F4D\u7F6E\u548C\u59FF\u6001">\u9AA8\u9ABC</label>
+            <input type="text" class="mm-input"
+                v-model="editingBone"
+                @change="onBoneChange($event.target.value)"
+                :list="boneListId"
+                placeholder="\u641C\u7D22\u5E76\u9009\u62E9\u9AA8\u9ABC\u2026" />
+            <datalist :id="boneListId">
+                <option v-for="(name, idx) in allBoneNames" :key="idx" :value="name" />
+            </datalist>
+            <p v-if="allBoneNames.length === 0" class="mm-element-info" style="color:#888;font-size:10px">
+                \u5F53\u524D\u6A21\u578B\u4E2D\u6CA1\u6709\u4EFB\u4F55\u9AA8\u9ABC\uFF08Group\uFF09
+            </p>
+        </div>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">\u4EA4\u4E92\u533A\u5C5E\u6027</h4>
+        <div class="mm-field">
+            <label title="\u4EA4\u4E92\u6A21\u5F0F\u3002fast\uFF1A\u73A9\u5BB6\u78B0\u649E\u7BB1\u4E0E\u4EA4\u4E92\u533A\u78B0\u649E\u65F6\u6309\u4E0B\u4EA4\u4E92\u952E\u89E6\u53D1\uFF1Baccurate\uFF1A\u9700\u8981\u73A9\u5BB6\u7784\u51C6\u4EA4\u4E92\u533A">\u4EA4\u4E92\u6A21\u5F0F</label>
+            <select class="mm-select" :value="config.interact_mode" @change="onFieldChange('interact_mode', $event.target.value)">
+                <option value="fast">fast\uFF08\u5FEB\u901F\uFF09</option>
+                <option value="accurate">accurate\uFF08\u7CBE\u786E\uFF09</option>
+            </select>
+        </div>
+        <div class="mm-field">
+            <label title="\u4EA4\u4E92\u533A\u542F\u7528\u6761\u4EF6\u903B\u8F91\u3002AND\uFF1A\u6240\u6709\u8F93\u5165\u4FE1\u53F7\u90FD\u4E0D\u4E3A0\u65F6\u542F\u7528\uFF1BNOR\uFF1A\u4EFB\u610F\u4E00\u4E2A\u8F93\u5165\u4FE1\u53F7\u4E3A0\u65F6\u542F\u7528\uFF08\u9ED8\u8BA4\uFF09">\u6761\u4EF6\u903B\u8F91</label>
+            <select class="mm-select" :value="config.condition" @change="onFieldChange('condition', $event.target.value)">
+                <option value="AND">AND\uFF08\u5168\u771F\u5219\u771F\uFF09</option>
+                <option value="OR">OR\uFF08\u6709\u771F\u5219\u771F\uFF09</option>
+                <option value="NAND">NAND\uFF08\u5168\u771F\u5219\u5047\uFF09</option>
+                <option value="NOR">NOR\uFF08\u6709\u771F\u5219\u5047\uFF09</option>
+                <option value="XOR">XOR\uFF08\u5947\u771F\u5219\u771F\uFF09</option>
+                <option value="XNOR">XNOR\uFF08\u5076\u771F\u5219\u771F\uFF09</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- === \u4FE1\u53F7\u76EE\u6807 (signal_targets) === -->
+    <div class="mm-section">
+        <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
+            <span>\u4FE1\u53F7\u76EE\u6807</span>
+            <button class="mm-btn mm-btn-sm" @click="addSignalTargetChannel" title="\u6DFB\u52A0\u4FE1\u53F7\u9891\u9053" style="font-size:18px;font-weight:bold">+</button>
+        </h4>
+        <div v-if="signalTargetChannelCount === 0" class="mm-element-info" style="color:#888;font-size:11px">
+            \u65E0\u4FE1\u53F7\u76EE\u6807 \u2014 \u70B9\u51FB [+ ] \u6DFB\u52A0\u9891\u9053
+        </div>
+        <div v-for="(targets, channel, ci) in signalTargetEntries" :key="ci" class="mm-signal-card">
+            <div class="mm-signal-header">
+                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel"
+                    @change="onSignalTargetChannelChange(channel, $event.target.value)"
+                    :list="'ib-sig-chan-'+_uid" placeholder="\u9891\u9053\u540D" />
+                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetChannel(channel)" title="\u5220\u9664\u9891\u9053">\xD7</button>
+            </div>
+            <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
+                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
+                    @change="updateSignalTargetItem(channel, ti, $event.target.value)"
+                    :list="'ib-sig-tgt-'+_uid" placeholder="\u76EE\u6807\uFF08\u5B50\u7CFB\u7EDF\u540D / subpart / vehicle / \u8FDE\u63A5\u70B9\u540D\uFF09" />
+                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
+            </div>
+            <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTargetItem(channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
+        </div>
+        <datalist :id="'ib-sig-chan-'+_uid">
+            <option v-for="h in channelHints" :key="h" :value="h" />
+        </datalist>
+        <datalist :id="'ib-sig-tgt-'+_uid">
+            <option v-for="h in signalTargetHints" :key="h" :value="h" />
+        </datalist>
+    </div>
+
+    <div class="mm-section">
+        <h4 class="mm-section-title">\u9AA8\u9ABC\u4FE1\u606F\uFF08\u53EA\u8BFB\uFF09</h4>
+        <p class="mm-element-info">\u5F53\u524D\u9009\u4E2D\u9AA8\u9ABC: {{ elementName }}</p>
+        <p class="mm-element-info" v-if="config.bone">\u7ED1\u5B9A\u9AA8\u9ABC: {{ config.bone }}</p>
+    </div>
+</div>` : "<p>\u4EA4\u4E92\u533A\u9762\u677F\u52A0\u8F7D\u4E2D...</p>",
+        props: {
+          config: { type: Object, required: true },
+          elementName: { type: String, default: "" },
+          interactBoxName: { type: String, default: "" },
+          parentSubPartKey: { type: String, default: "" },
+          /** 当前子零件内的子系统映射，用于信号目标下拉选择 */
+          parentSubsystems: { type: Object, default: function() {
+            return {};
+          } },
+          /** 信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'） */
+          signalTargetHints: { type: Array, default: function() {
+            return [];
+          } },
+          /** 模型中所有骨骼名称列表（用于骨骼选择器） */
+          allBoneNames: { type: Array, default: function() {
+            return [];
+          } }
+        },
+        data: function() {
+          return {
+            overwriteExpanded: false,
+            editingName: this.interactBoxName || "",
+            editingBone: this.config.bone || this.elementName || ""
+          };
+        },
+        watch: {
+          interactBoxName: function(val) {
+            if (val !== this.editingName) {
+              this.editingName = val;
+            }
+          },
+          "config.bone": function(val) {
+            if (val !== this.editingBone) {
+              this.editingBone = val;
+            }
+          }
+        },
+        computed: {
+          boneListId: function() {
+            return "mm-ib-bone-list-" + this._uid;
+          },
+          badgeColor: function() {
+            return "#D9A441";
+          },
+          badgeLabel: function() {
+            return "\u4EA4\u4E92\u533A";
+          },
+          /**
+           * 信号目标条目映射
+           */
+          signalTargetEntries: function() {
+            return this.config && this.config.signal_targets || {};
+          },
+          signalTargetChannelCount: function() {
+            return Object.keys(this.signalTargetEntries).length;
+          },
+          /**
+           * 常用频道名补全列表
+           */
+          channelHints: function() {
+            return [
+              "interact",
+              "interact_left_front_door",
+              "interact_right_front_door",
+              "interact_left_back_door",
+              "interact_right_back_door",
+              "interact_hood",
+              "interact_trunk",
+              "interact_seat",
+              "trunk_interact",
+              "lever_pull",
+              "button_press",
+              "door_interact",
+              "switch_toggle",
+              "interact_custom"
+            ];
+          }
+        },
+        methods: {
+          onFieldChange: function(field, value) {
+            this.$emit("field-change", field, value);
+          },
+          onNameChange: function(value) {
+            if (value !== this.interactBoxName) {
+              this.$emit("name-change", this.interactBoxName, value);
+            }
+          },
+          onNameBlur: function(event) {
+            event.target.style.border = "1px solid transparent";
+            event.target.style.background = "transparent";
+          },
+          onBoneChange: function(value) {
+            if (value !== (this.config.bone || this.elementName)) {
+              this.$emit("bone-change", "bone", value);
+            }
+          },
+          /**
+           * 导航到归属子零件：点击归属标签时选中对应的子零件 Group，切换回子零件属性面板
+           */
+          navigateToSubPart: function() {
+            this.$emit("navigate-to-sub-part", this.parentSubPartKey);
+          },
+          // ===== 信号目标编辑 =====
+          /**
+           * 添加新的信号频道
+           */
+          addSignalTargetChannel: function() {
+            var entries = this.signalTargetEntries;
+            var newChan = "interact";
+            var idx = 1;
+            while (entries[newChan]) {
+              newChan = "interact_" + idx;
+              idx++;
+            }
+            this.$set(entries, newChan, []);
+            this.emitSignalTargets(entries);
+          },
+          /**
+           * 删除信号频道
+           */
+          removeSignalTargetChannel: function(channel) {
+            var entries = this.signalTargetEntries;
+            this.$delete(entries, channel);
+            this.emitSignalTargets(entries);
+          },
+          /**
+           * 重命名信号频道
+           */
+          onSignalTargetChannelChange: function(oldChannel, newChannel) {
+            if (!newChannel || oldChannel === newChannel) return;
+            var entries = this.signalTargetEntries;
+            var targets = entries[oldChannel];
+            if (targets === void 0) return;
+            this.$delete(entries, oldChannel);
+            this.$set(entries, newChannel, targets);
+            this.emitSignalTargets(entries);
+          },
+          /**
+           * 为指定频道添加信号目标项
+           */
+          addSignalTargetItem: function(channel) {
+            var entries = this.signalTargetEntries;
+            if (!entries[channel]) {
+              this.$set(entries, channel, []);
+            }
+            entries[channel].push("");
+            this.emitSignalTargets(entries);
+          },
+          /**
+           * 删除信号频道的指定目标项
+           */
+          removeSignalTargetItem: function(channel, index) {
+            var entries = this.signalTargetEntries;
+            if (entries[channel]) {
+              entries[channel].splice(index, 1);
+              this.emitSignalTargets(entries);
+            }
+          },
+          /**
+           * 更新信号频道的指定目标值
+           */
+          updateSignalTargetItem: function(channel, index, value) {
+            var entries = this.signalTargetEntries;
+            if (entries[channel]) {
+              this.$set(entries[channel], index, value);
+              this.emitSignalTargets(entries);
+            }
+          },
+          /**
+           * 触发 signal_targets 字段变更事件
+           */
+          emitSignalTargets: function(entries) {
+            this.$emit("field-change", "signal_targets", JSON.parse(JSON.stringify(entries)));
+          }
+        }
+      });
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {};
+      }
     }
   });
 
@@ -10050,56 +10459,82 @@
         </div>
     </div>
 
-    <div class="mm-section" v-if="typeMeta && typeMeta.needsLocator">
-        <h4 class="mm-section-title">\u7A7A\u95F4\u5F15\u7528\uFF08\u6B64\u7C7B\u578B\u9700\u8981\u5B9A\u4F4D\u5668\uFF09</h4>
-        <div class="mm-field">
-            <label title="\u9009\u62E9\u6A21\u578B\u4E2D\u6240\u6709 Locator">\u5173\u8054\u5B9A\u4F4D\u5668 (locator)</label>
-            <select class="mm-select" :value="config.locator" @change="onFieldChange('locator', $event.target.value)">
+    <!-- \u52A8\u6001\u5C5E\u6027\u5B57\u6BB5\uFF1A\u7531 subsystem_types.js \u7684 dynamicFields \u6CE8\u518C\u8868\u9A71\u52A8 -->
+    <div class="mm-section" v-if="nonDefFields.length > 0">
+        <h4 class="mm-section-title">{{ dynamicAttrsTitle }}</h4>
+        <div v-for="field in nonDefFields" :key="field.field" class="mm-field">
+            <label :title="field.field">{{ field.label }}</label>
+
+            <!-- \u5B9A\u4F4D\u5668\u9009\u62E9\u5668 -->
+            <select v-if="field.editor === 'locator_selector'" class="mm-select"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)">
                 <option value="">\uFF08\u65E0\uFF09</option>
                 <option v-for="(l, i) in allLocatorNames" :key="i" :value="l">{{ l }}</option>
             </select>
-        </div>
-    </div>
 
-    <div class="mm-section" v-if="typeMeta && typeMeta.needsConnector">
-        <h4 class="mm-section-title">\u8FDE\u63A5\u70B9\u5F15\u7528\uFF08\u6B64\u7C7B\u578B\u9700\u8981\u8FDE\u63A5\u70B9\uFF09</h4>
-        <div class="mm-field">
-            <label title="\u9009\u62E9\u672C\u5B50\u96F6\u4EF6\u4E2D\u7684\u8FDE\u63A5\u70B9">\u5173\u8054\u8FDE\u63A5\u70B9 (connector)</label>
-            <select class="mm-select" :value="config.connector" @change="onFieldChange('connector', $event.target.value)">
+            <!-- \u8FDE\u63A5\u70B9\u9009\u62E9\u5668 -->
+            <select v-else-if="field.editor === 'connector_selector'" class="mm-select"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)">
                 <option value="">\uFF08\u65E0\uFF09</option>
                 <option v-for="(conn, connKey) in connectorKeys" :key="connKey" :value="connKey">{{ connKey }}</option>
             </select>
-        </div>
-    </div>
 
-    <div class="mm-section" v-if="typeMeta && typeMeta.signalOutputs.length > 0">
-        <h4 class="mm-section-title">\u4FE1\u53F7\u8F93\u51FA</h4>
-        <div v-for="sigField in typeMeta.signalOutputs" :key="sigField" class="mm-field">
-            <label>{{ getSignalLabel(sigField) }}</label>
-            <div v-if="isSingleTargetSignal(sigField)" style="display:flex;gap:4px;align-items:center">
-                <select class="mm-select" :value="getSignalValue(sigField)"
-                    @change="onFieldChange(sigField, $event.target.value)">
-                    <option value="">\uFF08\u65E0\uFF09</option>
-                    <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target">{{ target }}</option>
-                </select>
+            <!-- \u679A\u4E3E\u4E0B\u62C9\u83DC\u5355 -->
+            <select v-else-if="field.editor === 'enum_selector'" class="mm-select"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)">
+                <option value="">\uFF08\u65E0\uFF09</option>
+                <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+            </select>
+
+            <!-- \u5355\u76EE\u6807\u529F\u7387\u8F93\u51FA\u9009\u62E9\u5668\uFF08\u5982 power_output\uFF09 -->
+            <select v-else-if="field.editor === 'power_target'" class="mm-select"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)">
+                <option value="">\uFF08\u65E0\uFF09</option>
+                <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target">{{ target }}</option>
+            </select>
+
+            <!-- \u529F\u7387\u8F93\u51FA\u6620\u5C04\u7F16\u8F91\u5668\uFF08power_outputs_map\uFF0C\u503C\u7C7B\u578B\u4E3A <string, number>\uFF09
+                 \u76EE\u6807\u540D\u4ECE signalTargetOptions \u4E0B\u62C9\u9009\u62E9\uFF0C\u540C power_target \u7684\u9009\u9879\u6765\u6E90 -->
+            <div v-else-if="field.editor === 'power_outputs_map'" class="mm-power-outputs-editor">
+                <div v-for="(ratio, targetName, pi) in getPowerOutputEntries(field.field)" :key="pi" style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+                    <select class="mm-select" style="flex:1;min-width:80px"
+                        :value="targetName"
+                        @change="onPowerOutputTargetChange(field.field, targetName, $event.target.value)">
+                        <option value="">\uFF08\u65E0\uFF09</option>
+                        <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target">{{ target }}</option>
+                    </select>
+                    <input type="number" class="mm-input" style="width:80px;font-size:11px;text-align:right"
+                        step="0.01" min="-999" max="999"
+                        :value="ratio"
+                        @change="onPowerOutputRatioChange(field.field, targetName, parseFloat($event.target.value) || 0)"
+                        placeholder="\u51CF\u901F\u6BD4" />
+                    <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removePowerOutput(field.field, targetName)" title="\u5220\u9664">\xD7</button>
+                </div>
+                <button class="mm-btn" style="font-size:11px" @click="addPowerOutput(field.field)">+ \u6DFB\u52A0\u8F93\u51FA\u76EE\u6807</button>
             </div>
-            <div v-else>
-                <div v-for="(targets, channel, ci) in getSignalEntries(sigField)" :key="ci" class="mm-signal-card">
+
+            <!-- \u4FE1\u53F7\u9891\u9053\u7F16\u8F91\u5668\uFF08signal_targets\uFF0C\u503C\u7C7B\u578B\u4E3A <string, string[]>\uFF09 -->
+            <div v-else-if="field.editor === 'signal_targets'" class="mm-signal-editor">
+                <div v-for="(targets, channel, ci) in getSignalEntries(field.field)" :key="ci" class="mm-signal-card">
                     <div class="mm-signal-header">
                         <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel"
-                            @change="onSignalChannelChange(sigField, channel, $event.target.value)"
+                            @change="onSignalChannelChange(field.field, channel, $event.target.value)"
                             :list="'sig-channel-hints-'+_uid" placeholder="\u9891\u9053\u540D" />
-                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalChannel(sigField, channel)" title="\u5220\u9664\u9891\u9053">\xD7</button>
+                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalChannel(field.field, channel)" title="\u5220\u9664\u9891\u9053">\xD7</button>
                     </div>
                     <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
                         <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
-                            @change="updateSignalTarget(sigField, channel, ti, $event.target.value)"
+                            @change="updateSignalTarget(field.field, channel, ti, $event.target.value)"
                             :list="'sig-target-hints-'+_uid" placeholder="\u76EE\u6807" />
-                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTarget(sigField, channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
+                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTarget(field.field, channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
                     </div>
-                    <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTarget(sigField, channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
+                    <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTarget(field.field, channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
                 </div>
-                <button class="mm-btn" style="font-size:11px" @click="addSignalChannel(sigField)">+ \u6DFB\u52A0\u9891\u9053</button>
+                <button class="mm-btn" style="font-size:11px" @click="addSignalChannel(field.field)">+ \u6DFB\u52A0\u9891\u9053</button>
                 <datalist :id="'sig-channel-hints-'+_uid">
                     <option v-for="h in channelHints" :key="h" :value="h" />
                 </datalist>
@@ -10107,6 +10542,24 @@
                     <option v-for="h in signalTargetOptions" :key="h" :value="h" />
                 </datalist>
             </div>
+
+            <!-- \u6587\u672C\u8F93\u5165 -->
+            <input v-else-if="field.editor === 'text_input'" type="text" class="mm-input"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)"
+                :placeholder="'(\u9ED8\u8BA4)'" />
+
+            <!-- JSON \u7F16\u8F91\u6846 -->
+            <textarea v-else-if="field.editor === 'json_textarea'" class="mm-input mm-textarea"
+                :value="formatJsonValue(field.field)"
+                @change="onJsonChange(field.field, $event.target.value)"
+                rows="4" placeholder="\u8BF7\u8F93\u5165 JSON"></textarea>
+
+            <!-- \u672A\u77E5\u7F16\u8F91\u5668\u7C7B\u578B\uFF08\u56DE\u9000\uFF09 -->
+            <input v-else type="text" class="mm-input"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)"
+                :placeholder="'(' + field.editor + ')'" />
         </div>
     </div>
 
@@ -10166,10 +10619,7 @@
             var parts = meta.id.split(":");
             return (parts.length > 1 ? parts[1] : parts[0]).substring(0, 6);
           },
-          /**
-           * 按当前子系统类型筛选可用的型号定义
-           * subsystemDefs 中的每个定义都有 type 字段，匹配则纳入
-           */
+          /** 按当前子系统类型筛选可用的型号定义 */
           filteredSubsystemDefs: function() {
             if (!this.typeId || !this.subsystemDefs) return {};
             var result = {};
@@ -10185,6 +10635,19 @@
           },
           filteredSubsystemDefsCount: function() {
             return Object.keys(this.filteredSubsystemDefs).length;
+          },
+          /** 排除 definition 后的动态属性字段列表，用于面板循环渲染 */
+          nonDefFields: function() {
+            var meta = this.typeMeta;
+            if (!meta || !meta.dynamicFields) return [];
+            return meta.dynamicFields.filter(function(f) {
+              return f.field !== "definition";
+            });
+          },
+          /** 动态属性区块的标题，包含字段数量提示 */
+          dynamicAttrsTitle: function() {
+            var count = this.nonDefFields.length;
+            return "\u52A8\u6001\u5C5E\u6027 (" + count + " \u9879)";
           },
           channelHints: function() {
             return [
@@ -10234,31 +10697,7 @@
           navigateToSubPart: function() {
             this.$emit("navigate-to-sub-part", this.parentSubPartKey);
           },
-          getSignalLabel: function(sigField) {
-            var labels = {
-              power_output: "\u529F\u7387\u8F93\u51FA\u76EE\u6807",
-              power_outputs: "\u529F\u7387\u8F93\u51FA\u5206\u914D",
-              speed_outputs: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA",
-              control_outputs: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA",
-              throttle_outputs: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA",
-              brake_outputs: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA",
-              steering_outputs: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA",
-              handbrake_outputs: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA",
-              gear_outputs: "\u6321\u4F4D\u4FE1\u53F7\u8F93\u51FA",
-              move_outputs: "\u79FB\u52A8\u4FE1\u53F7\u8F93\u51FA",
-              regular_outputs: "\u5E38\u89C4\u4FE1\u53F7\u8F93\u51FA",
-              aim_outputs: "\u7784\u51C6\u4FE1\u53F7\u8F93\u51FA",
-              passenger_num_outputs: "\u4E58\u5BA2\u6570\u4FE1\u53F7\u8F93\u51FA",
-              fire_outputs: "\u5F00\u706B\u4FE1\u53F7\u8F93\u51FA"
-            };
-            return labels[sigField] || sigField;
-          },
-          isSingleTargetSignal: function(sigField) {
-            return sigField === "power_output";
-          },
-          getSignalValue: function(sigField) {
-            return this.config[sigField] || "";
-          },
+          // ─── 信号频道编辑器（signal_targets） ─────────────────────────────
           getSignalEntries: function(sigField) {
             var val = this.config[sigField];
             if (val && typeof val === "object" && !Array.isArray(val)) {
@@ -10312,6 +10751,66 @@
               this.$set(entries[channel], index, value);
               this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
             }
+          },
+          // ─── 功率输出映射编辑器（power_outputs_map，Map<string, number>） ──
+          getPowerOutputEntries: function(field) {
+            var val = this.config[field];
+            if (val && typeof val === "object") return val;
+            return {};
+          },
+          addPowerOutput: function(field) {
+            var entries = this.getPowerOutputEntries(field);
+            var newName = "new_target";
+            var idx = 1;
+            while (entries[newName] !== void 0) {
+              newName = "new_target_" + idx;
+              idx++;
+            }
+            entries[newName] = 1;
+            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+          },
+          removePowerOutput: function(field, targetName) {
+            var entries = this.getPowerOutputEntries(field);
+            this.$delete(entries, targetName);
+            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+          },
+          onPowerOutputTargetChange: function(field, oldName, newName) {
+            if (!newName || oldName === newName) return;
+            var entries = this.getPowerOutputEntries(field);
+            var ratio = entries[oldName];
+            if (ratio === void 0) return;
+            this.$delete(entries, oldName);
+            this.$set(entries, newName, ratio);
+            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+          },
+          onPowerOutputRatioChange: function(field, targetName, ratio) {
+            var entries = this.getPowerOutputEntries(field);
+            if (entries[targetName] !== void 0) {
+              this.$set(entries, targetName, ratio);
+              this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            }
+          },
+          // ─── JSON 编辑框（json_textarea） ────────────────────────────────
+          formatJsonValue: function(field) {
+            var val = this.config[field];
+            if (val === void 0 || val === null) return "";
+            if (typeof val === "string") return val;
+            try {
+              return JSON.stringify(val, null, 2);
+            } catch (_e) {
+              return String(val);
+            }
+          },
+          onJsonChange: function(field, text) {
+            if (!text || text.trim() === "") {
+              this.onFieldChange(field, {});
+              return;
+            }
+            try {
+              var parsed = JSON.parse(text);
+              this.onFieldChange(field, parsed);
+            } catch (_e) {
+            }
           }
         }
       });
@@ -10340,6 +10839,7 @@
       var log2 = createLogger2("UI");
       require_SubPartPanel_vue();
       require_HitBoxPanel_vue();
+      require_InteractBoxPanel_vue();
       require_ConnectorPanel_vue();
       require_SubsystemPanel_vue();
       var MMMainPanel = Vue.component("mm-main-panel", {
@@ -10454,6 +10954,7 @@
             :element-name="selectedElementName"
             :sp-name="selectedMarker ? selectedMarker.config_ref : ''"
             :hit-boxes="selectedSubPartConfig ? selectedSubPartConfig.hit_boxes || {} : {}"
+            :interact-boxes="selectedSubPartConfig ? selectedSubPartConfig.interact_boxes || {} : {}"
             :all-bone-names="allBoneNames"
             :all-locator-names="ownedLocatorNames"
             :refresh-key="_markerVersion"
@@ -10474,8 +10975,23 @@
             :element-name="selectedElementName"
             :parent-sub-part-key="hitBoxParentSubPartKey"
             :material-defs="availableMaterials"
+            :parent-subsystems="hitBoxParentSubsystems"
             @field-change="updateHitBoxField"
             @overwrite-change="updateHitBoxOverwrite"
+            @navigate-to-sub-part="navigateToSubPart" />
+
+        <!-- \u4EA4\u4E92\u533A\u5C5E\u6027\u9762\u677F -->
+        <mm-interact-box-panel v-else-if="isInteractBoxSelected"
+            :config="selectedInteractBoxConfig"
+            :element-name="selectedElementName"
+            :interact-box-name="interactBoxName"
+            :parent-sub-part-key="interactBoxParentSubPartKey"
+            :parent-subsystems="interactBoxParentSubsystems"
+            :signal-target-hints="interactBoxParentSignalTargetHints"
+            :all-bone-names="allBoneNames"
+            @field-change="updateInteractBoxField"
+            @name-change="renameInteractBox"
+            @bone-change="migrateInteractBoxBone"
             @navigate-to-sub-part="navigateToSubPart" />
 
         <!-- \u8FDE\u63A5\u70B9\u5C5E\u6027\u9762\u677F -->
@@ -10654,6 +11170,12 @@
             return this.selectedMarker && this.selectedMarker.type === "hit_box";
           },
           /**
+           * 当前选中是否为交互区标记
+           */
+          isInteractBoxSelected: function() {
+            return this.selectedMarker && this.selectedMarker.type === "interact_box";
+          },
+          /**
            * 当前选中是否为连接点标记
            */
           isConnectorSelected: function() {
@@ -10813,6 +11335,102 @@
           hitBoxParentSubPartKey: function() {
             var owner = this.hitBoxOwner;
             return owner ? owner.spKey : "";
+          },
+          /**
+           * 碰撞箱所属子零件内的子系统映射（用于关联子系统下拉选择）
+           */
+          hitBoxParentSubsystems: function() {
+            var spKey = this.hitBoxParentSubPartKey;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return {};
+            var sp = this.currentVariant.sub_parts[spKey];
+            return sp && sp.subsystems || {};
+          },
+          /**
+           * 动态检测交互区所属子零件（沿父链向上遍历）
+           */
+          interactBoxOwner: function() {
+            if (!this.selectedElement || !this.isInteractBoxSelected) return null;
+            var config = this.config;
+            if (!config) return null;
+            return detectOwnerSubPart(config, this.activePartId, this.activeVariantName, this.selectedElement);
+          },
+          /**
+           * 交互区所属子零件的 key
+           */
+          interactBoxParentSubPartKey: function() {
+            var owner = this.interactBoxOwner;
+            return owner ? owner.spKey : "";
+          },
+          /**
+           * 交互区所属子零件内的子系统映射（用于信号目标下拉选择）
+           */
+          interactBoxParentSubsystems: function() {
+            var spKey = this.interactBoxParentSubPartKey;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return {};
+            var sp = this.currentVariant.sub_parts[spKey];
+            return sp && sp.subsystems || {};
+          },
+          /**
+           * 交互区所属子零件内的信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'）
+           */
+          interactBoxParentSignalTargetHints: function() {
+            var spKey = this.interactBoxParentSubPartKey;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return ["subpart", "vehicle"];
+            var sp = this.currentVariant.sub_parts[spKey];
+            if (!sp) return ["subpart", "vehicle"];
+            var hints = ["subpart", "vehicle"];
+            if (sp.connectors) {
+              hints = hints.concat(Object.keys(sp.connectors));
+            }
+            if (sp.subsystems) {
+              hints = hints.concat(Object.keys(sp.subsystems));
+            }
+            return hints;
+          },
+          /**
+           * 当前选中交互区的配置对象（从所属子零件的 interact_boxes 中获取）
+           * 按 _uuid 匹配（稳定，bone 变更后仍然有效）
+           */
+          selectedInteractBoxConfig: function() {
+            if (!this.isInteractBoxSelected) {
+              return null;
+            }
+            var variant = this.currentVariant;
+            if (!variant || !variant.sub_parts) {
+              return { _orphan: true, bone: "", interact_mode: "fast", condition: "NOR", signal_targets: {} };
+            }
+            var owner = this.interactBoxOwner;
+            var spKey = owner ? owner.spKey : null;
+            if (!spKey || !variant.sub_parts[spKey]) {
+              return { _orphan: true, bone: "", interact_mode: "fast", condition: "NOR", signal_targets: {} };
+            }
+            var sp = variant.sub_parts[spKey];
+            if (!sp.interact_boxes) this.$set(sp, "interact_boxes", {});
+            var selectedUuid = this.selectedElement.uuid;
+            for (var ibKey in sp.interact_boxes) {
+              if (sp.interact_boxes[ibKey]._uuid === selectedUuid) {
+                return sp.interact_boxes[ibKey];
+              }
+            }
+            return { _orphan: true, bone: "", interact_mode: "fast", condition: "NOR", signal_targets: {} };
+          },
+          /**
+           * 交互区在 interact_boxes 字典中的 key（即翻译键格式的名称）
+           * 用于属性面板显示和编辑
+           */
+          interactBoxName: function() {
+            if (!this.isInteractBoxSelected) return "";
+            var spKey = this.interactBoxParentSubPartKey;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return "";
+            var sp = this.currentVariant.sub_parts[spKey];
+            if (!sp || !sp.interact_boxes) return "";
+            var selectedUuid = this.selectedElement.uuid;
+            for (var ibKey in sp.interact_boxes) {
+              if (sp.interact_boxes[ibKey]._uuid === selectedUuid) {
+                return ibKey;
+              }
+            }
+            return "";
           },
           /**
            * 当前选中连接点的配置对象（从所属子零件的 connectors 中获取）
@@ -11435,6 +12053,27 @@
             log2.debug("updateHitBoxOverwrite: \u5DF2\u66F4\u65B0", { field, value });
           },
           /**
+           * 更新交互区配置中的单个字段
+           * 游离交互区（无归属）可编辑但不会持久化
+           * bone 变更后增量 _markerVersion 强制所有计算属性重新求值
+           */
+          updateInteractBoxField: function(field, value) {
+            const config = this.selectedInteractBoxConfig;
+            if (!config) {
+              log2.warn("updateInteractBoxField: selectedInteractBoxConfig \u4E3A\u7A7A");
+              return;
+            }
+            if (config._orphan) {
+              log2.warn("updateInteractBoxField: \u6E38\u79BB\u4EA4\u4E92\u533A\u4E0D\u53EF\u6301\u4E45\u5316", { field, value });
+              return;
+            }
+            this.$set(config, field, value);
+            if (field === "bone") {
+              this._markerVersion++;
+            }
+            log2.debug("updateInteractBoxField: \u5DF2\u66F4\u65B0", { field, value });
+          },
+          /**
            * 更新连接点配置字段，同时同步到标记的 config_ref
            */
           updateConnectorField: function(field, value) {
@@ -11603,6 +12242,79 @@
             Blockbench.dispatchEvent("update_selection");
             showToast2('\u8FDE\u63A5\u70B9\u5DF2\u91CD\u547D\u540D\u4E3A "' + newKey + '"', "positive");
             log2.info("renameConnector: \u5B8C\u6210");
+          },
+          /**
+           * 重命名交互区：修改 interact_boxes 字典的 key
+           */
+          renameInteractBox: function(oldKey, newKey) {
+            if (!oldKey || !newKey || oldKey === newKey) return;
+            var variant = this.currentVariant;
+            if (!variant) return;
+            var spKey = this.interactBoxParentSubPartKey;
+            if (!spKey || !variant.sub_parts) return;
+            var sp = variant.sub_parts[spKey];
+            if (!sp || !sp.interact_boxes || !sp.interact_boxes[oldKey]) {
+              log2.warn("renameInteractBox: \u672A\u627E\u5230\u4EA4\u4E92\u533A", { oldKey });
+              return;
+            }
+            var { validateNameUniqueness } = require_naming();
+            var check = validateNameUniqueness(variant, "interact_box", spKey, newKey, oldKey);
+            if (!check.valid) {
+              showToast2(check.message, "error");
+              return;
+            }
+            log2.info("renameInteractBox: \u91CD\u547D\u540D", { from: oldKey, to: newKey });
+            this.$set(sp.interact_boxes, newKey, sp.interact_boxes[oldKey]);
+            this.$delete(sp.interact_boxes, oldKey);
+            refreshOutlinerIcons2();
+            Blockbench.dispatchEvent("update_selection");
+            showToast2('\u4EA4\u4E92\u533A\u5DF2\u91CD\u547D\u540D\u4E3A "' + newKey + '"', "positive");
+            log2.info("renameInteractBox: \u5B8C\u6210");
+          },
+          /**
+           * 迁移交互区骨骼绑定：bone 从旧骨骼变更为新骨骼时，
+           * 同步迁移 element_marker 到新骨骼的 UUID，并选中新骨骼。
+           */
+          migrateInteractBoxBone: function(field, newBoneName) {
+            var config = this.selectedInteractBoxConfig;
+            if (!config || config._orphan) {
+              log2.warn("migrateInteractBoxBone: \u4EA4\u4E92\u533A\u4E0D\u53EF\u8FC1\u79FB");
+              return;
+            }
+            var oldBoneName = config.bone || "";
+            if (oldBoneName === newBoneName) return;
+            var part = this.currentPart;
+            var variant = this.currentVariant;
+            var variantName = this.activeVariantName;
+            if (!part || !variant) return;
+            this.$set(config, "bone", newBoneName);
+            var oldGroup = typeof Group !== "undefined" ? Group.all.find(function(g) {
+              return g.name === oldBoneName;
+            }) : null;
+            var newGroup = typeof Group !== "undefined" ? Group.all.find(function(g) {
+              return g.name === newBoneName;
+            }) : null;
+            if (oldGroup && newGroup && oldGroup !== newGroup) {
+              config._uuid = newGroup.uuid;
+              var markers = part.element_markers && part.element_markers[variantName];
+              if (markers) {
+                var markerData = markers[oldGroup.uuid];
+                if (markerData && markerData.type === "interact_box") {
+                  this.$set(markers, newGroup.uuid, markerData);
+                  this.$delete(markers, oldGroup.uuid);
+                  log2.debug("migrateInteractBoxBone: \u6807\u8BB0\u5DF2\u8FC1\u79FB", {
+                    from: oldGroup.uuid,
+                    to: newGroup.uuid
+                  });
+                }
+              }
+              newGroup.select();
+              newGroup.showInOutliner();
+            }
+            this._markerVersion++;
+            refreshOutlinerIcons2();
+            Blockbench.dispatchEvent("update_selection");
+            log2.info("migrateInteractBoxBone: \u9AA8\u9ABC\u8FC1\u79FB\u5B8C\u6210", { from: oldBoneName, to: newBoneName });
           }
         },
         mounted: function() {
@@ -11688,11 +12400,11 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
+      var subsystemTypes = require_subsystem_types();
       function extractSignalGraph(variant) {
         var nodes = [];
         var edges = [];
         var nodeMap = {};
-        var seenSpecialTargets = {};
         if (!variant || !variant.sub_parts) return { nodes: [], edges: [] };
         for (var spKey in variant.sub_parts) {
           var sp = variant.sub_parts[spKey];
@@ -11711,23 +12423,6 @@
                   locator: conn.locator || ""
                 });
               }
-              if (conn.signal_targets) {
-                for (var channel in conn.signal_targets) {
-                  var targets = conn.signal_targets[channel];
-                  if (!targets || !Array.isArray(targets)) continue;
-                  for (var ti = 0; ti < targets.length; ti++) {
-                    var tgt = targets[ti];
-                    if (!tgt) continue;
-                    _ensureNodeForTarget(tgt, sp, nodeMap, nodes, seenSpecialTargets, spKey);
-                    edges.push({ from: connKey, to: tgt, channel, type: "signal" });
-                  }
-                }
-              }
-              if (conn.power_target) {
-                var pt = conn.power_target;
-                _ensureNodeForTarget(pt, sp, nodeMap, nodes, seenSpecialTargets, spKey);
-                edges.push({ from: connKey, to: pt, channel: "power", type: "power" });
-              }
             }
           }
           if (sp.subsystems) {
@@ -11744,6 +12439,40 @@
                   subType: ss.type || ""
                 });
               }
+            }
+          }
+        }
+        var seenSpecialTargets = {};
+        for (var spKey in variant.sub_parts) {
+          var sp = variant.sub_parts[spKey];
+          if (!sp) continue;
+          if (sp.connectors) {
+            for (var connKey in sp.connectors) {
+              var conn = sp.connectors[connKey];
+              if (!conn) continue;
+              if (conn.signal_targets) {
+                for (var channel in conn.signal_targets) {
+                  var targets = conn.signal_targets[channel];
+                  if (!targets || !Array.isArray(targets)) continue;
+                  for (var ti = 0; ti < targets.length; ti++) {
+                    var tgt = targets[ti];
+                    if (!tgt) continue;
+                    _ensureTargetNode(tgt, nodeMap, nodes, seenSpecialTargets, spKey);
+                    edges.push({ from: connKey, to: tgt, channel, type: "signal" });
+                  }
+                }
+              }
+              if (conn.power_target) {
+                var pt = conn.power_target;
+                _ensureTargetNode(pt, nodeMap, nodes, seenSpecialTargets, spKey);
+                edges.push({ from: connKey, to: pt, channel: "power", type: "power" });
+              }
+            }
+          }
+          if (sp.subsystems) {
+            for (var ssKey in sp.subsystems) {
+              var ss = sp.subsystems[ssKey];
+              if (!ss) continue;
               var outputFields = _getSignalOutputFields(ss);
               for (var fi = 0; fi < outputFields.length; fi++) {
                 var field = outputFields[fi];
@@ -11751,23 +12480,26 @@
                 if (!val) continue;
                 if (typeof val === "string") {
                   if (val) {
-                    _ensureNodeForTarget(val, sp, nodeMap, nodes, seenSpecialTargets, spKey);
+                    _ensureTargetNode(val, nodeMap, nodes, seenSpecialTargets, spKey);
                     edges.push({ from: ssKey, to: val, channel: field, type: _edgeTypeForField(field) });
                   }
                 } else if (typeof val === "object" && !Array.isArray(val)) {
                   for (var ch in val) {
                     var tgts = val[ch];
-                    if (!tgts) continue;
+                    if (tgts === void 0 || tgts === null) continue;
                     if (Array.isArray(tgts)) {
                       for (var tji = 0; tji < tgts.length; tji++) {
                         var t = tgts[tji];
                         if (!t) continue;
-                        _ensureNodeForTarget(t, sp, nodeMap, nodes, seenSpecialTargets, spKey);
+                        _ensureTargetNode(t, nodeMap, nodes, seenSpecialTargets, spKey);
                         edges.push({ from: ssKey, to: t, channel: ch, type: _edgeTypeForField(field) });
                       }
                     } else if (typeof tgts === "string") {
-                      _ensureNodeForTarget(tgts, sp, nodeMap, nodes, seenSpecialTargets, spKey);
+                      _ensureTargetNode(tgts, nodeMap, nodes, seenSpecialTargets, spKey);
                       edges.push({ from: ssKey, to: tgts, channel: ch, type: _edgeTypeForField(field) });
+                    } else if (typeof tgts === "number") {
+                      _ensureTargetNode(ch, nodeMap, nodes, seenSpecialTargets, spKey);
+                      edges.push({ from: ssKey, to: ch, channel: field, type: _edgeTypeForField(field) });
                     }
                   }
                 }
@@ -11777,8 +12509,9 @@
         }
         return { nodes, edges };
       }
-      function _ensureNodeForTarget(target, sp, nodeMap, nodes, seenSpecialTargets, currentSpKey) {
+      function _ensureTargetNode(target, nodeMap, nodes, seenSpecialTargets, currentSpKey) {
         if (!target) return;
+        if (nodeMap[target]) return;
         if (target === "subpart" || target === "vehicle") {
           if (!seenSpecialTargets[target]) {
             seenSpecialTargets[target] = true;
@@ -11792,17 +12525,31 @@
           }
           return;
         }
-        if (!nodeMap[target]) {
-          nodeMap[target] = true;
-          nodes.push({
-            id: target,
-            type: "unresolved",
-            subPart: currentSpKey,
-            label: _shortName(target)
-          });
-        }
+        nodeMap[target] = true;
+        nodes.push({
+          id: target,
+          type: "unresolved",
+          subPart: currentSpKey,
+          label: _shortName(target)
+        });
       }
       function _getSignalOutputFields(ss) {
+        var typeId = ss.type;
+        if (typeId) {
+          var fields = subsystemTypes.getDynamicFields(typeId);
+          if (fields && fields.length > 0) {
+            var result = [];
+            for (var i = 0; i < fields.length; i++) {
+              var f = fields[i];
+              if (f.editor === "signal_targets" || f.editor === "power_target" || f.editor === "power_outputs_map") {
+                if (ss[f.field] !== void 0 && ss[f.field] !== null) {
+                  result.push(f.field);
+                }
+              }
+            }
+            return result;
+          }
+        }
         var knownOutputs = [
           "power_output",
           "power_outputs",
@@ -11816,8 +12563,7 @@
           "move_outputs",
           "regular_outputs",
           "aim_outputs",
-          "passenger_num_outputs",
-          "fire_outputs"
+          "passenger_num_outputs"
         ];
         var result = [];
         for (var i = 0; i < knownOutputs.length; i++) {
@@ -11845,18 +12591,19 @@
       function forceLayout(nodes, edges, options) {
         if (!nodes || nodes.length === 0) return nodes || [];
         var opts = options || {};
-        var width = opts.width || 600;
-        var height = opts.height || 300;
-        var repulsion = opts.repulsion || 2e3;
-        var attraction = opts.attraction || 5e-3;
-        var idealLength = opts.idealLength || 140;
-        var iterations = opts.iterations || 80;
-        var damping = opts.damping || 0.85;
+        var width = opts.width || 800;
+        var height = opts.height || 400;
+        var repulsion = opts.repulsion || 7e3;
+        var attraction = opts.attraction || 4e-3;
+        var idealLength = opts.idealLength || 280;
+        var iterations = opts.iterations || 100;
+        var damping = opts.damping || 0.82;
+        var NODE_MIN_DIST = 50;
         for (var i = 0; i < nodes.length; i++) {
           var n = nodes[i];
           if (n.x === void 0 || n.y === void 0) {
             var angle = i / nodes.length * Math.PI * 2;
-            var radius = Math.min(width, height) * 0.3;
+            var radius = Math.min(width, height) * 0.35;
             n.x = width / 2 + Math.cos(angle) * radius * (0.5 + Math.random() * 0.5);
             n.y = height / 2 + Math.sin(angle) * radius * (0.5 + Math.random() * 0.5);
           }
@@ -11880,7 +12627,7 @@
               var dx = nb.x - na.x;
               var dy = nb.y - na.y;
               var dist = Math.sqrt(dx * dx + dy * dy);
-              if (dist < 1) dist = 1;
+              if (dist < NODE_MIN_DIST) dist = NODE_MIN_DIST;
               var force = repulsion / (dist * dist);
               var fx = force * (dx / dist);
               var fy = force * (dy / dist);
@@ -11991,23 +12738,31 @@
             @mouseleave="onPanEnd">
             <svg :width="svgWidth" :height="svgHeight"
                 @wheel.prevent="onWheel"
-                style="display:block;cursor:grab">
+                style="display:block;cursor:grab;background:#1a1a2e;border-radius:6px">
                 <defs>
+                    <!-- \u8282\u70B9\u6295\u5F71\u9634\u5F71 -->
+                    <filter id="mm-flow-shadow" x="-10%" y="-10%" width="130%" height="130%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.4" />
+                    </filter>
+                    <!-- \u60AC\u505C\u53D1\u5149\u9634\u5F71 -->
+                    <filter id="mm-flow-shadow-hover" x="-20%" y="-20%" width="150%" height="150%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="#fff" flood-opacity="0.25" />
+                    </filter>
                     <!-- \u666E\u901A\u7BAD\u5934 -->
-                    <marker id="mm-flow-arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                        <polygon points="0 0, 8 3, 0 6" fill="#888" />
+                    <marker id="mm-flow-arrow" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+                        <polygon points="0 0, 10 4, 0 8" fill="#888" />
                     </marker>
                     <!-- \u52A8\u529B\u7BAD\u5934\uFF08\u6A59\u8272\uFF09 -->
-                    <marker id="mm-flow-arrow-power" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                        <polygon points="0 0, 8 3, 0 6" fill="#e67e22" />
+                    <marker id="mm-flow-arrow-power" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+                        <polygon points="0 0, 10 4, 0 8" fill="#e67e22" />
                     </marker>
                     <!-- \u8F6C\u901F\u7BAD\u5934\uFF08\u84DD\u8272\uFF09 -->
-                    <marker id="mm-flow-arrow-speed" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                        <polygon points="0 0, 8 3, 0 6" fill="#3498db" />
+                    <marker id="mm-flow-arrow-speed" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+                        <polygon points="0 0, 10 4, 0 8" fill="#3498db" />
                     </marker>
                     <!-- \u63A7\u5236\u7BAD\u5934\uFF08\u7EFF\u8272\uFF09 -->
-                    <marker id="mm-flow-arrow-control" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                        <polygon points="0 0, 8 3, 0 6" fill="#2ecc71" />
+                    <marker id="mm-flow-arrow-control" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+                        <polygon points="0 0, 10 4, 0 8" fill="#2ecc71" />
                     </marker>
                 </defs>
                 <g :transform="'translate('+panX+','+panY+') scale('+zoom+')'">
@@ -12044,24 +12799,39 @@
                             style="cursor:pointer">
                             <!-- \u7279\u7279\u6B8A\u76EE\u6807\u7528\u7EBF\u6846 -->
                             <rect v-if="node.type === 'special'"
-                                width="130" height="32" rx="4"
+                                width="140" height="32" rx="6"
                                 :fill="nodeColor(node)" fill-opacity="0.15"
                                 :stroke="nodeColor(node)" stroke-width="1.5"
-                                stroke-dasharray="4,3" />
+                                stroke-dasharray="4,3"
+                                :class="{ 'mm-flow-node-hovered': hoveredNode === node }" />
                             <!-- \u672A\u89E3\u6790\u76EE\u6807\u7528\u865A\u7EBF -->
                             <rect v-else-if="node.type === 'unresolved'"
-                                width="130" height="32" rx="4"
+                                width="140" height="32" rx="6"
                                 :fill="nodeColor(node)" fill-opacity="0.2"
                                 :stroke="nodeColor(node)" stroke-width="1"
-                                stroke-dasharray="3,2" />
+                                stroke-dasharray="3,2"
+                                :class="{ 'mm-flow-node-hovered': hoveredNode === node }" />
                             <!-- \u666E\u901A\u8282\u70B9 -->
                             <rect v-else
-                                width="130" height="32" rx="4"
+                                width="140" height="32" rx="6"
                                 :fill="nodeColor(node)" fill-opacity="0.85"
                                 stroke="#fff" stroke-width="0.5"
+                                filter="url(#mm-flow-shadow)"
                                 :class="{ 'mm-flow-node-hovered': hoveredNode === node }" />
+                            <!-- \u60AC\u505C\u9AD8\u4EAE\u5149\u6655\uFF08\u53E0\u52A0\u5C42\uFF09 -->
+                            <rect v-if="hoveredNode === node"
+                                width="144" height="36" rx="8" x="-2" y="-2"
+                                fill="none" stroke="#fff" stroke-width="1.5" stroke-opacity="0.4"
+                                filter="url(#mm-flow-shadow-hover)" />
+                            <!-- \u7AEF\u53E3\u5C0F\u5706\u5708\uFF08\u8F93\u51FA=\u6A59\u8272\uFF0C\u8F93\u5165=\u7EFF\u8272\uFF09 -->
+                            <g v-if="node._ports">
+                                <circle v-for="(p, pi) in node._ports" :key="'p'+pi"
+                                    :cx="portX(p.port)" :cy="portY(p.port)" r="4"
+                                    :fill="p.isOutput ? '#e67e22' : '#2ecc71'"
+                                    stroke="#1a1a2e" stroke-width="1" />
+                            </g>
                             <!-- \u8282\u70B9\u6807\u7B7E -->
-                            <text x="65" y="20"
+                            <text x="70" y="20"
                                 fill="#fff" font-size="11"
                                 text-anchor="middle" style="pointer-events:none;user-select:none"
                                 :font-weight="hoveredNode === node ? 'bold' : 'normal'">
@@ -12144,7 +12914,7 @@
             return 800;
           },
           svgHeight: function() {
-            return 350;
+            return 420;
           },
           hasEmptyGraph: function() {
             return this.hasActiveSelection && this.nodes.length === 0 && this.edges.length === 0;
@@ -12167,6 +12937,14 @@
             if (cfg) {
               this.activePartId = cfg._uiState?.activePartId || "";
               this.activeVariantName = cfg._uiState?.activeVariantName || "";
+              log2.info("loadConfigData: \u914D\u7F6E\u5DF2\u52A0\u8F7D", {
+                partId: this.activePartId,
+                variant: this.activeVariantName,
+                hasParts: !!cfg.parts,
+                partCount: cfg.parts ? Object.keys(cfg.parts).length : 0
+              });
+            } else {
+              log2.warn("loadConfigData: \u65E0\u6709\u6548\u914D\u7F6E");
             }
             this.rebuildGraph();
           },
@@ -12178,20 +12956,22 @@
           rebuildGraph: function() {
             var variant = this.currentVariant;
             if (!variant) {
+              log2.info("rebuildGraph: \u65E0\u6709\u6548\u53D8\u4F53\uFF0C\u6E05\u7A7A\u56FE\u8868");
               this.nodes = [];
               this.edges = [];
               return;
             }
             var graph = extractSignalGraph(variant);
-            log2.debug("rebuildGraph: \u4FE1\u53F7\u62D3\u6251\u63D0\u53D6\u5B8C\u6210", {
+            log2.info("rebuildGraph: \u4FE1\u53F7\u62D3\u6251\u63D0\u53D6\u5B8C\u6210", {
               nodes: graph.nodes.length,
               edges: graph.edges.length
             });
             forceLayout(graph.nodes, graph.edges, {
               width: this.svgWidth,
               height: this.svgHeight,
-              iterations: 60
+              iterations: 80
             });
+            _assignPortRoles(graph.nodes, graph.edges);
             this.nodes = graph.nodes;
             this.edges = graph.edges;
           },
@@ -12273,50 +13053,155 @@
             }
           },
           /**
-           * 计算两个节点之间的连线路径（直线）
-           * 节点宽度 ~130px, 高度 ~32px
+           * 获取端口相对节点的偏移坐标（8端口模型）
+           * 垂直边(左/右)的端口平行偏移方向为垂直；水平边(上/下)的端口平行偏移方向为水平
+           * @param {string} port - 'right-out'|'right-in'|'bottom-out'|'bottom-in'|'left-out'|'left-in'|'top-out'|'top-in'
+           * @param {number} index - 该端口上第几条边（0-based），用于平行偏移
+           * @returns {{x: number, y: number}}
+           */
+          _portOffset: function(port, index) {
+            var NODE_W = 140;
+            var NODE_H = 32;
+            var isOutput = port && port.indexOf("-out") >= 0;
+            var offset = (isOutput ? 0 : index || 0) * 6;
+            switch (port) {
+              case "right-out":
+                return { x: NODE_W, y: 10 };
+              case "right-in":
+                return { x: NODE_W, y: 21 + offset };
+              case "left-in":
+                return { x: 0, y: 10 + offset };
+              case "left-out":
+                return { x: 0, y: 21 };
+              case "bottom-in":
+                return { x: 46 + offset, y: NODE_H };
+              case "bottom-out":
+                return { x: 93, y: NODE_H };
+              case "top-out":
+                return { x: 46, y: 0 };
+              case "top-in":
+                return { x: 93 + offset, y: 0 };
+              default:
+                return { x: NODE_W, y: 10 };
+            }
+          },
+          /**
+           * 端口小圆圈的 X 坐标（相对节点左上角，模板用 v-for 调用）
+           * 8端口模型：左/右侧端口在边两端(0/140)，上/下端口中输出偏左(46)输入偏右(93)
+           */
+          portX: function(port) {
+            switch (port) {
+              case "right-out":
+              case "right-in":
+                return 140;
+              case "left-in":
+              case "left-out":
+                return 0;
+              case "top-out":
+              case "bottom-in":
+                return 46;
+              case "top-in":
+              case "bottom-out":
+                return 93;
+              default:
+                return 0;
+            }
+          },
+          /**
+           * 端口小圆圈的 Y 坐标（相对节点左上角）
+           * 8端口模型：左/右侧端口输出偏上(10)输入偏下(21)，上/下端口在边两端(0/32)
+           */
+          portY: function(port) {
+            switch (port) {
+              case "right-out":
+              case "left-in":
+                return 10;
+              case "right-in":
+              case "left-out":
+                return 21;
+              case "top-out":
+              case "top-in":
+                return 0;
+              case "bottom-in":
+              case "bottom-out":
+                return 32;
+              default:
+                return 0;
+            }
+          },
+          /**
+           * 获取端口法线方向（控制点延伸方向）：法线总是朝节点外
+           * 支持8端口：right-out/right-in 朝右，bottom-out/bottom-in 朝下，
+           *           left-out/left-in 朝左，top-out/top-in 朝上
+           */
+          _portNormal: function(port) {
+            switch (port) {
+              case "right-out":
+              case "right-in":
+                return { x: 1, y: 0 };
+              case "bottom-out":
+              case "bottom-in":
+                return { x: 0, y: 1 };
+              case "left-out":
+              case "left-in":
+                return { x: -1, y: 0 };
+              case "top-out":
+              case "top-in":
+                return { x: 0, y: -1 };
+              default:
+                return { x: 1, y: 0 };
+            }
+          },
+          /**
+           * 计算两个节点之间的连线路径（贝塞尔曲线，按端口分派）
+           * 控制点沿端口法线方向延伸，支持8方向端口
            */
           computeEdgePath: function(edge) {
-            var NODE_W = 130;
-            var NODE_H = 32;
             var src = this._findNode(edge.from);
             var tgt = this._findNode(edge.to);
             if (!src || !tgt) return "";
-            var x1 = src.x + NODE_W;
-            var y1 = src.y + NODE_H / 2;
-            var x2 = tgt.x;
-            var y2 = tgt.y + NODE_H / 2;
-            if (tgt.x + NODE_W < src.x) {
-              x1 = src.x;
-              y1 = src.y + NODE_H / 2;
-              x2 = tgt.x + NODE_W;
-              y2 = tgt.y + NODE_H / 2;
-            }
-            return "M" + x1.toFixed(1) + "," + y1.toFixed(1) + " L" + x2.toFixed(1) + "," + y2.toFixed(1);
+            var sp = this._portOffset(edge._srcPort || "right-out", edge._srcIdx || 0);
+            var tp = this._portOffset(edge._tgtPort || "left-in", edge._tgtIdx || 0);
+            var x1 = src.x + sp.x;
+            var y1 = src.y + sp.y;
+            var x2 = tgt.x + tp.x;
+            var y2 = tgt.y + tp.y;
+            var dx = x2 - x1;
+            var dy = y2 - y1;
+            var cpLen = Math.max(40, Math.abs(dx) * 0.4, Math.abs(dy) * 0.4);
+            var sn = this._portNormal(edge._srcPort || "right-out");
+            var tn = this._portNormal(edge._tgtPort || "left-in");
+            var cpx1 = x1 + sn.x * cpLen;
+            var cpy1 = y1 + sn.y * cpLen;
+            var cpx2 = x2 + tn.x * cpLen;
+            var cpy2 = y2 + tn.y * cpLen;
+            return "M" + x1.toFixed(1) + "," + y1.toFixed(1) + " C" + cpx1.toFixed(1) + "," + cpy1.toFixed(1) + " " + cpx2.toFixed(1) + "," + cpy2.toFixed(1) + " " + x2.toFixed(1) + "," + y2.toFixed(1);
           },
           /**
-           * 计算连线标签位置（中点偏上）
+           * 计算连线标签位置（贝塞尔曲线中点，使用三次贝塞尔 t=0.5 精确公式）
            */
           edgeLabelPos: function(edge) {
-            var NODE_W = 130;
-            var NODE_H = 32;
             var src = this._findNode(edge.from);
             var tgt = this._findNode(edge.to);
             if (!src || !tgt) return { x: 0, y: 0 };
-            var x1 = src.x + NODE_W;
-            var y1 = src.y + NODE_H / 2;
-            var x2 = tgt.x;
-            var y2 = tgt.y + NODE_H / 2;
-            if (tgt.x + NODE_W < src.x) {
-              x1 = src.x;
-              y1 = src.y + NODE_H / 2;
-              x2 = tgt.x + NODE_W;
-              y2 = tgt.y + NODE_H / 2;
-            }
-            return {
-              x: (x1 + x2) / 2,
-              y: (y1 + y2) / 2 - 8
-            };
+            var sp = this._portOffset(edge._srcPort || "right-out", edge._srcIdx || 0);
+            var tp = this._portOffset(edge._tgtPort || "left-in", edge._tgtIdx || 0);
+            var x1 = src.x + sp.x;
+            var y1 = src.y + sp.y;
+            var x2 = tgt.x + tp.x;
+            var y2 = tgt.y + tp.y;
+            var dx = x2 - x1;
+            var dy = y2 - y1;
+            var cpLen = Math.max(40, Math.abs(dx) * 0.4, Math.abs(dy) * 0.4);
+            var sn = this._portNormal(edge._srcPort || "right-out");
+            var tn = this._portNormal(edge._tgtPort || "left-in");
+            var cpx1 = x1 + sn.x * cpLen;
+            var cpy1 = y1 + sn.y * cpLen;
+            var cpx2 = x2 + tn.x * cpLen;
+            var cpy2 = y2 + tn.y * cpLen;
+            var mx = (x1 + 3 * cpx1 + 3 * cpx2 + x2) / 8;
+            var my = (y1 + 3 * cpy1 + 3 * cpy2 + y2) / 8;
+            return { x: mx, y: my - 12 };
           },
           /**
            * 在数组中按 id 查找节点
@@ -12406,26 +13291,31 @@
             forceLayout(graph.nodes, graph.edges, {
               width: this.svgWidth,
               height: this.svgHeight,
-              iterations: 60
+              iterations: 80
             });
+            _assignPortRoles(graph.nodes, graph.edges);
             this.nodes = graph.nodes;
             this.edges = graph.edges;
           }
         },
         mounted: function() {
           var self = this;
-          log2.debug("\u4FE1\u53F7\u6D41\u56FE\u9762\u677F\u5DF2\u6302\u8F7D");
+          log2.info("\u4FE1\u53F7\u6D41\u56FE\u9762\u677F\u5DF2\u6302\u8F7D");
           self.loadConfigData();
           this._projectHandler = Blockbench.on("select_project", function() {
+            log2.info("\u4FE1\u53F7\u6D41\u56FE: select_project \u4E8B\u4EF6");
             self.loadConfigData();
           });
           this._selectionHandler = Blockbench.on("update_selection", function() {
+            log2.info("\u4FE1\u53F7\u6D41\u56FE: update_selection \u4E8B\u4EF6");
             self.loadConfigData();
           });
           this._modeHandler = Blockbench.on("select_mode", function() {
+            log2.info("\u4FE1\u53F7\u6D41\u56FE: select_mode \u4E8B\u4EF6");
             self.loadConfigData();
           });
           this._saveHandler = Blockbench.on("save", function() {
+            log2.info("\u4FE1\u53F7\u6D41\u56FE: save \u4E8B\u4EF6");
             var variant = self.currentVariant;
             if (variant) {
               self.rebuildGraph();
@@ -12439,6 +13329,67 @@
           if (this._saveHandler) this._saveHandler();
         }
       });
+      function _findNodeById(nodes, id) {
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].id === id) return nodes[i];
+        }
+        return null;
+      }
+      function _assignPortRoles(nodes, edges) {
+        var srcIdxMap = {};
+        var tgtIdxMap = {};
+        for (var ei = 0; ei < edges.length; ei++) {
+          var e = edges[ei];
+          var src = _findNodeById(nodes, e.from);
+          var tgt = _findNodeById(nodes, e.to);
+          var srcPort = "right-out";
+          var tgtPort = "left-in";
+          if (src && tgt) {
+            var dx = tgt.x - src.x;
+            var dy = tgt.y - src.y;
+            if (Math.abs(dx) >= Math.abs(dy)) {
+              srcPort = dx >= 0 ? "right-out" : "left-out";
+            } else {
+              srcPort = dy >= 0 ? "bottom-out" : "top-out";
+            }
+            var sx = src.x - tgt.x;
+            var sy = src.y - tgt.y;
+            if (Math.abs(sx) >= Math.abs(sy)) {
+              tgtPort = sx >= 0 ? "right-in" : "left-in";
+            } else {
+              tgtPort = sy >= 0 ? "bottom-in" : "top-in";
+            }
+          }
+          var srcKey = e.from + "::" + srcPort;
+          if (!srcIdxMap[srcKey]) srcIdxMap[srcKey] = 0;
+          e._srcPort = srcPort;
+          e._srcIdx = srcIdxMap[srcKey]++;
+          var tgtKey = e.to + "::" + tgtPort;
+          if (!tgtIdxMap[tgtKey]) tgtIdxMap[tgtKey] = 0;
+          e._tgtPort = tgtPort;
+          e._tgtIdx = tgtIdxMap[tgtKey]++;
+          _markNodePort(nodes, e.from, srcPort, true);
+          _markNodePort(nodes, e.to, tgtPort, false);
+        }
+      }
+      function _markNodePort(nodes, nodeId, port, isOutput) {
+        for (var ni = 0; ni < nodes.length; ni++) {
+          if (nodes[ni].id === nodeId) {
+            if (!nodes[ni]._ports) nodes[ni]._ports = [];
+            var exists = false;
+            for (var pi = 0; pi < nodes[ni]._ports.length; pi++) {
+              if (nodes[ni]._ports[pi].port === port) {
+                exists = true;
+                break;
+              }
+            }
+            if (!exists) {
+              nodes[ni]._ports.push({ port, isOutput });
+            }
+            break;
+          }
+        }
+      }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = Vue.component("mm-signal-flow-panel");
       }

@@ -79,7 +79,13 @@ function buildSubPartOutput(sp) {
 
     // 导出碰撞箱时将 UUID key 解析为骨骼名（游戏运行时使用骨骼名作为 key）
     if (sp.hit_boxes && Object.keys(sp.hit_boxes).length > 0) out.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
-    if (sp.interact_boxes && Object.keys(sp.interact_boxes).length > 0) out.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
+    if (sp.interact_boxes && Object.keys(sp.interact_boxes).length > 0) {
+        out.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
+        // 导出时剥离内部 _uuid 字段
+        for (var ibKey in out.interact_boxes) {
+            delete out.interact_boxes[ibKey]._uuid;
+        }
+    }
     if (sp.connectors && Object.keys(sp.connectors).length > 0) out.connectors = _cleanConnectors(sp.connectors);
     if (sp.subsystems && Object.keys(sp.subsystems).length > 0) out.subsystems = _cleanSubsystems(sp.subsystems);
     if (sp.hydrodynamics) out.hydrodynamics = sp.hydrodynamics;

@@ -109,6 +109,7 @@
             :element-name="selectedElementName"
             :sp-name="selectedMarker ? selectedMarker.config_ref : ''"
             :hit-boxes="selectedSubPartConfig ? selectedSubPartConfig.hit_boxes || {} : {}"
+            :interact-boxes="selectedSubPartConfig ? selectedSubPartConfig.interact_boxes || {} : {}"
             :all-bone-names="allBoneNames"
             :all-locator-names="ownedLocatorNames"
             :refresh-key="_markerVersion"
@@ -129,8 +130,23 @@
             :element-name="selectedElementName"
             :parent-sub-part-key="hitBoxParentSubPartKey"
             :material-defs="availableMaterials"
+            :parent-subsystems="hitBoxParentSubsystems"
             @field-change="updateHitBoxField"
             @overwrite-change="updateHitBoxOverwrite"
+            @navigate-to-sub-part="navigateToSubPart" />
+
+        <!-- 交互区属性面板 -->
+        <mm-interact-box-panel v-else-if="isInteractBoxSelected"
+            :config="selectedInteractBoxConfig"
+            :element-name="selectedElementName"
+            :interact-box-name="interactBoxName"
+            :parent-sub-part-key="interactBoxParentSubPartKey"
+            :parent-subsystems="interactBoxParentSubsystems"
+            :signal-target-hints="interactBoxParentSignalTargetHints"
+            :all-bone-names="allBoneNames"
+            @field-change="updateInteractBoxField"
+            @name-change="renameInteractBox"
+            @bone-change="migrateInteractBoxBone"
             @navigate-to-sub-part="navigateToSubPart" />
 
         <!-- 连接点属性面板 -->

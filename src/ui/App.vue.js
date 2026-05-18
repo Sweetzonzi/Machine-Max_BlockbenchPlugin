@@ -25,6 +25,8 @@ require('./SubPartPanel.vue.js');
 
 require('./HitBoxPanel.vue.js');
 
+require('./InteractBoxPanel.vue.js');
+
 require('./ConnectorPanel.vue.js');
 
 require('./SubsystemPanel.vue.js');
@@ -169,6 +171,12 @@ const MMMainPanel = Vue.component('mm-main-panel', {
          */
         isHitBoxSelected: function () {
             return this.selectedMarker && this.selectedMarker.type === 'hit_box';
+        },
+        /**
+         * 当前选中是否为交互区标记
+         */
+        isInteractBoxSelected: function () {
+            return this.selectedMarker && this.selectedMarker.type === 'interact_box';
         },
         /**
          * 当前选中是否为连接点标记
@@ -333,6 +341,102 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         hitBoxParentSubPartKey: function () {
             var owner = this.hitBoxOwner;
             return owner ? owner.spKey : '';
+        },
+        /**
+         * 碰撞箱所属子零件内的子系统映射（用于关联子系统下拉选择）
+         */
+        hitBoxParentSubsystems: function () {
+            var spKey = this.hitBoxParentSubPartKey;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return {};
+            var sp = this.currentVariant.sub_parts[spKey];
+            return (sp && sp.subsystems) || {};
+        },
+        /**
+         * 动态检测交互区所属子零件（沿父链向上遍历）
+         */
+        interactBoxOwner: function () {
+            if (!this.selectedElement || !this.isInteractBoxSelected) return null;
+            var config = this.config;
+            if (!config) return null;
+            return detectOwnerSubPart(config, this.activePartId, this.activeVariantName, this.selectedElement);
+        },
+        /**
+         * 交互区所属子零件的 key
+         */
+        interactBoxParentSubPartKey: function () {
+            var owner = this.interactBoxOwner;
+            return owner ? owner.spKey : '';
+        },
+        /**
+         * 交互区所属子零件内的子系统映射（用于信号目标下拉选择）
+         */
+        interactBoxParentSubsystems: function () {
+            var spKey = this.interactBoxParentSubPartKey;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return {};
+            var sp = this.currentVariant.sub_parts[spKey];
+            return (sp && sp.subsystems) || {};
+        },
+        /**
+         * 交互区所属子零件内的信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'）
+         */
+        interactBoxParentSignalTargetHints: function () {
+            var spKey = this.interactBoxParentSubPartKey;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return ['subpart', 'vehicle'];
+            var sp = this.currentVariant.sub_parts[spKey];
+            if (!sp) return ['subpart', 'vehicle'];
+            var hints = ['subpart', 'vehicle'];
+            if (sp.connectors) {
+                hints = hints.concat(Object.keys(sp.connectors));
+            }
+            if (sp.subsystems) {
+                hints = hints.concat(Object.keys(sp.subsystems));
+            }
+            return hints;
+        },
+        /**
+         * 当前选中交互区的配置对象（从所属子零件的 interact_boxes 中获取）
+         * 按 _uuid 匹配（稳定，bone 变更后仍然有效）
+         */
+        selectedInteractBoxConfig: function () {
+            if (!this.isInteractBoxSelected) {
+                return null;
+            }
+            var variant = this.currentVariant;
+            if (!variant || !variant.sub_parts) {
+                return { _orphan: true, bone: '', interact_mode: 'fast', condition: 'NOR', signal_targets: {} };
+            }
+            var owner = this.interactBoxOwner;
+            var spKey = owner ? owner.spKey : null;
+            if (!spKey || !variant.sub_parts[spKey]) {
+                return { _orphan: true, bone: '', interact_mode: 'fast', condition: 'NOR', signal_targets: {} };
+            }
+            var sp = variant.sub_parts[spKey];
+            if (!sp.interact_boxes) this.$set(sp, 'interact_boxes', {});
+            var selectedUuid = this.selectedElement.uuid;
+            for (var ibKey in sp.interact_boxes) {
+                if (sp.interact_boxes[ibKey]._uuid === selectedUuid) {
+                    return sp.interact_boxes[ibKey];
+                }
+            }
+            return { _orphan: true, bone: '', interact_mode: 'fast', condition: 'NOR', signal_targets: {} };
+        },
+        /**
+         * 交互区在 interact_boxes 字典中的 key（即翻译键格式的名称）
+         * 用于属性面板显示和编辑
+         */
+        interactBoxName: function () {
+            if (!this.isInteractBoxSelected) return '';
+            var spKey = this.interactBoxParentSubPartKey;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return '';
+            var sp = this.currentVariant.sub_parts[spKey];
+            if (!sp || !sp.interact_boxes) return '';
+            var selectedUuid = this.selectedElement.uuid;
+            for (var ibKey in sp.interact_boxes) {
+                if (sp.interact_boxes[ibKey]._uuid === selectedUuid) {
+                    return ibKey;
+                }
+            }
+            return '';
         },
         /**
          * 当前选中连接点的配置对象（从所属子零件的 connectors 中获取）
@@ -1002,6 +1106,28 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             log.debug('updateHitBoxOverwrite: 已更新', { field: field, value: value });
         },
         /**
+         * 更新交互区配置中的单个字段
+         * 游离交互区（无归属）可编辑但不会持久化
+         * bone 变更后增量 _markerVersion 强制所有计算属性重新求值
+         */
+        updateInteractBoxField: function (field, value) {
+            const config = this.selectedInteractBoxConfig;
+            if (!config) {
+                log.warn('updateInteractBoxField: selectedInteractBoxConfig 为空');
+                return;
+            }
+            if (config._orphan) {
+                log.warn('updateInteractBoxField: 游离交互区不可持久化', { field: field, value: value });
+                return;
+            }
+            this.$set(config, field, value);
+            // bone 变更后强制刷新，触发子零件面板列表和归属重新计算
+            if (field === 'bone') {
+                this._markerVersion++;
+            }
+            log.debug('updateInteractBoxField: 已更新', { field: field, value: value });
+        },
+        /**
          * 更新连接点配置字段，同时同步到标记的 config_ref
          */
         updateConnectorField: function (field, value) {
@@ -1178,6 +1304,93 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             Blockbench.dispatchEvent('update_selection');
             showToast('连接点已重命名为 "' + newKey + '"', 'positive');
             log.info('renameConnector: 完成');
+        },
+        /**
+         * 重命名交互区：修改 interact_boxes 字典的 key
+         */
+        renameInteractBox: function (oldKey, newKey) {
+            if (!oldKey || !newKey || oldKey === newKey) return;
+            var variant = this.currentVariant;
+            if (!variant) return;
+
+            var spKey = this.interactBoxParentSubPartKey;
+            if (!spKey || !variant.sub_parts) return;
+            var sp = variant.sub_parts[spKey];
+            if (!sp || !sp.interact_boxes || !sp.interact_boxes[oldKey]) {
+                log.warn('renameInteractBox: 未找到交互区', { oldKey: oldKey });
+                return;
+            }
+
+            // 校验唯一性
+            var { validateNameUniqueness } = require('../core/naming.js');
+            var check = validateNameUniqueness(variant, 'interact_box', spKey, newKey, oldKey);
+            if (!check.valid) {
+                showToast(check.message, 'error');
+                return;
+            }
+
+            log.info('renameInteractBox: 重命名', { from: oldKey, to: newKey });
+
+            // 迁移字典 key
+            this.$set(sp.interact_boxes, newKey, sp.interact_boxes[oldKey]);
+            this.$delete(sp.interact_boxes, oldKey);
+
+            refreshOutlinerIcons();
+            Blockbench.dispatchEvent('update_selection');
+            showToast('交互区已重命名为 "' + newKey + '"', 'positive');
+            log.info('renameInteractBox: 完成');
+        },
+        /**
+         * 迁移交互区骨骼绑定：bone 从旧骨骼变更为新骨骼时，
+         * 同步迁移 element_marker 到新骨骼的 UUID，并选中新骨骼。
+         */
+        migrateInteractBoxBone: function (field, newBoneName) {
+            var config = this.selectedInteractBoxConfig;
+            if (!config || config._orphan) {
+                log.warn('migrateInteractBoxBone: 交互区不可迁移');
+                return;
+            }
+            var oldBoneName = config.bone || '';
+            if (oldBoneName === newBoneName) return;
+
+            var part = this.currentPart;
+            var variant = this.currentVariant;
+            var variantName = this.activeVariantName;
+            if (!part || !variant) return;
+
+            // 更新 bone 字段
+            this.$set(config, 'bone', newBoneName);
+
+            // 找到新旧骨骼 Group
+            var oldGroup = typeof Group !== 'undefined' ? Group.all.find(function(g) { return g.name === oldBoneName; }) : null;
+            var newGroup = typeof Group !== 'undefined' ? Group.all.find(function(g) { return g.name === newBoneName; }) : null;
+
+            if (oldGroup && newGroup && oldGroup !== newGroup) {
+                // 更新 _uuid 指向新骨骼
+                config._uuid = newGroup.uuid;
+
+                // 迁移 element_marker 到新骨骼的 UUID
+                var markers = part.element_markers && part.element_markers[variantName];
+                if (markers) {
+                    var markerData = markers[oldGroup.uuid];
+                    if (markerData && markerData.type === 'interact_box') {
+                        this.$set(markers, newGroup.uuid, markerData);
+                        this.$delete(markers, oldGroup.uuid);
+                        log.debug('migrateInteractBoxBone: 标记已迁移', {
+                            from: oldGroup.uuid, to: newGroup.uuid,
+                        });
+                    }
+                }
+
+                // 自动选中新骨骼
+                newGroup.select();
+                newGroup.showInOutliner();
+            }
+
+            this._markerVersion++;
+            refreshOutlinerIcons();
+            Blockbench.dispatchEvent('update_selection');
+            log.info('migrateInteractBoxBone: 骨骼迁移完成', { from: oldBoneName, to: newBoneName });
         },
     },
     mounted: function () {

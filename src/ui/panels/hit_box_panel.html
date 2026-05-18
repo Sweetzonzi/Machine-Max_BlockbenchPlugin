@@ -52,7 +52,9 @@
         </div>
         <div class="mm-field">
             <label title="关联子系统名称，碰撞箱受伤时该子系统同步受伤">关联子系统</label>
-            <input type="text" class="mm-input" :value="config.subsystem" @input="onFieldChange('subsystem', $event.target.value)" placeholder="留空则不关联" />
+            <select class="mm-select" :value="config.subsystem || ''" @change="onFieldChange('subsystem', $event.target.value || '')">
+                <option v-for="(label, key) in subsystemOptions" :key="key" :value="key">{{ label }}</option>
+            </select>
         </div>
         <div class="mm-field">
             <label title="Molang条件表达式，为空则始终生效">条件表达式</label>
