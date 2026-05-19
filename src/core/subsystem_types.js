@@ -297,21 +297,6 @@ function getDynamicFields(typeId) {
 }
 
 /**
- * 获取指定子系统类型的动态属性字段名列表
- * 供导出过滤器等只关心字段名而不关心元数据的地方使用
- * @param {string} typeId - 类型 ID
- * @returns {string[]} 字段名数组
- */
-function getDynamicFieldNames(typeId) {
-    var fields = getDynamicFields(typeId);
-    var names = [];
-    for (var i = 0; i < fields.length; i++) {
-        names.push(fields[i].field);
-    }
-    return names;
-}
-
-/**
  * 获取指定子系统类型的字段默认值对象（兼容旧接口 getTypeDefaults）
  * @param {string} typeId - 类型 ID
  * @returns {Object} 默认值对象（深拷贝，不包含 definition 和 type）
@@ -333,7 +318,12 @@ function getTypeDefaults(typeId) {
  * @returns {string[]} 字段键名数组
  */
 function getTypeSpecificFields(typeId) {
-    return getDynamicFieldNames(typeId);
+    var fields = getDynamicFields(typeId);
+    var names = [];
+    for (var i = 0; i < fields.length; i++) {
+        names.push(fields[i].field);
+    }
+    return names;
 }
 
 /**
@@ -452,7 +442,6 @@ if (typeof module !== 'undefined' && module.exports) {
         getTypesByCategory: getTypesByCategory,
         getTypesGroupedByCategory: getTypesGroupedByCategory,
         getDynamicFields: getDynamicFields,
-        getDynamicFieldNames: getDynamicFieldNames,
         getTypeDefaults: getTypeDefaults,
         getTypeSpecificFields: getTypeSpecificFields,
         needsLocator: needsLocator,

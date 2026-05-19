@@ -1,3 +1,6 @@
+// @deprecated - 默认值已迁移到 src/codec/codecs/
+// 此文件保留作历史参考，不再被任何模块引用。
+// 所有新代码应通过相应 codec 的 decode 获取默认值。
 const CONFIG_VERSION = 4;
 
 const PART_DEFAULTS = {
