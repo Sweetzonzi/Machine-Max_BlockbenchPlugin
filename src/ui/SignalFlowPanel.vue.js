@@ -128,6 +128,7 @@ Vue.component('mm-signal-flow-panel', {
             if (!node) return '#555';
             switch (node.type) {
                 case 'connector': return '#3AA83A';
+                case 'interact_box': return '#D9A441';
                 case 'subsystem':
                     if (node.subType) return getTypeColor(node.subType) || '#4A90D9';
                     return '#4A90D9';
@@ -143,6 +144,7 @@ Vue.component('mm-signal-flow-panel', {
             if (!node) return '';
             switch (node.type) {
                 case 'connector': return '连接点';
+                case 'interact_box': return '交互区';
                 case 'subsystem':
                     if (node.subType) {
                         var meta = ssTypes.getTypeMeta(node.subType);
@@ -344,18 +346,17 @@ Vue.component('mm-signal-flow-panel', {
          * 点击节点 → 导航到对应属性面板
          * 子系统 → 设置 subsystemSelection 触发子系统面板
          * 连接点 → 选中对应的 Locator
+         * 交互区 → 选中对应的 Group（Outliner 中高亮）
          */
         onNodeClick: function (node) {
             if (!node) return;
             if (node.type === 'subsystem') {
-                // 通过共享的 config._uiState 通信（SignalFlowPanel 和 App.vue 是不同的 Vue root）
                 var cfg = getConfig();
                 if (cfg && cfg._uiState) {
                     cfg._uiState._pendingSubsystemNav = { spKey: node.subPart, subsystemKey: node.id };
                 }
                 Blockbench.dispatchEvent('update_selection');
             } else if (node.type === 'connector') {
-                // 选中对应的 Locator
                 var locName = node.locator;
                 if (locName && typeof Locator !== 'undefined') {
                     var loc = Locator.all.find(function (l) { return l.name === locName; });
@@ -363,6 +364,27 @@ Vue.component('mm-signal-flow-panel', {
                         loc.select();
                         loc.showInOutliner();
                         Blockbench.dispatchEvent('update_selection');
+                    }
+                }
+            } else if (node.type === 'interact_box') {
+                // 通过 _uuid 找到对应的 Group 并在 Outliner 中选中
+                var variant = this.currentVariant;
+                if (variant && variant.sub_parts && variant.sub_parts[node.subPart]) {
+                    var sp = variant.sub_parts[node.subPart];
+                    if (sp.interact_boxes && sp.interact_boxes[node.id]) {
+                        var ibCfg = sp.interact_boxes[node.id];
+                        var ibUuid = ibCfg._uuid;
+                        if (ibUuid && typeof Group !== 'undefined') {
+                            var groups = Group.all;
+                            for (var gi = 0; gi < groups.length; gi++) {
+                                if (groups[gi].uuid === ibUuid) {
+                                    groups[gi].select();
+                                    groups[gi].showInOutliner();
+                                    Blockbench.dispatchEvent('update_selection');
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }

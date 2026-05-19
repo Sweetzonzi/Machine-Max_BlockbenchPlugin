@@ -14,15 +14,15 @@ describe('element_markers', function () {
     // ─── MARKER_TYPES ─────────────────────────────────────────────────────────
 
     describe('MARKER_TYPES', function () {
-        it('包含全部 3 种标记类型', function () {
-            var expectedTypes = ['sub_part', 'hit_box', 'connector'];
+        it('包含全部 4 种标记类型', function () {
+            var expectedTypes = ['sub_part', 'hit_box', 'connector', 'interact_box'];
             var actualTypes = Object.keys(markers.MARKER_TYPES);
-            if (actualTypes.length !== 3) {
-                throw new Error('Expected 3 marker types, got ' + actualTypes.length);
+            if (actualTypes.length !== 4) {
+                throw new Error('Expected 4 marker types, got ' + actualTypes.length);
             }
             expectedTypes.forEach(function (t) {
                 if (actualTypes.indexOf(t) === -1) {
-                    throw new Error('Missing marker type: ' + t);
+                    throw new Error('Missing type in MARKER_TYPES: ' + t);
                 }
             });
         });
@@ -122,14 +122,15 @@ describe('element_markers', function () {
     // ─── getMarkerTypesForElement ─────────────────────────────────────────────
 
     describe('getMarkerTypesForElement', function () {
-        it('Group 返回 [sub_part, hit_box]', function () {
+        it('Group 返回 [sub_part, hit_box, interact_box]', function () {
             var group = new globalThis.Group('testGroup');
             var types = markers.getMarkerTypesForElement(group);
-            if (types.length !== 2) {
-                throw new Error('Expected 2 types for Group, got ' + types.length);
+            if (types.length !== 3) {
+                throw new Error('Expected 3 types for Group, got ' + types.length);
             }
             if (types.indexOf('sub_part') === -1) throw new Error('Missing sub_part');
             if (types.indexOf('hit_box') === -1) throw new Error('Missing hit_box');
+            if (types.indexOf('interact_box') === -1) throw new Error('Missing interact_box');
         });
 
         it('Locator 仅返回 [connector]', function () {
@@ -511,14 +512,14 @@ describe('element_markers', function () {
     // ─── MARKER_TYPE_LIST ─────────────────────────────────────────────────────
 
     describe('MARKER_TYPE_LIST', function () {
-        it('包含所有 3 种标记类型名称', function () {
+        it('包含所有 4 种标记类型名称', function () {
             if (!Array.isArray(markers.MARKER_TYPE_LIST)) {
                 throw new Error('MARKER_TYPE_LIST should be an array');
             }
-            if (markers.MARKER_TYPE_LIST.length !== 3) {
-                throw new Error('Expected 3 entries, got ' + markers.MARKER_TYPE_LIST.length);
+            if (markers.MARKER_TYPE_LIST.length !== 4) {
+                throw new Error('Expected 4 entries, got ' + markers.MARKER_TYPE_LIST.length);
             }
-            var expected = ['sub_part', 'hit_box', 'connector'];
+            var expected = ['sub_part', 'hit_box', 'connector', 'interact_box'];
             expected.forEach(function (t) {
                 if (markers.MARKER_TYPE_LIST.indexOf(t) === -1) {
                     throw new Error('Missing type in MARKER_TYPE_LIST: ' + t);

@@ -69,6 +69,23 @@ function extractSignalGraph(variant) {
                 }
             }
         }
+
+        // 交互区 — 既是信号发送者也是接收者，纳入信号流图
+        if (sp.interact_boxes) {
+            for (var ibKey in sp.interact_boxes) {
+                var ib = sp.interact_boxes[ibKey];
+                if (!ib) continue;
+                if (!nodeMap[ibKey]) {
+                    nodeMap[ibKey] = true;
+                    nodes.push({
+                        id: ibKey,
+                        type: 'interact_box',
+                        subPart: spKey,
+                        label: _shortName(ibKey),
+                    });
+                }
+            }
+        }
     }
 
     // ====================================================================
@@ -104,6 +121,28 @@ function extractSignalGraph(variant) {
                     var pt = conn.power_target;
                     _ensureTargetNode(pt, nodeMap, nodes, seenSpecialTargets, spKey);
                     edges.push({ from: connKey, to: pt, channel: 'power', type: 'power' });
+                }
+            }
+        }
+
+        // === 交互区的边（玩家交互 → 信号目标） ===
+        if (sp.interact_boxes) {
+            for (var ibKey in sp.interact_boxes) {
+                var ib = sp.interact_boxes[ibKey];
+                if (!ib) continue;
+
+                // signal_targets: { channel → [targets] }  — 交互区发射的信号路由
+                if (ib.signal_targets) {
+                    for (var ibChannel in ib.signal_targets) {
+                        var ibTargets = ib.signal_targets[ibChannel];
+                        if (!ibTargets || !Array.isArray(ibTargets)) continue;
+                        for (var iti = 0; iti < ibTargets.length; iti++) {
+                            var ibTgt = ibTargets[iti];
+                            if (!ibTgt) continue;
+                            _ensureTargetNode(ibTgt, nodeMap, nodes, seenSpecialTargets, spKey);
+                            edges.push({ from: ibKey, to: ibTgt, channel: ibChannel, type: 'signal' });
+                        }
+                    }
                 }
             }
         }

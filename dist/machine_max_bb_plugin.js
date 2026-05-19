@@ -12441,6 +12441,21 @@
               }
             }
           }
+          if (sp.interact_boxes) {
+            for (var ibKey in sp.interact_boxes) {
+              var ib = sp.interact_boxes[ibKey];
+              if (!ib) continue;
+              if (!nodeMap[ibKey]) {
+                nodeMap[ibKey] = true;
+                nodes.push({
+                  id: ibKey,
+                  type: "interact_box",
+                  subPart: spKey,
+                  label: _shortName(ibKey)
+                });
+              }
+            }
+          }
         }
         var seenSpecialTargets = {};
         for (var spKey in variant.sub_parts) {
@@ -12466,6 +12481,24 @@
                 var pt = conn.power_target;
                 _ensureTargetNode(pt, nodeMap, nodes, seenSpecialTargets, spKey);
                 edges.push({ from: connKey, to: pt, channel: "power", type: "power" });
+              }
+            }
+          }
+          if (sp.interact_boxes) {
+            for (var ibKey in sp.interact_boxes) {
+              var ib = sp.interact_boxes[ibKey];
+              if (!ib) continue;
+              if (ib.signal_targets) {
+                for (var ibChannel in ib.signal_targets) {
+                  var ibTargets = ib.signal_targets[ibChannel];
+                  if (!ibTargets || !Array.isArray(ibTargets)) continue;
+                  for (var iti = 0; iti < ibTargets.length; iti++) {
+                    var ibTgt = ibTargets[iti];
+                    if (!ibTgt) continue;
+                    _ensureTargetNode(ibTgt, nodeMap, nodes, seenSpecialTargets, spKey);
+                    edges.push({ from: ibKey, to: ibTgt, channel: ibChannel, type: "signal" });
+                  }
+                }
               }
             }
           }
@@ -12860,6 +12893,7 @@
     <!-- \u56FE\u4F8B -->
     <div class="mm-signal-flow-legend" v-if="hasGraph">
         <span class="mm-flow-legend-item" title="\u8FDE\u63A5\u70B9"><span class="mm-flow-legend-dot" style="background:#3AA83A"></span>\u8FDE\u63A5\u70B9</span>
+        <span class="mm-flow-legend-item" title="\u4EA4\u4E92\u533A\uFF08\u73A9\u5BB6\u53EF\u4EA4\u4E92\u533A\u57DF\uFF09"><span class="mm-flow-legend-dot" style="background:#D9A441"></span>\u4EA4\u4E92\u533A</span>
         <span class="mm-flow-legend-item" title="\u5B50\u7CFB\u7EDF\uFF08\u6309\u7C7B\u578B\u7740\u8272\uFF09"><span class="mm-flow-legend-dot" style="background:#4A90D9"></span>\u5B50\u7CFB\u7EDF</span>
         <span class="mm-flow-legend-item" title="\u7279\u6B8A\u76EE\u6807\uFF08subpart/vehicle\uFF09"><span class="mm-flow-legend-dot" style="background:#666;opacity:0.5"></span>\u7279\u6B8A\u76EE\u6807</span>
         <span class="mm-flow-legend-item" title="\u4FE1\u53F7/\u63A7\u5236\u4FE1\u53F7"><span class="mm-flow-legend-line" style="background:#7f8c8d"></span>\u4FE1\u53F7</span>
@@ -12983,6 +13017,8 @@
             switch (node.type) {
               case "connector":
                 return "#3AA83A";
+              case "interact_box":
+                return "#D9A441";
               case "subsystem":
                 if (node.subType) return getTypeColor(node.subType) || "#4A90D9";
                 return "#4A90D9";
@@ -13002,6 +13038,8 @@
             switch (node.type) {
               case "connector":
                 return "\u8FDE\u63A5\u70B9";
+              case "interact_box":
+                return "\u4EA4\u4E92\u533A";
               case "subsystem":
                 if (node.subType) {
                   var meta = ssTypes.getTypeMeta(node.subType);
@@ -13229,6 +13267,7 @@
            * 点击节点 → 导航到对应属性面板
            * 子系统 → 设置 subsystemSelection 触发子系统面板
            * 连接点 → 选中对应的 Locator
+           * 交互区 → 选中对应的 Group（Outliner 中高亮）
            */
           onNodeClick: function(node) {
             if (!node) return;
@@ -13248,6 +13287,26 @@
                   loc.select();
                   loc.showInOutliner();
                   Blockbench.dispatchEvent("update_selection");
+                }
+              }
+            } else if (node.type === "interact_box") {
+              var variant = this.currentVariant;
+              if (variant && variant.sub_parts && variant.sub_parts[node.subPart]) {
+                var sp = variant.sub_parts[node.subPart];
+                if (sp.interact_boxes && sp.interact_boxes[node.id]) {
+                  var ibCfg = sp.interact_boxes[node.id];
+                  var ibUuid = ibCfg._uuid;
+                  if (ibUuid && typeof Group !== "undefined") {
+                    var groups = Group.all;
+                    for (var gi = 0; gi < groups.length; gi++) {
+                      if (groups[gi].uuid === ibUuid) {
+                        groups[gi].select();
+                        groups[gi].showInOutliner();
+                        Blockbench.dispatchEvent("update_selection");
+                        break;
+                      }
+                    }
+                  }
                 }
               }
             }
