@@ -1,5 +1,5 @@
 const PROPERTY_NAME = 'machine_max_plugin';
-const config_defaults = require('../core/config_defaults.js');
+const { CONFIG_VERSION } = require('../core/constants.js');
 const { migrateIfNeeded, createBlankConfig } = require('../core/config.js');
 const { createLogger } = require('./logger.js');
 
@@ -125,7 +125,7 @@ function saveConfig() {
         fs.writeFileSync(
             standalonePath,
             JSON.stringify({
-                $schema_version: config_defaults.CONFIG_VERSION,
+                $schema_version: CONFIG_VERSION,
                 bbmodel: path.basename(bbmodelPath),
                 timestamp: Date.now(),
                 config: {
