@@ -78,19 +78,9 @@ function showAddSubsystemDialog(options) {
                     return false;
                 }
             }
-            // 创建子系统实例
-            var cfgMod = require('../core/config.js');
-            var ssConfig = cfgMod.createSubsystemConfig();
-            ssConfig.type = typeId;
-            // 合并类型专属默认值
-            var typeDefaults = ssTypes.getTypeDefaults(typeId);
-            for (var f in typeDefaults) {
-                if (typeDefaults.hasOwnProperty(f)) {
-                    ssConfig[f] = JSON.parse(JSON.stringify(typeDefaults[f]));
-                }
-            }
-            // getTypeDefaults() 已从 dynamicFields[].defaultValue 读取所有非 definition 字段的默认值，
-            // 包括 locator/connector 的 ''、signal_targets 的默认频道映射、power_output 的 '' 等
+            // 创建子系统实例（通过 SubsystemDispatchCodec.decode 生成完整默认值）
+            var { SubsystemDispatchCodec } = require('../codec/codecs/subsystem_codec.js');
+            var ssConfig = SubsystemDispatchCodec.decode({ type: typeId });
             beforeSet(sp, instanceName, ssConfig);
             onCreated(spKey, instanceName);
             // 持久化并触发 UI 刷新
