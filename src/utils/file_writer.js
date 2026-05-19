@@ -64,9 +64,43 @@ function fileExists(filePath) {
     return exists;
 }
 
+/**
+ * Windows 下使用 .NET API 永久删除单个文件（不进回收站）
+ *
+ * PowerShell 的 Remove-Item 底层使用 Shell API，默认附带 FOF_ALLOWUNDO
+ * 标志导致文件进入回收站。而 [System.IO.File]::Delete() 直接调用 Win32
+ * DeleteFile API，不经过 Shell，等效于 Linux 的 unlink()。
+ *
+ * @param {string} filePath - 要删除的文件路径
+ */
+function _deletePermanent(filePath) {
+    if (process.platform === 'win32') {
+        try {
+            var cp = require('child_process');
+            var psCmd = 'try { [System.IO.File]::Delete("' + filePath.replace(/\\/g, '\\\\') + '") } catch {}';
+            cp.spawnSync(
+                'powershell.exe',
+                [
+                    '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+                    '-Command', psCmd
+                ],
+                { timeout: 10000 }
+            );
+            log.debug('_deletePermanent: File::Delete ' + filePath);
+            return;
+        } catch (_e) {
+            log.debug('_deletePermanent: child_process 不可用，降级到 fs.unlinkSync: ' + _e.message);
+        }
+    } else {
+        log.debug('_deletePermanent: 非 Windows 平台，使用 fs.unlinkSync');
+    }
+    fs.unlinkSync(filePath);
+    log.debug('_deletePermanent: fs.unlinkSync 删除 ' + filePath);
+}
+
 function deleteFile(filePath) {
     if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+        _deletePermanent(filePath);
         log.debug('deleteFile: 已删除 ' + filePath);
     } else {
         log.debug('deleteFile: 文件不存在，跳过 ' + filePath);

@@ -3522,9 +3522,37 @@
         log2.debug("fileExists: " + filePath + " \u2192 " + exists);
         return exists;
       }
+      function _deletePermanent(filePath) {
+        if (process.platform === "win32") {
+          try {
+            var cp = __require("child_process");
+            var psCmd = 'try { [System.IO.File]::Delete("' + filePath.replace(/\\/g, "\\\\") + '") } catch {}';
+            cp.spawnSync(
+              "powershell.exe",
+              [
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                psCmd
+              ],
+              { timeout: 1e4 }
+            );
+            log2.debug("_deletePermanent: File::Delete " + filePath);
+            return;
+          } catch (_e) {
+            log2.debug("_deletePermanent: child_process \u4E0D\u53EF\u7528\uFF0C\u964D\u7EA7\u5230 fs.unlinkSync: " + _e.message);
+          }
+        } else {
+          log2.debug("_deletePermanent: \u975E Windows \u5E73\u53F0\uFF0C\u4F7F\u7528 fs.unlinkSync");
+        }
+        fs.unlinkSync(filePath);
+        log2.debug("_deletePermanent: fs.unlinkSync \u5220\u9664 " + filePath);
+      }
       function deleteFile(filePath) {
         if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
+          _deletePermanent(filePath);
           log2.debug("deleteFile: \u5DF2\u5220\u9664 " + filePath);
         } else {
           log2.debug("deleteFile: \u6587\u4EF6\u4E0D\u5B58\u5728\uFF0C\u8DF3\u8FC7 " + filePath);
