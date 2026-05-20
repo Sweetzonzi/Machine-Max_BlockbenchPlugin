@@ -29,7 +29,6 @@ function toSnakeCase(str) {
  * @param {string} [context.namespace='machine_max'] - 命名空间
  * @param {string} [context.boneName] - 骨骼/Locator 名称（用于 connector/interact_box）
  * @param {string} [context.typeShortName] - type 短名（用于 subsystem）
- * @param {number} [context.index=1] - 序号（用于 subsystem 去重）
  * @returns {string} 默认名称
  */
 function generateDefaultName(entityType, context) {
@@ -49,8 +48,7 @@ function generateDefaultName(entityType, context) {
 
         case 'subsystem':
             var shortName = context.typeShortName || 'subsystem';
-            var idx = context.index || 1;
-            return 'subsystem.' + ns + '.' + shortName + '_' + idx;
+            return 'subsystem.' + ns + '.' + shortName;
 
         default:
             return '';
@@ -115,17 +113,17 @@ function ensureUniqueName(scope, variant, subPartKey, baseName) {
     var result = validateNameUniqueness(variant, scope, subPartKey, baseName);
     if (result.valid) return baseName;
 
-    // 尝试加后缀 .2, .3, ... 直到唯一
+    // 尝试加后缀 _2, _3, ... 直到唯一
     var suffix = 2;
     while (!result.valid && suffix <= 999) {
-        var candidate = baseName + '.' + suffix;
+        var candidate = baseName + '_' + suffix;
         result = validateNameUniqueness(variant, scope, subPartKey, candidate);
         if (result.valid) return candidate;
         suffix++;
     }
 
     // 兜底：加时间戳
-    return baseName + '.' + Date.now();
+    return baseName + '_' + Date.now();
 }
 
 if (typeof module !== 'undefined' && module.exports) {

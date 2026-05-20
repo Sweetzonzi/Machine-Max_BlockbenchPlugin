@@ -34,7 +34,7 @@ var SUBSYSTEM_TYPES = [
         category: 'power',
         dynamicFields: [
             { field: 'definition',    label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'power_output',  label: '功率输出目标',  editor: 'power_target',        required: true,  defaultValue: '' },
+            { field: 'power_output',  label: '功率输出目标',  editor: 'power_target',        required: true,  defaultValue: null },
             { field: 'speed_outputs', label: '转速信号输出',  editor: 'signal_targets',       required: false, defaultValue: { engine_speed: ['subpart', 'vehicle'] } },
         ],
     },
@@ -44,7 +44,7 @@ var SUBSYSTEM_TYPES = [
         category: 'power',
         dynamicFields: [
             { field: 'definition',    label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'power_output',  label: '功率输出目标',  editor: 'power_target',        required: true,  defaultValue: '' },
+            { field: 'power_output',  label: '功率输出目标',  editor: 'power_target',        required: true,  defaultValue: null },
             { field: 'speed_outputs', label: '转速信号输出',  editor: 'signal_targets',       required: false, defaultValue: { motor_speed: ['subpart', 'vehicle'] } },
         ],
     },
@@ -62,7 +62,7 @@ var SUBSYSTEM_TYPES = [
         category: 'power',
         dynamicFields: [
             { field: 'definition',    label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'power_output',  label: '功率输出目标', editor: 'power_target',        required: true,  defaultValue: '' },
+            { field: 'power_output',  label: '功率输出目标', editor: 'power_target',        required: true,  defaultValue: null },
             { field: 'gear_outputs',  label: '挡位信号输出', editor: 'signal_targets',       required: false, defaultValue: { gear: ['subpart', 'vehicle'] } },
         ],
     },
@@ -81,7 +81,7 @@ var SUBSYSTEM_TYPES = [
         category: 'power',
         dynamicFields: [
             { field: 'definition',    label: '型号定义',    editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'power_output',  label: '功率输出目标',editor: 'power_target',        required: true,  defaultValue: '' },
+            { field: 'power_output',  label: '功率输出目标',editor: 'power_target',        required: true,  defaultValue: null },
             { field: 'speed_outputs', label: '转速信号输出',editor: 'signal_targets',       required: false, defaultValue: { motor_speed: ['subpart', 'vehicle'] } },
         ],
     },
@@ -129,7 +129,7 @@ var SUBSYSTEM_TYPES = [
         category: 'utility',
         dynamicFields: [
             { field: 'definition',             label: '型号定义',        editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'connector',              label: '关联连接点',      editor: 'connector_selector',  required: true,  defaultValue: '' },
+            { field: 'connector',              label: '关联连接点',      editor: 'connector_selector',  required: true,  defaultValue: null },
             { field: 'roll_speed_outputs',     label: '滚动速度信号输出',editor: 'signal_targets',      required: false, defaultValue: {} },
             { field: 'steering_angle_outputs', label: '转向角度信号输出',editor: 'signal_targets',      required: false, defaultValue: {} },
         ],
@@ -140,7 +140,7 @@ var SUBSYSTEM_TYPES = [
         category: 'utility',
         dynamicFields: [
             { field: 'definition',           label: '型号定义',    editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'locator',              label: '关联定位器',  editor: 'locator_selector',    required: true,  defaultValue: '' },
+            { field: 'locator',              label: '关联定位器',  editor: 'locator_selector',    required: true,  defaultValue: null },
             { field: 'move_outputs',         label: '移动信号输出',editor: 'signal_targets',      required: false, defaultValue: { move_control: [] } },
             { field: 'aim_outputs',          label: '瞄准信号输出',editor: 'signal_targets',      required: false, defaultValue: { aim: [] } },
             { field: 'regular_outputs',      label: '常规信号输出',editor: 'signal_targets',      required: false, defaultValue: { regular_control: [] } },
@@ -178,7 +178,7 @@ var SUBSYSTEM_TYPES = [
         category: 'utility',
         dynamicFields: [
             { field: 'definition',      label: '型号定义',   editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'locator',         label: '关联定位器', editor: 'locator_selector',    required: true,  defaultValue: '' },
+            { field: 'locator',         label: '关联定位器', editor: 'locator_selector',    required: true,  defaultValue: null },
             { field: 'rotation_order',  label: '旋转顺序',   editor: 'enum_selector',       required: true,  defaultValue: 'XYZ',
               options: ['XYZ', 'XZY', 'YXZ', 'ZYX', 'ZXY', 'YZX'] },
             { field: 'axes',            label: '关节轴参数', editor: 'json_textarea',        required: true,  defaultValue: {} },
@@ -208,7 +208,7 @@ var SUBSYSTEM_TYPES = [
         category: 'experimental',
         dynamicFields: [
             { field: 'definition',       label: '型号定义',    editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'connector',        label: '关联连接点',  editor: 'connector_selector',  required: true,  defaultValue: '' },
+            { field: 'connector',        label: '关联连接点',  editor: 'connector_selector',  required: true,  defaultValue: null },
             { field: 'rotation_outputs', label: '角度反馈输出',editor: 'signal_targets',       required: false, defaultValue: {} },
         ],
     },
@@ -227,7 +227,7 @@ var SUBSYSTEM_TYPES = [
         category: 'experimental',
         dynamicFields: [
             { field: 'definition',    label: '型号定义',   editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'locator',       label: '发射点定位器',editor: 'locator_selector',    required: true,  defaultValue: '' },
+            { field: 'locator',       label: '发射点定位器',editor: 'locator_selector',    required: true,  defaultValue: null },
             { field: 'ammo_outputs',  label: '弹药反馈输出',editor: 'signal_targets',       required: false, defaultValue: {} },
         ],
     },

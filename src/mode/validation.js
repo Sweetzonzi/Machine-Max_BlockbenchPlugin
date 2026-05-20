@@ -35,6 +35,46 @@ function checkOrphanedMarkers(config, partId, vName, errors) {
 }
 
 /**
+ * 通过 subsystem_types.js 的 dynamicFields 注册表，数据驱动校验每个子系统实例的必填字段
+ *
+ * 对每个子系统中 required: true 的字段，检查其值是否为 null 或 undefined。
+ * 空字符串 ''、空数组 [] 等被视为"用户明确留空"，不触发告警。
+ * 新增子系统类型或字段只需修改 subsystem_types.js，无需改动本函数。
+ */
+function checkSubsystemRequiredFields(config, errors) {
+    var ssTypes = require('../core/subsystem_types.js');
+    var parts = config.parts || {};
+
+    for (const [partId, part] of Object.entries(parts)) {
+        var variants = part.variants || {};
+        for (const [vName, variant] of Object.entries(variants)) {
+            var subParts = variant.sub_parts || {};
+            for (const [spName, sp] of Object.entries(subParts)) {
+                var subsystems = sp.subsystems || {};
+                for (const [ssName, ss] of Object.entries(subsystems)) {
+                    var typeMeta = ssTypes.getTypeMeta(ss.type);
+                    if (!typeMeta) continue;
+                    var fields = typeMeta.dynamicFields;
+                    for (var fi = 0; fi < fields.length; fi++) {
+                        var f = fields[fi];
+                        if (f.required) {
+                            var val = ss[f.field];
+                            if (val === null || val === undefined) {
+                                errors.push(
+                                    '子系统 "' + ssName + '" 在零件 "' + partId + '"/' + vName +
+                                    ' 子零件 "' + spName + '" 中：' + f.label + '（' + f.field + '）' +
+                                    '为必填字段但未配置'
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
  * 运行基础校验
  */
 function runValidation(config) {
@@ -74,6 +114,9 @@ function runValidation(config) {
             checkOrphanedMarkers(config, partId, vName, errors);
         }
     }
+
+    // 校验子系统必填字段（数据驱动）
+    checkSubsystemRequiredFields(config, errors);
 
     return errors;
 }

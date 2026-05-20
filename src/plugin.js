@@ -5,7 +5,7 @@ const { registerMachineMaxMenu, unregisterMachineMaxMenu } = require('./ui/menu.
 const { showToast } = require('./utils/notify.js');
 
 /** 插件版本号 */
-const PLUGIN_VERSION = '0.1.0';
+const PLUGIN_VERSION = '0.1.1';
 
 /** 模块日志 */
 var log = createLogger('Plugin');

@@ -68,7 +68,7 @@ function showAddSubsystemDialog(options) {
             if (!instanceName || instanceName.trim() === '') {
                 var { generateDefaultName, ensureUniqueName } = require('../core/naming.js');
                 var ns = (config && config.namespace) || 'machine_max';
-                var baseName = generateDefaultName('subsystem', { namespace: ns, typeName: typeId.split(':').pop() || 'ss' });
+                var baseName = generateDefaultName('subsystem', { namespace: ns, typeShortName: typeId.split(':').pop() || 'ss' });
                 instanceName = ensureUniqueName('subsystem', variant, spKey, baseName);
             } else {
                 instanceName = instanceName.trim();
@@ -78,9 +78,16 @@ function showAddSubsystemDialog(options) {
                     return false;
                 }
             }
-            // 创建子系统实例（通过 SubsystemDispatchCodec.decode 生成完整默认值）
-            var { SubsystemDispatchCodec } = require('../codec/codecs/subsystem_codec.js');
-            var ssConfig = SubsystemDispatchCodec.decode({ type: typeId });
+            // 创建子系统实例（从 subsystem_types.js 读取动态字段默认值手动构造）
+            // 注意：不使用 SubsystemDispatchCodec.decode()，因为 codec 中所有 .field() 字段在
+            // 导出时承担必填校验职责，不应为创建实例而降低校验严格度。
+            var defaultFields = ssTypes.getTypeDefaults(typeId);
+            var ssConfig = { type: typeId, definition: '' };
+            for (var key in defaultFields) {
+                if (defaultFields.hasOwnProperty(key)) {
+                    ssConfig[key] = defaultFields[key];
+                }
+            }
             beforeSet(sp, instanceName, ssConfig);
             onCreated(spKey, instanceName);
             // 持久化并触发 UI 刷新

@@ -2563,110 +2563,807 @@
     }
   });
 
-  // src/core/config_defaults.js
-  var require_config_defaults = __commonJS({
-    "src/core/config_defaults.js"(exports, module) {
+  // src/core/constants.js
+  var require_constants = __commonJS({
+    "src/core/constants.js"(exports, module) {
+      "use strict";
       init_define_BUILTIN_CONNECTORS();
       init_define_BUILTIN_MATERIALS();
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var CONFIG_VERSION = 4;
-      var PART_DEFAULTS = {
-        icon: "",
-        vehicle_durability_rate: 0.8,
-        vehicle_damage_rate: 1,
-        vehicle_damage_rate_destroyed: 0.1,
-        functional_threshold: 0.3,
-        share_durability: true,
-        max_stack_size: 1,
-        variants: {},
-        element_markers: {}
-      };
-      var VARIANT_DEFAULTS = {
-        model: "",
-        textures: "",
-        animations: null,
-        tags: [],
-        sub_parts: {}
-      };
-      var SUB_PART_DEFAULTS = {
-        start_bone: "",
-        end_bones: [],
-        auto_end_bones: [],
-        durability: 20,
-        mass: 25,
-        mass_center: "mass_center",
-        projected_area: [0, 0, 0],
-        block_collision: "true",
-        collision_height: -1,
-        climb_assist: false,
-        hydro_priority: 0,
-        hit_boxes: {},
-        interact_boxes: {},
-        connectors: {},
-        subsystems: {},
-        hydrodynamics: null
-      };
-      var HIT_BOX_DEFAULTS = {
-        id: "part",
-        type: "box",
-        material: "",
-        thickness: 1,
-        condition: "true"
-      };
-      var INTERACT_BOX_DEFAULTS = {
-        bone: "",
-        interact_mode: "fast",
-        condition: "NOR",
-        signal_targets: {}
-      };
-      var SUBSYSTEM_INSTANCE_DEFAULTS = {
-        type: "",
-        definition: ""
-      };
-      var CONNECTOR_INSTANCE_DEFAULTS = {
-        locator: "",
-        definition: "",
-        power_target: "",
-        signal_translations: {},
-        signal_targets: {},
-        internal: false,
-        overwrite: {}
-      };
       if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          CONFIG_VERSION,
-          PART_DEFAULTS,
-          VARIANT_DEFAULTS,
-          SUB_PART_DEFAULTS,
-          HIT_BOX_DEFAULTS,
-          INTERACT_BOX_DEFAULTS,
-          SUBSYSTEM_INSTANCE_DEFAULTS,
-          CONNECTOR_INSTANCE_DEFAULTS
+        module.exports = { CONFIG_VERSION };
+      }
+    }
+  });
+
+  // src/codec/Codec.js
+  var require_Codec = __commonJS({
+    "src/codec/Codec.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      function withFieldMethods(codec) {
+        codec.field = function() {
+          return createFieldDescriptor(codec, { required: true });
+        };
+        codec.default = function(val) {
+          return createFieldDescriptor(codec, { defaultValue: val });
+        };
+        codec.nullable = function() {
+          return createFieldDescriptor(codec, { nullable: true });
+        };
+        codec.list = function(len) {
+          return createListCodec(codec, len);
+        };
+        codec.map = function(keyC, valC) {
+          return createMapCodec(keyC, valC);
+        };
+        return codec;
+      }
+      function createFieldDescriptor(codec, opts) {
+        if (opts.required) {
+          return {
+            required: true,
+            encodeField: function(value, path) {
+              if (value === void 0) {
+                throw new Error("Missing required field at " + (path || "?"));
+              }
+              return codec.encode(value, path);
+            },
+            decodeField: function(value, key, path) {
+              if (value === void 0) {
+                throw new Error("Missing required field: " + path + key);
+              }
+              return codec.decode(value);
+            }
+          };
+        }
+        if (opts.nullable) {
+          return {
+            nullable: true,
+            defaultValue: null,
+            encodeField: function(value, path) {
+              if (value === null || value === void 0) return void 0;
+              return codec.encode(value, path);
+            },
+            decodeField: function(value, key, path) {
+              if (value === void 0) return null;
+              return codec.decode(value);
+            }
+          };
+        }
+        var defaultVal = opts.defaultValue;
+        return {
+          defaultValue: defaultVal,
+          encodeField: function(value, path) {
+            if (value === void 0 || value === null || value === defaultVal) return void 0;
+            return codec.encode(value, path);
+          },
+          decodeField: function(value, key, path) {
+            if (value === void 0) return defaultVal;
+            return codec.decode(value);
+          }
         };
       }
+      function createListCodec(itemCodec, len) {
+        var codec = {
+          type: "list",
+          encode: function(arr, path) {
+            var result, i;
+            if (!Array.isArray(arr)) {
+              throw new Error((path ? path + ": " : "") + "Expected array, got " + typeof arr);
+            }
+            if (len !== void 0 && arr.length !== len) {
+              throw new Error((path ? path + ": " : "") + "Expected array of length " + len + ", got " + arr.length);
+            }
+            result = [];
+            for (i = 0; i < arr.length; i++) {
+              result.push(itemCodec.encode(arr[i], path + "[" + i + "]"));
+            }
+            return result;
+          },
+          decode: function(arr) {
+            var result, i;
+            if (!Array.isArray(arr)) {
+              throw new Error("Expected array, got " + typeof arr);
+            }
+            if (len !== void 0 && arr.length !== len) {
+              throw new Error("Expected array of length " + len + ", got " + arr.length);
+            }
+            result = [];
+            for (i = 0; i < arr.length; i++) {
+              result.push(itemCodec.decode(arr[i]));
+            }
+            return result;
+          }
+        };
+        return withFieldMethods(codec);
+      }
+      function createMapCodec(keyCodec, valCodec) {
+        var codec = {
+          type: "map",
+          encode: function(obj, path) {
+            var result, keys, i, k;
+            if (obj === null || obj === void 0) return void 0;
+            if (typeof obj !== "object" || Array.isArray(obj)) {
+              throw new Error((path ? path + ": " : "") + "Expected object for map, got " + typeof obj);
+            }
+            result = {};
+            keys = Object.keys(obj);
+            for (i = 0; i < keys.length; i++) {
+              k = keys[i];
+              result[keyCodec.encode(k)] = valCodec.encode(obj[k], (path || "") + "[" + k + "]");
+            }
+            if (Object.keys(result).length === 0) return void 0;
+            return result;
+          },
+          decode: function(obj) {
+            var result, keys, i, k;
+            if (obj === null || obj === void 0) return {};
+            if (typeof obj !== "object" || Array.isArray(obj)) {
+              throw new Error("Expected object for map, got " + typeof obj);
+            }
+            result = {};
+            keys = Object.keys(obj);
+            for (i = 0; i < keys.length; i++) {
+              k = keys[i];
+              result[keyCodec.decode(k)] = valCodec.decode(obj[k]);
+            }
+            return result;
+          }
+        };
+        return withFieldMethods(codec);
+      }
+      function createPrimitiveCodec(encodeFn, decodeFn) {
+        var codec = {
+          type: "primitive",
+          encode: encodeFn,
+          decode: decodeFn
+        };
+        return withFieldMethods(codec);
+      }
+      var ANY = createPrimitiveCodec(
+        function(v) {
+          return v;
+        },
+        function(v) {
+          return v;
+        }
+      );
+      var STRING = createPrimitiveCodec(
+        function(v) {
+          return String(v);
+        },
+        function(v) {
+          if (typeof v !== "string") {
+            throw new Error("Expected string, got " + typeof v);
+          }
+          return v;
+        }
+      );
+      var INT = createPrimitiveCodec(
+        function(v) {
+          if (typeof v !== "number" || !Number.isInteger(v)) {
+            throw new Error("Expected integer, got " + v);
+          }
+          return v;
+        },
+        function(v) {
+          if (typeof v !== "number" || !Number.isInteger(v)) {
+            throw new Error("Expected integer, got " + v);
+          }
+          return v;
+        }
+      );
+      var FLOAT = createPrimitiveCodec(
+        function(v) {
+          if (typeof v !== "number") {
+            throw new Error("Expected number, got " + typeof v);
+          }
+          return v;
+        },
+        function(v) {
+          if (typeof v !== "number") {
+            throw new Error("Expected number, got " + typeof v);
+          }
+          return v;
+        }
+      );
+      var BOOL = createPrimitiveCodec(
+        function(v) {
+          if (typeof v !== "boolean") {
+            throw new Error("Expected boolean, got " + typeof v);
+          }
+          return v;
+        },
+        function(v) {
+          if (typeof v !== "boolean") {
+            throw new Error("Expected boolean, got " + typeof v);
+          }
+          return v;
+        }
+      );
+      function ENUM(values) {
+        var codec = {
+          type: "enum",
+          encode: function(v) {
+            if (values.indexOf(v) === -1) {
+              throw new Error("Invalid enum value: " + v);
+            }
+            return v;
+          },
+          decode: function(v) {
+            if (values.indexOf(v) === -1) {
+              throw new Error("Invalid enum value: " + v);
+            }
+            return v;
+          }
+        };
+        return withFieldMethods(codec);
+      }
+      function record(schema) {
+        var codec = {
+          type: "record",
+          encode: function(obj, path) {
+            var result, schemaKeys, i, key, field, val, encoded, fieldPath;
+            if (obj === null || obj === void 0) return void 0;
+            result = {};
+            schemaKeys = Object.keys(schema);
+            for (i = 0; i < schemaKeys.length; i++) {
+              key = schemaKeys[i];
+              field = schema[key];
+              val = obj[key];
+              fieldPath = (path || "") + (path ? "." : "") + key;
+              encoded = field.encodeField ? field.encodeField(val, fieldPath) : val;
+              if (encoded !== void 0) {
+                result[key] = encoded;
+              }
+            }
+            if (Object.keys(result).length === 0) return void 0;
+            return result;
+          },
+          decode: function(raw, _path) {
+            var path, result, schemaKeys, i, key, field, rawKeys, j, rawKey;
+            if (raw === null || raw === void 0) return {};
+            if (typeof raw !== "object" || Array.isArray(raw)) {
+              throw new Error("Expected object for record, got " + typeof raw);
+            }
+            path = _path ? _path + "." : "";
+            result = {};
+            schemaKeys = Object.keys(schema);
+            for (i = 0; i < schemaKeys.length; i++) {
+              key = schemaKeys[i];
+              field = schema[key];
+              result[key] = field.decodeField ? field.decodeField(raw[key], key, path) : raw[key];
+            }
+            rawKeys = Object.keys(raw);
+            for (j = 0; j < rawKeys.length; j++) {
+              rawKey = rawKeys[j];
+              if (!Object.prototype.hasOwnProperty.call(schema, rawKey)) {
+                result[rawKey] = raw[rawKey];
+              }
+            }
+            return result;
+          }
+        };
+        return withFieldMethods(codec);
+      }
+      function dispatch(key, codecMap) {
+        var codec = {
+          type: "dispatch",
+          encode: function(obj, path) {
+            var type, subCodec, rest, objKeys, i, k, encoded, result, encKeys, j;
+            type = obj[key];
+            if (type === void 0) {
+              throw new Error((path ? path + ": " : "") + "Missing dispatch key: " + key);
+            }
+            subCodec = codecMap[type];
+            if (!subCodec) {
+              throw new Error((path ? path + ": " : "") + "Unknown dispatch type: " + type);
+            }
+            rest = {};
+            objKeys = Object.keys(obj);
+            for (i = 0; i < objKeys.length; i++) {
+              k = objKeys[i];
+              if (k !== key) {
+                rest[k] = obj[k];
+              }
+            }
+            encoded = subCodec.encode(rest, path);
+            result = {};
+            result[key] = type;
+            if (encoded && typeof encoded === "object" && !Array.isArray(encoded)) {
+              encKeys = Object.keys(encoded);
+              for (j = 0; j < encKeys.length; j++) {
+                result[encKeys[j]] = encoded[encKeys[j]];
+              }
+            }
+            return result;
+          },
+          decode: function(raw) {
+            if (raw === null || raw === void 0 || typeof raw !== "object") {
+              throw new Error("Expected object for dispatch, got " + typeof raw);
+            }
+            var type = raw[key];
+            if (type === void 0) {
+              throw new Error("Missing dispatch key: " + key);
+            }
+            var subCodec = codecMap[type];
+            if (!subCodec) {
+              throw new Error("Unknown dispatch type: " + type);
+            }
+            var decoded = subCodec.decode(raw);
+            return decoded;
+          }
+        };
+        return withFieldMethods(codec);
+      }
+      function either(singleCodec, mapCodec) {
+        var WRAP_KEY = "default";
+        function looksLikeSingleEntity(obj) {
+          var keys, i, k;
+          keys = Object.keys(obj);
+          if (keys.length === 0) return false;
+          for (i = 0; i < keys.length; i++) {
+            k = keys[i];
+            if (/^[a-z_]/.test(k) && !/^\d/.test(k)) {
+              return true;
+            }
+          }
+          return false;
+        }
+        var codec = {
+          type: "either",
+          encode: function(obj, path) {
+            if (obj === null || obj === void 0) return void 0;
+            if (typeof obj !== "object") {
+              return singleCodec.encode(obj, path);
+            }
+            var keys = Object.keys(obj);
+            if (keys.length === 1 && keys[0] === WRAP_KEY) {
+              return singleCodec.encode(obj[WRAP_KEY], path);
+            }
+            return mapCodec.encode(obj, path);
+          },
+          decode: function(raw) {
+            var wrapped;
+            if (raw === null || raw === void 0) return {};
+            if (typeof raw !== "object") {
+              wrapped = {};
+              wrapped[WRAP_KEY] = singleCodec.decode(raw);
+              return wrapped;
+            }
+            if (looksLikeSingleEntity(raw)) {
+              wrapped = {};
+              wrapped[WRAP_KEY] = singleCodec.decode(raw);
+              return wrapped;
+            }
+            return mapCodec.decode(raw);
+          }
+        };
+        return withFieldMethods(codec);
+      }
+      var Codec = {
+        STRING,
+        INT,
+        FLOAT,
+        BOOL,
+        ENUM,
+        ANY,
+        record,
+        either,
+        dispatch,
+        map: createMapCodec
+      };
+      module.exports = { Codec };
+    }
+  });
+
+  // src/codec/codecs/hit_box_codec.js
+  var require_hit_box_codec = __commonJS({
+    "src/codec/codecs/hit_box_codec.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { Codec } = require_Codec();
+      var HitBoxCodec = Codec.record({
+        id: Codec.STRING.field(),
+        // 碰撞形状ID（必填）
+        type: Codec.STRING.field(),
+        // 碰撞形状类型（必填，box/sphere/cylinder/capsule/wheel）
+        material: Codec.STRING.default("machine_max:default"),
+        thickness: Codec.FLOAT.default(1),
+        condition: Codec.STRING.default("true"),
+        subsystem: Codec.STRING.default(""),
+        // 关联子系统
+        // overwrite：透传对象（对应 Java HitBoxAttr.OverwriteAttr — 14 个可选字段）
+        // 使用 ANY.nullable() 宽松传递，encode 时 null/undefined/空对象跳过
+        overwrite: Codec.ANY.nullable()
+      });
+      module.exports = { HitBoxCodec };
+    }
+  });
+
+  // src/codec/codecs/interact_box_codec.js
+  var require_interact_box_codec = __commonJS({
+    "src/codec/codecs/interact_box_codec.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { Codec } = require_Codec();
+      var InteractBoxCodec = Codec.record({
+        bone: Codec.STRING.field(),
+        // 骨骼名（必填）
+        interact_mode: Codec.ENUM(["fast", "accurate"]).default("fast"),
+        condition: Codec.STRING.default("NOR"),
+        signal_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      module.exports = { InteractBoxCodec };
+    }
+  });
+
+  // src/codec/codecs/connector_codec.js
+  var require_connector_codec = __commonJS({
+    "src/codec/codecs/connector_codec.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { Codec } = require_Codec();
+      var ConnectorCodec = Codec.record({
+        locator: Codec.STRING.field(),
+        // 关联 Locator（必填）
+        definition: Codec.STRING.default(""),
+        // 定义引用（空 = 无定义 → 导出跳过）
+        signal_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        // signal_translations: Map<频道名, 目标频道> — 值类型为 String（对应 Java unboundedMap(STRING, STRING)）
+        signal_translations: Codec.map(Codec.STRING, Codec.STRING).default({}),
+        power_target: Codec.STRING.default(""),
+        internal: Codec.BOOL.default(false),
+        // overwrite：透传对象（对应 Java ConnectorAttr.OverwriteAttr — 12 个可选字段）
+        // 使用 ANY.nullable() 宽松传递，encode 时 null/undefined 跳过
+        overwrite: Codec.ANY.nullable()
+      });
+      module.exports = { ConnectorCodec };
+    }
+  });
+
+  // src/codec/codecs/subsystem_codec.js
+  var require_subsystem_codec = __commonJS({
+    "src/codec/codecs/subsystem_codec.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { Codec } = require_Codec();
+      var EngineCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        power_output: Codec.STRING.field(),
+        speed_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      var WheelDriverCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        connector: Codec.STRING.field(),
+        roll_speed_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        steering_angle_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      var SeatCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        locator: Codec.STRING.field(),
+        move_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        aim_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        regular_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        passenger_num_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      var GearboxCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        power_output: Codec.STRING.field(),
+        gear_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      var CarControllerCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        control_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        speed_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        throttle_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        steering_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        brake_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        handbrake_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      var MotorCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        power_output: Codec.STRING.field(),
+        speed_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      var BasicCodec = Codec.record({
+        definition: Codec.STRING.field()
+      });
+      var ItemStorageCodec = Codec.record({
+        definition: Codec.STRING.field()
+      });
+      var LightingCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        locator: Codec.STRING.default("")
+      });
+      var MotorbikeControllerCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        control_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        speed_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        throttle_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        steering_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        brake_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        handbrake_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      var TransmissionCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        power_outputs: Codec.map(Codec.STRING, Codec.FLOAT).default({})
+        // 频道→减速比（数值）
+      });
+      var MotorControllerCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        power_output: Codec.STRING.field(),
+        speed_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      var BatteryCodec = Codec.record({
+        definition: Codec.STRING.field()
+      });
+      var SignalConvertCodec = Codec.record({
+        definition: Codec.STRING.field()
+      });
+      var JointDriverCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        locator: Codec.STRING.field(),
+        rotation_order: Codec.STRING.default("XYZ"),
+        axes: Codec.record({
+          // axes 是一个对象，其内部结构由用户通过 JSON 编辑框定义
+          // 这里使用宽松的 record（无 schema 字段）来保留所有键
+        }).default({})
+      });
+      var CameraCodec = Codec.record({
+        definition: Codec.STRING.field()
+      });
+      var JavascriptCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        script: Codec.STRING.default("")
+      });
+      var TurretDriverCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        connector: Codec.STRING.field(),
+        rotation_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      var FireControlCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        control_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      var LauncherCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        locator: Codec.STRING.field(),
+        ammo_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      var SubsystemDispatchCodec = Codec.dispatch("type", {
+        "machine_max:engine": EngineCodec,
+        "machine_max:motor": MotorCodec,
+        "machine_max:gearbox": GearboxCodec,
+        "machine_max:transmission": TransmissionCodec,
+        "machine_max:battery": BatteryCodec,
+        "machine_max:motor_controller": MotorControllerCodec,
+        "machine_max:car_controller": CarControllerCodec,
+        "machine_max:motorbike_controller": MotorbikeControllerCodec,
+        "machine_max:signal_convert": SignalConvertCodec,
+        "machine_max:wheel_driver": WheelDriverCodec,
+        "machine_max:seat": SeatCodec,
+        "machine_max:lighting": LightingCodec,
+        "machine_max:item_storage": ItemStorageCodec,
+        "machine_max:basic": BasicCodec,
+        "machine_max:joint": JointDriverCodec,
+        "machine_max:camera": CameraCodec,
+        "machine_max:javascript": JavascriptCodec,
+        "machine_max:turret": TurretDriverCodec,
+        "machine_max:fire_controller": FireControlCodec,
+        "machine_max:launcher": LauncherCodec
+      });
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          SubsystemDispatchCodec,
+          EngineCodec,
+          WheelDriverCodec,
+          SeatCodec,
+          GearboxCodec,
+          CarControllerCodec,
+          MotorCodec,
+          BasicCodec,
+          ItemStorageCodec,
+          LightingCodec,
+          MotorbikeControllerCodec,
+          TransmissionCodec,
+          MotorControllerCodec,
+          BatteryCodec,
+          SignalConvertCodec,
+          JointDriverCodec,
+          CameraCodec,
+          JavascriptCodec,
+          TurretDriverCodec,
+          FireControlCodec,
+          LauncherCodec
+        };
+      }
+    }
+  });
+
+  // src/codec/codecs/hydrodynamic_codec.js
+  var require_hydrodynamic_codec = __commonJS({
+    "src/codec/codecs/hydrodynamic_codec.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { Codec } = require_Codec();
+      var AdvancedAeroCodec = Codec.record({
+        lift_slope: Codec.FLOAT.default(6.28),
+        alpha0: Codec.FLOAT.default(0),
+        alpha_stall: Codec.FLOAT.default(0.52),
+        cd0: Codec.FLOAT.default(0.02),
+        k_induced: Codec.FLOAT.default(0.05)
+      });
+      var HydroCodec = Codec.record({
+        scale: Codec.FLOAT.default(1),
+        effective_range: Codec.FLOAT.default(1),
+        transonic_amplifier: Codec.FLOAT.default(5),
+        front_drag: Codec.FLOAT.list(2).default([0, 1]),
+        back_drag: Codec.FLOAT.list(2).default([0, 1]),
+        left_drag: Codec.FLOAT.list(2).default([0, 1]),
+        right_drag: Codec.FLOAT.list(2).default([0, 1]),
+        up_drag: Codec.FLOAT.list(2).default([0, 1]),
+        down_drag: Codec.FLOAT.list(2).default([0, 1]),
+        x_lift: Codec.FLOAT.default(0),
+        y_lift: Codec.FLOAT.default(0),
+        z_lift: Codec.FLOAT.default(0),
+        advanced: Codec.BOOL.default(false),
+        advanced_aero: AdvancedAeroCodec.default({
+          lift_slope: 6.28,
+          alpha0: 0,
+          alpha_stall: 0.52,
+          cd0: 0.02,
+          k_induced: 0.05
+        })
+      });
+      module.exports = { HydroCodec, AdvancedAeroCodec };
+    }
+  });
+
+  // src/codec/codecs/sub_part_codec.js
+  var require_sub_part_codec = __commonJS({
+    "src/codec/codecs/sub_part_codec.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { Codec } = require_Codec();
+      var { HitBoxCodec } = require_hit_box_codec();
+      var { InteractBoxCodec } = require_interact_box_codec();
+      var { ConnectorCodec } = require_connector_codec();
+      var { SubsystemDispatchCodec } = require_subsystem_codec();
+      var { HydroCodec } = require_hydrodynamic_codec();
+      var SubPartCodec = Codec.record({
+        // ── 骨骼范围 ──
+        start_bone: Codec.STRING.default(""),
+        end_bones: Codec.STRING.list().default([]),
+        // ── 物理属性 ──
+        durability: Codec.FLOAT.default(20),
+        mass: Codec.FLOAT.default(25),
+        mass_center: Codec.STRING.default("mass_center"),
+        projected_area: Codec.FLOAT.list(3).default([0, 0, 0]),
+        block_collision: Codec.ENUM(["true", "false", "ground"]).default("true"),
+        collision_height: Codec.FLOAT.default(-1),
+        climb_assist: Codec.BOOL.default(false),
+        hydro_priority: Codec.INT.default(0),
+        // ── 子对象映射 ──
+        hit_boxes: Codec.map(Codec.STRING, HitBoxCodec).default({}),
+        interact_boxes: Codec.map(Codec.STRING, InteractBoxCodec).default({}),
+        connectors: Codec.map(Codec.STRING, ConnectorCodec).default({}),
+        subsystems: Codec.map(Codec.STRING, SubsystemDispatchCodec).default({}),
+        // ── 可选子对象 ──
+        // 默认为空 map（encode 时跳过），与 Java optionalFieldOf("hydrodynamics", Map.of("", DEFAULT)) 语义对齐
+        hydrodynamics: Codec.map(Codec.STRING, HydroCodec).default({})
+      });
+      module.exports = { SubPartCodec };
+    }
+  });
+
+  // src/codec/codecs/variant_codec.js
+  var require_variant_codec = __commonJS({
+    "src/codec/codecs/variant_codec.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { Codec } = require_Codec();
+      var { SubPartCodec } = require_sub_part_codec();
+      var VariantCodec = Codec.record({
+        model: Codec.STRING.field(),
+        // textures: either(单值字符串, 完整 map{名称→路径})
+        // — 单值时编码为裸字符串，解码时包装为 {default: 值}
+        // — 多值时编码为完整 map，解码时保持 map
+        // — 默认值 '' 表示未设置，encode 时跳过字段 → Java 端 fallback 到 missingno
+        textures: Codec.either(Codec.STRING, Codec.map(Codec.STRING, Codec.STRING)).default(""),
+        // animations: 单个资源路径字符串（对应 Java ResourceLocation）
+        // — 默认值 '' 表示未设置，encode 时跳过字段 → Java 端 fallback 到 machine_max:empty
+        animations: Codec.STRING.default(""),
+        tags: Codec.STRING.list().default([]),
+        sub_parts: Codec.either(SubPartCodec, Codec.map(Codec.STRING, SubPartCodec)).default({})
+      });
+      module.exports = { VariantCodec };
+    }
+  });
+
+  // src/codec/codecs/part_codec.js
+  var require_part_codec = __commonJS({
+    "src/codec/codecs/part_codec.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { Codec } = require_Codec();
+      var { VariantCodec } = require_variant_codec();
+      var PartCodec = Codec.record({
+        // ── 标识 ──
+        namespace: Codec.STRING.default("machine_max"),
+        id: Codec.STRING.default(""),
+        // ── 基础 ──
+        icon: Codec.STRING.default(""),
+        can_stand_on_top: Codec.BOOL.default(false),
+        // ── 物理 ──
+        vehicle_durability_rate: Codec.FLOAT.default(0.8),
+        vehicle_damage_rate: Codec.FLOAT.default(1),
+        vehicle_damage_rate_destroyed: Codec.FLOAT.default(0.1),
+        functional_threshold: Codec.FLOAT.default(0.3),
+        // ── 行为 ──
+        share_durability: Codec.BOOL.default(true),
+        max_stack_size: Codec.INT.default(1),
+        // ── 变体 ──
+        variants: Codec.either(VariantCodec, Codec.map(Codec.STRING, VariantCodec)).default({}),
+        // ── 编辑器内部状态 ──
+        element_markers: Codec.record({}).default({})
+      });
+      module.exports = { PartCodec };
     }
   });
 
   // src/core/config.js
   var require_config = __commonJS({
     "src/core/config.js"(exports, module) {
+      "use strict";
       init_define_BUILTIN_CONNECTORS();
       init_define_BUILTIN_MATERIALS();
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var {
-        CONFIG_VERSION,
-        PART_DEFAULTS,
-        VARIANT_DEFAULTS,
-        SUB_PART_DEFAULTS,
-        HIT_BOX_DEFAULTS,
-        INTERACT_BOX_DEFAULTS,
-        SUBSYSTEM_INSTANCE_DEFAULTS,
-        CONNECTOR_INSTANCE_DEFAULTS
-      } = require_config_defaults();
+      var { CONFIG_VERSION } = require_constants();
+      var { PartCodec } = require_part_codec();
+      var { VariantCodec } = require_variant_codec();
+      var { SubPartCodec } = require_sub_part_codec();
       var { createLogger: createLogger2 } = require_logger();
       var log2 = createLogger2("Config");
       var MIGRATIONS = {
@@ -2694,6 +3391,32 @@
           return v3config;
         }
       };
+      var HIT_BOX_DEFAULTS = {
+        id: "part",
+        type: "box",
+        material: "",
+        thickness: 1,
+        condition: "true"
+      };
+      var INTERACT_BOX_DEFAULTS = {
+        bone: "",
+        interact_mode: "fast",
+        condition: "NOR",
+        signal_targets: {}
+      };
+      var SUBSYSTEM_INSTANCE_DEFAULTS = {
+        type: "",
+        definition: ""
+      };
+      var CONNECTOR_INSTANCE_DEFAULTS = {
+        locator: "",
+        definition: "",
+        power_target: "",
+        signal_translations: {},
+        signal_targets: {},
+        internal: false,
+        overwrite: {}
+      };
       function createBlankConfig() {
         log2.debug("createBlankConfig: \u521B\u5EFA\u7A7A\u767D\u914D\u7F6E\uFF0C\u7248\u672C=" + CONFIG_VERSION);
         return {
@@ -2711,20 +3434,19 @@
       }
       function createPartConfig(partId, initialVariantName) {
         log2.debug("createPartConfig: \u521B\u5EFA\u96F6\u4EF6\u914D\u7F6E", { partId, variant: initialVariantName });
-        const part = JSON.parse(JSON.stringify(PART_DEFAULTS));
-        part.element_markers = {};
+        var part = PartCodec.decode({ id: partId });
         if (initialVariantName) {
-          part.variants[initialVariantName] = createVariantConfig();
+          part.variants[initialVariantName] = VariantCodec.decode({ model: "" });
         }
         return part;
       }
       function createVariantConfig() {
         log2.debug("createVariantConfig: \u521B\u5EFA\u53D8\u4F53\u914D\u7F6E");
-        return JSON.parse(JSON.stringify(VARIANT_DEFAULTS));
+        return VariantCodec.decode({ model: "" });
       }
       function createSubPartConfig() {
         log2.debug("createSubPartConfig: \u521B\u5EFA\u5B50\u96F6\u4EF6\u914D\u7F6E");
-        return JSON.parse(JSON.stringify(SUB_PART_DEFAULTS));
+        return SubPartCodec.decode({});
       }
       function createHitBoxConfig() {
         log2.debug("createHitBoxConfig: \u521B\u5EFA\u78B0\u649E\u7BB1\u914D\u7F6E");
@@ -2747,10 +3469,22 @@
           log2.warn("ensureDefaults: \u914D\u7F6E\u65E0\u6548\uFF0C\u8FD4\u56DE\u7A7A\u767D\u914D\u7F6E");
           return createBlankConfig();
         }
-        const result = Object.assign({}, createBlankConfig(), config);
+        var result = Object.assign({}, createBlankConfig(), config);
         if (!result.parts) result.parts = {};
         if (!result._uiState) {
           result._uiState = { activeMode: "part", activePartId: "", activeVariantName: "" };
+        }
+        var partKeys, i, pk, part, savedVariants;
+        partKeys = Object.keys(result.parts);
+        for (i = 0; i < partKeys.length; i++) {
+          pk = partKeys[i];
+          part = result.parts[pk];
+          savedVariants = part.variants;
+          delete part.variants;
+          result.parts[pk] = PartCodec.decode(part);
+          if (savedVariants && typeof savedVariants === "object" && Object.keys(savedVariants).length > 0) {
+            result.parts[pk].variants = savedVariants;
+          }
         }
         log2.debug("ensureDefaults: \u5B8C\u6210");
         return result;
@@ -2760,14 +3494,15 @@
           log2.info("migrateIfNeeded: \u65E0\u7248\u672C\u53F7\uFF0C\u5E94\u7528\u9ED8\u8BA4\u503C");
           return ensureDefaults(config);
         }
-        const version = config.$schema_version;
+        var version = config.$schema_version;
         if (version === CONFIG_VERSION) {
           log2.debug("migrateIfNeeded: \u914D\u7F6E\u5DF2\u662F\u6700\u65B0\u7248\u672C v" + version);
           return ensureDefaults(config);
         }
         log2.info("migrateIfNeeded: \u914D\u7F6E\u9700\u8981\u8FC1\u79FB", { from: version, to: CONFIG_VERSION });
-        let migrated = JSON.parse(JSON.stringify(config));
-        for (let v = version; v < CONFIG_VERSION; v++) {
+        var migrated = JSON.parse(JSON.stringify(config));
+        var v;
+        for (v = version; v < CONFIG_VERSION; v++) {
           if (MIGRATIONS[v]) {
             migrated = MIGRATIONS[v](migrated);
             log2.debug("migrateIfNeeded: \u8FC1\u79FB\u6B65\u9AA4 v" + v + " \u5B8C\u6210");
@@ -2780,7 +3515,7 @@
           log2.debug("getActivePart: \u914D\u7F6E\u6216\u96F6\u4EF6\u5217\u8868\u4E3A\u7A7A");
           return null;
         }
-        const partId = config._uiState?.activePartId;
+        var partId = config._uiState?.activePartId;
         if (!partId) {
           log2.debug("getActivePart: \u65E0\u6D3B\u8DC3\u96F6\u4EF6 ID");
           return null;
@@ -2790,9 +3525,9 @@
         return part;
       }
       function getActiveVariant(config) {
-        const part = getActivePart(config);
+        var part = getActivePart(config);
         if (!part) return null;
-        const variantName = config._uiState?.activeVariantName;
+        var variantName = config._uiState?.activeVariantName;
         if (!variantName) {
           log2.debug("getActiveVariant: \u65E0\u6D3B\u8DC3\u53D8\u4F53\u540D");
           return null;
@@ -2830,7 +3565,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var PROPERTY_NAME = "machine_max_plugin";
-      var config_defaults = require_config_defaults();
+      var { CONFIG_VERSION } = require_constants();
       var { migrateIfNeeded, createBlankConfig } = require_config();
       var { createLogger: createLogger2 } = require_logger();
       var log2 = createLogger2("Persistence");
@@ -2917,7 +3652,7 @@
           fs.writeFileSync(
             standalonePath,
             JSON.stringify({
-              $schema_version: config_defaults.CONFIG_VERSION,
+              $schema_version: CONFIG_VERSION,
               bbmodel: path.basename(bbmodelPath),
               timestamp: Date.now(),
               config: {
@@ -4130,6 +4865,355 @@
     }
   });
 
+  // src/core/subsystem_types.js
+  var require_subsystem_types = __commonJS({
+    "src/core/subsystem_types.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var SUBSYSTEM_TYPES = [
+        // ===== power 分类 =====
+        {
+          id: "machine_max:engine",
+          displayName: "\u53D1\u52A8\u673A",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: null },
+            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { engine_speed: ["subpart", "vehicle"] } }
+          ]
+        },
+        {
+          id: "machine_max:motor",
+          displayName: "\u7535\u52A8\u673A",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: null },
+            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { motor_speed: ["subpart", "vehicle"] } }
+          ]
+        },
+        {
+          id: "machine_max:battery",
+          displayName: "\u7535\u6C60",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+          ]
+        },
+        {
+          id: "machine_max:gearbox",
+          displayName: "\u53D8\u901F\u7BB1",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: null },
+            { field: "gear_outputs", label: "\u6321\u4F4D\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { gear: ["subpart", "vehicle"] } }
+          ]
+        },
+        {
+          id: "machine_max:transmission",
+          displayName: "\u5206\u52A8\u7BB1",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_outputs", label: "\u529F\u7387\u8F93\u51FA\u5206\u914D", editor: "power_outputs_map", required: true, defaultValue: {} }
+          ]
+        },
+        {
+          id: "machine_max:motor_controller",
+          displayName: "\u7535\u673A\u63A7\u5236\u5668",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: null },
+            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { motor_speed: ["subpart", "vehicle"] } }
+          ]
+        },
+        // ===== control 分类 =====
+        {
+          id: "machine_max:car_controller",
+          displayName: "\u8F66\u8F86\u63A7\u5236\u5668",
+          category: "control",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { car_control: [] } },
+            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["subpart", "vehicle"] } },
+            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["subpart", "vehicle"] } },
+            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["subpart", "vehicle"] } },
+            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["subpart", "vehicle"] } },
+            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["subpart", "vehicle"] } }
+          ]
+        },
+        {
+          id: "machine_max:motorbike_controller",
+          displayName: "\u6469\u6258\u8F66\u63A7\u5236\u5668",
+          category: "control",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { car_control: [] } },
+            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["subpart", "vehicle"] } },
+            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["subpart", "vehicle"] } },
+            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["subpart", "vehicle"] } },
+            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["subpart", "vehicle"] } },
+            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["subpart", "vehicle"] } }
+          ]
+        },
+        {
+          id: "machine_max:signal_convert",
+          displayName: "\u4FE1\u53F7\u8F6C\u6362\u5668",
+          category: "control",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+          ]
+        },
+        // ===== utility 分类 =====
+        {
+          id: "machine_max:wheel_driver",
+          displayName: "\u8F6E\u80CE\u9A71\u52A8\u5668",
+          category: "utility",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: null },
+            { field: "roll_speed_outputs", label: "\u6EDA\u52A8\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} },
+            { field: "steering_angle_outputs", label: "\u8F6C\u5411\u89D2\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
+          ]
+        },
+        {
+          id: "machine_max:seat",
+          displayName: "\u5EA7\u4F4D",
+          category: "utility",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: null },
+            { field: "move_outputs", label: "\u79FB\u52A8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { move_control: [] } },
+            { field: "aim_outputs", label: "\u7784\u51C6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { aim: [] } },
+            { field: "regular_outputs", label: "\u5E38\u89C4\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { regular_control: [] } },
+            { field: "passenger_num_outputs", label: "\u4E58\u5BA2\u6570\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { passenger_num: ["subpart", "vehicle"] } }
+          ]
+        },
+        {
+          id: "machine_max:lighting",
+          displayName: "\u706F\u5149",
+          category: "utility",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u5149\u6E90\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: "" }
+          ]
+        },
+        {
+          id: "machine_max:item_storage",
+          displayName: "\u7269\u54C1\u5B58\u50A8",
+          category: "utility",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+          ]
+        },
+        {
+          id: "machine_max:basic",
+          displayName: "\u57FA\u7840\uFF08\u65E0\u989D\u5916\u9762\u677F\uFF09",
+          category: "utility",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+          ]
+        },
+        {
+          id: "machine_max:joint",
+          displayName: "\u5173\u8282",
+          category: "utility",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: null },
+            {
+              field: "rotation_order",
+              label: "\u65CB\u8F6C\u987A\u5E8F",
+              editor: "enum_selector",
+              required: true,
+              defaultValue: "XYZ",
+              options: ["XYZ", "XZY", "YXZ", "ZYX", "ZXY", "YZX"]
+            },
+            { field: "axes", label: "\u5173\u8282\u8F74\u53C2\u6570", editor: "json_textarea", required: true, defaultValue: {} }
+          ]
+        },
+        // ===== experimental 分类 =====
+        {
+          id: "machine_max:camera",
+          displayName: "\u6444\u50CF\u5934",
+          category: "experimental",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+          ]
+        },
+        {
+          id: "machine_max:javascript",
+          displayName: "JavaScript \u811A\u672C",
+          category: "experimental",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "script", label: "\u811A\u672C\u5185\u5BB9", editor: "text_input", required: false, defaultValue: "" }
+          ]
+        },
+        {
+          id: "machine_max:turret",
+          displayName: "\u70AE\u5854",
+          category: "experimental",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: null },
+            { field: "rotation_outputs", label: "\u89D2\u5EA6\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
+          ]
+        },
+        {
+          id: "machine_max:fire_controller",
+          displayName: "\u706B\u63A7\u7CFB\u7EDF",
+          category: "experimental",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { fire_control: [] } }
+          ]
+        },
+        {
+          id: "machine_max:launcher",
+          displayName: "\u53D1\u5C04\u5668",
+          category: "experimental",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u53D1\u5C04\u70B9\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: null },
+            { field: "ammo_outputs", label: "\u5F39\u836F\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
+          ]
+        }
+      ];
+      var TYPE_MAP = {};
+      (function() {
+        for (var i = 0; i < SUBSYSTEM_TYPES.length; i++) {
+          TYPE_MAP[SUBSYSTEM_TYPES[i].id] = SUBSYSTEM_TYPES[i];
+        }
+      })();
+      function getTypeMeta(typeId) {
+        return TYPE_MAP[typeId] || null;
+      }
+      function getAllTypes() {
+        return SUBSYSTEM_TYPES.slice();
+      }
+      function getTypesByCategory(category) {
+        return SUBSYSTEM_TYPES.filter(function(t) {
+          return t.category === category;
+        });
+      }
+      function getTypesGroupedByCategory() {
+        var result = { power: [], control: [], utility: [], experimental: [] };
+        for (var i = 0; i < SUBSYSTEM_TYPES.length; i++) {
+          var t = SUBSYSTEM_TYPES[i];
+          if (result[t.category]) {
+            result[t.category].push(t);
+          }
+        }
+        return result;
+      }
+      function getDynamicFields(typeId) {
+        var meta = TYPE_MAP[typeId];
+        return meta ? meta.dynamicFields.slice() : [];
+      }
+      function getTypeDefaults(typeId) {
+        var fields = getDynamicFields(typeId);
+        var result = {};
+        for (var i = 0; i < fields.length; i++) {
+          var f = fields[i];
+          if (f.field === "definition") continue;
+          result[f.field] = JSON.parse(JSON.stringify(f.defaultValue));
+        }
+        return result;
+      }
+      function getTypeSpecificFields(typeId) {
+        var fields = getDynamicFields(typeId);
+        var names = [];
+        for (var i = 0; i < fields.length; i++) {
+          names.push(fields[i].field);
+        }
+        return names;
+      }
+      function needsLocator(typeId) {
+        var fields = getDynamicFields(typeId);
+        for (var i = 0; i < fields.length; i++) {
+          if (fields[i].editor === "locator_selector") return true;
+        }
+        return false;
+      }
+      function needsConnector(typeId) {
+        var fields = getDynamicFields(typeId);
+        for (var i = 0; i < fields.length; i++) {
+          if (fields[i].editor === "connector_selector") return true;
+        }
+        return false;
+      }
+      function getSignalOutputFieldNames(typeId) {
+        var fields = getDynamicFields(typeId);
+        var result = [];
+        for (var i = 0; i < fields.length; i++) {
+          var f = fields[i];
+          if (f.editor === "signal_targets" || f.editor === "power_target" || f.editor === "power_outputs_map") {
+            result.push(f.field);
+          }
+        }
+        return result;
+      }
+      var EDITOR_LABELS = {
+        definition_selector: "\u578B\u53F7\u5B9A\u4E49\u9009\u62E9\u5668",
+        locator_selector: "\u5B9A\u4F4D\u5668\u9009\u62E9\u5668",
+        connector_selector: "\u8FDE\u63A5\u70B9\u9009\u62E9\u5668",
+        power_target: "\u529F\u7387\u76EE\u6807\u9009\u62E9\u5668",
+        signal_targets: "\u4FE1\u53F7\u9891\u9053\u7F16\u8F91\u5668",
+        power_outputs_map: "\u529F\u7387\u8F93\u51FA\u6620\u5C04\u7F16\u8F91\u5668",
+        enum_selector: "\u679A\u4E3E\u4E0B\u62C9\u83DC\u5355",
+        text_input: "\u6587\u672C\u8F93\u5165\u6846",
+        json_textarea: "JSON \u7F16\u8F91\u6846"
+      };
+      function getEditorLabel(editorType) {
+        return EDITOR_LABELS[editorType] || editorType;
+      }
+      var CATEGORY_COLORS = {
+        power: "#e67e22",
+        control: "#3498db",
+        utility: "#2ecc71",
+        experimental: "#9b59b6"
+      };
+      function getTypeColor(typeId) {
+        var meta = TYPE_MAP[typeId];
+        if (!meta) return "#888";
+        return CATEGORY_COLORS[meta.category] || "#888";
+      }
+      var CATEGORY_LABELS = {
+        power: "\u52A8\u529B",
+        control: "\u63A7\u5236",
+        utility: "\u529F\u80FD",
+        experimental: "\u5B9E\u9A8C"
+      };
+      function getCategoryLabel(category) {
+        return CATEGORY_LABELS[category] || category;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          SUBSYSTEM_TYPES,
+          getTypeMeta,
+          getAllTypes,
+          getTypesByCategory,
+          getTypesGroupedByCategory,
+          getDynamicFields,
+          getTypeDefaults,
+          getTypeSpecificFields,
+          needsLocator,
+          needsConnector,
+          getSignalOutputFieldNames,
+          getEditorLabel,
+          getTypeColor,
+          getCategoryLabel
+        };
+      }
+    }
+  });
+
   // src/mode/validation.js
   var require_validation = __commonJS({
     "src/mode/validation.js"(exports, module) {
@@ -4168,6 +5252,35 @@
           }
         }
       }
+      function checkSubsystemRequiredFields(config, errors) {
+        var ssTypes = require_subsystem_types();
+        var parts = config.parts || {};
+        for (const [partId, part] of Object.entries(parts)) {
+          var variants = part.variants || {};
+          for (const [vName, variant] of Object.entries(variants)) {
+            var subParts = variant.sub_parts || {};
+            for (const [spName, sp] of Object.entries(subParts)) {
+              var subsystems = sp.subsystems || {};
+              for (const [ssName, ss] of Object.entries(subsystems)) {
+                var typeMeta = ssTypes.getTypeMeta(ss.type);
+                if (!typeMeta) continue;
+                var fields = typeMeta.dynamicFields;
+                for (var fi = 0; fi < fields.length; fi++) {
+                  var f = fields[fi];
+                  if (f.required) {
+                    var val = ss[f.field];
+                    if (val === null || val === void 0) {
+                      errors.push(
+                        '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spName + '" \u4E2D\uFF1A' + f.label + "\uFF08" + f.field + "\uFF09\u4E3A\u5FC5\u586B\u5B57\u6BB5\u4F46\u672A\u914D\u7F6E"
+                      );
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
       function runValidation(config) {
         const errors = [];
         const parts = config.parts || {};
@@ -4200,6 +5313,7 @@
             checkOrphanedMarkers(config, partId, vName, errors);
           }
         }
+        checkSubsystemRequiredFields(config, errors);
         return errors;
       }
       if (typeof module !== "undefined" && module.exports) {
@@ -5468,359 +6582,6 @@
     }
   });
 
-  // src/core/subsystem_types.js
-  var require_subsystem_types = __commonJS({
-    "src/core/subsystem_types.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var SUBSYSTEM_TYPES = [
-        // ===== power 分类 =====
-        {
-          id: "machine_max:engine",
-          displayName: "\u53D1\u52A8\u673A",
-          category: "power",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
-            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { engine_speed: ["subpart", "vehicle"] } }
-          ]
-        },
-        {
-          id: "machine_max:motor",
-          displayName: "\u7535\u52A8\u673A",
-          category: "power",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
-            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { motor_speed: ["subpart", "vehicle"] } }
-          ]
-        },
-        {
-          id: "machine_max:battery",
-          displayName: "\u7535\u6C60",
-          category: "power",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
-          ]
-        },
-        {
-          id: "machine_max:gearbox",
-          displayName: "\u53D8\u901F\u7BB1",
-          category: "power",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
-            { field: "gear_outputs", label: "\u6321\u4F4D\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { gear: ["subpart", "vehicle"] } }
-          ]
-        },
-        {
-          id: "machine_max:transmission",
-          displayName: "\u5206\u52A8\u7BB1",
-          category: "power",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "power_outputs", label: "\u529F\u7387\u8F93\u51FA\u5206\u914D", editor: "power_outputs_map", required: true, defaultValue: {} }
-          ]
-        },
-        {
-          id: "machine_max:motor_controller",
-          displayName: "\u7535\u673A\u63A7\u5236\u5668",
-          category: "power",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
-            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { motor_speed: ["subpart", "vehicle"] } }
-          ]
-        },
-        // ===== control 分类 =====
-        {
-          id: "machine_max:car_controller",
-          displayName: "\u8F66\u8F86\u63A7\u5236\u5668",
-          category: "control",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { car_control: [] } },
-            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["subpart", "vehicle"] } },
-            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["subpart", "vehicle"] } },
-            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["subpart", "vehicle"] } },
-            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["subpart", "vehicle"] } },
-            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["subpart", "vehicle"] } }
-          ]
-        },
-        {
-          id: "machine_max:motorbike_controller",
-          displayName: "\u6469\u6258\u8F66\u63A7\u5236\u5668",
-          category: "control",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { car_control: [] } },
-            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["subpart", "vehicle"] } },
-            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["subpart", "vehicle"] } },
-            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["subpart", "vehicle"] } },
-            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["subpart", "vehicle"] } },
-            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["subpart", "vehicle"] } }
-          ]
-        },
-        {
-          id: "machine_max:signal_convert",
-          displayName: "\u4FE1\u53F7\u8F6C\u6362\u5668",
-          category: "control",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
-          ]
-        },
-        // ===== utility 分类 =====
-        {
-          id: "machine_max:wheel_driver",
-          displayName: "\u8F6E\u80CE\u9A71\u52A8\u5668",
-          category: "utility",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
-            { field: "roll_speed_outputs", label: "\u6EDA\u52A8\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} },
-            { field: "steering_angle_outputs", label: "\u8F6C\u5411\u89D2\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
-          ]
-        },
-        {
-          id: "machine_max:seat",
-          displayName: "\u5EA7\u4F4D",
-          category: "utility",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
-            { field: "move_outputs", label: "\u79FB\u52A8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { move_control: [] } },
-            { field: "aim_outputs", label: "\u7784\u51C6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { aim: [] } },
-            { field: "regular_outputs", label: "\u5E38\u89C4\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { regular_control: [] } },
-            { field: "passenger_num_outputs", label: "\u4E58\u5BA2\u6570\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { passenger_num: ["subpart", "vehicle"] } }
-          ]
-        },
-        {
-          id: "machine_max:lighting",
-          displayName: "\u706F\u5149",
-          category: "utility",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u5149\u6E90\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: "" }
-          ]
-        },
-        {
-          id: "machine_max:item_storage",
-          displayName: "\u7269\u54C1\u5B58\u50A8",
-          category: "utility",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
-          ]
-        },
-        {
-          id: "machine_max:basic",
-          displayName: "\u57FA\u7840\uFF08\u65E0\u989D\u5916\u9762\u677F\uFF09",
-          category: "utility",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
-          ]
-        },
-        {
-          id: "machine_max:joint",
-          displayName: "\u5173\u8282",
-          category: "utility",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
-            {
-              field: "rotation_order",
-              label: "\u65CB\u8F6C\u987A\u5E8F",
-              editor: "enum_selector",
-              required: true,
-              defaultValue: "XYZ",
-              options: ["XYZ", "XZY", "YXZ", "ZYX", "ZXY", "YZX"]
-            },
-            { field: "axes", label: "\u5173\u8282\u8F74\u53C2\u6570", editor: "json_textarea", required: true, defaultValue: {} }
-          ]
-        },
-        // ===== experimental 分类 =====
-        {
-          id: "machine_max:camera",
-          displayName: "\u6444\u50CF\u5934",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
-          ]
-        },
-        {
-          id: "machine_max:javascript",
-          displayName: "JavaScript \u811A\u672C",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "script", label: "\u811A\u672C\u5185\u5BB9", editor: "text_input", required: false, defaultValue: "" }
-          ]
-        },
-        {
-          id: "machine_max:turret",
-          displayName: "\u70AE\u5854",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
-            { field: "rotation_outputs", label: "\u89D2\u5EA6\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
-          ]
-        },
-        {
-          id: "machine_max:fire_controller",
-          displayName: "\u706B\u63A7\u7CFB\u7EDF",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { fire_control: [] } }
-          ]
-        },
-        {
-          id: "machine_max:launcher",
-          displayName: "\u53D1\u5C04\u5668",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u53D1\u5C04\u70B9\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
-            { field: "ammo_outputs", label: "\u5F39\u836F\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
-          ]
-        }
-      ];
-      var TYPE_MAP = {};
-      (function() {
-        for (var i = 0; i < SUBSYSTEM_TYPES.length; i++) {
-          TYPE_MAP[SUBSYSTEM_TYPES[i].id] = SUBSYSTEM_TYPES[i];
-        }
-      })();
-      function getTypeMeta(typeId) {
-        return TYPE_MAP[typeId] || null;
-      }
-      function getAllTypes() {
-        return SUBSYSTEM_TYPES.slice();
-      }
-      function getTypesByCategory(category) {
-        return SUBSYSTEM_TYPES.filter(function(t) {
-          return t.category === category;
-        });
-      }
-      function getTypesGroupedByCategory() {
-        var result = { power: [], control: [], utility: [], experimental: [] };
-        for (var i = 0; i < SUBSYSTEM_TYPES.length; i++) {
-          var t = SUBSYSTEM_TYPES[i];
-          if (result[t.category]) {
-            result[t.category].push(t);
-          }
-        }
-        return result;
-      }
-      function getDynamicFields(typeId) {
-        var meta = TYPE_MAP[typeId];
-        return meta ? meta.dynamicFields.slice() : [];
-      }
-      function getDynamicFieldNames(typeId) {
-        var fields = getDynamicFields(typeId);
-        var names = [];
-        for (var i = 0; i < fields.length; i++) {
-          names.push(fields[i].field);
-        }
-        return names;
-      }
-      function getTypeDefaults(typeId) {
-        var fields = getDynamicFields(typeId);
-        var result = {};
-        for (var i = 0; i < fields.length; i++) {
-          var f = fields[i];
-          if (f.field === "definition") continue;
-          result[f.field] = JSON.parse(JSON.stringify(f.defaultValue));
-        }
-        return result;
-      }
-      function getTypeSpecificFields(typeId) {
-        return getDynamicFieldNames(typeId);
-      }
-      function needsLocator(typeId) {
-        var fields = getDynamicFields(typeId);
-        for (var i = 0; i < fields.length; i++) {
-          if (fields[i].editor === "locator_selector") return true;
-        }
-        return false;
-      }
-      function needsConnector(typeId) {
-        var fields = getDynamicFields(typeId);
-        for (var i = 0; i < fields.length; i++) {
-          if (fields[i].editor === "connector_selector") return true;
-        }
-        return false;
-      }
-      function getSignalOutputFieldNames(typeId) {
-        var fields = getDynamicFields(typeId);
-        var result = [];
-        for (var i = 0; i < fields.length; i++) {
-          var f = fields[i];
-          if (f.editor === "signal_targets" || f.editor === "power_target" || f.editor === "power_outputs_map") {
-            result.push(f.field);
-          }
-        }
-        return result;
-      }
-      var EDITOR_LABELS = {
-        definition_selector: "\u578B\u53F7\u5B9A\u4E49\u9009\u62E9\u5668",
-        locator_selector: "\u5B9A\u4F4D\u5668\u9009\u62E9\u5668",
-        connector_selector: "\u8FDE\u63A5\u70B9\u9009\u62E9\u5668",
-        power_target: "\u529F\u7387\u76EE\u6807\u9009\u62E9\u5668",
-        signal_targets: "\u4FE1\u53F7\u9891\u9053\u7F16\u8F91\u5668",
-        power_outputs_map: "\u529F\u7387\u8F93\u51FA\u6620\u5C04\u7F16\u8F91\u5668",
-        enum_selector: "\u679A\u4E3E\u4E0B\u62C9\u83DC\u5355",
-        text_input: "\u6587\u672C\u8F93\u5165\u6846",
-        json_textarea: "JSON \u7F16\u8F91\u6846"
-      };
-      function getEditorLabel(editorType) {
-        return EDITOR_LABELS[editorType] || editorType;
-      }
-      var CATEGORY_COLORS = {
-        power: "#e67e22",
-        control: "#3498db",
-        utility: "#2ecc71",
-        experimental: "#9b59b6"
-      };
-      function getTypeColor(typeId) {
-        var meta = TYPE_MAP[typeId];
-        if (!meta) return "#888";
-        return CATEGORY_COLORS[meta.category] || "#888";
-      }
-      var CATEGORY_LABELS = {
-        power: "\u52A8\u529B",
-        control: "\u63A7\u5236",
-        utility: "\u529F\u80FD",
-        experimental: "\u5B9E\u9A8C"
-      };
-      function getCategoryLabel(category) {
-        return CATEGORY_LABELS[category] || category;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          SUBSYSTEM_TYPES,
-          getTypeMeta,
-          getAllTypes,
-          getTypesByCategory,
-          getTypesGroupedByCategory,
-          getDynamicFields,
-          getDynamicFieldNames,
-          getTypeDefaults,
-          getTypeSpecificFields,
-          needsLocator,
-          needsConnector,
-          getSignalOutputFieldNames,
-          getEditorLabel,
-          getTypeColor,
-          getCategoryLabel
-        };
-      }
-    }
-  });
-
   // src/generators/subsystem_generator.js
   var require_subsystem_generator = __commonJS({
     "src/generators/subsystem_generator.js"(exports, module) {
@@ -6992,141 +7753,10 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
-      var subsystemTypes = require_subsystem_types();
+      var { PartCodec } = require_part_codec();
       var log2 = createLogger2("GenPart");
-      function generatePartJSON(partId, partConfig, namespace) {
-        const ns = namespace || "machine_max";
-        const output = {};
-        const topFields = [
-          "icon",
-          "vehicle_durability_rate",
-          "vehicle_damage_rate",
-          "vehicle_damage_rate_destroyed",
-          "functional_threshold",
-          "share_durability",
-          "max_stack_size"
-        ];
-        for (const field of topFields) {
-          if (partConfig[field] !== void 0 && partConfig[field] !== null) {
-            output[field] = partConfig[field];
-          }
-        }
-        const variants = partConfig.variants || {};
-        const variantKeys = Object.keys(variants);
-        if (variantKeys.length === 1 && variantKeys[0] === "default") {
-          output.variants = buildVariantOutput(variants["default"], ns);
-        } else if (variantKeys.length > 0) {
-          output.variants = {};
-          for (const [vName, variant] of Object.entries(variants)) {
-            output.variants[vName] = buildVariantOutput(variant, ns);
-          }
-        }
-        log2.debug("generatePartJSON: \u96F6\u4EF6 " + partId + " \u751F\u6210\u5B8C\u6210");
-        return output;
-      }
-      function buildVariantOutput(variant, ns) {
-        const out = {};
-        if (variant.model) out.model = variant.model;
-        if (variant.textures) out.textures = variant.textures;
-        if (variant.animations) out.animations = variant.animations;
-        if (variant.tags && variant.tags.length > 0) out.tags = variant.tags;
-        const subParts = variant.sub_parts || {};
-        const spKeys = Object.keys(subParts);
-        if (spKeys.length === 1 && spKeys[0] === "sub_part.machine_max.main") {
-          out.sub_parts = buildSubPartOutput(subParts["sub_part.machine_max.main"]);
-        } else if (spKeys.length > 0) {
-          out.sub_parts = {};
-          for (const [spName, sp] of Object.entries(subParts)) {
-            out.sub_parts[spName] = buildSubPartOutput(sp);
-          }
-        }
-        return out;
-      }
-      function buildSubPartOutput(sp) {
-        const out = {};
-        if (sp.start_bone) out.start_bone = sp.start_bone;
-        if (sp.end_bones && sp.end_bones.length > 0) out.end_bones = sp.end_bones;
-        if (sp.durability !== 20) out.durability = sp.durability;
-        if (sp.mass !== 25) out.mass = sp.mass;
-        if (sp.mass_center && sp.mass_center !== "mass_center") out.mass_center = sp.mass_center;
-        if (sp.projected_area && !sp.projected_area.every((v) => v === 0)) out.projected_area = sp.projected_area;
-        if (sp.block_collision && sp.block_collision !== "true") out.block_collision = sp.block_collision;
-        if (sp.collision_height !== -1) out.collision_height = sp.collision_height;
-        if (sp.climb_assist) out.climb_assist = true;
-        if (sp.hydro_priority !== 0) out.hydro_priority = sp.hydro_priority;
-        if (sp.hit_boxes && Object.keys(sp.hit_boxes).length > 0) out.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
-        if (sp.interact_boxes && Object.keys(sp.interact_boxes).length > 0) {
-          out.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
-          for (var ibKey in out.interact_boxes) {
-            delete out.interact_boxes[ibKey]._uuid;
-          }
-        }
-        if (sp.connectors && Object.keys(sp.connectors).length > 0) out.connectors = _cleanConnectors(sp.connectors);
-        if (sp.subsystems && Object.keys(sp.subsystems).length > 0) out.subsystems = _cleanSubsystems(sp.subsystems);
-        if (sp.hydrodynamics) out.hydrodynamics = sp.hydrodynamics;
-        return out;
-      }
-      function _cleanSubsystems(subsystems) {
-        var result = {};
-        for (var key in subsystems) {
-          var ss = subsystems[key];
-          var typeId = ss.type;
-          var allowedFields = subsystemTypes.getDynamicFieldNames(typeId);
-          if (allowedFields.length > 0) {
-            allowedFields.unshift("type");
-          }
-          if (allowedFields.length <= 1) {
-            log2.warn('_cleanSubsystems: \u672A\u77E5\u5B50\u7CFB\u7EDF\u7C7B\u578B "' + typeId + '"\uFF0C\u4F7F\u7528\u56DE\u9000\u8FC7\u6EE4\u7B56\u7565');
-            allowedFields = _inferDynamicFields(ss);
-          }
-          var cleaned = {};
-          for (var fi = 0; fi < allowedFields.length; fi++) {
-            var field = allowedFields[fi];
-            var val = ss[field];
-            if (val === void 0 || val === null) continue;
-            if (typeof val === "object" && !Array.isArray(val) && Object.keys(val).length === 0) continue;
-            if (typeof val === "string" && val === "") continue;
-            cleaned[field] = val;
-          }
-          result[key] = cleaned;
-        }
-        return result;
-      }
-      function _inferDynamicFields(ss) {
-        var fields = ["type", "definition"];
-        for (var sf in ss) {
-          if (sf === "type" || sf === "definition") continue;
-          if (sf.endsWith("_outputs") || sf.endsWith("_inputs") || sf === "power_output") {
-            fields.push(sf);
-          }
-        }
-        return fields;
-      }
-      function _cleanConnectors(connectors) {
-        var result = {};
-        for (var key in connectors) {
-          var conn = connectors[key];
-          var cleaned = {};
-          if (conn.locator) cleaned.locator = conn.locator;
-          if (conn.definition) cleaned.definition = conn.definition;
-          if (conn.signal_targets && Object.keys(conn.signal_targets).length > 0) {
-            cleaned.signal_targets = conn.signal_targets;
-          }
-          if (conn.signal_translations && Object.keys(conn.signal_translations).length > 0) {
-            cleaned.signal_translations = conn.signal_translations;
-          }
-          if (conn.power_target) {
-            cleaned.power_target = conn.power_target;
-          }
-          if (conn.internal) {
-            cleaned.internal = true;
-          }
-          if (conn.overwrite && Object.keys(conn.overwrite).length > 0) {
-            cleaned.overwrite = conn.overwrite;
-          }
-          result[key] = cleaned;
-        }
-        return result;
+      function generatePartJSON(partConfig) {
+        return PartCodec.encode(partConfig);
       }
       function _resolveUUIDKeys(obj) {
         var resolved = {};
@@ -7142,12 +7772,30 @@
         }
         return resolved;
       }
+      function _resolveAllUUIDKeys(partConfig) {
+        if (!partConfig || !partConfig.variants) return partConfig;
+        for (var vKey in partConfig.variants) {
+          var sub_parts = partConfig.variants[vKey].sub_parts;
+          if (!sub_parts) continue;
+          for (var spKey in sub_parts) {
+            var sp = sub_parts[spKey];
+            if (!sp) continue;
+            if (sp.hit_boxes && typeof sp.hit_boxes === "object") {
+              sp.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
+            }
+            if (sp.interact_boxes && typeof sp.interact_boxes === "object") {
+              sp.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
+            }
+          }
+        }
+        return partConfig;
+      }
       function generateAllParts(projectConfig) {
-        const ns = projectConfig.namespace || "machine_max";
         const parts = projectConfig.parts || {};
         const result = {};
         for (const [partId, partConfig] of Object.entries(parts)) {
-          result[partId] = generatePartJSON(partId, partConfig, ns);
+          var resolved = _resolveAllUUIDKeys(JSON.parse(JSON.stringify(partConfig)));
+          result[partId] = generatePartJSON(resolved);
         }
         log2.info("generateAllParts: \u5DF2\u751F\u6210 " + Object.keys(result).length + " \u4E2A\u96F6\u4EF6");
         return result;
@@ -8145,8 +8793,7 @@
             return "interact." + ns + "." + toSnakeCase(boneName);
           case "subsystem":
             var shortName = context.typeShortName || "subsystem";
-            var idx = context.index || 1;
-            return "subsystem." + ns + "." + shortName + "_" + idx;
+            return "subsystem." + ns + "." + shortName;
           default:
             return "";
         }
@@ -8185,12 +8832,12 @@
         if (result.valid) return baseName;
         var suffix = 2;
         while (!result.valid && suffix <= 999) {
-          var candidate = baseName + "." + suffix;
+          var candidate = baseName + "_" + suffix;
           result = validateNameUniqueness(variant, scope, subPartKey, candidate);
           if (result.valid) return candidate;
           suffix++;
         }
-        return baseName + "." + Date.now();
+        return baseName + "_" + Date.now();
       }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
@@ -8259,7 +8906,7 @@
             if (!instanceName || instanceName.trim() === "") {
               var { generateDefaultName, ensureUniqueName } = require_naming();
               var ns = config && config.namespace || "machine_max";
-              var baseName = generateDefaultName("subsystem", { namespace: ns, typeName: typeId.split(":").pop() || "ss" });
+              var baseName = generateDefaultName("subsystem", { namespace: ns, typeShortName: typeId.split(":").pop() || "ss" });
               instanceName = ensureUniqueName("subsystem", variant, spKey, baseName);
             } else {
               instanceName = instanceName.trim();
@@ -8268,13 +8915,11 @@
                 return false;
               }
             }
-            var cfgMod = require_config();
-            var ssConfig = cfgMod.createSubsystemConfig();
-            ssConfig.type = typeId;
-            var typeDefaults = ssTypes.getTypeDefaults(typeId);
-            for (var f in typeDefaults) {
-              if (typeDefaults.hasOwnProperty(f)) {
-                ssConfig[f] = JSON.parse(JSON.stringify(typeDefaults[f]));
+            var defaultFields = ssTypes.getTypeDefaults(typeId);
+            var ssConfig = { type: typeId, definition: "" };
+            for (var key in defaultFields) {
+              if (defaultFields.hasOwnProperty(key)) {
+                ssConfig[key] = defaultFields[key];
               }
             }
             beforeSet(sp, instanceName, ssConfig);
@@ -8593,8 +9238,16 @@
                       var baseName = generateDefaultName("connector", { namespace: ns, boneName: locName });
                       var connName = ensureUniqueName("connector", variant, spKey, baseName);
                       if (!variant.sub_parts[spKey].connectors[connName]) {
-                        var connDefaults = require_config_defaults().CONNECTOR_INSTANCE_DEFAULTS;
-                        variant.sub_parts[spKey].connectors[connName] = Object.assign({}, connDefaults, {
+                        var CONNECTOR_INSTANCE_DEFAULTS = {
+                          locator: "",
+                          definition: "",
+                          power_target: "",
+                          signal_translations: {},
+                          signal_targets: {},
+                          internal: false,
+                          overwrite: {}
+                        };
+                        variant.sub_parts[spKey].connectors[connName] = Object.assign({}, CONNECTOR_INSTANCE_DEFAULTS, {
                           locator: locName
                         });
                         log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9 \u2014 \u5728 sub_parts \u4E2D\u521B\u5EFA\u6761\u76EE", {
@@ -10848,6 +11501,76 @@
     }
   });
 
+  // src/ui/components/KeyValueEditor.vue.js
+  var require_KeyValueEditor_vue = __commonJS({
+    "src/ui/components/KeyValueEditor.vue.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      Vue.component("key-value-editor", {
+        props: {
+          entries: { type: Object, default: function() {
+            return {};
+          } },
+          keyLabel: { type: String, default: "\u952E" },
+          valueLabel: { type: String, default: "\u503C" },
+          keyPlaceholder: { type: String, default: "" },
+          valuePlaceholder: { type: String, default: "" },
+          keyHints: { type: Array, default: function() {
+            return [];
+          } },
+          valueHints: { type: Array, default: function() {
+            return [];
+          } }
+        },
+        data: function() {
+          return {
+            newKey: "",
+            newValue: ""
+          };
+        },
+        computed: {
+          entryList: function() {
+            var entries = this.entries || {};
+            var list = [];
+            for (var k in entries) {
+              if (Object.prototype.hasOwnProperty.call(entries, k)) {
+                list.push({ key: k, value: entries[k] });
+              }
+            }
+            return list;
+          }
+        },
+        template: '<div class="mm-kv-editor"><div class="mm-kv-row" v-for="(entry, i) in entryList" :key="entry.key"><input type="text" :value="entry.key" @input="onKeyInput(i, $event)" class="mm-input mm-kv-key" :placeholder="keyPlaceholder" /><input type="text" :value="entry.value" @input="onValueInput(i, $event)" class="mm-input mm-kv-value" :placeholder="valuePlaceholder" /><button type="button" class="mm-btn mm-btn-sm mm-btn-danger" @click="onRemove(i)" title="\u79FB\u9664\u6B64\u6761\u76EE">\xD7</button></div><div class="mm-kv-row mm-kv-add"><input type="text" v-model="newKey" @keyup.enter="onAdd" class="mm-input mm-kv-key" :placeholder="keyPlaceholder" /><input type="text" v-model="newValue" @keyup.enter="onAdd" class="mm-input mm-kv-value" :placeholder="valuePlaceholder" /><button type="button" class="mm-btn mm-btn-sm" @click="onAdd" title="\u6DFB\u52A0\u6761\u76EE">+</button></div></div>',
+        methods: {
+          onKeyInput: function(i, event) {
+            var entry = this.entryList[i];
+            var oldKey = entry.key;
+            var newKey = event.target.value;
+            this.$emit("kv-update-key", { oldKey, newKey });
+          },
+          onValueInput: function(i, event) {
+            var key = this.entryList[i].key;
+            this.$emit("kv-update-value", { key, newValue: event.target.value });
+          },
+          onRemove: function(i) {
+            var key = this.entryList[i].key;
+            this.$emit("kv-remove", { key });
+          },
+          onAdd: function() {
+            if (!this.newKey.trim()) return;
+            this.$emit("kv-add", { key: this.newKey.trim(), value: this.newValue.trim() });
+            this.newKey = "";
+            this.newValue = "";
+          }
+        }
+      });
+      module.exports = {};
+    }
+  });
+
   // src/ui/App.vue.js
   var require_App_vue = __commonJS({
     "src/ui/App.vue.js"(exports, module) {
@@ -10870,6 +11593,7 @@
       require_InteractBoxPanel_vue();
       require_ConnectorPanel_vue();
       require_SubsystemPanel_vue();
+      require_KeyValueEditor_vue();
       var MMMainPanel = Vue.component("mm-main-panel", {
         template: `<div class="mm-panel" v-if="config">
     <div class="mm-panel-header">
@@ -10958,8 +11682,18 @@
                 <input type="text" v-model="currentVariant.animations" class="mm-input" placeholder="machine_max:..." title="\u52A8\u753B\u8DEF\u5F84\uFF0C\u5982 machine_max:wine_fox_anim\u3002\u7559\u7A7A\u5219\u4E0D\u64AD\u52A8\u753B" />
             </div>
             <div class="mm-field">
-                <label title="\u8D34\u56FE\u8DEF\u5F84\u3002\u5355\u4E00\u8D34\u56FE\u7528\u5B57\u7B26\u4E32\uFF0C\u591A\u8D34\u56FE\u7528\u952E\u503C\u5BF9\u5BF9\u8C61\uFF0C\u5982 {&quot;default&quot;: &quot;...&quot;}">\u8D34\u56FE</label>
-                <input type="text" v-model="currentVariant.textures" class="mm-input" placeholder="default: ..." title="\u8D34\u56FE\u8DEF\u5F84\u3002\u5355\u4E00\u8D34\u56FE\u76F4\u63A5\u586B\u8DEF\u5F84\uFF1B\u591A\u8D34\u56FE\u7528 JSON \u952E\u503C\u5BF9" />
+                <label title="\u4E3A\u6BCF\u4E2A\u6D82\u88C5\u540D\u6307\u5B9A\u8D34\u56FE\u8DEF\u5F84\u3002default \u4E3A\u9ED8\u8BA4\u6D82\u88C5">\u8D34\u56FE</label>
+                <key-value-editor
+                    :entries="variantTextures"
+                    key-label="\u6D82\u88C5\u540D"
+                    value-label="\u8D34\u56FE\u8DEF\u5F84"
+                    key-placeholder="default"
+                    value-placeholder="machine_max:textures/part/..."
+                    @kv-add="handleTexturesKvAdd"
+                    @kv-remove="handleTexturesKvRemove"
+                    @kv-update-key="handleTexturesKvUpdateKey"
+                    @kv-update-value="handleTexturesKvUpdateValue">
+                </key-value-editor>
             </div>
             <div class="mm-field">
                 <label title="\u96F6\u4EF6\u6807\u7B7E\uFF0C\u683C\u5F0F namespace:tag_name\u3002\u7528\u4E8E\u8FDE\u63A5\u70B9\u5339\u914D\u548C\u529F\u80FD\u5206\u7C7B">\u6807\u7B7E</label>
@@ -11078,6 +11812,15 @@
           currentVariant: function() {
             if (!this.currentPart || !this.activeVariantName) return null;
             return this.currentPart.variants[this.activeVariantName] || null;
+          },
+          /** textures 始终返回对象，兼容旧数据的字符串格式 */
+          variantTextures: function() {
+            var v = this.currentVariant;
+            if (!v) return {};
+            var t = v.textures;
+            if (typeof t === "string") return t ? { "default": t } : {};
+            if (!t || typeof t !== "object" || Array.isArray(t)) return {};
+            return t;
           },
           variantCount: function() {
             if (!this.currentPart || !this.currentPart.variants) return 0;
@@ -11737,6 +12480,8 @@
                 }
                 self.$set(part.variants, variantName, createVariantConfig());
                 if (model) part.variants[variantName].model = model;
+                var defaultTexPath = "machine_max:textures/part/" + self.activePartId + "/" + self.activePartId + ".png";
+                part.variants[variantName].textures = { "default": defaultTexPath };
                 self.activeVariantName = variantName;
                 log2.info("UI\u65B0\u5EFA\u53D8\u4F53\u6210\u529F", { variant: variantName, partId: self.activePartId });
                 self.onVariantChange();
@@ -12343,6 +13088,34 @@
             refreshOutlinerIcons2();
             Blockbench.dispatchEvent("update_selection");
             log2.info("migrateInteractBoxBone: \u9AA8\u9ABC\u8FC1\u79FB\u5B8C\u6210", { from: oldBoneName, to: newBoneName });
+          },
+          /* —————— 贴图键值对编辑器事件处理 —————— */
+          handleTexturesKvAdd: function(payload) {
+            var v = this.currentVariant;
+            if (!v) return;
+            if (typeof v.textures !== "object" || Array.isArray(v.textures)) {
+              this.$set(v, "textures", {});
+            }
+            this.$set(v.textures, payload.key, payload.value);
+          },
+          handleTexturesKvRemove: function(payload) {
+            var v = this.currentVariant;
+            if (!v || !v.textures || typeof v.textures !== "object") return;
+            this.$delete(v.textures, payload.key);
+          },
+          handleTexturesKvUpdateKey: function(payload) {
+            var v = this.currentVariant;
+            if (!v || !v.textures || typeof v.textures !== "object") return;
+            var val = v.textures[payload.oldKey];
+            this.$delete(v.textures, payload.oldKey);
+            if (val !== void 0) {
+              this.$set(v.textures, payload.newKey, val);
+            }
+          },
+          handleTexturesKvUpdateValue: function(payload) {
+            var v = this.currentVariant;
+            if (!v || !v.textures || typeof v.textures !== "object") return;
+            this.$set(v.textures, payload.key, payload.newValue);
           }
         },
         mounted: function() {
@@ -12797,7 +13570,7 @@
             @mousemove="onPanMove"
             @mouseup="onPanEnd"
             @mouseleave="onPanEnd">
-            <svg :width="svgWidth" :height="svgHeight"
+            <svg viewBox="0 0 800 420" width="100%" height="100%"
                 @wheel.prevent="onWheel"
                 style="display:block;cursor:grab;background:#1a1a2e;border-radius:6px">
                 <defs>
@@ -13614,7 +14387,7 @@
         }
         if (!_mmCssInserted) {
           try {
-            const mmCss = ".mm-panel {\n    padding: 12px;\n    height: 100%;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n}\n\n.mm-panel-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n}\n\n.mm-panel-header {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n.mm-nav-row {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    margin-bottom: 6px;\n}\n\n.mm-label {\n    font-size: 12px;\n    color: #aaa;\n    min-width: 32px;\n    flex-shrink: 0;\n}\n\n.mm-select {\n    flex: 1;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    cursor: pointer;\n}\n\n.mm-input {\n    width: 100%;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    box-sizing: border-box;\n}\n\n.mm-input:focus {\n    border-color: #4A90D9;\n    outline: none;\n}\n\n.mm-btn {\n    background: var(--btn-bg, #3a3a3a);\n    border: 1px solid var(--border-color, #555);\n    color: var(--text-color, #ddd);\n    border-radius: 3px;\n    cursor: pointer;\n    font-size: 12px;\n    white-space: nowrap;\n}\n\n.mm-btn:hover {\n    background: var(--btn-hover-bg, #4a4a4a);\n}\n\n.mm-btn-sm {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    padding: 0;\n    font-size: 14px;\n    line-height: 1;\n    width: 30px;\n    height: 30px;\n    min-width: 30px;\n    min-height: 30px;\n    box-sizing: border-box;\n}\n\n.mm-btn-danger {\n    background: var(--btn-danger-bg, #5a2a2a);\n    border-color: var(--btn-danger-border, #8a3a3a);\n    color: #ff6b6b;\n}\n\n.mm-btn-danger:hover:not(:disabled) {\n    background: var(--btn-danger-hover-bg, #7a3a3a);\n    color: #ff9999;\n}\n\n.mm-btn-danger:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n\n.mm-section {\n    margin-bottom: 16px;\n}\n\n.mm-section-title {\n    font-size: 13px;\n    font-weight: 600;\n    margin: 0 0 8px 0;\n    padding-bottom: 4px;\n    border-bottom: 1px solid var(--border-color, #333);\n    color: var(--heading-color, #eee);\n}\n\n.mm-field {\n    margin-bottom: 8px;\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n\n.mm-field label {\n    font-size: 11px;\n    color: #999;\n    margin-bottom: 1px;\n}\n\n.mm-field-row {\n    flex-direction: row;\n    align-items: center;\n    gap: 8px;\n}\n\n.mm-field-row label {\n    margin-bottom: 0;\n}\n\n.mm-tags {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-tag {\n    background: var(--tag-bg, #3a6a9a);\n    color: white;\n    padding: 2px 8px;\n    border-radius: 3px;\n    font-size: 11px;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n\n.mm-tag-remove {\n    cursor: pointer;\n    font-weight: bold;\n    font-size: 14px;\n    line-height: 1;\n}\n\n.mm-tag-remove:hover {\n    color: #ff6b6b;\n}\n\n.mm-variant-list {\n    list-style: none;\n    padding: 0;\n    margin: 0;\n}\n\n.mm-variant-list li {\n    padding: 4px 8px;\n    cursor: pointer;\n    font-size: 12px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    border-radius: 3px;\n}\n\n.mm-variant-list li:hover {\n    background: var(--hover-bg, #333);\n}\n\n.mm-variant-list li.active {\n    background: var(--active-bg, #2a4a6a);\n    color: white;\n}\n\n.mm-variant-remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-weight: bold;\n}\n\n.mm-element-info {\n    font-size: 11px;\n    color: #888;\n    margin: 2px 0;\n}\n\n.mm-marker-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: white;\n    margin-left: 6px;\n    vertical-align: middle;\n}\n\n.mm-panel-hint {\n    color: #666;\n    font-size: 12px;\n    text-align: center;\n    padding: 20px;\n}\n\n.mm-panel-body {\n    flex: 1;\n    overflow-y: auto;\n}\n\n/* \u56FA\u5B9A\u5728\u9762\u677F\u9876\u90E8\u7684\u6807\u9898\u680F\uFF0C\u6EDA\u52A8\u65F6\u59CB\u7EC8\u53EF\u89C1 */\n.mm-sticky-title {\n    position: sticky;\n    top: 0;\n    z-index: 1;\n    background: var(--panel-bg, #1e1e1e);\n    padding: 8px 0 4px 0;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u6761\u76EE\u884C */\n.mm-sub-item-row {\n    display: flex;\n    flex-direction: column;\n    padding: 4px 8px;\n    border-radius: 3px;\n    margin-bottom: 2px;\n}\n.mm-sub-item-row.mm-clickable {\n    cursor: pointer;\n}\n.mm-sub-item-row.mm-clickable:hover {\n    background: var(--hover-bg, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u540D\u79F0\u884C */\n.mm-sub-item-name {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 12px;\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u5143\u4FE1\u606F\u884C */\n.mm-sub-item-meta {\n    font-size: 10px;\n    color: #888;\n    margin-left: 4px;\n}\n\n/* \u53EF\u70B9\u51FB\u7684\u5F52\u5C5E\u6807\u7B7E */\n.mm-clickable-tag:hover {\n    filter: brightness(1.3);\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5361\u7247 */\n.mm-signal-card {\n    margin-bottom: 4px;\n    padding: 4px;\n    background: #252525;\n    border-radius: 3px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5934\u90E8 */\n.mm-signal-header {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n    margin-bottom: 2px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u5220\u9664\u6309\u94AE */\n.mm-btn-sm.mm-btn-danger-light {\n    color: #ff6b6b;\n}\n\n.mm-btn-sm.mm-btn-danger-light:hover {\n    color: #ff9999;\n}\n\n/* ===== \u4FE1\u53F7\u6D41\u56FE\u9762\u677F ===== */\n.mm-signal-flow {\n    padding: 8px 12px;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n}\n\n.mm-signal-flow-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n    font-size: 12px;\n}\n\n.mm-signal-flow-header {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding-bottom: 8px;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n}\n\n.mm-signal-flow-title {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 14px;\n    font-weight: 600;\n    color: var(--heading-color, #eee);\n}\n\n.mm-flow-icon {\n    font-size: 16px;\n    color: #4A90D9;\n}\n\n.mm-signal-flow-meta {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 11px;\n    color: #888;\n}\n\n.mm-flow-meta-item {\n    background: #2a2a2a;\n    padding: 1px 6px;\n    border-radius: 3px;\n    color: #aaa;\n}\n\n.mm-flow-meta-sep {\n    color: #555;\n}\n\n.mm-signal-flow-body {\n    flex: 1;\n    display: flex;\n    overflow: auto;\n}\n\n.mm-signal-flow-placeholder {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    width: 100%;\n    gap: 12px;\n}\n\n.mm-flow-placeholder-icon {\n    font-size: 36px;\n    color: #4a4a4a;\n    opacity: 0.5;\n}\n\n.mm-flow-placeholder-text {\n    font-size: 13px;\n    color: #666;\n}\n\n.mm-flow-placeholder-hint {\n    font-size: 11px;\n    color: #555;\n    text-align: center;\n}\n\n.mm-flow-stats {\n    display: flex;\n    gap: 24px;\n    margin: 8px 0;\n}\n\n.mm-flow-stat {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    gap: 2px;\n}\n\n.mm-flow-stat-value {\n    font-size: 18px;\n    font-weight: 600;\n    color: #4A90D9;\n}\n\n.mm-flow-stat-label {\n    font-size: 10px;\n    color: #888;\n    text-transform: uppercase;\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u753B\u5E03 */\n.mm-flow-canvas {\n    flex: 1;\n    overflow: hidden;\n    background: #1a1a1a;\n    border-radius: 4px;\n    border: 1px solid var(--border-color, #333);\n    min-height: 200px;\n}\n\n.mm-flow-canvas svg {\n    display: block;\n}\n\n/* \u8FDE\u7EBF\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-edge-hovered {\n    stroke-opacity: 1 !important;\n}\n\n/* \u8282\u70B9\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-node-hovered {\n    stroke: #fff !important;\n    stroke-width: 1.5 !important;\n    filter: brightness(1.2);\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u64CD\u4F5C\u6309\u94AE */\n.mm-signal-flow-actions {\n    margin-left: auto;\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n/* \u56FE\u4F8B */\n.mm-signal-flow-legend {\n    display: flex;\n    gap: 12px;\n    padding-top: 6px;\n    margin-top: 4px;\n    border-top: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n    flex-wrap: wrap;\n}\n\n.mm-flow-legend-item {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 10px;\n    color: #999;\n    cursor: default;\n}\n\n.mm-flow-legend-item:hover {\n    color: #ccc;\n}\n\n.mm-flow-legend-dot {\n    width: 8px;\n    height: 8px;\n    border-radius: 2px;\n    flex-shrink: 0;\n}\n\n.mm-flow-legend-line {\n    width: 14px;\n    height: 3px;\n    border-radius: 1px;\n    flex-shrink: 0;\n}";
+            const mmCss = ".mm-panel {\n    padding: 12px;\n    height: 100%;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n}\n\n.mm-panel-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n}\n\n.mm-panel-header {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n.mm-nav-row {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    margin-bottom: 6px;\n}\n\n.mm-label {\n    font-size: 12px;\n    color: #aaa;\n    min-width: 32px;\n    flex-shrink: 0;\n}\n\n.mm-select {\n    flex: 1;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    cursor: pointer;\n}\n\n.mm-input {\n    width: 100%;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    box-sizing: border-box;\n}\n\n.mm-input:focus {\n    border-color: #4A90D9;\n    outline: none;\n}\n\n.mm-btn {\n    background: var(--btn-bg, #3a3a3a);\n    border: 1px solid var(--border-color, #555);\n    color: var(--text-color, #ddd);\n    border-radius: 3px;\n    cursor: pointer;\n    font-size: 12px;\n    white-space: nowrap;\n}\n\n.mm-btn:hover {\n    background: var(--btn-hover-bg, #4a4a4a);\n}\n\n.mm-btn-sm {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    padding: 0;\n    font-size: 14px;\n    line-height: 1;\n    width: 30px;\n    height: 30px;\n    min-width: 30px;\n    min-height: 30px;\n    box-sizing: border-box;\n}\n\n.mm-btn-danger {\n    background: var(--btn-danger-bg, #5a2a2a);\n    border-color: var(--btn-danger-border, #8a3a3a);\n    color: #ff6b6b;\n}\n\n.mm-btn-danger:hover:not(:disabled) {\n    background: var(--btn-danger-hover-bg, #7a3a3a);\n    color: #ff9999;\n}\n\n.mm-btn-danger:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n\n.mm-section {\n    margin-bottom: 16px;\n}\n\n.mm-section-title {\n    font-size: 13px;\n    font-weight: 600;\n    margin: 0 0 8px 0;\n    padding-bottom: 4px;\n    border-bottom: 1px solid var(--border-color, #333);\n    color: var(--heading-color, #eee);\n}\n\n.mm-field {\n    margin-bottom: 8px;\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n\n.mm-field label {\n    font-size: 11px;\n    color: #999;\n    margin-bottom: 1px;\n}\n\n.mm-field-row {\n    flex-direction: row;\n    align-items: center;\n    gap: 8px;\n}\n\n.mm-field-row label {\n    margin-bottom: 0;\n}\n\n.mm-tags {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-tag {\n    background: var(--tag-bg, #3a6a9a);\n    color: white;\n    padding: 2px 8px;\n    border-radius: 3px;\n    font-size: 11px;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n\n.mm-tag-remove {\n    cursor: pointer;\n    font-weight: bold;\n    font-size: 14px;\n    line-height: 1;\n}\n\n.mm-tag-remove:hover {\n    color: #ff6b6b;\n}\n\n.mm-variant-list {\n    list-style: none;\n    padding: 0;\n    margin: 0;\n}\n\n.mm-variant-list li {\n    padding: 4px 8px;\n    cursor: pointer;\n    font-size: 12px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    border-radius: 3px;\n}\n\n.mm-variant-list li:hover {\n    background: var(--hover-bg, #333);\n}\n\n.mm-variant-list li.active {\n    background: var(--active-bg, #2a4a6a);\n    color: white;\n}\n\n.mm-variant-remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-weight: bold;\n}\n\n.mm-element-info {\n    font-size: 11px;\n    color: #888;\n    margin: 2px 0;\n}\n\n.mm-marker-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: white;\n    margin-left: 6px;\n    vertical-align: middle;\n}\n\n.mm-panel-hint {\n    color: #666;\n    font-size: 12px;\n    text-align: center;\n    padding: 20px;\n}\n\n.mm-panel-body {\n    flex: 1;\n    overflow-y: auto;\n}\n\n/* \u56FA\u5B9A\u5728\u9762\u677F\u9876\u90E8\u7684\u6807\u9898\u680F\uFF0C\u6EDA\u52A8\u65F6\u59CB\u7EC8\u53EF\u89C1 */\n.mm-sticky-title {\n    position: sticky;\n    top: 0;\n    z-index: 1;\n    background: var(--panel-bg, #1e1e1e);\n    padding: 8px 0 4px 0;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u6761\u76EE\u884C */\n.mm-sub-item-row {\n    display: flex;\n    flex-direction: column;\n    padding: 4px 8px;\n    border-radius: 3px;\n    margin-bottom: 2px;\n}\n.mm-sub-item-row.mm-clickable {\n    cursor: pointer;\n}\n.mm-sub-item-row.mm-clickable:hover {\n    background: var(--hover-bg, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u540D\u79F0\u884C */\n.mm-sub-item-name {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 12px;\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u5143\u4FE1\u606F\u884C */\n.mm-sub-item-meta {\n    font-size: 10px;\n    color: #888;\n    margin-left: 4px;\n}\n\n/* \u53EF\u70B9\u51FB\u7684\u5F52\u5C5E\u6807\u7B7E */\n.mm-clickable-tag:hover {\n    filter: brightness(1.3);\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5361\u7247 */\n.mm-signal-card {\n    margin-bottom: 4px;\n    padding: 4px;\n    background: #252525;\n    border-radius: 3px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5934\u90E8 */\n.mm-signal-header {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n    margin-bottom: 2px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u5220\u9664\u6309\u94AE */\n.mm-btn-sm.mm-btn-danger-light {\n    color: #ff6b6b;\n}\n\n.mm-btn-sm.mm-btn-danger-light:hover {\n    color: #ff9999;\n}\n\n/* ===== \u4FE1\u53F7\u6D41\u56FE\u9762\u677F ===== */\n.mm-signal-flow {\n    padding: 8px 12px;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n}\n\n.mm-signal-flow-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n    font-size: 12px;\n}\n\n.mm-signal-flow-header {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding-bottom: 8px;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n}\n\n.mm-signal-flow-title {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 14px;\n    font-weight: 600;\n    color: var(--heading-color, #eee);\n}\n\n.mm-flow-icon {\n    font-size: 16px;\n    color: #4A90D9;\n}\n\n.mm-signal-flow-meta {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 11px;\n    color: #888;\n}\n\n.mm-flow-meta-item {\n    background: #2a2a2a;\n    padding: 1px 6px;\n    border-radius: 3px;\n    color: #aaa;\n}\n\n.mm-flow-meta-sep {\n    color: #555;\n}\n\n.mm-signal-flow-body {\n    flex: 1;\n    display: flex;\n    overflow: auto;\n}\n\n.mm-signal-flow-placeholder {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    width: 100%;\n    gap: 12px;\n}\n\n.mm-flow-placeholder-icon {\n    font-size: 36px;\n    color: #4a4a4a;\n    opacity: 0.5;\n}\n\n.mm-flow-placeholder-text {\n    font-size: 13px;\n    color: #666;\n}\n\n.mm-flow-placeholder-hint {\n    font-size: 11px;\n    color: #555;\n    text-align: center;\n}\n\n.mm-flow-stats {\n    display: flex;\n    gap: 24px;\n    margin: 8px 0;\n}\n\n.mm-flow-stat {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    gap: 2px;\n}\n\n.mm-flow-stat-value {\n    font-size: 18px;\n    font-weight: 600;\n    color: #4A90D9;\n}\n\n.mm-flow-stat-label {\n    font-size: 10px;\n    color: #888;\n    text-transform: uppercase;\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u753B\u5E03 */\n.mm-flow-canvas {\n    flex: 1;\n    overflow: hidden;\n    background: #1a1a1a;\n    border-radius: 4px;\n    border: 1px solid var(--border-color, #333);\n    min-height: 200px;\n}\n\n.mm-flow-canvas svg {\n    display: block;\n    width: 100%;\n    height: 100%;\n}\n\n/* \u8FDE\u7EBF\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-edge-hovered {\n    stroke-opacity: 1 !important;\n}\n\n/* \u8282\u70B9\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-node-hovered {\n    stroke: #fff !important;\n    stroke-width: 1.5 !important;\n    filter: brightness(1.2);\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u64CD\u4F5C\u6309\u94AE */\n.mm-signal-flow-actions {\n    margin-left: auto;\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n/* \u56FE\u4F8B */\n.mm-signal-flow-legend {\n    display: flex;\n    gap: 12px;\n    padding-top: 6px;\n    margin-top: 4px;\n    border-top: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n    flex-wrap: wrap;\n}\n\n.mm-flow-legend-item {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 10px;\n    color: #999;\n    cursor: default;\n}\n\n.mm-flow-legend-item:hover {\n    color: #ccc;\n}\n\n.mm-flow-legend-dot {\n    width: 8px;\n    height: 8px;\n    border-radius: 2px;\n    flex-shrink: 0;\n}\n\n.mm-flow-legend-line {\n    width: 14px;\n    height: 3px;\n    border-radius: 1px;\n    flex-shrink: 0;\n}\n\n/* ==================== \u952E\u503C\u5BF9\u7F16\u8F91\u5668 ==================== */\n\n.mm-kv-editor {\n    display: flex;\n    flex-direction: column;\n    gap: 4px;\n}\n\n.mm-kv-row {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-kv-key {\n    flex: 1 1 30%;\n    min-width: 60px;\n}\n\n.mm-kv-value {\n    flex: 2 1 70%;\n    min-width: 100px;\n}\n\n.mm-kv-add {\n    border-top: 1px solid #373a40;\n    padding-top: 4px;\n}\n\n.mm-btn-danger {\n    color: #D94A4A;\n    border: 1px solid #D94A4A;\n    background: transparent;\n}\n.mm-btn-danger:hover {\n    background: #D94A4A;\n    color: #fff;\n}";
             if (mmCss) {
               const style = document.createElement("style");
               style.setAttribute("data-mm-plugin", "true");
@@ -13803,7 +14576,7 @@
   var { registerMode, unregisterActions } = require_mode();
   var { registerMachineMaxMenu, unregisterMachineMaxMenu } = require_menu();
   var { showToast } = require_notify();
-  var PLUGIN_VERSION = "0.1.0";
+  var PLUGIN_VERSION = "0.1.1";
   var log = createLogger("Plugin");
   Plugin.register("machine_max_bb_plugin", {
     title: "MachineMax \u96F6\u4EF6\u5B9A\u4E49",
