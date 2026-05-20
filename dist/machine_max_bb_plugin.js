@@ -11224,7 +11224,7 @@
                         :value="targetName"
                         @change="onPowerOutputTargetChange(field.field, targetName, $event.target.value)">
                         <option value="">\uFF08\u65E0\uFF09</option>
-                        <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target">{{ target }}</option>
+                        <option v-for="(target, si) in getFilteredPowerOutputTargets(field.field, targetName)" :key="si" :value="target">{{ target }}</option>
                     </select>
                     <input type="number" class="mm-input" style="width:80px;font-size:11px;text-align:right"
                         step="0.01" min="-999" max="999"
@@ -11493,6 +11493,32 @@
             }
           },
           // ─── 功率输出映射编辑器（power_outputs_map，Map<string, number>） ──
+          /**
+           * 获取指定 power_outputs_map 中当前条目可用的目标列表：排除其他条目已选的目标
+           * @param {string} field - 字段名
+           * @param {string} currentTarget - 当前条目的目标名
+           * @returns {string[]} 过滤后的可用目标列表
+           */
+          getFilteredPowerOutputTargets: function(field, currentTarget) {
+            var allTargets = this.signalTargetOptions;
+            if (!allTargets || allTargets.length === 0) return [];
+            var entries = this.getPowerOutputEntries(field);
+            var usedTargets = [];
+            for (var key in entries) {
+              if (entries.hasOwnProperty(key) && key !== currentTarget) {
+                usedTargets.push(key);
+              }
+            }
+            if (usedTargets.length === 0) return allTargets;
+            var filtered = [];
+            for (var i = 0; i < allTargets.length; i++) {
+              var t = allTargets[i];
+              if (usedTargets.indexOf(t) === -1) {
+                filtered.push(t);
+              }
+            }
+            return filtered;
+          },
           getPowerOutputEntries: function(field) {
             var val = this.config[field];
             if (val && typeof val === "object") return val;

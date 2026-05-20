@@ -89,7 +89,7 @@
                         :value="targetName"
                         @change="onPowerOutputTargetChange(field.field, targetName, $event.target.value)">
                         <option value="">（无）</option>
-                        <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target">{{ target }}</option>
+                        <option v-for="(target, si) in getFilteredPowerOutputTargets(field.field, targetName)" :key="si" :value="target">{{ target }}</option>
                     </select>
                     <input type="number" class="mm-input" style="width:80px;font-size:11px;text-align:right"
                         step="0.01" min="-999" max="999"
