@@ -82,7 +82,7 @@ function showAddSubsystemDialog(options) {
             // 注意：不使用 SubsystemDispatchCodec.decode()，因为 codec 中所有 .field() 字段在
             // 导出时承担必填校验职责，不应为创建实例而降低校验严格度。
             var defaultFields = ssTypes.getTypeDefaults(typeId);
-            var ssConfig = { type: typeId, definition: '' };
+            var ssConfig = { type: typeId, definition: null };
             for (var key in defaultFields) {
                 if (defaultFields.hasOwnProperty(key)) {
                     ssConfig[key] = defaultFields[key];

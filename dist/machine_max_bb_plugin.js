@@ -8912,7 +8912,7 @@
               }
             }
             var defaultFields = ssTypes.getTypeDefaults(typeId);
-            var ssConfig = { type: typeId, definition: "" };
+            var ssConfig = { type: typeId, definition: null };
             for (var key in defaultFields) {
               if (defaultFields.hasOwnProperty(key)) {
                 ssConfig[key] = defaultFields[key];
