@@ -120,22 +120,22 @@ Vue.component('mm-interact-box-panel', {
          * 添加新的信号频道
          */
         addSignalTargetChannel: function () {
-            var entries = this.signalTargetEntries;
+            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
             var newChan = 'interact';
             var idx = 1;
             while (entries[newChan]) {
                 newChan = 'interact_' + idx;
                 idx++;
             }
-            this.$set(entries, newChan, []);
+            entries[newChan] = [];
             this.emitSignalTargets(entries);
         },
         /**
          * 删除信号频道
          */
         removeSignalTargetChannel: function (channel) {
-            var entries = this.signalTargetEntries;
-            this.$delete(entries, channel);
+            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
+            delete entries[channel];
             this.emitSignalTargets(entries);
         },
         /**
@@ -143,20 +143,20 @@ Vue.component('mm-interact-box-panel', {
          */
         onSignalTargetChannelChange: function (oldChannel, newChannel) {
             if (!newChannel || oldChannel === newChannel) return;
-            var entries = this.signalTargetEntries;
+            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
             var targets = entries[oldChannel];
             if (targets === undefined) return;
-            this.$delete(entries, oldChannel);
-            this.$set(entries, newChannel, targets);
+            delete entries[oldChannel];
+            entries[newChannel] = targets;
             this.emitSignalTargets(entries);
         },
         /**
          * 为指定频道添加信号目标项
          */
         addSignalTargetItem: function (channel) {
-            var entries = this.signalTargetEntries;
+            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
             if (!entries[channel]) {
-                this.$set(entries, channel, []);
+                entries[channel] = [];
             }
             entries[channel].push('');
             this.emitSignalTargets(entries);
@@ -165,7 +165,7 @@ Vue.component('mm-interact-box-panel', {
          * 删除信号频道的指定目标项
          */
         removeSignalTargetItem: function (channel, index) {
-            var entries = this.signalTargetEntries;
+            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
             if (entries[channel]) {
                 entries[channel].splice(index, 1);
                 this.emitSignalTargets(entries);
@@ -175,9 +175,9 @@ Vue.component('mm-interact-box-panel', {
          * 更新信号频道的指定目标值
          */
         updateSignalTargetItem: function (channel, index, value) {
-            var entries = this.signalTargetEntries;
+            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
             if (entries[channel]) {
-                this.$set(entries[channel], index, value);
+                entries[channel][index] = value;
                 this.emitSignalTargets(entries);
             }
         },
