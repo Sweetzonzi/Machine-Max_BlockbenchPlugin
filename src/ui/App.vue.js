@@ -31,6 +31,8 @@ require('./ConnectorPanel.vue.js');
 
 require('./SubsystemPanel.vue.js');
 
+require('./components/KeyValueEditor.vue.js');
+
 const MMMainPanel = Vue.component('mm-main-panel', {
     template: TEMPLATE_PART_PANEL,
     data: function () {
@@ -51,6 +53,15 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         currentVariant: function () {
             if (!this.currentPart || !this.activeVariantName) return null;
             return this.currentPart.variants[this.activeVariantName] || null;
+        },
+        /** textures 始终返回对象，兼容旧数据的字符串格式 */
+        variantTextures: function () {
+            var v = this.currentVariant;
+            if (!v) return {};
+            var t = v.textures;
+            if (typeof t === 'string') return t ? { 'default': t } : {};
+            if (!t || typeof t !== 'object' || Array.isArray(t)) return {};
+            return t;
         },
         variantCount: function () {
             if (!this.currentPart || !this.currentPart.variants) return 0;
@@ -742,6 +753,9 @@ const MMMainPanel = Vue.component('mm-main-panel', {
 
                     self.$set(part.variants, variantName, createVariantConfig());
                     if (model) part.variants[variantName].model = model;
+                    // 初始化贴图为键值对对象，默认填充 default 涂装
+                    var defaultTexPath = 'machine_max:textures/part/' + self.activePartId + '/' + self.activePartId + '.png';
+                    part.variants[variantName].textures = { 'default': defaultTexPath };
                     self.activeVariantName = variantName;
                     log.info('UI新建变体成功', { variant: variantName, partId: self.activePartId });
                     self.onVariantChange();
@@ -1450,6 +1464,33 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         });
 
         log.debug('Vue 组件挂载完成，已注册事件监听');
+    },
+    onTexturesKvAdd: function (payload) {
+        var v = this.currentVariant;
+        if (!v) return;
+        if (typeof v.textures !== 'object' || Array.isArray(v.textures)) {
+            this.$set(v, 'textures', {});
+        }
+        this.$set(v.textures, payload.key, payload.value);
+    },
+    onTexturesKvRemove: function (payload) {
+        var v = this.currentVariant;
+        if (!v || !v.textures || typeof v.textures !== 'object') return;
+        this.$delete(v.textures, payload.key);
+    },
+    onTexturesKvUpdateKey: function (payload) {
+        var v = this.currentVariant;
+        if (!v || !v.textures || typeof v.textures !== 'object') return;
+        var val = v.textures[payload.oldKey];
+        this.$delete(v.textures, payload.oldKey);
+        if (val !== undefined) {
+            this.$set(v.textures, payload.newKey, val);
+        }
+    },
+    onTexturesKvUpdateValue: function (payload) {
+        var v = this.currentVariant;
+        if (!v || !v.textures || typeof v.textures !== 'object') return;
+        this.$set(v.textures, payload.key, payload.newValue);
     },
     beforeDestroy: function () {
         log.debug('Vue 组件 beforeDestroy — 清理事件监听');

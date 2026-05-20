@@ -85,8 +85,18 @@
                 <input type="text" v-model="currentVariant.animations" class="mm-input" placeholder="machine_max:..." title="动画路径，如 machine_max:wine_fox_anim。留空则不播动画" />
             </div>
             <div class="mm-field">
-                <label title="贴图路径。单一贴图用字符串，多贴图用键值对对象，如 {&quot;default&quot;: &quot;...&quot;}">贴图</label>
-                <input type="text" v-model="currentVariant.textures" class="mm-input" placeholder="default: ..." title="贴图路径。单一贴图直接填路径；多贴图用 JSON 键值对" />
+                <label title="为每个涂装名指定贴图路径。default 为默认涂装">贴图</label>
+                <key-value-editor
+                    :entries="variantTextures"
+                    key-label="涂装名"
+                    value-label="贴图路径"
+                    key-placeholder="default"
+                    value-placeholder="machine_max:textures/part/..."
+                    @add="onTexturesKvAdd"
+                    @remove="onTexturesKvRemove"
+                    @update-key="onTexturesKvUpdateKey"
+                    @update-value="onTexturesKvUpdateValue">
+                </key-value-editor>
             </div>
             <div class="mm-field">
                 <label title="零件标签，格式 namespace:tag_name。用于连接点匹配和功能分类">标签</label>

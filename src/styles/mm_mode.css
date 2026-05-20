@@ -491,3 +491,42 @@
     border-radius: 1px;
     flex-shrink: 0;
 }
+
+/* ==================== 键值对编辑器 ==================== */
+
+.mm-kv-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mm-kv-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.mm-kv-key {
+    flex: 1 1 30%;
+    min-width: 60px;
+}
+
+.mm-kv-value {
+    flex: 2 1 70%;
+    min-width: 100px;
+}
+
+.mm-kv-add {
+    border-top: 1px solid #373a40;
+    padding-top: 4px;
+}
+
+.mm-btn-danger {
+    color: #D94A4A;
+    border: 1px solid #D94A4A;
+    background: transparent;
+}
+.mm-btn-danger:hover {
+    background: #D94A4A;
+    color: #fff;
+}
