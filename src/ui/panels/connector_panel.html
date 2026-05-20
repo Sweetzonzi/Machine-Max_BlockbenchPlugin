@@ -81,16 +81,16 @@
             <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
                 <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
                     @change="updateSignalTargetItem(channel, ti, $event.target.value)"
-                    :list="'cn-sig-tgt-'+_uid" placeholder="目标（子系统名 / subpart / vehicle / 连接点名）" />
+                    :list="'cn-sig-tgt-'+_uid+'-'+ci" placeholder="目标（子系统名 / subpart / vehicle / 连接点名）" />
                 <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="删除目标">×</button>
             </div>
             <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTargetItem(channel)">+ 添加目标</button>
+            <datalist :id="'cn-sig-tgt-'+_uid+'-'+ci">
+                <option v-for="h in getFilteredTargets(channel)" :key="h" :value="h" />
+            </datalist>
         </div>
         <datalist :id="'cn-sig-chan-'+_uid">
             <option v-for="h in channelHints" :key="h" :value="h" />
-        </datalist>
-        <datalist :id="'cn-sig-tgt-'+_uid">
-            <option v-for="h in signalTargetHints" :key="h" :value="h" />
         </datalist>
     </div>
 

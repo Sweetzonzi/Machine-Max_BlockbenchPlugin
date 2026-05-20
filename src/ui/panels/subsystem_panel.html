@@ -113,17 +113,17 @@
                     <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
                         <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
                             @change="updateSignalTarget(field.field, channel, ti, $event.target.value)"
-                            :list="'sig-target-hints-'+_uid" placeholder="目标" />
+                            :list="'sig-target-hints-'+_uid+'-'+ci" placeholder="目标" />
                         <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTarget(field.field, channel, ti)" title="删除目标">×</button>
                     </div>
                     <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTarget(field.field, channel)">+ 添加目标</button>
+                    <datalist :id="'sig-target-hints-'+_uid+'-'+ci">
+                        <option v-for="h in getFilteredTargets(field.field, channel)" :key="h" :value="h" />
+                    </datalist>
                 </div>
                 <button class="mm-btn" style="font-size:11px" @click="addSignalChannel(field.field)">+ 添加频道</button>
                 <datalist :id="'sig-channel-hints-'+_uid">
                     <option v-for="h in channelHints" :key="h" :value="h" />
-                </datalist>
-                <datalist :id="'sig-target-hints-'+_uid">
-                    <option v-for="h in signalTargetOptions" :key="h" :value="h" />
                 </datalist>
             </div>
 

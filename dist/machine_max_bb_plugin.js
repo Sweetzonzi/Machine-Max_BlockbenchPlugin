@@ -10399,16 +10399,16 @@
             <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
                 <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
                     @change="updateSignalTargetItem(channel, ti, $event.target.value)"
-                    :list="'ib-sig-tgt-'+_uid" placeholder="\u76EE\u6807\uFF08\u5B50\u7CFB\u7EDF\u540D / subpart / vehicle / \u8FDE\u63A5\u70B9\u540D\uFF09" />
+                    :list="'ib-sig-tgt-'+_uid+'-'+ci" placeholder="\u76EE\u6807\uFF08\u5B50\u7CFB\u7EDF\u540D / subpart / vehicle / \u8FDE\u63A5\u70B9\u540D\uFF09" />
                 <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
             </div>
             <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTargetItem(channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
+            <datalist :id="'ib-sig-tgt-'+_uid+'-'+ci">
+                <option v-for="h in getFilteredTargets(channel)" :key="h" :value="h" />
+            </datalist>
         </div>
         <datalist :id="'ib-sig-chan-'+_uid">
             <option v-for="h in channelHints" :key="h" :value="h" />
-        </datalist>
-        <datalist :id="'ib-sig-tgt-'+_uid">
-            <option v-for="h in signalTargetHints" :key="h" :value="h" />
         </datalist>
     </div>
 
@@ -10521,6 +10521,26 @@
             this.$emit("navigate-to-sub-part", this.parentSubPartKey);
           },
           // ===== 信号目标编辑 =====
+          /**
+           * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
+           * @param {string} channel - 频道名
+           * @returns {string[]} 过滤后的可用目标列表
+           */
+          getFilteredTargets: function(channel) {
+            var allTargets = this.signalTargetHints;
+            if (!allTargets || allTargets.length === 0) return [];
+            var entries = this.signalTargetEntries;
+            var usedTargets = entries[channel];
+            if (!usedTargets || usedTargets.length === 0) return allTargets;
+            var filtered = [];
+            for (var i = 0; i < allTargets.length; i++) {
+              var t = allTargets[i];
+              if (usedTargets.indexOf(t) === -1) {
+                filtered.push(t);
+              }
+            }
+            return filtered;
+          },
           /**
            * 添加新的信号频道
            */
@@ -10692,16 +10712,16 @@
             <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
                 <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
                     @change="updateSignalTargetItem(channel, ti, $event.target.value)"
-                    :list="'cn-sig-tgt-'+_uid" placeholder="\u76EE\u6807\uFF08\u5B50\u7CFB\u7EDF\u540D / subpart / vehicle / \u8FDE\u63A5\u70B9\u540D\uFF09" />
+                    :list="'cn-sig-tgt-'+_uid+'-'+ci" placeholder="\u76EE\u6807\uFF08\u5B50\u7CFB\u7EDF\u540D / subpart / vehicle / \u8FDE\u63A5\u70B9\u540D\uFF09" />
                 <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
             </div>
             <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTargetItem(channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
+            <datalist :id="'cn-sig-tgt-'+_uid+'-'+ci">
+                <option v-for="h in getFilteredTargets(channel)" :key="h" :value="h" />
+            </datalist>
         </div>
         <datalist :id="'cn-sig-chan-'+_uid">
             <option v-for="h in channelHints" :key="h" :value="h" />
-        </datalist>
-        <datalist :id="'cn-sig-tgt-'+_uid">
-            <option v-for="h in signalTargetHints" :key="h" :value="h" />
         </datalist>
     </div>
 
@@ -10902,6 +10922,26 @@
             this.$emit("navigate-to-sub-part", this.parentSubPartKey);
           },
           // ===== 信号目标编辑 =====
+          /**
+           * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
+           * @param {string} channel - 频道名
+           * @returns {string[]} 过滤后的可用目标列表
+           */
+          getFilteredTargets: function(channel) {
+            var allTargets = this.signalTargetHints;
+            if (!allTargets || allTargets.length === 0) return [];
+            var entries = this.signalTargetEntries;
+            var usedTargets = entries[channel];
+            if (!usedTargets || usedTargets.length === 0) return allTargets;
+            var filtered = [];
+            for (var i = 0; i < allTargets.length; i++) {
+              var t = allTargets[i];
+              if (usedTargets.indexOf(t) === -1) {
+                filtered.push(t);
+              }
+            }
+            return filtered;
+          },
           /**
            * 添加新的信号频道
            */
@@ -11208,17 +11248,17 @@
                     <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
                         <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
                             @change="updateSignalTarget(field.field, channel, ti, $event.target.value)"
-                            :list="'sig-target-hints-'+_uid" placeholder="\u76EE\u6807" />
+                            :list="'sig-target-hints-'+_uid+'-'+ci" placeholder="\u76EE\u6807" />
                         <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTarget(field.field, channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
                     </div>
                     <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTarget(field.field, channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
+                    <datalist :id="'sig-target-hints-'+_uid+'-'+ci">
+                        <option v-for="h in getFilteredTargets(field.field, channel)" :key="h" :value="h" />
+                    </datalist>
                 </div>
                 <button class="mm-btn" style="font-size:11px" @click="addSignalChannel(field.field)">+ \u6DFB\u52A0\u9891\u9053</button>
                 <datalist :id="'sig-channel-hints-'+_uid">
                     <option v-for="h in channelHints" :key="h" :value="h" />
-                </datalist>
-                <datalist :id="'sig-target-hints-'+_uid">
-                    <option v-for="h in signalTargetOptions" :key="h" :value="h" />
                 </datalist>
             </div>
 
@@ -11383,6 +11423,27 @@
               return val;
             }
             return {};
+          },
+          /**
+           * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
+           * @param {string} sigField - 信号字段名（如 control_outputs）
+           * @param {string} channel - 频道名
+           * @returns {string[]} 过滤后的可用目标列表
+           */
+          getFilteredTargets: function(sigField, channel) {
+            var allTargets = this.signalTargetOptions;
+            if (!allTargets || allTargets.length === 0) return [];
+            var entries = this.getSignalEntries(sigField);
+            var usedTargets = entries[channel];
+            if (!usedTargets || usedTargets.length === 0) return allTargets;
+            var filtered = [];
+            for (var i = 0; i < allTargets.length; i++) {
+              var t = allTargets[i];
+              if (usedTargets.indexOf(t) === -1) {
+                filtered.push(t);
+              }
+            }
+            return filtered;
           },
           addSignalChannel: function(sigField) {
             var entries = this.getSignalEntries(sigField);
