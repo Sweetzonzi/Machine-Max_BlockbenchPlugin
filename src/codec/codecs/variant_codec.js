@@ -15,7 +15,7 @@ const { SubPartCodec } = require('./sub_part_codec.js');
 
 const VariantCodec = Codec.record({
     model:      Codec.STRING.field(),
-    textures:   Codec.STRING.list().default([]),
+    textures:   Codec.ANY.default(''),   // 支持 string | string[] | object — MachineMax 多格式兼容
     animations: Codec.map(Codec.STRING, Codec.STRING).default({}),
     tags:       Codec.STRING.list().default([]),
     sub_parts:  Codec.either(SubPartCodec, Codec.map(Codec.STRING, SubPartCodec)).default({}),

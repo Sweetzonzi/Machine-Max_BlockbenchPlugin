@@ -213,6 +213,19 @@ function createPrimitiveCodec(encodeFn, decodeFn) {
     return withFieldMethods(codec);
 }
 
+// ==================== 6 种基元类型 ====================
+
+/**
+ * @type {object} ANY codec — 透传任意值，不做类型转换
+ * encode: 原样返回
+ * decode: 原样返回
+ * 用途: textures 等 MachineMax 规范支持多种类型的字段
+ */
+var ANY = createPrimitiveCodec(
+    function (v) { return v; },
+    function (v) { return v; }
+);
+
 // ==================== 5 种基元类型 ====================
 
 /**
@@ -559,6 +572,7 @@ var Codec = {
     FLOAT: FLOAT,
     BOOL: BOOL,
     ENUM: ENUM,
+    ANY: ANY,
     record: record,
     either: either,
     dispatch: dispatch,
