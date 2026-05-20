@@ -59,9 +59,9 @@ function createFieldDescriptor(codec, opts) {
     if (opts.required) {
         return {
             required: true,
-            encodeField: function (value) {
+            encodeField: function (value, key) {
                 if (value === undefined) {
-                    throw new Error('Missing required field');
+                    throw new Error('Missing required field: ' + (key || '?'));
                 }
                 return codec.encode(value);
             },
@@ -77,7 +77,7 @@ function createFieldDescriptor(codec, opts) {
         return {
             nullable: true,
             defaultValue: null,
-            encodeField: function (value) {
+            encodeField: function (value, key) {
                 if (value === null || value === undefined) return undefined;
                 return codec.encode(value);
             },
@@ -91,7 +91,7 @@ function createFieldDescriptor(codec, opts) {
     var defaultVal = opts.defaultValue;
     return {
         defaultValue: defaultVal,
-        encodeField: function (value) {
+        encodeField: function (value, key) {
             if (value === undefined || value === defaultVal) return undefined;
             return codec.encode(value);
         },
@@ -117,8 +117,13 @@ function createListCodec(itemCodec, len) {
         type: 'list',
         encode: function (arr) {
             var result, i;
+            // 宽松模式：非数组值自动包装为数组，兼容旧数据
             if (!Array.isArray(arr)) {
-                throw new Error('Expected array, got ' + typeof arr);
+                if (arr === null || arr === undefined) {
+                    return undefined;
+                }
+                // 空字符串 → 空数组（旧数据中 end_bones: '' 表示"无"）
+                arr = arr === '' ? [] : [arr];
             }
             if (len !== undefined && arr.length !== len) {
                 throw new Error('Expected array of length ' + len + ', got ' + arr.length);
@@ -354,7 +359,7 @@ function record(schema) {
                 field = schema[key];
                 val = obj[key];
                 // 使用字段描述符的 encodeField（处理默认值跳过/nullable跳过等）
-                encoded = field.encodeField ? field.encodeField(val) : val;
+                encoded = field.encodeField ? field.encodeField(val, key) : val;
                 if (encoded !== undefined) {
                     result[key] = encoded;
                 }
