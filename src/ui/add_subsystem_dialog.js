@@ -13,6 +13,9 @@
  * @param {Function} [options.onCreated] - 创建成功回调 (spKey, instanceName)，用于 caller 特定逻辑
  * @param {Function} [options.beforeSet] - 设置前回调 (sp, instanceName, ssConfig)，用于 Vue 2 $set
  */
+/** 模块级缓存：上次选择的子系统类型 ID，本次会话内跨对话框保持 */
+var _lastSelectedType = 'machine_max:engine';
+
 function showAddSubsystemDialog(options) {
     var config = options.config;
     var variant = options.variant;
@@ -53,7 +56,7 @@ function showAddSubsystemDialog(options) {
     new Dialog({
         title: '添加子系统',
         form: {
-            subsystemType: { type: 'select', label: '子系统类型', options: allTypeOpts, value: preSelectedType || 'machine_max:engine' },
+            subsystemType: { type: 'select', label: '子系统类型', options: allTypeOpts, value: preSelectedType || _lastSelectedType },
             instanceName: { type: 'text', label: '子系统名称', value: '', description: '留空自动生成' },
         },
         onConfirm: function (formData) {
@@ -64,6 +67,9 @@ function showAddSubsystemDialog(options) {
                 showToast('无效的子系统类型', 'error');
                 return false;
             }
+            // 记忆本次选择的类型，下次对话框默认选中
+            _lastSelectedType = typeId;
+
             // 自动生成名称
             if (!instanceName || instanceName.trim() === '') {
                 var { generateDefaultName, ensureUniqueName } = require('../core/naming.js');

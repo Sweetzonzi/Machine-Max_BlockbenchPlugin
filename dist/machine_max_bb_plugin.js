@@ -8854,6 +8854,7 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
+      var _lastSelectedType = "machine_max:engine";
       function showAddSubsystemDialog(options) {
         var config = options.config;
         var variant = options.variant;
@@ -8888,7 +8889,7 @@
         new Dialog({
           title: "\u6DFB\u52A0\u5B50\u7CFB\u7EDF",
           form: {
-            subsystemType: { type: "select", label: "\u5B50\u7CFB\u7EDF\u7C7B\u578B", options: allTypeOpts, value: preSelectedType || "machine_max:engine" },
+            subsystemType: { type: "select", label: "\u5B50\u7CFB\u7EDF\u7C7B\u578B", options: allTypeOpts, value: preSelectedType || _lastSelectedType },
             instanceName: { type: "text", label: "\u5B50\u7CFB\u7EDF\u540D\u79F0", value: "", description: "\u7559\u7A7A\u81EA\u52A8\u751F\u6210" }
           },
           onConfirm: function(formData) {
@@ -8899,6 +8900,7 @@
               showToast2("\u65E0\u6548\u7684\u5B50\u7CFB\u7EDF\u7C7B\u578B", "error");
               return false;
             }
+            _lastSelectedType = typeId;
             if (!instanceName || instanceName.trim() === "") {
               var { generateDefaultName, ensureUniqueName } = require_naming();
               var ns = config && config.namespace || "machine_max";
