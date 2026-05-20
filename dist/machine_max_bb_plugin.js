@@ -11614,7 +11614,7 @@
     </div>
 
     <!-- \u5B50\u7CFB\u7EDF\u5C5E\u6027\u9762\u677F\uFF08\u865A\u62DF\u9009\u62E9\u4F18\u5148\uFF0C\u5F53\u4ECE\u5B50\u96F6\u4EF6\u9762\u677F\u70B9\u51FB\u5B50\u7CFB\u7EDF\u6761\u76EE\u65F6\u663E\u793A\uFF09 -->
-    <div v-if="isSubsystemSelected" class="mm-panel-body">
+    <div v-show="isSubsystemSelected" class="mm-panel-body">
         <mm-subsystem-panel
             v-if="selectedSubsystemConfig"
             :config="selectedSubsystemConfig"
@@ -11630,7 +11630,8 @@
             @navigate-to-sub-part="navigateToSubPart" />
     </div>
 
-    <div v-else-if="!selectedElement" class="mm-panel-body">
+    <!-- \u96F6\u4EF6/\u53D8\u4F53\u5C5E\u6027\u9762\u677F -->
+    <div v-show="!isSubsystemSelected && !selectedElement" class="mm-panel-body">
         <div class="mm-section" v-if="currentPart">
             <h3 class="mm-section-title">
                 <span class="mm-marker-badge" style="background:#D97E4A">\u96F6\u4EF6</span>
@@ -11707,7 +11708,8 @@
         </div>
     </div>
 
-    <div v-else class="mm-panel-body">
+    <!-- \u5143\u7D20\u5C5E\u6027\u9762\u677F\uFF08\u5B50\u96F6\u4EF6/\u78B0\u649E\u7BB1/\u4EA4\u4E92\u533A/\u8FDE\u63A5\u70B9\uFF09 -->
+    <div v-show="!isSubsystemSelected && selectedElement" class="mm-panel-body">
         <!-- \u5B50\u96F6\u4EF6\u5C5E\u6027\u9762\u677F -->
         <mm-sub-part-panel v-if="isSubPartSelected"
             :config="selectedSubPartConfig"

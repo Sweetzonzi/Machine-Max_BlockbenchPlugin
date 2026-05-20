@@ -19,7 +19,7 @@
     </div>
 
     <!-- 子系统属性面板（虚拟选择优先，当从子零件面板点击子系统条目时显示） -->
-    <div v-if="isSubsystemSelected" class="mm-panel-body">
+    <div v-show="isSubsystemSelected" class="mm-panel-body">
         <mm-subsystem-panel
             v-if="selectedSubsystemConfig"
             :config="selectedSubsystemConfig"
@@ -35,7 +35,8 @@
             @navigate-to-sub-part="navigateToSubPart" />
     </div>
 
-    <div v-else-if="!selectedElement" class="mm-panel-body">
+    <!-- 零件/变体属性面板 -->
+    <div v-show="!isSubsystemSelected && !selectedElement" class="mm-panel-body">
         <div class="mm-section" v-if="currentPart">
             <h3 class="mm-section-title">
                 <span class="mm-marker-badge" style="background:#D97E4A">零件</span>
@@ -112,7 +113,8 @@
         </div>
     </div>
 
-    <div v-else class="mm-panel-body">
+    <!-- 元素属性面板（子零件/碰撞箱/交互区/连接点） -->
+    <div v-show="!isSubsystemSelected && selectedElement" class="mm-panel-body">
         <!-- 子零件属性面板 -->
         <mm-sub-part-panel v-if="isSubPartSelected"
             :config="selectedSubPartConfig"
