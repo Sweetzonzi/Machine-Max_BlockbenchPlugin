@@ -77,21 +77,22 @@
             </p>
         </div>
         <div class="mm-field">
-            <label title="子部件在三个轴向上的投影面积(m²)，用于计算空气阻力">投影面积 (m²)</label>
+            <label title="三轴投影面积(m²)，用于计算空气阻力。设为 -1/≤0 则根据碰撞箱 AABB 自动计算">投影面积 (m²)</label>
             <div style="display:flex;gap:6px">
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">X</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[0]" @input="onProjectedAreaChange(0, config.projected_area[0] || 0)" step="0.1" min="0" />
+                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[0]" @input="onProjectedAreaChange(0, config.projected_area[0] || 0)" step="0.1" />
                 </div>
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">Y</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[1]" @input="onProjectedAreaChange(1, config.projected_area[1] || 0)" step="0.1" min="0" />
+                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[1]" @input="onProjectedAreaChange(1, config.projected_area[1] || 0)" step="0.1" />
                 </div>
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">Z</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[2]" @input="onProjectedAreaChange(2, config.projected_area[2] || 0)" step="0.1" min="0" />
+                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[2]" @input="onProjectedAreaChange(2, config.projected_area[2] || 0)" step="0.1" />
                 </div>
             </div>
+            <span class="mm-element-info" style="font-size:10px;color:#888">设 ≤ 0 则根据碰撞箱 AABB 自动计算</span>
         </div>
     </div>
 

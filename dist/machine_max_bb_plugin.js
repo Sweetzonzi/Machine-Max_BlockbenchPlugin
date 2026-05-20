@@ -3270,7 +3270,7 @@
         durability: Codec.FLOAT.default(20),
         mass: Codec.FLOAT.default(25),
         mass_center: Codec.STRING.default("mass_center"),
-        projected_area: Codec.FLOAT.list(3).default([0, 0, 0]),
+        projected_area: Codec.FLOAT.list(3).default([-1, -1, -1]),
         block_collision: Codec.ENUM(["true", "false", "ground"]).default("true"),
         collision_height: Codec.FLOAT.default(-1),
         climb_assist: Codec.BOOL.default(false),
@@ -9812,21 +9812,22 @@
             </p>
         </div>
         <div class="mm-field">
-            <label title="\u5B50\u90E8\u4EF6\u5728\u4E09\u4E2A\u8F74\u5411\u4E0A\u7684\u6295\u5F71\u9762\u79EF(m\xB2)\uFF0C\u7528\u4E8E\u8BA1\u7B97\u7A7A\u6C14\u963B\u529B">\u6295\u5F71\u9762\u79EF (m\xB2)</label>
+            <label title="\u4E09\u8F74\u6295\u5F71\u9762\u79EF(m\xB2)\uFF0C\u7528\u4E8E\u8BA1\u7B97\u7A7A\u6C14\u963B\u529B\u3002\u8BBE\u4E3A -1/\u22640 \u5219\u6839\u636E\u78B0\u649E\u7BB1 AABB \u81EA\u52A8\u8BA1\u7B97">\u6295\u5F71\u9762\u79EF (m\xB2)</label>
             <div style="display:flex;gap:6px">
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">X</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[0]" @input="onProjectedAreaChange(0, config.projected_area[0] || 0)" step="0.1" min="0" />
+                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[0]" @input="onProjectedAreaChange(0, config.projected_area[0] || 0)" step="0.1" />
                 </div>
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">Y</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[1]" @input="onProjectedAreaChange(1, config.projected_area[1] || 0)" step="0.1" min="0" />
+                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[1]" @input="onProjectedAreaChange(1, config.projected_area[1] || 0)" step="0.1" />
                 </div>
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">Z</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[2]" @input="onProjectedAreaChange(2, config.projected_area[2] || 0)" step="0.1" min="0" />
+                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[2]" @input="onProjectedAreaChange(2, config.projected_area[2] || 0)" step="0.1" />
                 </div>
             </div>
+            <span class="mm-element-info" style="font-size:10px;color:#888">\u8BBE \u2264 0 \u5219\u6839\u636E\u78B0\u649E\u7BB1 AABB \u81EA\u52A8\u8BA1\u7B97</span>
         </div>
     </div>
 
@@ -12842,7 +12843,7 @@
               return;
             }
             if (!config.projected_area) {
-              this.$set(config, "projected_area", [0, 0, 0]);
+              this.$set(config, "projected_area", [-1, -1, -1]);
             }
             this.$set(config.projected_area, axis, value);
             log2.debug("updateProjectedArea: \u5DF2\u66F4\u65B0", { axis, value });

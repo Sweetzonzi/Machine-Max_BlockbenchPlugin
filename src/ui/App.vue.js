@@ -1049,7 +1049,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 return;
             }
             if (!config.projected_area) {
-                this.$set(config, 'projected_area', [0, 0, 0]);
+                this.$set(config, 'projected_area', [-1, -1, -1]);
             }
             this.$set(config.projected_area, axis, value);
             log.debug('updateProjectedArea: 已更新', { axis: axis, value: value });
@@ -1406,6 +1406,35 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             Blockbench.dispatchEvent('update_selection');
             log.info('migrateInteractBoxBone: 骨骼迁移完成', { from: oldBoneName, to: newBoneName });
         },
+
+        /* —————— 贴图键值对编辑器事件处理 —————— */
+        handleTexturesKvAdd: function (payload) {
+            var v = this.currentVariant;
+            if (!v) return;
+            if (typeof v.textures !== 'object' || Array.isArray(v.textures)) {
+                this.$set(v, 'textures', {});
+            }
+            this.$set(v.textures, payload.key, payload.value);
+        },
+        handleTexturesKvRemove: function (payload) {
+            var v = this.currentVariant;
+            if (!v || !v.textures || typeof v.textures !== 'object') return;
+            this.$delete(v.textures, payload.key);
+        },
+        handleTexturesKvUpdateKey: function (payload) {
+            var v = this.currentVariant;
+            if (!v || !v.textures || typeof v.textures !== 'object') return;
+            var val = v.textures[payload.oldKey];
+            this.$delete(v.textures, payload.oldKey);
+            if (val !== undefined) {
+                this.$set(v.textures, payload.newKey, val);
+            }
+        },
+        handleTexturesKvUpdateValue: function (payload) {
+            var v = this.currentVariant;
+            if (!v || !v.textures || typeof v.textures !== 'object') return;
+            this.$set(v.textures, payload.key, payload.newValue);
+        },
     },
     mounted: function () {
         var self = this;
@@ -1464,33 +1493,6 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         });
 
         log.debug('Vue 组件挂载完成，已注册事件监听');
-    },
-    handleTexturesKvAdd: function (payload) {
-        var v = this.currentVariant;
-        if (!v) return;
-        if (typeof v.textures !== 'object' || Array.isArray(v.textures)) {
-            this.$set(v, 'textures', {});
-        }
-        this.$set(v.textures, payload.key, payload.value);
-    },
-    handleTexturesKvRemove: function (payload) {
-        var v = this.currentVariant;
-        if (!v || !v.textures || typeof v.textures !== 'object') return;
-        this.$delete(v.textures, payload.key);
-    },
-    handleTexturesKvUpdateKey: function (payload) {
-        var v = this.currentVariant;
-        if (!v || !v.textures || typeof v.textures !== 'object') return;
-        var val = v.textures[payload.oldKey];
-        this.$delete(v.textures, payload.oldKey);
-        if (val !== undefined) {
-            this.$set(v.textures, payload.newKey, val);
-        }
-    },
-    handleTexturesKvUpdateValue: function (payload) {
-        var v = this.currentVariant;
-        if (!v || !v.textures || typeof v.textures !== 'object') return;
-        this.$set(v.textures, payload.key, payload.newValue);
     },
     beforeDestroy: function () {
         log.debug('Vue 组件 beforeDestroy — 清理事件监听');

@@ -63,7 +63,7 @@ const SubPartCodec = Codec.record({
     durability:         Codec.FLOAT.default(20.0),
     mass:               Codec.FLOAT.default(25.0),
     mass_center:        Codec.STRING.default('mass_center'),
-    projected_area:     Codec.FLOAT.list(3).default([0, 0, 0]),
+    projected_area:     Codec.FLOAT.list(3).default([-1, -1, -1]),
     block_collision:    Codec.ENUM(['true', 'false', 'ground']).default('true'),
     collision_height:   Codec.FLOAT.default(-1.0),
     climb_assist:       Codec.BOOL.default(false),
@@ -76,8 +76,8 @@ const SubPartCodec = Codec.record({
     subsystems:         Codec.map(Codec.STRING, SubsystemDispatchCodec).default({}),
 
     // ── 可选子对象 ──
-    // nullable() 语义: null → encode 跳过, decode 缺失 → null
-    hydrodynamics:      Codec.map(Codec.STRING, HydroCodec).nullable(),
+    // 默认为空 map（encode 时跳过），与 Java optionalFieldOf("hydrodynamics", Map.of("", DEFAULT)) 语义对齐
+    hydrodynamics:      Codec.map(Codec.STRING, HydroCodec).default({}),
 });
 
 module.exports = { SubPartCodec };
