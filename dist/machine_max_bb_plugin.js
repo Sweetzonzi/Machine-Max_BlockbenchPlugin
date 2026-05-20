@@ -3328,12 +3328,8 @@
       var { Codec } = require_Codec();
       var { VariantCodec } = require_variant_codec();
       var PartCodec = Codec.record({
-        // ── 标识 ──
-        namespace: Codec.STRING.default("machine_max"),
-        id: Codec.STRING.default(""),
         // ── 基础 ──
         icon: Codec.STRING.default(""),
-        can_stand_on_top: Codec.BOOL.default(false),
         // ── 物理 ──
         vehicle_durability_rate: Codec.FLOAT.default(0.8),
         vehicle_damage_rate: Codec.FLOAT.default(1),
@@ -3344,7 +3340,7 @@
         max_stack_size: Codec.INT.default(1),
         // ── 变体 ──
         variants: Codec.either(VariantCodec, Codec.map(Codec.STRING, VariantCodec)).default({}),
-        // ── 编辑器内部状态 ──
+        // ── 编辑器内部状态（encode 时空对象跳过，不影响导出）──
         element_markers: Codec.record({}).default({})
       });
       module.exports = { PartCodec };

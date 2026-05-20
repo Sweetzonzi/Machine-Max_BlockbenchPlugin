@@ -20,10 +20,12 @@ const { VariantCodec } = require('./variant_codec.js');
 /**
  * PartCodec — 零件配置的序列化/反序列化 Codec
  *
- * 12 个字段来源于 config_defaults.js PART_DEFAULTS，外加 namespace、id、can_stand_on_top。
+ * 9 个字段，与 Java PartType.CODEC 一一对齐，不含 id / namespace 等运行时字段。
+ * 零件 ID 由文件名决定，不写入 JSON 体。
  *
  * encode 行为:
  *   - _uiState 等运行时字段不在 schema 中 → 自动剥离
+ *   - id、namespace 等编辑器元数据不在 schema 中 → 自动剥离
  *   - 所有字段按默认值规则跳过
  *   - 单 variant 时 Either 展开为简写格式
  *
@@ -33,13 +35,8 @@ const { VariantCodec } = require('./variant_codec.js');
  *   - 单 variant 简写 → 自动包装为 { default: variant }
  */
 const PartCodec = Codec.record({
-    // ── 标识 ──
-    namespace:                    Codec.STRING.default('machine_max'),
-    id:                           Codec.STRING.default(''),
-
     // ── 基础 ──
     icon:                         Codec.STRING.default(''),
-    can_stand_on_top:             Codec.BOOL.default(false),
 
     // ── 物理 ──
     vehicle_durability_rate:      Codec.FLOAT.default(0.8),
@@ -54,7 +51,7 @@ const PartCodec = Codec.record({
     // ── 变体 ──
     variants:                     Codec.either(VariantCodec, Codec.map(Codec.STRING, VariantCodec)).default({}),
 
-    // ── 编辑器内部状态 ──
+    // ── 编辑器内部状态（encode 时空对象跳过，不影响导出）──
     element_markers:              Codec.record({}).default({}),
 });
 
