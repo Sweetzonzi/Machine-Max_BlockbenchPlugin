@@ -59,11 +59,11 @@ function createFieldDescriptor(codec, opts) {
     if (opts.required) {
         return {
             required: true,
-            encodeField: function (value, key) {
+            encodeField: function (value, path) {
                 if (value === undefined) {
-                    throw new Error('Missing required field: ' + (key || '?'));
+                    throw new Error('Missing required field at ' + (path || '?'));
                 }
-                return codec.encode(value);
+                return codec.encode(value, path);
             },
             decodeField: function (value, key, path) {
                 if (value === undefined) {
@@ -77,9 +77,9 @@ function createFieldDescriptor(codec, opts) {
         return {
             nullable: true,
             defaultValue: null,
-            encodeField: function (value, key) {
+            encodeField: function (value, path) {
                 if (value === null || value === undefined) return undefined;
-                return codec.encode(value);
+                return codec.encode(value, path);
             },
             decodeField: function (value, key, path) {
                 if (value === undefined) return null;
@@ -91,9 +91,9 @@ function createFieldDescriptor(codec, opts) {
     var defaultVal = opts.defaultValue;
     return {
         defaultValue: defaultVal,
-        encodeField: function (value, key) {
+        encodeField: function (value, path) {
             if (value === undefined || value === defaultVal) return undefined;
-            return codec.encode(value);
+            return codec.encode(value, path);
         },
         decodeField: function (value, key, path) {
             if (value === undefined) return defaultVal;
@@ -115,22 +115,17 @@ function createFieldDescriptor(codec, opts) {
 function createListCodec(itemCodec, len) {
     var codec = {
         type: 'list',
-        encode: function (arr) {
+        encode: function (arr, path) {
             var result, i;
-            // 宽松模式：非数组值自动包装为数组，兼容旧数据
             if (!Array.isArray(arr)) {
-                if (arr === null || arr === undefined) {
-                    return undefined;
-                }
-                // 空字符串 → 空数组（旧数据中 end_bones: '' 表示"无"）
-                arr = arr === '' ? [] : [arr];
+                throw new Error((path ? path + ': ' : '') + 'Expected array, got ' + typeof arr);
             }
             if (len !== undefined && arr.length !== len) {
-                throw new Error('Expected array of length ' + len + ', got ' + arr.length);
+                throw new Error((path ? path + ': ' : '') + 'Expected array of length ' + len + ', got ' + arr.length);
             }
             result = [];
             for (i = 0; i < arr.length; i++) {
-                result.push(itemCodec.encode(arr[i]));
+                result.push(itemCodec.encode(arr[i], path + '[' + i + ']'));
             }
             return result;
         },
@@ -166,17 +161,17 @@ function createListCodec(itemCodec, len) {
 function createMapCodec(keyCodec, valCodec) {
     var codec = {
         type: 'map',
-        encode: function (obj) {
+        encode: function (obj, path) {
             var result, keys, i, k;
             if (obj === null || obj === undefined) return undefined;
             if (typeof obj !== 'object' || Array.isArray(obj)) {
-                throw new Error('Expected object for map, got ' + typeof obj);
+                throw new Error((path ? path + ': ' : '') + 'Expected object for map, got ' + typeof obj);
             }
             result = {};
             keys = Object.keys(obj);
             for (i = 0; i < keys.length; i++) {
                 k = keys[i];
-                result[keyCodec.encode(k)] = valCodec.encode(obj[k]);
+                result[keyCodec.encode(k)] = valCodec.encode(obj[k], (path || '') + '[' + k + ']');
             }
             // 空对象返回 undefined，由父级 record 决定跳过
             if (Object.keys(result).length === 0) return undefined;
@@ -349,8 +344,8 @@ function ENUM(values) {
 function record(schema) {
     var codec = {
         type: 'record',
-        encode: function (obj) {
-            var result, schemaKeys, i, key, field, val, encoded;
+        encode: function (obj, path) {
+            var result, schemaKeys, i, key, field, val, encoded, fieldPath;
             if (obj === null || obj === undefined) return undefined;
             result = {};
             schemaKeys = Object.keys(schema);
@@ -358,8 +353,9 @@ function record(schema) {
                 key = schemaKeys[i];
                 field = schema[key];
                 val = obj[key];
+                fieldPath = (path || '') + (path ? '.' : '') + key;
                 // 使用字段描述符的 encodeField（处理默认值跳过/nullable跳过等）
-                encoded = field.encodeField ? field.encodeField(val, key) : val;
+                encoded = field.encodeField ? field.encodeField(val, fieldPath) : val;
                 if (encoded !== undefined) {
                     result[key] = encoded;
                 }
@@ -424,15 +420,15 @@ function record(schema) {
 function dispatch(key, codecMap) {
     var codec = {
         type: 'dispatch',
-        encode: function (obj) {
+        encode: function (obj, path) {
             var type, subCodec, rest, objKeys, i, k, encoded, result, encKeys, j;
             type = obj[key];
             if (type === undefined) {
-                throw new Error('Missing dispatch key: ' + key);
+                throw new Error((path ? path + ': ' : '') + 'Missing dispatch key: ' + key);
             }
             subCodec = codecMap[type];
             if (!subCodec) {
-                throw new Error('Unknown dispatch type: ' + type);
+                throw new Error((path ? path + ': ' : '') + 'Unknown dispatch type: ' + type);
             }
             // 剥除 discriminator key 后委托子 codec encode
             rest = {};
@@ -443,7 +439,7 @@ function dispatch(key, codecMap) {
                     rest[k] = obj[k];
                 }
             }
-            encoded = subCodec.encode(rest);
+            encoded = subCodec.encode(rest, path);
             // 合并: discriminator key 在前，子 codec 输出在后
             result = {};
             result[key] = type;
@@ -525,15 +521,15 @@ function either(singleCodec, mapCodec) {
 
     var codec = {
         type: 'either',
-        encode: function (obj) {
+        encode: function (obj, path) {
             if (obj === null || obj === undefined) return undefined;
             var keys = Object.keys(obj);
             // 只有一个 default key → 简写，unwrap 输出单个对象
             if (keys.length === 1 && keys[0] === WRAP_KEY) {
-                return singleCodec.encode(obj[WRAP_KEY]);
+                return singleCodec.encode(obj[WRAP_KEY], path);
             }
             // 否则使用完整 map 格式
-            return mapCodec.encode(obj);
+            return mapCodec.encode(obj, path);
         },
         decode: function (raw) {
             var wrapped;
