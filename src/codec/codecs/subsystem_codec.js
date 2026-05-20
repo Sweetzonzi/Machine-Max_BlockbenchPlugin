@@ -126,7 +126,7 @@ const MotorbikeControllerCodec = Codec.record({
  */
 const TransmissionCodec = Codec.record({
     definition:     Codec.STRING.field(),
-    power_outputs:  Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    power_outputs:  Codec.map(Codec.STRING, Codec.FLOAT).default({}),   // 频道→减速比（数值）
 });
 
 /**

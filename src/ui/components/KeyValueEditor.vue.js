@@ -50,19 +50,19 @@ Vue.component('key-value-editor', {
             var entry = this.entryList[i];
             var oldKey = entry.key;
             var newKey = event.target.value;
-            this.$emit('update-key', { oldKey: oldKey, newKey: newKey });
+            this.$emit('kv-update-key', { oldKey: oldKey, newKey: newKey });
         },
         onValueInput: function (i, event) {
             var key = this.entryList[i].key;
-            this.$emit('update-value', { key: key, newValue: event.target.value });
+            this.$emit('kv-update-value', { key: key, newValue: event.target.value });
         },
         onRemove: function (i) {
             var key = this.entryList[i].key;
-            this.$emit('remove', { key: key });
+            this.$emit('kv-remove', { key: key });
         },
         onAdd: function () {
             if (!this.newKey.trim()) return;
-            this.$emit('add', { key: this.newKey.trim(), value: this.newValue.trim() });
+            this.$emit('kv-add', { key: this.newKey.trim(), value: this.newValue.trim() });
             this.newKey = '';
             this.newValue = '';
         },
