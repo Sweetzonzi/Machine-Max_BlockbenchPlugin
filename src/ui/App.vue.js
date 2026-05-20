@@ -1040,21 +1040,6 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             log.info('migrateConnectorLocator: 完成');
         },
         /**
-         * 更新子零件投影面积的单个轴向分量
-         */
-        updateProjectedArea: function (axis, value) {
-            const config = this.selectedSubPartConfig;
-            if (!config) {
-                log.warn('updateProjectedArea: selectedSubPartConfig 为空');
-                return;
-            }
-            if (!config.projected_area) {
-                this.$set(config, 'projected_area', [-1, -1, -1]);
-            }
-            this.$set(config.projected_area, axis, value);
-            log.debug('updateProjectedArea: 已更新', { axis: axis, value: value });
-        },
-        /**
          * 添加排除骨骼到 end_bones 列表
          */
         addEndBone: function (boneName) {

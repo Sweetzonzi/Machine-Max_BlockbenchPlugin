@@ -9816,15 +9816,15 @@
             <div style="display:flex;gap:6px">
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">X</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[0]" @input="onProjectedAreaChange(0, config.projected_area[0] || 0)" step="0.1" />
+                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[0]" step="0.1" />
                 </div>
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">Y</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[1]" @input="onProjectedAreaChange(1, config.projected_area[1] || 0)" step="0.1" />
+                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[1]" step="0.1" />
                 </div>
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">Z</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[2]" @input="onProjectedAreaChange(2, config.projected_area[2] || 0)" step="0.1" />
+                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[2]" step="0.1" />
                 </div>
             </div>
             <span class="mm-element-info" style="font-size:10px;color:#888">\u8BBE \u2264 0 \u5219\u6839\u636E\u78B0\u649E\u7BB1 AABB \u81EA\u52A8\u8BA1\u7B97</span>
@@ -12832,21 +12832,6 @@
             refreshOutlinerIcons2();
             Blockbench.dispatchEvent("update_selection");
             log2.info("migrateConnectorLocator: \u5B8C\u6210");
-          },
-          /**
-           * 更新子零件投影面积的单个轴向分量
-           */
-          updateProjectedArea: function(axis, value) {
-            const config = this.selectedSubPartConfig;
-            if (!config) {
-              log2.warn("updateProjectedArea: selectedSubPartConfig \u4E3A\u7A7A");
-              return;
-            }
-            if (!config.projected_area) {
-              this.$set(config, "projected_area", [-1, -1, -1]);
-            }
-            this.$set(config.projected_area, axis, value);
-            log2.debug("updateProjectedArea: \u5DF2\u66F4\u65B0", { axis, value });
           },
           /**
            * 添加排除骨骼到 end_bones 列表
