@@ -13,8 +13,9 @@ function generatePartJSON(partConfig) {
 }
 
 /**
- * 遍历零件配置，将所有 hit_boxes 和 interact_boxes 的 UUID 键解析为骨骼名
- * UUID 用于编辑模式下稳定追踪，导出时需转为 Group.name
+ * 遍历零件配置，将所有 hit_boxes 的 UUID 键解析为骨骼名（Group.name）。
+ * UUID 用于编辑模式下稳定追踪，导出时需转为可读的骨骼名。
+ * interact_boxes 有自己的 bone 字段和用户自定义名，不在此处理。
  * @param {Object} partConfig - 零件配置（会修改原对象）
  * @returns {Object} 修改后的 partConfig
  */
@@ -28,9 +29,6 @@ function _resolveAllUUIDKeys(partConfig) {
             if (!sp) continue;
             if (sp.hit_boxes && typeof sp.hit_boxes === 'object') {
                 sp.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
-            }
-            if (sp.interact_boxes && typeof sp.interact_boxes === 'object') {
-                sp.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
             }
         }
     }
