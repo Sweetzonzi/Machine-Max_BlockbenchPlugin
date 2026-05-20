@@ -15,13 +15,18 @@ const { Codec } = require('../Codec.js');
  * 注意：_uuid 为运行时瞬态字段，不在此 codec 中定义。
  */
 const HitBoxCodec = Codec.record({
-    shape:          Codec.STRING.field(),          // 碰撞箱形状（必填）
-    material:       Codec.STRING.default('iron'),
-    thickness:      Codec.FLOAT.default(1.0),
-    condition:      Codec.STRING.default(''),
-    mass_override:  Codec.FLOAT.default(-1.0),    // -1 表示未覆写
-    overwrite:      Codec.BOOL.default(false),     // 是否覆写上级
-    pos:            Codec.FLOAT.list(3).default([0, 0, 0]),
+    id:         Codec.STRING.field(),              // 碰撞形状ID（必填）
+    type:       Codec.STRING.field(),              // 碰撞形状类型（必填，box/sphere/cylinder/capsule/wheel）
+    material:   Codec.STRING.default(''),
+    thickness:  Codec.FLOAT.default(1.0),
+    condition:  Codec.STRING.default('true'),
+    subsystem:  Codec.STRING.default(''),          // 关联子系统
+    overwrite:  Codec.record({                     // 材质覆写（嵌套 record）
+        rha:                        Codec.FLOAT.default(1),
+        block_damage_factor:        Codec.FLOAT.default(1),
+        angle_effect:               Codec.BOOL.default(false),
+        un_penetrate_damage_factor: Codec.FLOAT.default(0),
+    }).default({}),
 });
 
 module.exports = { HitBoxCodec };

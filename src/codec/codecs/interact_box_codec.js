@@ -28,9 +28,9 @@ const { Codec } = require('../Codec.js');
  *   - bone 缺失 → 报错
  */
 const InteractBoxCodec = Codec.record({
-    bone:            Codec.STRING.field(),                              // 骨骼名（必填）
-    mode:            Codec.ENUM(['interact', 'damage', 'seat']).default('interact'),
-    condition:       Codec.STRING.default(''),
+    bone:            Codec.STRING.field(),                                    // 骨骼名（必填）
+    interact_mode:   Codec.ENUM(['fast', 'accurate']).default('fast'),
+    condition:       Codec.STRING.default('NOR'),
     signal_targets:  Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
 });
 
