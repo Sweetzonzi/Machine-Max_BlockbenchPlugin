@@ -10013,9 +10013,6 @@
           onStartBoneInput: function(value) {
             this.$emit("field-change", "start_bone", value);
           },
-          onProjectedAreaChange: function(axis, value) {
-            this.$emit("projected-area-change", axis, value);
-          },
           onAddEndBone: function() {
             if (this.newEndBone && this.newEndBone.trim()) {
               this.$emit("add-end-bone", this.newEndBone.trim());
@@ -11809,7 +11806,6 @@
             :all-locator-names="ownedLocatorNames"
             :refresh-key="_markerVersion"
             @field-change="updateSubPartField"
-            @projected-area-change="updateProjectedArea"
             @add-end-bone="addEndBone"
             @remove-end-bone="removeEndBone"
             @name-change="renameSubPart"

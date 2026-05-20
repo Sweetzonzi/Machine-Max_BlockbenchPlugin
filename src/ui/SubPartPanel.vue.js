@@ -97,9 +97,6 @@ Vue.component('mm-sub-part-panel', {
         onStartBoneInput: function (value) {
             this.$emit('field-change', 'start_bone', value);
         },
-        onProjectedAreaChange: function (axis, value) {
-            this.$emit('projected-area-change', axis, value);
-        },
         onAddEndBone: function () {
             if (this.newEndBone && this.newEndBone.trim()) {
                 this.$emit('add-end-bone', this.newEndBone.trim());
