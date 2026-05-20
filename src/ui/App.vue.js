@@ -1465,7 +1465,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
 
         log.debug('Vue 组件挂载完成，已注册事件监听');
     },
-    onTexturesKvAdd: function (payload) {
+    handleTexturesKvAdd: function (payload) {
         var v = this.currentVariant;
         if (!v) return;
         if (typeof v.textures !== 'object' || Array.isArray(v.textures)) {
@@ -1473,12 +1473,12 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         }
         this.$set(v.textures, payload.key, payload.value);
     },
-    onTexturesKvRemove: function (payload) {
+    handleTexturesKvRemove: function (payload) {
         var v = this.currentVariant;
         if (!v || !v.textures || typeof v.textures !== 'object') return;
         this.$delete(v.textures, payload.key);
     },
-    onTexturesKvUpdateKey: function (payload) {
+    handleTexturesKvUpdateKey: function (payload) {
         var v = this.currentVariant;
         if (!v || !v.textures || typeof v.textures !== 'object') return;
         var val = v.textures[payload.oldKey];
@@ -1487,7 +1487,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             this.$set(v.textures, payload.newKey, val);
         }
     },
-    onTexturesKvUpdateValue: function (payload) {
+    handleTexturesKvUpdateValue: function (payload) {
         var v = this.currentVariant;
         if (!v || !v.textures || typeof v.textures !== 'object') return;
         this.$set(v.textures, payload.key, payload.newValue);
