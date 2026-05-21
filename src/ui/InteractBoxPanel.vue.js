@@ -9,6 +9,8 @@
  * 交互区定义玩家可点击的交互区域，点击时发送信号到指定目标。
  * 支持交互模式（fast/accurate）和条件逻辑（AND/OR/NAND/NOR/XOR/XNOR）。
  */
+var nameUtils = require('../utils/name_utils.js');
+
 Vue.component('mm-interact-box-panel', {
     template: typeof TEMPLATE_INTERACT_BOX_PANEL !== 'undefined' ? TEMPLATE_INTERACT_BOX_PANEL : '<p>交互区面板加载中...</p>',
     props: {
@@ -71,6 +73,9 @@ Vue.component('mm-interact-box-panel', {
         },
     },
     methods: {
+        displayLabel: function (fullKey) {
+            return nameUtils.displayLabel(fullKey, 'zh', 'machine_max');
+        },
         onFieldChange: function (field, value) {
             this.$emit('field-change', field, value);
         },
@@ -99,7 +104,7 @@ Vue.component('mm-interact-box-panel', {
         /**
          * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
          * @param {string} channel - 频道名
-         * @returns {string[]} 过滤后的可用目标列表
+         * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
          */
         getFilteredTargets: function (channel) {
             var allTargets = this.signalTargetHints;
@@ -110,7 +115,7 @@ Vue.component('mm-interact-box-panel', {
             var filtered = [];
             for (var i = 0; i < allTargets.length; i++) {
                 var t = allTargets[i];
-                if (usedTargets.indexOf(t) === -1) {
+                if (usedTargets.indexOf(t.value) === -1) {
                     filtered.push(t);
                 }
             }

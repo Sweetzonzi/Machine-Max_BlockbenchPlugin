@@ -78,7 +78,7 @@
                 :value="config[field.field]"
                 @change="onFieldChange(field.field, $event.target.value)">
                 <option value="">（无）</option>
-                <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target">{{ target }}</option>
+                <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target.value">{{ target.label }}</option>
             </select>
 
             <!-- 功率输出映射编辑器（power_outputs_map，值类型为 <string, number>）
@@ -89,7 +89,7 @@
                         :value="targetName"
                         @change="onPowerOutputTargetChange(field.field, targetName, $event.target.value)">
                         <option value="">（无）</option>
-                        <option v-for="(target, si) in getFilteredPowerOutputTargets(field.field, targetName)" :key="si" :value="target">{{ target }}</option>
+                        <option v-for="(target, si) in getFilteredPowerOutputTargets(field.field, targetName)" :key="si" :value="target.value">{{ target.label }}</option>
                     </select>
                     <input type="number" class="mm-input" style="width:80px;font-size:11px;text-align:right"
                         step="0.01" min="-999" max="999"
@@ -111,15 +111,15 @@
                         <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalChannel(field.field, channel)" title="删除频道">×</button>
                     </div>
                     <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
-                        <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
-                            @change="updateSignalTarget(field.field, channel, ti, $event.target.value)"
-                            :list="'sig-target-hints-'+_uid+'-'+ci" placeholder="目标" />
+                        <select class="mm-select" style="flex:1;font-size:11px;min-width:120px"
+                            :value="t"
+                            @change="updateSignalTarget(field.field, channel, ti, $event.target.value)">
+                            <option value="">（选择目标）</option>
+                            <option v-for="opt in getFilteredTargets(field.field, channel)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                        </select>
                         <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTarget(field.field, channel, ti)" title="删除目标">×</button>
                     </div>
                     <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTarget(field.field, channel)">+ 添加目标</button>
-                    <datalist :id="'sig-target-hints-'+_uid+'-'+ci">
-                        <option v-for="h in getFilteredTargets(field.field, channel)" :key="h" :value="h" />
-                    </datalist>
                 </div>
                 <button class="mm-btn" style="font-size:11px" @click="addSignalChannel(field.field)">+ 添加频道</button>
                 <datalist :id="'sig-channel-hints-'+_uid">

@@ -16,6 +16,7 @@ const { createLogger } = require('../utils/logger.js');
 const { refreshOutlinerIcons } = require('../mode/icons.js');
 const { showToast } = require('../utils/notify.js');
 const content_pack_manager = require('../core/content_pack_manager.js');
+const nameUtils = require('../utils/name_utils.js');
 var { showAddTagDialog, _hashTagColor } = require('./tag_dialog_helper.js');
 
 /** 模块日志 */
@@ -242,20 +243,28 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             return sp.connectors;
         },
         /**
-         * 当前子零件内所有子系统 key 列表 + 特殊目标（用于信号目标下拉选择）
+         * 当前子零件内所有目标 key（用于信号目标下拉选择）
+         * 返回 {value, label}[]，value=完整键，label=[类型]短名
          */
         currentSignalTargetOptions: function () {
             if (!this.isSubsystemSelected || !this.currentVariant) return [];
             var sp = this.currentVariant.sub_parts[this.subsystemSelection.spKey];
-            if (!sp) return ['subpart', 'vehicle'];
-            var targets = ['subpart', 'vehicle'];
+            if (!sp) return [{value: 'subpart', label: 'subpart'}, {value: 'vehicle', label: 'vehicle'}];
+            var ns = (this.config && this.config.namespace) || 'machine_max';
+            var result = [{value: 'subpart', label: 'subpart'}, {value: 'vehicle', label: 'vehicle'}];
             if (sp.connectors) {
-                targets = targets.concat(Object.keys(sp.connectors));
+                var connKeys = Object.keys(sp.connectors);
+                for (var i = 0; i < connKeys.length; i++) {
+                    result.push({value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], 'zh', ns)});
+                }
             }
             if (sp.subsystems) {
-                targets = targets.concat(Object.keys(sp.subsystems));
+                var ssKeys = Object.keys(sp.subsystems);
+                for (var j = 0; j < ssKeys.length; j++) {
+                    result.push({value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], 'zh', ns)});
+                }
             }
-            return targets;
+            return result;
         },
         /**
          * 动态检测碰撞箱所属子零件（沿父链向上遍历）
@@ -305,21 +314,29 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             return (sp && sp.subsystems) || {};
         },
         /**
-         * 连接点所属子零件内的信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'）
+         * 连接点所属子零件内的信号目标补全列表
+         * 返回 {value, label}[]，value=完整键，label=[类型]短名
          */
         connectorParentSignalTargetHints: function () {
             var spKey = this.connectorParentSubPartKey;
-            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return ['subpart', 'vehicle'];
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
             var sp = this.currentVariant.sub_parts[spKey];
-            if (!sp) return ['subpart', 'vehicle'];
-            var hints = ['subpart', 'vehicle'];
+            if (!sp) return [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
+            var ns = (this.config && this.config.namespace) || 'machine_max';
+            var result = [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
             if (sp.connectors) {
-                hints = hints.concat(Object.keys(sp.connectors));
+                var connKeys = Object.keys(sp.connectors);
+                for (var i = 0; i < connKeys.length; i++) {
+                    result.push({value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], 'zh', ns)});
+                }
             }
             if (sp.subsystems) {
-                hints = hints.concat(Object.keys(sp.subsystems));
+                var ssKeys = Object.keys(sp.subsystems);
+                for (var j = 0; j < ssKeys.length; j++) {
+                    result.push({value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], 'zh', ns)});
+                }
             }
-            return hints;
+            return result;
         },
         /**
          * 当前选中碰撞箱的配置对象（从所属子零件的 hit_boxes 中获取）
@@ -388,21 +405,29 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             return (sp && sp.subsystems) || {};
         },
         /**
-         * 交互区所属子零件内的信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'）
+         * 交互区所属子零件内的信号目标补全列表
+         * 返回 {value, label}[]，value=完整键，label=[类型]短名
          */
         interactBoxParentSignalTargetHints: function () {
             var spKey = this.interactBoxParentSubPartKey;
-            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return ['subpart', 'vehicle'];
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
             var sp = this.currentVariant.sub_parts[spKey];
-            if (!sp) return ['subpart', 'vehicle'];
-            var hints = ['subpart', 'vehicle'];
+            if (!sp) return [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
+            var ns = (this.config && this.config.namespace) || 'machine_max';
+            var result = [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
             if (sp.connectors) {
-                hints = hints.concat(Object.keys(sp.connectors));
+                var connKeys = Object.keys(sp.connectors);
+                for (var i = 0; i < connKeys.length; i++) {
+                    result.push({value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], 'zh', ns)});
+                }
             }
             if (sp.subsystems) {
-                hints = hints.concat(Object.keys(sp.subsystems));
+                var ssKeys = Object.keys(sp.subsystems);
+                for (var j = 0; j < ssKeys.length; j++) {
+                    result.push({value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], 'zh', ns)});
+                }
             }
-            return hints;
+            return result;
         },
         /**
          * 当前选中交互区的配置对象（从所属子零件的 interact_boxes 中获取）

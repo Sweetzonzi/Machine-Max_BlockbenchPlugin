@@ -6,6 +6,8 @@
  * - 名称即翻译键格式的 key（如 sub_part.machine_max.main）
  * - 骨骼为独立的绑定字段
  */
+var nameUtils = require('../utils/name_utils.js');
+
 Vue.component('mm-sub-part-panel', {
     template: typeof TEMPLATE_SUB_PART_PANEL !== 'undefined' ? TEMPLATE_SUB_PART_PANEL : '<p>子零件面板加载中...</p>',
     props: {
@@ -108,12 +110,10 @@ Vue.component('mm-sub-part-panel', {
             return el ? el.name : hbKey;
         },
         resolveInteractBoxName: function (ibKey) {
-            // 交互区 key 是翻译键格式（如 interact.machine_max.left_seat），直接显示
-            return ibKey;
+            return nameUtils.displayLabel(ibKey);
         },
         resolveConnectorName: function (connKey) {
-            // 连接点 key 现在是翻译键格式，直接显示
-            return connKey;
+            return nameUtils.displayLabel(connKey);
         },
         /**
          * 解析子系统类型的中文显示名
@@ -124,6 +124,9 @@ Vue.component('mm-sub-part-panel', {
             var ssTypes = require('../core/subsystem_types.js');
             var meta = ssTypes.getTypeMeta(ss.type);
             return meta ? meta.displayName : ss.type;
+        },
+        resolveSubsystemShortName: function (ssKey) {
+            return nameUtils.extractShortName(ssKey);
         },
         /**
          * 获取子系统类型的颜色

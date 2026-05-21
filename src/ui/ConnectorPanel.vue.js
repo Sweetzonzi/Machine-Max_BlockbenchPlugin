@@ -8,6 +8,8 @@
  *
  * 扩展功能：信号目标、信号转译、机械能输出、内部连接点、属性覆写
  */
+var nameUtils = require('../utils/name_utils.js');
+
 Vue.component('mm-connector-panel', {
     template: typeof TEMPLATE_CONNECTOR_PANEL !== 'undefined' ? TEMPLATE_CONNECTOR_PANEL : '<p>连接点面板加载中...</p>',
     props: {
@@ -92,6 +94,9 @@ Vue.component('mm-connector-panel', {
         },
     },
     methods: {
+        displayLabel: function (fullKey) {
+            return nameUtils.displayLabel(fullKey, 'zh', 'machine_max');
+        },
         onNameChange: function (value) {
             if (value !== this.connectorName) {
                 this.$emit('name-change', this.connectorName, value);
@@ -126,7 +131,7 @@ Vue.component('mm-connector-panel', {
         /**
          * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
          * @param {string} channel - 频道名
-         * @returns {string[]} 过滤后的可用目标列表
+         * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
          */
         getFilteredTargets: function (channel) {
             var allTargets = this.signalTargetHints;
@@ -137,7 +142,7 @@ Vue.component('mm-connector-panel', {
             var filtered = [];
             for (var i = 0; i < allTargets.length; i++) {
                 var t = allTargets[i];
-                if (usedTargets.indexOf(t) === -1) {
+                if (usedTargets.indexOf(t.value) === -1) {
                     filtered.push(t);
                 }
             }

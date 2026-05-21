@@ -7718,6 +7718,103 @@
     }
   });
 
+  // src/utils/name_utils.js
+  var require_name_utils = __commonJS({
+    "src/utils/name_utils.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("NameUtils");
+      var TYPE_LABELS = {
+        sub_part: { zh: "\u5B50\u96F6\u4EF6", en: "SubPart" },
+        interact: { zh: "\u4EA4\u4E92\u533A", en: "Interact" },
+        connector: { zh: "\u8FDE\u63A5\u70B9", en: "Connector" },
+        subsystem: { zh: "\u5B50\u7CFB\u7EDF", en: "Subsystem" }
+      };
+      var TYPE_PREFIXES = Object.keys(TYPE_LABELS);
+      function extractType(fullKey) {
+        if (!fullKey || typeof fullKey !== "string") return null;
+        for (var i = 0; i < TYPE_PREFIXES.length; i++) {
+          if (fullKey.indexOf(TYPE_PREFIXES[i] + ".") === 0) {
+            return TYPE_PREFIXES[i];
+          }
+        }
+        return null;
+      }
+      function extractShortName(fullKey, ns) {
+        if (!fullKey || typeof fullKey !== "string") return fullKey || "";
+        ns = ns || "machine_max";
+        var prefix = "." + ns + ".";
+        var idx = fullKey.indexOf(prefix);
+        if (idx >= 0) {
+          return fullKey.substring(idx + prefix.length);
+        }
+        return fullKey;
+      }
+      function buildFullKey(type, shortName, ns) {
+        if (!shortName) return "";
+        ns = ns || "machine_max";
+        if (type) {
+          return type + "." + ns + "." + shortName;
+        }
+        return shortName;
+      }
+      function displayLabel(fullKey, locale, ns) {
+        if (!fullKey || typeof fullKey !== "string") return fullKey || "";
+        var type = extractType(fullKey);
+        var shortName = extractShortName(fullKey, ns);
+        if (!type) return shortName;
+        var labels = TYPE_LABELS[type];
+        var label = labels ? labels[locale] || labels["zh"] || type : type;
+        return "[" + label + "]" + shortName;
+      }
+      function getTargetOptions(variant, ns) {
+        var options = [];
+        ns = ns || "machine_max";
+        if (!variant) return options;
+        var subParts = variant.sub_parts || {};
+        for (var spKey in subParts) {
+          if (!subParts.hasOwnProperty(spKey)) continue;
+          var sp = subParts[spKey];
+          if (!sp || typeof sp !== "object") continue;
+          var connectors = sp.connectors || {};
+          for (var connKey in connectors) {
+            if (!connectors.hasOwnProperty(connKey)) continue;
+            if (options.some(function(o) {
+              return o.fullKey === connKey;
+            })) continue;
+            options.push({
+              type: "connector",
+              shortName: extractShortName(connKey, ns),
+              fullKey: connKey,
+              label: displayLabel(connKey, "zh", ns)
+            });
+          }
+          var subsystems = sp.subsystems || {};
+          for (var ssKey in subsystems) {
+            if (!subsystems.hasOwnProperty(ssKey)) continue;
+            if (options.some(function(o) {
+              return o.fullKey === ssKey;
+            })) continue;
+            options.push({
+              type: "subsystem",
+              shortName: extractShortName(ssKey, ns),
+              fullKey: ssKey,
+              label: displayLabel(ssKey, "zh", ns)
+            });
+          }
+        }
+        return options;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { extractType, extractShortName, buildFullKey, displayLabel, getTargetOptions, TYPE_LABELS, TYPE_PREFIXES };
+      }
+    }
+  });
+
   // src/generators/lang_generator.js
   var require_lang_generator = __commonJS({
     "src/generators/lang_generator.js"(exports, module) {
@@ -7727,6 +7824,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
+      var nameUtils = require_name_utils();
       var log2 = createLogger2("GenLang");
       function _toDisplayName(key) {
         return key.replace(/_/g, " ").replace(/\b\w/g, function(c) {
@@ -7743,9 +7841,8 @@
           if (!parts.hasOwnProperty(partId)) continue;
           var partConfig = parts[partId];
           var partKey = ns + "." + partId;
-          var partDisplayName = _toDisplayName(partId);
-          enLang[partKey] = partDisplayName;
-          zhLang[partKey] = partDisplayName;
+          enLang[partKey] = _toDisplayName(partId);
+          zhLang[partKey] = _toDisplayName(partId);
           var variants = partConfig.variants || {};
           var variantMap;
           if (typeof variants.model === "string") {
@@ -7767,35 +7864,31 @@
               if (!subPartMap.hasOwnProperty(subPartKey)) continue;
               var subPart = subPartMap[subPartKey];
               if (!subPart || typeof subPart !== "object") continue;
-              if (subPartKey !== "_single" && subPartKey !== "main") {
-                var spKey = "sub_part." + ns + "." + subPartKey;
-                var spName = _toDisplayName(subPartKey);
-                enLang[spKey] = spName;
-                zhLang[spKey] = spName;
+              if (subPartKey !== "_single" && subPartKey !== "sub_part." + ns + ".main") {
+                var spShortName = nameUtils.extractShortName(subPartKey, ns);
+                enLang[subPartKey] = _toDisplayName(spShortName);
+                zhLang[subPartKey] = _toDisplayName(spShortName);
               }
               var interactBoxes = subPart.interact_boxes || {};
               for (var interactKey in interactBoxes) {
                 if (!interactBoxes.hasOwnProperty(interactKey)) continue;
-                var itKey = "interact." + ns + "." + interactKey;
-                var itName = _toDisplayName(interactKey);
-                enLang[itKey] = itName;
-                zhLang[itKey] = itName;
+                var ibShortName = nameUtils.extractShortName(interactKey, ns);
+                enLang[interactKey] = _toDisplayName(ibShortName);
+                zhLang[interactKey] = _toDisplayName(ibShortName);
               }
               var connectors = subPart.connectors || {};
               for (var connectorKey in connectors) {
                 if (!connectors.hasOwnProperty(connectorKey)) continue;
-                var connKey = "connector." + ns + "." + connectorKey;
-                var connName = _toDisplayName(connectorKey);
-                enLang[connKey] = connName;
-                zhLang[connKey] = connName;
+                var connShortName = nameUtils.extractShortName(connectorKey, ns);
+                enLang[connectorKey] = _toDisplayName(connShortName);
+                zhLang[connectorKey] = _toDisplayName(connShortName);
               }
               var subsystems = subPart.subsystems || {};
               for (var subsystemKey in subsystems) {
                 if (!subsystems.hasOwnProperty(subsystemKey)) continue;
-                var ssKey = "subsystem." + ns + "." + subsystemKey;
-                var ssName = _toDisplayName(subsystemKey);
-                enLang[ssKey] = ssName;
-                zhLang[ssKey] = ssName;
+                var ssShortName = nameUtils.extractShortName(subsystemKey, ns);
+                enLang[subsystemKey] = _toDisplayName(ssShortName);
+                zhLang[subsystemKey] = _toDisplayName(ssShortName);
               }
             }
           }
@@ -9803,6 +9896,7 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
+      var nameUtils = require_name_utils();
       Vue.component("mm-sub-part-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -9984,7 +10078,7 @@
             <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
                 <span class="mm-sub-item-name">
                     <span class="mm-marker-badge" :style="{ background: resolveSubsystemTypeColor(ssKey) }" style="font-size:10px;padding:0 4px">SS</span>
-                    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :title="ssKey">{{ ssKey }}</span>
+                    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :title="ssKey">{{ resolveSubsystemShortName(ssKey) }}</span>
                 </span>
                 <button class="mm-btn mm-btn-sm" @click.stop="deleteSubsystem(ssKey)" title="\u5220\u9664\u5B50\u7CFB\u7EDF" style="color:#ff6b6b;font-size:14px;width:24px;height:24px;min-width:24px;min-height:24px">\xD7</button>
             </div>
@@ -10097,10 +10191,10 @@
             return el ? el.name : hbKey;
           },
           resolveInteractBoxName: function(ibKey) {
-            return ibKey;
+            return nameUtils.displayLabel(ibKey);
           },
           resolveConnectorName: function(connKey) {
-            return connKey;
+            return nameUtils.displayLabel(connKey);
           },
           /**
            * 解析子系统类型的中文显示名
@@ -10111,6 +10205,9 @@
             var ssTypes = require_subsystem_types();
             var meta = ssTypes.getTypeMeta(ss.type);
             return meta ? meta.displayName : ss.type;
+          },
+          resolveSubsystemShortName: function(ssKey) {
+            return nameUtils.extractShortName(ssKey);
           },
           /**
            * 获取子系统类型的颜色
@@ -10378,6 +10475,7 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
+      var nameUtils = require_name_utils();
       Vue.component("mm-interact-box-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -10466,15 +10564,15 @@
                 <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetChannel(channel)" title="\u5220\u9664\u9891\u9053">\xD7</button>
             </div>
             <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
-                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
-                    @change="updateSignalTargetItem(channel, ti, $event.target.value)"
-                    :list="'ib-sig-tgt-'+_uid+'-'+ci" placeholder="\u76EE\u6807\uFF08\u5B50\u7CFB\u7EDF\u540D / subpart / vehicle / \u8FDE\u63A5\u70B9\u540D\uFF09" />
+                <select class="mm-select" style="flex:1;font-size:11px;min-width:120px"
+                    :value="t"
+                    @change="updateSignalTargetItem(channel, ti, $event.target.value)">
+                    <option value="">\uFF08\u9009\u62E9\u76EE\u6807\uFF09</option>
+                    <option v-for="opt in getFilteredTargets(channel)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
                 <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
             </div>
             <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTargetItem(channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
-            <datalist :id="'ib-sig-tgt-'+_uid+'-'+ci">
-                <option v-for="h in getFilteredTargets(channel)" :key="h" :value="h" />
-            </datalist>
         </div>
         <datalist :id="'ib-sig-chan-'+_uid">
             <option v-for="h in channelHints" :key="h" :value="h" />
@@ -10566,6 +10664,9 @@
           }
         },
         methods: {
+          displayLabel: function(fullKey) {
+            return nameUtils.displayLabel(fullKey, "zh", "machine_max");
+          },
           onFieldChange: function(field, value) {
             this.$emit("field-change", field, value);
           },
@@ -10593,7 +10694,7 @@
           /**
            * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
            * @param {string} channel - 频道名
-           * @returns {string[]} 过滤后的可用目标列表
+           * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
            */
           getFilteredTargets: function(channel) {
             var allTargets = this.signalTargetHints;
@@ -10604,7 +10705,7 @@
             var filtered = [];
             for (var i = 0; i < allTargets.length; i++) {
               var t = allTargets[i];
-              if (usedTargets.indexOf(t) === -1) {
+              if (usedTargets.indexOf(t.value) === -1) {
                 filtered.push(t);
               }
             }
@@ -10697,6 +10798,7 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
+      var nameUtils = require_name_utils();
       Vue.component("mm-connector-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -10779,15 +10881,15 @@
                 <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetChannel(channel)" title="\u5220\u9664\u9891\u9053">\xD7</button>
             </div>
             <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
-                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
-                    @change="updateSignalTargetItem(channel, ti, $event.target.value)"
-                    :list="'cn-sig-tgt-'+_uid+'-'+ci" placeholder="\u76EE\u6807\uFF08\u5B50\u7CFB\u7EDF\u540D / subpart / vehicle / \u8FDE\u63A5\u70B9\u540D\uFF09" />
+                <select class="mm-select" style="flex:1;font-size:11px;min-width:120px"
+                    :value="t"
+                    @change="updateSignalTargetItem(channel, ti, $event.target.value)">
+                    <option value="">\uFF08\u9009\u62E9\u76EE\u6807\uFF09</option>
+                    <option v-for="opt in getFilteredTargets(channel)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
                 <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
             </div>
             <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTargetItem(channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
-            <datalist :id="'cn-sig-tgt-'+_uid+'-'+ci">
-                <option v-for="h in getFilteredTargets(channel)" :key="h" :value="h" />
-            </datalist>
         </div>
         <datalist :id="'cn-sig-chan-'+_uid">
             <option v-for="h in channelHints" :key="h" :value="h" />
@@ -10828,7 +10930,7 @@
             <label title="\u673A\u68B0\u80FD\u8F93\u51FA\u76EE\u6807\uFF1A\u9009\u62E9\u672C\u5B50\u96F6\u4EF6\u5185\u7684\u5B50\u7CFB\u7EDF\uFF0C\u6216\u7559\u7A7A\u8868\u793A\u65E0\u8F93\u51FA">\u673A\u68B0\u80FD\u8F93\u51FA\u76EE\u6807</label>
             <select class="mm-select" :value="config.power_target" @change="onFieldChange('power_target', $event.target.value)">
                 <option value="">\uFF08\u65E0\uFF09</option>
-                <option v-for="(ss, ssKey) in subsystemKeys" :key="ssKey" :value="ssKey">{{ ssKey }}</option>
+                <option v-for="(ss, ssKey) in subsystemKeys" :key="ssKey" :value="ssKey">{{ displayLabel(ssKey) }}</option>
             </select>
         </div>
         <div class="mm-field mm-field-row" style="margin-top:4px">
@@ -10961,6 +11063,9 @@
           }
         },
         methods: {
+          displayLabel: function(fullKey) {
+            return nameUtils.displayLabel(fullKey, "zh", "machine_max");
+          },
           onNameChange: function(value) {
             if (value !== this.connectorName) {
               this.$emit("name-change", this.connectorName, value);
@@ -10994,7 +11099,7 @@
           /**
            * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
            * @param {string} channel - 频道名
-           * @returns {string[]} 过滤后的可用目标列表
+           * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
            */
           getFilteredTargets: function(channel) {
             var allTargets = this.signalTargetHints;
@@ -11005,7 +11110,7 @@
             var filtered = [];
             for (var i = 0; i < allTargets.length; i++) {
               var t = allTargets[i];
-              if (usedTargets.indexOf(t) === -1) {
+              if (usedTargets.indexOf(t.value) === -1) {
                 filtered.push(t);
               }
             }
@@ -11282,7 +11387,7 @@
                 :value="config[field.field]"
                 @change="onFieldChange(field.field, $event.target.value)">
                 <option value="">\uFF08\u65E0\uFF09</option>
-                <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target">{{ target }}</option>
+                <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target.value">{{ target.label }}</option>
             </select>
 
             <!-- \u529F\u7387\u8F93\u51FA\u6620\u5C04\u7F16\u8F91\u5668\uFF08power_outputs_map\uFF0C\u503C\u7C7B\u578B\u4E3A <string, number>\uFF09
@@ -11293,7 +11398,7 @@
                         :value="targetName"
                         @change="onPowerOutputTargetChange(field.field, targetName, $event.target.value)">
                         <option value="">\uFF08\u65E0\uFF09</option>
-                        <option v-for="(target, si) in getFilteredPowerOutputTargets(field.field, targetName)" :key="si" :value="target">{{ target }}</option>
+                        <option v-for="(target, si) in getFilteredPowerOutputTargets(field.field, targetName)" :key="si" :value="target.value">{{ target.label }}</option>
                     </select>
                     <input type="number" class="mm-input" style="width:80px;font-size:11px;text-align:right"
                         step="0.01" min="-999" max="999"
@@ -11315,15 +11420,15 @@
                         <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalChannel(field.field, channel)" title="\u5220\u9664\u9891\u9053">\xD7</button>
                     </div>
                     <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
-                        <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="t"
-                            @change="updateSignalTarget(field.field, channel, ti, $event.target.value)"
-                            :list="'sig-target-hints-'+_uid+'-'+ci" placeholder="\u76EE\u6807" />
+                        <select class="mm-select" style="flex:1;font-size:11px;min-width:120px"
+                            :value="t"
+                            @change="updateSignalTarget(field.field, channel, ti, $event.target.value)">
+                            <option value="">\uFF08\u9009\u62E9\u76EE\u6807\uFF09</option>
+                            <option v-for="opt in getFilteredTargets(field.field, channel)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                        </select>
                         <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTarget(field.field, channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
                     </div>
                     <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTarget(field.field, channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
-                    <datalist :id="'sig-target-hints-'+_uid+'-'+ci">
-                        <option v-for="h in getFilteredTargets(field.field, channel)" :key="h" :value="h" />
-                    </datalist>
                 </div>
                 <button class="mm-btn" style="font-size:11px" @click="addSignalChannel(field.field)">+ \u6DFB\u52A0\u9891\u9053</button>
                 <datalist :id="'sig-channel-hints-'+_uid">
@@ -11497,7 +11602,7 @@
            * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
            * @param {string} sigField - 信号字段名（如 control_outputs）
            * @param {string} channel - 频道名
-           * @returns {string[]} 过滤后的可用目标列表
+           * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
            */
           getFilteredTargets: function(sigField, channel) {
             var allTargets = this.signalTargetOptions;
@@ -11508,7 +11613,7 @@
             var filtered = [];
             for (var i = 0; i < allTargets.length; i++) {
               var t = allTargets[i];
-              if (usedTargets.indexOf(t) === -1) {
+              if (usedTargets.indexOf(t.value) === -1) {
                 filtered.push(t);
               }
             }
@@ -11582,7 +11687,7 @@
             var filtered = [];
             for (var i = 0; i < allTargets.length; i++) {
               var t = allTargets[i];
-              if (usedTargets.indexOf(t) === -1) {
+              if (usedTargets.indexOf(t.value) === -1) {
                 filtered.push(t);
               }
             }
@@ -11740,6 +11845,7 @@
       var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_icons();
       var { showToast: showToast2 } = require_notify();
       var content_pack_manager = require_content_pack_manager();
+      var nameUtils = require_name_utils();
       var { showAddTagDialog, _hashTagColor } = require_tag_dialog_helper();
       var log2 = createLogger2("UI");
       require_SubPartPanel_vue();
@@ -12154,20 +12260,28 @@
             return sp.connectors;
           },
           /**
-           * 当前子零件内所有子系统 key 列表 + 特殊目标（用于信号目标下拉选择）
+           * 当前子零件内所有目标 key（用于信号目标下拉选择）
+           * 返回 {value, label}[]，value=完整键，label=[类型]短名
            */
           currentSignalTargetOptions: function() {
             if (!this.isSubsystemSelected || !this.currentVariant) return [];
             var sp = this.currentVariant.sub_parts[this.subsystemSelection.spKey];
-            if (!sp) return ["subpart", "vehicle"];
-            var targets = ["subpart", "vehicle"];
+            if (!sp) return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
+            var ns = this.config && this.config.namespace || "machine_max";
+            var result = [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
             if (sp.connectors) {
-              targets = targets.concat(Object.keys(sp.connectors));
+              var connKeys = Object.keys(sp.connectors);
+              for (var i = 0; i < connKeys.length; i++) {
+                result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
+              }
             }
             if (sp.subsystems) {
-              targets = targets.concat(Object.keys(sp.subsystems));
+              var ssKeys = Object.keys(sp.subsystems);
+              for (var j = 0; j < ssKeys.length; j++) {
+                result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
+              }
             }
-            return targets;
+            return result;
           },
           /**
            * 动态检测碰撞箱所属子零件（沿父链向上遍历）
@@ -12217,21 +12331,29 @@
             return sp && sp.subsystems || {};
           },
           /**
-           * 连接点所属子零件内的信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'）
+           * 连接点所属子零件内的信号目标补全列表
+           * 返回 {value, label}[]，value=完整键，label=[类型]短名
            */
           connectorParentSignalTargetHints: function() {
             var spKey = this.connectorParentSubPartKey;
-            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return ["subpart", "vehicle"];
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
             var sp = this.currentVariant.sub_parts[spKey];
-            if (!sp) return ["subpart", "vehicle"];
-            var hints = ["subpart", "vehicle"];
+            if (!sp) return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
+            var ns = this.config && this.config.namespace || "machine_max";
+            var result = [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
             if (sp.connectors) {
-              hints = hints.concat(Object.keys(sp.connectors));
+              var connKeys = Object.keys(sp.connectors);
+              for (var i = 0; i < connKeys.length; i++) {
+                result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
+              }
             }
             if (sp.subsystems) {
-              hints = hints.concat(Object.keys(sp.subsystems));
+              var ssKeys = Object.keys(sp.subsystems);
+              for (var j = 0; j < ssKeys.length; j++) {
+                result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
+              }
             }
-            return hints;
+            return result;
           },
           /**
            * 当前选中碰撞箱的配置对象（从所属子零件的 hit_boxes 中获取）
@@ -12297,21 +12419,29 @@
             return sp && sp.subsystems || {};
           },
           /**
-           * 交互区所属子零件内的信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'）
+           * 交互区所属子零件内的信号目标补全列表
+           * 返回 {value, label}[]，value=完整键，label=[类型]短名
            */
           interactBoxParentSignalTargetHints: function() {
             var spKey = this.interactBoxParentSubPartKey;
-            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return ["subpart", "vehicle"];
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
             var sp = this.currentVariant.sub_parts[spKey];
-            if (!sp) return ["subpart", "vehicle"];
-            var hints = ["subpart", "vehicle"];
+            if (!sp) return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
+            var ns = this.config && this.config.namespace || "machine_max";
+            var result = [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
             if (sp.connectors) {
-              hints = hints.concat(Object.keys(sp.connectors));
+              var connKeys = Object.keys(sp.connectors);
+              for (var i = 0; i < connKeys.length; i++) {
+                result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
+              }
             }
             if (sp.subsystems) {
-              hints = hints.concat(Object.keys(sp.subsystems));
+              var ssKeys = Object.keys(sp.subsystems);
+              for (var j = 0; j < ssKeys.length; j++) {
+                result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
+              }
             }
-            return hints;
+            return result;
           },
           /**
            * 当前选中交互区的配置对象（从所属子零件的 interact_boxes 中获取）
