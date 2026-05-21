@@ -116,6 +116,14 @@ Vue.component('mm-sub-part-panel', {
             var el = Group.all.find(function (g) { return g.name === hbKey || g.uuid === hbKey; });
             return el ? el.name : hbKey;
         },
+        resolveHitBoxTypeLabel: function (type) {
+            var map = { box: '方体', sphere: '球体', cylinder: '圆柱', capsule: '胶囊', wheel: '轮胎' };
+            return map[type] || type;
+        },
+        resolveInteractModeLabel: function (mode) {
+            var map = { fast: '快速', accurate: '精确' };
+            return map[mode] || mode || '快速';
+        },
         resolveInteractBoxName: function (ibKey) {
             return nameUtils.extractShortName(ibKey);
         },

@@ -10035,7 +10035,7 @@
                 <span class="mm-marker-badge" style="background:#D94A4A;font-size:10px;padding:0 4px">HB</span>
                 {{ resolveHitBoxName(hbKey) }}
             </span>
-            <span class="mm-sub-item-meta">{{ hb.type }} | {{ hb.material }} | {{ hb.thickness }}mm</span>
+            <span class="mm-sub-item-meta">{{ resolveHitBoxTypeLabel(hb.type) }} | {{ hb.material }} | {{ hb.thickness }}mm</span>
         </div>
     </div>
 
@@ -10049,7 +10049,7 @@
                 <span class="mm-marker-badge" style="background:#D9A441;font-size:10px;padding:0 4px">IB</span>
                 {{ resolveInteractBoxName(ibKey) }}
             </span>
-            <span class="mm-sub-item-meta">{{ ib.interact_mode || 'fast' }} | {{ ib.bone || '\uFF08\u672A\u6307\u5B9A\u9AA8\u9ABC\uFF09' }}</span>
+            <span class="mm-sub-item-meta">{{ resolveInteractModeLabel(ib.interact_mode) }} | {{ ib.bone || '\uFF08\u672A\u6307\u5B9A\u9AA8\u9ABC\uFF09' }}</span>
         </div>
     </div>
 
@@ -10088,7 +10088,7 @@
             <span class="mm-sub-item-meta">
                 {{ resolveSubsystemTypeName(ssKey) }}
                 <span v-if="resolveSubsystemDefinition(ssKey)" style="color:#888;margin-left:4px">| {{ resolveSubsystemDefinition(ssKey) }}</span>
-                <span v-else style="color:#ff6b6b;margin-left:4px">\u26A0 \u672A\u6307\u5B9A\u578B\u53F7</span>
+                <span v-else style="color:#ff6b6b;margin-left:4px">| \u26A0 \u672A\u6307\u5B9A\u578B\u53F7</span>
             </span>
         </div>
     </div>
@@ -10203,6 +10203,14 @@
               return g.name === hbKey || g.uuid === hbKey;
             });
             return el ? el.name : hbKey;
+          },
+          resolveHitBoxTypeLabel: function(type) {
+            var map = { box: "\u65B9\u4F53", sphere: "\u7403\u4F53", cylinder: "\u5706\u67F1", capsule: "\u80F6\u56CA", wheel: "\u8F6E\u80CE" };
+            return map[type] || type;
+          },
+          resolveInteractModeLabel: function(mode) {
+            var map = { fast: "\u5FEB\u901F", accurate: "\u7CBE\u786E" };
+            return map[mode] || mode || "\u5FEB\u901F";
           },
           resolveInteractBoxName: function(ibKey) {
             return nameUtils.extractShortName(ibKey);
