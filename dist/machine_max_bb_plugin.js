@@ -4300,8 +4300,26 @@
         }
         return { ns: defaultNs || "", path: str };
       }
+      function mergeJSONFile(dir, filename, newData) {
+        ensureDir(dir);
+        var filePath = path.join(dir, filename);
+        var existing = readJSONFile(filePath) || {};
+        for (var key in newData) {
+          if (newData.hasOwnProperty(key) && !(key in existing)) {
+            existing[key] = newData[key];
+          }
+        }
+        try {
+          fs.writeFileSync(filePath, JSON.stringify(existing, null, 2), "utf-8");
+          log2.debug("mergeJSONFile: \u5DF2\u5408\u5E76\u5199\u5165 " + filePath + "\uFF08\u65B0\u589E " + Object.keys(newData).length + " \u6761\uFF0C\u5DF2\u6709 " + Object.keys(existing).length + " \u6761\uFF09");
+          return filePath;
+        } catch (e) {
+          log2.error("mergeJSONFile: \u5199\u5165\u5931\u8D25 " + filePath, e);
+          throw e;
+        }
+      }
       if (typeof module !== "undefined" && module.exports) {
-        module.exports = { ensureDir, writeJSONFile, writeTextFile, readJSONFile, fileExists, deleteFile, extractResourceLocation };
+        module.exports = { ensureDir, writeJSONFile, writeTextFile, readJSONFile, fileExists, deleteFile, extractResourceLocation, mergeJSONFile };
       }
     }
   });
@@ -7710,32 +7728,85 @@
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
       var log2 = createLogger2("GenLang");
-      function generateLangEntries(projectConfig, locale) {
-        const lang = {};
-        const ns = projectConfig.namespace || "machine_max";
-        const parts = projectConfig.parts || {};
-        for (const partId of Object.keys(parts)) {
-          const key = `item.${ns}.${partId}`;
-          const displayName = partId.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-          lang[key] = displayName;
-        }
-        return lang;
+      function _toDisplayName(key) {
+        return key.replace(/_/g, " ").replace(/\b\w/g, function(c) {
+          return c.toUpperCase();
+        });
       }
       function generateAllLangs(projectConfig) {
-        const result = {};
-        result["zh_cn"] = generateLangEntries(projectConfig, "zh_cn");
-        result["en_us"] = generateLangEntries(projectConfig, "en_us");
-        const ns = projectConfig.namespace || "machine_max";
-        const parts = projectConfig.parts || {};
-        for (const partId of Object.keys(parts)) {
-          const displayName = partId.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-          result["en_us"][`item.${ns}.${partId}`] = displayName;
+        var result = {};
+        var zhLang = {};
+        var enLang = {};
+        var ns = projectConfig.namespace || "machine_max";
+        var parts = projectConfig.parts || {};
+        for (var partId in parts) {
+          if (!parts.hasOwnProperty(partId)) continue;
+          var partConfig = parts[partId];
+          var partKey = ns + "." + partId;
+          var partDisplayName = _toDisplayName(partId);
+          enLang[partKey] = partDisplayName;
+          zhLang[partKey] = partDisplayName;
+          var variants = partConfig.variants || {};
+          var variantMap;
+          if (typeof variants.model === "string") {
+            variantMap = { _default: variants };
+          } else {
+            variantMap = variants;
+          }
+          for (var variantName in variantMap) {
+            if (!variantMap.hasOwnProperty(variantName)) continue;
+            var variant = variantMap[variantName];
+            var subParts = variant.sub_parts || {};
+            var subPartMap;
+            if (typeof subParts.durability === "number") {
+              subPartMap = { _single: subParts };
+            } else {
+              subPartMap = subParts;
+            }
+            for (var subPartKey in subPartMap) {
+              if (!subPartMap.hasOwnProperty(subPartKey)) continue;
+              var subPart = subPartMap[subPartKey];
+              if (!subPart || typeof subPart !== "object") continue;
+              if (subPartKey !== "_single" && subPartKey !== "main") {
+                var spKey = "sub_part." + ns + "." + subPartKey;
+                var spName = _toDisplayName(subPartKey);
+                enLang[spKey] = spName;
+                zhLang[spKey] = spName;
+              }
+              var interactBoxes = subPart.interact_boxes || {};
+              for (var interactKey in interactBoxes) {
+                if (!interactBoxes.hasOwnProperty(interactKey)) continue;
+                var itKey = "interact." + ns + "." + interactKey;
+                var itName = _toDisplayName(interactKey);
+                enLang[itKey] = itName;
+                zhLang[itKey] = itName;
+              }
+              var connectors = subPart.connectors || {};
+              for (var connectorKey in connectors) {
+                if (!connectors.hasOwnProperty(connectorKey)) continue;
+                var connKey = "connector." + ns + "." + connectorKey;
+                var connName = _toDisplayName(connectorKey);
+                enLang[connKey] = connName;
+                zhLang[connKey] = connName;
+              }
+              var subsystems = subPart.subsystems || {};
+              for (var subsystemKey in subsystems) {
+                if (!subsystems.hasOwnProperty(subsystemKey)) continue;
+                var ssKey = "subsystem." + ns + "." + subsystemKey;
+                var ssName = _toDisplayName(subsystemKey);
+                enLang[ssKey] = ssName;
+                zhLang[ssKey] = ssName;
+              }
+            }
+          }
         }
-        log2.info("generateAllLangs: \u5DF2\u751F\u6210\u672C\u5730\u5316\uFF0C\u96F6\u4EF6\u6570=" + Object.keys(parts).length);
+        result["zh_cn"] = zhLang;
+        result["en_us"] = enLang;
+        log2.info("generateAllLangs: \u5DF2\u751F\u6210\u672C\u5730\u5316\uFF0C\u952E\u6570=" + Object.keys(zhLang).length);
         return result;
       }
       if (typeof module !== "undefined" && module.exports) {
-        module.exports = { generateLangEntries, generateAllLangs };
+        module.exports = { generateAllLangs };
       }
     }
   });
@@ -8507,7 +8578,7 @@
           var langDir = path.join(packRoot, ns, "lang");
           for (var locale in allLangs) {
             if (allLangs.hasOwnProperty(locale)) {
-              fileWriter.writeJSONFile(langDir, locale + ".json", allLangs[locale]);
+              fileWriter.mergeJSONFile(langDir, locale + ".json", allLangs[locale]);
               stats.langs++;
             }
           }

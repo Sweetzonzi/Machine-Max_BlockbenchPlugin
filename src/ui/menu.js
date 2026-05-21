@@ -769,14 +769,14 @@ function _executeExport(config, packMeta, exportDir, packFolderName) {
         log.warn('无法导出 Bedrock 几何体模型（可能非 Bedrock 格式）', e);
     }
 
-    // === {namespace}/lang/{locale}.json ===
+    // === {namespace}/lang/{locale}.json（合并模式：保留已有条目，仅添加缺失键） ===
     var genLang = require('../generators/lang_generator.js');
     var allLangs = genLang.generateAllLangs(config);
     if (allLangs) {
         var langDir = path.join(packRoot, ns, 'lang');
         for (var locale in allLangs) {
             if (allLangs.hasOwnProperty(locale)) {
-                fileWriter.writeJSONFile(langDir, locale + '.json', allLangs[locale]);
+                fileWriter.mergeJSONFile(langDir, locale + '.json', allLangs[locale]);
                 stats.langs++;
             }
         }

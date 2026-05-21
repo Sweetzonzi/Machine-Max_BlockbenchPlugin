@@ -127,6 +127,35 @@ function extractResourceLocation(id, defaultNs) {
     return { ns: defaultNs || '', path: str };
 }
 
+/**
+ * 合并写入 JSON 文件 — 保留已有条目，仅添加缺失的键
+ * 先读取现有文件（如果有），将 newData 中不存在于现有文件的键补入，
+ * 最后整体写回。适用于 lang/*.json 等不希望覆盖手动添加条目的场景。
+ *
+ * @param {string} dir - 目录
+ * @param {string} filename - 文件名
+ * @param {Object} newData - 要合并的新数据（新条目优先但不会覆盖已有）
+ * @returns {string} 文件路径
+ */
+function mergeJSONFile(dir, filename, newData) {
+    ensureDir(dir);
+    var filePath = path.join(dir, filename);
+    var existing = readJSONFile(filePath) || {};
+    for (var key in newData) {
+        if (newData.hasOwnProperty(key) && !(key in existing)) {
+            existing[key] = newData[key];
+        }
+    }
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(existing, null, 2), 'utf-8');
+        log.debug('mergeJSONFile: 已合并写入 ' + filePath + '（新增 ' + (Object.keys(newData).length) + ' 条，已有 ' + (Object.keys(existing).length) + ' 条）');
+        return filePath;
+    } catch (e) {
+        log.error('mergeJSONFile: 写入失败 ' + filePath, e);
+        throw e;
+    }
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ensureDir, writeJSONFile, writeTextFile, readJSONFile, fileExists, deleteFile, extractResourceLocation };
+    module.exports = { ensureDir, writeJSONFile, writeTextFile, readJSONFile, fileExists, deleteFile, extractResourceLocation, mergeJSONFile };
 }
