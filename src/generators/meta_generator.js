@@ -6,10 +6,10 @@ var log = createLogger('GenMeta');
 /**
  * meta.json 生成器 — 生成 Spark-Core 兼容的内容包元数据文件
  *
- * 格式来源：SparkPackMetaInfo（Spark-Core pack 系统）
- * 字段：id (ResourceLocation), version, name, author, description, dependencies, enable_auto_pack
+ * 字段：id (ResourceLocation), version, author, description, dependencies, enable_auto_pack
  *
- * name/author/description 输出为 Minecraft Component 格式（{"text": "..."}）
+ * 注意：meta.json 中没有 name 字段，包显示名称由文件夹名决定。
+ * author/description 为纯字符串，非 Minecraft Component 格式。
  *
  * 支持两种输入方式：
  * 1. config.packMeta（旧版，兼容迁移中的配置）
@@ -27,9 +27,8 @@ function generateMeta(projectConfig) {
     var result = {
         id: packId,
         version: pm.version || '1.0',
-        name: { text: pm.name || packId.split(':')[1] || packId },
-        author: { text: pm.author || 'Anonymous' },
-        description: { text: pm.description || '' },
+        author: pm.author || 'Anonymous',
+        description: pm.description || '',
     };
 
     // 处理依赖列表

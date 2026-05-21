@@ -45,10 +45,14 @@ const SCHEMAS_DIR = path.join(ROOT, 'schemas');
 function walkDefFiles(dir, ext) {
     var results, entries, i, j, entryName, fullPath, stat, subResults, defId;
     results = [];
-    if (!fs.existsSync(dir)) return results;
+    if (!fs.existsSync(dir)) {
+        log.debug('walkDefFiles: 目录不存在 ' + dir);
+        return results;
+    }
 
     try {
         entries = fs.readdirSync(dir);
+        log.debug('walkDefFiles: 扫描目录 ' + dir + ' 找到 ' + entries.length + ' 个条目');
         for (i = 0; i < entries.length; i++) {
             entryName = entries[i];
             fullPath = path.join(dir, entryName);
@@ -62,6 +66,7 @@ function walkDefFiles(dir, ext) {
             } else if (path.extname(entryName) === ext) {
                 defId = path.basename(entryName, ext);
                 results.push({ filePath: fullPath, id: defId });
+                log.debug('walkDefFiles: 找到文件 id=' + defId + ' path=' + fullPath);
             }
         }
     } catch (e) {
@@ -142,12 +147,20 @@ function _readZipDefs(zipPath, namespace, type) {
     allFiles = handle.listFiles();
     prefix = namespace + '/' + type + '/';
 
+    log.debug('_readZipDefs: ZIP=' + zipPath + ' 前缀=' + prefix + ' 总文件数=' + allFiles.length);
+
     for (i = 0; i < allFiles.length; i++) {
         filePath = allFiles[i];
 
         // 筛选：路径以 {ns}/{type}/ 开头且以 .json 结尾
-        if (filePath.indexOf(prefix) !== 0) continue;
-        if (!filePath.endsWith('.json')) continue;
+        if (filePath.indexOf(prefix) !== 0) {
+            log.debug('_readZipDefs: 跳过（前缀不匹配） ' + filePath);
+            continue;
+        }
+        if (!filePath.endsWith('.json')) {
+            log.debug('_readZipDefs: 跳过（非 .json） ' + filePath);
+            continue;
+        }
 
         // 提取定义 ID：去掉前缀和扩展名，取文件名部分
         // 例如 "machine_max/materials/steel.json" → "steel"
@@ -164,13 +177,14 @@ function _readZipDefs(zipPath, namespace, type) {
             }
             parsed = JSON.parse(contentStr.toString('utf-8'));
             result[defId] = parsed;
-            log.debug('_readZipDefs: 已读取 ' + filePath);
+            log.debug('_readZipDefs: 已读取 id=' + defId + ' path=' + filePath);
         } catch (e) {
             log.warn('_readZipDefs: JSON 解析失败，跳过 ' + filePath, e);
         }
     }
 
     log.info('_readZipDefs: ' + type + ' 从 ZIP 读取完成，共 ' + Object.keys(result).length + ' 个定义');
+    log.debug('_readZipDefs: ' + type + ' 键列表', Object.keys(result));
     return result;
 }
 
@@ -184,7 +198,7 @@ function _readZipDefs(zipPath, namespace, type) {
  * "simple_name" → "simple_name"
  * "" → ""
  *
- * @param {string} packId - 内容包 ID，如 "machine_max:official"
+ * @param {string} packId - 内容包 ID，如 "machine_max:builtin"
  * @returns {string} namespace
  */
 function resolveNamespace(packId) {
@@ -368,17 +382,22 @@ function openContentPack(packPath) {
     try {
         meta = readPackMeta(packPath);
         if (meta === null) {
+            log.warn('openContentPack: meta.json 读取失败或不存在: ' + packPath);
             return { valid: false, meta: null, namespace: '', error: 'meta.json 读取失败或不存在' };
         }
 
         if (!meta.id) {
+            log.warn('openContentPack: meta.id 为空，路径=' + packPath);
             return { valid: false, meta: meta, namespace: '', error: 'meta.id 为空' };
         }
 
         namespace = resolveNamespace(meta.id);
         if (!namespace) {
+            log.warn('openContentPack: 无法从 meta.id 解析 namespace: ' + meta.id);
             return { valid: false, meta: meta, namespace: '', error: '无法从 meta.id 解析 namespace' };
         }
+
+        log.debug('openContentPack: meta.id=' + meta.id + ' -> namespace=' + namespace);
 
         // 验证必要子目录存在
         var requiredDirs = [
@@ -389,6 +408,7 @@ function openContentPack(packPath) {
 
         for (i = 0; i < requiredDirs.length; i++) {
             if (!fs.existsSync(requiredDirs[i])) {
+                log.warn('openContentPack: 缺少必要目录: ' + requiredDirs[i]);
                 return {
                     valid: false,
                     meta: meta,
@@ -429,25 +449,29 @@ function readAllDefs(packDir, namespace, type) {
     // 目录形式（原有逻辑）
     typeDir = path.join(packDir, namespace, type);
 
+    log.debug('readAllDefs: 查找目录 ' + typeDir + ' (packDir=' + packDir + ', namespace=' + namespace + ')');
+
     if (!fs.existsSync(typeDir)) {
         log.debug('readAllDefs: 目录不存在 ' + typeDir);
         return {};
     }
 
     files = walkDefFiles(typeDir, '.json');
+    log.debug('readAllDefs: walkDefFiles 找到 ' + files.length + ' 个文件');
+
     result = {};
 
     for (i = 0; i < files.length; i++) {
         try {
             raw = fs.readFileSync(files[i].filePath, 'utf-8');
             result[files[i].id] = JSON.parse(raw);
-            log.debug('readAllDefs: 已读取 ' + files[i].filePath);
+            log.debug('readAllDefs: 已读取 id=' + files[i].id + ' path=' + files[i].filePath);
         } catch (e) {
             log.warn('readAllDefs: JSON 解析失败，跳过 ' + files[i].filePath, e);
         }
     }
 
-    log.info('readAllDefs: 完成', { type: type, count: Object.keys(result).length });
+    log.info('readAllDefs: 完成', { type: type, dir: typeDir, count: Object.keys(result).length, ids: Object.keys(result) });
     return result;
 }
 

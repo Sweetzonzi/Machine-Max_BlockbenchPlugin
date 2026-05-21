@@ -89,6 +89,11 @@ function loadMergedDefs(config, type) {
     defs = {};
     sources = {};
 
+    log.debug('loadMergedDefs: 开始合并 ' + type, {
+        contentPackPath: config.contentPackPath,
+        dependencyPaths: config.dependencyPaths,
+    });
+
     // ── 第 1 层：内置包（优先级最低）──────────────────────────────────
     try {
         builtin = builtin_pack.getBuiltinPack();
@@ -99,9 +104,10 @@ function loadMergedDefs(config, type) {
                 var namespacedKey = builtin.namespace + ':' + bKey;
                 defs[namespacedKey] = builtinDefs[bKey];
                 sources[namespacedKey] = 'builtin';
+                log.debug('loadMergedDefs: 内置包添加 ' + namespacedKey + ' (source=builtin)');
             }
         }
-        log.info('loadMergedDefs: 内置包 ' + type + ' 加载完成，共 ' + Object.keys(builtinDefs).length + ' 个定义');
+        log.info('loadMergedDefs: 内置包 ' + type + ' 加载完成，共 ' + Object.keys(builtinDefs).length + ' 个定义，namespace=' + builtin.namespace);
     } catch (e) {
         log.warn('loadMergedDefs: 内置包读取失败，作为空包处理', e);
     }
@@ -125,12 +131,21 @@ function loadMergedDefs(config, type) {
                     continue;
                 }
 
+                log.debug('loadMergedDefs: 依赖包打开成功', {
+                    path: depPath,
+                    namespace: openResult.namespace,
+                    metaId: openResult.meta ? openResult.meta.id : null,
+                });
+
                 depDefs = content_pack.readAllDefs(depPath, openResult.namespace, type);
                 for (depKey in depDefs) {
                     if (hasOwn(depDefs, depKey)) {
                         var namespacedDepKey = openResult.namespace + ':' + depKey;
+                        // 检查是否已被更早的层定义（内置包或更早的依赖包）
+                        var prevSource = sources[namespacedDepKey];
                         defs[namespacedDepKey] = depDefs[depKey];
                         sources[namespacedDepKey] = 'dependency:' + i;
+                        log.debug('loadMergedDefs: 依赖包添加 ' + namespacedDepKey + ' (source=dependency:' + i + ', 覆盖前=' + (prevSource || '无') + ')');
                     }
                 }
                 log.debug('loadMergedDefs: 依赖包 ' + depPath + ' ' + type + ' 加载完成，共 ' + Object.keys(depDefs).length + ' 个定义');
@@ -147,13 +162,25 @@ function loadMergedDefs(config, type) {
             curOpenResult = content_pack.openContentPack(currentPath);
             if (!curOpenResult.valid) {
                 log.error('loadMergedDefs: 当前内容包无效: ' + currentPath, curOpenResult.error);
+                log.debug('loadMergedDefs: openContentPack 结果', {
+                    namespace: curOpenResult.namespace,
+                    meta: curOpenResult.meta,
+                    error: curOpenResult.error,
+                });
             } else {
+                log.debug('loadMergedDefs: 当前包打开成功', {
+                    path: currentPath,
+                    namespace: curOpenResult.namespace,
+                    metaId: curOpenResult.meta ? curOpenResult.meta.id : null,
+                });
                 curDefs = content_pack.readAllDefs(currentPath, curOpenResult.namespace, type);
                 for (curKey in curDefs) {
                     if (hasOwn(curDefs, curKey)) {
                         var namespacedCurKey = curOpenResult.namespace + ':' + curKey;
+                        var prevSource = sources[namespacedCurKey];
                         defs[namespacedCurKey] = curDefs[curKey];
                         sources[namespacedCurKey] = 'current';
+                        log.debug('loadMergedDefs: 当前包添加 ' + namespacedCurKey + ' (source=current, 覆盖前=' + (prevSource || '无') + ')');
                     }
                 }
                 log.debug('loadMergedDefs: 当前包 ' + currentPath + ' ' + type + ' 加载完成，共 ' + Object.keys(curDefs).length + ' 个定义');
@@ -169,6 +196,7 @@ function loadMergedDefs(config, type) {
 
     defCount = Object.keys(defs).length;
     log.info('loadMergedDefs: ' + type + ' 合并完成，共 ' + defCount + ' 个定义');
+    log.debug('loadMergedDefs: 最终 sources', sources);
 
     return result;
 }
@@ -188,6 +216,7 @@ function resolveDefSource(config, type, defId) {
         log.debug('resolveDefSource: 未找到定义 ' + type + ':' + defId);
         return null;
     }
+    log.debug('resolveDefSource: ' + type + ':' + defId + ' -> ' + source);
     return source;
 }
 
@@ -249,6 +278,12 @@ function invalidateCache() {
     _cache.connectors = null;
     _cache.subsystems = null;
     log.debug('invalidateCache: 缓存已清除');
+    // 检查调用栈（帮助定位谁触发了缓存失效）
+    try {
+        throw new Error('invalidateCache 调用栈');
+    } catch (e) {
+        log.debug('invalidateCache: 调用者', e.stack);
+    }
 }
 
 // =============================================================================

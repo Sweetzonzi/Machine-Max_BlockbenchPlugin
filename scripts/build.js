@@ -188,19 +188,23 @@ function normalizeDefFiles(raw) {
 }
 
 /**
- * 加载内置官方内容包（src/builtin/official_pack/），
+ * 加载内置基础内容包（src/builtin/builtin/），即 machine_max:builtin。
  * 返回 esbuild define 常量映射。
  * 抛出清晰错误如果目录不存在。
+ *
+ * 内置包提供通用连接点（6方向 fixed + 轻/中/重三级轮毂）、
+ * 子系统模板（10种类型，33个型号）和基础材料（15种）。
+ * 这些是所有内容包共享的基类定义，由 Mod 自动提供。
  *
  * 规范化后的 define 常量值为 JSON 对象字符串，
  * 格式与 content_pack.readAllDefs() 输出一致。
  */
-function loadOfficialPack() {
-    const packDir = path.join(SRC, 'builtin', 'official_pack');
+function loadBuiltinPack() {
+    const packDir = path.join(SRC, 'builtin', 'builtin');
     if (!fs.existsSync(packDir)) {
         throw new Error(
-            '内置官方内容包目录不存在: ' + packDir + '\n' +
-            '请确保 src/builtin/official_pack/ 已正确复制。'
+            '内置基础内容包目录不存在: ' + packDir + '\n' +
+            '请确保 src/builtin/builtin/ 已正确复制。'
         );
     }
 
@@ -248,7 +252,7 @@ function loadSchemas() {
 function getConfig() {
     const cssLiteral = loadCSS(path.join(SRC, 'styles', 'mm_mode.css'));
     const templates = loadAllHTMLTemplates(path.join(SRC, 'ui', 'panels'));
-    const packDefines = loadOfficialPack();
+    const packDefines = loadBuiltinPack();
     const schemaDefines = loadSchemas();
     const packStats = packDefines._packStats;
     delete packDefines._packStats;
@@ -311,7 +315,7 @@ async function buildOnce() {
 
         // 输出内置包统计
         if (packStats) {
-            console.log(`📦 内置包: ${packStats.materials} materials, ${packStats.connectors} connectors, ${packStats.subsystems} subsystems`);
+            console.log(`📦 内置基础包 (machine_max:builtin): ${packStats.materials} materials, ${packStats.connectors} connectors, ${packStats.subsystems} subsystems`);
         }
 
         if (warnings.length > 0) {

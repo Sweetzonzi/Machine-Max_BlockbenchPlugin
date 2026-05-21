@@ -1,5 +1,9 @@
 /**
- * builtin_pack.js — 内置 MachineMax 官方内容包运行时提供器
+ * builtin_pack.js — 内置基础内容包（machine_max:builtin）运行时提供器
+ *
+ * builtin 包提供通用连接点（6方向 fixed + 轻/中/重三级轮毂）、
+ * 子系统模板（10种类型，33个型号）和基础材料（15种）。
+ * 这些是所有内容包共享的基类定义，由 Mod 自动提供。
  *
  * 读取构建时 esbuild define 注入的全局常量（__BUILTIN_PACK_META__、__BUILTIN_MATERIALS__ 等），
  * 在模块加载时规范化后通过 getBuiltinPack() 返回冻结的只读对象。
@@ -184,7 +188,7 @@ var builtinSubsystems = normalizeDefs(
 
 /**
  * 从 meta.id 中提取命名空间（冒号前部分）
- * 例如 "machine_max:official" → "machine_max"
+ * 例如 "machine_max:builtin" → "machine_max"
  * @param {string} id - 包 ID
  * @returns {string} 命名空间
  */
@@ -217,12 +221,17 @@ function getBuiltinPack() {
     connCount = Object.keys(builtinConnectors).length;
     subCount = Object.keys(builtinSubsystems).length;
 
-    log.info('getBuiltinPack: 内置包加载完成 — '
+    log.info('getBuiltinPack: 内置基础包加载完成 — '
         + 'materials=' + matCount
         + ' connectors=' + connCount
         + ' subsystems=' + subCount
         + ' namespace=' + namespace
+        + ' metaId=' + (builtinMeta.id || '无')
     );
+
+    log.debug('getBuiltinPack: 连接器键列表', Object.keys(builtinConnectors));
+    log.debug('getBuiltinPack: 材料键列表', Object.keys(builtinMaterials));
+    log.debug('getBuiltinPack: 子系统键列表', Object.keys(builtinSubsystems));
 
     return result;
 }

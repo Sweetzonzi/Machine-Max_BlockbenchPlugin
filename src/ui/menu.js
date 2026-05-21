@@ -4,6 +4,7 @@ const { showToast } = require('../utils/notify.js');
 const { runValidation } = require('../mode.js');
 const content_pack = require('../core/content_pack.js');
 const fileWriter = require('../utils/file_writer.js');
+const path = require('path');
 
 /** 模块日志 */
 var log = createLogger('Menu');
@@ -271,8 +272,8 @@ function _showPackSettingsDialog() {
                 packName: {
                     type: 'text',
                     label: '显示名称',
-                    value: pm.name || '',
-                    description: '内容包的显示名称（支持 Minecraft 文本组件格式）',
+                    value: pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : ''),
+                    description: '内容包的显示名称（存储在配置中，不会写入 meta.json）',
                 },
                 packAuthor: {
                     type: 'text',
@@ -435,7 +436,7 @@ function _showExportDialog() {
                 packName: {
                     type: 'text',
                     label: '显示名称',
-                    value: pm.name || '',
+                    value: pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : ''),
                 },
                 packAuthor: {
                     type: 'text',
@@ -462,19 +463,19 @@ function _showExportDialog() {
                         var lines = deps.map(function (d) {
                             return (typeof d === 'string' ? d : (d.id + ' ' + (d.type || 'hard')));
                         });
-                        // 默认填充官方内容包为 hard 依赖
-                        var hasOfficial = false;
+                        // 默认填充基础内置包为 hard 依赖（由 Mod 自动提供）
+                        var hasBuiltin = false;
                         for (var di = 0; di < deps.length; di++) {
                             var did = typeof deps[di] === 'string' ? deps[di] : deps[di].id;
-                            if (did === 'machine_max:official') { hasOfficial = true; break; }
+                            if (did === 'machine_max:builtin') { hasBuiltin = true; break; }
                         }
-                        if (!hasOfficial && pm.id !== 'machine_max:official') {
-                            lines.unshift('machine_max:official hard');
+                        if (!hasBuiltin && pm.id !== 'machine_max:builtin') {
+                            lines.unshift('machine_max:builtin hard');
                         }
                         return lines.join('\n');
                     })(),
                     height: 100,
-                    description: '格式：每行 "依赖ID 类型"。类型: hard(必需), soft(可选), override(覆盖), conflict(冲突)\n示例: machine_max:core hard',
+                    description: '格式：每行 "依赖ID 类型"。类型: hard(必需), soft(可选), override(覆盖), conflict(冲突)\n示例: machine_max:builtin hard',
                 },
             },
             onConfirm: function (formData) {
@@ -485,13 +486,13 @@ function _showExportDialog() {
                 }
 
                 var packFolderName = _sanitizeFolderName(formData.packName)
-                    || _sanitizeFolderName(pm.name)
+                    || _sanitizeFolderName(pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : ''))
                     || (Project ? Project.name : 'content_pack');
 
                 var overriddenMeta = {
                     id: formData.packId || defaultPackId,
                     version: formData.packVersion || '1.0',
-                    name: formData.packName || pm.name || '',
+                    name: formData.packName || pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : ''),
                     author: formData.packAuthor || pm.author || '',
                     description: formData.packDescription || pm.description || '',
                     enable_auto_pack: pm.enable_auto_pack !== false,

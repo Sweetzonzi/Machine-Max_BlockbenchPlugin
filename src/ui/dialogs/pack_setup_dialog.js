@@ -422,7 +422,8 @@ function showCreatePackDialog(config, onSave) {
                     type: 'info',
                     text: '<span style="color:#888;font-size:11px">' +
                         '提示：创建完成后将立即进入依赖管理界面。' +
-                        '建议选择官方内容包作为依赖以获取材料、连接点、子系统定义。' +
+                        '基础定义（通用连接点、子系统模板、材料）已内置，无需额外依赖。' +
+                        '如果需要官方车辆零件（如 AE86、Jeep 等车型），可添加 machine_max:official 作为依赖。' +
                         '</span>',
                 },
             },
@@ -443,10 +444,10 @@ function showCreatePackDialog(config, onSave) {
                 var packDirPath = path.join(parentDir, folderName);
 
                 // ---- 构建 meta（不含依赖，依赖在路径编辑器后单独补充） ----
+                // 注意：meta.json 中没有 name 字段，包显示名称由文件夹名决定
                 var meta = {
                     id: packId,
                     version: formData.packVersion || '1.0',
-                    name: formData.packName || '',
                     author: formData.packAuthor || '',
                     description: formData.packDescription || '',
                 };
@@ -465,7 +466,7 @@ function showCreatePackDialog(config, onSave) {
                 persistence.saveConfig();
 
                 var namespace = result.namespace || '';
-                var displayName = meta.name || packId;
+                var displayName = folderName || packId.split(':').pop() || packId;
                 log.info('内容包创建成功', { path: packDirPath, namespace: namespace, id: packId, name: displayName });
 
                 this.hide();
@@ -567,7 +568,7 @@ function showOpenPackDialog(config, onSave) {
                 config.namespace = result.namespace || '';
                 config.packMeta = meta;
                 persistence.saveConfig();
-                var displayName = meta.name || result.namespace || '';
+                var displayName = path.basename(dirPath) || result.namespace || '';
                 showToast('内容包 ' + displayName + ' 已加载', 'positive', 5000);
                 log.info('内容包已打开', { path: dirPath, namespace: result.namespace, id: meta.id });
 

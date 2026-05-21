@@ -45,6 +45,7 @@ function listConnectors(config) {
     }
 
     log.debug('listConnectors: 共 ' + result.length + ' 个连接器');
+    log.debug('listConnectors: 来源分布', result.map(function (r) { return r.id + '=' + r.source; }));
     return result;
 }
 

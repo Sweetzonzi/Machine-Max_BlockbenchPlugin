@@ -1,5 +1,5 @@
 // ============================================================
-// MachineMax Blockbench Plugin v0.1.1
+// MachineMax Blockbench Plugin v0.1.2
 // 打包文件 — 由 scripts/build.js 自动生成
 // 源文件在 src/ 目录，修改后运行 npm run build 重新生成
 // ============================================================
@@ -23,7 +23,7 @@
   var define_BUILTIN_CONNECTORS_default;
   var init_define_BUILTIN_CONNECTORS = __esm({
     "<define:__BUILTIN_CONNECTORS__>"() {
-      define_BUILTIN_CONNECTORS_default = { ae86at_left_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 40, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:chassis", "machine_max:hull"], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 1, stiffness: 28e3, damping: 1500 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: 1, upper_limit: 15, equilibrium: 1, stiffness: 5e4, damping: 1e3 } } }, ae86at_left_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 40, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:chassis", "machine_max:hull"], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 1, stiffness: 28e3, damping: 1500 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 4e3, damping: 20 }, zr: { lower_limit: 1, upper_limit: 15, equilibrium: 1, stiffness: 5e4, damping: 1e3 } } }, ae86at_right_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 40, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:chassis", "machine_max:hull"], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 1, stiffness: 28e3, damping: 1500 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: -15, upper_limit: -1, equilibrium: -1, stiffness: 5e4, damping: 1e3 } } }, ae86at_right_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 40, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:chassis", "machine_max:hull"], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 1, stiffness: 28e3, damping: 1500 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 4e3, damping: 20 }, zr: { lower_limit: -15, upper_limit: -1, equilibrium: -1, stiffness: 5e4, damping: 1e3 } } }, ae86_left_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 40, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: [], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 1, equilibrium: -0.15, stiffness: 18e3, damping: 1e3 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: 1, upper_limit: 15, equilibrium: 1, stiffness: 5e4, damping: 1e3 } } }, ae86_left_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 40, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: [], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 1, equilibrium: -0.15, stiffness: 18e3, damping: 1e3 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 4e3, damping: 20 }, zr: { lower_limit: 1, upper_limit: 15, equilibrium: 1, stiffness: 5e4, damping: 1e3 } } }, ae86_right_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 40, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: [], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 1, equilibrium: -0.15, stiffness: 18e3, damping: 1e3 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: -15, upper_limit: -1, equilibrium: -1, stiffness: 5e4, damping: 1e3 } } }, ae86_right_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 40, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: [], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 1, equilibrium: -0.15, stiffness: 18e3, damping: 1e3 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 4e3, damping: 20 }, zr: { lower_limit: -15, upper_limit: -1, equilibrium: -1, stiffness: 5e4, damping: 1e3 } } }, dayun_hull_axis: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "yp", integrity: 1500, impact_reduction: 3, impact_multiplier: 0.8, joint_attrs: { xr: { lower_limit: 55, upper_limit: 0, equilibrium: 35, stiffness: 1e4, damping: 500 } } }, dayun_left_steering_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 1500, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: [], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 0.5, equilibrium: -0.2, stiffness: 7e4, damping: 3200 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 6e3, damping: 20 }, zr: { lower_limit: 1, upper_limit: 5, equilibrium: 1, stiffness: 1e5, damping: 2500 } } }, dayun_left_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 1500, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: [], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 0.6, equilibrium: -0.15, stiffness: 12e4, damping: 3500 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: 1, upper_limit: 8, equilibrium: 1, stiffness: 12e4, damping: 3500 } } }, dayun_right_steering_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 1500, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: [], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 0.5, equilibrium: -0.2, stiffness: 7e4, damping: 3200 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 6e3, damping: 20 }, zr: { lower_limit: -5, upper_limit: -1, equilibrium: -1, stiffness: 1e5, damping: 2500 } } }, dayun_right_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 1500, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: [], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 0.6, equilibrium: -0.15, stiffness: 12e4, damping: 3500 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: -8, upper_limit: -1, equilibrium: -1, stiffness: 12e4, damping: 3500 } } }, dayun_trailer: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "yp", integrity: 1500, impact_reduction: 3, impact_multiplier: 0.8, joint_attrs: { xr: { lower_limit: -10, upper_limit: 10, damping: 500 }, yr: { lower_limit: -85, upper_limit: 85, damping: 500 }, zr: { lower_limit: -5, upper_limit: 5, stiffness: 1e4, damping: 1e3 } } }, fixed_back: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "zp", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_down: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "yn", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_front: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "zn", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_left: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "xn", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_right: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "xp", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_up: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "yp", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, jeep_left_steering_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 100, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], forbidden_tags: ["machine_max:chassis", "machine_max:hull"], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 1, equilibrium: -0.15, stiffness: 55e3, damping: 2500 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 20 }, zr: { lower_limit: -1, upper_limit: 5, equilibrium: -1, stiffness: 2e4, damping: 500 } } }, jeep_left_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 100, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:chassis", "machine_max:hull"], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 1, equilibrium: -0.15, stiffness: 55e3, damping: 2500 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: -1, upper_limit: 5, equilibrium: -1, stiffness: 2e4, damping: 500 } } }, jeep_right_steering_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 100, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:chassis", "machine_max:hull"], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 1, equilibrium: -0.15, stiffness: 55e3, damping: 2500 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 20 }, zr: { lower_limit: -5, upper_limit: 1, equilibrium: 1, stiffness: 2e4, damping: 500 } } }, jeep_right_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 100, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:chassis", "machine_max:hull"], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 1, equilibrium: -0.15, stiffness: 55e3, damping: 2500 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: -5, upper_limit: 1, equilibrium: 1, stiffness: 2e4, damping: 500 } } }, kluo_back_bumper_left: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zp", required_tags: ["machine_max:back", "machine_max:bumper"], integrity: 30, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 5e3, damping: 100 } } }, kluo_back_bumper_right: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zp", required_tags: ["machine_max:back", "machine_max:bumper"], integrity: 30, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 5e3, damping: 100 } } }, kluo_front_bumper_left: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zn", required_tags: ["machine_max:front", "machine_max:bumper"], integrity: 30, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 5e3, damping: 100 } } }, kluo_front_bumper_right: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zn", required_tags: ["machine_max:front", "machine_max:bumper"], integrity: 30, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 5e3, damping: 100 } } }, kluo_front_light_left: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zn", integrity: 10, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 4e3, damping: 100 } } }, kluo_front_light_right: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zn", integrity: 10, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 4e3, damping: 100 } } }, kluo_hood_axis: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", required_tags: ["machine_max:hood"], integrity: 20, joint_attrs: { xr: { lower_limit: -80, upper_limit: 0, equilibrium: -45, stiffness: 1e3, damping: 100 } } }, kluo_left_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 30, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 12e3, damping: 300 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: 1, upper_limit: 5, equilibrium: 1, stiffness: 6e3, damping: 85 } } }, kluo_left_door_axis: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", required_tags: ["machine_max:left", "machine_max:door"], integrity: 20, joint_attrs: { yr: { lower_limit: 0, upper_limit: 80, damping: 100 } } }, kluo_left_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 30, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 12e3, damping: 300 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 20 }, zr: { lower_limit: 1, upper_limit: 5, equilibrium: 1, stiffness: 6e3, damping: 85 } } }, kluo_right_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 30, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 12e3, damping: 300 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: -5, upper_limit: -1, equilibrium: -1, stiffness: 6e3, damping: 85 } } }, kluo_right_door_axis: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", required_tags: ["machine_max:right", "machine_max:door"], integrity: 20, joint_attrs: { yr: { lower_limit: -80, upper_limit: 0, damping: 100 } } }, kluo_right_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 30, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 12e3, damping: 300 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 20 }, zr: { lower_limit: -5, upper_limit: -1, equilibrium: -1, stiffness: 6e3, damping: 85 } } }, kluo_trunk_door_axis: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", required_tags: ["machine_max:trunk"], integrity: 20, joint_attrs: { xr: { lower_limit: 80, upper_limit: 0, equilibrium: 45, stiffness: 1e3, damping: 100 } } }, mini_ev_left_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 40, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1, equilibrium: -0.1, stiffness: 2e4, damping: 1e3 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: 1, upper_limit: 15, equilibrium: 1, stiffness: 25e3, damping: 1e3 } } }, mini_ev_left_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 40, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1, equilibrium: -0.1, stiffness: 2e4, damping: 1e3 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 4e3, damping: 20 }, zr: { lower_limit: 1, upper_limit: 15, equilibrium: 1, stiffness: 25e3, damping: 1e3 } } }, mini_ev_right_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 40, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1, equilibrium: -0.1, stiffness: 2e4, damping: 1e3 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: -15, upper_limit: -1, equilibrium: -1, stiffness: 25e3, damping: 1e3 } } }, mini_ev_right_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 40, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1, equilibrium: -0.1, stiffness: 2e4, damping: 1e3 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 4e3, damping: 20 }, zr: { lower_limit: -15, upper_limit: -1, equilibrium: -1, stiffness: 25e3, damping: 1e3 } } }, r700_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 30, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 15e3, damping: 450 }, xr: { lower_limit: 1, upper_limit: -1 } } }, r700_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 30, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 15e3, damping: 450 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, damping: 20 } } }, senna_gtr_back_bumper_left: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zp", required_tags: ["machine_max:back", "machine_max:bumper"], integrity: 30, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 5e3, damping: 100 } } }, senna_gtr_back_bumper_right: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zp", required_tags: ["machine_max:back", "machine_max:bumper"], integrity: 30, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 5e3, damping: 100 } } }, senna_gtr_front_bumper_left: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zn", required_tags: ["machine_max:front", "machine_max:bumper"], integrity: 30, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 5e3, damping: 100 } } }, senna_gtr_front_bumper_right: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zn", required_tags: ["machine_max:front", "machine_max:bumper"], integrity: 30, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 5e3, damping: 100 } } }, senna_gtr_left_door_axis: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "yp", required_tags: ["machine_max:left", "machine_max:door"], integrity: 20, joint_attrs: { zr: { lower_limit: 0, upper_limit: 80, equilibrium: 80, stiffness: 500, damping: 200 } } }, senna_gtr_left_steering_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 60, required_tags: ["machine_max:left", "machine_max:front"], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 0.5, equilibrium: -0.1, stiffness: 65e3, damping: 1500 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 200 } } }, senna_gtr_left_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 60, required_tags: ["machine_max:left", "machine_max:back"], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 0.5, equilibrium: -0.1, stiffness: 65e3, damping: 1500 }, xr: { lower_limit: 1, upper_limit: -1 } } }, senna_gtr_right_door_axis: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "yp", required_tags: ["machine_max:right", "machine_max:door"], integrity: 20, joint_attrs: { zr: { lower_limit: -80, upper_limit: 0, equilibrium: -80, stiffness: 500, damping: 200 } } }, senna_gtr_right_steering_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 60, required_tags: ["machine_max:right", "machine_max:front"], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 0.5, equilibrium: -0.1, stiffness: 65e3, damping: 1500 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 200 } } }, senna_gtr_right_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 60, required_tags: ["machine_max:right", "machine_max:back"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 0.5, equilibrium: -0.1, stiffness: 65e3, damping: 1500 }, xr: { lower_limit: 1, upper_limit: -1 } } }, szn_left_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 80, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1, equilibrium: -0.1, stiffness: 5e3, damping: 200 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 20 }, zr: { lower_limit: 1, upper_limit: 15, equilibrium: 1, stiffness: 15e3, damping: 300 } } }, szn_left_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 80, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1, equilibrium: -0.1, stiffness: 5e3, damping: 200 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 20 }, zr: { lower_limit: 1, upper_limit: 15, equilibrium: 1, stiffness: 15e3, damping: 300 } } }, szn_right_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 80, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1, equilibrium: -0.1, stiffness: 5e3, damping: 200 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 20 }, zr: { lower_limit: -15, upper_limit: -1, equilibrium: -1, stiffness: 15e3, damping: 300 } } }, szn_right_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 80, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1, equilibrium: -0.1, stiffness: 5e3, damping: 200 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 20 }, zr: { lower_limit: -15, upper_limit: -1, equilibrium: -1, stiffness: 15e3, damping: 300 } } }, van_back_door_axis_hull: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "yn", required_tags: ["machine_max:trunk"], integrity: 80, joint_attrs: { xr: { lower_limit: 80, upper_limit: 0, equilibrium: 45, stiffness: 1e3, damping: 100 } } }, van_left_back_door_axis_hull: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", required_tags: ["machine_max:left", "machine_max:door"], integrity: 40, joint_attrs: { x: { lower_limit: -0.1, upper_limit: 0, equilibrium: -0.1, stiffness: 1e3, damping: 100 }, z: { lower_limit: 0, upper_limit: 1, equilibrium: 1, stiffness: 1e3, damping: 100 } } }, van_left_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 60, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 22e3, damping: 500 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: 1, upper_limit: 5, equilibrium: 1, stiffness: 6e3, damping: 85 } } }, van_left_front_door_axis_hull: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", required_tags: ["machine_max:left", "machine_max:door"], integrity: 40, joint_attrs: { yr: { lower_limit: 0, upper_limit: 80, damping: 100 } } }, van_left_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 60, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 22e3, damping: 500 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 20 }, zr: { lower_limit: 1, upper_limit: 5, equilibrium: 1, stiffness: 6e3, damping: 85 } } }, van_right_back_door_axis_hull: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", required_tags: ["machine_max:right", "machine_max:door"], integrity: 40, joint_attrs: { x: { lower_limit: 0, upper_limit: 0.1, equilibrium: 0.1, stiffness: 1e3, damping: 100 }, z: { lower_limit: 0, upper_limit: 1, equilibrium: 1, stiffness: 1e3, damping: 100 } } }, van_right_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 60, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 22e3, damping: 500 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: -5, upper_limit: -1, equilibrium: -1, stiffness: 6e3, damping: 85 } } }, van_right_front_door_axis_hull: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", required_tags: ["machine_max:right", "machine_max:door"], integrity: 40, joint_attrs: { yr: { lower_limit: -80, upper_limit: 0, damping: 100 } } }, van_right_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 60, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 22e3, damping: 500 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 20 }, zr: { lower_limit: -5, upper_limit: -1, equilibrium: -1, stiffness: 6e3, damping: 85 } } }, vn_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 40, forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 0.5, equilibrium: -0.1, stiffness: 25e3, damping: 550 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, damping: 20 } } }, vn_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 40, forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -0.5, upper_limit: 0.5, equilibrium: 0, stiffness: 25e3, damping: 550 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, damping: 20 } } }, wine_fox_back_bumper_left: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zp", required_tags: ["machine_max:back", "machine_max:bumper"], integrity: 10, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 5e3, damping: 100 } } }, wine_fox_back_bumper_right: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zp", required_tags: ["machine_max:back", "machine_max:bumper"], integrity: 10, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 5e3, damping: 100 } } }, wine_fox_front_bumper_left: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zn", required_tags: ["machine_max:front", "machine_max:bumper"], integrity: 10, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 5e3, damping: 100 } } }, wine_fox_front_bumper_right: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zn", required_tags: ["machine_max:front", "machine_max:bumper"], integrity: 10, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 5e3, damping: 100 } } }, wine_fox_front_light_left: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zn", integrity: 10, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 4e3, damping: 100 } } }, wine_fox_front_light_right: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zn", integrity: 10, joint_attrs: { zr: { lower_limit: -30, upper_limit: 30, equilibrium: 0, stiffness: 4e3, damping: 100 } } }, wine_fox_hood_axis: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", required_tags: ["machine_max:hood"], integrity: 20, joint_attrs: { xr: { lower_limit: -80, upper_limit: 0, equilibrium: -45, stiffness: 1e3, damping: 100 } } }, wine_fox_left_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 30, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 22e3, damping: 500 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: 1, upper_limit: 5, equilibrium: 1, stiffness: 6e3, damping: 85 } } }, wine_fox_left_door_axis: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", required_tags: ["machine_max:left", "machine_max:door"], integrity: 20, joint_attrs: { yr: { lower_limit: 0, upper_limit: 80, damping: 100 } } }, wine_fox_left_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 30, required_tags: ["machine_max:left"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 22e3, damping: 500 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 20 }, zr: { lower_limit: 1, upper_limit: 5, equilibrium: 1, stiffness: 6e3, damping: 85 } } }, wine_fox_right_back_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 30, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 22e3, damping: 500 }, xr: { lower_limit: 1, upper_limit: -1 }, zr: { lower_limit: -5, upper_limit: -1, equilibrium: -1, stiffness: 6e3, damping: 85 } } }, wine_fox_right_door_axis: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", required_tags: ["machine_max:right", "machine_max:door"], integrity: 20, joint_attrs: { yr: { lower_limit: -80, upper_limit: 0, damping: 100 } } }, wine_fox_right_front_wheel: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 30, required_tags: ["machine_max:right"], acceptable_tags: [], forbidden_tags: ["machine_max:hull", "machine_max:chassis"], joint_attrs: { y: { lower_limit: -1, upper_limit: 1.5, equilibrium: -0.1, stiffness: 22e3, damping: 500 }, xr: { lower_limit: 1, upper_limit: -1 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 1e3, damping: 20 }, zr: { lower_limit: -5, upper_limit: -1, equilibrium: -1, stiffness: 6e3, damping: 85 } } }, wine_fox_trunk_door_axis: { $schema: "../../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", required_tags: ["machine_max:trunk"], integrity: 20, joint_attrs: { xr: { lower_limit: 80, upper_limit: 0, equilibrium: 45, stiffness: 1e3, damping: 100 } } } };
+      define_BUILTIN_CONNECTORS_default = { fixed_back: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "zp", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_down: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "yn", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_front: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "zn", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_left: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "xn", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_right: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "xp", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_up: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "yp", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, heavy_left_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 80, impact_absorption: 0.12, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], joint_attrs: { y: { lower_limit: -0.2, upper_limit: 0.25, stiffness: 6e4, damping: 3e3 }, yr: { lower_limit: -40, upper_limit: 40, stiffness: 8e3, damping: 50 } } }, heavy_left_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 80, impact_absorption: 0.12, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:left"], joint_attrs: { y: { lower_limit: -0.2, upper_limit: 0.25, stiffness: 6e4, damping: 3e3 } } }, heavy_right_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 80, impact_absorption: 0.12, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:right"], joint_attrs: { y: { lower_limit: -0.2, upper_limit: 0.25, stiffness: 6e4, damping: 3e3 }, yr: { lower_limit: -40, upper_limit: 40, stiffness: 8e3, damping: 50 } } }, heavy_right_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 80, impact_absorption: 0.12, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:right"], joint_attrs: { y: { lower_limit: -0.2, upper_limit: 0.25, stiffness: 6e4, damping: 3e3 } } }, light_left_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 30, impact_absorption: 0.15, impact_reduction: 1, impact_multiplier: 1, required_tags: ["machine_max:left"], joint_attrs: { y: { lower_limit: -0.1, upper_limit: 0.15, stiffness: 15e3, damping: 800 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 2e3, damping: 15 } } }, light_left_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 30, impact_absorption: 0.15, impact_reduction: 1, impact_multiplier: 1, required_tags: ["machine_max:left"], joint_attrs: { y: { lower_limit: -0.1, upper_limit: 0.15, stiffness: 15e3, damping: 800 } } }, light_right_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 30, impact_absorption: 0.15, impact_reduction: 1, impact_multiplier: 1, required_tags: ["machine_max:right"], joint_attrs: { y: { lower_limit: -0.1, upper_limit: 0.15, stiffness: 15e3, damping: 800 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 2e3, damping: 15 } } }, light_right_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 30, impact_absorption: 0.15, impact_reduction: 1, impact_multiplier: 1, required_tags: ["machine_max:right"], joint_attrs: { y: { lower_limit: -0.1, upper_limit: 0.15, stiffness: 15e3, damping: 800 } } }, medium_left_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 45, impact_absorption: 0.15, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:left"], joint_attrs: { y: { lower_limit: -0.15, upper_limit: 0.2, stiffness: 3e4, damping: 1500 }, yr: { lower_limit: -35, upper_limit: 35, stiffness: 4e3, damping: 25 } } }, medium_left_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 45, impact_absorption: 0.15, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:left"], joint_attrs: { y: { lower_limit: -0.15, upper_limit: 0.2, stiffness: 3e4, damping: 1500 } } }, medium_right_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 45, impact_absorption: 0.15, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:right"], joint_attrs: { y: { lower_limit: -0.15, upper_limit: 0.2, stiffness: 3e4, damping: 1500 }, yr: { lower_limit: -35, upper_limit: 35, stiffness: 4e3, damping: 25 } } }, medium_right_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 45, impact_absorption: 0.15, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:right"], joint_attrs: { y: { lower_limit: -0.15, upper_limit: 0.2, stiffness: 3e4, damping: 1500 } } } };
     }
   });
 
@@ -39,7 +39,7 @@
   var define_BUILTIN_PACK_META_default;
   var init_define_BUILTIN_PACK_META = __esm({
     "<define:__BUILTIN_PACK_META__>"() {
-      define_BUILTIN_PACK_META_default = { id: "machine_max:official", version: "1.0", author: "\u4F5C\u8005", description: "\u63CF\u8FF0\u4FE1\u606F", dependencies: [{ id: "machine_max:builtin", type: "hard" }] };
+      define_BUILTIN_PACK_META_default = { id: "machine_max:builtin", version: "1.0", author: "\u4F5C\u8005", description: "\u63CF\u8FF0\u4FE1\u606F" };
     }
   });
 
@@ -47,7 +47,7 @@
   var define_BUILTIN_SUBSYSTEMS_default;
   var init_define_BUILTIN_SUBSYSTEMS = __esm({
     "<define:__BUILTIN_SUBSYSTEMS__>"() {
-      define_BUILTIN_SUBSYSTEMS_default = { ae86_back_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 300, roll: { max_drive_force: 2500, max_brake_force: 1500, max_hand_brake_force: 2500, max_speed: 2500 }, steering: { max_force: 0, max_speed: 0 }, abs_enabled: false, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.469, control_inputs: ["car_control"] }, ae86_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 150, manual_gear_shift: false, auto_hand_brake: true, steering_center: [0, 0, 2.4036], min_steering_radius: 4, lateral_acceleration: 40, max_drift_angular_velocity: 9.42, control_inputs: ["move_control"] }, ae86_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 220, max_power: 96941, max_torque: 186, idle_rpm: 1200, idle_rpm_torque_ratio: 0.333, max_torque_rpm: 5200, red_line_rpm: 7500, red_line_torque_ratio: 0.91, inertia: 20, damping_factors: [2, 0.03, 2e-5], sounds: { on_activate: { sound_id: "machine_max:subsystem.engine.i4_start", range: 64 }, on_deactivate: { sound_id: "machine_max:subsystem.engine.i4_stop", range: 64 }, working_sounds: { "800.0": { sound_id: "machine_max:subsystem.engine.i4_800", range: 64 }, "2000.0": { sound_id: "machine_max:subsystem.engine.i4_2000", range: 64 }, "3000.0": { sound_id: "machine_max:subsystem.engine.i4_3000", range: 64 }, "4000.0": { sound_id: "machine_max:subsystem.engine.i4_4000", range: 64 }, "5000.0": { sound_id: "machine_max:subsystem.engine.i4_5000", range: 64 }, "6000.0": { sound_id: "machine_max:subsystem.engine.i4_6000", range: 64 }, "7000.0": { sound_id: "machine_max:subsystem.engine.i4_7000", range: 64 } } } }, ae86_front_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 300, roll: { max_drive_force: 0, max_brake_force: 1500, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 4e3, max_speed: 3.14 }, abs_enabled: false, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.469, control_inputs: ["car_control"] }, ae86_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 120, final_ratio: 8.5, ratios: [-3.5, 3.2, 2.5, 1.75, 1.4, 1.15], switch_time: 0.1, control_inputs: ["car_control"] }, ae86_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 400, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 10, diff_lock_inputs: ["diff_lock_control"] }, ae86at_back_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 400, roll: { max_drive_force: 3e3, max_brake_force: 2e3, max_hand_brake_force: 4500, max_speed: 3e3 }, steering: { max_force: 0, max_speed: 0 }, abs_enabled: false, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.8125, control_inputs: ["car_control"] }, ae86at_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 200, manual_gear_shift: false, auto_hand_brake: true, steering_center: [0, 0, 2.4036], min_steering_radius: 6, lateral_acceleration: 40, max_drift_angular_velocity: 1, control_inputs: ["move_control"] }, ae86at_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 270, max_power: 178968, max_torque: 179, idle_rpm: 1200, idle_rpm_torque_ratio: 0.333, max_torque_rpm: 6e3, red_line_rpm: 11e3, red_line_torque_ratio: 0.7, inertia: 18, four_stroke: true, cylinder: 4, damping_factors: [2, 0.03, 2e-5], sounds: { on_activate: { sound_id: "machine_max:subsystem.engine.i4_start", range: 64 }, on_deactivate: { sound_id: "machine_max:subsystem.engine.i4_stop", range: 64 }, working_sounds: { "1000.0": { sound_id: "machine_max:subsystem.engine.i4_1000", range: 64 }, "2000.0": { sound_id: "machine_max:subsystem.engine.i4_2000", range: 64 }, "3000.0": { sound_id: "machine_max:subsystem.engine.i4_3000", range: 64 }, "4000.0": { sound_id: "machine_max:subsystem.engine.i4_4000", range: 64 }, "5000.0": { sound_id: "machine_max:subsystem.engine.i4_5000", range: 64 }, "6000.0": { sound_id: "machine_max:subsystem.engine.i4_6000", range: 64 } } } }, ae86at_front_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 400, roll: { max_drive_force: 3e3, max_brake_force: 2e3, max_hand_brake_force: 0, max_speed: 3e3 }, steering: { max_force: 4e3, max_speed: 3.14 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.8125, control_inputs: ["car_control"] }, ae86at_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 270, final_ratio: 24.5, ratios: [-3.5, 3.2, 2.5, 1.75, 1.4, 1.15], switch_time: 0.24, control_inputs: ["car_control"] }, ae86at_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 500, diff_lock: "auto", diff_lock_sensitivity: 0.75, auto_diff_lock_threshold: 15, diff_lock_inputs: ["diff_lock_control"] }, beam_light: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "beam", range: 16, color: [255, 245, 210], intensity: 0.5, beam_angle: 24 }, container_16x16x32: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 600, rows: 6, columns: 9 }, container_16x16x8: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 1, columns: 9 }, container_16x32x32: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 800, rows: 9, columns: 12 }, dayun_back_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 700, roll: { max_drive_force: 28e3, max_brake_force: 2e4, max_hand_brake_force: 35e3, max_speed: 3540 }, steering: { max_force: 0, max_speed: 0 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.5, control_inputs: ["car_control"], sounds: { brake_on: { sound_id: "machine_max:subsystem.wheel_driver.air_brake_on", range: 16 }, brake_off: { sound_id: "machine_max:subsystem.wheel_driver.air_brake_off", range: 16 } } }, dayun_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 700, manual_gear_shift: false, auto_hand_brake: true, steering_center: [0, 0, 0.5], min_steering_radius: 7, lateral_acceleration: 20, max_drift_angular_velocity: 0.8, control_inputs: ["move_control"] }, dayun_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 700, max_power: 368e3, max_torque: 2500, idle_rpm: 550, idle_rpm_torque_ratio: 0.5, max_torque_rpm: 1200, red_line_rpm: 2200, red_line_torque_ratio: 0.65, inertia: 50, cylinder: 6, damping_factors: [15, 0.1, 1e-4], sounds: { on_activate: { sound_id: "machine_max:subsystem.engine.v8d_start", range: 64 }, on_deactivate: { sound_id: "machine_max:subsystem.engine.v8d_stop", range: 64 }, working_sounds: { "500.0": { sound_id: "machine_max:subsystem.engine.v8d_500", range: 64 }, "1000.0": { sound_id: "machine_max:subsystem.engine.v8d_1000", range: 64 }, "1500.0": { sound_id: "machine_max:subsystem.engine.v8d_1500", range: 64 }, "2000.0": { sound_id: "machine_max:subsystem.engine.v8d_2000", range: 64 } } } }, dayun_front_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 700, roll: { max_drive_force: 0, max_brake_force: 2e4, max_hand_brake_force: 0, max_speed: 3540 }, steering: { max_force: 5e3, max_speed: 1.2 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.5, control_inputs: ["car_control"], sounds: { brake_on: { sound_id: "machine_max:subsystem.wheel_driver.air_brake_on", range: 16 }, brake_off: { sound_id: "machine_max:subsystem.wheel_driver.air_brake_off", range: 16 } } }, dayun_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 620, final_ratio: 3.7, ratios: [-12.3, 12.1, 9.41, 7.31, 5.71, 4.46, 3.4, 2.7, 2.11, 1.84, 1.3, 1, 0.78], switch_time: 0.3, control_inputs: ["car_control"] }, dayun_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_person_hud: ["machine_max:example_hud_2"], enable_third_person: true, third_person_hud: ["machine_max:example_hud_2"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.1 }, allow_use_items: true }, dayun_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 800, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 10, diff_lock_inputs: ["diff_lock_control"] }, default_glass: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:basic", basic_durability: 2, pass_damage: false, limit_damage: false, sounds: { on_destroyed: { sound_id: "machine_max:subsystem.baisc.glass.break", range: 32 } }, hidden: true }, default_passenger_seat: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_seat: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_person_hud: ["machine_max:example_hud"], enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: true }, default_trunk: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 6, columns: 9 }, dummy_light: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 0, intensity: 0 }, glove_box: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 50, rows: 2, columns: 3 }, golden_closestool: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_person_hud: ["machine_max:example_hud"], enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.1 }, allow_use_items: true }, jeep_back_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 500, roll: { max_drive_force: 8e3, max_brake_force: 5e3, max_hand_brake_force: 3e3, max_speed: 3140 }, steering: { max_force: 0, max_speed: 0 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.672, control_inputs: ["car_control"] }, jeep_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 350, manual_gear_shift: false, auto_hand_brake: true, drift_assist: false, steering_center: [0, 0, 2.4036], min_steering_radius: 6.2, lateral_acceleration: 40, max_drift_angular_velocity: 1, control_inputs: ["move_control"] }, jeep_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 220, max_power: 195e3, max_torque: 400, idle_rpm: 750, idle_rpm_torque_ratio: 0.4, max_torque_rpm: 3e3, red_line_rpm: 6e3, red_line_torque_ratio: 0.6, inertia: 15, cylinder: 6, damping_factors: [3, 0.05, 5e-5] }, jeep_front_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 500, roll: { max_drive_force: 8e3, max_brake_force: 5e3, max_hand_brake_force: 0, max_speed: 3140 }, steering: { max_force: 3500, max_speed: 1.9 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.672, control_inputs: ["car_control"] }, jeep_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 220, final_ratio: 10, ratios: [-3.3, 4.71, 3.14, 2.1, 1.6, 1.29, 1.1, 0.88, 0.67], switch_time: 0.2, control_inputs: ["car_control"] }, jeep_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 500, diff_lock: "auto", diff_lock_sensitivity: 0.98, auto_diff_lock_threshold: 5, diff_lock_inputs: ["diff_lock_control"] }, kluo_back_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 2500, max_brake_force: 1500, max_hand_brake_force: 2500, max_speed: 3140 }, steering: { max_force: 0, max_speed: 0 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.375, control_inputs: ["car_control"] }, kluo_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 50, manual_gear_shift: false, auto_hand_brake: true, steering_center: [0, 0, 1.96], min_steering_radius: 3.5, lateral_acceleration: 40, max_drift_angular_velocity: 1, control_inputs: ["move_control"] }, kluo_front_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 500, max_brake_force: 2200, max_hand_brake_force: 0, max_speed: 3140 }, steering: { max_force: 2e3, max_speed: 3.14 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.375, control_inputs: ["car_control"] }, kluo_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 100, final_ratio: 8, ratios: [2, 1.3] }, kluo_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 50, max_power: 5e4, max_torque: 250, inertia: 2, damping_factors: [10, 0.1, 1e-4] }, kluo_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 50, diff_lock: "auto", diff_lock_sensitivity: 0.6, auto_diff_lock_threshold: 12 }, mini_ev_back_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 1500, max_brake_force: 400, max_hand_brake_force: 500, max_speed: 3140 }, steering: { max_force: 0, max_speed: 0 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.35, control_inputs: ["car_control"] }, mini_ev_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 100, manual_gear_shift: false, auto_hand_brake: true, steering_center: [0, 0, 2.4036], min_steering_radius: 4.2, lateral_acceleration: 40, max_drift_angular_velocity: 1, control_inputs: ["move_control"] }, mini_ev_front_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 0, max_brake_force: 800, max_hand_brake_force: 0, max_speed: 3140 }, steering: { max_force: 2e3, max_speed: 3.14 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.35, control_inputs: ["car_control"] }, mini_ev_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 145, max_power: 2e4, max_torque: 85, inertia: 10, damping_factors: [2, 0.05, 5e-5], sounds: { working_sounds: { "3000.0": { sound_id: "machine_max:subsystem.motor.elec_3000", range: 64 } } } }, mini_ev_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 290, diff_lock: "auto", diff_lock_sensitivity: 0.85, auto_diff_lock_threshold: 10, diff_lock_inputs: ["diff_lock_control"] }, point_light: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 1, color: [255, 235, 180], intensity: 0.55, beam_angle: 24 }, r700_back_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 2500, max_brake_force: 300, max_hand_brake_force: 200, max_speed: 3140 }, steering: { max_force: 0, max_speed: 0 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.3, control_inputs: ["car_control"] }, r700_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 50, max_power: 5900, max_torque: 8.8, idle_rpm: 500, idle_rpm_torque_ratio: 0.5, max_torque_rpm: 5500, red_line_rpm: 9500, red_line_torque_ratio: 0.8, inertia: 20, four_stroke: true, cylinder: 1, damping_factors: [0, 1e-4, 1e-5], sounds: { on_activate: { sound_id: "machine_max:subsystem.engine.i2_start", range: 64 }, on_deactivate: { sound_id: "machine_max:subsystem.engine.i2_stop", range: 64 }, working_sounds: { "800.0": { sound_id: "machine_max:subsystem.engine.i2_800", range: 64 }, "2000.0": { sound_id: "machine_max:subsystem.engine.i2_2000", range: 64 }, "3000.0": { sound_id: "machine_max:subsystem.engine.i2_3000", range: 64 }, "4000.0": { sound_id: "machine_max:subsystem.engine.i2_4000", range: 64 }, "5000.0": { sound_id: "machine_max:subsystem.engine.i2_5000", range: 64 }, "6000.0": { sound_id: "machine_max:subsystem.engine.i2_6000", range: 64 } } } }, r700_front_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 0, max_brake_force: 600, max_hand_brake_force: 0, max_speed: 3140 }, steering: { max_force: 500, max_speed: 3.14 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.3, control_inputs: ["car_control"] }, r700_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 50, final_ratio: 15, ratios: [-3.5, 3.5, 2.8, 2, 1.4] }, r700_motorbike_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motorbike_controller", basic_durability: 40, steering_center: [0, -0.6875, 0.85], min_steering_radius: 3.5, lateral_acceleration: 20, max_drift_angular_velocity: 1.8, control_inputs: ["move_control"], max_angle: 35, parking_angle: 5 }, senna_gtr_back_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 2500, max_brake_force: 1500, max_hand_brake_force: 700, max_speed: 3140 }, steering: { max_force: 0, max_speed: 0 }, abs_wheel_radius: 0.4531 }, senna_gtr_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 50, steering_center: [0, 0, 1.96], min_steering_radius: 4, lateral_acceleration: 60, max_drift_angular_velocity: 1 }, senna_gtr_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 50, max_power: 615202, max_torque: 800, idle_rpm: 500, idle_rpm_torque_ratio: 0.4, max_torque_rpm: 7200, red_line_rpm: 9e3, red_line_torque_ratio: 0.95, inertia: 20, cylinder: 8, damping_factors: [2, 1e-3, 1e-6], sounds: { on_activate: { sound_id: "machine_max:subsystem.engine.v8_start", range: 64 }, on_deactivate: { sound_id: "machine_max:subsystem.engine.v8_stop", range: 64 }, working_sounds: { "800.0": { sound_id: "machine_max:subsystem.engine.v8_800", range: 64 }, "2000.0": { sound_id: "machine_max:subsystem.engine.v8_2000", range: 64 }, "3000.0": { sound_id: "machine_max:subsystem.engine.v8_3000", range: 64 }, "4000.0": { sound_id: "machine_max:subsystem.engine.v8_4000", range: 64 }, "5000.0": { sound_id: "machine_max:subsystem.engine.v8_5000", range: 64 }, "6000.0": { sound_id: "machine_max:subsystem.engine.v8_6000", range: 64 } } } }, senna_gtr_front_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 0, max_brake_force: 1700, max_hand_brake_force: 0, max_speed: 3140 }, steering: { max_force: 4e3, max_speed: 6.28 }, abs_wheel_radius: 0.4218 }, senna_gtr_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 50, final_ratio: 10, ratios: [-3.5, 3.5, 2.5, 1.8, 1.4, 1, 0.7, 0.5], switch_time: 0.04 }, senna_gtr_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [0.9, 0.9, 0.9], views: { enable_first_person: true, first_person_offset: [0, -0.08, -0.15], enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, senna_gtr_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [0.9, 0.9, 0.9], views: { enable_first_person: true, first_person_hud: ["machine_max:example_hud"], first_person_offset: [0, -0.08, -0.15], enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: true }, senna_gtr_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 50, auto_diff_lock_threshold: 5, diff_lock_sensitivity: 2 }, szn_back_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 1500, max_brake_force: 600, max_hand_brake_force: 2e3, max_speed: 3140 }, steering: { max_force: 2e3, max_speed: 3.14 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.75, control_inputs: ["car_control"] }, szn_front_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 1500, max_brake_force: 1200, max_hand_brake_force: 0, max_speed: 3140 }, steering: { max_force: 2e3, max_speed: 3.14 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.75, control_inputs: ["car_control"] }, szn_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 145, max_power: 1e5, max_torque: 250, inertia: 5, damping_factors: [1, 0.05, 5e-5] }, szn_motorbike_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motorbike_controller", basic_durability: 100, steering_center: [0, -0.375, 0.117], min_steering_radius: 3, lateral_acceleration: 60, max_angle: 15, parking_angle: 0, max_drift_angular_velocity: 2 }, szn_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 290, auto_diff_lock_threshold: 5 }, van_back_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 0, max_brake_force: 500, max_hand_brake_force: 500, max_speed: 600 }, steering: { max_force: 0, max_speed: 0 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.3, control_inputs: ["car_control"] }, van_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 80, manual_gear_shift: false, auto_hand_brake: true, steering_center: [0, 0, 1.36], min_steering_radius: 5.5, lateral_acceleration: 20, max_drift_angular_velocity: 1.3, control_inputs: ["move_control"] }, van_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 50, max_power: 79e3, max_torque: 146, idle_rpm: 800, idle_rpm_torque_ratio: 0.333, max_torque_rpm: 3800, red_line_rpm: 6300, red_line_torque_ratio: 0.8, inertia: 10, damping_factors: [2, 0.03, 2e-5], sounds: { on_activate: { sound_id: "machine_max:subsystem.engine.i4_start", range: 64 }, on_deactivate: { sound_id: "machine_max:subsystem.engine.i4_stop", range: 64 }, working_sounds: { "800.0": { sound_id: "machine_max:subsystem.engine.i4_800", range: 64 }, "2000.0": { sound_id: "machine_max:subsystem.engine.i4_2000", range: 64 }, "3000.0": { sound_id: "machine_max:subsystem.engine.i4_3000", range: 64 }, "4000.0": { sound_id: "machine_max:subsystem.engine.i4_4000", range: 64 }, "5000.0": { sound_id: "machine_max:subsystem.engine.i4_5000", range: 64 }, "6000.0": { sound_id: "machine_max:subsystem.engine.i4_6000", range: 64 } } } }, van_front_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 2e3, max_brake_force: 1e3, max_hand_brake_force: 1e3, max_speed: 600 }, steering: { max_force: 1800, max_speed: 1.5 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.3, control_inputs: ["car_control"] }, van_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 100, final_ratio: 8, ratios: [-3.58, 3.73, 2.05, 1.32, 1, 0.81] }, van_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 100, diff_lock: "false", diff_lock_sensitivity: 0.85, auto_diff_lock_threshold: 10 }, vn_back_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 2500, max_brake_force: 500, max_hand_brake_force: 300, max_speed: 3140 }, steering: { max_force: 1e3, max_speed: 3.14 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.3984, control_inputs: ["car_control"] }, vn_front_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 2500, max_brake_force: 800, max_hand_brake_force: 0, max_speed: 3140 }, steering: { max_force: 1e3, max_speed: 3.14 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.3984, control_inputs: ["car_control"] }, vn_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 150, max_power: 1e5, max_torque: 250, inertia: 5, damping_factors: [1, 0.05, 5e-5] }, vn_motorbike_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motorbike_controller", basic_durability: 40, steering_center: [0, -0.25, 0], min_steering_radius: 3.5, lateral_acceleration: 20, max_drift_angular_velocity: 2, control_inputs: ["move_control"], max_angle: 75, parking_angle: 0, correction_force_multiplier: 1 }, vn_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_person_hud: ["machine_max:example_hud"], enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -30, max_pitch: 90, yaw_limit: 90 }, allow_use_items: true }, vn_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 250, diff_lock: "auto", diff_lock_sensitivity: 0.85, auto_diff_lock_threshold: 5 }, wine_fox_back_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 3500, max_brake_force: 1500, max_hand_brake_force: 3e3, max_speed: 3140 }, steering: { max_force: 0, max_speed: 0 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.375, control_inputs: ["car_control"] }, wine_fox_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 50, manual_gear_shift: false, auto_hand_brake: true, steering_center: [0, 0, 1.96], min_steering_radius: 3, lateral_acceleration: 40, max_drift_angular_velocity: 1.2, control_inputs: ["move_control"] }, wine_fox_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 50, max_power: 77e3, max_torque: 175, idle_rpm: 850, idle_rpm_torque_ratio: 0.3, max_torque_rpm: 2800, red_line_rpm: 5500, red_line_torque_ratio: 0.7, inertia: 12, damping_factors: [1.5, 0.03, 1e-5], sounds: { on_activate: { sound_id: "machine_max:subsystem.engine.i4_start", range: 64 }, on_deactivate: { sound_id: "machine_max:subsystem.engine.i4_stop", range: 64 }, working_sounds: { "800.0": { sound_id: "machine_max:subsystem.engine.i4_800", range: 64 }, "2000.0": { sound_id: "machine_max:subsystem.engine.i4_2000", range: 64 }, "3000.0": { sound_id: "machine_max:subsystem.engine.i4_3000", range: 64 }, "4000.0": { sound_id: "machine_max:subsystem.engine.i4_4000", range: 64 }, "5000.0": { sound_id: "machine_max:subsystem.engine.i4_5000", range: 64 }, "6000.0": { sound_id: "machine_max:subsystem.engine.i4_6000", range: 64 } } } }, wine_fox_front_wheel_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 100, roll: { max_drive_force: 0, max_brake_force: 1800, max_hand_brake_force: 0, max_speed: 3140 }, steering: { max_force: 2e3, max_speed: 3.14 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.375, control_inputs: ["car_control"] }, wine_fox_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 50, final_ratio: 6, ratios: [-3.8, 3.8, 2.1, 1.32, 0.89] }, wine_fox_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 50, diff_lock: "false", diff_lock_sensitivity: 0.85, auto_diff_lock_threshold: 10 } };
+      define_BUILTIN_SUBSYSTEMS_default = { default_glass: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:basic", basic_durability: 2, pass_damage: false, limit_damage: false, sounds: { on_destroyed: { sound_id: "machine_max:subsystem.baisc.glass.break", range: 32 } }, hidden: true }, large_battery: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:battery", basic_durability: 100, max_stored_energy: 5e5, max_charge_rate: 5e3, max_discharge_rate: 1e4 }, medium_battery: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:battery", basic_durability: 50, max_stored_energy: 1e5, max_charge_rate: 2e3, max_discharge_rate: 5e3 }, small_battery: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:battery", basic_durability: 20, max_stored_energy: 2e4, max_charge_rate: 500, max_discharge_rate: 1e3 }, default_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 150, steering_center: [0, 0, 1.5], min_steering_radius: 5, lateral_acceleration: 50, max_drift_angular_velocity: 2, manual_gear_shift: false, auto_hand_brake: true, drift_assist: true }, light_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 80, max_power: 8e4, max_torque: 175, idle_rpm: 850, max_torque_rpm: 4e3, red_line_rpm: 6300, red_line_torque_ratio: 0.75, inertia: 10, cylinder: 4, damping_factors: [2, 0.03, 2e-5] }, medium_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 150, max_power: 18e4, max_torque: 380, idle_rpm: 750, max_torque_rpm: 4e3, red_line_rpm: 6e3, red_line_torque_ratio: 0.65, inertia: 15, cylinder: 6, damping_factors: [2, 0.03, 2e-5] }, motorcycle_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 30, max_power: 6e3, max_torque: 9, idle_rpm: 500, max_torque_rpm: 7e3, red_line_rpm: 9500, red_line_torque_ratio: 0.7, inertia: 2, cylinder: 1, damping_factors: [1, 0.02, 1e-5] }, sport_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 100, max_power: 45e4, max_torque: 700, idle_rpm: 500, max_torque_rpm: 5500, red_line_rpm: 9e3, red_line_torque_ratio: 0.9, inertia: 20, cylinder: 8, damping_factors: [2, 0.03, 2e-5] }, truck_diesel_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 400, max_power: 37e4, max_torque: 2500, idle_rpm: 550, max_torque_rpm: 1500, red_line_rpm: 2200, red_line_torque_ratio: 0.9, inertia: 50, cylinder: 6, damping_factors: [5, 0.05, 1e-5] }, light_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 8, ratios: [-3.5, 3.5, 2.5, 1.75, 1.4, 1.15, 0.85], switch_time: 0.2 }, medium_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 150, final_ratio: 10, ratios: [-3.3, 4.71, 3.14, 2.1, 1.6, 1.29, 1.1, 0.88, 0.67], switch_time: 0.2 }, motorcycle_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 40, final_ratio: 15, ratios: [-3.5, 3.5, 2.8, 2, 1.4], switch_time: 0.15 }, simple_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 60, final_ratio: 8, ratios: [2, 1.3], switch_time: 0.1 }, sport_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 10, ratios: [-3.5, 3.5, 2.5, 1.8, 1.4, 1, 0.7, 0.5], switch_time: 0.05 }, truck_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 500, final_ratio: 3.7, ratios: [-12.3, 12.1, 9.41, 7.31, 5.71, 4.46, 3.4, 2.7, 2.11, 1.84, 1.3, 1, 0.78], switch_time: 0.3 }, default_trunk: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 6, columns: 9 }, glove_box: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 50, rows: 2, columns: 3 }, beam_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "beam", range: 16, color: [255, 245, 210], intensity: 0.5, beam_angle: 24 }, dummy_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 0, intensity: 0 }, point_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 1, color: [255, 235, 180], intensity: 0.55, beam_angle: 24 }, high_power_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 120, max_power: 15e4, max_torque: 350, red_line_rpm: 15e3, red_line_power_ratio: 0.75, inertia: 8, damping_factors: [10, 0.1, 5e-5], generator_efficiency: 0.9 }, medium_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 80, max_power: 5e4, max_torque: 250, red_line_rpm: 1e4, red_line_power_ratio: 0.8, inertia: 5, damping_factors: [10, 0.1, 1e-4], generator_efficiency: 0.85 }, small_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 50, max_power: 2e4, max_torque: 85, red_line_rpm: 12e3, red_line_power_ratio: 0.8, inertia: 3, damping_factors: [5, 0.05, 5e-5], generator_efficiency: 0.85 }, default_motorbike_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motorbike_controller", basic_durability: 60, steering_center: [0, -0.5, 0.85], min_steering_radius: 3.5, lateral_acceleration: 20, max_drift_angular_velocity: 1.8, max_angle: 35, parking_angle: 5, correction_force_multiplier: 1 }, default_passenger_seat: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_seat: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_person_hud: ["machine_max:example_hud"], enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: true }, heavy_duty_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 800, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 15 }, locked_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 400, diff_lock: "true", diff_lock_sensitivity: 1 }, open_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "false", diff_lock_sensitivity: 0.85 }, sport_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "auto", diff_lock_sensitivity: 1.5, auto_diff_lock_threshold: 5 }, standard_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 300, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 10 }, light_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 800, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 2e3, max_speed: 3.14 }, abs_enabled: true, abs_wheel_radius: 0.35 }, light_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 1500, max_brake_force: 800, max_hand_brake_force: 1e3, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.35 }, motorcycle_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 600, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 500, max_speed: 3.14 }, abs_enabled: true, abs_wheel_radius: 0.3 }, motorcycle_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 2500, max_brake_force: 300, max_hand_brake_force: 200, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.3 }, sport_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 0, max_brake_force: 2e3, max_hand_brake_force: 0, max_speed: 3e3 }, steering: { max_force: 5e3, max_speed: 6.28 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, sport_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 5e3, max_brake_force: 2e3, max_hand_brake_force: 3e3, max_speed: 3e3 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, standard_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 0, max_brake_force: 1500, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 4e3, max_speed: 3.14 }, abs_enabled: false, abs_wheel_radius: 0.4 }, standard_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 2500, max_brake_force: 1500, max_hand_brake_force: 2500, max_speed: 2500 }, abs_enabled: false, abs_wheel_radius: 0.4 }, truck_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 0, max_brake_force: 2e4, max_hand_brake_force: 0, max_speed: 1e3 }, steering: { max_force: 5e3, max_speed: 1.5 }, abs_enabled: true, abs_wheel_radius: 0.5 }, truck_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 28e3, max_brake_force: 2e4, max_hand_brake_force: 35e3, max_speed: 1e3 }, abs_enabled: true, abs_wheel_radius: 0.5 } };
     }
   });
 
@@ -4580,9 +4580,13 @@
       function walkDefFiles(dir, ext) {
         var results, entries, i, j, entryName, fullPath, stat, subResults, defId;
         results = [];
-        if (!fs.existsSync(dir)) return results;
+        if (!fs.existsSync(dir)) {
+          log2.debug("walkDefFiles: \u76EE\u5F55\u4E0D\u5B58\u5728 " + dir);
+          return results;
+        }
         try {
           entries = fs.readdirSync(dir);
+          log2.debug("walkDefFiles: \u626B\u63CF\u76EE\u5F55 " + dir + " \u627E\u5230 " + entries.length + " \u4E2A\u6761\u76EE");
           for (i = 0; i < entries.length; i++) {
             entryName = entries[i];
             fullPath = path.join(dir, entryName);
@@ -4595,6 +4599,7 @@
             } else if (path.extname(entryName) === ext) {
               defId = path.basename(entryName, ext);
               results.push({ filePath: fullPath, id: defId });
+              log2.debug("walkDefFiles: \u627E\u5230\u6587\u4EF6 id=" + defId + " path=" + fullPath);
             }
           }
         } catch (e) {
@@ -4640,10 +4645,17 @@
         }
         allFiles = handle.listFiles();
         prefix = namespace + "/" + type + "/";
+        log2.debug("_readZipDefs: ZIP=" + zipPath + " \u524D\u7F00=" + prefix + " \u603B\u6587\u4EF6\u6570=" + allFiles.length);
         for (i = 0; i < allFiles.length; i++) {
           filePath = allFiles[i];
-          if (filePath.indexOf(prefix) !== 0) continue;
-          if (!filePath.endsWith(".json")) continue;
+          if (filePath.indexOf(prefix) !== 0) {
+            log2.debug("_readZipDefs: \u8DF3\u8FC7\uFF08\u524D\u7F00\u4E0D\u5339\u914D\uFF09 " + filePath);
+            continue;
+          }
+          if (!filePath.endsWith(".json")) {
+            log2.debug("_readZipDefs: \u8DF3\u8FC7\uFF08\u975E .json\uFF09 " + filePath);
+            continue;
+          }
           defId = path.basename(filePath, ".json");
           if (!defId) continue;
           try {
@@ -4654,12 +4666,13 @@
             }
             parsed = JSON.parse(contentStr.toString("utf-8"));
             result[defId] = parsed;
-            log2.debug("_readZipDefs: \u5DF2\u8BFB\u53D6 " + filePath);
+            log2.debug("_readZipDefs: \u5DF2\u8BFB\u53D6 id=" + defId + " path=" + filePath);
           } catch (e) {
             log2.warn("_readZipDefs: JSON \u89E3\u6790\u5931\u8D25\uFF0C\u8DF3\u8FC7 " + filePath, e);
           }
         }
         log2.info("_readZipDefs: " + type + " \u4ECE ZIP \u8BFB\u53D6\u5B8C\u6210\uFF0C\u5171 " + Object.keys(result).length + " \u4E2A\u5B9A\u4E49");
+        log2.debug("_readZipDefs: " + type + " \u952E\u5217\u8868", Object.keys(result));
         return result;
       }
       function resolveNamespace(packId) {
@@ -4775,15 +4788,19 @@
         try {
           meta = readPackMeta(packPath);
           if (meta === null) {
+            log2.warn("openContentPack: meta.json \u8BFB\u53D6\u5931\u8D25\u6216\u4E0D\u5B58\u5728: " + packPath);
             return { valid: false, meta: null, namespace: "", error: "meta.json \u8BFB\u53D6\u5931\u8D25\u6216\u4E0D\u5B58\u5728" };
           }
           if (!meta.id) {
+            log2.warn("openContentPack: meta.id \u4E3A\u7A7A\uFF0C\u8DEF\u5F84=" + packPath);
             return { valid: false, meta, namespace: "", error: "meta.id \u4E3A\u7A7A" };
           }
           namespace = resolveNamespace(meta.id);
           if (!namespace) {
+            log2.warn("openContentPack: \u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace: " + meta.id);
             return { valid: false, meta, namespace: "", error: "\u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace" };
           }
+          log2.debug("openContentPack: meta.id=" + meta.id + " -> namespace=" + namespace);
           var requiredDirs = [
             path.join(packPath, namespace, "materials"),
             path.join(packPath, namespace, "connectors"),
@@ -4791,6 +4808,7 @@
           ];
           for (i = 0; i < requiredDirs.length; i++) {
             if (!fs.existsSync(requiredDirs[i])) {
+              log2.warn("openContentPack: \u7F3A\u5C11\u5FC5\u8981\u76EE\u5F55: " + requiredDirs[i]);
               return {
                 valid: false,
                 meta,
@@ -4812,22 +4830,24 @@
           return _readZipDefs(packDir, namespace, type);
         }
         typeDir = path.join(packDir, namespace, type);
+        log2.debug("readAllDefs: \u67E5\u627E\u76EE\u5F55 " + typeDir + " (packDir=" + packDir + ", namespace=" + namespace + ")");
         if (!fs.existsSync(typeDir)) {
           log2.debug("readAllDefs: \u76EE\u5F55\u4E0D\u5B58\u5728 " + typeDir);
           return {};
         }
         files = walkDefFiles(typeDir, ".json");
+        log2.debug("readAllDefs: walkDefFiles \u627E\u5230 " + files.length + " \u4E2A\u6587\u4EF6");
         result = {};
         for (i = 0; i < files.length; i++) {
           try {
             raw = fs.readFileSync(files[i].filePath, "utf-8");
             result[files[i].id] = JSON.parse(raw);
-            log2.debug("readAllDefs: \u5DF2\u8BFB\u53D6 " + files[i].filePath);
+            log2.debug("readAllDefs: \u5DF2\u8BFB\u53D6 id=" + files[i].id + " path=" + files[i].filePath);
           } catch (e) {
             log2.warn("readAllDefs: JSON \u89E3\u6790\u5931\u8D25\uFF0C\u8DF3\u8FC7 " + files[i].filePath, e);
           }
         }
-        log2.info("readAllDefs: \u5B8C\u6210", { type, count: Object.keys(result).length });
+        log2.info("readAllDefs: \u5B8C\u6210", { type, dir: typeDir, count: Object.keys(result).length, ids: Object.keys(result) });
         return result;
       }
       function writeDef(packDir, namespace, type, defId, data) {
@@ -5628,7 +5648,7 @@
               },
               depNote: {
                 type: "info",
-                text: '<span style="color:#888;font-size:11px">\u63D0\u793A\uFF1A\u521B\u5EFA\u5B8C\u6210\u540E\u5C06\u7ACB\u5373\u8FDB\u5165\u4F9D\u8D56\u7BA1\u7406\u754C\u9762\u3002\u5EFA\u8BAE\u9009\u62E9\u5B98\u65B9\u5185\u5BB9\u5305\u4F5C\u4E3A\u4F9D\u8D56\u4EE5\u83B7\u53D6\u6750\u6599\u3001\u8FDE\u63A5\u70B9\u3001\u5B50\u7CFB\u7EDF\u5B9A\u4E49\u3002</span>'
+                text: '<span style="color:#888;font-size:11px">\u63D0\u793A\uFF1A\u521B\u5EFA\u5B8C\u6210\u540E\u5C06\u7ACB\u5373\u8FDB\u5165\u4F9D\u8D56\u7BA1\u7406\u754C\u9762\u3002\u57FA\u7840\u5B9A\u4E49\uFF08\u901A\u7528\u8FDE\u63A5\u70B9\u3001\u5B50\u7CFB\u7EDF\u6A21\u677F\u3001\u6750\u6599\uFF09\u5DF2\u5185\u7F6E\uFF0C\u65E0\u9700\u989D\u5916\u4F9D\u8D56\u3002\u5982\u679C\u9700\u8981\u5B98\u65B9\u8F66\u8F86\u96F6\u4EF6\uFF08\u5982 AE86\u3001Jeep \u7B49\u8F66\u578B\uFF09\uFF0C\u53EF\u6DFB\u52A0 machine_max:official \u4F5C\u4E3A\u4F9D\u8D56\u3002</span>'
               }
             },
             onConfirm: function(formData) {
@@ -5647,7 +5667,6 @@
               var meta = {
                 id: packId,
                 version: formData.packVersion || "1.0",
-                name: formData.packName || "",
                 author: formData.packAuthor || "",
                 description: formData.packDescription || ""
               };
@@ -5661,7 +5680,7 @@
               config.packMeta = meta;
               persistence.saveConfig();
               var namespace = result.namespace || "";
-              var displayName = meta.name || packId;
+              var displayName = folderName || packId.split(":").pop() || packId;
               log2.info("\u5185\u5BB9\u5305\u521B\u5EFA\u6210\u529F", { path: packDirPath, namespace, id: packId, name: displayName });
               this.hide();
               _showDependencyPathEditor([], parentDir, { defaultKeepAdding: false }, function(resolved) {
@@ -5729,7 +5748,7 @@
               config.namespace = result.namespace || "";
               config.packMeta = meta;
               persistence.saveConfig();
-              var displayName = meta.name || result.namespace || "";
+              var displayName = path.basename(dirPath) || result.namespace || "";
               showToast2("\u5185\u5BB9\u5305 " + displayName + " \u5DF2\u52A0\u8F7D", "positive", 5e3);
               log2.info("\u5185\u5BB9\u5305\u5DF2\u6253\u5F00", { path: dirPath, namespace: result.namespace, id: meta.id });
               if (typeof onSave === "function") onSave(config);
@@ -6015,8 +6034,11 @@
         connCount = Object.keys(builtinConnectors).length;
         subCount = Object.keys(builtinSubsystems).length;
         log2.info(
-          "getBuiltinPack: \u5185\u7F6E\u5305\u52A0\u8F7D\u5B8C\u6210 \u2014 materials=" + matCount + " connectors=" + connCount + " subsystems=" + subCount + " namespace=" + namespace
+          "getBuiltinPack: \u5185\u7F6E\u57FA\u7840\u5305\u52A0\u8F7D\u5B8C\u6210 \u2014 materials=" + matCount + " connectors=" + connCount + " subsystems=" + subCount + " namespace=" + namespace + " metaId=" + (builtinMeta.id || "\u65E0")
         );
+        log2.debug("getBuiltinPack: \u8FDE\u63A5\u5668\u952E\u5217\u8868", Object.keys(builtinConnectors));
+        log2.debug("getBuiltinPack: \u6750\u6599\u952E\u5217\u8868", Object.keys(builtinMaterials));
+        log2.debug("getBuiltinPack: \u5B50\u7CFB\u7EDF\u952E\u5217\u8868", Object.keys(builtinSubsystems));
         return result;
       }
       if (typeof module !== "undefined" && module.exports) {
@@ -6076,6 +6098,10 @@
         }
         defs = {};
         sources = {};
+        log2.debug("loadMergedDefs: \u5F00\u59CB\u5408\u5E76 " + type, {
+          contentPackPath: config.contentPackPath,
+          dependencyPaths: config.dependencyPaths
+        });
         try {
           builtin = builtin_pack.getBuiltinPack();
           builtinDefs = builtin[type] || {};
@@ -6084,9 +6110,10 @@
               var namespacedKey = builtin.namespace + ":" + bKey;
               defs[namespacedKey] = builtinDefs[bKey];
               sources[namespacedKey] = "builtin";
+              log2.debug("loadMergedDefs: \u5185\u7F6E\u5305\u6DFB\u52A0 " + namespacedKey + " (source=builtin)");
             }
           }
-          log2.info("loadMergedDefs: \u5185\u7F6E\u5305 " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(builtinDefs).length + " \u4E2A\u5B9A\u4E49");
+          log2.info("loadMergedDefs: \u5185\u7F6E\u5305 " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(builtinDefs).length + " \u4E2A\u5B9A\u4E49\uFF0Cnamespace=" + builtin.namespace);
         } catch (e) {
           log2.warn("loadMergedDefs: \u5185\u7F6E\u5305\u8BFB\u53D6\u5931\u8D25\uFF0C\u4F5C\u4E3A\u7A7A\u5305\u5904\u7406", e);
         }
@@ -6104,12 +6131,19 @@
                 log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u65E0\u6548\uFF0C\u8DF3\u8FC7: " + depPath, openResult.error);
                 continue;
               }
+              log2.debug("loadMergedDefs: \u4F9D\u8D56\u5305\u6253\u5F00\u6210\u529F", {
+                path: depPath,
+                namespace: openResult.namespace,
+                metaId: openResult.meta ? openResult.meta.id : null
+              });
               depDefs = content_pack.readAllDefs(depPath, openResult.namespace, type);
               for (depKey in depDefs) {
                 if (hasOwn(depDefs, depKey)) {
                   var namespacedDepKey = openResult.namespace + ":" + depKey;
+                  var prevSource = sources[namespacedDepKey];
                   defs[namespacedDepKey] = depDefs[depKey];
                   sources[namespacedDepKey] = "dependency:" + i;
+                  log2.debug("loadMergedDefs: \u4F9D\u8D56\u5305\u6DFB\u52A0 " + namespacedDepKey + " (source=dependency:" + i + ", \u8986\u76D6\u524D=" + (prevSource || "\u65E0") + ")");
                 }
               }
               log2.debug("loadMergedDefs: \u4F9D\u8D56\u5305 " + depPath + " " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(depDefs).length + " \u4E2A\u5B9A\u4E49");
@@ -6124,13 +6158,25 @@
             curOpenResult = content_pack.openContentPack(currentPath);
             if (!curOpenResult.valid) {
               log2.error("loadMergedDefs: \u5F53\u524D\u5185\u5BB9\u5305\u65E0\u6548: " + currentPath, curOpenResult.error);
+              log2.debug("loadMergedDefs: openContentPack \u7ED3\u679C", {
+                namespace: curOpenResult.namespace,
+                meta: curOpenResult.meta,
+                error: curOpenResult.error
+              });
             } else {
+              log2.debug("loadMergedDefs: \u5F53\u524D\u5305\u6253\u5F00\u6210\u529F", {
+                path: currentPath,
+                namespace: curOpenResult.namespace,
+                metaId: curOpenResult.meta ? curOpenResult.meta.id : null
+              });
               curDefs = content_pack.readAllDefs(currentPath, curOpenResult.namespace, type);
               for (curKey in curDefs) {
                 if (hasOwn(curDefs, curKey)) {
                   var namespacedCurKey = curOpenResult.namespace + ":" + curKey;
+                  var prevSource = sources[namespacedCurKey];
                   defs[namespacedCurKey] = curDefs[curKey];
                   sources[namespacedCurKey] = "current";
+                  log2.debug("loadMergedDefs: \u5F53\u524D\u5305\u6DFB\u52A0 " + namespacedCurKey + " (source=current, \u8986\u76D6\u524D=" + (prevSource || "\u65E0") + ")");
                 }
               }
               log2.debug("loadMergedDefs: \u5F53\u524D\u5305 " + currentPath + " " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(curDefs).length + " \u4E2A\u5B9A\u4E49");
@@ -6143,6 +6189,7 @@
         _cache[type] = result;
         defCount = Object.keys(defs).length;
         log2.info("loadMergedDefs: " + type + " \u5408\u5E76\u5B8C\u6210\uFF0C\u5171 " + defCount + " \u4E2A\u5B9A\u4E49");
+        log2.debug("loadMergedDefs: \u6700\u7EC8 sources", sources);
         return result;
       }
       function resolveDefSource(config, type, defId) {
@@ -6152,6 +6199,7 @@
           log2.debug("resolveDefSource: \u672A\u627E\u5230\u5B9A\u4E49 " + type + ":" + defId);
           return null;
         }
+        log2.debug("resolveDefSource: " + type + ":" + defId + " -> " + source);
         return source;
       }
       function isDefEditable(config, type, defId) {
@@ -6176,6 +6224,11 @@
         _cache.connectors = null;
         _cache.subsystems = null;
         log2.debug("invalidateCache: \u7F13\u5B58\u5DF2\u6E05\u9664");
+        try {
+          throw new Error("invalidateCache \u8C03\u7528\u6808");
+        } catch (e) {
+          log2.debug("invalidateCache: \u8C03\u7528\u8005", e.stack);
+        }
       }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
@@ -7250,6 +7303,9 @@
           });
         }
         log2.debug("listConnectors: \u5171 " + result.length + " \u4E2A\u8FDE\u63A5\u5668");
+        log2.debug("listConnectors: \u6765\u6E90\u5206\u5E03", result.map(function(r) {
+          return r.id + "=" + r.source;
+        }));
         return result;
       }
       function createConnector(config, id, data) {
@@ -7692,9 +7748,8 @@
         var result = {
           id: packId,
           version: pm.version || "1.0",
-          name: { text: pm.name || packId.split(":")[1] || packId },
-          author: { text: pm.author || "Anonymous" },
-          description: { text: pm.description || "" }
+          author: pm.author || "Anonymous",
+          description: pm.description || ""
         };
         var deps = pm.dependencies || [];
         if (deps.length > 0) {
@@ -7726,91 +7781,40 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("NameUtils");
-      var TYPE_LABELS = {
-        sub_part: { zh: "\u5B50\u96F6\u4EF6", en: "SubPart" },
-        interact: { zh: "\u4EA4\u4E92\u533A", en: "Interact" },
-        connector: { zh: "\u8FDE\u63A5\u70B9", en: "Connector" },
-        subsystem: { zh: "\u5B50\u7CFB\u7EDF", en: "Subsystem" }
-      };
-      var TYPE_PREFIXES = Object.keys(TYPE_LABELS);
-      function extractType(fullKey) {
-        if (!fullKey || typeof fullKey !== "string") return null;
-        for (var i = 0; i < TYPE_PREFIXES.length; i++) {
-          if (fullKey.indexOf(TYPE_PREFIXES[i] + ".") === 0) {
-            return TYPE_PREFIXES[i];
-          }
-        }
-        return null;
-      }
-      function extractShortName(fullKey, ns) {
-        if (!fullKey || typeof fullKey !== "string") return fullKey || "";
-        ns = ns || "machine_max";
-        var prefix = "." + ns + ".";
-        var idx = fullKey.indexOf(prefix);
-        if (idx >= 0) {
-          return fullKey.substring(idx + prefix.length);
+      function extractShortName(fullKey, namespace) {
+        if (!fullKey) return "";
+        var colonIdx = fullKey.indexOf(":");
+        if (colonIdx < 0) return fullKey;
+        var ns = namespace || fullKey.substring(0, colonIdx);
+        var prefix = ns + ":";
+        if (fullKey.indexOf(prefix) === 0) {
+          return fullKey.substring(prefix.length);
         }
         return fullKey;
       }
-      function buildFullKey(type, shortName, ns) {
+      function displayLabel(key, locale, ns) {
+        if (!key) return "";
+        var shortName = extractShortName(key, ns);
+        var words = shortName.replace(/_/g, " ").split(" ");
+        for (var i = 0; i < words.length; i++) {
+          if (words[i].length > 0) {
+            words[i] = words[i][0].toUpperCase() + words[i].substring(1);
+          }
+        }
+        return (ns || "").split(":")[0] + ":" + words.join(" ");
+      }
+      function buildFullKey(type, shortName, namespace) {
         if (!shortName) return "";
-        ns = ns || "machine_max";
-        if (type) {
-          return type + "." + ns + "." + shortName;
-        }
-        return shortName;
-      }
-      function displayLabel(fullKey, locale, ns) {
-        if (!fullKey || typeof fullKey !== "string") return fullKey || "";
-        var type = extractType(fullKey);
-        var shortName = extractShortName(fullKey, ns);
-        if (!type) return shortName;
-        var labels = TYPE_LABELS[type];
-        var label = labels ? labels[locale] || labels["zh"] || type : type;
-        return "[" + label + "]" + shortName;
-      }
-      function getTargetOptions(variant, ns) {
-        var options = [];
-        ns = ns || "machine_max";
-        if (!variant) return options;
-        var subParts = variant.sub_parts || {};
-        for (var spKey in subParts) {
-          if (!subParts.hasOwnProperty(spKey)) continue;
-          var sp = subParts[spKey];
-          if (!sp || typeof sp !== "object") continue;
-          var connectors = sp.connectors || {};
-          for (var connKey in connectors) {
-            if (!connectors.hasOwnProperty(connKey)) continue;
-            if (options.some(function(o) {
-              return o.fullKey === connKey;
-            })) continue;
-            options.push({
-              type: "connector",
-              shortName: extractShortName(connKey, ns),
-              fullKey: connKey,
-              label: displayLabel(connKey, "zh", ns)
-            });
-          }
-          var subsystems = sp.subsystems || {};
-          for (var ssKey in subsystems) {
-            if (!subsystems.hasOwnProperty(ssKey)) continue;
-            if (options.some(function(o) {
-              return o.fullKey === ssKey;
-            })) continue;
-            options.push({
-              type: "subsystem",
-              shortName: extractShortName(ssKey, ns),
-              fullKey: ssKey,
-              label: displayLabel(ssKey, "zh", ns)
-            });
-          }
-        }
-        return options;
+        if (!namespace) return shortName;
+        if (shortName.indexOf(":") >= 0) return shortName;
+        return namespace + ":" + shortName;
       }
       if (typeof module !== "undefined" && module.exports) {
-        module.exports = { extractType, extractShortName, buildFullKey, displayLabel, getTargetOptions, TYPE_LABELS, TYPE_PREFIXES };
+        module.exports = {
+          extractShortName,
+          displayLabel,
+          buildFullKey
+        };
       }
     }
   });
@@ -8074,6 +8078,7 @@
       var { runValidation } = require_mode();
       var content_pack = require_content_pack();
       var fileWriter = require_file_writer();
+      var path = __require("path");
       var log2 = createLogger2("Menu");
       var _machineMaxMenu = null;
       function registerMachineMaxMenu2() {
@@ -8242,16 +8247,16 @@
         });
       }
       function _getDefaultExportDir(pm) {
-        var path = __require("path");
+        var path2 = __require("path");
         var cached = pm && pm.exportDir;
         if (cached) return cached;
         var config = getConfig();
         if (config && config.contentPackPath) {
-          return path.dirname(config.contentPackPath);
+          return path2.dirname(config.contentPackPath);
         }
         var bbmodelPath = Project && Project.file_path ? Project.file_path : "";
         if (bbmodelPath) {
-          return path.join(path.dirname(bbmodelPath), "machine_max_content_pack");
+          return path2.join(path2.dirname(bbmodelPath), "machine_max_content_pack");
         }
         return "";
       }
@@ -8285,8 +8290,8 @@
               packName: {
                 type: "text",
                 label: "\u663E\u793A\u540D\u79F0",
-                value: pm.name || "",
-                description: "\u5185\u5BB9\u5305\u7684\u663E\u793A\u540D\u79F0\uFF08\u652F\u6301 Minecraft \u6587\u672C\u7EC4\u4EF6\u683C\u5F0F\uFF09"
+                value: pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : ""),
+                description: "\u5185\u5BB9\u5305\u7684\u663E\u793A\u540D\u79F0\uFF08\u5B58\u50A8\u5728\u914D\u7F6E\u4E2D\uFF0C\u4E0D\u4F1A\u5199\u5165 meta.json\uFF09"
               },
               packAuthor: {
                 type: "text",
@@ -8431,7 +8436,7 @@
               packName: {
                 type: "text",
                 label: "\u663E\u793A\u540D\u79F0",
-                value: pm.name || ""
+                value: pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : "")
               },
               packAuthor: {
                 type: "text",
@@ -8458,21 +8463,21 @@
                   var lines = deps.map(function(d) {
                     return typeof d === "string" ? d : d.id + " " + (d.type || "hard");
                   });
-                  var hasOfficial = false;
+                  var hasBuiltin = false;
                   for (var di = 0; di < deps.length; di++) {
                     var did = typeof deps[di] === "string" ? deps[di] : deps[di].id;
-                    if (did === "machine_max:official") {
-                      hasOfficial = true;
+                    if (did === "machine_max:builtin") {
+                      hasBuiltin = true;
                       break;
                     }
                   }
-                  if (!hasOfficial && pm.id !== "machine_max:official") {
-                    lines.unshift("machine_max:official hard");
+                  if (!hasBuiltin && pm.id !== "machine_max:builtin") {
+                    lines.unshift("machine_max:builtin hard");
                   }
                   return lines.join("\n");
                 })(),
                 height: 100,
-                description: '\u683C\u5F0F\uFF1A\u6BCF\u884C "\u4F9D\u8D56ID \u7C7B\u578B"\u3002\u7C7B\u578B: hard(\u5FC5\u9700), soft(\u53EF\u9009), override(\u8986\u76D6), conflict(\u51B2\u7A81)\n\u793A\u4F8B: machine_max:core hard'
+                description: '\u683C\u5F0F\uFF1A\u6BCF\u884C "\u4F9D\u8D56ID \u7C7B\u578B"\u3002\u7C7B\u578B: hard(\u5FC5\u9700), soft(\u53EF\u9009), override(\u8986\u76D6), conflict(\u51B2\u7A81)\n\u793A\u4F8B: machine_max:builtin hard'
               }
             },
             onConfirm: function(formData) {
@@ -8481,11 +8486,11 @@
                 showToast2("\u8BF7\u5148\u9009\u62E9\u5BFC\u51FA\u76EE\u5F55", "warning");
                 return;
               }
-              var packFolderName = _sanitizeFolderName(formData.packName) || _sanitizeFolderName(pm.name) || (Project ? Project.name : "content_pack");
+              var packFolderName = _sanitizeFolderName(formData.packName) || _sanitizeFolderName(pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : "")) || (Project ? Project.name : "content_pack");
               var overriddenMeta = {
                 id: formData.packId || defaultPackId,
                 version: formData.packVersion || "1.0",
-                name: formData.packName || pm.name || "",
+                name: formData.packName || pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : ""),
                 author: formData.packAuthor || pm.author || "",
                 description: formData.packDescription || pm.description || "",
                 enable_auto_pack: pm.enable_auto_pack !== false,
@@ -8537,11 +8542,11 @@
       }
       function _executeExport(config, packMeta, exportDir, packFolderName) {
         var fs = __require("fs");
-        var path = __require("path");
+        var path2 = __require("path");
         if (!fs.existsSync(exportDir)) {
           fs.mkdirSync(exportDir, { recursive: true });
         }
-        var packRoot = path.join(exportDir, packFolderName);
+        var packRoot = path2.join(exportDir, packFolderName);
         if (!fs.existsSync(packRoot)) {
           fs.mkdirSync(packRoot, { recursive: true });
         }
@@ -8551,7 +8556,7 @@
         function _resolveTargetDir(baseDir, id, flat) {
           if (flat) return baseDir;
           var seg = id.split("_")[0];
-          return seg && seg.length > 0 ? path.join(baseDir, seg) : baseDir;
+          return seg && seg.length > 0 ? path2.join(baseDir, seg) : baseDir;
         }
         function _writeSchemasFromConstant(destBaseDir) {
           var schemasRaw = typeof define_SCHEMAS_default !== "undefined" ? define_SCHEMAS_default : null;
@@ -8563,11 +8568,11 @@
           var keys = Object.keys(schemas);
           var locales = ["zh_cn", "en_us"];
           for (var l = 0; l < locales.length; l++) {
-            var localeDir = path.join(destBaseDir, locales[l], "schemas");
+            var localeDir = path2.join(destBaseDir, locales[l], "schemas");
             for (var i = 0; i < keys.length; i++) {
               var relPath = keys[i];
-              var destPath = path.join(localeDir, relPath);
-              fileWriter.ensureDir(path.dirname(destPath));
+              var destPath = path2.join(localeDir, relPath);
+              fileWriter.ensureDir(path2.dirname(destPath));
               fs.writeFileSync(destPath, schemas[relPath], "utf-8");
             }
           }
@@ -8597,7 +8602,7 @@
           };
           var dirs = ["parts", "connectors", "subsystems", "materials", "recipe"];
           for (var d = 0; d < dirs.length; d++) {
-            var typeDir = path.join(nsDir, dirs[d]);
+            var typeDir = path2.join(nsDir, dirs[d]);
             if (!fs.existsSync(typeDir)) continue;
             _walkAndInject(typeDir, nsDir, dirs[d], schemaMap, recipeSchemaMap);
           }
@@ -8605,7 +8610,7 @@
         function _walkAndInject(currentDir, nsDir, typeName, schemaMap, recipeSchemaMap) {
           var entries = fs.readdirSync(currentDir);
           for (var e = 0; e < entries.length; e++) {
-            var fullPath = path.join(currentDir, entries[e]);
+            var fullPath = path2.join(currentDir, entries[e]);
             var stat = fs.statSync(fullPath);
             if (stat.isDirectory()) {
               _walkAndInject(fullPath, nsDir, typeName, schemaMap, recipeSchemaMap);
@@ -8619,8 +8624,8 @@
                   schemaRel = schemaMap[typeName];
                 }
                 if (!schemaRel) continue;
-                var relDir = path.relative(path.dirname(fullPath), nsDir);
-                var schemaPath = path.join(relDir, schemaRel).replace(/\\/g, "/");
+                var relDir = path2.relative(path2.dirname(fullPath), nsDir);
+                var schemaPath = path2.join(relDir, schemaRel).replace(/\\/g, "/");
                 content["$schema"] = schemaPath;
                 fs.writeFileSync(fullPath, JSON.stringify(content, null, 2), "utf8");
               } catch (_err) {
@@ -8649,14 +8654,14 @@
           "templates",
           "docs"
         ];
-        var _nsDir = path.join(packRoot, ns);
+        var _nsDir = path2.join(packRoot, ns);
         for (var _ei = 0; _ei < _emptyDirs.length; _ei++) {
-          fileWriter.ensureDir(path.join(_nsDir, _emptyDirs[_ei]));
+          fileWriter.ensureDir(path2.join(_nsDir, _emptyDirs[_ei]));
         }
-        _writeSchemasFromConstant(path.join(_nsDir, "docs"));
+        _writeSchemasFromConstant(path2.join(_nsDir, "docs"));
         try {
           if (typeof Codecs !== "undefined" && Codecs.bedrock && Project) {
-            var modelDir = path.join(packRoot, ns, "models", "part");
+            var modelDir = path2.join(packRoot, ns, "models", "part");
             var modelName = Project.geometry_name || Project.name || "model";
             var geoContent = Codecs.bedrock.compile();
             fileWriter.writeTextFile(modelDir, modelName + ".geo.json", geoContent);
@@ -8668,7 +8673,7 @@
         var genLang = require_lang_generator();
         var allLangs = genLang.generateAllLangs(config);
         if (allLangs) {
-          var langDir = path.join(packRoot, ns, "lang");
+          var langDir = path2.join(packRoot, ns, "lang");
           for (var locale in allLangs) {
             if (allLangs.hasOwnProperty(locale)) {
               fileWriter.mergeJSONFile(langDir, locale + ".json", allLangs[locale]);
@@ -8678,7 +8683,7 @@
         }
         var genParts = require_part_generator();
         var allParts = genParts.generateAllParts(config);
-        var partsBaseDir = path.join(packRoot, ns, "parts");
+        var partsBaseDir = path2.join(packRoot, ns, "parts");
         for (var partId in allParts) {
           if (allParts.hasOwnProperty(partId)) {
             var partsTargetDir = _resolveTargetDir(partsBaseDir, partId, isFlat);
@@ -8687,7 +8692,7 @@
           }
         }
         if (config.recipes && Object.keys(config.recipes).length > 0) {
-          var recipeDir = path.join(packRoot, ns, "recipe");
+          var recipeDir = path2.join(packRoot, ns, "recipe");
           for (var recipeId in config.recipes) {
             if (config.recipes.hasOwnProperty(recipeId)) {
               fileWriter.writeJSONFile(recipeDir, recipeId + ".json", config.recipes[recipeId]);
@@ -8699,22 +8704,22 @@
           var genConn = require_connector_generator();
           var genSub = require_subsystem_generator();
           var genMat = require_material_generator();
-          stats.connectors = genConn.copyConnectorDefs(packDir, ns, path.join(packRoot, ns, "connectors"), isFlat);
-          stats.subsystems = genSub.copySubsystemDefs(packDir, ns, path.join(packRoot, ns, "subsystems"), isFlat);
-          stats.materials = genMat.copyMaterialDefs(packDir, ns, path.join(packRoot, ns, "materials"));
-          var depSrcDir = path.join(packDir, "dependency");
+          stats.connectors = genConn.copyConnectorDefs(packDir, ns, path2.join(packRoot, ns, "connectors"), isFlat);
+          stats.subsystems = genSub.copySubsystemDefs(packDir, ns, path2.join(packRoot, ns, "subsystems"), isFlat);
+          stats.materials = genMat.copyMaterialDefs(packDir, ns, path2.join(packRoot, ns, "materials"));
+          var depSrcDir = path2.join(packDir, "dependency");
           if (fs.existsSync(depSrcDir)) {
-            var depTargetDir = path.join(packRoot, "dependency");
+            var depTargetDir = path2.join(packRoot, "dependency");
             fileWriter.ensureDir(depTargetDir);
             var depFiles = fs.readdirSync(depSrcDir);
             var j, depFile, depSrcFile, depContent;
             for (j = 0; j < depFiles.length; j++) {
               depFile = depFiles[j];
               if (depFile.indexOf(".json") !== depFile.length - 5) continue;
-              depSrcFile = path.join(depSrcDir, depFile);
+              depSrcFile = path2.join(depSrcDir, depFile);
               try {
                 depContent = fs.readFileSync(depSrcFile, "utf8");
-                fs.writeFileSync(path.join(depTargetDir, depFile), depContent, "utf8");
+                fs.writeFileSync(path2.join(depTargetDir, depFile), depContent, "utf8");
               } catch (e) {
                 log2.warn("\u590D\u5236\u4F9D\u8D56\u5305\u5B9A\u4E49\u5931\u8D25: " + depSrcFile, e);
               }
@@ -14952,7 +14957,7 @@
   var { registerMode, unregisterActions } = require_mode();
   var { registerMachineMaxMenu, unregisterMachineMaxMenu } = require_menu();
   var { showToast } = require_notify();
-  var PLUGIN_VERSION = "0.1.1";
+  var PLUGIN_VERSION = "0.1.2";
   var log = createLogger("Plugin");
   Plugin.register("machine_max_bb_plugin", {
     title: "MachineMax \u96F6\u4EF6\u5B9A\u4E49",
