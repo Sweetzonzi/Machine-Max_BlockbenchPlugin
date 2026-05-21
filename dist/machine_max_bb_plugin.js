@@ -10064,7 +10064,7 @@
                 {{ resolveConnectorName(connKey) }}
             </span>
             <span class="mm-sub-item-meta" :style="conn.definition ? '' : 'color:#ff6b6b'">
-                <span v-if="!conn.definition" style="margin-right:4px">\u26A0\uFE0F</span>{{ conn.definition || '\u672A\u6307\u5B9A\u5B9A\u4E49' }}
+                <span v-if="!conn.definition" style="margin-right:4px">\u26A0</span>{{ conn.definition || '\u672A\u6307\u5B9A\u5B9A\u4E49' }}
             </span>
         </div>
     </div>
@@ -10087,8 +10087,8 @@
             </div>
             <span class="mm-sub-item-meta">
                 {{ resolveSubsystemTypeName(ssKey) }}
-                <span v-if="resolveSubsystemDefinition(ssKey)" style="color:#888;margin-left:4px">\xB7 {{ resolveSubsystemDefinition(ssKey) }}</span>
-                <span v-else style="color:#ff6b6b;margin-left:4px">\u26A0\uFE0F \u672A\u6307\u5B9A\u578B\u53F7</span>
+                <span v-if="resolveSubsystemDefinition(ssKey)" style="color:#888;margin-left:4px">| {{ resolveSubsystemDefinition(ssKey) }}</span>
+                <span v-else style="color:#ff6b6b;margin-left:4px">\u26A0 \u672A\u6307\u5B9A\u578B\u53F7</span>
             </span>
         </div>
     </div>
