@@ -2,7 +2,7 @@
     "id": "machine_max_bb_plugin",
     "name": "MachineMax 零件定义",
     "author": "MachineMax Team",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "description": "在 Blockbench 中以可视化方式制作 MachineMax 内容包，无需手写 JSON",
     "main": "dist/machine_max_bb_plugin.js",
     "target": "desktop"

@@ -1,5 +1,5 @@
 // ============================================================
-// MachineMax Blockbench Plugin v0.1.2
+// MachineMax Blockbench Plugin v0.1.3
 // 打包文件 — 由 scripts/build.js 自动生成
 // 源文件在 src/ 目录，修改后运行 npm run build 重新生成
 // ============================================================
@@ -15172,7 +15172,7 @@
   var { registerMode, unregisterActions } = require_mode();
   var { registerMachineMaxMenu, unregisterMachineMaxMenu } = require_menu();
   var { showToast } = require_notify();
-  var PLUGIN_VERSION = "0.1.2";
+  var PLUGIN_VERSION = "0.1.3";
   var log = createLogger("Plugin");
   Plugin.register("machine_max_bb_plugin", {
     title: "MachineMax \u96F6\u4EF6\u5B9A\u4E49",
