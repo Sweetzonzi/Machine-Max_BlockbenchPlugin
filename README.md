@@ -1,5 +1,7 @@
 # MachineMax Blockbench 插件
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Sweetzonzi/Machine-Max_BlockbenchPlugin)
+
 为 [Blockbench](https://www.blockbench.net/) 开发的插件，使内容创作者能够以**可视化方式一站式制作 MachineMax 内容包**，无需手写 JSON 配置文件。
 
 目标用户群体：缺乏编程/JSON 经验的 Minecraft 模组内容创作者。
