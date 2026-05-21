@@ -4,8 +4,8 @@ const { registerMode, unregisterActions } = require('./mode.js');
 const { registerMachineMaxMenu, unregisterMachineMaxMenu } = require('./ui/menu.js');
 const { showToast } = require('./utils/notify.js');
 
-/** 插件版本号 */
-const PLUGIN_VERSION = '0.1.1';
+/** 插件版本号（构建时由 esbuild 从 package.json 注入） */
+const PLUGIN_VERSION = __PLUGIN_VERSION__;
 
 /** 模块日志 */
 var log = createLogger('Plugin');

@@ -1,5 +1,5 @@
 // ============================================================
-// MachineMax Blockbench Plugin v0.1.0
+// MachineMax Blockbench Plugin v0.1.1
 // 打包文件 — 由 scripts/build.js 自动生成
 // 源文件在 src/ 目录，修改后运行 npm run build 重新生成
 // ============================================================

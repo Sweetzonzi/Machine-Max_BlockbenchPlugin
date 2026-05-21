@@ -20,6 +20,9 @@ const SRC = path.join(ROOT, 'src');
 const DIST = path.join(ROOT, 'dist');
 const OUT_FILE = path.join(DIST, 'machine_max_bb_plugin.js');
 
+/** 从 package.json 读取版本号，作为单一版本源 */
+const PLUGIN_VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf-8')).version;
+
 const isWatch = process.argv.includes('--watch');
 
 /** 读取 CSS 文件内容，转换为 JS 字符串字面量 */
@@ -252,6 +255,7 @@ function getConfig() {
     const defines = Object.assign({
         'CSS_MM_MODE': cssLiteral || '""',
         '__DEBUG_ENABLED__': 'false',
+        '__PLUGIN_VERSION__': JSON.stringify(PLUGIN_VERSION),
     }, templates, packDefines, schemaDefines);
 
     return {
@@ -268,7 +272,7 @@ function getConfig() {
         banner: {
             js: [
                 '// ============================================================',
-                '// MachineMax Blockbench Plugin v0.1.0',
+                '// MachineMax Blockbench Plugin v' + PLUGIN_VERSION,
                 '// 打包文件 — 由 scripts/build.js 自动生成',
                 '// 源文件在 src/ 目录，修改后运行 npm run build 重新生成',
                 '// ============================================================',
@@ -317,6 +321,18 @@ async function buildOnce() {
 
         console.log(`✅ 构建成功 → ${OUT_FILE}`);
         console.log(`   大小: ${formatSize(OUT_FILE)}`);
+
+        // 同步 bbplugin.json 版本号，使其与 package.json 保持一致
+        const bbpluginPath = path.join(ROOT, 'bbplugin.json');
+        if (fs.existsSync(bbpluginPath)) {
+            const bbplugin = JSON.parse(fs.readFileSync(bbpluginPath, 'utf-8'));
+            if (bbplugin.version !== PLUGIN_VERSION) {
+                bbplugin.version = PLUGIN_VERSION;
+                fs.writeFileSync(bbpluginPath, JSON.stringify(bbplugin, null, 4) + '\n', 'utf-8');
+                console.log(`   bbplugin.json 版本已同步 → v${PLUGIN_VERSION}`);
+            }
+        }
+
         return true;
     } catch (e) {
         console.error('❌ 构建失败:', e.message);
