@@ -563,10 +563,29 @@ function showOpenPackDialog(config, onSave) {
 
                 var meta = result.meta || {};
 
+                log.debug('showOpenPackDialog: 打开内容包结果', {
+                    metaType: typeof meta,
+                    metaKeys: Object.keys(meta),
+                    authorType: typeof meta.author,
+                    descType: typeof meta.description,
+                    nameExists: 'name' in meta,
+                    metaJSON: JSON.stringify(meta).substring(0, 500),
+                    namespace: result.namespace,
+                });
+
                 // ---- 更新配置 ----
                 persistence.setPackPath(config, dirPath);
                 config.namespace = result.namespace || '';
                 config.packMeta = meta;
+
+                log.debug('showOpenPackDialog: packMeta 已设置', {
+                    packMetaType: typeof config.packMeta,
+                    packMetaKeys: Object.keys(config.packMeta),
+                    name: config.packMeta.name,
+                    author: config.packMeta.author,
+                    description: config.packMeta.description,
+                    full: JSON.stringify(config.packMeta).substring(0, 500),
+                });
                 persistence.saveConfig();
                 var displayName = path.basename(dirPath) || result.namespace || '';
                 showToast('内容包 ' + displayName + ' 已加载', 'positive', 5000);

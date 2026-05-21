@@ -12,6 +12,9 @@
  */
 var ssTypes = require('../core/subsystem_types.js');
 var nameUtils = require('../utils/name_utils.js');
+var { createLogger } = require('../utils/logger.js');
+
+var log = createLogger('SubsystemPanel');
 
 Vue.component('mm-subsystem-panel', {
     template: typeof TEMPLATE_SUBSYSTEM_PANEL !== 'undefined' ? TEMPLATE_SUBSYSTEM_PANEL : '<p>子系统面板加载中...</p>',
@@ -64,16 +67,22 @@ Vue.component('mm-subsystem-panel', {
         },
         /** 按当前子系统类型筛选可用的型号定义 */
         filteredSubsystemDefs: function () {
-            if (!this.typeId || !this.subsystemDefs) return {};
+            if (!this.typeId || !this.subsystemDefs) {
+                log.debug('filteredSubsystemDefs: typeId=' + this.typeId + ', subsystemDefs=' + (this.subsystemDefs ? Object.keys(this.subsystemDefs).length : 'null'));
+                return {};
+            }
             var result = {};
+            var totalDefs = 0;
             for (var defId in this.subsystemDefs) {
                 if (this.subsystemDefs.hasOwnProperty(defId)) {
+                    totalDefs++;
                     var def = this.subsystemDefs[defId];
                     if (def && def.type === this.typeId) {
                         result[defId] = def;
                     }
                 }
             }
+            log.info('filteredSubsystemDefs: typeId=' + this.typeId + ', 总定义=' + totalDefs + ', 匹配结果=' + Object.keys(result).length);
             return result;
         },
         filteredSubsystemDefsCount: function () {

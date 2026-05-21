@@ -131,7 +131,7 @@ function loadMergedDefs(config, type) {
                     continue;
                 }
 
-                log.debug('loadMergedDefs: 依赖包打开成功', {
+                log.info('loadMergedDefs: 依赖包打开成功', {
                     path: depPath,
                     namespace: openResult.namespace,
                     metaId: openResult.meta ? openResult.meta.id : null,
@@ -145,10 +145,10 @@ function loadMergedDefs(config, type) {
                         var prevSource = sources[namespacedDepKey];
                         defs[namespacedDepKey] = depDefs[depKey];
                         sources[namespacedDepKey] = 'dependency:' + i;
-                        log.debug('loadMergedDefs: 依赖包添加 ' + namespacedDepKey + ' (source=dependency:' + i + ', 覆盖前=' + (prevSource || '无') + ')');
+                        log.info('loadMergedDefs: 依赖包添加 ' + namespacedDepKey + ' (source=dependency:' + i + ', 覆盖前=' + (prevSource || '无') + ')');
                     }
                 }
-                log.debug('loadMergedDefs: 依赖包 ' + depPath + ' ' + type + ' 加载完成，共 ' + Object.keys(depDefs).length + ' 个定义');
+                log.info('loadMergedDefs: 依赖包 ' + depPath + ' ' + type + ' 加载完成，共 ' + Object.keys(depDefs).length + ' 个定义');
             } catch (e) {
                 log.warn('loadMergedDefs: 依赖包加载失败，跳过: ' + depPath, e);
             }
@@ -168,7 +168,7 @@ function loadMergedDefs(config, type) {
                     error: curOpenResult.error,
                 });
             } else {
-                log.debug('loadMergedDefs: 当前包打开成功', {
+                log.info('loadMergedDefs: 当前包打开成功', {
                     path: currentPath,
                     namespace: curOpenResult.namespace,
                     metaId: curOpenResult.meta ? curOpenResult.meta.id : null,
@@ -180,10 +180,10 @@ function loadMergedDefs(config, type) {
                         var prevSource = sources[namespacedCurKey];
                         defs[namespacedCurKey] = curDefs[curKey];
                         sources[namespacedCurKey] = 'current';
-                        log.debug('loadMergedDefs: 当前包添加 ' + namespacedCurKey + ' (source=current, 覆盖前=' + (prevSource || '无') + ')');
+                        log.info('loadMergedDefs: 当前包添加 ' + namespacedCurKey + ' (source=current, 覆盖前=' + (prevSource || '无') + ')');
                     }
                 }
-                log.debug('loadMergedDefs: 当前包 ' + currentPath + ' ' + type + ' 加载完成，共 ' + Object.keys(curDefs).length + ' 个定义');
+                log.info('loadMergedDefs: 当前包 ' + currentPath + ' ' + type + ' 加载完成，共 ' + Object.keys(curDefs).length + ' 个定义');
             }
         } catch (e) {
             log.error('loadMergedDefs: 当前内容包加载失败: ' + currentPath, e);

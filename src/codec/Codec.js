@@ -55,6 +55,17 @@ function withFieldMethods(codec) {
  * @param {boolean} [opts.nullable] - 可选字段，默认 null，encode 时 null 跳过
  * @returns {object} 字段描述符 { encodeField, decodeField, required?, defaultValue?, nullable? }
  */
+/**
+ * 克隆可变默认值（对象/数组），避免跨实例共享引用
+ * 基元类型（string/number/boolean/null）直接返回
+ */
+function cloneMutable(val) {
+    if (val === null || val === undefined) return val;
+    if (Array.isArray(val)) return val.slice();
+    if (typeof val === 'object') return Object.assign({}, val);
+    return val;
+}
+
 function createFieldDescriptor(codec, opts) {
     if (opts.required) {
         return {
@@ -89,14 +100,21 @@ function createFieldDescriptor(codec, opts) {
     }
     // .default(val) — 可选字段，有显式默认值
     var defaultVal = opts.defaultValue;
+    var isMutable = (typeof defaultVal === 'object' && defaultVal !== null);
     return {
         defaultValue: defaultVal,
         encodeField: function (value, path) {
-            if (value === undefined || value === null || value === defaultVal) return undefined;
+            if (value === undefined || value === null) return undefined;
+            // 可变默认值（对象/数组）已被克隆，不能直接用 === 判等；
+            // 由子 codec encode 自行决定是否输出空值（map 空对象返回 undefined，list 空数组返回 []）
+            if (!isMutable && value === defaultVal) return undefined;
             return codec.encode(value, path);
         },
         decodeField: function (value, key, path) {
-            if (value === undefined) return defaultVal;
+            if (value === undefined) {
+                // 每次返回克隆，防止跨实例共享同一可变对象引用导致数据泄漏
+                return isMutable ? cloneMutable(defaultVal) : defaultVal;
+            }
             return codec.decode(value);
         },
     };

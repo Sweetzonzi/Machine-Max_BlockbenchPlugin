@@ -83,7 +83,12 @@ function listSubsystems(config) {
         }
     }
 
-    log.debug('listSubsystems: 共 ' + result.length + ' 个子系统定义');
+    log.info('listSubsystems: 共 ' + result.length + ' 个子系统定义');
+    if (result.length > 0) {
+        log.info('listSubsystems: 详情', result.map(function (r) { return r.id + '=' + r.source; }));
+    } else {
+        log.warn('listSubsystems: 未找到任何子系统定义，defs keys=' + Object.keys(defs).join(',') + ', sources keys=' + Object.keys(sources).join(','));
+    }
     return result;
 }
 

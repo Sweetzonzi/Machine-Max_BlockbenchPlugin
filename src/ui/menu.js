@@ -249,6 +249,20 @@ function _showPackSettingsDialog() {
 
     var pm = config.packMeta || {};
     var ns = config.namespace || 'machine_max';
+
+    log.debug('_showPackSettingsDialog: 打开设置对话框', {
+        packMetaExists: !!config.packMeta,
+        pmType: typeof pm,
+        pmKeys: Object.keys(pm),
+        nameType: typeof pm.name,
+        name: pm.name,
+        authorType: typeof pm.author,
+        author: pm.author,
+        descType: typeof pm.description,
+        description: pm.description,
+        contentPackPath: config.contentPackPath,
+        fallbackName: config.contentPackPath ? path.basename(config.contentPackPath) : '(无路径)',
+    });
     var defaultPackId = pm.id || ns + ':' + (Project ? (Project.name || 'content_pack') : 'content_pack');
     var defaultExportDir = pm.exportDir || _getDefaultExportDir(pm);
 
@@ -389,6 +403,20 @@ function _showExportDialog() {
 
     var pm = config.packMeta || {};
     var ns = config.namespace || 'machine_max';
+
+    log.debug('_showExportDialog: 打开导出对话框', {
+        packMetaExists: !!config.packMeta,
+        pmType: typeof pm,
+        pmKeys: Object.keys(pm),
+        nameType: typeof pm.name,
+        name: pm.name,
+        authorType: typeof pm.author,
+        author: pm.author,
+        descType: typeof pm.description,
+        description: pm.description,
+        contentPackPath: config.contentPackPath,
+        fallbackName: config.contentPackPath ? path.basename(config.contentPackPath) : '(无路径)',
+    });
     var defaultPackId = pm.id || ns + ':' + (Project ? (Project.name || 'content_pack') : 'content_pack');
     var defaultExportDir = pm.exportDir || _getDefaultExportDir(pm);
 
@@ -713,7 +741,8 @@ function _executeExport(config, packMeta, exportDir, packFolderName) {
                 _walkAndInject(fullPath, nsDir, typeName, schemaMap, recipeSchemaMap);
             } else if (entries[e].endsWith('.json')) {
                 try {
-                    var content = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+                    var rawContent = fs.readFileSync(fullPath, 'utf8');
+                    var content = JSON.parse(fileWriter.stripJsonComments(rawContent));
                     var schemaRel;
                     if (typeName === 'recipe') {
                         schemaRel = recipeSchemaMap[content.type] || 'docs/schemas/recipe/research_recipe.schema.json';

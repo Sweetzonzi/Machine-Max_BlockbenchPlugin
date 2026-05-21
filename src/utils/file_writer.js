@@ -9,6 +9,57 @@ var log = createLogger('FileWriter');
  * 文件写入器 — 封装 Node.js fs 操作，确保目录存在后写入文件
  */
 
+// =============================================================================
+// JSON 注释剥离
+// =============================================================================
+
+/**
+ * 剥离 JSON 中的 // 单行注释（支持 inline 和独立行注释）。
+ *
+ * 通过跟踪双引号的奇偶性来判断 // 是否出现在字符串字面量内部，
+ * 避免误删 URL（如 "http://example.com"）中的 //。
+ *
+ * @param {string} content - 包含 // 注释的类 JSON 文本
+ * @returns {string} 剥离注释后的纯 JSON 文本
+ */
+function stripJsonComments(content) {
+    var lines, result, i, line, inString, commentStart, j, ch, stripped;
+
+    lines = content.split('\n');
+    result = [];
+
+    for (i = 0; i < lines.length; i++) {
+        line = lines[i];
+        inString = false;
+        commentStart = -1;
+
+        for (j = 0; j < line.length; j++) {
+            ch = line[j];
+            if (ch === '"' && (j === 0 || line[j - 1] !== '\\')) {
+                inString = !inString;
+            } else if (ch === '/' && line[j + 1] === '/' && !inString) {
+                commentStart = j;
+                break;
+            }
+        }
+
+        if (commentStart >= 0) {
+            stripped = line.substring(0, commentStart);
+            if (stripped.trim().length > 0) {
+                result.push(stripped);
+            }
+        } else {
+            result.push(line);
+        }
+    }
+
+    return result.join('\n');
+}
+
+// =============================================================================
+// 核心 I/O 函数
+// =============================================================================
+
 function ensureDir(dirPath) {
     if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
@@ -49,7 +100,7 @@ function readJSONFile(filePath) {
     }
     try {
         const raw = fs.readFileSync(filePath, 'utf-8');
-        const data = JSON.parse(raw);
+        const data = JSON.parse(stripJsonComments(raw));
         log.debug('readJSONFile: 已读取 ' + filePath);
         return data;
     } catch (e) {
@@ -157,5 +208,5 @@ function mergeJSONFile(dir, filename, newData) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ensureDir, writeJSONFile, writeTextFile, readJSONFile, fileExists, deleteFile, extractResourceLocation, mergeJSONFile };
+    module.exports = { ensureDir, writeJSONFile, writeTextFile, readJSONFile, fileExists, deleteFile, extractResourceLocation, mergeJSONFile, stripJsonComments };
 }

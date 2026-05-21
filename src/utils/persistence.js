@@ -66,6 +66,13 @@ function loadConfig() {
         log.info('从 Property 加载配置，版本: ' + propData.$schema_version);
         var migrated = migrateIfNeeded(propData);
         Project[PROPERTY_NAME] = migrated;
+        log.debug('loadConfig: 从 Property 加载完成', {
+            packMetaType: typeof migrated.packMeta,
+            packMetaKeys: migrated.packMeta ? Object.keys(migrated.packMeta) : [],
+            name: migrated.packMeta ? migrated.packMeta.name : null,
+            author: migrated.packMeta ? migrated.packMeta.author : null,
+            description: migrated.packMeta ? migrated.packMeta.description : null,
+        });
         return migrated;
     }
 
@@ -116,6 +123,18 @@ function saveConfig() {
         log.warn('saveConfig: 未找到 .bbmodel 路径，跳过独立备份');
         return;
     }
+
+    log.debug('saveConfig: 即将保存 packMeta', {
+        packMetaType: typeof config.packMeta,
+        packMetaExists: !!config.packMeta,
+        packMetaKeys: config.packMeta ? Object.keys(config.packMeta) : [],
+        name: config.packMeta ? config.packMeta.name : null,
+        nameType: config.packMeta ? typeof config.packMeta.name : 'N/A',
+        author: config.packMeta ? config.packMeta.author : null,
+        authorType: config.packMeta ? typeof config.packMeta.author : 'N/A',
+        description: config.packMeta ? config.packMeta.description : null,
+        descType: config.packMeta ? typeof config.packMeta.description : 'N/A',
+    });
 
     const standalonePath = bbmodelPath.replace(/\.bbmodel$/i, '.mm_project.json');
     try {

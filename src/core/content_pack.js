@@ -22,6 +22,7 @@ const {
     fileExists,
     deleteFile,
     extractResourceLocation,
+    stripJsonComments,
 } = require('../utils/file_writer.js');
 const zip_reader = require('./zip_reader.js');
 
@@ -46,13 +47,13 @@ function walkDefFiles(dir, ext) {
     var results, entries, i, j, entryName, fullPath, stat, subResults, defId;
     results = [];
     if (!fs.existsSync(dir)) {
-        log.debug('walkDefFiles: 目录不存在 ' + dir);
+        log.warn('walkDefFiles: 目录不存在 ' + dir);
         return results;
     }
 
     try {
         entries = fs.readdirSync(dir);
-        log.debug('walkDefFiles: 扫描目录 ' + dir + ' 找到 ' + entries.length + ' 个条目');
+        log.info('walkDefFiles: 扫描目录 ' + dir + ' 找到 ' + entries.length + ' 个条目');
         for (i = 0; i < entries.length; i++) {
             entryName = entries[i];
             fullPath = path.join(dir, entryName);
@@ -66,7 +67,7 @@ function walkDefFiles(dir, ext) {
             } else if (path.extname(entryName) === ext) {
                 defId = path.basename(entryName, ext);
                 results.push({ filePath: fullPath, id: defId });
-                log.debug('walkDefFiles: 找到文件 id=' + defId + ' path=' + fullPath);
+                log.info('walkDefFiles: 找到文件 id=' + defId + ' path=' + fullPath);
             }
         }
     } catch (e) {
@@ -147,7 +148,7 @@ function _readZipDefs(zipPath, namespace, type) {
     allFiles = handle.listFiles();
     prefix = namespace + '/' + type + '/';
 
-    log.debug('_readZipDefs: ZIP=' + zipPath + ' 前缀=' + prefix + ' 总文件数=' + allFiles.length);
+    log.info('_readZipDefs: 开始读取 ' + type + ' ZIP=' + zipPath + ' 前缀=' + prefix + ' 总文件数=' + allFiles.length);
 
     for (i = 0; i < allFiles.length; i++) {
         filePath = allFiles[i];
@@ -175,7 +176,7 @@ function _readZipDefs(zipPath, namespace, type) {
                 log.warn('_readZipDefs: 无法读取 ' + filePath);
                 continue;
             }
-            parsed = JSON.parse(contentStr.toString('utf-8'));
+            parsed = JSON.parse(stripJsonComments(contentStr.toString('utf-8')));
             result[defId] = parsed;
             log.debug('_readZipDefs: 已读取 id=' + defId + ' path=' + filePath);
         } catch (e) {
@@ -230,7 +231,7 @@ function readPackMeta(packPath) {
             return null;
         }
         try {
-            meta = JSON.parse(raw.toString('utf-8'));
+            meta = JSON.parse(stripJsonComments(raw.toString('utf-8')));
             log.debug('readPackMeta: 已从 ZIP 读取 meta.json: ' + packPath);
             return meta;
         } catch (e) {
@@ -245,7 +246,16 @@ function readPackMeta(packPath) {
     if (meta === null) {
         log.warn('readPackMeta: 读取失败或文件不存在 ' + metaPath);
     } else {
-        log.debug('readPackMeta: 已读取 ' + metaPath);
+        log.debug('readPackMeta: 已读取 ' + metaPath, {
+            rawType: typeof meta,
+            keys: Object.keys(meta),
+            idType: typeof meta.id,
+            authorType: typeof meta.author,
+            descType: typeof meta.description,
+            id: meta.id,
+            author: meta.author,
+            description: meta.description,
+        });
     }
     return meta;
 }
@@ -449,22 +459,22 @@ function readAllDefs(packDir, namespace, type) {
     // 目录形式（原有逻辑）
     typeDir = path.join(packDir, namespace, type);
 
-    log.debug('readAllDefs: 查找目录 ' + typeDir + ' (packDir=' + packDir + ', namespace=' + namespace + ')');
+    log.info('readAllDefs: 开始读取 ' + type + ' 目录=' + typeDir + ' (packDir=' + packDir + ', namespace=' + namespace + ')');
 
     if (!fs.existsSync(typeDir)) {
-        log.debug('readAllDefs: 目录不存在 ' + typeDir);
+        log.warn('readAllDefs: 目录不存在 ' + typeDir + ' (类型=' + type + ')');
         return {};
     }
 
     files = walkDefFiles(typeDir, '.json');
-    log.debug('readAllDefs: walkDefFiles 找到 ' + files.length + ' 个文件');
+    log.info('readAllDefs: walkDefFiles 找到 ' + files.length + ' 个 ' + type + ' 文件' + (files.length > 0 ? '，列表=' + files.map(function(f){return f.id;}).join(',') : ''));
 
     result = {};
 
     for (i = 0; i < files.length; i++) {
         try {
             raw = fs.readFileSync(files[i].filePath, 'utf-8');
-            result[files[i].id] = JSON.parse(raw);
+            result[files[i].id] = JSON.parse(stripJsonComments(raw));
             log.debug('readAllDefs: 已读取 id=' + files[i].id + ' path=' + files[i].filePath);
         } catch (e) {
             log.warn('readAllDefs: JSON 解析失败，跳过 ' + files[i].filePath, e);

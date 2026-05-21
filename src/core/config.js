@@ -216,6 +216,14 @@ function ensureDefaults(config) {
     }
 
     log.debug('ensureDefaults: 完成');
+    log.debug('ensureDefaults: packMeta 状态', {
+        hasPackMeta: 'packMeta' in result,
+        packMetaType: typeof result.packMeta,
+        packMetaKeys: result.packMeta ? Object.keys(result.packMeta) : [],
+        name: result.packMeta ? result.packMeta.name : null,
+        author: result.packMeta ? result.packMeta.author : null,
+        description: result.packMeta ? result.packMeta.description : null,
+    });
     return result;
 }
 

@@ -141,7 +141,10 @@ const MMMainPanel = Vue.component('mm-main-panel', {
          */
         availableConnectorDefs: function () {
             if (!this.config) return {};
-            return content_pack_manager.loadMergedDefs(this.config, 'connectors').defs;
+            var result = content_pack_manager.loadMergedDefs(this.config, 'connectors').defs;
+            var keys = Object.keys(result);
+            log.info('availableConnectorDefs: 共 ' + keys.length + ' 个连接点定义' + (keys.length > 0 ? '，列表=' + keys.join(',') : ''));
+            return result;
         },
         selectedMarker: function () {
             if (!this.selectedElement) return null;
@@ -252,9 +255,18 @@ const MMMainPanel = Vue.component('mm-main-panel', {
          * 当前子零件内所有子系统对应的子系统定义（用于型号下拉选择）
          */
         availableSubsystemDefs: function () {
-            if (!this.config) return {};
+            if (!this.config) {
+                log.warn('availableSubsystemDefs: config 为空');
+                return {};
+            }
             var cp = require('../core/content_pack_manager.js');
-            return cp.loadMergedDefs(this.config, 'subsystems').defs;
+            var result = cp.loadMergedDefs(this.config, 'subsystems').defs;
+            var keys = Object.keys(result);
+            log.info('availableSubsystemDefs: 共 ' + keys.length + ' 个子系统定义' + (keys.length > 0 ? '，列表=' + keys.join(',') : ''));
+            // 与连接点数量对比，帮助定位问题
+            var connKeys = Object.keys(cp.loadMergedDefs(this.config, 'connectors').defs);
+            log.info('availableSubsystemDefs: 对照 — 连接点共 ' + connKeys.length + ' 个');
+            return result;
         },
         /**
          * 当前子零件内所有连接点名称列表（用于 connector 下拉选择）

@@ -538,6 +538,12 @@ function showSubsystemManagerDialog(config, onSave) {
     }
 
     var subsystems = subsystem_manager.listSubsystems(config);
+    log.info('showSubsystemManagerDialog: listSubsystems 返回 ' + (subsystems ? subsystems.length : 'null') + ' 个定义');
+    if (subsystems && subsystems.length > 0) {
+        log.info('showSubsystemManagerDialog: 子系统定义列表', subsystems.map(function (s) { return s.id; }));
+    } else {
+        log.warn('showSubsystemManagerDialog: 子系统定义列表为空，config=' + JSON.stringify({ contentPackPath: config ? config.contentPackPath : null, dependencyPaths: config ? config.dependencyPaths : null }));
+    }
     var listHtml = _buildSubsystemListHtml(subsystems);
 
     try {

@@ -1,77 +1,126 @@
 /**
- * name_utils.js — 内容包 ResourceLocation 名称解析工具
+ * name_utils.js — 翻译键格式名称解析工具
  *
- * 提供 ResourceLocation（如 "machine_max:standard_front_wheel"）的
- * 拆分、拼接、显示名生成等操作。
+ * 处理三类翻译键形式的名称：
+ *   完整键:  "subsystem.machine_max.engine"
+ *   短名:    "engine"
+ *   显示:    "[子系统]engine"
+ *
+ * 所有键使用点分隔格式（{type}.{ns}.{name}），与零件定义 JSON 中的 map key 一致。
  */
 
+var TYPE_LABELS = {
+    sub_part:   { zh: '子零件',   en: 'SubPart' },
+    interact:   { zh: '交互区',   en: 'Interact' },
+    connector:  { zh: '连接点',   en: 'Connector' },
+    subsystem:  { zh: '子系统',   en: 'Subsystem' },
+};
+
+var TYPE_PREFIXES = Object.keys(TYPE_LABELS);
+
 /**
- * 从 resource location 全名中提取短名称（去掉 namespace: 前缀）
- *
- * "machine_max:standard_front_wheel" + "machine_max" → "standard_front_wheel"
- * "standard_front_wheel" + "machine_max" → "standard_front_wheel"（无前缀时原样返回）
- *
- * @param {string} fullKey - resource location 全名
- * @param {string} [namespace] - 命名空间，不传时取冒号前部分
- * @returns {string} 短名称
+ * 从完整键提取类型前缀
+ * "subsystem.machine_max.engine" → "subsystem"
  */
-function extractShortName(fullKey, namespace) {
-    if (!fullKey) return '';
-    var colonIdx = fullKey.indexOf(':');
-    if (colonIdx < 0) return fullKey;
-    var ns = namespace || fullKey.substring(0, colonIdx);
-    var prefix = ns + ':';
-    if (fullKey.indexOf(prefix) === 0) {
-        return fullKey.substring(prefix.length);
+function extractType(fullKey) {
+    if (!fullKey || typeof fullKey !== 'string') return null;
+    for (var i = 0; i < TYPE_PREFIXES.length; i++) {
+        if (fullKey.indexOf(TYPE_PREFIXES[i] + '.') === 0) {
+            return TYPE_PREFIXES[i];
+        }
+    }
+    return null;
+}
+
+/**
+ * 从完整键提取短名（namespace 后的部分）
+ * "subsystem.machine_max.engine" → "engine"
+ * "connector.machine_max.front_wheel" → "front_wheel"
+ */
+function extractShortName(fullKey, ns) {
+    if (!fullKey || typeof fullKey !== 'string') return fullKey || '';
+    ns = ns || 'machine_max';
+    var prefix = '.' + ns + '.';
+    var idx = fullKey.indexOf(prefix);
+    if (idx >= 0) {
+        return fullKey.substring(idx + prefix.length);
     }
     return fullKey;
 }
 
 /**
- * 生成 resource location 的显示标签
- *
- * 将命名空间前缀替换为中文显示名，短名称中的下划线转为空格，
- * 首字母大写。如：
- * "machine_max:standard_front_wheel" → "machine_max:Standard Front Wheel"
- *
- * @param {string} key - resource location 全名
- * @param {string} locale - 语言代码（仅用于缩略显示，暂未实现国际化）
- * @param {string} ns - 命名空间
- * @returns {string} 显示标签
+ * 构建完整键
+ * 如果 shortName 已经是完整键格式，则提取短名后重建，防止二次拼接
+ * "subsystem", "engine", "machine_max" → "subsystem.machine_max.engine"
  */
-function displayLabel(key, locale, ns) {
-    if (!key) return '';
-    var shortName = extractShortName(key, ns);
-    var words = shortName.replace(/_/g, ' ').split(' ');
-    for (var i = 0; i < words.length; i++) {
-        if (words[i].length > 0) {
-            words[i] = words[i][0].toUpperCase() + words[i].substring(1);
-        }
+function buildFullKey(type, shortName, ns) {
+    if (!shortName) return '';
+    ns = ns || 'machine_max';
+    /* 防御: 如果 shortName 已经是完整键，提取短名后重建 */
+    var existingType = extractType(shortName);
+    if (existingType) {
+        shortName = extractShortName(shortName, ns);
     }
-    return (ns || '').split(':')[0] + ':' + words.join(' ');
+    if (type) {
+        return type + '.' + ns + '.' + shortName;
+    }
+    return shortName;
 }
 
 /**
- * 根据短名称构建完整的 resource location 键名
- *
- * "standard_front_wheel" + "machine_max" → "machine_max:standard_front_wheel"
- *
- * @param {string} type - 类型标识（用于日志/校验，暂未使用）
- * @param {string} shortName - 短名称
- * @param {string} namespace - 命名空间
- * @returns {string} 全名
+ * 生成显示标签
+ * "subsystem.machine_max.engine" → "[子系统]engine"
+ * 用于下拉菜单、列表项等 UI 展示
  */
-function buildFullKey(type, shortName, namespace) {
-    if (!shortName) return '';
-    if (!namespace) return shortName;
-    if (shortName.indexOf(':') >= 0) return shortName;
-    return namespace + ':' + shortName;
+function displayLabel(fullKey, locale, ns) {
+    if (!fullKey || typeof fullKey !== 'string') return fullKey || '';
+    var type = extractType(fullKey);
+    var shortName = extractShortName(fullKey, ns);
+    if (!type) return shortName;
+    var labels = TYPE_LABELS[type];
+    var label = labels ? (labels[locale] || labels['zh'] || type) : type;
+    return '[' + label + ']' + shortName;
+}
+
+/**
+ * 从 variant 收集信号目标选项，按类型分组
+ * 返回 [{ type, shortName, fullKey, label }]
+ */
+function getTargetOptions(variant, ns) {
+    var options = [];
+    ns = ns || 'machine_max';
+    if (!variant) return options;
+    var subParts = variant.sub_parts || {};
+    for (var spKey in subParts) {
+        if (!subParts.hasOwnProperty(spKey)) continue;
+        var sp = subParts[spKey];
+        if (!sp || typeof sp !== 'object') continue;
+        var connectors = sp.connectors || {};
+        for (var connKey in connectors) {
+            if (!connectors.hasOwnProperty(connKey)) continue;
+            if (options.some(function(o) { return o.fullKey === connKey; })) continue;
+            options.push({
+                type: 'connector',
+                shortName: extractShortName(connKey, ns),
+                fullKey: connKey,
+                label: displayLabel(connKey, 'zh', ns),
+            });
+        }
+        var subsystems = sp.subsystems || {};
+        for (var ssKey in subsystems) {
+            if (!subsystems.hasOwnProperty(ssKey)) continue;
+            if (options.some(function(o) { return o.fullKey === ssKey; })) continue;
+            options.push({
+                type: 'subsystem',
+                shortName: extractShortName(ssKey, ns),
+                fullKey: ssKey,
+                label: displayLabel(ssKey, 'zh', ns),
+            });
+        }
+    }
+    return options;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        extractShortName,
-        displayLabel,
-        buildFullKey,
-    };
+    module.exports = { extractType, extractShortName, buildFullKey, displayLabel, getTargetOptions, TYPE_LABELS, TYPE_PREFIXES };
 }

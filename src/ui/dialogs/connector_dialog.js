@@ -367,6 +367,12 @@ function showConnectorManagerDialog(config) {
     }
 
     var connectors = connector_manager.listConnectors(config);
+    log.info('showConnectorManagerDialog: listConnectors 返回 ' + (connectors ? connectors.length : 'null') + ' 个定义');
+    if (connectors && connectors.length > 0) {
+        log.info('showConnectorManagerDialog: 连接点定义列表', connectors.map(function (c) { return c.id; }));
+    } else {
+        log.warn('showConnectorManagerDialog: 连接点定义列表为空');
+    }
     var listHtml = _buildConnectorListHtml(connectors);
     var hasContentPack = _hasContentPack(config);
 
