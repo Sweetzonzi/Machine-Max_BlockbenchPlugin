@@ -17,6 +17,7 @@ Vue.component('mm-subsystem-panel', {
     props: {
         config: { type: Object, required: true },
         subsystemKey: { type: String, default: '' },
+        namespace: { type: String, default: 'machine_max' },
         parentSubPartKey: { type: String, default: '' },
         subsystemDefs: { type: Object, default: function () { return {}; } },
         allLocatorNames: { type: Array, default: function () { return []; } },
@@ -25,17 +26,21 @@ Vue.component('mm-subsystem-panel', {
     },
     data: function () {
         return {
-            editingName: this.subsystemKey || '',
+            editingName: nameUtils.extractShortName(this.subsystemKey, this.namespace),
         };
     },
     watch: {
         subsystemKey: function (val) {
-            if (val !== this.editingName) {
-                this.editingName = val;
+            var short = nameUtils.extractShortName(val, this.namespace);
+            if (short !== this.editingName) {
+                this.editingName = short;
             }
         },
     },
     computed: {
+        namePrefix: function () {
+            return 'subsystem.' + this.namespace + '.';
+        },
         typeId: function () {
             return this.config.type || '';
         },
@@ -103,8 +108,10 @@ Vue.component('mm-subsystem-panel', {
             this.$emit('field-change', this.subsystemKey, field, value);
         },
         onNameChange: function (value) {
-            if (value !== this.subsystemKey) {
-                this.$emit('name-change', this.subsystemKey, value);
+            var oldKey = this.subsystemKey;
+            var newKey = nameUtils.buildFullKey('subsystem', value, this.namespace);
+            if (newKey !== oldKey) {
+                this.$emit('name-change', oldKey, newKey);
             }
         },
         onNameBlur: function (event) {

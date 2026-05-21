@@ -14,6 +14,7 @@ Vue.component('mm-sub-part-panel', {
         config: { type: Object, required: true },
         elementName: { type: String, default: '' },
         spName: { type: String, default: '' },
+        namespace: { type: String, default: 'machine_max' },
         badgeColor: { type: String, default: '#4A90D9' },
         badgeLabel: { type: String, default: '子零件' },
         hitBoxes: { type: Object, default: function() { return {}; } },
@@ -25,15 +26,16 @@ Vue.component('mm-sub-part-panel', {
     data: function () {
         return {
             newEndBone: '',
-            editingName: this.spName || '',
+            editingName: nameUtils.extractShortName(this.spName, this.namespace),
             editingStartBone: this.config.start_bone,
             editingMassCenter: this.config.mass_center,
         };
     },
     watch: {
         spName: function (val) {
-            if (val !== this.editingName) {
-                this.editingName = val;
+            var short = nameUtils.extractShortName(val, this.namespace);
+            if (short !== this.editingName) {
+                this.editingName = short;
             }
         },
         'config.start_bone': function (val) {
@@ -48,6 +50,9 @@ Vue.component('mm-sub-part-panel', {
         },
     },
     computed: {
+        namePrefix: function () {
+            return 'sub_part.' + this.namespace + '.';
+        },
         boneListId: function () {
             return 'mm-bone-list-' + this._uid;
         },
@@ -87,8 +92,10 @@ Vue.component('mm-sub-part-panel', {
             this.$emit('field-change', field, value);
         },
         onNameChange: function (value) {
-            if (value !== this.spName) {
-                this.$emit('name-change', this.spName, value);
+            var oldKey = this.spName;
+            var newKey = nameUtils.buildFullKey('sub_part', value, this.namespace);
+            if (newKey !== oldKey) {
+                this.$emit('name-change', oldKey, newKey);
             }
         },
         onNameBlur: function (event) {

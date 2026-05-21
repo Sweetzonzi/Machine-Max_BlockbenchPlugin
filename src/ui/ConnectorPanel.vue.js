@@ -16,6 +16,7 @@ Vue.component('mm-connector-panel', {
         config: { type: Object, required: true },
         elementName: { type: String, default: '' },
         connectorName: { type: String, default: '' },
+        namespace: { type: String, default: 'machine_max' },
         parentSubPartKey: { type: String, default: '' },
         connectorDefs: { type: Object, default: function() { return {}; } },
         allLocatorNames: { type: Array, default: function() { return []; } },
@@ -26,14 +27,15 @@ Vue.component('mm-connector-panel', {
     },
     data: function () {
         return {
-            editingName: this.connectorName || '',
+            editingName: nameUtils.extractShortName(this.connectorName, this.namespace),
             editingLocator: this.config.locator || this.elementName || '',
         };
     },
     watch: {
         connectorName: function (val) {
-            if (val !== this.editingName) {
-                this.editingName = val;
+            var short = nameUtils.extractShortName(val, this.namespace);
+            if (short !== this.editingName) {
+                this.editingName = short;
             }
         },
         'config.locator': function (val) {
@@ -43,6 +45,9 @@ Vue.component('mm-connector-panel', {
         },
     },
     computed: {
+        namePrefix: function () {
+            return 'connector.' + this.namespace + '.';
+        },
         locatorListId: function () {
             return 'mm-connector-loc-list-' + this._uid;
         },
@@ -98,8 +103,10 @@ Vue.component('mm-connector-panel', {
             return nameUtils.displayLabel(fullKey, 'zh', 'machine_max');
         },
         onNameChange: function (value) {
-            if (value !== this.connectorName) {
-                this.$emit('name-change', this.connectorName, value);
+            var oldKey = this.connectorName;
+            var newKey = nameUtils.buildFullKey('connector', value, this.namespace);
+            if (newKey !== oldKey) {
+                this.$emit('name-change', oldKey, newKey);
             }
         },
         onNameBlur: function (event) {

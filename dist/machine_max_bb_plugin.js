@@ -7824,7 +7824,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
-      var nameUtils = require_name_utils();
+      var nameUtils2 = require_name_utils();
       var log2 = createLogger2("GenLang");
       function _toDisplayName(key) {
         return key.replace(/_/g, " ").replace(/\b\w/g, function(c) {
@@ -7865,28 +7865,28 @@
               var subPart = subPartMap[subPartKey];
               if (!subPart || typeof subPart !== "object") continue;
               if (subPartKey !== "_single" && subPartKey !== "sub_part." + ns + ".main") {
-                var spShortName = nameUtils.extractShortName(subPartKey, ns);
+                var spShortName = nameUtils2.extractShortName(subPartKey, ns);
                 enLang[subPartKey] = _toDisplayName(spShortName);
                 zhLang[subPartKey] = _toDisplayName(spShortName);
               }
               var interactBoxes = subPart.interact_boxes || {};
               for (var interactKey in interactBoxes) {
                 if (!interactBoxes.hasOwnProperty(interactKey)) continue;
-                var ibShortName = nameUtils.extractShortName(interactKey, ns);
+                var ibShortName = nameUtils2.extractShortName(interactKey, ns);
                 enLang[interactKey] = _toDisplayName(ibShortName);
                 zhLang[interactKey] = _toDisplayName(ibShortName);
               }
               var connectors = subPart.connectors || {};
               for (var connectorKey in connectors) {
                 if (!connectors.hasOwnProperty(connectorKey)) continue;
-                var connShortName = nameUtils.extractShortName(connectorKey, ns);
+                var connShortName = nameUtils2.extractShortName(connectorKey, ns);
                 enLang[connectorKey] = _toDisplayName(connShortName);
                 zhLang[connectorKey] = _toDisplayName(connShortName);
               }
               var subsystems = subPart.subsystems || {};
               for (var subsystemKey in subsystems) {
                 if (!subsystems.hasOwnProperty(subsystemKey)) continue;
-                var ssShortName = nameUtils.extractShortName(subsystemKey, ns);
+                var ssShortName = nameUtils2.extractShortName(subsystemKey, ns);
                 enLang[subsystemKey] = _toDisplayName(ssShortName);
                 zhLang[subsystemKey] = _toDisplayName(ssShortName);
               }
@@ -9896,19 +9896,20 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var nameUtils = require_name_utils();
+      var nameUtils2 = require_name_utils();
       Vue.component("mm-sub-part-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
         <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
             <span class="mm-marker-badge" :style="{ background: badgeColor }">{{ badgeLabel }}</span>
-            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:0;border:1px solid transparent;background:transparent;"
+            <span style="color:#888;font-size:11px;white-space:nowrap;flex-shrink:0">{{ namePrefix }}</span>
+            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:80px;border:1px solid transparent;background:transparent;"
                 v-model="editingName"
                 @focus="$event.target.style.border='1px solid #555';$event.target.style.background='#2a2a2a'"
                 @blur="onNameBlur($event)"
                 @change="onNameChange($event.target.value)"
-                placeholder="sub_part.machine_max.main"
-                title="\u5B50\u96F6\u4EF6\u540D\u79F0\uFF08\u5B57\u5178 key\uFF09\uFF0C\u4FEE\u6539\u540E\u81EA\u52A8\u8FC1\u79FB\u5B57\u5178" />
+                placeholder="main"
+                title="\u5B50\u96F6\u4EF6\u540D\u79F0\u77ED\u540D\uFF0C\u4FDD\u5B58\u540E\u81EA\u52A8\u8865\u5168\u4E3A\u5B8C\u6574\u952E" />
         </h3>
     </div>
 
@@ -10090,6 +10091,7 @@
           config: { type: Object, required: true },
           elementName: { type: String, default: "" },
           spName: { type: String, default: "" },
+          namespace: { type: String, default: "machine_max" },
           badgeColor: { type: String, default: "#4A90D9" },
           badgeLabel: { type: String, default: "\u5B50\u96F6\u4EF6" },
           hitBoxes: { type: Object, default: function() {
@@ -10109,15 +10111,16 @@
         data: function() {
           return {
             newEndBone: "",
-            editingName: this.spName || "",
+            editingName: nameUtils2.extractShortName(this.spName, this.namespace),
             editingStartBone: this.config.start_bone,
             editingMassCenter: this.config.mass_center
           };
         },
         watch: {
           spName: function(val) {
-            if (val !== this.editingName) {
-              this.editingName = val;
+            var short = nameUtils2.extractShortName(val, this.namespace);
+            if (short !== this.editingName) {
+              this.editingName = short;
             }
           },
           "config.start_bone": function(val) {
@@ -10132,6 +10135,9 @@
           }
         },
         computed: {
+          namePrefix: function() {
+            return "sub_part." + this.namespace + ".";
+          },
           boneListId: function() {
             return "mm-bone-list-" + this._uid;
           },
@@ -10167,8 +10173,10 @@
             this.$emit("field-change", field, value);
           },
           onNameChange: function(value) {
-            if (value !== this.spName) {
-              this.$emit("name-change", this.spName, value);
+            var oldKey = this.spName;
+            var newKey = nameUtils2.buildFullKey("sub_part", value, this.namespace);
+            if (newKey !== oldKey) {
+              this.$emit("name-change", oldKey, newKey);
             }
           },
           onNameBlur: function(event) {
@@ -10191,10 +10199,10 @@
             return el ? el.name : hbKey;
           },
           resolveInteractBoxName: function(ibKey) {
-            return nameUtils.displayLabel(ibKey);
+            return nameUtils2.displayLabel(ibKey);
           },
           resolveConnectorName: function(connKey) {
-            return nameUtils.displayLabel(connKey);
+            return nameUtils2.displayLabel(connKey);
           },
           /**
            * 解析子系统类型的中文显示名
@@ -10207,7 +10215,7 @@
             return meta ? meta.displayName : ss.type;
           },
           resolveSubsystemShortName: function(ssKey) {
-            return nameUtils.extractShortName(ssKey);
+            return nameUtils2.extractShortName(ssKey);
           },
           /**
            * 获取子系统类型的颜色
@@ -10475,19 +10483,20 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var nameUtils = require_name_utils();
+      var nameUtils2 = require_name_utils();
       Vue.component("mm-interact-box-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
         <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
             <span class="mm-marker-badge" :style="{ background: badgeColor }">{{ badgeLabel }}</span>
-            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:0;border:1px solid transparent;background:transparent;"
+            <span style="color:#888;font-size:11px;white-space:nowrap;flex-shrink:0">{{ namePrefix }}</span>
+            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:80px;border:1px solid transparent;background:transparent;"
                 v-model="editingName"
                 @focus="$event.target.style.border='1px solid #555';$event.target.style.background='#2a2a2a'"
                 @blur="onNameBlur($event)"
                 @change="onNameChange($event.target.value)"
-                placeholder="interact.machine_max.xxx"
-                title="\u4EA4\u4E92\u533A\u540D\u79F0\uFF08\u5B57\u5178 key\uFF09\uFF0C\u4FEE\u6539\u540E\u81EA\u52A8\u8FC1\u79FB\u5B57\u5178" />
+                placeholder="seat"
+                title="\u4EA4\u4E92\u533A\u540D\u79F0\u77ED\u540D\uFF0C\u4FDD\u5B58\u540E\u81EA\u52A8\u8865\u5168\u4E3A\u5B8C\u6574\u952E" />
         </h3>
     </div>
 
@@ -10589,6 +10598,7 @@
           config: { type: Object, required: true },
           elementName: { type: String, default: "" },
           interactBoxName: { type: String, default: "" },
+          namespace: { type: String, default: "machine_max" },
           parentSubPartKey: { type: String, default: "" },
           /** 当前子零件内的子系统映射，用于信号目标下拉选择 */
           parentSubsystems: { type: Object, default: function() {
@@ -10606,14 +10616,15 @@
         data: function() {
           return {
             overwriteExpanded: false,
-            editingName: this.interactBoxName || "",
+            editingName: nameUtils2.extractShortName(this.interactBoxName, this.namespace),
             editingBone: this.config.bone || this.elementName || ""
           };
         },
         watch: {
           interactBoxName: function(val) {
-            if (val !== this.editingName) {
-              this.editingName = val;
+            var short = nameUtils2.extractShortName(val, this.namespace);
+            if (short !== this.editingName) {
+              this.editingName = short;
             }
           },
           "config.bone": function(val) {
@@ -10623,6 +10634,9 @@
           }
         },
         computed: {
+          namePrefix: function() {
+            return "interact." + this.namespace + ".";
+          },
           boneListId: function() {
             return "mm-ib-bone-list-" + this._uid;
           },
@@ -10665,14 +10679,16 @@
         },
         methods: {
           displayLabel: function(fullKey) {
-            return nameUtils.displayLabel(fullKey, "zh", "machine_max");
+            return nameUtils2.displayLabel(fullKey, "zh", "machine_max");
           },
           onFieldChange: function(field, value) {
             this.$emit("field-change", field, value);
           },
           onNameChange: function(value) {
-            if (value !== this.interactBoxName) {
-              this.$emit("name-change", this.interactBoxName, value);
+            var oldKey = this.interactBoxName;
+            var newKey = nameUtils2.buildFullKey("interact", value, this.namespace);
+            if (newKey !== oldKey) {
+              this.$emit("name-change", oldKey, newKey);
             }
           },
           onNameBlur: function(event) {
@@ -10800,19 +10816,20 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var nameUtils = require_name_utils();
+      var nameUtils2 = require_name_utils();
       Vue.component("mm-connector-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
         <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
             <span class="mm-marker-badge" style="background:#3AA83A">\u8FDE\u63A5\u70B9</span>
-            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:0;border:1px solid transparent;background:transparent;"
+            <span style="color:#888;font-size:11px;white-space:nowrap;flex-shrink:0">{{ namePrefix }}</span>
+            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:80px;border:1px solid transparent;background:transparent;"
                 v-model="editingName"
                 @focus="$event.target.style.border='1px solid #555';$event.target.style.background='#2a2a2a'"
                 @blur="onNameBlur($event)"
                 @change="onNameChange($event.target.value)"
-                placeholder="connector.machine_max.xxx"
-                title="\u8FDE\u63A5\u70B9\u540D\u79F0\uFF08\u5B57\u5178 key\uFF09\uFF0C\u4FEE\u6539\u540E\u81EA\u52A8\u8FC1\u79FB\u5B57\u5178" />
+                placeholder="front_wheel"
+                title="\u8FDE\u63A5\u70B9\u540D\u79F0\u77ED\u540D\uFF0C\u4FDD\u5B58\u540E\u81EA\u52A8\u8865\u5168\u4E3A\u5B8C\u6574\u952E" />
         </h3>
     </div>
 
@@ -10963,6 +10980,7 @@
           config: { type: Object, required: true },
           elementName: { type: String, default: "" },
           connectorName: { type: String, default: "" },
+          namespace: { type: String, default: "machine_max" },
           parentSubPartKey: { type: String, default: "" },
           connectorDefs: { type: Object, default: function() {
             return {};
@@ -10981,14 +10999,15 @@
         },
         data: function() {
           return {
-            editingName: this.connectorName || "",
+            editingName: nameUtils2.extractShortName(this.connectorName, this.namespace),
             editingLocator: this.config.locator || this.elementName || ""
           };
         },
         watch: {
           connectorName: function(val) {
-            if (val !== this.editingName) {
-              this.editingName = val;
+            var short = nameUtils2.extractShortName(val, this.namespace);
+            if (short !== this.editingName) {
+              this.editingName = short;
             }
           },
           "config.locator": function(val) {
@@ -10998,6 +11017,9 @@
           }
         },
         computed: {
+          namePrefix: function() {
+            return "connector." + this.namespace + ".";
+          },
           locatorListId: function() {
             return "mm-connector-loc-list-" + this._uid;
           },
@@ -11066,11 +11088,13 @@
         },
         methods: {
           displayLabel: function(fullKey) {
-            return nameUtils.displayLabel(fullKey, "zh", "machine_max");
+            return nameUtils2.displayLabel(fullKey, "zh", "machine_max");
           },
           onNameChange: function(value) {
-            if (value !== this.connectorName) {
-              this.$emit("name-change", this.connectorName, value);
+            var oldKey = this.connectorName;
+            var newKey = nameUtils2.buildFullKey("connector", value, this.namespace);
+            if (newKey !== oldKey) {
+              this.$emit("name-change", oldKey, newKey);
             }
           },
           onNameBlur: function(event) {
@@ -11315,13 +11339,14 @@
     <div class="mm-sticky-title">
         <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
             <span class="mm-marker-badge" :style="{ background: typeColor }">SS</span>
-            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:0;border:1px solid transparent;background:transparent;"
+            <span style="color:#888;font-size:11px;white-space:nowrap;flex-shrink:0">{{ namePrefix }}</span>
+            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:80px;border:1px solid transparent;background:transparent;"
                 v-model="editingName"
                 @focus="$event.target.style.border='1px solid #555';$event.target.style.background='#2a2a2a'"
                 @blur="onNameBlur($event)"
                 @change="onNameChange($event.target.value)"
-                :placeholder="subsystemKey"
-                title="\u5B50\u7CFB\u7EDF\u540D\u79F0\uFF08\u5B57\u5178 key\uFF09\uFF0C\u4FEE\u6539\u540E\u81EA\u52A8\u8FC1\u79FB\u5B57\u5178" />
+                placeholder="engine"
+                title="\u5B50\u7CFB\u7EDF\u540D\u79F0\u77ED\u540D\uFF0C\u4FDD\u5B58\u540E\u81EA\u52A8\u8865\u5168\u4E3A\u5B8C\u6574\u952E" />
         </h3>
     </div>
 
@@ -11469,6 +11494,7 @@
         props: {
           config: { type: Object, required: true },
           subsystemKey: { type: String, default: "" },
+          namespace: { type: String, default: "machine_max" },
           parentSubPartKey: { type: String, default: "" },
           subsystemDefs: { type: Object, default: function() {
             return {};
@@ -11485,17 +11511,21 @@
         },
         data: function() {
           return {
-            editingName: this.subsystemKey || ""
+            editingName: nameUtils.extractShortName(this.subsystemKey, this.namespace)
           };
         },
         watch: {
           subsystemKey: function(val) {
-            if (val !== this.editingName) {
-              this.editingName = val;
+            var short = nameUtils.extractShortName(val, this.namespace);
+            if (short !== this.editingName) {
+              this.editingName = short;
             }
           }
         },
         computed: {
+          namePrefix: function() {
+            return "subsystem." + this.namespace + ".";
+          },
           typeId: function() {
             return this.config.type || "";
           },
@@ -11580,8 +11610,10 @@
             this.$emit("field-change", this.subsystemKey, field, value);
           },
           onNameChange: function(value) {
-            if (value !== this.subsystemKey) {
-              this.$emit("name-change", this.subsystemKey, value);
+            var oldKey = this.subsystemKey;
+            var newKey = nameUtils.buildFullKey("subsystem", value, this.namespace);
+            if (newKey !== oldKey) {
+              this.$emit("name-change", oldKey, newKey);
             }
           },
           onNameBlur: function(event) {
@@ -11851,7 +11883,7 @@
       var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_icons();
       var { showToast: showToast2 } = require_notify();
       var content_pack_manager = require_content_pack_manager();
-      var nameUtils = require_name_utils();
+      var nameUtils2 = require_name_utils();
       var { showAddTagDialog, _hashTagColor } = require_tag_dialog_helper();
       var log2 = createLogger2("UI");
       require_SubPartPanel_vue();
@@ -11887,6 +11919,7 @@
             v-if="selectedSubsystemConfig"
             :config="selectedSubsystemConfig"
             :subsystem-key="selectedSubsystemKey"
+            :namespace="config.namespace || 'machine_max'"
             :parent-sub-part-key="selectedSubsystemParentSpKey"
             :subsystem-defs="availableSubsystemDefs"
             :all-locator-names="allLocatorNames"
@@ -11983,6 +12016,7 @@
             :config="selectedSubPartConfig"
             :element-name="selectedElementName"
             :sp-name="selectedMarker ? selectedMarker.config_ref : ''"
+            :namespace="config.namespace || 'machine_max'"
             :hit-boxes="selectedSubPartConfig ? selectedSubPartConfig.hit_boxes || {} : {}"
             :interact-boxes="selectedSubPartConfig ? selectedSubPartConfig.interact_boxes || {} : {}"
             :all-bone-names="allBoneNames"
@@ -12014,6 +12048,7 @@
             :config="selectedInteractBoxConfig"
             :element-name="selectedElementName"
             :interact-box-name="interactBoxName"
+            :namespace="config.namespace || 'machine_max'"
             :parent-sub-part-key="interactBoxParentSubPartKey"
             :parent-subsystems="interactBoxParentSubsystems"
             :signal-target-hints="interactBoxParentSignalTargetHints"
@@ -12028,6 +12063,7 @@
             :config="selectedConnectorConfig"
             :element-name="selectedElementName"
             :connector-name="connectorKeyName"
+            :namespace="config.namespace || 'machine_max'"
             :parent-sub-part-key="connectorParentSubPartKey"
             :connector-defs="availableConnectorDefs"
             :all-locator-names="allLocatorNames"
@@ -12278,13 +12314,13 @@
             if (sp.connectors) {
               var connKeys = Object.keys(sp.connectors);
               for (var i = 0; i < connKeys.length; i++) {
-                result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
+                result.push({ value: connKeys[i], label: nameUtils2.displayLabel(connKeys[i], "zh", ns) });
               }
             }
             if (sp.subsystems) {
               var ssKeys = Object.keys(sp.subsystems);
               for (var j = 0; j < ssKeys.length; j++) {
-                result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
+                result.push({ value: ssKeys[j], label: nameUtils2.displayLabel(ssKeys[j], "zh", ns) });
               }
             }
             return result;
@@ -12350,13 +12386,13 @@
             if (sp.connectors) {
               var connKeys = Object.keys(sp.connectors);
               for (var i = 0; i < connKeys.length; i++) {
-                result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
+                result.push({ value: connKeys[i], label: nameUtils2.displayLabel(connKeys[i], "zh", ns) });
               }
             }
             if (sp.subsystems) {
               var ssKeys = Object.keys(sp.subsystems);
               for (var j = 0; j < ssKeys.length; j++) {
-                result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
+                result.push({ value: ssKeys[j], label: nameUtils2.displayLabel(ssKeys[j], "zh", ns) });
               }
             }
             return result;
@@ -12438,13 +12474,13 @@
             if (sp.connectors) {
               var connKeys = Object.keys(sp.connectors);
               for (var i = 0; i < connKeys.length; i++) {
-                result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
+                result.push({ value: connKeys[i], label: nameUtils2.displayLabel(connKeys[i], "zh", ns) });
               }
             }
             if (sp.subsystems) {
               var ssKeys = Object.keys(sp.subsystems);
               for (var j = 0; j < ssKeys.length; j++) {
-                result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
+                result.push({ value: ssKeys[j], label: nameUtils2.displayLabel(ssKeys[j], "zh", ns) });
               }
             }
             return result;

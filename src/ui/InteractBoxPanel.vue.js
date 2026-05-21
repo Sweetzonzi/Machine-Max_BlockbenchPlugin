@@ -17,6 +17,7 @@ Vue.component('mm-interact-box-panel', {
         config: { type: Object, required: true },
         elementName: { type: String, default: '' },
         interactBoxName: { type: String, default: '' },
+        namespace: { type: String, default: 'machine_max' },
         parentSubPartKey: { type: String, default: '' },
         /** 当前子零件内的子系统映射，用于信号目标下拉选择 */
         parentSubsystems: { type: Object, default: function() { return {}; } },
@@ -28,14 +29,15 @@ Vue.component('mm-interact-box-panel', {
     data: function () {
         return {
             overwriteExpanded: false,
-            editingName: this.interactBoxName || '',
+            editingName: nameUtils.extractShortName(this.interactBoxName, this.namespace),
             editingBone: this.config.bone || this.elementName || '',
         };
     },
     watch: {
         interactBoxName: function (val) {
-            if (val !== this.editingName) {
-                this.editingName = val;
+            var short = nameUtils.extractShortName(val, this.namespace);
+            if (short !== this.editingName) {
+                this.editingName = short;
             }
         },
         'config.bone': function (val) {
@@ -45,6 +47,9 @@ Vue.component('mm-interact-box-panel', {
         },
     },
     computed: {
+        namePrefix: function () {
+            return 'interact.' + this.namespace + '.';
+        },
         boneListId: function () {
             return 'mm-ib-bone-list-' + this._uid;
         },
@@ -80,8 +85,10 @@ Vue.component('mm-interact-box-panel', {
             this.$emit('field-change', field, value);
         },
         onNameChange: function (value) {
-            if (value !== this.interactBoxName) {
-                this.$emit('name-change', this.interactBoxName, value);
+            var oldKey = this.interactBoxName;
+            var newKey = nameUtils.buildFullKey('interact', value, this.namespace);
+            if (newKey !== oldKey) {
+                this.$emit('name-change', oldKey, newKey);
             }
         },
         onNameBlur: function (event) {
