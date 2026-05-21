@@ -10568,7 +10568,7 @@
                     :value="t"
                     @change="updateSignalTargetItem(channel, ti, $event.target.value)">
                     <option value="">\uFF08\u9009\u62E9\u76EE\u6807\uFF09</option>
-                    <option v-for="opt in getFilteredTargets(channel)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                    <option v-for="opt in getFilteredTargets(channel, t)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                 </select>
                 <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
             </div>
@@ -10693,10 +10693,12 @@
           // ===== 信号目标编辑 =====
           /**
            * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
+           * 但保留当前项自身，防止 <select> 因无匹配 option 而显示空白
            * @param {string} channel - 频道名
+           * @param {string} [currentValue] - 当前项的值，此值不会被过滤
            * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
            */
-          getFilteredTargets: function(channel) {
+          getFilteredTargets: function(channel, currentValue) {
             var allTargets = this.signalTargetHints;
             if (!allTargets || allTargets.length === 0) return [];
             var entries = this.signalTargetEntries;
@@ -10705,7 +10707,7 @@
             var filtered = [];
             for (var i = 0; i < allTargets.length; i++) {
               var t = allTargets[i];
-              if (usedTargets.indexOf(t.value) === -1) {
+              if (t.value === currentValue || usedTargets.indexOf(t.value) === -1) {
                 filtered.push(t);
               }
             }
@@ -10885,7 +10887,7 @@
                     :value="t"
                     @change="updateSignalTargetItem(channel, ti, $event.target.value)">
                     <option value="">\uFF08\u9009\u62E9\u76EE\u6807\uFF09</option>
-                    <option v-for="opt in getFilteredTargets(channel)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                    <option v-for="opt in getFilteredTargets(channel, t)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                 </select>
                 <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
             </div>
@@ -11098,10 +11100,12 @@
           // ===== 信号目标编辑 =====
           /**
            * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
+           * 但保留当前项自身，防止 <select> 因无匹配 option 而显示空白
            * @param {string} channel - 频道名
+           * @param {string} [currentValue] - 当前项的值，此值不会被过滤
            * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
            */
-          getFilteredTargets: function(channel) {
+          getFilteredTargets: function(channel, currentValue) {
             var allTargets = this.signalTargetHints;
             if (!allTargets || allTargets.length === 0) return [];
             var entries = this.signalTargetEntries;
@@ -11110,7 +11114,7 @@
             var filtered = [];
             for (var i = 0; i < allTargets.length; i++) {
               var t = allTargets[i];
-              if (usedTargets.indexOf(t.value) === -1) {
+              if (t.value === currentValue || usedTargets.indexOf(t.value) === -1) {
                 filtered.push(t);
               }
             }
@@ -11424,7 +11428,7 @@
                             :value="t"
                             @change="updateSignalTarget(field.field, channel, ti, $event.target.value)">
                             <option value="">\uFF08\u9009\u62E9\u76EE\u6807\uFF09</option>
-                            <option v-for="opt in getFilteredTargets(field.field, channel)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                            <option v-for="opt in getFilteredTargets(field.field, channel, t)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                         </select>
                         <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTarget(field.field, channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
                     </div>
@@ -11600,11 +11604,13 @@
           },
           /**
            * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
+           * 但保留当前项自身，防止 <select> 因无匹配 option 而显示空白
            * @param {string} sigField - 信号字段名（如 control_outputs）
            * @param {string} channel - 频道名
+           * @param {string} [currentValue] - 当前项的值，此值不会被过滤
            * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
            */
-          getFilteredTargets: function(sigField, channel) {
+          getFilteredTargets: function(sigField, channel, currentValue) {
             var allTargets = this.signalTargetOptions;
             if (!allTargets || allTargets.length === 0) return [];
             var entries = this.getSignalEntries(sigField);
@@ -11613,7 +11619,7 @@
             var filtered = [];
             for (var i = 0; i < allTargets.length; i++) {
               var t = allTargets[i];
-              if (usedTargets.indexOf(t.value) === -1) {
+              if (t.value === currentValue || usedTargets.indexOf(t.value) === -1) {
                 filtered.push(t);
               }
             }

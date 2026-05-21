@@ -83,7 +83,7 @@
                     :value="t"
                     @change="updateSignalTargetItem(channel, ti, $event.target.value)">
                     <option value="">（选择目标）</option>
-                    <option v-for="opt in getFilteredTargets(channel)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                    <option v-for="opt in getFilteredTargets(channel, t)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                 </select>
                 <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="删除目标">×</button>
             </div>

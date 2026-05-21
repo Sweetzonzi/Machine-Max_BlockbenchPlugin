@@ -128,11 +128,13 @@ Vue.component('mm-subsystem-panel', {
         },
         /**
          * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
+         * 但保留当前项自身，防止 <select> 因无匹配 option 而显示空白
          * @param {string} sigField - 信号字段名（如 control_outputs）
          * @param {string} channel - 频道名
+         * @param {string} [currentValue] - 当前项的值，此值不会被过滤
          * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
          */
-        getFilteredTargets: function (sigField, channel) {
+        getFilteredTargets: function (sigField, channel, currentValue) {
             var allTargets = this.signalTargetOptions;
             if (!allTargets || allTargets.length === 0) return [];
             var entries = this.getSignalEntries(sigField);
@@ -141,7 +143,7 @@ Vue.component('mm-subsystem-panel', {
             var filtered = [];
             for (var i = 0; i < allTargets.length; i++) {
                 var t = allTargets[i];
-                if (usedTargets.indexOf(t.value) === -1) {
+                if (t.value === currentValue || usedTargets.indexOf(t.value) === -1) {
                     filtered.push(t);
                 }
             }
