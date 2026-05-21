@@ -112,12 +112,26 @@
                 </div>
             </div>
         </div>
+
+        <!-- 子零件列表（风格与子零件面板中的碰撞箱/连接点列表一致） -->
+        <div class="mm-section">
+            <h4 class="mm-section-title">子零件 ({{ subPartEntries.length }})</h4>
+            <div v-if="subPartEntries.length === 0" class="mm-element-info" style="color:#888">
+                暂无子零件 — 在 Outliner 中右键骨骼并选择"标记为子零件"
+            </div>
+            <div v-for="entry in subPartEntries" :key="entry.key" class="mm-sub-item-row mm-clickable" :title="'点击跳转到子零件 ' + entry.key" @click="navigateToSubPart(entry.key)">
+                <span class="mm-sub-item-name">
+                    <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
+                    {{ entry.shortName }}
+                </span>
+                <span class="mm-sub-item-meta">{{ entry.startBone || '（无绑定骨骼）' }} | 碰撞箱:{{ entry.hitBoxCount }} | 交互区:{{ entry.interactBoxCount }} | 连接点:{{ entry.connectorCount }} | 子系统:{{ entry.subsystemCount }}</span>
+            </div>
+        </div>
     </div>
 
-    <!-- 元素属性面板（子零件/碰撞箱/交互区/连接点） -->
-    <div v-show="!isSubsystemSelected && selectedElement" class="mm-panel-body">
-        <!-- 子零件属性面板 -->
-        <mm-sub-part-panel v-if="isSubPartSelected"
+    <!-- 子零件属性面板（独立 v-show 容器，保留滚动位置） -->
+    <div v-show="!isSubsystemSelected && isSubPartSelected" class="mm-panel-body">
+        <mm-sub-part-panel v-if="selectedSubPartConfig"
             :config="selectedSubPartConfig"
             :element-name="selectedElementName"
             :sp-name="selectedMarker ? selectedMarker.config_ref : ''"
@@ -136,9 +150,11 @@
             @navigate-to-subsystem="selectSubsystem({ subsystemKey: $event, spKey: selectedMarker.config_ref })"
             @add-subsystem="addSubsystem(selectedMarker.config_ref)"
             @delete-subsystem="deleteSubsystem($event.spKey || selectedMarker.config_ref, $event.ssKey)" />
+    </div>
 
-        <!-- 碰撞箱属性面板 -->
-        <mm-hit-box-panel v-else-if="isHitBoxSelected"
+    <!-- 碰撞箱属性面板（独立 v-show 容器，保留滚动位置） -->
+    <div v-show="!isSubsystemSelected && isHitBoxSelected" class="mm-panel-body">
+        <mm-hit-box-panel v-if="selectedHitBoxConfig"
             :config="selectedHitBoxConfig"
             :element-name="selectedElementName"
             :parent-sub-part-key="hitBoxParentSubPartKey"
@@ -147,9 +163,11 @@
             @field-change="updateHitBoxField"
             @overwrite-change="updateHitBoxOverwrite"
             @navigate-to-sub-part="navigateToSubPart" />
+    </div>
 
-        <!-- 交互区属性面板 -->
-        <mm-interact-box-panel v-else-if="isInteractBoxSelected"
+    <!-- 交互区属性面板（独立 v-show 容器，保留滚动位置） -->
+    <div v-show="!isSubsystemSelected && isInteractBoxSelected" class="mm-panel-body">
+        <mm-interact-box-panel v-if="selectedInteractBoxConfig"
             :config="selectedInteractBoxConfig"
             :element-name="selectedElementName"
             :interact-box-name="interactBoxName"
@@ -162,9 +180,11 @@
             @name-change="renameInteractBox"
             @bone-change="migrateInteractBoxBone"
             @navigate-to-sub-part="navigateToSubPart" />
+    </div>
 
-        <!-- 连接点属性面板 -->
-        <mm-connector-panel v-else-if="isConnectorSelected"
+    <!-- 连接点属性面板（独立 v-show 容器，保留滚动位置） -->
+    <div v-show="!isSubsystemSelected && isConnectorSelected" class="mm-panel-body">
+        <mm-connector-panel v-if="selectedConnectorConfig"
             :config="selectedConnectorConfig"
             :element-name="selectedElementName"
             :connector-name="connectorKeyName"
@@ -178,9 +198,11 @@
             @locator-change="migrateConnectorLocator"
             @name-change="renameConnector"
             @navigate-to-sub-part="navigateToSubPart" />
+    </div>
 
-        <!-- 未标记或未知类型 -->
-        <div v-else class="mm-section">
+    <!-- 未标记或未知类型（独立 v-show 容器，保留滚动位置） -->
+    <div v-show="!isSubsystemSelected && selectedElement && !isSubPartSelected && !isHitBoxSelected && !isInteractBoxSelected && !isConnectorSelected" class="mm-panel-body">
+        <div class="mm-section">
             <div class="mm-sticky-title">
                 <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">
                     <span class="mm-marker-badge" v-if="selectedMarker"

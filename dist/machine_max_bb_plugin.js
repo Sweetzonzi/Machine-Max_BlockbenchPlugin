@@ -12026,12 +12026,26 @@
                 </div>
             </div>
         </div>
+
+        <!-- \u5B50\u96F6\u4EF6\u5217\u8868\uFF08\u98CE\u683C\u4E0E\u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u5217\u8868\u4E00\u81F4\uFF09 -->
+        <div class="mm-section">
+            <h4 class="mm-section-title">\u5B50\u96F6\u4EF6 ({{ subPartEntries.length }})</h4>
+            <div v-if="subPartEntries.length === 0" class="mm-element-info" style="color:#888">
+                \u6682\u65E0\u5B50\u96F6\u4EF6 \u2014 \u5728 Outliner \u4E2D\u53F3\u952E\u9AA8\u9ABC\u5E76\u9009\u62E9"\u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6"
+            </div>
+            <div v-for="entry in subPartEntries" :key="entry.key" class="mm-sub-item-row mm-clickable" :title="'\u70B9\u51FB\u8DF3\u8F6C\u5230\u5B50\u96F6\u4EF6 ' + entry.key" @click="navigateToSubPart(entry.key)">
+                <span class="mm-sub-item-name">
+                    <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
+                    {{ entry.shortName }}
+                </span>
+                <span class="mm-sub-item-meta">{{ entry.startBone || '\uFF08\u65E0\u7ED1\u5B9A\u9AA8\u9ABC\uFF09' }} | \u78B0\u649E\u7BB1:{{ entry.hitBoxCount }} | \u4EA4\u4E92\u533A:{{ entry.interactBoxCount }} | \u8FDE\u63A5\u70B9:{{ entry.connectorCount }} | \u5B50\u7CFB\u7EDF:{{ entry.subsystemCount }}</span>
+            </div>
+        </div>
     </div>
 
-    <!-- \u5143\u7D20\u5C5E\u6027\u9762\u677F\uFF08\u5B50\u96F6\u4EF6/\u78B0\u649E\u7BB1/\u4EA4\u4E92\u533A/\u8FDE\u63A5\u70B9\uFF09 -->
-    <div v-show="!isSubsystemSelected && selectedElement" class="mm-panel-body">
-        <!-- \u5B50\u96F6\u4EF6\u5C5E\u6027\u9762\u677F -->
-        <mm-sub-part-panel v-if="isSubPartSelected"
+    <!-- \u5B50\u96F6\u4EF6\u5C5E\u6027\u9762\u677F\uFF08\u72EC\u7ACB v-show \u5BB9\u5668\uFF0C\u4FDD\u7559\u6EDA\u52A8\u4F4D\u7F6E\uFF09 -->
+    <div v-show="!isSubsystemSelected && isSubPartSelected" class="mm-panel-body">
+        <mm-sub-part-panel v-if="selectedSubPartConfig"
             :config="selectedSubPartConfig"
             :element-name="selectedElementName"
             :sp-name="selectedMarker ? selectedMarker.config_ref : ''"
@@ -12050,9 +12064,11 @@
             @navigate-to-subsystem="selectSubsystem({ subsystemKey: $event, spKey: selectedMarker.config_ref })"
             @add-subsystem="addSubsystem(selectedMarker.config_ref)"
             @delete-subsystem="deleteSubsystem($event.spKey || selectedMarker.config_ref, $event.ssKey)" />
+    </div>
 
-        <!-- \u78B0\u649E\u7BB1\u5C5E\u6027\u9762\u677F -->
-        <mm-hit-box-panel v-else-if="isHitBoxSelected"
+    <!-- \u78B0\u649E\u7BB1\u5C5E\u6027\u9762\u677F\uFF08\u72EC\u7ACB v-show \u5BB9\u5668\uFF0C\u4FDD\u7559\u6EDA\u52A8\u4F4D\u7F6E\uFF09 -->
+    <div v-show="!isSubsystemSelected && isHitBoxSelected" class="mm-panel-body">
+        <mm-hit-box-panel v-if="selectedHitBoxConfig"
             :config="selectedHitBoxConfig"
             :element-name="selectedElementName"
             :parent-sub-part-key="hitBoxParentSubPartKey"
@@ -12061,9 +12077,11 @@
             @field-change="updateHitBoxField"
             @overwrite-change="updateHitBoxOverwrite"
             @navigate-to-sub-part="navigateToSubPart" />
+    </div>
 
-        <!-- \u4EA4\u4E92\u533A\u5C5E\u6027\u9762\u677F -->
-        <mm-interact-box-panel v-else-if="isInteractBoxSelected"
+    <!-- \u4EA4\u4E92\u533A\u5C5E\u6027\u9762\u677F\uFF08\u72EC\u7ACB v-show \u5BB9\u5668\uFF0C\u4FDD\u7559\u6EDA\u52A8\u4F4D\u7F6E\uFF09 -->
+    <div v-show="!isSubsystemSelected && isInteractBoxSelected" class="mm-panel-body">
+        <mm-interact-box-panel v-if="selectedInteractBoxConfig"
             :config="selectedInteractBoxConfig"
             :element-name="selectedElementName"
             :interact-box-name="interactBoxName"
@@ -12076,9 +12094,11 @@
             @name-change="renameInteractBox"
             @bone-change="migrateInteractBoxBone"
             @navigate-to-sub-part="navigateToSubPart" />
+    </div>
 
-        <!-- \u8FDE\u63A5\u70B9\u5C5E\u6027\u9762\u677F -->
-        <mm-connector-panel v-else-if="isConnectorSelected"
+    <!-- \u8FDE\u63A5\u70B9\u5C5E\u6027\u9762\u677F\uFF08\u72EC\u7ACB v-show \u5BB9\u5668\uFF0C\u4FDD\u7559\u6EDA\u52A8\u4F4D\u7F6E\uFF09 -->
+    <div v-show="!isSubsystemSelected && isConnectorSelected" class="mm-panel-body">
+        <mm-connector-panel v-if="selectedConnectorConfig"
             :config="selectedConnectorConfig"
             :element-name="selectedElementName"
             :connector-name="connectorKeyName"
@@ -12092,9 +12112,11 @@
             @locator-change="migrateConnectorLocator"
             @name-change="renameConnector"
             @navigate-to-sub-part="navigateToSubPart" />
+    </div>
 
-        <!-- \u672A\u6807\u8BB0\u6216\u672A\u77E5\u7C7B\u578B -->
-        <div v-else class="mm-section">
+    <!-- \u672A\u6807\u8BB0\u6216\u672A\u77E5\u7C7B\u578B\uFF08\u72EC\u7ACB v-show \u5BB9\u5668\uFF0C\u4FDD\u7559\u6EDA\u52A8\u4F4D\u7F6E\uFF09 -->
+    <div v-show="!isSubsystemSelected && selectedElement && !isSubPartSelected && !isHitBoxSelected && !isInteractBoxSelected && !isConnectorSelected" class="mm-panel-body">
+        <div class="mm-section">
             <div class="mm-sticky-title">
                 <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">
                     <span class="mm-marker-badge" v-if="selectedMarker"
@@ -12187,6 +12209,29 @@
               return owner && owner.spKey === spKey;
             }).map(function(l) {
               return l.name;
+            });
+          },
+          /**
+           * 当前变体下的所有子零件条目（含短名、起始骨骼、子系统数）
+           * 用于零件/变体属性面板中的子零件列表
+           */
+          subPartEntries: function() {
+            var variant = this.currentVariant;
+            if (!variant || !variant.sub_parts) return [];
+            var ns = this.config && this.config.namespace || "machine_max";
+            var keys = Object.keys(variant.sub_parts);
+            var self = this;
+            return keys.map(function(spKey) {
+              var sp = variant.sub_parts[spKey];
+              return {
+                key: spKey,
+                shortName: nameUtils.extractShortName(spKey, ns),
+                startBone: sp ? sp.start_bone : "",
+                subsystemCount: sp && sp.subsystems ? Object.keys(sp.subsystems).length : 0,
+                hitBoxCount: sp && sp.hit_boxes ? Object.keys(sp.hit_boxes).length : 0,
+                interactBoxCount: sp && sp.interact_boxes ? Object.keys(sp.interact_boxes).length : 0,
+                connectorCount: sp && sp.connectors ? Object.keys(sp.connectors).length : 0
+              };
             });
           },
           /**

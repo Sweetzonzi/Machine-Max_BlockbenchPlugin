@@ -107,6 +107,29 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 .map(function (l) { return l.name; });
         },
         /**
+         * 当前变体下的所有子零件条目（含短名、起始骨骼、子系统数）
+         * 用于零件/变体属性面板中的子零件列表
+         */
+        subPartEntries: function () {
+            var variant = this.currentVariant;
+            if (!variant || !variant.sub_parts) return [];
+            var ns = (this.config && this.config.namespace) || 'machine_max';
+            var keys = Object.keys(variant.sub_parts);
+            var self = this;
+            return keys.map(function (spKey) {
+                var sp = variant.sub_parts[spKey];
+                return {
+                    key: spKey,
+                    shortName: nameUtils.extractShortName(spKey, ns),
+                    startBone: sp ? sp.start_bone : '',
+                    subsystemCount: sp && sp.subsystems ? Object.keys(sp.subsystems).length : 0,
+                    hitBoxCount: sp && sp.hit_boxes ? Object.keys(sp.hit_boxes).length : 0,
+                    interactBoxCount: sp && sp.interact_boxes ? Object.keys(sp.interact_boxes).length : 0,
+                    connectorCount: sp && sp.connectors ? Object.keys(sp.connectors).length : 0,
+                };
+            });
+        },
+        /**
          * 所有可用材料定义（通过内容包管理器合并加载）
          */
         availableMaterials: function () {
