@@ -10063,7 +10063,9 @@
                 <span class="mm-marker-badge" style="background:#3AA83A;font-size:10px;padding:0 4px">CN</span>
                 {{ resolveConnectorName(connKey) }}
             </span>
-            <span class="mm-sub-item-meta">{{ conn.definition || '\uFF08\u672A\u6307\u5B9A\u5B9A\u4E49\uFF09' }}</span>
+            <span class="mm-sub-item-meta" :style="conn.definition ? '' : 'color:#ff6b6b'">
+                <span v-if="!conn.definition" style="margin-right:4px">\u26A0\uFE0F</span>{{ conn.definition || '\u672A\u6307\u5B9A\u5B9A\u4E49' }}
+            </span>
         </div>
     </div>
 
@@ -10083,7 +10085,11 @@
                 </span>
                 <button class="mm-btn mm-btn-sm" @click.stop="deleteSubsystem(ssKey)" title="\u5220\u9664\u5B50\u7CFB\u7EDF" style="color:#ff6b6b;font-size:14px;width:24px;height:24px;min-width:24px;min-height:24px">\xD7</button>
             </div>
-            <span class="mm-sub-item-meta">{{ resolveSubsystemTypeName(ssKey) }}</span>
+            <span class="mm-sub-item-meta">
+                {{ resolveSubsystemTypeName(ssKey) }}
+                <span v-if="resolveSubsystemDefinition(ssKey)" style="color:#888;margin-left:4px">\xB7 {{ resolveSubsystemDefinition(ssKey) }}</span>
+                <span v-else style="color:#ff6b6b;margin-left:4px">\u26A0\uFE0F \u672A\u6307\u5B9A\u578B\u53F7</span>
+            </span>
         </div>
     </div>
 </div>` : "<p>\u5B50\u96F6\u4EF6\u9762\u677F\u52A0\u8F7D\u4E2D...</p>",
@@ -10216,6 +10222,10 @@
           },
           resolveSubsystemShortName: function(ssKey) {
             return nameUtils.extractShortName(ssKey);
+          },
+          resolveSubsystemDefinition: function(ssKey) {
+            var ss = this.config.subsystems && this.config.subsystems[ssKey];
+            return ss ? ss.definition || "" : "";
           },
           /**
            * 获取子系统类型的颜色

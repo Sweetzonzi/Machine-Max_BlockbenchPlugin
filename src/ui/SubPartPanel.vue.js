@@ -135,6 +135,10 @@ Vue.component('mm-sub-part-panel', {
         resolveSubsystemShortName: function (ssKey) {
             return nameUtils.extractShortName(ssKey);
         },
+        resolveSubsystemDefinition: function (ssKey) {
+            var ss = this.config.subsystems && this.config.subsystems[ssKey];
+            return ss ? (ss.definition || '') : '';
+        },
         /**
          * 获取子系统类型的颜色
          */

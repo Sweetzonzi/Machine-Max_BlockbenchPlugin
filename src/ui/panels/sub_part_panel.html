@@ -163,7 +163,9 @@
                 <span class="mm-marker-badge" style="background:#3AA83A;font-size:10px;padding:0 4px">CN</span>
                 {{ resolveConnectorName(connKey) }}
             </span>
-            <span class="mm-sub-item-meta">{{ conn.definition || '（未指定定义）' }}</span>
+            <span class="mm-sub-item-meta" :style="conn.definition ? '' : 'color:#ff6b6b'">
+                <span v-if="!conn.definition" style="margin-right:4px">⚠️</span>{{ conn.definition || '未指定定义' }}
+            </span>
         </div>
     </div>
 
@@ -183,7 +185,11 @@
                 </span>
                 <button class="mm-btn mm-btn-sm" @click.stop="deleteSubsystem(ssKey)" title="删除子系统" style="color:#ff6b6b;font-size:14px;width:24px;height:24px;min-width:24px;min-height:24px">×</button>
             </div>
-            <span class="mm-sub-item-meta">{{ resolveSubsystemTypeName(ssKey) }}</span>
+            <span class="mm-sub-item-meta">
+                {{ resolveSubsystemTypeName(ssKey) }}
+                <span v-if="resolveSubsystemDefinition(ssKey)" style="color:#888;margin-left:4px">· {{ resolveSubsystemDefinition(ssKey) }}</span>
+                <span v-else style="color:#ff6b6b;margin-left:4px">⚠️ 未指定型号</span>
+            </span>
         </div>
     </div>
 </div>
