@@ -2,7 +2,7 @@
 
 ## 概览
 
-配置工厂、版本迁移和元素标记类型系统。所有目录都依赖此层——它是数据模型基础。
+配置工厂、版本迁移、元素标记类型系统和内容包 I/O。所有目录都依赖此层——它是数据模型基础。
 
 ## 结构
 
@@ -10,6 +10,7 @@
 src/core/
 ├── config.js              # 工厂函数 + 迁移引擎（273行）
 ├── config_defaults.js     # 所有默认值、CONFIG_VERSION、预设（410行，纯数据）
+├── content_pack.js        # 内容包目录 I/O：meta.json + 定义文件 CRUD（548行）
 └── element_markers.js     # 标记类型系统（sub_part, hit_box, connector 等）（301行）
 ```
 
@@ -22,6 +23,9 @@ src/core/
 | 处理配置版本迁移 | `config.js` → `MIGRATIONS` 对象 | 按版本号键值存储；`migrateIfNeeded()` 循环补齐间隙 |
 | 添加新标记类型 | `element_markers.js` → `MARKER_TYPES` | 添加 `{ label, icon, color }` 条目；更新 `getMarkerTypesForElement()` |
 | 重算自动排除骨骼 | `element_markers.js` → `recalcAutoEndBones()` | 子零件标记起始骨骼变更时调用 |
+| 读写内容包定义文件 | `content_pack.js` | `readDef()`, `writeDef()`, `deleteDef()` — 按类目分别处理 parts/subsystems/connectors/materials |
+| 管理内容包 meta.json | `content_pack.js` | `openContentPack()`, `createContentPack()`, `readMeta()`, `writeMeta()` |
+| 内容包合并视图 | `content_pack_manager.js` | 合并内置包 + 依赖包 + 当前包的定义列表，标注可编辑性 |
 
 ## 约定
 

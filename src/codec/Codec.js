@@ -92,7 +92,7 @@ function createFieldDescriptor(codec, opts) {
     return {
         defaultValue: defaultVal,
         encodeField: function (value, path) {
-            if (value === undefined || value === defaultVal) return undefined;
+            if (value === undefined || value === null || value === defaultVal) return undefined;
             return codec.encode(value, path);
         },
         decodeField: function (value, key, path) {
@@ -536,6 +536,10 @@ function either(singleCodec, mapCodec) {
         type: 'either',
         encode: function (obj, path) {
             if (obj === null || obj === undefined) return undefined;
+            // 原始值（字符串、数字等）→ 直接 singleCodec encode（用于 textures 等可接受裸值的字段）
+            if (typeof obj !== 'object') {
+                return singleCodec.encode(obj, path);
+            }
             var keys = Object.keys(obj);
             // 只有一个 default key → 简写，unwrap 输出单个对象
             if (keys.length === 1 && keys[0] === WRAP_KEY) {
@@ -547,8 +551,11 @@ function either(singleCodec, mapCodec) {
         decode: function (raw) {
             var wrapped;
             if (raw === null || raw === undefined) return {};
-            if (typeof raw !== 'object' || Array.isArray(raw)) {
-                throw new Error('Expected object for either, got ' + typeof raw);
+            // 原始值（字符串、数字等）→ 包装为 { default: decoded }
+            if (typeof raw !== 'object') {
+                wrapped = {};
+                wrapped[WRAP_KEY] = singleCodec.decode(raw);
+                return wrapped;
             }
             // 检测是单个实体对象还是 map
             if (looksLikeSingleEntity(raw)) {

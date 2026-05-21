@@ -11678,7 +11678,7 @@
       require_SubsystemPanel_vue();
       require_KeyValueEditor_vue();
       var MMMainPanel = Vue.component("mm-main-panel", {
-        template: `<div class="mm-panel" v-if="config">
+        template: `<div class="mm-panel capture_tab_key" v-if="config">
     <div class="mm-panel-header">
         <div class="mm-nav-row">
             <label class="mm-label">\u96F6\u4EF6</label>
@@ -11872,7 +11872,7 @@
         </div>
     </div>
 </div>
-<div v-else class="mm-panel mm-panel-empty">
+<div v-else class="mm-panel mm-panel-empty capture_tab_key">
     <p>\u521D\u59CB\u5316 MachineMax \u914D\u7F6E\u4E2D...</p>
     <p class="mm-element-info">\u8BF7\u786E\u4FDD\u5DF2\u6253\u5F00\u6216\u521B\u5EFA\u4E00\u4E2A .bbmodel \u6A21\u578B\u6587\u4EF6</p>
 </div>`,

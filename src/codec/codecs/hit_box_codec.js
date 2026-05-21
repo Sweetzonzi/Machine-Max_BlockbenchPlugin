@@ -17,16 +17,13 @@ const { Codec } = require('../Codec.js');
 const HitBoxCodec = Codec.record({
     id:         Codec.STRING.field(),              // 碰撞形状ID（必填）
     type:       Codec.STRING.field(),              // 碰撞形状类型（必填，box/sphere/cylinder/capsule/wheel）
-    material:   Codec.STRING.default(''),
+    material:   Codec.STRING.default('machine_max:default'),
     thickness:  Codec.FLOAT.default(1.0),
     condition:  Codec.STRING.default('true'),
     subsystem:  Codec.STRING.default(''),          // 关联子系统
-    overwrite:  Codec.record({                     // 材质覆写（嵌套 record）
-        rha:                        Codec.FLOAT.default(1),
-        block_damage_factor:        Codec.FLOAT.default(1),
-        angle_effect:               Codec.BOOL.default(false),
-        un_penetrate_damage_factor: Codec.FLOAT.default(0),
-    }).default({}),
+    // overwrite：透传对象（对应 Java HitBoxAttr.OverwriteAttr — 14 个可选字段）
+    // 使用 ANY.nullable() 宽松传递，encode 时 null/undefined/空对象跳过
+    overwrite:  Codec.ANY.nullable(),
 });
 
 module.exports = { HitBoxCodec };

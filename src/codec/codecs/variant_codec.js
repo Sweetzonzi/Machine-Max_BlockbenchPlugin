@@ -15,8 +15,14 @@ const { SubPartCodec } = require('./sub_part_codec.js');
 
 const VariantCodec = Codec.record({
     model:      Codec.STRING.field(),
-    textures:   Codec.ANY.default(''),   // 支持 string | string[] | object — MachineMax 多格式兼容
-    animations: Codec.map(Codec.STRING, Codec.STRING).default({}),
+    // textures: either(单值字符串, 完整 map{名称→路径})
+    // — 单值时编码为裸字符串，解码时包装为 {default: 值}
+    // — 多值时编码为完整 map，解码时保持 map
+    // — 默认值 '' 表示未设置，encode 时跳过字段 → Java 端 fallback 到 missingno
+    textures:   Codec.either(Codec.STRING, Codec.map(Codec.STRING, Codec.STRING)).default(''),
+    // animations: 单个资源路径字符串（对应 Java ResourceLocation）
+    // — 默认值 '' 表示未设置，encode 时跳过字段 → Java 端 fallback 到 machine_max:empty
+    animations: Codec.STRING.default(''),
     tags:       Codec.STRING.list().default([]),
     sub_parts:  Codec.either(SubPartCodec, Codec.map(Codec.STRING, SubPartCodec)).default({}),
 });

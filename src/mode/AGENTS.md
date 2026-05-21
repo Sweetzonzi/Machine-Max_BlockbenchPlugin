@@ -2,17 +2,17 @@
 
 ## 概览
 
-MachineMax 自定义模式"零件定义"的全部逻辑。负责模式生命周期、Outliner 图标、原型猴子补丁、配置校验和工具栏动作注册。
+MachineMax 自定义模式"零件定义"的全部逻辑。负责模式生命周期、Vue 面板懒加载、Outliner 图标、原型猴子补丁、配置校验和工具栏动作注册。
 
-重构前 `mode.js` 为 935 行单体文件，现已拆分为 4 个专注模块。
+重构前 `mode.js` 为 935 行单体文件，现已拆分为 4 个专注模块 + 懒加载 Vue 面板。
 
 ## 结构
 
 ```
 src/mode/
-├── mode.js           # 模式注册 + 生命周期（211行）
+├── mode.js           # 模式注册 + 生命周期（341行，含 Vue 面板懒加载）
 ├── icons.js          # Outliner 图标刷新（82行）
-├── patches.js        # 原型猴子补丁 + 右键菜单（467行）
+├── patches.js        # 原型猴子补丁 + 右键菜单（623行）
 ├── validation.js     # 配置校验（48行）
 └── toolbar.js        # 工具栏 Action 注册（185行）
 ```
@@ -40,6 +40,7 @@ mode.js
                         (内部懒加载 mode.js 获取 refreshOutlinerIcons)
 mode.js ──→ App.vue.js（懒加载，运行时安全）
 App.vue.js ──→ icons.js（无循环依赖）
+App.vue.js ──→ SignalFlowPanel.vue.js ──→ lib/signal_graph.js
 ```
 
 ## 约定
