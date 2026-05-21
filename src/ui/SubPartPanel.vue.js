@@ -117,10 +117,10 @@ Vue.component('mm-sub-part-panel', {
             return el ? el.name : hbKey;
         },
         resolveInteractBoxName: function (ibKey) {
-            return nameUtils.displayLabel(ibKey);
+            return nameUtils.extractShortName(ibKey);
         },
         resolveConnectorName: function (connKey) {
-            return nameUtils.displayLabel(connKey);
+            return nameUtils.extractShortName(connKey);
         },
         /**
          * 解析子系统类型的中文显示名

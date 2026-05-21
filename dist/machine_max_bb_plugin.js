@@ -7824,7 +7824,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
-      var nameUtils2 = require_name_utils();
+      var nameUtils = require_name_utils();
       var log2 = createLogger2("GenLang");
       function _toDisplayName(key) {
         return key.replace(/_/g, " ").replace(/\b\w/g, function(c) {
@@ -7865,28 +7865,28 @@
               var subPart = subPartMap[subPartKey];
               if (!subPart || typeof subPart !== "object") continue;
               if (subPartKey !== "_single" && subPartKey !== "sub_part." + ns + ".main") {
-                var spShortName = nameUtils2.extractShortName(subPartKey, ns);
+                var spShortName = nameUtils.extractShortName(subPartKey, ns);
                 enLang[subPartKey] = _toDisplayName(spShortName);
                 zhLang[subPartKey] = _toDisplayName(spShortName);
               }
               var interactBoxes = subPart.interact_boxes || {};
               for (var interactKey in interactBoxes) {
                 if (!interactBoxes.hasOwnProperty(interactKey)) continue;
-                var ibShortName = nameUtils2.extractShortName(interactKey, ns);
+                var ibShortName = nameUtils.extractShortName(interactKey, ns);
                 enLang[interactKey] = _toDisplayName(ibShortName);
                 zhLang[interactKey] = _toDisplayName(ibShortName);
               }
               var connectors = subPart.connectors || {};
               for (var connectorKey in connectors) {
                 if (!connectors.hasOwnProperty(connectorKey)) continue;
-                var connShortName = nameUtils2.extractShortName(connectorKey, ns);
+                var connShortName = nameUtils.extractShortName(connectorKey, ns);
                 enLang[connectorKey] = _toDisplayName(connShortName);
                 zhLang[connectorKey] = _toDisplayName(connShortName);
               }
               var subsystems = subPart.subsystems || {};
               for (var subsystemKey in subsystems) {
                 if (!subsystems.hasOwnProperty(subsystemKey)) continue;
-                var ssShortName = nameUtils2.extractShortName(subsystemKey, ns);
+                var ssShortName = nameUtils.extractShortName(subsystemKey, ns);
                 enLang[subsystemKey] = _toDisplayName(ssShortName);
                 zhLang[subsystemKey] = _toDisplayName(ssShortName);
               }
@@ -9896,7 +9896,7 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var nameUtils2 = require_name_utils();
+      var nameUtils = require_name_utils();
       Vue.component("mm-sub-part-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -10111,14 +10111,14 @@
         data: function() {
           return {
             newEndBone: "",
-            editingName: nameUtils2.extractShortName(this.spName, this.namespace),
+            editingName: nameUtils.extractShortName(this.spName, this.namespace),
             editingStartBone: this.config.start_bone,
             editingMassCenter: this.config.mass_center
           };
         },
         watch: {
           spName: function(val) {
-            var short = nameUtils2.extractShortName(val, this.namespace);
+            var short = nameUtils.extractShortName(val, this.namespace);
             if (short !== this.editingName) {
               this.editingName = short;
             }
@@ -10174,7 +10174,7 @@
           },
           onNameChange: function(value) {
             var oldKey = this.spName;
-            var newKey = nameUtils2.buildFullKey("sub_part", value, this.namespace);
+            var newKey = nameUtils.buildFullKey("sub_part", value, this.namespace);
             if (newKey !== oldKey) {
               this.$emit("name-change", oldKey, newKey);
             }
@@ -10199,10 +10199,10 @@
             return el ? el.name : hbKey;
           },
           resolveInteractBoxName: function(ibKey) {
-            return nameUtils2.displayLabel(ibKey);
+            return nameUtils.extractShortName(ibKey);
           },
           resolveConnectorName: function(connKey) {
-            return nameUtils2.displayLabel(connKey);
+            return nameUtils.extractShortName(connKey);
           },
           /**
            * 解析子系统类型的中文显示名
@@ -10215,7 +10215,7 @@
             return meta ? meta.displayName : ss.type;
           },
           resolveSubsystemShortName: function(ssKey) {
-            return nameUtils2.extractShortName(ssKey);
+            return nameUtils.extractShortName(ssKey);
           },
           /**
            * 获取子系统类型的颜色
@@ -10483,7 +10483,7 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var nameUtils2 = require_name_utils();
+      var nameUtils = require_name_utils();
       Vue.component("mm-interact-box-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -10616,13 +10616,13 @@
         data: function() {
           return {
             overwriteExpanded: false,
-            editingName: nameUtils2.extractShortName(this.interactBoxName, this.namespace),
+            editingName: nameUtils.extractShortName(this.interactBoxName, this.namespace),
             editingBone: this.config.bone || this.elementName || ""
           };
         },
         watch: {
           interactBoxName: function(val) {
-            var short = nameUtils2.extractShortName(val, this.namespace);
+            var short = nameUtils.extractShortName(val, this.namespace);
             if (short !== this.editingName) {
               this.editingName = short;
             }
@@ -10679,14 +10679,14 @@
         },
         methods: {
           displayLabel: function(fullKey) {
-            return nameUtils2.displayLabel(fullKey, "zh", "machine_max");
+            return nameUtils.displayLabel(fullKey, "zh", "machine_max");
           },
           onFieldChange: function(field, value) {
             this.$emit("field-change", field, value);
           },
           onNameChange: function(value) {
             var oldKey = this.interactBoxName;
-            var newKey = nameUtils2.buildFullKey("interact", value, this.namespace);
+            var newKey = nameUtils.buildFullKey("interact", value, this.namespace);
             if (newKey !== oldKey) {
               this.$emit("name-change", oldKey, newKey);
             }
@@ -10816,7 +10816,7 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var nameUtils2 = require_name_utils();
+      var nameUtils = require_name_utils();
       Vue.component("mm-connector-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -10999,13 +10999,13 @@
         },
         data: function() {
           return {
-            editingName: nameUtils2.extractShortName(this.connectorName, this.namespace),
+            editingName: nameUtils.extractShortName(this.connectorName, this.namespace),
             editingLocator: this.config.locator || this.elementName || ""
           };
         },
         watch: {
           connectorName: function(val) {
-            var short = nameUtils2.extractShortName(val, this.namespace);
+            var short = nameUtils.extractShortName(val, this.namespace);
             if (short !== this.editingName) {
               this.editingName = short;
             }
@@ -11088,11 +11088,11 @@
         },
         methods: {
           displayLabel: function(fullKey) {
-            return nameUtils2.displayLabel(fullKey, "zh", "machine_max");
+            return nameUtils.displayLabel(fullKey, "zh", "machine_max");
           },
           onNameChange: function(value) {
             var oldKey = this.connectorName;
-            var newKey = nameUtils2.buildFullKey("connector", value, this.namespace);
+            var newKey = nameUtils.buildFullKey("connector", value, this.namespace);
             if (newKey !== oldKey) {
               this.$emit("name-change", oldKey, newKey);
             }
@@ -11334,6 +11334,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var ssTypes = require_subsystem_types();
+      var nameUtils = require_name_utils();
       Vue.component("mm-subsystem-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -11883,7 +11884,7 @@
       var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_icons();
       var { showToast: showToast2 } = require_notify();
       var content_pack_manager = require_content_pack_manager();
-      var nameUtils2 = require_name_utils();
+      var nameUtils = require_name_utils();
       var { showAddTagDialog, _hashTagColor } = require_tag_dialog_helper();
       var log2 = createLogger2("UI");
       require_SubPartPanel_vue();
@@ -12314,13 +12315,13 @@
             if (sp.connectors) {
               var connKeys = Object.keys(sp.connectors);
               for (var i = 0; i < connKeys.length; i++) {
-                result.push({ value: connKeys[i], label: nameUtils2.displayLabel(connKeys[i], "zh", ns) });
+                result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
               }
             }
             if (sp.subsystems) {
               var ssKeys = Object.keys(sp.subsystems);
               for (var j = 0; j < ssKeys.length; j++) {
-                result.push({ value: ssKeys[j], label: nameUtils2.displayLabel(ssKeys[j], "zh", ns) });
+                result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
               }
             }
             return result;
@@ -12386,13 +12387,13 @@
             if (sp.connectors) {
               var connKeys = Object.keys(sp.connectors);
               for (var i = 0; i < connKeys.length; i++) {
-                result.push({ value: connKeys[i], label: nameUtils2.displayLabel(connKeys[i], "zh", ns) });
+                result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
               }
             }
             if (sp.subsystems) {
               var ssKeys = Object.keys(sp.subsystems);
               for (var j = 0; j < ssKeys.length; j++) {
-                result.push({ value: ssKeys[j], label: nameUtils2.displayLabel(ssKeys[j], "zh", ns) });
+                result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
               }
             }
             return result;
@@ -12474,13 +12475,13 @@
             if (sp.connectors) {
               var connKeys = Object.keys(sp.connectors);
               for (var i = 0; i < connKeys.length; i++) {
-                result.push({ value: connKeys[i], label: nameUtils2.displayLabel(connKeys[i], "zh", ns) });
+                result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
               }
             }
             if (sp.subsystems) {
               var ssKeys = Object.keys(sp.subsystems);
               for (var j = 0; j < ssKeys.length; j++) {
-                result.push({ value: ssKeys[j], label: nameUtils2.displayLabel(ssKeys[j], "zh", ns) });
+                result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
               }
             }
             return result;

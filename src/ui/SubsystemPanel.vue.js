@@ -11,6 +11,7 @@
  * text_input, json_textarea。
  */
 var ssTypes = require('../core/subsystem_types.js');
+var nameUtils = require('../utils/name_utils.js');
 
 Vue.component('mm-subsystem-panel', {
     template: typeof TEMPLATE_SUBSYSTEM_PANEL !== 'undefined' ? TEMPLATE_SUBSYSTEM_PANEL : '<p>子系统面板加载中...</p>',
