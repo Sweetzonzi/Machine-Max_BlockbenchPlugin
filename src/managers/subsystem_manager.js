@@ -247,8 +247,8 @@ function getSubsystemTypes() {
         'machine_max:signal_convert',
         'machine_max:camera',
         'machine_max:javascript',
-        'machine_max:turret',
-        'machine_max:fire_controller',
+        'machine_max:turret_driver',
+        'machine_max:weapon_controller',
         'machine_max:launcher',
     ];
 

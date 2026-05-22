@@ -23,6 +23,11 @@ var log = createLogger('FileWriter');
  * @returns {string} 剥离注释后的纯 JSON 文本
  */
 function stripJsonComments(content) {
+    // 去除 UTF-8 BOM（Byte Order Mark, U+FEFF），否则 JSON.parse 会报错
+    if (content && content.charCodeAt(0) === 0xFEFF) {
+        content = content.slice(1);
+    }
+
     var lines, result, i, line, inString, commentStart, j, ch, stripped;
 
     lines = content.split('\n');

@@ -161,9 +161,19 @@ function buildMMMenuItems(el) {
                 var baseName = generateDefaultName('sub_part', { namespace: ns });
                 var spName = ensureUniqueName('sub_part', variant, null, baseName);
                 setMarker(config, activePartId, activeVariantName, el.uuid, 'sub_part', spName);
+                // debug: 标记后记录 sub_parts 状态
+                var postVariant = config.parts[activePartId] && config.parts[activePartId].variants[activeVariantName];
+                log.debug('右键菜单: 标记为子零件 — setMarker 后 sub_parts', {
+                    spName: spName,
+                    subPartKeys: postVariant && postVariant.sub_parts ? Object.keys(postVariant.sub_parts) : [],
+                    subPartsExist: !!(postVariant && postVariant.sub_parts),
+                    activePartId: activePartId,
+                    variantName: activeVariantName,
+                });
                 var { refreshOutlinerIcons } = require('../mode.js');
                 refreshOutlinerIcons();
                 Blockbench.dispatchEvent('update_selection');
+                log.debug('右键菜单: 标记为子零件 — 已触发 update_selection');
             }});
         }
         if (!marker || marker.type !== 'hit_box') {

@@ -52,8 +52,8 @@ function _getTypeDisplayName(typeId) {
         'machine_max:signal_convert': '信号转换器 (Signal Convert)',
         'machine_max:camera': '摄像头 (Camera)',
         'machine_max:javascript': '脚本 (JavaScript)',
-        'machine_max:turret': '炮塔 (Turret)',
-        'machine_max:fire_controller': '射击控制器 (Fire Controller)',
+        'machine_max:turret_driver': '炮塔 (Turret Driver)',
+        'machine_max:weapon_controller': '武器控制器 (Weapon Controller)',
         'machine_max:launcher': '发射器 (Launcher)',
     };
     return map[typeId] || typeId;

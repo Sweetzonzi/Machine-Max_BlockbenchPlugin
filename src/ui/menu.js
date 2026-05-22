@@ -670,8 +670,8 @@ function _executeExport(config, packMeta, exportDir, packFolderName) {
 
     /**
      * 从构建时嵌入的 __SCHEMAS__ 常量写入所有 schema 文件到目标目录
-     * 同时写入 zh_cn/ 和 en_us/ 两份，供不同 locale 的编辑器引用
-     * __SCHEMAS__ 是 { relativePath: fileContent } 映射，由 build.js 注入
+     * __SCHEMAS__ 是 { locale/relativePath: fileContent } 映射，键包含 locale 前缀（如 "en_us/schemas/..."），
+     * 由 build.js 从内置内容包 docs/ 目录收集（zh_cn/ 和 en_us/ 两份），由本函数直接按原路径写入。
      */
     function _writeSchemasFromConstant(destBaseDir) {
         var schemasRaw = (typeof __SCHEMAS__ !== 'undefined') ? __SCHEMAS__ : null;
@@ -681,17 +681,13 @@ function _executeExport(config, packMeta, exportDir, packFolderName) {
         }
         var schemas = (typeof schemasRaw === 'string') ? JSON.parse(schemasRaw) : schemasRaw;
         var keys = Object.keys(schemas);
-        var locales = ['zh_cn', 'en_us'];
-        for (var l = 0; l < locales.length; l++) {
-            var localeDir = path.join(destBaseDir, locales[l], 'schemas');
-            for (var i = 0; i < keys.length; i++) {
-                var relPath = keys[i];
-                var destPath = path.join(localeDir, relPath);
-                fileWriter.ensureDir(path.dirname(destPath));
-                fs.writeFileSync(destPath, schemas[relPath], 'utf-8');
-            }
+        for (var i = 0; i < keys.length; i++) {
+            var relPath = keys[i];
+            var destPath = path.join(destBaseDir, relPath);
+            fileWriter.ensureDir(path.dirname(destPath));
+            fs.writeFileSync(destPath, schemas[relPath], 'utf-8');
         }
-        log.info('_writeSchemasFromConstant: 已写入 ' + locales.length + ' 套 (' + keys.length + ' 个文件/套) schema 文件');
+        log.info('_writeSchemasFromConstant: 已写入 ' + keys.length + ' 个 schema 文件');
     }
 
     /**

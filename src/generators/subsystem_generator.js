@@ -37,7 +37,8 @@ function copySubsystemDefs(packDir, ns, targetDir, flat) {
         if (!fileName.endsWith('.json')) continue;
         var srcFile = path.join(srcDir, fileName);
         try {
-            var content = JSON.parse(fs.readFileSync(srcFile, 'utf8'));
+            var raw = fs.readFileSync(srcFile, 'utf8');
+            var content = JSON.parse(fileWriter.stripJsonComments(raw));
             var id = fileName.slice(0, -5);
             var loc = fileWriter.extractResourceLocation(id, ns);
             var tDir = resolveTarget(targetDir, loc.path, flat);

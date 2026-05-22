@@ -199,10 +199,10 @@ const TurretDriverCodec = Codec.record({
 });
 
 /**
- * FireControlCodec — 火控系统
+ * WeaponControllerCodec — 武器控制器
  * 字段: definition, control_outputs
  */
-const FireControlCodec = Codec.record({
+const WeaponControllerCodec = Codec.record({
     definition:      Codec.STRING.field(),
     control_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
 });
@@ -243,8 +243,8 @@ const SubsystemDispatchCodec = Codec.dispatch('type', {
     'machine_max:joint':                JointDriverCodec,
     'machine_max:camera':               CameraCodec,
     'machine_max:javascript':           JavascriptCodec,
-    'machine_max:turret':               TurretDriverCodec,
-    'machine_max:fire_controller':      FireControlCodec,
+    'machine_max:turret_driver':           TurretDriverCodec,
+    'machine_max:weapon_controller':            WeaponControllerCodec,
     'machine_max:launcher':             LauncherCodec,
 });
 
@@ -271,7 +271,7 @@ if (typeof module !== 'undefined' && module.exports) {
         CameraCodec,
         JavascriptCodec,
         TurretDriverCodec,
-        FireControlCodec,
+        WeaponControllerCodec,
         LauncherCodec,
     };
 }

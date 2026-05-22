@@ -42,7 +42,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             activePartId: '',
             activeVariantName: '',
             selectedElement: null,
-            _markerVersion: 0, // 标记更新版本号，右键菜单 delete 操作后递增，强制计算属性重新求值
+            markerVersion: { v: 0 }, // 标记更新版本号，右键菜单 delete 操作后递增 v，强制计算属性重新求值。使用对象避免 Vue 2 原始类型 NaN 问题
             subsystemSelection: { spKey: '', subsystemKey: '' }, // 虚拟选择的子系统
         };
     },
@@ -111,12 +111,51 @@ const MMMainPanel = Vue.component('mm-main-panel', {
          * 用于零件/变体属性面板中的子零件列表
          */
         subPartEntries: function () {
+            if (!this.markerVersion) return [];
+            // 读取版本号作为虚拟依赖：右键菜单通过 delete 非响应式删除 sub_parts 条目后强制重新求值
+            void this.markerVersion.v;
             var variant = this.currentVariant;
-            if (!variant || !variant.sub_parts) return [];
+            if (!variant || !variant.sub_parts) {
+                log.debug('subPartEntries: 无 variant 或 sub_parts', {
+                    variantExists: !!variant,
+                    subPartsExists: variant ? !!variant.sub_parts : false,
+                    activePartId: this.activePartId,
+                    activeVariantName: this.activeVariantName,
+                    markerVersion: this.markerVersion.v,
+                });
+                return [];
+            }
             var ns = (this.config && this.config.namespace) || 'machine_max';
             var keys = Object.keys(variant.sub_parts);
+            // debug: 检查是否有子零件配置无对应标记（遗留脏数据）
+            if (this.currentPart && this.currentPart.element_markers && this.currentPart.element_markers[this.activeVariantName]) {
+                var subPartMarkerKeys = {};
+                var markers = this.currentPart.element_markers[this.activeVariantName];
+                for (var mk in markers) {
+                    if (markers[mk].type === 'sub_part') {
+                        subPartMarkerKeys[markers[mk].config_ref] = true;
+                    }
+                }
+                var orphaned = keys.filter(function(k) { return !subPartMarkerKeys[k]; });
+                if (orphaned.length > 0) {
+                    log.warn('subPartEntries: 发现无对应标记的子零件配置（遗留脏数据），自动清理', {
+                        orphanedKeys: orphaned,
+                    });
+                    for (var ok = 0; ok < orphaned.length; ok++) {
+                        delete variant.sub_parts[orphaned[ok]];
+                        log.debug('subPartEntries: 已清理孤儿子零件', { spKey: orphaned[ok] });
+                    }
+                }
+            }
+            log.debug('subPartEntries: 计算中', {
+                subPartCount: keys.length,
+                subPartKeys: keys,
+                variantExists: !!variant,
+                configExists: !!this.config,
+                markerVersion: this.markerVersion.v,
+            });
             var self = this;
-            return keys.map(function (spKey) {
+            var result = keys.map(function (spKey) {
                 var sp = variant.sub_parts[spKey];
                 return {
                     key: spKey,
@@ -128,6 +167,11 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                     connectorCount: sp && sp.connectors ? Object.keys(sp.connectors).length : 0,
                 };
             });
+            log.debug('subPartEntries: 结果', {
+                entryCount: result.length,
+                entryKeys: result.map(function(e) { return e.key; }),
+            });
+            return result;
         },
         /**
          * 所有可用材料定义（通过内容包管理器合并加载）
@@ -148,9 +192,10 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         },
         selectedMarker: function () {
             if (!this.selectedElement) return null;
+            if (!this.markerVersion) return null;
             // 读取版本号作为虚拟依赖：右键菜单通过 delete 修改 element_markers 时
-            // Vue 2 无法检测，通过自增 _markerVersion 强制该计算属性重新求值
-            void this._markerVersion;
+            // Vue 2 无法检测，通过自增 markerVersion.v 强制该计算属性重新求值
+            void this.markerVersion.v;
             const part = this.currentPart;
             if (!part || !part.element_markers) return null;
             const vMarkers = part.element_markers[this.activeVariantName];
@@ -158,7 +203,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             var result = vMarkers[this.selectedElement.uuid] || null;
             log.debug('selectedMarker 计算属性', {
                 uuid: this.selectedElement.uuid,
-                markerVersion: this._markerVersion,
+                markerVersion: this.markerVersion.v,
                 hasElementMarkers: !!part.element_markers,
                 variantMarkersKeys: Object.keys(vMarkers),
                 result: result ? (result.type + ' / ' + result.config_ref) : 'null',
@@ -282,6 +327,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
          * 返回 {value, label}[]，value=完整键，label=[类型]短名
          */
         currentSignalTargetOptions: function () {
+            void this.markerVersion.v;
             if (!this.isSubsystemSelected || !this.currentVariant) return [];
             var sp = this.currentVariant.sub_parts[this.subsystemSelection.spKey];
             if (!sp) return [{value: 'subpart', label: 'subpart'}, {value: 'vehicle', label: 'vehicle'}];
@@ -353,6 +399,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
          * 返回 {value, label}[]，value=完整键，label=[类型]短名
          */
         connectorParentSignalTargetHints: function () {
+            void this.markerVersion.v;
             var spKey = this.connectorParentSubPartKey;
             if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
             var sp = this.currentVariant.sub_parts[spKey];
@@ -444,6 +491,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
          * 返回 {value, label}[]，value=完整键，label=[类型]短名
          */
         interactBoxParentSignalTargetHints: function () {
+            void this.markerVersion.v;
             var spKey = this.interactBoxParentSubPartKey;
             if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
             var sp = this.currentVariant.sub_parts[spKey];
@@ -825,6 +873,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             log.debug('showNewVariantDialog: Dialog 已显示');
         },
         onSelectionChange: function () {
+            if (!this.markerVersion) return;
             var sel = Outliner && Outliner.selected;
 
             // 检查 SignalFlowPanel 发起的子系统导航请求（通过 config 共享）
@@ -833,7 +882,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 this.subsystemSelection = { spKey: pendingNav.spKey, subsystemKey: pendingNav.subsystemKey };
                 this.config._uiState._pendingSubsystemNav = null;
                 this.selectedElement = null; // 清空 Outliner 选中，让子系统面板优先显示
-                this._markerVersion++;
+                this.markerVersion.v++;
                 log.debug('onSelectionChange: 信号流图触发子系统导航', {
                     spKey: pendingNav.spKey,
                     subsystemKey: pendingNav.subsystemKey,
@@ -843,10 +892,16 @@ const MMMainPanel = Vue.component('mm-main-panel', {
 
             if (!sel || sel.length === 0) {
                 this.selectedElement = null;
-                this._markerVersion++;
+                this.markerVersion.v++;
+                // debug: 取消选中时记录当前 sub_parts 状态
+                var v = this.currentVariant;
+                var spKeys = v && v.sub_parts ? Object.keys(v.sub_parts) : [];
                 log.debug('onSelectionChange: 取消选中', {
-                    markerVersion: this._markerVersion,
-                    markerVersionAfter: this._markerVersion,
+                    markerVersion: this.markerVersion.v,
+                    subPartCount: spKeys.length,
+                    subPartKeys: spKeys,
+                    variantExists: !!v,
+                    configExists: !!this.config,
                 });
                 return;
             }
@@ -857,14 +912,19 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             var best = (typeof Group !== 'undefined' && Group.first_selected) || sel[0];
             var sameElement = this.selectedElement && this.selectedElement.uuid === best.uuid;
             this.selectedElement = best;
-            this._markerVersion++;
+            this.markerVersion.v++;
+            this.$forceUpdate(); // 后备保障：确保 Vue 模板强制重新渲染，弥补计算属性依赖追踪可能遗漏的场景
+            var v2 = this.currentVariant;
+            var spKeys2 = v2 && v2.sub_parts ? Object.keys(v2.sub_parts) : [];
             log.debug('onSelectionChange: 选中元素', {
                 name: best.name,
                 uuid: best.uuid,
                 type: best.constructor ? best.constructor.name : typeof best,
                 groupSelected: !!(typeof Group !== 'undefined' && Group.first_selected),
                 sameElementAsBefore: sameElement,
-                markerVersion: this._markerVersion,
+                markerVersion: this.markerVersion.v,
+                subPartCount: spKeys2.length,
+                subPartKeys: spKeys2,
             });
         },
         loadConfigData: function () {
@@ -1167,7 +1227,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         /**
          * 更新交互区配置中的单个字段
          * 游离交互区（无归属）可编辑但不会持久化
-         * bone 变更后增量 _markerVersion 强制所有计算属性重新求值
+         * bone 变更后增量 markerVersion 强制所有计算属性重新求值
          */
         updateInteractBoxField: function (field, value) {
             const config = this.selectedInteractBoxConfig;
@@ -1182,7 +1242,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             this.$set(config, field, value);
             // bone 变更后强制刷新，触发子零件面板列表和归属重新计算
             if (field === 'bone') {
-                this._markerVersion++;
+                this.markerVersion.v++;
             }
             log.debug('updateInteractBoxField: 已更新', { field: field, value: value });
         },
@@ -1243,7 +1303,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 },
                 onCreated: function (createdSpKey, instanceName) {
                     self.subsystemSelection = { spKey: createdSpKey, subsystemKey: instanceName };
-                    self._markerVersion++;
+                    self.markerVersion.v++;
                     log.info('addSubsystem: 已创建子系统', { spKey: createdSpKey, instanceName: instanceName });
                 },
             });
@@ -1269,7 +1329,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 onConfirm: function () {
                     self.$delete(sp.subsystems, ssKey);
                     self.subsystemSelection = { spKey: '', subsystemKey: '' };
-                    self._markerVersion++;
+                    self.markerVersion.v++;
                     log.info('deleteSubsystem: 已删除子系统', { spKey: spKey, subsystemKey: ssKey });
                     showToast('子系统 "' + ssKey + '" 已删除', 'warning');
                     this.hide();
@@ -1446,7 +1506,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 newGroup.showInOutliner();
             }
 
-            this._markerVersion++;
+            this.markerVersion.v++;
             refreshOutlinerIcons();
             Blockbench.dispatchEvent('update_selection');
             log.info('migrateInteractBoxBone: 骨骼迁移完成', { from: oldBoneName, to: newBoneName });

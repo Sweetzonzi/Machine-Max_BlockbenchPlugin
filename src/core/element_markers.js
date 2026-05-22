@@ -334,11 +334,19 @@ function clearMarker(projectConfig, partId, variantName, uuid) {
         if (variant && variant.sub_parts) {
             delete variant.sub_parts[spKey];
             log.debug('clearMarker: 已清理 sub_parts 条目', { partId, variant: variantName, spKey: spKey });
+            // 先删除标记，再重算 auto_end_bones。
+            // 避免已删除的子零件标记仍被 recalcAutoEndBones 收集到，
+            // 重新被加入父级子零件的自动排除列表。
+            delete part.element_markers[variantName][uuid];
             recalcAutoEndBones(projectConfig, partId, variantName);
+            // 标记已被提前删除，跳过行尾的统一删除（置 null 防双重删除）
+            marker = null;
         }
     }
 
-    delete part.element_markers[variantName][uuid];
+    if (marker) {
+        delete part.element_markers[variantName][uuid];
+    }
     log.debug('clearMarker: 标记已从 element_markers 字典删除', {
         partId: partId, variant: variantName, uuid,
         remainingMarkers: Object.keys(part.element_markers[variantName] || {}),

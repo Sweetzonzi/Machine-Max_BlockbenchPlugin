@@ -140,7 +140,7 @@
             :interact-boxes="selectedSubPartConfig ? selectedSubPartConfig.interact_boxes || {} : {}"
             :all-bone-names="allBoneNames"
             :all-locator-names="ownedLocatorNames"
-            :refresh-key="_markerVersion"
+            :refresh-key="markerVersion.v"
             @field-change="updateSubPartField"
             @add-end-bone="addEndBone"
             @remove-end-bone="removeEndBone"

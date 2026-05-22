@@ -203,7 +203,7 @@ var SUBSYSTEM_TYPES = [
         ],
     },
     {
-        id: 'machine_max:turret',
+        id: 'machine_max:turret_driver',
         displayName: '炮塔',
         category: 'experimental',
         dynamicFields: [
@@ -213,12 +213,12 @@ var SUBSYSTEM_TYPES = [
         ],
     },
     {
-        id: 'machine_max:fire_controller',
-        displayName: '火控系统',
+        id: 'machine_max:weapon_controller',
+        displayName: '武器控制器',
         category: 'experimental',
         dynamicFields: [
             { field: 'definition',      label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'control_outputs', label: '控制信号输出', editor: 'signal_targets',       required: false, defaultValue: { fire_control: [] } },
+            { field: 'control_outputs', label: '控制信号输出', editor: 'signal_targets',       required: false, defaultValue: { weapon_control: [] } },
         ],
     },
     {

@@ -232,13 +232,15 @@ function loadBuiltinPack() {
 }
 
 /**
- * 加载 schemas/ 目录的所有文件（JSON + Markdown），
+ * 加载内置内容包 docs/ 目录的中英文 schema 文件。
+ * 文件使用 locale 前缀（en_us/、zh_cn/）组织在键中，
+ * 直接完整路径相对于 docs/，如 "en_us/schemas/base/axis.schema.json"。
  * 返回 esbuild define 常量映射。
  */
 function loadSchemas() {
-    const schemasDir = path.join(ROOT, 'schemas');
+    const schemasDir = path.join(SRC, 'builtin', 'builtin', 'machine_max', 'docs');
     if (!fs.existsSync(schemasDir)) {
-        throw new Error('schemas 目录不存在: ' + schemasDir);
+        throw new Error('内置内容包 docs 目录不存在: ' + schemasDir);
     }
     const files = collectAllFiles(schemasDir, schemasDir);
     const fileCount = Object.keys(files).length;
@@ -258,7 +260,7 @@ function getConfig() {
     delete packDefines._packStats;
     const defines = Object.assign({
         'CSS_MM_MODE': cssLiteral || '""',
-        '__DEBUG_ENABLED__': 'false',
+        '__DEBUG_ENABLED__': 'true',
         '__PLUGIN_VERSION__': JSON.stringify(PLUGIN_VERSION),
     }, templates, packDefines, schemaDefines);
 
