@@ -83,17 +83,27 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             return Locator.all.map(function (l) { return l.name; });
         },
         /**
-         * 仅在当前选中子零件骨骼子树下的定位器名称列表（用于质心/连接点等选择器）。
-         * 对每个 Locator 沿 parent 链查找第一个 sub_part 标记，若匹配当前子零件则纳入。
+         * 当前子零件骨骼子树下的定位器名称列表（用于子系统定位器选择、质心选择器等）。
+         * 对每个 Locator 沿 parent 链查找第一个 sub_part 标记，若匹配目标子零件则纳入。
+         * 目标子零件的确定优先级：
+         *   1. 当前 3D 视图中选中的 sub_part 骨骼
+         *   2. 虚拟选择的子系统所属的子零件（selectedSubsystemParentSpKey）
          */
         ownedLocatorNames: function () {
             var variant = this.currentVariant;
             var part = this.currentPart;
             var variantName = this.activeVariantName;
-            if (!variant || !part || !this.selectedElement) return [];
-            var marker = this.selectedMarker;
-            if (!marker || marker.type !== 'sub_part') return [];
-            var spKey = marker.config_ref || this.selectedElementName;
+            if (!variant || !part) return [];
+
+            var spKey;
+            // 优先级1: 当前选中的 sub_part 骨骼
+            if (this.selectedElement && this.selectedMarker && this.selectedMarker.type === 'sub_part') {
+                spKey = this.selectedMarker.config_ref || this.selectedElementName;
+            }
+            // 优先级2: 虚拟选择（子系统面板编辑）时，使用所属子零件 key
+            else if (this.isSubsystemSelected) {
+                spKey = this.selectedSubsystemParentSpKey;
+            }
             if (!spKey) return [];
             if (typeof Locator === 'undefined' || !Locator.all) return [];
 

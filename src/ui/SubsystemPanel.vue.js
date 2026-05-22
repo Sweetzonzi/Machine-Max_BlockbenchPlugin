@@ -25,6 +25,7 @@ Vue.component('mm-subsystem-panel', {
         parentSubPartKey: { type: String, default: '' },
         subsystemDefs: { type: Object, default: function () { return {}; } },
         allLocatorNames: { type: Array, default: function () { return []; } },
+        ownedLocatorNames: { type: Array, default: function () { return []; } },
         connectorKeys: { type: Object, default: function () { return {}; } },
         signalTargetOptions: { type: Array, default: function () { return []; } },
     },
@@ -129,7 +130,7 @@ Vue.component('mm-subsystem-panel', {
             event.target.style.background = 'transparent';
         },
         onDelete: function () {
-            this.$emit('delete-subsystem', this.subsystemKey);
+            this.$emit('delete-subsystem', { spKey: this.parentSubPartKey, ssKey: this.subsystemKey });
         },
         navigateToSubPart: function () {
             this.$emit('navigate-to-sub-part', this.parentSubPartKey);

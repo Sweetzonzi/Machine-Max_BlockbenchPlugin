@@ -50,12 +50,12 @@
         <div v-for="field in nonDefFields" :key="field.field" class="mm-field">
             <label :title="field.field">{{ field.label }}</label>
 
-            <!-- 定位器选择器 -->
+            <!-- 定位器选择器（范围限制在当前子零件骨骼树下） -->
             <select v-if="field.editor === 'locator_selector'" class="mm-select"
                 :value="config[field.field]"
                 @change="onFieldChange(field.field, $event.target.value)">
                 <option value="">（无）</option>
-                <option v-for="(l, i) in allLocatorNames" :key="i" :value="l">{{ l }}</option>
+                <option v-for="(l, i) in ownedLocatorNames" :key="i" :value="l">{{ l }}</option>
             </select>
 
             <!-- 连接点选择器 -->
