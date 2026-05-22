@@ -715,7 +715,7 @@ function _executeExport(config, packMeta, exportDir, packFolderName) {
         var schemaLocale = _getSchemaLocale();
         var schemaMap = {
             parts: 'docs/' + schemaLocale + '/schemas/part_definition_schema.json',
-            connectors: 'docs/' + schemaLocale + '/schemas/part/subpart/connector/connector_attr.schema.json',
+            connectors: 'docs/' + schemaLocale + '/schemas/part/subpart/connector/connector_static_attr.schema.json',
             subsystems: 'docs/' + schemaLocale + '/schemas/subsystem/subsystem_static_attr.schema.json',
             materials: 'docs/' + schemaLocale + '/schemas/base/material_attr.schema.json',
         };
