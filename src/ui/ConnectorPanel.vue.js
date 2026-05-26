@@ -86,7 +86,7 @@ Vue.component('mm-connector-panel', {
          */
         channelHints: function () {
             return [
-                'move_control', 'regular_control', 'engine_control', 'wheel_control',
+                'move_input', 'regular_input', 'engine_control', 'wheel_control',
                 'steering', 'throttle', 'brake', 'handbrake',
                 'engine_speed', 'wheel_speed', 'vehicle_speed',
                 'gear', 'clutch', 'parking_brake', 'power',

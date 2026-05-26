@@ -34,14 +34,12 @@ const WheelDriverCodec = Codec.record({
 
 /**
  * SeatCodec — 座位
- * 字段: definition, locator, move_outputs, aim_outputs, regular_outputs, passenger_num_outputs
+ * 字段: definition, locator, control_group_preset, passenger_num_outputs
  */
 const SeatCodec = Codec.record({
-    definition:           Codec.STRING.field(),
-    locator:              Codec.STRING.field(),
-    move_outputs:         Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
-    aim_outputs:          Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
-    regular_outputs:      Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    definition:            Codec.STRING.field(),
+    locator:               Codec.STRING.field(),
+    control_group_preset:  Codec.STRING.default(''),
     passenger_num_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
 });
 

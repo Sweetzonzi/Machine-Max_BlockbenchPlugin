@@ -182,6 +182,14 @@ var builtinSubsystems = normalizeDefs(
     )
 );
 
+/** 控制组预设映射 { presetId: ControlGroupSet } — 经 normalizeDefs 规范化 */
+var builtinControlGroups = normalizeDefs(
+    readDefine(
+        typeof __BUILTIN_CONTROL_GROUPS__ !== 'undefined' ? __BUILTIN_CONTROL_GROUPS__ : undefined,
+        {}
+    )
+);
+
 // ──────────────────────────────────────────────
 // 公开 API
 // ──────────────────────────────────────────────
@@ -204,7 +212,7 @@ function extractNamespace(id) {
  */
 function getBuiltinPack() {
     var namespace = extractNamespace(builtinMeta.id);
-    var matCount, connCount, subCount;
+    var matCount, connCount, subCount, cgCount;
 
     var result = {
         meta: builtinMeta,
@@ -212,6 +220,7 @@ function getBuiltinPack() {
         materials: builtinMaterials,
         connectors: builtinConnectors,
         subsystems: builtinSubsystems,
+        control_groups: builtinControlGroups,
     };
 
     // 浅冻结以防止意外修改
@@ -220,11 +229,13 @@ function getBuiltinPack() {
     matCount = Object.keys(builtinMaterials).length;
     connCount = Object.keys(builtinConnectors).length;
     subCount = Object.keys(builtinSubsystems).length;
+    cgCount = Object.keys(builtinControlGroups).length;
 
     log.info('getBuiltinPack: 内置基础包加载完成 — '
         + 'materials=' + matCount
         + ' connectors=' + connCount
         + ' subsystems=' + subCount
+        + ' controlGroups=' + cgCount
         + ' namespace=' + namespace
         + ' metaId=' + (builtinMeta.id || '无')
     );
@@ -232,6 +243,7 @@ function getBuiltinPack() {
     log.debug('getBuiltinPack: 连接器键列表', Object.keys(builtinConnectors));
     log.debug('getBuiltinPack: 材料键列表', Object.keys(builtinMaterials));
     log.debug('getBuiltinPack: 子系统键列表', Object.keys(builtinSubsystems));
+    log.debug('getBuiltinPack: 控制组预设键列表', Object.keys(builtinControlGroups));
 
     return result;
 }

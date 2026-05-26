@@ -30,6 +30,7 @@ var _cache = {
     materials: null,
     connectors: null,
     subsystems: null,
+    control_groups: null,
 };
 
 // =============================================================================
@@ -46,7 +47,7 @@ var _cache = {
  *
  * @param {Object|null} config - 项目配置对象，需包含 dependencyPaths (string[]) 和
  *   contentPackPath (string) 字段。为 null/undefined 时返回空结果。
- * @param {'materials'|'connectors'|'subsystems'} type - 定义类型
+ * @param {'materials'|'connectors'|'subsystems'|'control_groups'} type - 定义类型
  * @returns {{defs: Object<string,Object>, sources: Object<string,string>}}
  *   defs: 合并后的定义映射 { defId: defData }
  *   sources: 每个定义的来源标记 'builtin'|'dependency:0'|'dependency:1'|...|'current'
@@ -205,7 +206,7 @@ function loadMergedDefs(config, type) {
  * 查询指定定义 ID 的来源
  *
  * @param {Object|null} config - 项目配置对象
- * @param {'materials'|'connectors'|'subsystems'} type - 定义类型
+ * @param {'materials'|'connectors'|'subsystems'|'control_groups'} type - 定义类型
  * @param {string} defId - 定义 ID
  * @returns {string|null} 来源标记 ('builtin'|'dependency:N'|'current')，未找到返回 null
  */
@@ -227,7 +228,7 @@ function resolveDefSource(config, type, defId) {
  * 内置包和依赖包的定义为只读。
  *
  * @param {Object|null} config - 项目配置对象
- * @param {'materials'|'connectors'|'subsystems'} type - 定义类型
+ * @param {'materials'|'connectors'|'subsystems'|'control_groups'} type - 定义类型
  * @param {string} defId - 定义 ID
  * @returns {boolean} 是否可编辑
  */
@@ -240,7 +241,7 @@ function isDefEditable(config, type, defId) {
  * 获取指定类型的所有可用定义（仅 defs 映射，不含 sources）
  *
  * @param {Object|null} config - 项目配置对象
- * @param {'materials'|'connectors'|'subsystems'} type - 定义类型
+ * @param {'materials'|'connectors'|'subsystems'|'control_groups'} type - 定义类型
  * @returns {Object<string,Object>} 定义映射 { defId: defData }，无定义时返回 {}
  */
 function getAvailableDefsForType(config, type) {
@@ -254,7 +255,7 @@ function getAvailableDefsForType(config, type) {
  * 用于面板中的默认选择（如 HitBox 面板的默认材料）。
  *
  * @param {Object|null} config - 项目配置对象
- * @param {'materials'|'connectors'|'subsystems'} type - 定义类型
+ * @param {'materials'|'connectors'|'subsystems'|'control_groups'} type - 定义类型
  * @returns {string|null} 第一个定义的 ID，无可用定义时返回 null
  */
 function getFirstDefId(config, type) {
@@ -277,6 +278,7 @@ function invalidateCache() {
     _cache.materials = null;
     _cache.connectors = null;
     _cache.subsystems = null;
+    _cache.control_groups = null;
     log.debug('invalidateCache: 缓存已清除');
     // 检查调用栈（帮助定位谁触发了缓存失效）
     try {

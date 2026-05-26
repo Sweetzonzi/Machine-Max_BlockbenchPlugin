@@ -139,12 +139,10 @@ var SUBSYSTEM_TYPES = [
         displayName: '座位',
         category: 'utility',
         dynamicFields: [
-            { field: 'definition',           label: '型号定义',    editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'locator',              label: '关联定位器',  editor: 'locator_selector',    required: true,  defaultValue: null },
-            { field: 'move_outputs',         label: '移动信号输出',editor: 'signal_targets',      required: false, defaultValue: { move_control: [] } },
-            { field: 'aim_outputs',          label: '瞄准信号输出',editor: 'signal_targets',      required: false, defaultValue: { aim: [] } },
-            { field: 'regular_outputs',      label: '常规信号输出',editor: 'signal_targets',      required: false, defaultValue: { regular_control: [] } },
-            { field: 'passenger_num_outputs',label: '乘客数信号输出',editor: 'signal_targets',     required: false, defaultValue: { passenger_num: ['subpart', 'vehicle'] } },
+            { field: 'definition',             label: '型号定义',        editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'locator',                label: '关联定位器',      editor: 'locator_selector',    required: true,  defaultValue: null },
+            { field: 'control_group_preset',   label: '控制组预设',      editor: 'control_group_selector', required: false, defaultValue: '' },
+            { field: 'passenger_num_outputs',  label: '乘客数信号输出',  editor: 'signal_targets',      required: false, defaultValue: { passenger_num: ['subpart', 'vehicle'] } },
         ],
     },
     {

@@ -74,6 +74,14 @@
                 <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
             </select>
 
+            <!-- 控制组预设选择器 -->
+            <select v-else-if="field.editor === 'control_group_selector'" class="mm-select"
+                :value="config[field.field]"
+                @change="onFieldChange(field.field, $event.target.value)">
+                <option value="">（无 — 使用默认控制）</option>
+                <option v-for="(preset, presetId) in availableControlGroupPresets" :key="presetId" :value="presetId">{{ presetId }}</option>
+            </select>
+
             <!-- 单目标功率输出选择器（如 power_output） -->
             <select v-else-if="field.editor === 'power_target'" class="mm-select"
                 :value="config[field.field]"

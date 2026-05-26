@@ -107,6 +107,22 @@ function registerMachineMaxMenu() {
         '_',
 
         {
+            name: '查看控制组预设',
+            icon: 'gamepad',
+            id: 'mm_menu_control_groups',
+            click: function () {
+                var config = getConfig();
+                if (!config) {
+                    showToast('请先打开项目', 'warning');
+                    return;
+                }
+                require('./dialogs/control_group_dialog.js').showControlGroupManagerDialog(config);
+            },
+        },
+
+        '_',
+
+        {
             name: '创建/管理材料类型',
             icon: 'Texture',
             id: 'mm_menu_materials',

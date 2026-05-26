@@ -212,22 +212,25 @@ function loadBuiltinPack() {
     const metaPath = path.join(packDir, 'meta.json');
     const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
 
-    // 递归收集 materials / connectors / subsystems 并规范化
+    // 递归收集 materials / connectors / subsystems / control_groups 并规范化
     const machineMaxDir = path.join(packDir, 'machine_max');
     const materialsRaw = collectJSONFiles(path.join(machineMaxDir, 'materials'), path.join(machineMaxDir, 'materials'));
     const connectorsRaw = collectJSONFiles(path.join(machineMaxDir, 'connectors'), path.join(machineMaxDir, 'connectors'));
     const subsystemsRaw = collectJSONFiles(path.join(machineMaxDir, 'subsystems'), path.join(machineMaxDir, 'subsystems'));
+    const controlGroupsRaw = collectJSONFiles(path.join(machineMaxDir, 'control_groups'), path.join(machineMaxDir, 'control_groups'));
 
     const materials = normalizeDefFiles(materialsRaw);
     const connectors = normalizeDefFiles(connectorsRaw);
     const subsystems = normalizeDefFiles(subsystemsRaw);
+    const controlGroups = normalizeDefFiles(controlGroupsRaw);
 
     return {
         '__BUILTIN_PACK_META__': JSON.stringify(meta),
         '__BUILTIN_MATERIALS__': JSON.stringify(materials),
         '__BUILTIN_CONNECTORS__': JSON.stringify(connectors),
         '__BUILTIN_SUBSYSTEMS__': JSON.stringify(subsystems),
-        _packStats: { materials: Object.keys(materials).length, connectors: Object.keys(connectors).length, subsystems: Object.keys(subsystems).length },
+        '__BUILTIN_CONTROL_GROUPS__': JSON.stringify(controlGroups),
+        _packStats: { materials: Object.keys(materials).length, connectors: Object.keys(connectors).length, subsystems: Object.keys(subsystems).length, controlGroups: Object.keys(controlGroups).length },
     };
 }
 
@@ -317,7 +320,7 @@ async function buildOnce() {
 
         // 输出内置包统计
         if (packStats) {
-            console.log(`📦 内置基础包 (machine_max:builtin): ${packStats.materials} materials, ${packStats.connectors} connectors, ${packStats.subsystems} subsystems`);
+            console.log(`📦 内置基础包 (machine_max:builtin): ${packStats.materials} materials, ${packStats.connectors} connectors, ${packStats.subsystems} subsystems, ${packStats.controlGroups} control_groups`);
         }
 
         if (warnings.length > 0) {

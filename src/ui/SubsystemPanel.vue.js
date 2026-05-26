@@ -28,6 +28,7 @@ Vue.component('mm-subsystem-panel', {
         ownedLocatorNames: { type: Array, default: function () { return []; } },
         connectorKeys: { type: Object, default: function () { return {}; } },
         signalTargetOptions: { type: Array, default: function () { return []; } },
+        controlGroupPresets: { type: Object, default: function () { return {}; } },
     },
     data: function () {
         return {
@@ -89,6 +90,17 @@ Vue.component('mm-subsystem-panel', {
         filteredSubsystemDefsCount: function () {
             return Object.keys(this.filteredSubsystemDefs).length;
         },
+        /** 所有可用的控制组预设（排除空字符串键） */
+        availableControlGroupPresets: function () {
+            var result = {};
+            if (!this.controlGroupPresets) return result;
+            for (var key in this.controlGroupPresets) {
+                if (this.controlGroupPresets.hasOwnProperty(key) && key) {
+                    result[key] = this.controlGroupPresets[key];
+                }
+            }
+            return result;
+        },
         /** 排除 definition 后的动态属性字段列表，用于面板循环渲染 */
         nonDefFields: function () {
             var meta = this.typeMeta;
@@ -102,7 +114,7 @@ Vue.component('mm-subsystem-panel', {
         },
         channelHints: function () {
             return [
-                'move_control', 'regular_control', 'engine_control', 'wheel_control',
+                'move_input', 'regular_input', 'engine_control', 'wheel_control',
                 'steering', 'throttle', 'brake', 'handbrake',
                 'engine_speed', 'wheel_speed', 'vehicle_speed',
                 'gear', 'clutch', 'parking_brake',

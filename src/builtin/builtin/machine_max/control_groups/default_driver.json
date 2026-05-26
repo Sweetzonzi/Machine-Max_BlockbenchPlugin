@@ -1,0 +1,14 @@
+{
+    "base_group": {
+        "name": "base",
+        "control_mode": "ground",
+        "move_targets": {
+            "move_input_p1": ["vehicle"]
+        },
+        "view_targets": {},
+        "regular_targets": {
+            "regular_input_p1": ["vehicle"]
+        },
+        "bindings": []
+    }
+}

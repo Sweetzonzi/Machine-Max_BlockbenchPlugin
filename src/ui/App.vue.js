@@ -324,6 +324,18 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             return result;
         },
         /**
+         * 所有可用的控制组预设（用于控制组预设下拉选择）
+         */
+        availableControlGroupPresets: function () {
+            if (!this.config) {
+                log.warn('availableControlGroupPresets: config 为空');
+                return {};
+            }
+            var cp = require('../core/content_pack_manager.js');
+            var result = cp.loadMergedDefs(this.config, 'control_groups').defs;
+            return result;
+        },
+        /**
          * 当前子零件内所有连接点名称列表（用于 connector 下拉选择）
          */
         currentConnectorKeys: function () {

@@ -1,7 +1,7 @@
 {
   "$schema": "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json",
   "type": "Advanced", //必须为Advanced才能提供旋转关节自由度
-  "direction": "xp", //法线朝前，连接炮管
+  "direction": "zn", //法线朝前，连接炮管
   "integrity": 80.0, //高低机结构完整度
   "impact_absorption": 0.12,
   "impact_reduction": 2.0,

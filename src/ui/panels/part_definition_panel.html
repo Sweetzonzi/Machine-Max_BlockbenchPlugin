@@ -31,6 +31,7 @@
             :owned-locator-names="ownedLocatorNames"
             :connector-keys="currentConnectorKeys"
             :signal-target-options="currentSignalTargetOptions"
+            :control-group-presets="availableControlGroupPresets"
             @field-change="updateSubsystemField"
             @name-change="renameSubsystem"
             @delete-subsystem="deleteSubsystem($event.spKey, $event.ssKey)"
