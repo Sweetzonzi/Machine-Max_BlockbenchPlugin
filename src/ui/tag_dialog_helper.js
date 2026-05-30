@@ -52,26 +52,26 @@ function showAddTagDialog(vm, variant) {
     var DEFAULT_TAG_GROUPS = {
         direction: {
             label: '方向',
-            tags: ['left', 'right', 'front', 'back', 'top', 'bottom'],
+            tags: ['direction/left', 'direction/right', 'direction/front', 'direction/back', 'direction/top', 'direction/bottom'],
         },
         function: {
             label: '功能',
-            tags: ['structural', 'decoration', 'mobility', 'weapon', 'misc'],
+            tags: ['category/structural', 'category/decoration', 'category/mobility', 'category/weapon', 'category/misc'],
         },
         type: {
             label: '类型',
-            tags: ['land', 'marine', 'aerial', 'mecha'],
+            tags: ['type/land', 'type/marine', 'type/aerial', 'type/mecha'],
         },
     };
 
     /** 默认标签的中文显示名映射 */
     var TAG_LABELS = {
-        left: '左 (left)', right: '右 (right)', front: '前 (front)',
-        back: '后 (back)', top: '上 (top)', bottom: '下 (bottom)',
-        structural: '结构 (structural)', decoration: '装饰 (decoration)',
-        mobility: '移动 (mobility)', weapon: '武器 (weapon)', misc: '杂项 (misc)',
-        land: '地面 (land)', marine: '水中 (marine)',
-        aerial: '空中 (aerial)', mecha: '机甲 (mecha)',
+        'direction/left': '左 (direction/left)', 'direction/right': '右 (direction/right)', 'direction/front': '前 (direction/front)',
+        'direction/back': '后 (direction/back)', 'direction/top': '上 (direction/top)', 'direction/bottom': '下 (direction/bottom)',
+        'category/structural': '结构 (category/structural)', 'category/decoration': '装饰 (category/decoration)',
+        'category/mobility': '移动 (category/mobility)', 'category/weapon': '武器 (category/weapon)', 'category/misc': '杂项 (category/misc)',
+        'type/land': '地面 (type/land)', 'type/marine': '水中 (type/marine)',
+        'type/aerial': '空中 (type/aerial)', 'type/mecha': '机甲 (type/mecha)',
     };
 
     /**
