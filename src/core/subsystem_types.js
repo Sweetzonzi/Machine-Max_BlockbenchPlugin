@@ -35,7 +35,7 @@ var SUBSYSTEM_TYPES = [
         dynamicFields: [
             { field: 'definition',    label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'power_output',  label: '功率输出目标',  editor: 'power_target',        required: true,  defaultValue: null },
-            { field: 'speed_outputs', label: '转速信号输出',  editor: 'signal_targets',       required: false, defaultValue: { engine_speed: ['subpart', 'vehicle'] } },
+            { field: 'speed_outputs', label: '转速信号输出',  editor: 'signal_targets',       required: false, defaultValue: { engine_speed: ['vehicle', 'subpart'] } },
         ],
     },
     {
@@ -73,16 +73,6 @@ var SUBSYSTEM_TYPES = [
         dynamicFields: [
             { field: 'definition',    label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'power_outputs', label: '功率输出分配', editor: 'power_outputs_map',    required: true,  defaultValue: {} },
-        ],
-    },
-    {
-        id: 'machine_max:motor_controller',
-        displayName: '电机控制器',
-        category: 'power',
-        dynamicFields: [
-            { field: 'definition',    label: '型号定义',    editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'power_output',  label: '功率输出目标',editor: 'power_target',        required: true,  defaultValue: null },
-            { field: 'speed_outputs', label: '转速信号输出',editor: 'signal_targets',       required: false, defaultValue: { motor_speed: ['subpart', 'vehicle'] } },
         ],
     },
     // ===== control 分类 =====
@@ -139,10 +129,11 @@ var SUBSYSTEM_TYPES = [
         displayName: '座位',
         category: 'utility',
         dynamicFields: [
-            { field: 'definition',             label: '型号定义',        editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'locator',                label: '关联定位器',      editor: 'locator_selector',    required: true,  defaultValue: null },
-            { field: 'control_group_preset',   label: '控制组预设',      editor: 'control_group_selector', required: false, defaultValue: '' },
-            { field: 'passenger_num_outputs',  label: '乘客数信号输出',  editor: 'signal_targets',      required: false, defaultValue: { passenger_num: ['subpart', 'vehicle'] } },
+            { field: 'definition',              label: '型号定义',          editor: 'definition_selector',   required: true,  defaultValue: '' },
+            { field: 'locator',                 label: '关联定位器',        editor: 'locator_selector',      required: true,  defaultValue: null },
+            { field: 'control_group_preset',    label: '控制组预设',        editor: 'control_group_selector', required: false, defaultValue: '' },
+            { field: 'passenger_num_outputs',   label: '乘客数信号输出',    editor: 'signal_targets',        required: false, defaultValue: { passenger_num: ['subpart', 'vehicle'] } },
+            { field: 'camera_discovery_targets', label: '摄像机发现握手目标', editor: 'signal_targets',      required: false, defaultValue: {} },
         ],
     },
     {
@@ -185,10 +176,11 @@ var SUBSYSTEM_TYPES = [
     // ===== experimental 分类 =====
     {
         id: 'machine_max:camera',
-        displayName: '摄像头',
+        displayName: '摄像机',
         category: 'experimental',
         dynamicFields: [
-            { field: 'definition', label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'definition', label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'locator',    label: '摄像机定位器', editor: 'locator_selector',    required: false, defaultValue: null },
         ],
     },
     {
@@ -227,6 +219,34 @@ var SUBSYSTEM_TYPES = [
             { field: 'definition',    label: '型号定义',   editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'locator',       label: '发射点定位器',editor: 'locator_selector',    required: true,  defaultValue: null },
             { field: 'ammo_outputs',  label: '弹药反馈输出',editor: 'signal_targets',       required: false, defaultValue: {} },
+        ],
+    },
+    {
+        id: 'machine_max:sight',
+        displayName: '瞄准镜',
+        category: 'experimental',
+        dynamicFields: [
+            { field: 'definition', label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'locator',    label: '瞄准镜定位器', editor: 'locator_selector',    required: false, defaultValue: '' },
+        ],
+    },
+    {
+        id: 'machine_max:ammo_loader',
+        displayName: '装弹机',
+        category: 'experimental',
+        dynamicFields: [
+            { field: 'definition',       label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'discovery_outputs', label: '弹药发现频道', editor: 'signal_targets',       required: false, defaultValue: {} },
+        ],
+    },
+    {
+        id: 'machine_max:regen_loader',
+        displayName: '再生装弹机',
+        category: 'experimental',
+        dynamicFields: [
+            { field: 'definition',       label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'projectile_types',   label: '弹链构成',     editor: 'projectile_belt_editor', required: true,  defaultValue: [] },
+            { field: 'discovery_outputs', label: '弹药发现频道', editor: 'signal_targets',       required: false, defaultValue: {} },
         ],
     },
 ];

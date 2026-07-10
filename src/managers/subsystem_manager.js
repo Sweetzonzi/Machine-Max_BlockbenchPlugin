@@ -240,7 +240,6 @@ function getSubsystemTypes() {
         'machine_max:transmission',
         'machine_max:lighting',
         'machine_max:item_storage',
-        'machine_max:motor_controller',
         'machine_max:basic',
         'machine_max:battery',
         'machine_max:joint',
@@ -250,6 +249,9 @@ function getSubsystemTypes() {
         'machine_max:turret_driver',
         'machine_max:weapon_controller',
         'machine_max:launcher',
+        'machine_max:sight',
+        'machine_max:ammo_loader',
+        'machine_max:regen_loader',
     ];
 
     log.debug('getSubsystemTypes: 共 ' + types.length + ' 种类型');

@@ -8,13 +8,18 @@
  *
  * 支持编辑器类型：definition_selector, locator_selector, connector_selector,
  * enum_selector, power_target, power_outputs_map, signal_targets,
- * text_input, json_textarea。
+ * text_input, json_textarea, control_group_selector, projectile_belt_editor.
  */
 var ssTypes = require('../core/subsystem_types.js');
 var nameUtils = require('../utils/name_utils.js');
 var { createLogger } = require('../utils/logger.js');
 
 var log = createLogger('SubsystemPanel');
+
+/** 弹链编辑器占位键前缀（模块常量，非 methods 属性） */
+var PLACEHOLDER_PREFIX = '__new_p_';
+/** 弹链编辑器 do-while 最大迭代次数，防止无限循环卡死 */
+var MAX_PLACEHOLDER_ITERATIONS = 1000;
 
 Vue.component('mm-subsystem-panel', {
     template: typeof TEMPLATE_SUBSYSTEM_PANEL !== 'undefined' ? TEMPLATE_SUBSYSTEM_PANEL : '<p>子系统面板加载中...</p>',
@@ -29,10 +34,13 @@ Vue.component('mm-subsystem-panel', {
         connectorKeys: { type: Object, default: function () { return {}; } },
         signalTargetOptions: { type: Array, default: function () { return []; } },
         controlGroupPresets: { type: Object, default: function () { return {}; } },
+        projectileTypes: { type: Object, default: function () { return {}; } },
     },
     data: function () {
         return {
             editingName: nameUtils.extractShortName(this.subsystemKey, this.namespace),
+            /** 弹链占位键自增计数器（注意：不能以 _ 开头，Vue 2 会剥离） */
+            projectilePlaceholderCounter: 0,
         };
     },
     watch: {
@@ -288,6 +296,130 @@ Vue.component('mm-subsystem-panel', {
             var entries = this.getPowerOutputEntries(field);
             if (entries[targetName] !== undefined) {
                 this.$set(entries, targetName, ratio);
+                this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            }
+        },
+
+        // ─── 弹链编辑器（projectile_belt_editor，Map<projectileId, count>） ─
+
+        /**
+         * 获取弹链条目（用于 v-for 显示和修改操作）：对象 { projectileId: count }
+         * 键按插入序排列，onProjectileIdChange 通过原地重建保证位置不变（所见即所得）。
+         */
+        getProjectileEntries: function (field) {
+            var val = this.config[field];
+            if (val && typeof val === 'object' && !Array.isArray(val)) return val;
+            return {};
+        },
+        /**
+         * 获取所有投射物选项，已用于其他行的选项会被标记 disabled（当前行除外）。
+         * 占位键（__new_p_*）不计入"已使用"，不阻塞真实弹种的选择。
+         * @param {string} field - 字段名
+         * @param {string} currentId - 当前行 projectileId
+         * @returns {{value: string, label: string, disabled: boolean}[]}
+         */
+        getProjectileOptions: function (field, currentId) {
+            var all = this.projectileTypes;
+            var result = [];
+            if (!all || typeof all !== 'object') return result;
+            var entries = this.getProjectileEntries(field);
+            // 过滤掉占位键（__new_p_*），占位条目不应阻塞真实弹种的选择
+            var usedIds = Object.keys(entries).filter(function (k) {
+                return k.indexOf(PLACEHOLDER_PREFIX) !== 0;
+            });
+            for (var id in all) {
+                if (!all.hasOwnProperty(id)) continue;
+                var isUsed = usedIds.indexOf(id) !== -1;
+                var isCurrent = id === currentId;
+                result.push({
+                    value: id,
+                    label: id,
+                    disabled: isUsed && !isCurrent,
+                });
+            }
+            return result;
+        },
+        /**
+         * 添加一个空弹链占位条目。使用自增占位键 __new_p_N 确保可无限添加，
+         * 与 power_outputs_map 的 new_target_N 模式一致。
+         * 含 do-while 迭代上限（MAX_PLACEHOLDER_ITERATIONS）防止无限循环卡死。
+         */
+        addProjectileEntry: function (field) {
+            log.debug('[addProjectileEntry] 开始，field=' + field);
+            var entries = this.getProjectileEntries(field);
+            var counter = this.projectilePlaceholderCounter;
+            log.debug('[addProjectileEntry] 当前占位计数器=' + counter + ', 已有条目=' + Object.keys(entries).join(','));
+
+            var newKey;
+            var watchdog = 0;
+            do {
+                newKey = PLACEHOLDER_PREFIX + (counter++);
+                watchdog++;
+                if (watchdog > MAX_PLACEHOLDER_ITERATIONS) {
+                    log.error('[addProjectileEntry] 超出最大迭代次数！counter=' + counter + ', newKey=' + newKey + ', entries=' + JSON.stringify(Object.keys(entries)));
+                    return;
+                }
+            } while (entries.hasOwnProperty(newKey));
+
+            log.debug('[addProjectileEntry] 生成新占位键=' + newKey + ', counter=' + counter + ', 迭代次数=' + watchdog);
+            this.projectilePlaceholderCounter = counter;
+            this.$set(entries, newKey, 1);
+            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            log.debug('[addProjectileEntry] 完成');
+        },
+        removeProjectileEntry: function (field, projectileId) {
+            log.debug('[removeProjectileEntry] field=' + field + ', id=' + projectileId);
+            var entries = this.getProjectileEntries(field);
+            this.$delete(entries, projectileId);
+            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+        },
+        /**
+         * 弹链条目切换投射物。
+         * 通过按原始键序重建对象实现"原位替换"——选择第 N 个条目，新弹种仍然在第 N 位，
+         * 而非被排到对象末尾（所见即所得）。
+         * - 占位键 → 真实ID：原位替换
+         * - 真实ID → ""（取消选择）：原位替换为占位键
+         * - 真实ID → 另一真实ID：若目标ID已存在则合并数量（保留已存在条目的位置），否则原位替换
+         * - 占位键 → ""：无操作
+         */
+        onProjectileIdChange: function (field, oldId, newId) {
+            log.debug('[onProjectileIdChange] field=' + field + ', oldId=' + oldId + ', newId=' + newId);
+            if (oldId === newId) return;
+            var entries = this.getProjectileEntries(field);
+            var count = entries[oldId];
+            if (count === undefined) return;
+
+            if (!newId) {
+                // 取消选择：原位替换为占位键
+                if (oldId.indexOf(PLACEHOLDER_PREFIX) === 0) return;
+                newId = PLACEHOLDER_PREFIX + (this.projectilePlaceholderCounter++);
+                log.debug('[onProjectileIdChange] 取消选择，原位替换为占位键=' + newId);
+            } else if (entries.hasOwnProperty(newId)) {
+                // 合并到已存在的同ID条目（保留已存在条目的位置）
+                log.debug('[onProjectileIdChange] 合并数量：' + entries[newId] + ' + ' + count);
+                this.$set(entries, newId, entries[newId] + count);
+                this.$delete(entries, oldId);
+                this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+                return;
+            }
+
+            // 按原始键序重建对象，oldId 的位置替换为 newId
+            var rebuilt = {};
+            var allKeys = Object.keys(entries);
+            for (var i = 0; i < allKeys.length; i++) {
+                var k = allKeys[i];
+                if (k === oldId) {
+                    rebuilt[newId] = count;
+                } else {
+                    rebuilt[k] = entries[k];
+                }
+            }
+            this.$set(this.config, field, rebuilt);
+        },
+        onProjectileCountChange: function (field, projectileId, count) {
+            var entries = this.getProjectileEntries(field);
+            if (entries[projectileId] !== undefined) {
+                this.$set(entries, projectileId, count);
                 this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
             }
         },

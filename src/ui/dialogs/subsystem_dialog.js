@@ -45,7 +45,6 @@ function _getTypeDisplayName(typeId) {
         'machine_max:transmission': '分动器 (Transmission)',
         'machine_max:lighting': '车灯 (Lighting)',
         'machine_max:item_storage': '货箱 (Item Storage)',
-        'machine_max:motor_controller': '电机控制器 (Motor Controller)',
         'machine_max:basic': '基础 (Basic)',
         'machine_max:battery': '电池 (Battery)',
         'machine_max:joint': '关节 (Joint)',

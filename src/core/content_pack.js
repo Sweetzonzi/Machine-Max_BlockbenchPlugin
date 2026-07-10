@@ -2,8 +2,8 @@
  * content_pack.js — 内容包目录 I/O 模块
  *
  * 负责内容包定义在磁盘上的读写操作，是所有内容包重构工作的基础设施层。
- * 封装了 meta.json 管理、定义文件（materials/connectors/subsystems）的
- * CRUD 操作、目录结构校验和创建等功能。支持的类型: materials, connectors, subsystems, control_groups。
+ * 封装了 meta.json 管理、定义文件（materials/connectors/subsystems/control_groups/projectiles）的
+ * CRUD 操作、目录结构校验和创建等功能。支持的类型: materials, connectors, subsystems, control_groups, projectiles。
  *
  * 设计原则:
  * - 每次调用从磁盘读取最新数据，不缓存
@@ -132,7 +132,7 @@ function _isZipPath(p) {
  *
  * @param {string} zipPath - ZIP 文件的绝对路径
  * @param {string} namespace - 命名空间
- * @param {'materials'|'connectors'|'subsystems'|'control_groups'} type - 定义类型
+ * @param {'materials'|'connectors'|'subsystems'|'control_groups'|'projectiles'} type - 定义类型
  * @returns {Object<string, Object>} { [defId]: parsedData }
  */
 function _readZipDefs(zipPath, namespace, type) {
@@ -445,7 +445,7 @@ function openContentPack(packPath) {
  *
  * @param {string} packDir - 内容包根目录或 ZIP 文件路径
  * @param {string} namespace - 命名空间
- * @param {'materials'|'connectors'|'subsystems'|'control_groups'} type - 定义类型
+ * @param {'materials'|'connectors'|'subsystems'|'control_groups'|'projectiles'} type - 定义类型
  * @returns {Object<string, Object>} { [defId]: parsedData }，目录不存在时返回 {}
  */
 function readAllDefs(packDir, namespace, type) {
@@ -492,7 +492,7 @@ function readAllDefs(packDir, namespace, type) {
  *
  * @param {string} packDir - 内容包根目录
  * @param {string} namespace - 命名空间
- * @param {'materials'|'connectors'|'subsystems'|'control_groups'} type - 定义类型
+ * @param {'materials'|'connectors'|'subsystems'|'control_groups'|'projectiles'} type - 定义类型
  * @param {string} defId - 定义 ID（文件名，不含扩展名）
  * @param {Object} data - 要写入的数据
  */
@@ -510,7 +510,7 @@ function writeDef(packDir, namespace, type, defId, data) {
  *
  * @param {string} packDir - 内容包根目录
  * @param {string} namespace - 命名空间
- * @param {'materials'|'connectors'|'subsystems'|'control_groups'} type - 定义类型
+ * @param {'materials'|'connectors'|'subsystems'|'control_groups'|'projectiles'} type - 定义类型
  * @param {string} defId - 定义 ID（文件名，不含扩展名）
  */
 function deleteDef(packDir, namespace, type, defId) {
@@ -526,7 +526,7 @@ function deleteDef(packDir, namespace, type, defId) {
  *
  * @param {string} packDir - 内容包根目录
  * @param {string} namespace - 命名空间
- * @param {'materials'|'connectors'|'subsystems'|'control_groups'} type - 定义类型
+ * @param {'materials'|'connectors'|'subsystems'|'control_groups'|'projectiles'} type - 定义类型
  * @returns {string[]} 定义 ID 数组，目录不存在时返回 []
  */
 function listDefIds(packDir, namespace, type) {
@@ -553,7 +553,7 @@ function listDefIds(packDir, namespace, type) {
  *
  * @param {string} packDir - 内容包根目录
  * @param {string} namespace - 命名空间
- * @param {'materials'|'connectors'|'subsystems'|'control_groups'} type - 定义类型
+ * @param {'materials'|'connectors'|'subsystems'|'control_groups'|'projectiles'} type - 定义类型
  * @param {string} defId - 定义 ID
  * @returns {boolean} 文件是否存在
  */

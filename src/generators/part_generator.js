@@ -56,14 +56,45 @@ function _resolveAllUUIDKeys(partConfig) {
     return partConfig;
 }
 
+/**
+ * 清理再生装弹机 projectile_types 中的占位键（__new_p_*），
+ * 防止未选择的空条目被序列化到导出 JSON 中。
+ * @param {Object} partConfig - 零件配置（会被就地修改）
+ */
+function _cleanProjectileTypes(partConfig) {
+    if (!partConfig || !partConfig.variants) return;
+    var PLACEHOLDER_PREFIX = '__new_p_';
+    for (var vKey in partConfig.variants) {
+        var sub_parts = partConfig.variants[vKey].sub_parts;
+        if (!sub_parts) continue;
+        for (var spKey in sub_parts) {
+            var sp = sub_parts[spKey];
+            if (!sp || !sp.subsystems) continue;
+            for (var ssKey in sp.subsystems) {
+                var ss = sp.subsystems[ssKey];
+                if (!ss || ss.type !== 'machine_max:regen_loader') continue;
+                var pt = ss.projectile_types;
+                if (!pt || typeof pt !== 'object') continue;
+                for (var k in pt) {
+                    if (pt.hasOwnProperty(k) && k.indexOf(PLACEHOLDER_PREFIX) === 0) {
+                        delete pt[k];
+                    }
+                }
+            }
+        }
+    }
+}
+
 function generateAllParts(projectConfig) {
     const parts = projectConfig.parts || {};
     const result = {};
 
     for (const [partId, partConfig] of Object.entries(parts)) {
-        // 深拷贝后解析 UUID 为骨骼名，避免修改实时配置
-        var resolved = _resolveAllUUIDKeys(JSON.parse(JSON.stringify(partConfig)));
-        result[partId] = generatePartJSON(resolved);
+        // 深拷贝后解析 UUID 为骨骼名，并清理弹链占位键，避免修改实时配置
+        var cloned = JSON.parse(JSON.stringify(partConfig));
+        _resolveAllUUIDKeys(cloned);
+        _cleanProjectileTypes(cloned);
+        result[partId] = generatePartJSON(cloned);
     }
 
     log.info('generateAllParts: 已生成 ' + Object.keys(result).length + ' 个零件');

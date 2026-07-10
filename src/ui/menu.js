@@ -119,6 +119,19 @@ function registerMachineMaxMenu() {
                 require('./dialogs/control_group_dialog.js').showControlGroupManagerDialog(config);
             },
         },
+        {
+            name: '查看投射物定义',
+            icon: 'fa-bullseye',
+            id: 'mm_menu_projectiles',
+            click: function () {
+                var config = getConfig();
+                if (!config) {
+                    showToast('请先打开项目', 'warning');
+                    return;
+                }
+                require('./dialogs/projectile_dialog.js').showProjectileManagerDialog(config);
+            },
+        },
 
         '_',
 

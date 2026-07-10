@@ -336,6 +336,19 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             return result;
         },
         /**
+         * 所有可用的投射物定义（用于再生装弹机弹链选择器）
+         */
+        availableProjectileTypes: function () {
+            if (!this.config) {
+                log.warn('availableProjectileTypes: config 为空');
+                return {};
+            }
+            var projectile_manager = require('../managers/projectile_manager.js');
+            var result = projectile_manager.getProjectileMap(this.config);
+            log.info('availableProjectileTypes: 共 ' + Object.keys(result).length + ' 个投射物');
+            return result;
+        },
+        /**
          * 当前子零件内所有连接点名称列表（用于 connector 下拉选择）
          */
         currentConnectorKeys: function () {

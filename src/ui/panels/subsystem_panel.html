@@ -78,7 +78,7 @@
             <select v-else-if="field.editor === 'control_group_selector'" class="mm-select"
                 :value="config[field.field]"
                 @change="onFieldChange(field.field, $event.target.value)">
-                <option value="">（无 — 使用默认控制）</option>
+                <option value="">（无 — machine_max:empty）</option>
                 <option v-for="(preset, presetId) in availableControlGroupPresets" :key="presetId" :value="presetId">{{ presetId }}</option>
             </select>
 
@@ -108,6 +108,30 @@
                     <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removePowerOutput(field.field, targetName)" title="删除">×</button>
                 </div>
                 <button class="mm-btn" style="font-size:11px" @click="addPowerOutput(field.field)">+ 添加输出目标</button>
+            </div>
+
+            <!-- 弹链编辑器（projectile_belt_editor，Map<projectileId, count>） -->
+            <div v-else-if="field.editor === 'projectile_belt_editor'" class="mm-projectile-belt-editor">
+                <div v-if="Object.keys(projectileTypes).length === 0" style="color:#ff6b6b;font-size:11px;padding:4px 0">
+                    当前内容包中无可用投射物定义
+                </div>
+                <div v-for="(count, projectileId, pi) in getProjectileEntries(field.field)" :key="pi" style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+                    <select class="mm-select" style="flex:1;min-width:120px;font-size:11px"
+                        :value="projectileId"
+                        @change="onProjectileIdChange(field.field, projectileId, $event.target.value)">
+                        <option value="">（选择投射物）</option>
+                        <option v-for="opt in getProjectileOptions(field.field, projectileId)" :key="opt.value" :value="opt.value" :disabled="opt.disabled">
+                            {{ opt.label }}{{ opt.disabled ? '（已使用）' : '' }}
+                        </option>
+                    </select>
+                    <input type="number" class="mm-input" style="width:60px;font-size:11px;text-align:right"
+                        step="1" min="1" max="999"
+                        :value="count"
+                        @change="onProjectileCountChange(field.field, projectileId, parseInt($event.target.value) || 1)"
+                        placeholder="数量" />
+                    <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeProjectileEntry(field.field, projectileId)" title="删除">×</button>
+                </div>
+                <button class="mm-btn" style="font-size:11px" @click="addProjectileEntry(field.field)" :disabled="Object.keys(projectileTypes).length === 0">+ 添加投射物</button>
             </div>
 
             <!-- 信号频道编辑器（signal_targets，值类型为 <string, string[]>） -->

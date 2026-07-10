@@ -34,13 +34,14 @@ const WheelDriverCodec = Codec.record({
 
 /**
  * SeatCodec — 座位
- * 字段: definition, locator, control_group_preset, passenger_num_outputs
+ * 字段: definition, locator, control_group_preset, passenger_num_outputs, camera_discovery_targets
  */
 const SeatCodec = Codec.record({
-    definition:            Codec.STRING.field(),
-    locator:               Codec.STRING.field(),
-    control_group_preset:  Codec.STRING.default(''),
-    passenger_num_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    definition:               Codec.STRING.field(),
+    locator:                  Codec.STRING.field(),
+    control_group_preset:     Codec.STRING.default(''),
+    passenger_num_outputs:    Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    camera_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
 });
 
 /**
@@ -127,15 +128,6 @@ const TransmissionCodec = Codec.record({
     power_outputs:  Codec.map(Codec.STRING, Codec.FLOAT).default({}),   // 频道→减速比（数值）
 });
 
-/**
- * MotorControllerCodec — 电机控制器
- * 字段: definition, power_output, speed_outputs
- */
-const MotorControllerCodec = Codec.record({
-    definition:     Codec.STRING.field(),
-    power_output:   Codec.STRING.field(),
-    speed_outputs:  Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
-});
 
 /**
  * BatteryCodec — 电池
@@ -170,11 +162,12 @@ const JointDriverCodec = Codec.record({
 });
 
 /**
- * CameraCodec — 摄像头
- * 字段: definition
+ * CameraCodec — 摄像机
+ * 字段: definition, locator, aim_output_targets
  */
 const CameraCodec = Codec.record({
     definition: Codec.STRING.field(),
+    locator:    Codec.STRING.default(),
 });
 
 /**
@@ -215,6 +208,34 @@ const LauncherCodec = Codec.record({
     ammo_outputs:  Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
 });
 
+/**
+ * SightCodec — 瞄准镜
+ * 字段: definition, locator
+ */
+const SightCodec = Codec.record({
+    definition: Codec.STRING.field(),
+    locator:    Codec.STRING.default(),
+});
+
+/**
+ * AmmoLoaderCodec — 装弹机
+ * 字段: definition, discovery_outputs
+ */
+const AmmoLoaderCodec = Codec.record({
+    definition:        Codec.STRING.field(),
+    discovery_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+});
+
+/**
+ * RegenLoaderCodec — 再生装弹机
+ * 字段: definition, projectile_types, discovery_outputs
+ */
+const RegenLoaderCodec = Codec.record({
+    definition:        Codec.STRING.field(),
+    projectile_types:  Codec.map(Codec.STRING, Codec.INT).default({}),
+    discovery_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+});
+
 // ==================== Dispatch Codec ====================
 
 /**
@@ -229,7 +250,6 @@ const SubsystemDispatchCodec = Codec.dispatch('type', {
     'machine_max:gearbox':              GearboxCodec,
     'machine_max:transmission':         TransmissionCodec,
     'machine_max:battery':              BatteryCodec,
-    'machine_max:motor_controller':     MotorControllerCodec,
     'machine_max:car_controller':       CarControllerCodec,
     'machine_max:motorbike_controller': MotorbikeControllerCodec,
     'machine_max:signal_convert':       SignalConvertCodec,
@@ -241,9 +261,12 @@ const SubsystemDispatchCodec = Codec.dispatch('type', {
     'machine_max:joint':                JointDriverCodec,
     'machine_max:camera':               CameraCodec,
     'machine_max:javascript':           JavascriptCodec,
-    'machine_max:turret_driver':           TurretDriverCodec,
-    'machine_max:weapon_controller':            WeaponControllerCodec,
+    'machine_max:turret_driver':        TurretDriverCodec,
+    'machine_max:weapon_controller':    WeaponControllerCodec,
     'machine_max:launcher':             LauncherCodec,
+    'machine_max:sight':                SightCodec,
+    'machine_max:ammo_loader':          AmmoLoaderCodec,
+    'machine_max:regen_loader':         RegenLoaderCodec,
 });
 
 // ==================== 导出 ====================
@@ -262,7 +285,6 @@ if (typeof module !== 'undefined' && module.exports) {
         LightingCodec,
         MotorbikeControllerCodec,
         TransmissionCodec,
-        MotorControllerCodec,
         BatteryCodec,
         SignalConvertCodec,
         JointDriverCodec,
@@ -271,5 +293,8 @@ if (typeof module !== 'undefined' && module.exports) {
         TurretDriverCodec,
         WeaponControllerCodec,
         LauncherCodec,
+        SightCodec,
+        AmmoLoaderCodec,
+        RegenLoaderCodec,
     };
 }
