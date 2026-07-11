@@ -53,6 +53,64 @@ function registerMachineMaxMenu() {
         '_',
 
         {
+            name: '导入零件 JSON…',
+            icon: 'fa-file-import',
+            id: 'mm_menu_import_part',
+            click: function () {
+                log.info('MachineMax 菜单: 点击导入零件 JSON');
+                var config = getConfig();
+                if (!config) {
+                    showToast('请先打开项目', 'warning');
+                    return;
+                }
+                // 使用 Electron 原生文件选择器
+                var remote;
+                try {
+                    remote = require('electron').remote;
+                } catch (e) {
+                    remote = null;
+                }
+                if (remote && remote.dialog) {
+                    remote.dialog.showOpenDialog({
+                        title: '选择零件定义 JSON 文件',
+                        filters: [{ name: 'JSON 文件', extensions: ['json'] }],
+                        properties: ['openFile', 'multiSelections'],
+                    }).then(function (result) {
+                        if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+                            log.debug('菜单导入: 用户取消选择');
+                            return;
+                        }
+                        var dragImport = require('../import/drag_import.js');
+                        for (var i = 0; i < result.filePaths.length; i++) {
+                            dragImport.importPartFromPath(result.filePaths[i]);
+                        }
+                    }).catch(function (err) {
+                        log.error('菜单导入: 文件选择失败', err);
+                        showToast('文件选择失败', 'error');
+                    });
+                } else {
+                    // 回退：使用 Blockbench 的 import 机制
+                    Blockbench.import({
+                        extensions: ['json'],
+                        type: 'JSON 文件',
+                        read_mode: 'text',
+                    }, function (files) {
+                        if (!files || files.length === 0) return;
+                        var dragImport = require('../import/drag_import.js');
+                        for (var i = 0; i < files.length; i++) {
+                            var filePath = files[i].path || files[i].name;
+                            if (filePath) {
+                                dragImport.importPartFromPath(filePath);
+                            }
+                        }
+                    });
+                }
+            },
+        },
+
+        '_',
+
+        {
             name: '新建并切换至内容包',
             icon: 'fa-plus-circle',
             id: 'mm_menu_new_pack',

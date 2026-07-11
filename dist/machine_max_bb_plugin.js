@@ -7713,18 +7713,6 @@
       }
       function either(singleCodec, mapCodec) {
         var WRAP_KEY = "default";
-        function looksLikeSingleEntity(obj) {
-          var keys, i, k;
-          keys = Object.keys(obj);
-          if (keys.length === 0) return false;
-          for (i = 0; i < keys.length; i++) {
-            k = keys[i];
-            if (/^[a-z_]/.test(k) && !/^\d/.test(k)) {
-              return true;
-            }
-          }
-          return false;
-        }
         var codec = {
           type: "either",
           encode: function(obj, path) {
@@ -7738,20 +7726,40 @@
             }
             return mapCodec.encode(obj, path);
           },
+          /**
+           * decode: 先检测 key 是否为资源位置/翻译键格式，若是则直接走 map；
+           * 否则尝试单实体解码，失败回退 map。
+           *
+           * 策略：
+           *   1. 原始值（字符串等）→ 包装为单实体
+           *   2. key 含 . 或 :（资源位置/翻译键特征）→ 直接走 map
+           *      （如 "sub_part.machine_max.main"、"machine_max:rha"）
+           *   3. 其他 → 先试单实体，失败回退 map
+           *
+           * try-catch 回退对 SubPartCodec（全字段 .default()）永远无效，
+           * 因此必须用启发式预判资源位置 key。
+           */
           decode: function(raw) {
-            var wrapped;
+            var wrapped, keys, i;
             if (raw === null || raw === void 0) return {};
             if (typeof raw !== "object") {
               wrapped = {};
               wrapped[WRAP_KEY] = singleCodec.decode(raw);
               return wrapped;
             }
-            if (looksLikeSingleEntity(raw)) {
+            keys = Object.keys(raw);
+            for (i = 0; i < keys.length; i++) {
+              if (keys[i].indexOf(".") >= 0 || keys[i].indexOf(":") >= 0) {
+                return mapCodec.decode(raw);
+              }
+            }
+            try {
               wrapped = {};
               wrapped[WRAP_KEY] = singleCodec.decode(raw);
               return wrapped;
+            } catch (e) {
+              return mapCodec.decode(raw);
             }
-            return mapCodec.decode(raw);
           }
         };
         return withFieldMethods(codec);
@@ -10279,6 +10287,698 @@
       }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = { runValidation };
+      }
+    }
+  });
+
+  // src/import/bone_resolver.js
+  var require_bone_resolver = __commonJS({
+    "src/import/bone_resolver.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var { setMarker } = require_element_markers();
+      var log2 = createLogger2("BoneResolver");
+      function findGroupByName(allGroups, name) {
+        if (!name || !allGroups) return null;
+        for (var i = 0; i < allGroups.length; i++) {
+          if (allGroups[i].name === name) return allGroups[i];
+        }
+        return null;
+      }
+      function resolveBoneReferences(projectConfig, partId) {
+        var partConfig = projectConfig.parts[partId];
+        if (!partConfig) {
+          log2.warn("resolveBoneReferences: \u96F6\u4EF6\u4E0D\u5B58\u5728\u4E8E config.parts \u4E2D", { partId });
+          return null;
+        }
+        var unresolved = [];
+        var allGroups = typeof Group !== "undefined" ? Group.all : [];
+        if (!partConfig.element_markers) {
+          partConfig.element_markers = {};
+        }
+        var variants = partConfig.variants;
+        if (!variants || typeof variants !== "object") {
+          log2.debug("resolveBoneReferences: \u65E0 variants\uFF0C\u8DF3\u8FC7");
+          partConfig._unresolved_bones = unresolved;
+          return partConfig;
+        }
+        for (var vKey in variants) {
+          if (!variants.hasOwnProperty(vKey)) continue;
+          var variant = variants[vKey];
+          if (!variant || !variant.sub_parts || typeof variant.sub_parts !== "object") continue;
+          if (!partConfig.element_markers[vKey]) {
+            partConfig.element_markers[vKey] = {};
+          }
+          for (var spKey in variant.sub_parts) {
+            if (!variant.sub_parts.hasOwnProperty(spKey)) continue;
+            var sp = variant.sub_parts[spKey];
+            if (!sp || typeof sp !== "object") continue;
+            if (sp.start_bone && typeof sp.start_bone === "string") {
+              var startGroup = findGroupByName(allGroups, sp.start_bone);
+              if (startGroup) {
+                setMarker(projectConfig, partId, vKey, startGroup.uuid, "sub_part", spKey);
+                log2.debug("resolveBoneReferences: start_bone \u5DF2\u89E3\u6790", {
+                  partId,
+                  variant: vKey,
+                  sub_part: spKey,
+                  boneName: sp.start_bone,
+                  uuid: startGroup.uuid
+                });
+              } else {
+                unresolved.push({
+                  bone: sp.start_bone,
+                  field: "start_bone",
+                  sub_part: spKey,
+                  variant: vKey
+                });
+                log2.warn("resolveBoneReferences: start_bone \u672A\u5728\u5927\u7EB2\u6811\u4E2D\u627E\u5230", {
+                  partId,
+                  variant: vKey,
+                  sub_part: spKey,
+                  boneName: sp.start_bone
+                });
+              }
+            }
+            if (sp.hit_boxes && typeof sp.hit_boxes === "object") {
+              var resolvedHitBoxes = {};
+              var hitBoxKeys = Object.keys(sp.hit_boxes);
+              for (var h = 0; h < hitBoxKeys.length; h++) {
+                var boneName = hitBoxKeys[h];
+                var hbData = sp.hit_boxes[boneName];
+                var hbGroup = findGroupByName(allGroups, boneName);
+                if (hbGroup) {
+                  resolvedHitBoxes[hbGroup.uuid] = hbData;
+                  setMarker(projectConfig, partId, vKey, hbGroup.uuid, "hit_box", spKey);
+                  log2.debug("resolveBoneReferences: hit_box \u952E\u540D\u5DF2\u89E3\u6790", {
+                    partId,
+                    variant: vKey,
+                    sub_part: spKey,
+                    boneName,
+                    uuid: hbGroup.uuid
+                  });
+                } else {
+                  resolvedHitBoxes[boneName] = hbData;
+                  unresolved.push({
+                    bone: boneName,
+                    field: "hit_box_key",
+                    sub_part: spKey,
+                    variant: vKey
+                  });
+                  log2.warn("resolveBoneReferences: hit_box \u9AA8\u9ABC\u672A\u5728\u5927\u7EB2\u6811\u4E2D\u627E\u5230", {
+                    partId,
+                    variant: vKey,
+                    sub_part: spKey,
+                    boneName
+                  });
+                }
+              }
+              sp.hit_boxes = resolvedHitBoxes;
+            }
+            if (sp.interact_boxes && typeof sp.interact_boxes === "object") {
+              for (var ibKey in sp.interact_boxes) {
+                if (!sp.interact_boxes.hasOwnProperty(ibKey)) continue;
+                var ib = sp.interact_boxes[ibKey];
+                if (!ib || !ib.bone) continue;
+                var ibGroup = findGroupByName(allGroups, ib.bone);
+                if (ibGroup) {
+                  ib._uuid = ibGroup.uuid;
+                  setMarker(projectConfig, partId, vKey, ibGroup.uuid, "interact_box", ibKey);
+                  log2.debug("resolveBoneReferences: interact_box \u9AA8\u9ABC\u5DF2\u89E3\u6790", {
+                    partId,
+                    variant: vKey,
+                    key: ibKey,
+                    boneName: ib.bone,
+                    uuid: ibGroup.uuid
+                  });
+                } else {
+                  unresolved.push({
+                    bone: ib.bone,
+                    field: "interact_box.bone",
+                    sub_part: spKey,
+                    interact_box: ibKey,
+                    variant: vKey
+                  });
+                  log2.warn("resolveBoneReferences: interact_box \u9AA8\u9ABC\u672A\u5728\u5927\u7EB2\u6811\u4E2D\u627E\u5230", {
+                    partId,
+                    variant: vKey,
+                    key: ibKey,
+                    boneName: ib.bone
+                  });
+                }
+              }
+            }
+          }
+        }
+        partConfig._unresolved_bones = unresolved;
+        if (unresolved.length > 0) {
+          log2.warn("resolveBoneReferences: \u6709 " + unresolved.length + " \u4E2A\u9AA8\u9ABC\u5F15\u7528\u672A\u89E3\u6790", {
+            unresolved
+          });
+        } else {
+          log2.info("resolveBoneReferences: \u6240\u6709\u9AA8\u9ABC\u5F15\u7528\u5DF2\u6210\u529F\u89E3\u6790");
+        }
+        return partConfig;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { resolveBoneReferences };
+      }
+    }
+  });
+
+  // src/import/conflict_dialog.js
+  var require_conflict_dialog = __commonJS({
+    "src/import/conflict_dialog.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("ConflictDialog");
+      function showConflictDialog(options, onResolve) {
+        var typeLabel = options.typeLabel || "\u5B9A\u4E49";
+        var defId = options.defId || "\u672A\u77E5";
+        var isBatch = options.isBatch || false;
+        var selectOptions = {
+          overwrite: "\u8986\u76D6\u5DF2\u6709" + typeLabel + "\uFF08\u66FF\u6362\u5F53\u524D\u6570\u636E\uFF09",
+          skip: "\u8DF3\u8FC7\uFF08\u4FDD\u7559\u5DF2\u6709" + typeLabel + "\uFF09",
+          rename: "\u91CD\u547D\u540D\u5BFC\u5165\uFF08\u81EA\u52A8\u8FFD\u52A0 _1 \u540E\u7F00\uFF09"
+        };
+        if (isBatch) {
+          selectOptions.overwrite_all = "\u5168\u90E8\u8986\u76D6\uFF08\u540E\u7EED\u51B2\u7A81\u4E0D\u518D\u8BE2\u95EE\uFF09";
+          selectOptions.skip_all = "\u5168\u90E8\u8DF3\u8FC7\uFF08\u540E\u7EED\u51B2\u7A81\u4E0D\u518D\u8BE2\u95EE\uFF09";
+        }
+        log2.info("showConflictDialog: \u663E\u793A\u51B2\u7A81\u5BF9\u8BDD\u6846", {
+          typeLabel,
+          defId,
+          isBatch
+        });
+        new Dialog({
+          id: "mm_import_conflict",
+          title: "\u5BFC\u5165\u51B2\u7A81",
+          width: 480,
+          lines: [
+            typeLabel + " <b>" + defId + "</b> \u5DF2\u5B58\u5728\uFF0C\u8BF7\u9009\u62E9\u5904\u7406\u65B9\u5F0F\uFF1A"
+          ],
+          form: {
+            action: {
+              type: "select",
+              label: "\u64CD\u4F5C",
+              options: selectOptions,
+              value: "overwrite"
+            }
+          },
+          onConfirm: function(formData) {
+            var action = formData.action;
+            log2.info("showConflictDialog: \u7528\u6237\u9009\u62E9", { action });
+            onResolve(action);
+          },
+          onCancel: function() {
+            log2.info("showConflictDialog: \u7528\u6237\u53D6\u6D88\uFF08\u9ED8\u8BA4\u8DF3\u8FC7\uFF09");
+            onResolve("skip");
+          }
+        }).show();
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { showConflictDialog };
+      }
+    }
+  });
+
+  // src/mode/icons.js
+  var require_icons = __commonJS({
+    "src/mode/icons.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { getMarkerInfo, getMarkersForVariant } = require_element_markers();
+      var { getConfig } = require_persistence();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("Mode");
+      function getIconClassForType(type) {
+        const info = getMarkerInfo(type);
+        return info ? info.icon : "";
+      }
+      function refreshOutlinerIcons2() {
+        if (!Project || Project === 0) {
+          log2.debug("refreshOutlinerIcons: \u9879\u76EE\u672A\u6253\u5F00\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        const config = getConfig();
+        if (!config) {
+          log2.debug("refreshOutlinerIcons: config \u4E3A\u7A7A\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        const activePartId = config._uiState?.activePartId;
+        const activeVariantName = config._uiState?.activeVariantName;
+        if (!activePartId || !activeVariantName) {
+          log2.debug("refreshOutlinerIcons: \u65E0\u6D3B\u8DC3\u96F6\u4EF6/\u53D8\u4F53\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        log2.debug("refreshOutlinerIcons: \u5237\u65B0\u56FE\u6807", { partId: activePartId, variant: activeVariantName });
+        const markers = getMarkersForVariant(config, activePartId, activeVariantName);
+        const allElements = [...Group.all, ...Locator.all];
+        for (const el of allElements) {
+          const marker = markers[el.uuid];
+          if (marker) {
+            const iconClass = getIconClassForType(marker.type);
+            if (iconClass) {
+              el.icon = iconClass;
+            }
+          } else {
+            delete el.icon;
+          }
+          if (typeof el.updateElement === "function") {
+            el.updateElement();
+          }
+        }
+      }
+      function resetOutlinerIcons() {
+        if (!Project || Project === 0) return;
+        const allElements = [...Group.all, ...Locator.all];
+        for (const el of allElements) {
+          delete el.icon;
+          if (typeof el.updateElement === "function") {
+            el.updateElement();
+          }
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          getIconClassForType,
+          refreshOutlinerIcons: refreshOutlinerIcons2,
+          resetOutlinerIcons
+        };
+      }
+    }
+  });
+
+  // src/import/drag_import.js
+  var require_drag_import = __commonJS({
+    "src/import/drag_import.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var fs = __require("fs");
+      var path = __require("path");
+      var { createLogger: createLogger2 } = require_logger();
+      var { showToast: showToast2 } = require_notify();
+      var { getConfig, saveConfig } = require_persistence();
+      var { PartCodec } = require_part_codec();
+      var { resolveBoneReferences } = require_bone_resolver();
+      var { showConflictDialog } = require_conflict_dialog();
+      var log2 = createLogger2("DragImport");
+      var MODE_ID = "machine_max_part";
+      var _dragoverHandler = null;
+      var _dropHandler = null;
+      function parseJSONWithComments(content) {
+        if (content && content.charCodeAt(0) === 65279) {
+          content = content.slice(1);
+        }
+        var lines = content.split("\n");
+        var result = [];
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i];
+          var inString = false;
+          var commentStart = -1;
+          for (var j = 0; j < line.length; j++) {
+            var ch = line[j];
+            if (ch === '"' && (j === 0 || line[j - 1] !== "\\")) {
+              inString = !inString;
+            }
+            if (!inString && ch === "/" && j + 1 < line.length && line[j + 1] === "/") {
+              commentStart = j;
+              break;
+            }
+          }
+          if (commentStart >= 0) {
+            line = line.substring(0, commentStart);
+          }
+          result.push(line);
+        }
+        return JSON.parse(result.join("\n"));
+      }
+      function generateUniqueId(baseId, existingParts) {
+        if (!existingParts || !existingParts[baseId]) {
+          return baseId;
+        }
+        var counter = 1;
+        var candidate;
+        do {
+          candidate = baseId + "_" + counter;
+          counter++;
+        } while (existingParts[candidate]);
+        return candidate;
+      }
+      function importSingleFile(filePath, fileName, rawContent, batchAction) {
+        var json;
+        try {
+          json = parseJSONWithComments(rawContent);
+        } catch (e) {
+          log2.warn("importSingleFile: JSON \u89E3\u6790\u5931\u8D25", { fileName, error: e.message });
+          showToast2("\u6587\u4EF6 " + fileName + " \u4E0D\u662F\u6709\u6548\u7684 JSON", "error");
+          return { imported: false, partId: null, action: "error", unresolvedCount: 0 };
+        }
+        var partConfig;
+        try {
+          partConfig = PartCodec.decode(json);
+        } catch (e) {
+          log2.warn("importSingleFile: PartCodec.decode \u5931\u8D25", { fileName, error: e.message });
+          showToast2("\u6587\u4EF6 " + fileName + " \u65E0\u6CD5\u8BC6\u522B\u4E3A\u96F6\u4EF6\u5B9A\u4E49", "error");
+          return { imported: false, partId: null, action: "error", unresolvedCount: 0 };
+        }
+        var partId = fileName.replace(/\.json$/i, "");
+        log2.info("importSingleFile: \u89E3\u6790\u6210\u529F", {
+          fileName,
+          partId,
+          variantCount: partConfig.variants ? Object.keys(partConfig.variants).length : 0
+        });
+        var config = getConfig();
+        if (!config) {
+          showToast2("\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+          return { imported: false, partId, action: "no_project", unresolvedCount: 0 };
+        }
+        if (!config.parts) {
+          config.parts = {};
+        }
+        var existingParts = config.parts;
+        var isConflict = !!existingParts[partId];
+        if (isConflict && !batchAction) {
+          log2.info("importSingleFile: \u96F6\u4EF6 ID \u51B2\u7A81\uFF0C\u7B49\u5F85\u7528\u6237\u9009\u62E9", { partId });
+          showConflictDialog(
+            { typeLabel: "\u96F6\u4EF6", defId: partId, isBatch: false },
+            function(action2) {
+              _applyImport(partId, partConfig, config, action2, fileName);
+            }
+          );
+          return { imported: true, partId, action: "pending", unresolvedCount: 0 };
+        }
+        var action = "overwrite";
+        if (isConflict && batchAction) {
+          action = batchAction;
+          if (action === "skip_all") {
+            log2.info("importSingleFile: \u6279\u91CF\u8DF3\u8FC7", { partId });
+            return { imported: false, partId, action: "skip", unresolvedCount: 0 };
+          }
+        }
+        if (isConflict && action === "overwrite_all") {
+          action = "overwrite";
+        }
+        return _applyImport(partId, partConfig, config, action, fileName);
+      }
+      function _applyImport(partId, partConfig, config, action, fileName) {
+        if (action === "skip") {
+          log2.info("_applyImport: \u8DF3\u8FC7", { partId });
+          return { imported: false, partId, action: "skip", unresolvedCount: 0 };
+        }
+        if (action === "rename") {
+          var newId = generateUniqueId(partId, config.parts);
+          log2.info("_applyImport: \u91CD\u547D\u540D", { from: partId, to: newId });
+          partId = newId;
+        }
+        config.parts[partId] = partConfig;
+        resolveBoneReferences(config, partId);
+        try {
+          saveConfig();
+        } catch (e) {
+          log2.error("_applyImport: saveConfig \u5931\u8D25", e);
+        }
+        var unresolvedCount = partConfig._unresolved_bones ? partConfig._unresolved_bones.length : 0;
+        try {
+          var icons = require_icons();
+          icons.refreshOutlinerIcons();
+        } catch (e) {
+          log2.debug("_applyImport: refreshOutlinerIcons \u4E0D\u53EF\u7528\uFF08\u53EF\u80FD\u4E0D\u5728\u96F6\u4EF6\u5B9A\u4E49\u6A21\u5F0F\uFF09", e.message);
+        }
+        if (unresolvedCount > 0) {
+          showToast2(
+            '\u5DF2\u5BFC\u5165\u96F6\u4EF6 "' + partId + '"\uFF08' + unresolvedCount + " \u4E2A\u9AA8\u9ABC\u672A\u5728\u5927\u7EB2\u6811\u4E2D\u627E\u5230\uFF09",
+            "warning",
+            5e3
+          );
+        } else {
+          showToast2('\u5DF2\u5BFC\u5165\u96F6\u4EF6 "' + partId + '"', "positive");
+        }
+        log2.info("_applyImport: \u5BFC\u5165\u5B8C\u6210", {
+          partId,
+          unresolvedBones: unresolvedCount
+        });
+        return { imported: true, partId, action: "overwrite", unresolvedCount };
+      }
+      function importMultipleFiles(files) {
+        var config = getConfig();
+        if (!config) {
+          showToast2("\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+          return;
+        }
+        var jsonFiles = [];
+        for (var i = 0; i < files.length; i++) {
+          if (files[i].name.toLowerCase().endsWith(".json")) {
+            jsonFiles.push(files[i]);
+          }
+        }
+        if (jsonFiles.length === 0) return;
+        log2.info("importMultipleFiles: \u6279\u91CF\u5BFC\u5165 " + jsonFiles.length + " \u4E2A\u6587\u4EF6");
+        var conflictIds = [];
+        if (!config.parts) config.parts = {};
+        for (var j = 0; j < jsonFiles.length; j++) {
+          var pid = jsonFiles[j].name.replace(/\.json$/i, "");
+          if (config.parts[pid]) {
+            conflictIds.push(pid);
+          }
+        }
+        if (conflictIds.length === 0) {
+          var imported = 0;
+          var unresolvedTotal = 0;
+          for (var k = 0; k < jsonFiles.length; k++) {
+            var raw;
+            try {
+              raw = fs.readFileSync(jsonFiles[k].path, "utf-8");
+            } catch (e) {
+              log2.warn("importMultipleFiles: \u8BFB\u53D6\u6587\u4EF6\u5931\u8D25", { path: jsonFiles[k].path, error: e.message });
+              continue;
+            }
+            var result = importSingleFile(jsonFiles[k].path, jsonFiles[k].name, raw, null);
+            if (result.imported) imported++;
+            unresolvedTotal += result.unresolvedCount;
+          }
+          showToast2("\u5DF2\u5BFC\u5165 " + imported + " \u4E2A\u96F6\u4EF6", "positive");
+          return;
+        }
+        var conflictList = conflictIds.join(", ");
+        showConflictDialog(
+          {
+            typeLabel: "\u96F6\u4EF6",
+            defId: conflictList + "\uFF08\u5171 " + conflictIds.length + " \u4E2A\uFF09",
+            isBatch: true
+          },
+          function(action) {
+            var importedCount = 0;
+            var unresolvedTotal2 = 0;
+            for (var m = 0; m < jsonFiles.length; m++) {
+              var rawContent;
+              try {
+                rawContent = fs.readFileSync(jsonFiles[m].path, "utf-8");
+              } catch (e) {
+                log2.warn("importMultipleFiles: \u8BFB\u53D6\u6587\u4EF6\u5931\u8D25", { path: jsonFiles[m].path, error: e.message });
+                continue;
+              }
+              var res = importSingleFile(
+                jsonFiles[m].path,
+                jsonFiles[m].name,
+                rawContent,
+                action
+              );
+              if (res.imported) importedCount++;
+              unresolvedTotal2 += res.unresolvedCount;
+            }
+            showToast2("\u5DF2\u5BFC\u5165 " + importedCount + " / " + jsonFiles.length + " \u4E2A\u96F6\u4EF6", "positive");
+          }
+        );
+      }
+      var BB_DRAG_HANDLER_ID = "machine_max_part_import";
+      var _bbDragHandler = null;
+      function registerDragImport2() {
+        console.log("[MM][DragImport] registerDragImport() \u88AB\u8C03\u7528");
+        if (_bbDragHandler || _dragoverHandler) {
+          log2.info("registerDragImport: \u62D6\u62FD\u4E8B\u4EF6\u5DF2\u6CE8\u518C\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        if (typeof Blockbench !== "undefined" && typeof Blockbench.addDragHandler === "function") {
+          log2.info("registerDragImport: \u4F7F\u7528 Blockbench.addDragHandler API");
+          _bbDragHandler = Blockbench.addDragHandler(
+            BB_DRAG_HANDLER_ID,
+            {
+              extensions: ["json"],
+              condition: { modes: [MODE_ID] },
+              readtype: "text"
+            },
+            function(files, event) {
+              console.log(
+                "[MM][DragImport][BBDrag] \u56DE\u8C03\u89E6\u53D1\uFF01\uFF01\uFF01",
+                { fileCount: files ? files.length : 0 }
+              );
+              if (!files || files.length === 0) return;
+              var jsonFiles = [];
+              for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                log2.debug(
+                  "registerDragImport: [BB-API] \u5904\u7406\u6587\u4EF6",
+                  { name: file.name, hasPath: !!file.path, hasContent: typeof file.content === "string" }
+                );
+                if (!file.name || !file.name.toLowerCase().endsWith(".json")) continue;
+                var rawContent = typeof file.content === "string" ? file.content : "";
+                if (!rawContent && file.path) {
+                  try {
+                    rawContent = fs.readFileSync(file.path, "utf-8");
+                  } catch (e) {
+                    log2.warn("registerDragImport: \u8BFB\u53D6\u6587\u4EF6\u5931\u8D25", { path: file.path, error: e.message });
+                    continue;
+                  }
+                }
+                if (!rawContent) {
+                  log2.warn("registerDragImport: \u65E0\u6CD5\u83B7\u53D6\u6587\u4EF6\u5185\u5BB9", { name: file.name });
+                  continue;
+                }
+                jsonFiles.push({
+                  path: file.path || "",
+                  name: file.name,
+                  content: rawContent
+                });
+              }
+              if (jsonFiles.length === 0) return;
+              log2.info("registerDragImport: \u68C0\u6D4B\u5230 " + jsonFiles.length + " \u4E2A JSON \u6587\u4EF6\u62D6\u5165");
+              if (jsonFiles.length === 1) {
+                importSingleFile(jsonFiles[0].path, jsonFiles[0].name, jsonFiles[0].content, null);
+              } else {
+                importMultipleFiles(jsonFiles);
+              }
+            }
+          );
+          var allIds = [];
+          try {
+            if (typeof Filesystem !== "undefined" && Filesystem.drag_handlers) {
+              allIds = Object.keys(Filesystem.drag_handlers);
+            }
+          } catch (e) {
+          }
+          log2.info(
+            "registerDragImport: \u5DF2\u901A\u8FC7 Blockbench.addDragHandler \u6CE8\u518C",
+            { ourId: BB_DRAG_HANDLER_ID, allDragHandlerIds: allIds, modeId: MODE_ID }
+          );
+          return;
+        }
+        log2.info("registerDragImport: Blockbench.addDragHandler \u4E0D\u53EF\u7528\uFF0C\u56DE\u9000\u5230 DOM \u4E8B\u4EF6");
+        _dragoverHandler = function(e) {
+          console.log(
+            "[MM][DragImport][DOM] dragover \u89E6\u53D1",
+            { modeId: Modes ? Modes.id : "undefined" }
+          );
+          if (typeof Modes === "undefined" || !Modes || Modes.id !== MODE_ID) return;
+          e.preventDefault();
+          e.stopPropagation();
+        };
+        _dropHandler = function(e) {
+          console.log(
+            "[MM][DragImport][DOM] drop \u89E6\u53D1\uFF01\uFF01\uFF01",
+            { modeId: Modes ? Modes.id : "undefined", fileCount: e.dataTransfer && e.dataTransfer.files ? e.dataTransfer.files.length : 0 }
+          );
+          if (typeof Modes === "undefined" || !Modes || Modes.id !== MODE_ID) {
+            log2.debug("registerDragImport: [DOM] \u6A21\u5F0F\u4E0D\u5339\u914D\uFF0C\u5FFD\u7565", { current: Modes ? Modes.id : "undefined", expected: MODE_ID });
+            return;
+          }
+          e.preventDefault();
+          e.stopPropagation();
+          if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) {
+            return;
+          }
+          var droppedFiles = e.dataTransfer.files;
+          var jsonFiles = [];
+          for (var j = 0; j < droppedFiles.length; j++) {
+            var domFile = droppedFiles[j];
+            if (!domFile.name || !domFile.name.toLowerCase().endsWith(".json")) continue;
+            var domFilePath = domFile.path;
+            if (!domFilePath) {
+              log2.warn("registerDragImport: \u6587\u4EF6\u8DEF\u5F84\u4E0D\u53EF\u7528\uFF08\u53EF\u80FD\u662F Electron \u5B89\u5168\u9650\u5236\uFF09", { name: domFile.name });
+              continue;
+            }
+            var domRawContent;
+            try {
+              domRawContent = fs.readFileSync(domFilePath, "utf-8");
+            } catch (readErr) {
+              log2.warn("registerDragImport: \u8BFB\u53D6\u6587\u4EF6\u5931\u8D25", { path: domFilePath, error: readErr.message });
+              continue;
+            }
+            jsonFiles.push({ path: domFilePath, name: domFile.name, content: domRawContent });
+          }
+          if (jsonFiles.length === 0) return;
+          log2.info("registerDragImport: \u68C0\u6D4B\u5230 " + jsonFiles.length + " \u4E2A JSON \u6587\u4EF6\u62D6\u5165");
+          if (jsonFiles.length === 1) {
+            importSingleFile(jsonFiles[0].path, jsonFiles[0].name, jsonFiles[0].content, null);
+          } else {
+            importMultipleFiles(jsonFiles);
+          }
+        };
+        document.addEventListener("dragover", _dragoverHandler);
+        document.addEventListener("drop", _dropHandler);
+        log2.info("registerDragImport: \u5DF2\u901A\u8FC7 DOM \u4E8B\u4EF6\u6CE8\u518C\uFF08\u4EC5\u96F6\u4EF6\u5B9A\u4E49\u6A21\u5F0F\u4E0B\u54CD\u5E94\uFF09");
+      }
+      function unregisterDragImport2() {
+        if (_bbDragHandler) {
+          if (typeof Blockbench !== "undefined" && typeof Blockbench.removeDragHandler === "function") {
+            Blockbench.removeDragHandler(BB_DRAG_HANDLER_ID);
+          }
+          _bbDragHandler = null;
+          log2.info("unregisterDragImport: Blockbench.addDragHandler \u5DF2\u6CE8\u9500");
+        }
+        if (_dragoverHandler) {
+          document.removeEventListener("dragover", _dragoverHandler);
+          _dragoverHandler = null;
+        }
+        if (_dropHandler) {
+          document.removeEventListener("drop", _dropHandler);
+          _dropHandler = null;
+        }
+        log2.info("unregisterDragImport: DOM \u4E8B\u4EF6\u5DF2\u6CE8\u9500");
+      }
+      function importPartFromPath(filePath) {
+        var fileName = path.basename(filePath);
+        if (!fileName.toLowerCase().endsWith(".json")) {
+          showToast2("\u8BF7\u9009\u62E9 .json \u6587\u4EF6", "warning");
+          return;
+        }
+        var rawContent;
+        try {
+          rawContent = fs.readFileSync(filePath, "utf-8");
+        } catch (e) {
+          log2.error("importPartFromPath: \u8BFB\u53D6\u6587\u4EF6\u5931\u8D25", { path: filePath, error: e.message });
+          showToast2("\u65E0\u6CD5\u8BFB\u53D6\u6587\u4EF6: " + fileName, "error");
+          return;
+        }
+        importSingleFile(filePath, fileName, rawContent, null);
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          registerDragImport: registerDragImport2,
+          unregisterDragImport: unregisterDragImport2,
+          importPartFromPath,
+          importSingleFile
+        };
       }
     }
   });
@@ -13566,6 +14266,60 @@
           },
           "_",
           {
+            name: "\u5BFC\u5165\u96F6\u4EF6 JSON\u2026",
+            icon: "fa-file-import",
+            id: "mm_menu_import_part",
+            click: function() {
+              log2.info("MachineMax \u83DC\u5355: \u70B9\u51FB\u5BFC\u5165\u96F6\u4EF6 JSON");
+              var config = getConfig();
+              if (!config) {
+                showToast2("\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+                return;
+              }
+              var remote;
+              try {
+                remote = __require("electron").remote;
+              } catch (e) {
+                remote = null;
+              }
+              if (remote && remote.dialog) {
+                remote.dialog.showOpenDialog({
+                  title: "\u9009\u62E9\u96F6\u4EF6\u5B9A\u4E49 JSON \u6587\u4EF6",
+                  filters: [{ name: "JSON \u6587\u4EF6", extensions: ["json"] }],
+                  properties: ["openFile", "multiSelections"]
+                }).then(function(result) {
+                  if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+                    log2.debug("\u83DC\u5355\u5BFC\u5165: \u7528\u6237\u53D6\u6D88\u9009\u62E9");
+                    return;
+                  }
+                  var dragImport = require_drag_import();
+                  for (var i = 0; i < result.filePaths.length; i++) {
+                    dragImport.importPartFromPath(result.filePaths[i]);
+                  }
+                }).catch(function(err) {
+                  log2.error("\u83DC\u5355\u5BFC\u5165: \u6587\u4EF6\u9009\u62E9\u5931\u8D25", err);
+                  showToast2("\u6587\u4EF6\u9009\u62E9\u5931\u8D25", "error");
+                });
+              } else {
+                Blockbench.import({
+                  extensions: ["json"],
+                  type: "JSON \u6587\u4EF6",
+                  read_mode: "text"
+                }, function(files) {
+                  if (!files || files.length === 0) return;
+                  var dragImport = require_drag_import();
+                  for (var i = 0; i < files.length; i++) {
+                    var filePath = files[i].path || files[i].name;
+                    if (filePath) {
+                      dragImport.importPartFromPath(filePath);
+                    }
+                  }
+                });
+              }
+            }
+          },
+          "_",
+          {
             name: "\u65B0\u5EFA\u5E76\u5207\u6362\u81F3\u5185\u5BB9\u5305",
             icon: "fa-plus-circle",
             id: "mm_menu_new_pack",
@@ -15148,77 +15902,6 @@
           patchElementSelect,
           restoreElementSelect,
           buildMMMenuItems
-        };
-      }
-    }
-  });
-
-  // src/mode/icons.js
-  var require_icons = __commonJS({
-    "src/mode/icons.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { getMarkerInfo, getMarkersForVariant } = require_element_markers();
-      var { getConfig } = require_persistence();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("Mode");
-      function getIconClassForType(type) {
-        const info = getMarkerInfo(type);
-        return info ? info.icon : "";
-      }
-      function refreshOutlinerIcons2() {
-        if (!Project || Project === 0) {
-          log2.debug("refreshOutlinerIcons: \u9879\u76EE\u672A\u6253\u5F00\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        const config = getConfig();
-        if (!config) {
-          log2.debug("refreshOutlinerIcons: config \u4E3A\u7A7A\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        const activePartId = config._uiState?.activePartId;
-        const activeVariantName = config._uiState?.activeVariantName;
-        if (!activePartId || !activeVariantName) {
-          log2.debug("refreshOutlinerIcons: \u65E0\u6D3B\u8DC3\u96F6\u4EF6/\u53D8\u4F53\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        log2.debug("refreshOutlinerIcons: \u5237\u65B0\u56FE\u6807", { partId: activePartId, variant: activeVariantName });
-        const markers = getMarkersForVariant(config, activePartId, activeVariantName);
-        const allElements = [...Group.all, ...Locator.all];
-        for (const el of allElements) {
-          const marker = markers[el.uuid];
-          if (marker) {
-            const iconClass = getIconClassForType(marker.type);
-            if (iconClass) {
-              el.icon = iconClass;
-            }
-          } else {
-            delete el.icon;
-          }
-          if (typeof el.updateElement === "function") {
-            el.updateElement();
-          }
-        }
-      }
-      function resetOutlinerIcons() {
-        if (!Project || Project === 0) return;
-        const allElements = [...Group.all, ...Locator.all];
-        for (const el of allElements) {
-          delete el.icon;
-          if (typeof el.updateElement === "function") {
-            el.updateElement();
-          }
-        }
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          getIconClassForType,
-          refreshOutlinerIcons: refreshOutlinerIcons2,
-          resetOutlinerIcons
         };
       }
     }
@@ -20768,6 +21451,7 @@
   var { registerProperty } = require_persistence();
   var { registerMode, unregisterActions } = require_mode();
   var { registerMachineMaxMenu, unregisterMachineMaxMenu } = require_menu();
+  var { registerDragImport, unregisterDragImport } = require_drag_import();
   var { showToast } = require_notify();
   var PLUGIN_VERSION = "0.4.0";
   var log = createLogger("Plugin");
@@ -20779,21 +21463,31 @@
     version: PLUGIN_VERSION,
     variant: "desktop",
     onload() {
+      console.log("[MM][Plugin] onload \u5F00\u59CB");
       log.info("\u52A0\u8F7D MachineMax Blockbench \u63D2\u4EF6 v" + PLUGIN_VERSION);
       log.debug("Blockbench \u7248\u672C\u73AF\u5883\u68C0\u6D4B", {
         Blockbench: typeof Blockbench !== "undefined" ? Blockbench.version || "?" : "undefined",
         Project: typeof Project !== "undefined" ? Project ? "loaded" : "empty" : "undefined",
         Mode: typeof Mode !== "undefined" ? Mode.modes ? Object.keys(Mode.modes) : "no modes" : "undefined"
       });
+      console.log("[MM][Plugin] \u9636\u6BB51: registerProperty");
       registerProperty();
+      console.log("[MM][Plugin] \u9636\u6BB52: registerMode");
       registerMode();
+      console.log("[MM][Plugin] \u9636\u6BB53: registerDragImport (\u8C03\u7528\u524D)");
+      registerDragImport();
+      console.log("[MM][Plugin] \u9636\u6BB53: registerDragImport (\u8C03\u7528\u540E)");
+      console.log("[MM][Plugin] \u9636\u6BB54: registerMachineMaxMenu");
       registerMachineMaxMenu();
+      console.log("[MM][Plugin] \u9636\u6BB55: showToast");
       showToast('MachineMax \u63D2\u4EF6\u5DF2\u52A0\u8F7D\uFF0C\u5728\u6A21\u5F0F\u680F\u4E2D\u9009\u62E9 "\u96F6\u4EF6\u5B9A\u4E49" \u5F00\u59CB\u4F7F\u7528', "positive");
       log.info("\u63D2\u4EF6\u521D\u59CB\u5316\u5B8C\u6210");
+      console.log("[MM][Plugin] onload \u7ED3\u675F");
     },
     onunload() {
       log.info("\u5378\u8F7D MachineMax Blockbench \u63D2\u4EF6");
       unregisterActions();
+      unregisterDragImport();
       unregisterMachineMaxMenu();
       log.debug("\u63D2\u4EF6\u6E05\u7406\u5B8C\u6210");
     }

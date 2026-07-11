@@ -529,27 +529,6 @@ function dispatch(key, codecMap) {
 function either(singleCodec, mapCodec) {
     var WRAP_KEY = 'default';
 
-    /**
-     * 检测对象是否为单个实体（非 map 结构）
-     * 判断依据：如果存在以字母/下划线开头且不以数字开头的 key，视为对象字段
-     * 而非 map ID key（如 'sub_part.machine_max.main' 含 '.'）
-     *
-     * @param {object} obj - 待检测对象
-     * @returns {boolean} true 表示是单个实体对象
-     */
-    function looksLikeSingleEntity(obj) {
-        var keys, i, k;
-        keys = Object.keys(obj);
-        if (keys.length === 0) return false;
-        for (i = 0; i < keys.length; i++) {
-            k = keys[i];
-            if (/^[a-z_]/.test(k) && !/^\d/.test(k)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     var codec = {
         type: 'either',
         encode: function (obj, path) {
@@ -566,8 +545,21 @@ function either(singleCodec, mapCodec) {
             // 否则使用完整 map 格式
             return mapCodec.encode(obj, path);
         },
+        /**
+         * decode: 先检测 key 是否为资源位置/翻译键格式，若是则直接走 map；
+         * 否则尝试单实体解码，失败回退 map。
+         *
+         * 策略：
+         *   1. 原始值（字符串等）→ 包装为单实体
+         *   2. key 含 . 或 :（资源位置/翻译键特征）→ 直接走 map
+         *      （如 "sub_part.machine_max.main"、"machine_max:rha"）
+         *   3. 其他 → 先试单实体，失败回退 map
+         *
+         * try-catch 回退对 SubPartCodec（全字段 .default()）永远无效，
+         * 因此必须用启发式预判资源位置 key。
+         */
         decode: function (raw) {
-            var wrapped;
+            var wrapped, keys, i;
             if (raw === null || raw === undefined) return {};
             // 原始值（字符串、数字等）→ 包装为 { default: decoded }
             if (typeof raw !== 'object') {
@@ -575,15 +567,22 @@ function either(singleCodec, mapCodec) {
                 wrapped[WRAP_KEY] = singleCodec.decode(raw);
                 return wrapped;
             }
-            // 检测是单个实体对象还是 map
-            if (looksLikeSingleEntity(raw)) {
-                // 单个对象 → 包装为 { default: decodedObj }
+            // 检测 key 是否为资源位置/翻译键格式（含 . 或 :）→ 直接走 map
+            keys = Object.keys(raw);
+            for (i = 0; i < keys.length; i++) {
+                if (keys[i].indexOf('.') >= 0 || keys[i].indexOf(':') >= 0) {
+                    return mapCodec.decode(raw);
+                }
+            }
+            // 先尝试作为单个实体解码
+            try {
                 wrapped = {};
                 wrapped[WRAP_KEY] = singleCodec.decode(raw);
                 return wrapped;
+            } catch (e) {
+                // 单实体解码失败（通常是缺少必填字段如 model），回退到 map 解码
+                return mapCodec.decode(raw);
             }
-            // map → 保持原样 decode
-            return mapCodec.decode(raw);
         },
     };
     return withFieldMethods(codec);

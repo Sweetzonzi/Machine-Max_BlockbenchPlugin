@@ -2,6 +2,7 @@ const { createLogger } = require('./utils/logger.js');
 const { registerProperty } = require('./utils/persistence.js');
 const { registerMode, unregisterActions } = require('./mode.js');
 const { registerMachineMaxMenu, unregisterMachineMaxMenu } = require('./ui/menu.js');
+const { registerDragImport, unregisterDragImport } = require('./import/drag_import.js');
 const { showToast } = require('./utils/notify.js');
 
 /** 插件版本号（构建时由 esbuild 从 package.json 注入） */
@@ -27,6 +28,8 @@ Plugin.register('machine_max_bb_plugin', {
     version: PLUGIN_VERSION,
     variant: 'desktop',
     onload() {
+        console.log('[MM][Plugin] onload 开始');
+
         log.info('加载 MachineMax Blockbench 插件 v' + PLUGIN_VERSION);
         log.debug('Blockbench 版本环境检测', {
             Blockbench: typeof Blockbench !== 'undefined' ? Blockbench.version || '?' : 'undefined',
@@ -34,18 +37,30 @@ Plugin.register('machine_max_bb_plugin', {
             Mode: typeof Mode !== 'undefined' ? (Mode.modes ? Object.keys(Mode.modes) : 'no modes') : 'undefined',
         });
 
+        console.log('[MM][Plugin] 阶段1: registerProperty');
         registerProperty();
 
+        console.log('[MM][Plugin] 阶段2: registerMode');
         registerMode();
 
+        console.log('[MM][Plugin] 阶段3: registerDragImport (调用前)');
+        // 注册拖拽导入：仅在「零件定义」模式下拦截 .json 文件拖入
+        // 注意：必须在 registerMachineMaxMenu 之前注册，因为后者在较新 BB 版本中可能抛异常
+        registerDragImport();
+        console.log('[MM][Plugin] 阶段3: registerDragImport (调用后)');
+
+        console.log('[MM][Plugin] 阶段4: registerMachineMaxMenu');
         registerMachineMaxMenu();
 
+        console.log('[MM][Plugin] 阶段5: showToast');
         showToast('MachineMax 插件已加载，在模式栏中选择 "零件定义" 开始使用', 'positive');
         log.info('插件初始化完成');
+        console.log('[MM][Plugin] onload 结束');
     },
     onunload() {
         log.info('卸载 MachineMax Blockbench 插件');
         unregisterActions();
+        unregisterDragImport();
         unregisterMachineMaxMenu();
         log.debug('插件清理完成');
     },
