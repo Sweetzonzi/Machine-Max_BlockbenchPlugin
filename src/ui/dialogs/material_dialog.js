@@ -196,20 +196,6 @@ function _showEditDialog(config, materialId, materialData, isNew) {
         hint: '0.0（完全非弹性）~ 1.0（完全弹性）',
     };
 
-    formFields.density = {
-        type: 'number',
-        label: '密度',
-        value: _getField(materialData, 'density', 1.0),
-        hint: '材料密度值',
-    };
-
-    formFields.armor_thickness = {
-        type: 'number',
-        label: '装甲厚度',
-        value: _getField(materialData, 'armor_thickness', 1.0),
-        hint: '等效装甲厚度系数',
-    };
-
     new Dialog({
         id: isNew ? 'mm_material_create' : 'mm_material_edit',
         title: isNew ? '新建材料' : '编辑材料 — ' + materialId,
@@ -239,23 +225,9 @@ function _showEditDialog(config, materialId, materialData, isNew) {
                 return false;
             }
 
-            var density = parseFloat(formData.density);
-            if (Number.isNaN(density) || density < 0) {
-                showToast('密度必须为 ≥ 0 的有效数字', 'error');
-                return false;
-            }
-
-            var armorThickness = parseFloat(formData.armor_thickness);
-            if (Number.isNaN(armorThickness) || armorThickness < 0) {
-                showToast('装甲厚度必须为 ≥ 0 的有效数字', 'error');
-                return false;
-            }
-
             var data = {
                 friction: [fx, fy, fz],
                 restitution: restitution,
-                density: density,
-                armor_thickness: armorThickness,
             };
 
             try {
