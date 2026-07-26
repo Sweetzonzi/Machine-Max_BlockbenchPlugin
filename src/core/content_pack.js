@@ -332,13 +332,13 @@ function createContentPack(dirPath, meta) {
  * 打开并校验已有的内容包
  *
  * 支持目录形式和 ZIP 文件形式的内容包。
- * 验证 meta.json 可读且 id 有效，并检查必要的子目录存在。
+ * 验证 meta.json 可读且 id 有效，只要根目录有 meta.json 即视为合法内容包。
  *
  * @param {string} packPath - 内容包根目录或 ZIP 文件路径
  * @returns {{valid: boolean, meta: Object|null, namespace: string, error: string|null}} 校验结果
  */
 function openContentPack(packPath) {
-    var meta, namespace, allFiles, i, hasMat, hasConn, hasSub;
+    var meta, namespace;
 
     // ZIP 形式
     if (_isZipPath(packPath)) {
@@ -358,28 +358,7 @@ function openContentPack(packPath) {
                 return { valid: false, meta: meta, namespace: '', error: '无法从 meta.id 解析 namespace' };
             }
 
-            // 验证必要的"目录"在 ZIP 中存在（检查是否有文件以对应前缀开头）
-            allFiles = zip_reader.listFiles(packPath);
-            hasMat = false;
-            hasConn = false;
-            hasSub = false;
-
-            for (i = 0; i < allFiles.length; i++) {
-                if (allFiles[i].indexOf(namespace + '/materials/') === 0) hasMat = true;
-                if (allFiles[i].indexOf(namespace + '/connectors/') === 0) hasConn = true;
-                if (allFiles[i].indexOf(namespace + '/subsystems/') === 0) hasSub = true;
-            }
-
-            if (!hasMat) {
-                return { valid: false, meta: meta, namespace: namespace, error: 'ZIP 中缺少 materials/ 目录' };
-            }
-            if (!hasConn) {
-                return { valid: false, meta: meta, namespace: namespace, error: 'ZIP 中缺少 connectors/ 目录' };
-            }
-            if (!hasSub) {
-                return { valid: false, meta: meta, namespace: namespace, error: 'ZIP 中缺少 subsystems/ 目录' };
-            }
-
+            // 只要根目录有 meta.json 即视为合法内容包，不再检查子目录
             log.info('openContentPack: ZIP 内容包验证通过', { path: packPath, namespace: namespace });
             return { valid: true, meta: meta, namespace: namespace, error: null };
         } catch (e) {
@@ -409,25 +388,7 @@ function openContentPack(packPath) {
 
         log.debug('openContentPack: meta.id=' + meta.id + ' -> namespace=' + namespace);
 
-        // 验证必要子目录存在
-        var requiredDirs = [
-            path.join(packPath, namespace, 'materials'),
-            path.join(packPath, namespace, 'connectors'),
-            path.join(packPath, namespace, 'subsystems'),
-        ];
-
-        for (i = 0; i < requiredDirs.length; i++) {
-            if (!fs.existsSync(requiredDirs[i])) {
-                log.warn('openContentPack: 缺少必要目录: ' + requiredDirs[i]);
-                return {
-                    valid: false,
-                    meta: meta,
-                    namespace: namespace,
-                    error: '缺少必要目录: ' + requiredDirs[i],
-                };
-            }
-        }
-
+        // 只要根目录有 meta.json 即视为合法内容包，不再检查子目录
         log.info('openContentPack: 内容包验证通过', { path: packPath, namespace: namespace });
         return { valid: true, meta: meta, namespace: namespace, error: null };
     } catch (e) {
