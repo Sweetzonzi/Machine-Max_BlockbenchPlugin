@@ -8130,184 +8130,6 @@
     }
   });
 
-  // src/utils/persistence.js
-  var require_persistence = __commonJS({
-    "src/utils/persistence.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var PROPERTY_NAME = "machine_max_plugin";
-      var { CONFIG_VERSION } = require_constants();
-      var { migrateIfNeeded, createBlankConfig } = require_config();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("Persistence");
-      function registerProperty2() {
-        if (ModelProject.properties[PROPERTY_NAME]) {
-          log2.debug("registerProperty: Property \u5DF2\u6CE8\u518C\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        var existingData = Project && Project !== 0 ? Project[PROPERTY_NAME] : null;
-        var hasExisting = existingData && typeof existingData === "object" && Object.keys(existingData).length > 0;
-        new Property(ModelProject, "object", PROPERTY_NAME, {
-          default: {},
-          exposed: false
-        });
-        if (hasExisting) {
-          Project[PROPERTY_NAME] = existingData;
-          log2.info("registerProperty: \u5DF2\u8FD8\u539F\u5DF2\u6709\u914D\u7F6E\uFF08" + Object.keys(existingData).length + " \u4E2A\u952E\uFF09");
-        } else {
-          log2.info("registerProperty: Property \u5DF2\u6CE8\u518C\uFF08\u65E0\u5DF2\u6709\u914D\u7F6E\uFF09");
-        }
-      }
-      function getBBModelPath() {
-        if (!Project || Project === 0 || !Project.file_path) {
-          log2.debug("getBBModelPath: \u65E0 .bbmodel \u8DEF\u5F84");
-          return null;
-        }
-        log2.debug("getBBModelPath: " + Project.file_path);
-        return Project.file_path;
-      }
-      function loadConfig() {
-        if (!Project || Project === 0) {
-          log2.warn("loadConfig: \u5C1A\u672A\u6253\u5F00\u9879\u76EE\uFF0C\u8FD4\u56DE\u7A7A\u767D\u914D\u7F6E");
-          return createBlankConfig();
-        }
-        const propData = Project[PROPERTY_NAME];
-        if (propData && propData.$schema_version) {
-          log2.info("\u4ECE Property \u52A0\u8F7D\u914D\u7F6E\uFF0C\u7248\u672C: " + propData.$schema_version);
-          var migrated = migrateIfNeeded(propData);
-          Project[PROPERTY_NAME] = migrated;
-          log2.debug("loadConfig: \u4ECE Property \u52A0\u8F7D\u5B8C\u6210", {
-            packMetaType: typeof migrated.packMeta,
-            packMetaKeys: migrated.packMeta ? Object.keys(migrated.packMeta) : [],
-            name: migrated.packMeta ? migrated.packMeta.name : null,
-            author: migrated.packMeta ? migrated.packMeta.author : null,
-            description: migrated.packMeta ? migrated.packMeta.description : null
-          });
-          return migrated;
-        }
-        if (propData && typeof propData === "object" && Object.keys(propData).length > 0) {
-          log2.info("\u4ECE Property \u52A0\u8F7D\u914D\u7F6E\uFF08\u65E0\u7248\u672C\u53F7\uFF0C\u5C1D\u8BD5\u4FEE\u590D\uFF09\uFF0C\u952E: " + Object.keys(propData).join(","));
-          var repaired = migrateIfNeeded(propData);
-          Project[PROPERTY_NAME] = repaired;
-          return repaired;
-        }
-        const bbmodelPath = getBBModelPath();
-        if (bbmodelPath) {
-          const standalonePath = bbmodelPath.replace(/\.bbmodel$/i, ".mm_project.json");
-          try {
-            const fs = __require("fs");
-            if (fs.existsSync(standalonePath)) {
-              const raw = JSON.parse(fs.readFileSync(standalonePath, "utf-8"));
-              const config = raw.config || raw;
-              log2.info("\u4ECE\u72EC\u7ACB\u6587\u4EF6\u52A0\u8F7D\u914D\u7F6E: " + standalonePath);
-              Project[PROPERTY_NAME] = migrateIfNeeded(config);
-              return Project[PROPERTY_NAME];
-            }
-          } catch (e) {
-            log2.error("\u5907\u9009\u914D\u7F6E\u8BFB\u53D6\u5931\u8D25", e);
-          }
-        }
-        log2.info("\u521B\u5EFA\u7A7A\u767D\u914D\u7F6E");
-        const blank = createBlankConfig();
-        Project[PROPERTY_NAME] = blank;
-        return blank;
-      }
-      function saveConfig() {
-        if (!Project || Project === 0 || !Project[PROPERTY_NAME]) {
-          log2.debug("saveConfig: \u9879\u76EE\u6216\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8DF3\u8FC7\u4FDD\u5B58");
-          return;
-        }
-        const config = Project[PROPERTY_NAME];
-        const bbmodelPath = getBBModelPath();
-        if (!bbmodelPath) {
-          log2.warn("saveConfig: \u672A\u627E\u5230 .bbmodel \u8DEF\u5F84\uFF0C\u8DF3\u8FC7\u72EC\u7ACB\u5907\u4EFD");
-          return;
-        }
-        log2.debug("saveConfig: \u5373\u5C06\u4FDD\u5B58 packMeta", {
-          packMetaType: typeof config.packMeta,
-          packMetaExists: !!config.packMeta,
-          packMetaKeys: config.packMeta ? Object.keys(config.packMeta) : [],
-          name: config.packMeta ? config.packMeta.name : null,
-          nameType: config.packMeta ? typeof config.packMeta.name : "N/A",
-          author: config.packMeta ? config.packMeta.author : null,
-          authorType: config.packMeta ? typeof config.packMeta.author : "N/A",
-          description: config.packMeta ? config.packMeta.description : null,
-          descType: config.packMeta ? typeof config.packMeta.description : "N/A"
-        });
-        const standalonePath = bbmodelPath.replace(/\.bbmodel$/i, ".mm_project.json");
-        try {
-          const fs = __require("fs");
-          const path = __require("path");
-          fs.writeFileSync(
-            standalonePath,
-            JSON.stringify({
-              $schema_version: CONFIG_VERSION,
-              bbmodel: path.basename(bbmodelPath),
-              timestamp: Date.now(),
-              config: {
-                $schema_version: config.$schema_version,
-                parts: config.parts,
-                _uiState: config._uiState,
-                contentPackPath: config.contentPackPath,
-                dependencyPaths: config.dependencyPaths,
-                packMeta: config.packMeta,
-                namespace: config.namespace,
-                modelFile: config.modelFile
-              }
-            }, null, 2),
-            "utf-8"
-          );
-          log2.debug("saveConfig: \u72EC\u7ACB\u5907\u4EFD\u5DF2\u5199\u5165: " + standalonePath);
-        } catch (e) {
-          log2.error("saveConfig: \u5907\u9009\u914D\u7F6E\u5199\u5165\u5931\u8D25", e);
-        }
-        log2.info("\u914D\u7F6E\u5DF2\u4FDD\u5B58");
-      }
-      function setPackPath(config, packPath) {
-        config.contentPackPath = packPath;
-        return config;
-      }
-      function addDependencyPath(config, depPath) {
-        if (!config.dependencyPaths) config.dependencyPaths = [];
-        if (config.dependencyPaths.indexOf(depPath) === -1) {
-          config.dependencyPaths.push(depPath);
-        }
-        return config;
-      }
-      function removeDependencyPath(config, depPath) {
-        if (!config.dependencyPaths) return config;
-        var idx = config.dependencyPaths.indexOf(depPath);
-        if (idx !== -1) config.dependencyPaths.splice(idx, 1);
-        return config;
-      }
-      function getConfig() {
-        if (!Project || Project === 0) {
-          log2.debug("getConfig: \u9879\u76EE\u4E0D\u53EF\u7528");
-          return null;
-        }
-        var cfg = Project[PROPERTY_NAME] || null;
-        log2.debug("getConfig: " + (cfg ? "\u6709\u914D\u7F6E" : "\u65E0\u914D\u7F6E"));
-        return cfg;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          PROPERTY_NAME,
-          registerProperty: registerProperty2,
-          loadConfig,
-          saveConfig,
-          getConfig,
-          setPackPath,
-          addDependencyPath,
-          removeDependencyPath
-        };
-      }
-    }
-  });
-
   // src/core/element_markers.js
   var require_element_markers = __commonJS({
     "src/core/element_markers.js"(exports, module) {
@@ -8739,6 +8561,167 @@
         });
         return markers;
       }
+      function cleanGhostMarkers(projectConfig) {
+        if (!projectConfig || !projectConfig.parts) {
+          log2.debug("cleanGhostMarkers: \u65E0\u96F6\u4EF6\u914D\u7F6E\uFF0C\u8DF3\u8FC7");
+          return { cleanedCount: 0, details: [] };
+        }
+        var validUUIDs = {};
+        var allGroups = typeof Group !== "undefined" && Group.all ? Group.all : [];
+        var allLocators = typeof Locator !== "undefined" && Locator.all ? Locator.all : [];
+        for (var gi = 0; gi < allGroups.length; gi++) {
+          validUUIDs[allGroups[gi].uuid] = true;
+        }
+        for (var li = 0; li < allLocators.length; li++) {
+          validUUIDs[allLocators[li].uuid] = true;
+        }
+        log2.debug("cleanGhostMarkers: \u6A21\u578B\u7EDF\u8BA1", {
+          totalGroups: allGroups.length,
+          totalLocators: allLocators.length,
+          totalParts: Object.keys(projectConfig.parts).length
+        });
+        var cleanedCount = 0;
+        var details = [];
+        var partIds = Object.keys(projectConfig.parts);
+        for (var pi = 0; pi < partIds.length; pi++) {
+          var partId = partIds[pi];
+          var part = projectConfig.parts[partId];
+          if (!part.element_markers) {
+            log2.debug("cleanGhostMarkers: \u96F6\u4EF6\u65E0 element_markers", { partId });
+            continue;
+          }
+          var variantNames = Object.keys(part.element_markers);
+          log2.debug("cleanGhostMarkers: \u96F6\u4EF6\u6807\u8BB0\u6982\u51B5", {
+            partId,
+            variantCount: variantNames.length
+          });
+          for (var vi = 0; vi < variantNames.length; vi++) {
+            var variantName = variantNames[vi];
+            var markers = part.element_markers[variantName];
+            var markerCount = Object.keys(markers).length;
+            var ghostUUIDs = [];
+            for (var uuid in markers) {
+              if (!validUUIDs[uuid]) {
+                ghostUUIDs.push({ uuid, marker: markers[uuid] });
+              }
+            }
+            if (ghostUUIDs.length === 0 && markerCount > 0) {
+              log2.debug("cleanGhostMarkers: \u53D8\u4F53\u6807\u8BB0\u5168\u90E8\u6709\u6548", {
+                partId,
+                variant: variantName,
+                markerCount
+              });
+            }
+            for (var gi2 = 0; gi2 < ghostUUIDs.length; gi2++) {
+              var ghost = ghostUUIDs[gi2];
+              var marker = ghost.marker;
+              log2.warn("cleanGhostMarkers: \u53D1\u73B0\u5E7D\u7075\u6807\u8BB0", {
+                partId,
+                variant: variantName,
+                uuid: ghost.uuid,
+                type: marker.type,
+                configRef: marker.config_ref
+              });
+              _cleanMarkerDownstream(projectConfig, partId, variantName, ghost.uuid, marker);
+              delete markers[ghost.uuid];
+              cleanedCount++;
+              details.push({
+                partId,
+                variant: variantName,
+                uuid: ghost.uuid,
+                type: marker.type,
+                configRef: marker.config_ref
+              });
+            }
+            if (ghostUUIDs.length > 0 && Object.keys(markers).length === 0) {
+              delete part.element_markers[variantName];
+              log2.debug("cleanGhostMarkers: \u53D8\u4F53\u6807\u8BB0\u5B57\u5178\u5DF2\u6E05\u7A7A", { partId, variant: variantName });
+            }
+          }
+        }
+        if (cleanedCount > 0) {
+          log2.info("cleanGhostMarkers: \u6E05\u7406\u5B8C\u6210\uFF0C\u5171\u79FB\u9664 " + cleanedCount + " \u4E2A\u5E7D\u7075\u6807\u8BB0", { details });
+        } else {
+          log2.debug("cleanGhostMarkers: \u672A\u53D1\u73B0\u5E7D\u7075\u6807\u8BB0");
+        }
+        return { cleanedCount, details };
+      }
+      function _cleanMarkerDownstream(projectConfig, partId, variantName, uuid, marker) {
+        var part = projectConfig.parts[partId];
+        if (!part || !part.variants) return;
+        var variant = part.variants[variantName];
+        if (!variant || !variant.sub_parts) return;
+        if (marker.type === "sub_part" && marker.config_ref) {
+          if (variant.sub_parts[marker.config_ref]) {
+            delete variant.sub_parts[marker.config_ref];
+            log2.debug("cleanGhostMarkers: \u5DF2\u6E05\u7406\u5E7D\u7075\u5B50\u96F6\u4EF6\u914D\u7F6E", {
+              partId,
+              variant: variantName,
+              spKey: marker.config_ref
+            });
+            recalcAutoEndBones(projectConfig, partId, variantName);
+          }
+        } else if (marker.type === "hit_box" && marker.config_ref) {
+          var sp = variant.sub_parts[marker.config_ref];
+          if (sp && sp.hit_boxes && sp.hit_boxes[uuid] !== void 0) {
+            delete sp.hit_boxes[uuid];
+            log2.debug("cleanGhostMarkers: \u5DF2\u6E05\u7406\u5E7D\u7075\u78B0\u649E\u7BB1\u6761\u76EE", {
+              partId,
+              variant: variantName,
+              spKey: marker.config_ref,
+              uuid
+            });
+          }
+        } else if (marker.type === "interact_box") {
+          for (var sk in variant.sub_parts) {
+            var spIb = variant.sub_parts[sk];
+            if (spIb && spIb.interact_boxes) {
+              for (var ibKey in spIb.interact_boxes) {
+                if (spIb.interact_boxes[ibKey]._uuid === uuid) {
+                  delete spIb.interact_boxes[ibKey];
+                  log2.debug("cleanGhostMarkers: \u5DF2\u6E05\u7406\u5E7D\u7075\u4EA4\u4E92\u533A\u6761\u76EE", {
+                    partId,
+                    variant: variantName,
+                    spKey: sk,
+                    ibKey,
+                    uuid
+                  });
+                }
+              }
+            }
+          }
+        } else if (marker.type === "connector") {
+          var foundConn = false;
+          for (var sk in variant.sub_parts) {
+            var spConn = variant.sub_parts[sk];
+            if (spConn && spConn.connectors) {
+              for (var ck in spConn.connectors) {
+                var conn = spConn.connectors[ck];
+                if (conn._marker_uuid === uuid) {
+                  delete spConn.connectors[ck];
+                  foundConn = true;
+                  log2.debug("cleanGhostMarkers: \u5DF2\u6E05\u7406\u5E7D\u7075\u8FDE\u63A5\u70B9\u6761\u76EE", {
+                    partId,
+                    variant: variantName,
+                    spKey: sk,
+                    connKey: ck,
+                    uuid
+                  });
+                  break;
+                }
+              }
+            }
+            if (foundConn) break;
+          }
+          if (!foundConn) {
+            log2.warn("cleanGhostMarkers: \u65E0\u6CD5\u5339\u914D\u5E7D\u7075\u8FDE\u63A5\u70B9\u7684\u4E0B\u6E38\u6761\u76EE\uFF08\u7F3A\u5C11 _marker_uuid \u5B57\u6BB5\uFF09", {
+              partId,
+              variant: variantName,
+              uuid
+            });
+          }
+        }
+      }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
           MARKER_TYPES,
@@ -8753,7 +8736,196 @@
           clearAllMarkers,
           getMarkersForVariant,
           detectOwnerSubPart,
-          recalcAutoEndBones
+          recalcAutoEndBones,
+          cleanGhostMarkers
+        };
+      }
+    }
+  });
+
+  // src/utils/persistence.js
+  var require_persistence = __commonJS({
+    "src/utils/persistence.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var PROPERTY_NAME = "machine_max_plugin";
+      var { CONFIG_VERSION } = require_constants();
+      var { migrateIfNeeded, createBlankConfig } = require_config();
+      var { cleanGhostMarkers } = require_element_markers();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("Persistence");
+      function registerProperty2() {
+        if (ModelProject.properties[PROPERTY_NAME]) {
+          log2.debug("registerProperty: Property \u5DF2\u6CE8\u518C\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        var existingData = Project && Project !== 0 ? Project[PROPERTY_NAME] : null;
+        var hasExisting = existingData && typeof existingData === "object" && Object.keys(existingData).length > 0;
+        new Property(ModelProject, "object", PROPERTY_NAME, {
+          default: {},
+          exposed: false
+        });
+        if (hasExisting) {
+          Project[PROPERTY_NAME] = existingData;
+          log2.info("registerProperty: \u5DF2\u8FD8\u539F\u5DF2\u6709\u914D\u7F6E\uFF08" + Object.keys(existingData).length + " \u4E2A\u952E\uFF09");
+        } else {
+          log2.info("registerProperty: Property \u5DF2\u6CE8\u518C\uFF08\u65E0\u5DF2\u6709\u914D\u7F6E\uFF09");
+        }
+      }
+      function getBBModelPath() {
+        if (!Project || Project === 0 || !Project.file_path) {
+          log2.debug("getBBModelPath: \u65E0 .bbmodel \u8DEF\u5F84");
+          return null;
+        }
+        log2.debug("getBBModelPath: " + Project.file_path);
+        return Project.file_path;
+      }
+      function loadConfig() {
+        if (!Project || Project === 0) {
+          log2.warn("loadConfig: \u5C1A\u672A\u6253\u5F00\u9879\u76EE\uFF0C\u8FD4\u56DE\u7A7A\u767D\u914D\u7F6E");
+          return createBlankConfig();
+        }
+        const propData = Project[PROPERTY_NAME];
+        var result;
+        if (propData && propData.$schema_version) {
+          log2.info("\u4ECE Property \u52A0\u8F7D\u914D\u7F6E\uFF0C\u7248\u672C: " + propData.$schema_version);
+          var migrated = migrateIfNeeded(propData);
+          Project[PROPERTY_NAME] = migrated;
+          result = migrated;
+          log2.debug("loadConfig: \u4ECE Property \u52A0\u8F7D\u5B8C\u6210", {
+            packMetaType: typeof migrated.packMeta,
+            packMetaKeys: migrated.packMeta ? Object.keys(migrated.packMeta) : [],
+            name: migrated.packMeta ? migrated.packMeta.name : null,
+            author: migrated.packMeta ? migrated.packMeta.author : null,
+            description: migrated.packMeta ? migrated.packMeta.description : null
+          });
+        } else if (propData && typeof propData === "object" && Object.keys(propData).length > 0) {
+          log2.info("\u4ECE Property \u52A0\u8F7D\u914D\u7F6E\uFF08\u65E0\u7248\u672C\u53F7\uFF0C\u5C1D\u8BD5\u4FEE\u590D\uFF09\uFF0C\u952E: " + Object.keys(propData).join(","));
+          var repaired = migrateIfNeeded(propData);
+          Project[PROPERTY_NAME] = repaired;
+          result = repaired;
+        } else {
+          const bbmodelPath = getBBModelPath();
+          if (bbmodelPath) {
+            const standalonePath = bbmodelPath.replace(/\.bbmodel$/i, ".mm_project.json");
+            try {
+              const fs = __require("fs");
+              if (fs.existsSync(standalonePath)) {
+                const raw = JSON.parse(fs.readFileSync(standalonePath, "utf-8"));
+                const config = raw.config || raw;
+                log2.info("\u4ECE\u72EC\u7ACB\u6587\u4EF6\u52A0\u8F7D\u914D\u7F6E: " + standalonePath);
+                Project[PROPERTY_NAME] = migrateIfNeeded(config);
+                result = Project[PROPERTY_NAME];
+              }
+            } catch (e) {
+              log2.error("\u5907\u9009\u914D\u7F6E\u8BFB\u53D6\u5931\u8D25", e);
+            }
+          }
+          if (!result) {
+            log2.info("\u521B\u5EFA\u7A7A\u767D\u914D\u7F6E");
+            const blank = createBlankConfig();
+            Project[PROPERTY_NAME] = blank;
+            result = blank;
+          }
+        }
+        var ghostResult = cleanGhostMarkers(result);
+        if (ghostResult.cleanedCount > 0) {
+          log2.info("loadConfig: \u5DF2\u6E05\u7406 " + ghostResult.cleanedCount + " \u4E2A\u5E7D\u7075\u6807\u8BB0", ghostResult.details);
+          saveConfig();
+        }
+        return result;
+      }
+      function saveConfig() {
+        if (!Project || Project === 0 || !Project[PROPERTY_NAME]) {
+          log2.debug("saveConfig: \u9879\u76EE\u6216\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8DF3\u8FC7\u4FDD\u5B58");
+          return;
+        }
+        const config = Project[PROPERTY_NAME];
+        const bbmodelPath = getBBModelPath();
+        if (!bbmodelPath) {
+          log2.warn("saveConfig: \u672A\u627E\u5230 .bbmodel \u8DEF\u5F84\uFF0C\u8DF3\u8FC7\u72EC\u7ACB\u5907\u4EFD");
+          return;
+        }
+        log2.debug("saveConfig: \u5373\u5C06\u4FDD\u5B58 packMeta", {
+          packMetaType: typeof config.packMeta,
+          packMetaExists: !!config.packMeta,
+          packMetaKeys: config.packMeta ? Object.keys(config.packMeta) : [],
+          name: config.packMeta ? config.packMeta.name : null,
+          nameType: config.packMeta ? typeof config.packMeta.name : "N/A",
+          author: config.packMeta ? config.packMeta.author : null,
+          authorType: config.packMeta ? typeof config.packMeta.author : "N/A",
+          description: config.packMeta ? config.packMeta.description : null,
+          descType: config.packMeta ? typeof config.packMeta.description : "N/A"
+        });
+        const standalonePath = bbmodelPath.replace(/\.bbmodel$/i, ".mm_project.json");
+        try {
+          const fs = __require("fs");
+          const path = __require("path");
+          fs.writeFileSync(
+            standalonePath,
+            JSON.stringify({
+              $schema_version: CONFIG_VERSION,
+              bbmodel: path.basename(bbmodelPath),
+              timestamp: Date.now(),
+              config: {
+                $schema_version: config.$schema_version,
+                parts: config.parts,
+                _uiState: config._uiState,
+                contentPackPath: config.contentPackPath,
+                dependencyPaths: config.dependencyPaths,
+                packMeta: config.packMeta,
+                namespace: config.namespace,
+                modelFile: config.modelFile
+              }
+            }, null, 2),
+            "utf-8"
+          );
+          log2.debug("saveConfig: \u72EC\u7ACB\u5907\u4EFD\u5DF2\u5199\u5165: " + standalonePath);
+        } catch (e) {
+          log2.error("saveConfig: \u5907\u9009\u914D\u7F6E\u5199\u5165\u5931\u8D25", e);
+        }
+        log2.info("\u914D\u7F6E\u5DF2\u4FDD\u5B58");
+      }
+      function setPackPath(config, packPath) {
+        config.contentPackPath = packPath;
+        return config;
+      }
+      function addDependencyPath(config, depPath) {
+        if (!config.dependencyPaths) config.dependencyPaths = [];
+        if (config.dependencyPaths.indexOf(depPath) === -1) {
+          config.dependencyPaths.push(depPath);
+        }
+        return config;
+      }
+      function removeDependencyPath(config, depPath) {
+        if (!config.dependencyPaths) return config;
+        var idx = config.dependencyPaths.indexOf(depPath);
+        if (idx !== -1) config.dependencyPaths.splice(idx, 1);
+        return config;
+      }
+      function getConfig() {
+        if (!Project || Project === 0) {
+          log2.debug("getConfig: \u9879\u76EE\u4E0D\u53EF\u7528");
+          return null;
+        }
+        var cfg = Project[PROPERTY_NAME] || null;
+        log2.debug("getConfig: " + (cfg ? "\u6709\u914D\u7F6E" : "\u65E0\u914D\u7F6E"));
+        return cfg;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          PROPERTY_NAME,
+          registerProperty: registerProperty2,
+          loadConfig,
+          saveConfig,
+          getConfig,
+          setPackPath,
+          addDependencyPath,
+          removeDependencyPath
         };
       }
     }
@@ -9895,13 +10067,29 @@
       var { getMarkersForVariant, detectOwnerSubPart } = require_element_markers();
       var log2 = createLogger2("Validation");
       function checkOrphanedMarkers(config, partId, vName, errors) {
+        var validUUIDs = {};
+        var allGroups = typeof Group !== "undefined" && Group.all ? Group.all : [];
+        var allLocators = typeof Locator !== "undefined" && Locator.all ? Locator.all : [];
+        for (var gi = 0; gi < allGroups.length; gi++) {
+          validUUIDs[allGroups[gi].uuid] = true;
+        }
+        for (var li = 0; li < allLocators.length; li++) {
+          validUUIDs[allLocators[li].uuid] = true;
+        }
         var markers = getMarkersForVariant(config, partId, vName);
         for (var uuid in markers) {
           var marker = markers[uuid];
+          if (!validUUIDs[uuid]) {
+            var typeLabel = marker.type === "sub_part" ? "\u5B50\u96F6\u4EF6" : marker.type === "hit_box" ? "\u78B0\u649E\u7BB1" : marker.type === "connector" ? "\u8FDE\u63A5\u70B9" : marker.type === "interact_box" ? "\u4EA4\u4E92\u533A" : marker.type;
+            errors.push(
+              '\u96F6\u4EF6 "' + partId + '"/' + vName + " \u4E2D\u5B58\u5728\u5E7D\u7075" + typeLabel + "\u6807\u8BB0\uFF08UUID: " + uuid + "\uFF09\uFF0C\u5BF9\u5E94\u7684\u6A21\u578B\u5143\u7D20\u5DF2\u88AB\u5220\u9664\u3002\u5EFA\u8BAE\u4FDD\u5B58\u540E\u91CD\u65B0\u6253\u5F00\u9879\u76EE\u4EE5\u81EA\u52A8\u6E05\u7406\u3002"
+            );
+            continue;
+          }
           if (marker.type === "hit_box") {
-            var group = typeof Group !== "undefined" ? Group.all.find(function(g) {
+            var group = allGroups.find(function(g) {
               return g.uuid === uuid;
-            }) : null;
+            });
             if (group) {
               var owner = detectOwnerSubPart(config, partId, vName, group);
               if (!owner) {
@@ -9909,9 +10097,9 @@
               }
             }
           } else if (marker.type === "connector") {
-            var loc = typeof Locator !== "undefined" ? Locator.all.find(function(l) {
+            var loc = allLocators.find(function(l) {
               return l.uuid === uuid;
-            }) : null;
+            });
             if (loc) {
               var owner = detectOwnerSubPart(config, partId, vName, loc);
               if (!owner) {
@@ -10129,6 +10317,48 @@
                     variant: vKey,
                     key: ibKey,
                     boneName: ib.bone
+                  });
+                }
+              }
+            }
+            if (sp.connectors && typeof sp.connectors === "object") {
+              var allLocators = typeof Locator !== "undefined" && Locator.all ? Locator.all : [];
+              for (var ck in sp.connectors) {
+                if (!sp.connectors.hasOwnProperty(ck)) continue;
+                var conn = sp.connectors[ck];
+                if (!conn || !conn.locator) continue;
+                var loc = null;
+                for (var lj = 0; lj < allLocators.length; lj++) {
+                  if (allLocators[lj].name === conn.locator) {
+                    loc = allLocators[lj];
+                    break;
+                  }
+                }
+                if (loc) {
+                  conn._marker_uuid = loc.uuid;
+                  setMarker(projectConfig, partId, vKey, loc.uuid, "connector", null);
+                  log2.debug("resolveBoneReferences: connector locator \u5DF2\u89E3\u6790", {
+                    partId,
+                    variant: vKey,
+                    sub_part: spKey,
+                    connKey: ck,
+                    locatorName: conn.locator,
+                    uuid: loc.uuid
+                  });
+                } else {
+                  unresolved.push({
+                    bone: conn.locator,
+                    field: "connector.locator",
+                    sub_part: spKey,
+                    connector: ck,
+                    variant: vKey
+                  });
+                  log2.warn("resolveBoneReferences: connector locator \u672A\u5728\u5927\u7EB2\u6811\u4E2D\u627E\u5230", {
+                    partId,
+                    variant: vKey,
+                    sub_part: spKey,
+                    connKey: ck,
+                    locatorName: conn.locator
                   });
                 }
               }
@@ -15360,7 +15590,8 @@
                           overwrite: {}
                         };
                         variant.sub_parts[spKey].connectors[connName] = Object.assign({}, CONNECTOR_INSTANCE_DEFAULTS, {
-                          locator: locName
+                          locator: locName,
+                          _marker_uuid: el.uuid
                         });
                         log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9 \u2014 \u5728 sub_parts \u4E2D\u521B\u5EFA\u6761\u76EE", {
                           spKey,
@@ -15779,6 +16010,8 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var nameUtils = require_name_utils();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("SubPartPanel");
       Vue.component("mm-sub-part-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -16145,25 +16378,72 @@
             this.$emit("delete-subsystem", { spKey: this.spName, ssKey });
           },
           /**
-           * 导航到碰撞箱：点击碰撞箱条目时选中对应的 Group 骨骼，切换到碰撞箱属性面板
+           * 导航到碰撞箱：点击碰撞箱条目时选中对应的 Group 骨骼，切换到碰撞箱属性面板。
+           * 若对应的骨骼已不存在（幽灵条目），则发出清理事件。
            */
           navigateToHitBox: function(hbKey) {
+            var el = Group.all.find(function(g) {
+              return g.uuid === hbKey;
+            });
+            if (!el) {
+              el = Group.all.find(function(g) {
+                return g.name === hbKey;
+              });
+            }
+            if (!el) {
+              log2.warn("navigateToHitBox: \u78B0\u649E\u7BB1\u5143\u7D20\u4E0D\u5B58\u5728\uFF08\u5E7D\u7075\u6761\u76EE\uFF09\uFF0C\u89E6\u53D1\u6E05\u7406", {
+                spKey: this.spName,
+                hbKey
+              });
+              this.$emit("clean-ghost-entry", { type: "hit_box", spKey: this.spName, key: hbKey });
+              return;
+            }
             this.$emit("navigate-to-hit-box", hbKey);
           },
           /**
-           * 导航到交互区：点击交互区条目时选中对应的 Group 骨骼，切换到交互区属性面板
+           * 导航到交互区：点击交互区条目时选中对应的 Group 骨骼，切换到交互区属性面板。
+           * 若对应的骨骼已不存在（幽灵条目），则发出清理事件。
            */
           navigateToInteractBox: function(ibKey) {
             var ib = this.interactBoxes && this.interactBoxes[ibKey];
             var boneName = ib ? ib.bone : "";
             if (boneName) {
+              var el = Group.all.find(function(g) {
+                return g.name === boneName;
+              });
+              if (!el) {
+                log2.warn("navigateToInteractBox: \u4EA4\u4E92\u533A\u9AA8\u9ABC\u4E0D\u5B58\u5728\uFF08\u5E7D\u7075\u6761\u76EE\uFF09\uFF0C\u89E6\u53D1\u6E05\u7406", {
+                  spKey: this.spName,
+                  ibKey,
+                  boneName
+                });
+                this.$emit("clean-ghost-entry", { type: "interact_box", spKey: this.spName, key: ibKey });
+                return;
+              }
               this.$emit("navigate-to-hit-box", boneName);
             }
           },
           /**
-           * 导航到连接点：点击连接点条目时选中对应的 Locator，切换到连接点属性面板
+           * 导航到连接点：点击连接点条目时选中对应的 Locator，切换到连接点属性面板。
+           * 若对应的定位器已不存在（幽灵条目），则发出清理事件。
            */
           navigateToConnector: function(connKey) {
+            var conn = this.config && this.config.connectors && this.config.connectors[connKey];
+            var locatorName = conn ? conn.locator : "";
+            if (locatorName) {
+              var loc = typeof Locator !== "undefined" ? Locator.all.find(function(l) {
+                return l.name === locatorName;
+              }) : null;
+              if (!loc) {
+                log2.warn("navigateToConnector: \u8FDE\u63A5\u70B9 Locator \u4E0D\u5B58\u5728\uFF08\u5E7D\u7075\u6761\u76EE\uFF09\uFF0C\u89E6\u53D1\u6E05\u7406", {
+                  spKey: this.spName,
+                  connKey,
+                  locatorName
+                });
+                this.$emit("clean-ghost-entry", { type: "connector", spKey: this.spName, key: connKey });
+                return;
+              }
+            }
             this.$emit("navigate-to-connector", connKey);
           }
         }
@@ -17970,7 +18250,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { getConfig, loadConfig, saveConfig } = require_persistence();
-      var { getMarkerInfo, clearAllMarkers, detectOwnerSubPart } = require_element_markers();
+      var { getMarkerInfo, clearAllMarkers, detectOwnerSubPart, clearMarker } = require_element_markers();
       var { createVariantConfig, createPartConfig, createSubPartConfig } = require_config();
       var { createLogger: createLogger2 } = require_logger();
       var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_icons();
@@ -18140,7 +18420,8 @@
             @navigate-to-connector="navigateToConnector"
             @navigate-to-subsystem="selectSubsystem({ subsystemKey: $event, spKey: selectedMarker.config_ref })"
             @add-subsystem="addSubsystem(selectedMarker.config_ref)"
-            @delete-subsystem="deleteSubsystem($event.spKey || selectedMarker.config_ref, $event.ssKey)" />
+            @delete-subsystem="deleteSubsystem($event.spKey || selectedMarker.config_ref, $event.ssKey)"
+            @clean-ghost-entry="handleCleanGhostEntry" />
     </div>
 
     <!-- \u78B0\u649E\u7BB1\u5C5E\u6027\u9762\u677F\uFF08\u72EC\u7ACB v-show \u5BB9\u5668\uFF0C\u4FDD\u7559\u6EDA\u52A8\u4F4D\u7F6E\uFF09 -->
@@ -19148,6 +19429,79 @@
               loc.select();
               loc.showInOutliner();
               Blockbench.dispatchEvent("update_selection");
+            }
+          },
+          /**
+           * 处理幽灵条目清理：用户在面板中点击了一个条目，但其对应的模型元素已不存在。
+           * 清理该条目的下游配置和 element_markers 标记。由 SubPartPanel 的 clean-ghost-entry 事件触发。
+           *
+           * @param {{ type: string, spKey: string, key: string }} payload
+           *        type - 'hit_box' | 'interact_box' | 'connector'
+           *        spKey - 所属子零件 key
+           *        key - 条目在字典中的 key
+           */
+          handleCleanGhostEntry: function(payload) {
+            if (!payload || !payload.type || !payload.spKey || !payload.key) {
+              log2.warn("handleCleanGhostEntry: \u65E0\u6548\u7684\u6E05\u7406\u8F7D\u8377", payload);
+              return;
+            }
+            var part = this.currentPart;
+            var variantName = this.activeVariantName;
+            if (!part || !part.variants || !part.variants[variantName]) {
+              log2.warn("handleCleanGhostEntry: \u5F53\u524D\u96F6\u4EF6/\u53D8\u4F53\u4E0D\u53EF\u7528");
+              return;
+            }
+            var variant = part.variants[variantName];
+            if (!variant.sub_parts || !variant.sub_parts[payload.spKey]) {
+              log2.warn("handleCleanGhostEntry: \u5B50\u96F6\u4EF6\u4E0D\u5B58\u5728", { spKey: payload.spKey });
+              return;
+            }
+            var sp = variant.sub_parts[payload.spKey];
+            var cleaned = false;
+            var typeLabel = "";
+            if (payload.type === "hit_box") {
+              typeLabel = "\u78B0\u649E\u7BB1";
+              if (sp.hit_boxes && sp.hit_boxes[payload.key] !== void 0) {
+                delete sp.hit_boxes[payload.key];
+                if (part.element_markers && part.element_markers[variantName]) {
+                  delete part.element_markers[variantName][payload.key];
+                }
+                cleaned = true;
+              }
+            } else if (payload.type === "interact_box") {
+              typeLabel = "\u4EA4\u4E92\u533A";
+              if (sp.interact_boxes && sp.interact_boxes[payload.key] !== void 0) {
+                var ib = sp.interact_boxes[payload.key];
+                if (ib && ib._uuid && part.element_markers && part.element_markers[variantName]) {
+                  delete part.element_markers[variantName][ib._uuid];
+                }
+                delete sp.interact_boxes[payload.key];
+                cleaned = true;
+              }
+            } else if (payload.type === "connector") {
+              typeLabel = "\u8FDE\u63A5\u70B9";
+              if (sp.connectors && sp.connectors[payload.key] !== void 0) {
+                var conn = sp.connectors[payload.key];
+                if (conn && conn._marker_uuid && part.element_markers && part.element_markers[variantName]) {
+                  delete part.element_markers[variantName][conn._marker_uuid];
+                }
+                delete sp.connectors[payload.key];
+                cleaned = true;
+              }
+            }
+            if (cleaned) {
+              log2.info("handleCleanGhostEntry: \u5DF2\u6E05\u7406\u5E7D\u7075" + typeLabel + "\u6761\u76EE", {
+                partId: this.activePartId,
+                variant: variantName,
+                type: payload.type,
+                spKey: payload.spKey,
+                key: payload.key
+              });
+              saveConfig();
+              refreshOutlinerIcons2();
+              showToast2("\u5DF2\u81EA\u52A8\u6E05\u7406\u5E7D\u7075" + typeLabel + ' "' + payload.key + '"\uFF08\u5BF9\u5E94\u6A21\u578B\u5143\u7D20\u5DF2\u4E0D\u5B58\u5728\uFF09', "warning");
+            } else {
+              log2.debug("handleCleanGhostEntry: \u6761\u76EE\u5DF2\u4E0D\u5B58\u5728\uFF08\u53EF\u80FD\u5DF2\u88AB\u6E05\u7406\uFF09", payload);
             }
           },
           /**

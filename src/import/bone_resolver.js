@@ -177,6 +177,47 @@ function resolveBoneReferences(projectConfig, partId) {
                     }
                 }
             }
+
+            // ── 4. 解析 connectors[].locator → 创建 connector 标记 ──
+            if (sp.connectors && typeof sp.connectors === 'object') {
+                var allLocators = (typeof Locator !== 'undefined' && Locator.all) ? Locator.all : [];
+                for (var ck in sp.connectors) {
+                    if (!sp.connectors.hasOwnProperty(ck)) continue;
+                    var conn = sp.connectors[ck];
+                    if (!conn || !conn.locator) continue;
+
+                    var loc = null;
+                    for (var lj = 0; lj < allLocators.length; lj++) {
+                        if (allLocators[lj].name === conn.locator) {
+                            loc = allLocators[lj];
+                            break;
+                        }
+                    }
+
+                    if (loc) {
+                        // 记录 _marker_uuid 以支持后续幽灵标记清理
+                        conn._marker_uuid = loc.uuid;
+                        // 创建 connector 标记
+                        setMarker(projectConfig, partId, vKey, loc.uuid, 'connector', null);
+                        log.debug('resolveBoneReferences: connector locator 已解析', {
+                            partId: partId, variant: vKey, sub_part: spKey,
+                            connKey: ck, locatorName: conn.locator, uuid: loc.uuid,
+                        });
+                    } else {
+                        unresolved.push({
+                            bone: conn.locator,
+                            field: 'connector.locator',
+                            sub_part: spKey,
+                            connector: ck,
+                            variant: vKey,
+                        });
+                        log.warn('resolveBoneReferences: connector locator 未在大纲树中找到', {
+                            partId: partId, variant: vKey, sub_part: spKey,
+                            connKey: ck, locatorName: conn.locator,
+                        });
+                    }
+                }
+            }
         }
     }
 

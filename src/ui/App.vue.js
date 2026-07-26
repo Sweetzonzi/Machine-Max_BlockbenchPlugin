@@ -10,7 +10,7 @@
  *   - 选中子系统 Locator → 子系统属性页
  */
 const { getConfig, loadConfig, saveConfig } = require('../utils/persistence.js');
-const { getMarkerInfo, clearAllMarkers, detectOwnerSubPart } = require('../core/element_markers.js');
+const { getMarkerInfo, clearAllMarkers, detectOwnerSubPart, clearMarker } = require('../core/element_markers.js');
 const { createVariantConfig, createPartConfig, createSubPartConfig } = require('../core/config.js');
 const { createLogger } = require('../utils/logger.js');
 const { refreshOutlinerIcons } = require('../mode/icons.js');
@@ -1008,6 +1008,86 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 loc.select();
                 loc.showInOutliner();
                 Blockbench.dispatchEvent('update_selection');
+            }
+        },
+        /**
+         * 处理幽灵条目清理：用户在面板中点击了一个条目，但其对应的模型元素已不存在。
+         * 清理该条目的下游配置和 element_markers 标记。由 SubPartPanel 的 clean-ghost-entry 事件触发。
+         *
+         * @param {{ type: string, spKey: string, key: string }} payload
+         *        type - 'hit_box' | 'interact_box' | 'connector'
+         *        spKey - 所属子零件 key
+         *        key - 条目在字典中的 key
+         */
+        handleCleanGhostEntry: function (payload) {
+            if (!payload || !payload.type || !payload.spKey || !payload.key) {
+                log.warn('handleCleanGhostEntry: 无效的清理载荷', payload);
+                return;
+            }
+
+            var part = this.currentPart;
+            var variantName = this.activeVariantName;
+            if (!part || !part.variants || !part.variants[variantName]) {
+                log.warn('handleCleanGhostEntry: 当前零件/变体不可用');
+                return;
+            }
+            var variant = part.variants[variantName];
+            if (!variant.sub_parts || !variant.sub_parts[payload.spKey]) {
+                log.warn('handleCleanGhostEntry: 子零件不存在', { spKey: payload.spKey });
+                return;
+            }
+            var sp = variant.sub_parts[payload.spKey];
+
+            var cleaned = false;
+            var typeLabel = '';
+
+            if (payload.type === 'hit_box') {
+                typeLabel = '碰撞箱';
+                if (sp.hit_boxes && sp.hit_boxes[payload.key] !== undefined) {
+                    // 清理下游配置
+                    delete sp.hit_boxes[payload.key];
+                    // 清理 element_markers（key 为 UUID）
+                    if (part.element_markers && part.element_markers[variantName]) {
+                        delete part.element_markers[variantName][payload.key];
+                    }
+                    cleaned = true;
+                }
+            } else if (payload.type === 'interact_box') {
+                typeLabel = '交互区';
+                if (sp.interact_boxes && sp.interact_boxes[payload.key] !== undefined) {
+                    var ib = sp.interact_boxes[payload.key];
+                    // 清理 element_markers（通过 _uuid）
+                    if (ib && ib._uuid && part.element_markers && part.element_markers[variantName]) {
+                        delete part.element_markers[variantName][ib._uuid];
+                    }
+                    // 清理下游配置
+                    delete sp.interact_boxes[payload.key];
+                    cleaned = true;
+                }
+            } else if (payload.type === 'connector') {
+                typeLabel = '连接点';
+                if (sp.connectors && sp.connectors[payload.key] !== undefined) {
+                    var conn = sp.connectors[payload.key];
+                    // 清理 element_markers（通过 _marker_uuid）
+                    if (conn && conn._marker_uuid && part.element_markers && part.element_markers[variantName]) {
+                        delete part.element_markers[variantName][conn._marker_uuid];
+                    }
+                    // 清理下游配置
+                    delete sp.connectors[payload.key];
+                    cleaned = true;
+                }
+            }
+
+            if (cleaned) {
+                log.info('handleCleanGhostEntry: 已清理幽灵' + typeLabel + '条目', {
+                    partId: this.activePartId, variant: variantName,
+                    type: payload.type, spKey: payload.spKey, key: payload.key,
+                });
+                saveConfig();
+                refreshOutlinerIcons();
+                showToast('已自动清理幽灵' + typeLabel + ' "' + payload.key + '"（对应模型元素已不存在）', 'warning');
+            } else {
+                log.debug('handleCleanGhostEntry: 条目已不存在（可能已被清理）', payload);
             }
         },
         /**

@@ -478,6 +478,218 @@ function getMarkersForVariant(projectConfig, partId, variantName) {
     return markers;
 }
 
+/**
+ * 判断字符串是否像 Blockbench UUID（格式：xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx）
+ * 用于区分旧格式数据中的骨骼名 key 和 UUID key
+ * @param {string} str
+ * @returns {boolean}
+ */
+function _looksLikeUUID(str) {
+    if (typeof str !== 'string' || str.length < 32) return false;
+    // UUID 特征：含连字符，长度在 32-40 之间（标准 UUID 36 字符）
+    return str.indexOf('-') >= 0 && str.length >= 32 && str.length <= 40;
+}
+
+/**
+ * 清理幽灵标记：遍历所有 element_markers，删除那些 UUID 对应的 Blockbench 元素
+ * （Group/Locator）已不存在的条目，并清理其关联的下游配置。
+ *
+ * 使用场景：加载已保存的 .bbmodel 后，用户可能已在 Blockbench 中删除了某些骨骼或定位器，
+ * 但 element_markers 字典中仍保留了对应的标记条目，形成无法通过 UI 删除的"幽灵条目"。
+ * 在 loadConfig 时调用此函数可自动清理这些无效条目。
+ *
+ * @param {Object} projectConfig - MM 项目配置
+ * @returns {{ cleanedCount: number, details: Array }} 清理统计信息
+ */
+function cleanGhostMarkers(projectConfig) {
+    if (!projectConfig || !projectConfig.parts) {
+        log.debug('cleanGhostMarkers: 无零件配置，跳过');
+        return { cleanedCount: 0, details: [] };
+    }
+
+    // 构建当前模型中所有有效元素的 UUID 集合
+    var validUUIDs = {};
+    var allGroups = (typeof Group !== 'undefined' && Group.all) ? Group.all : [];
+    var allLocators = (typeof Locator !== 'undefined' && Locator.all) ? Locator.all : [];
+
+    for (var gi = 0; gi < allGroups.length; gi++) {
+        validUUIDs[allGroups[gi].uuid] = true;
+    }
+    for (var li = 0; li < allLocators.length; li++) {
+        validUUIDs[allLocators[li].uuid] = true;
+    }
+
+    log.debug('cleanGhostMarkers: 模型统计', {
+        totalGroups: allGroups.length,
+        totalLocators: allLocators.length,
+        totalParts: Object.keys(projectConfig.parts).length,
+    });
+
+    var cleanedCount = 0;
+    var details = [];
+
+    var partIds = Object.keys(projectConfig.parts);
+    for (var pi = 0; pi < partIds.length; pi++) {
+        var partId = partIds[pi];
+        var part = projectConfig.parts[partId];
+        if (!part.element_markers) {
+            log.debug('cleanGhostMarkers: 零件无 element_markers', { partId: partId });
+            continue;
+        }
+
+        var variantNames = Object.keys(part.element_markers);
+        log.debug('cleanGhostMarkers: 零件标记概况', {
+            partId: partId,
+            variantCount: variantNames.length,
+        });
+
+        for (var vi = 0; vi < variantNames.length; vi++) {
+            var variantName = variantNames[vi];
+            var markers = part.element_markers[variantName];
+            var markerCount = Object.keys(markers).length;
+            var ghostUUIDs = [];
+
+            // 收集本变体中所有幽灵标记的 UUID
+            for (var uuid in markers) {
+                if (!validUUIDs[uuid]) {
+                    ghostUUIDs.push({ uuid: uuid, marker: markers[uuid] });
+                }
+            }
+
+            if (ghostUUIDs.length === 0 && markerCount > 0) {
+                log.debug('cleanGhostMarkers: 变体标记全部有效', {
+                    partId: partId, variant: variantName, markerCount: markerCount,
+                });
+            }
+
+            // 对每个幽灵标记执行清理
+            for (var gi2 = 0; gi2 < ghostUUIDs.length; gi2++) {
+                var ghost = ghostUUIDs[gi2];
+                var marker = ghost.marker;
+
+                log.warn('cleanGhostMarkers: 发现幽灵标记', {
+                    partId: partId,
+                    variant: variantName,
+                    uuid: ghost.uuid,
+                    type: marker.type,
+                    configRef: marker.config_ref,
+                });
+
+                // 第一轮：清理关联的下游配置（复用 clearMarker 的下游清理逻辑）
+                _cleanMarkerDownstream(projectConfig, partId, variantName, ghost.uuid, marker);
+
+                // 删除标记条目
+                delete markers[ghost.uuid];
+
+                cleanedCount++;
+                details.push({
+                    partId: partId,
+                    variant: variantName,
+                    uuid: ghost.uuid,
+                    type: marker.type,
+                    configRef: marker.config_ref,
+                });
+            }
+
+            // 若变体的标记字典已空，删除变体条目
+            if (ghostUUIDs.length > 0 && Object.keys(markers).length === 0) {
+                delete part.element_markers[variantName];
+                log.debug('cleanGhostMarkers: 变体标记字典已清空', { partId: partId, variant: variantName });
+            }
+        }
+    }
+
+    if (cleanedCount > 0) {
+        log.info('cleanGhostMarkers: 清理完成，共移除 ' + cleanedCount + ' 个幽灵标记', { details: details });
+    } else {
+        log.debug('cleanGhostMarkers: 未发现幽灵标记');
+    }
+
+    return { cleanedCount: cleanedCount, details: details };
+}
+
+/**
+ * 内部函数：清理幽灵标记关联的下游配置
+ * 与 clearMarker 中的下游清理逻辑保持一致，但不操作 element_markers 本身
+ *
+ * @param {Object} projectConfig
+ * @param {string} partId
+ * @param {string} variantName
+ * @param {string} uuid - 幽灵标记的 UUID
+ * @param {Object} marker - 标记信息 { type, config_ref }
+ */
+function _cleanMarkerDownstream(projectConfig, partId, variantName, uuid, marker) {
+    var part = projectConfig.parts[partId];
+    if (!part || !part.variants) return;
+    var variant = part.variants[variantName];
+    if (!variant || !variant.sub_parts) return;
+
+    if (marker.type === 'sub_part' && marker.config_ref) {
+        // 清理子零件配置及其下的碰撞箱、交互区、连接点
+        if (variant.sub_parts[marker.config_ref]) {
+            delete variant.sub_parts[marker.config_ref];
+            log.debug('cleanGhostMarkers: 已清理幽灵子零件配置', {
+                partId: partId, variant: variantName, spKey: marker.config_ref,
+            });
+            // 清理后重算 auto_end_bones
+            recalcAutoEndBones(projectConfig, partId, variantName);
+        }
+    } else if (marker.type === 'hit_box' && marker.config_ref) {
+        // 清理碰撞箱条目（key 为 UUID）
+        var sp = variant.sub_parts[marker.config_ref];
+        if (sp && sp.hit_boxes && sp.hit_boxes[uuid] !== undefined) {
+            delete sp.hit_boxes[uuid];
+            log.debug('cleanGhostMarkers: 已清理幽灵碰撞箱条目', {
+                partId: partId, variant: variantName, spKey: marker.config_ref, uuid: uuid,
+            });
+        }
+    } else if (marker.type === 'interact_box') {
+        // 按 _uuid 字段清理交互区条目
+        for (var sk in variant.sub_parts) {
+            var spIb = variant.sub_parts[sk];
+            if (spIb && spIb.interact_boxes) {
+                for (var ibKey in spIb.interact_boxes) {
+                    if (spIb.interact_boxes[ibKey]._uuid === uuid) {
+                        delete spIb.interact_boxes[ibKey];
+                        log.debug('cleanGhostMarkers: 已清理幽灵交互区条目', {
+                            partId: partId, variant: variantName, spKey: sk, ibKey: ibKey, uuid: uuid,
+                        });
+                    }
+                }
+            }
+        }
+    } else if (marker.type === 'connector') {
+        // 连接点：由于元素已不存在，无法通过 locator 名称匹配，
+        // 只能遍历所有子零件的 connectors，通过 uuid 历史信息尝试匹配。
+        // 如果无法匹配则保留（需用户手动清理），记录警告。
+        var foundConn = false;
+        for (var sk in variant.sub_parts) {
+            var spConn = variant.sub_parts[sk];
+            if (spConn && spConn.connectors) {
+                for (var ck in spConn.connectors) {
+                    var conn = spConn.connectors[ck];
+                    // 连接点条目可能通过 _marker_uuid 字段关联（如果存在）
+                    // 也可能只能通过 locator 名称匹配（但元素已删除无法获取名称）
+                    if (conn._marker_uuid === uuid) {
+                        delete spConn.connectors[ck];
+                        foundConn = true;
+                        log.debug('cleanGhostMarkers: 已清理幽灵连接点条目', {
+                            partId: partId, variant: variantName, spKey: sk, connKey: ck, uuid: uuid,
+                        });
+                        break;
+                    }
+                }
+            }
+            if (foundConn) break;
+        }
+        if (!foundConn) {
+            log.warn('cleanGhostMarkers: 无法匹配幽灵连接点的下游条目（缺少 _marker_uuid 字段）', {
+                partId: partId, variant: variantName, uuid: uuid,
+            });
+        }
+    }
+}
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         MARKER_TYPES,
@@ -493,5 +705,6 @@ if (typeof module !== 'undefined' && module.exports) {
         getMarkersForVariant,
         detectOwnerSubPart,
         recalcAutoEndBones,
+        cleanGhostMarkers,
     };
 }

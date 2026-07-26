@@ -344,6 +344,7 @@ function buildMMMenuItems(el) {
                                     };
                                     variant.sub_parts[spKey].connectors[connName] = Object.assign({}, CONNECTOR_INSTANCE_DEFAULTS, {
                                         locator: locName,
+                                        _marker_uuid: el.uuid,
                                     });
                                     log.debug('右键菜单: 标记为连接点 — 在 sub_parts 中创建条目', {
                                         spKey: spKey, connKey: connName, locatorName: locName,

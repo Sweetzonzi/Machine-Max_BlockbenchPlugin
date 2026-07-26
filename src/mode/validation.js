@@ -5,17 +5,43 @@ var log = createLogger('Validation');
 
 /**
  * 校验单个变体中是否存在游离标记（标记了但无归属子零件）
+ * 同时检测幽灵标记（UUID 对应的 Blockbench 元素已不存在）
  * @param {Object} config - MM 项目配置
  * @param {string} partId - 零件 ID
  * @param {string} vName - 变体名
  * @param {Array} errors - 错误列表（就地追加）
  */
 function checkOrphanedMarkers(config, partId, vName, errors) {
+    // 构建当前模型中所有有效元素的 UUID 集合
+    var validUUIDs = {};
+    var allGroups = (typeof Group !== 'undefined' && Group.all) ? Group.all : [];
+    var allLocators = (typeof Locator !== 'undefined' && Locator.all) ? Locator.all : [];
+    for (var gi = 0; gi < allGroups.length; gi++) {
+        validUUIDs[allGroups[gi].uuid] = true;
+    }
+    for (var li = 0; li < allLocators.length; li++) {
+        validUUIDs[allLocators[li].uuid] = true;
+    }
+
     var markers = getMarkersForVariant(config, partId, vName);
     for (var uuid in markers) {
         var marker = markers[uuid];
+
+        // 检测幽灵标记：UUID 对应的元素已不存在于模型中
+        if (!validUUIDs[uuid]) {
+            var typeLabel = (marker.type === 'sub_part') ? '子零件' :
+                            (marker.type === 'hit_box') ? '碰撞箱' :
+                            (marker.type === 'connector') ? '连接点' :
+                            (marker.type === 'interact_box') ? '交互区' : marker.type;
+            errors.push(
+                '零件 "' + partId + '"/' + vName + ' 中存在幽灵' + typeLabel + '标记（UUID: ' + uuid +
+                '），对应的模型元素已被删除。建议保存后重新打开项目以自动清理。'
+            );
+            continue; // 元素不存在，跳过后续的游离检测
+        }
+
         if (marker.type === 'hit_box') {
-            var group = typeof Group !== 'undefined' ? Group.all.find(function (g) { return g.uuid === uuid; }) : null;
+            var group = allGroups.find(function (g) { return g.uuid === uuid; });
             if (group) {
                 var owner = detectOwnerSubPart(config, partId, vName, group);
                 if (!owner) {
@@ -23,7 +49,7 @@ function checkOrphanedMarkers(config, partId, vName, errors) {
                 }
             }
         } else if (marker.type === 'connector') {
-            var loc = typeof Locator !== 'undefined' ? Locator.all.find(function (l) { return l.uuid === uuid; }) : null;
+            var loc = allLocators.find(function (l) { return l.uuid === uuid; });
             if (loc) {
                 var owner = detectOwnerSubPart(config, partId, vName, loc);
                 if (!owner) {

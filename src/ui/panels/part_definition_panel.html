@@ -152,7 +152,8 @@
             @navigate-to-connector="navigateToConnector"
             @navigate-to-subsystem="selectSubsystem({ subsystemKey: $event, spKey: selectedMarker.config_ref })"
             @add-subsystem="addSubsystem(selectedMarker.config_ref)"
-            @delete-subsystem="deleteSubsystem($event.spKey || selectedMarker.config_ref, $event.ssKey)" />
+            @delete-subsystem="deleteSubsystem($event.spKey || selectedMarker.config_ref, $event.ssKey)"
+            @clean-ghost-entry="handleCleanGhostEntry" />
     </div>
 
     <!-- 碰撞箱属性面板（独立 v-show 容器，保留滚动位置） -->

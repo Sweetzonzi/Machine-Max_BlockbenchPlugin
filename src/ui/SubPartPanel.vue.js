@@ -7,6 +7,8 @@
  * - 骨骼为独立的绑定字段
  */
 var nameUtils = require('../utils/name_utils.js');
+var { createLogger } = require('../utils/logger.js');
+var log = createLogger('SubPartPanel');
 
 Vue.component('mm-sub-part-panel', {
     template: typeof TEMPLATE_SUB_PART_PANEL !== 'undefined' ? TEMPLATE_SUB_PART_PANEL : '<p>子零件面板加载中...</p>',
@@ -175,25 +177,63 @@ Vue.component('mm-sub-part-panel', {
             this.$emit('delete-subsystem', { spKey: this.spName, ssKey: ssKey });
         },
         /**
-         * 导航到碰撞箱：点击碰撞箱条目时选中对应的 Group 骨骼，切换到碰撞箱属性面板
+         * 导航到碰撞箱：点击碰撞箱条目时选中对应的 Group 骨骼，切换到碰撞箱属性面板。
+         * 若对应的骨骼已不存在（幽灵条目），则发出清理事件。
          */
         navigateToHitBox: function (hbKey) {
+            // 预检：通过 UUID 查找 Group，不存在则为幽灵条目
+            var el = Group.all.find(function (g) { return g.uuid === hbKey; });
+            if (!el) {
+                // 也尝试按名称查找（兼容旧格式）
+                el = Group.all.find(function (g) { return g.name === hbKey; });
+            }
+            if (!el) {
+                log.warn('navigateToHitBox: 碰撞箱元素不存在（幽灵条目），触发清理', {
+                    spKey: this.spName, hbKey: hbKey,
+                });
+                this.$emit('clean-ghost-entry', { type: 'hit_box', spKey: this.spName, key: hbKey });
+                return;
+            }
             this.$emit('navigate-to-hit-box', hbKey);
         },
         /**
-         * 导航到交互区：点击交互区条目时选中对应的 Group 骨骼，切换到交互区属性面板
+         * 导航到交互区：点击交互区条目时选中对应的 Group 骨骼，切换到交互区属性面板。
+         * 若对应的骨骼已不存在（幽灵条目），则发出清理事件。
          */
         navigateToInteractBox: function (ibKey) {
             var ib = this.interactBoxes && this.interactBoxes[ibKey];
             var boneName = ib ? ib.bone : '';
             if (boneName) {
+                // 预检：通过骨骼名查找 Group
+                var el = Group.all.find(function (g) { return g.name === boneName; });
+                if (!el) {
+                    log.warn('navigateToInteractBox: 交互区骨骼不存在（幽灵条目），触发清理', {
+                        spKey: this.spName, ibKey: ibKey, boneName: boneName,
+                    });
+                    this.$emit('clean-ghost-entry', { type: 'interact_box', spKey: this.spName, key: ibKey });
+                    return;
+                }
                 this.$emit('navigate-to-hit-box', boneName);
             }
         },
         /**
-         * 导航到连接点：点击连接点条目时选中对应的 Locator，切换到连接点属性面板
+         * 导航到连接点：点击连接点条目时选中对应的 Locator，切换到连接点属性面板。
+         * 若对应的定位器已不存在（幽灵条目），则发出清理事件。
          */
         navigateToConnector: function (connKey) {
+            var conn = this.config && this.config.connectors && this.config.connectors[connKey];
+            var locatorName = conn ? conn.locator : '';
+            if (locatorName) {
+                // 预检：通过 locator 名称查找 Locator
+                var loc = typeof Locator !== 'undefined' ? Locator.all.find(function (l) { return l.name === locatorName; }) : null;
+                if (!loc) {
+                    log.warn('navigateToConnector: 连接点 Locator 不存在（幽灵条目），触发清理', {
+                        spKey: this.spName, connKey: connKey, locatorName: locatorName,
+                    });
+                    this.$emit('clean-ghost-entry', { type: 'connector', spKey: this.spName, key: connKey });
+                    return;
+                }
+            }
             this.$emit('navigate-to-connector', connKey);
         },
     },

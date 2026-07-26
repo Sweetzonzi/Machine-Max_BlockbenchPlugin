@@ -1,6 +1,7 @@
 const PROPERTY_NAME = 'machine_max_plugin';
 const { CONFIG_VERSION } = require('../core/constants.js');
 const { migrateIfNeeded, createBlankConfig } = require('../core/config.js');
+const { cleanGhostMarkers } = require('../core/element_markers.js');
 const { createLogger } = require('./logger.js');
 
 /** 模块日志 */
@@ -62,10 +63,13 @@ function loadConfig() {
 
     const propData = Project[PROPERTY_NAME];
 
+    var result;
+
     if (propData && propData.$schema_version) {
         log.info('从 Property 加载配置，版本: ' + propData.$schema_version);
         var migrated = migrateIfNeeded(propData);
         Project[PROPERTY_NAME] = migrated;
+        result = migrated;
         log.debug('loadConfig: 从 Property 加载完成', {
             packMetaType: typeof migrated.packMeta,
             packMetaKeys: migrated.packMeta ? Object.keys(migrated.packMeta) : [],
@@ -73,39 +77,48 @@ function loadConfig() {
             author: migrated.packMeta ? migrated.packMeta.author : null,
             description: migrated.packMeta ? migrated.packMeta.description : null,
         });
-        return migrated;
-    }
-
-    // 备用方案1：Property 数据存在但无版本号 — 尝试 ensureDefaults 修复
-    if (propData && typeof propData === 'object' && Object.keys(propData).length > 0) {
+    } else if (propData && typeof propData === 'object' && Object.keys(propData).length > 0) {
+        // 备用方案1：Property 数据存在但无版本号 — 尝试 ensureDefaults 修复
         log.info('从 Property 加载配置（无版本号，尝试修复），键: ' + Object.keys(propData).join(','));
         var repaired = migrateIfNeeded(propData);
         Project[PROPERTY_NAME] = repaired;
-        return repaired;
-    }
-
-    // 备用方案2：独立 .mm_project.json 文件
-    const bbmodelPath = getBBModelPath();
-    if (bbmodelPath) {
-        const standalonePath = bbmodelPath.replace(/\.bbmodel$/i, '.mm_project.json');
-        try {
-            const fs = require('fs');
-            if (fs.existsSync(standalonePath)) {
-                const raw = JSON.parse(fs.readFileSync(standalonePath, 'utf-8'));
-                const config = raw.config || raw;
-                log.info('从独立文件加载配置: ' + standalonePath);
-                Project[PROPERTY_NAME] = migrateIfNeeded(config);
-                return Project[PROPERTY_NAME];
+        result = repaired;
+    } else {
+        // 备用方案2：独立 .mm_project.json 文件
+        const bbmodelPath = getBBModelPath();
+        if (bbmodelPath) {
+            const standalonePath = bbmodelPath.replace(/\.bbmodel$/i, '.mm_project.json');
+            try {
+                const fs = require('fs');
+                if (fs.existsSync(standalonePath)) {
+                    const raw = JSON.parse(fs.readFileSync(standalonePath, 'utf-8'));
+                    const config = raw.config || raw;
+                    log.info('从独立文件加载配置: ' + standalonePath);
+                    Project[PROPERTY_NAME] = migrateIfNeeded(config);
+                    result = Project[PROPERTY_NAME];
+                }
+            } catch (e) {
+                log.error('备选配置读取失败', e);
             }
-        } catch (e) {
-            log.error('备选配置读取失败', e);
+        }
+
+        if (!result) {
+            log.info('创建空白配置');
+            const blank = createBlankConfig();
+            Project[PROPERTY_NAME] = blank;
+            result = blank;
         }
     }
 
-    log.info('创建空白配置');
-    const blank = createBlankConfig();
-    Project[PROPERTY_NAME] = blank;
-    return blank;
+    // 清理幽灵标记：删除 element_markers 中 UUID 对应的 Group/Locator 已不存在的条目
+    var ghostResult = cleanGhostMarkers(result);
+    if (ghostResult.cleanedCount > 0) {
+        log.info('loadConfig: 已清理 ' + ghostResult.cleanedCount + ' 个幽灵标记', ghostResult.details);
+        // 保存清理后的配置，防止幽灵标记再次被持久化
+        saveConfig();
+    }
+
+    return result;
 }
 
 /**
