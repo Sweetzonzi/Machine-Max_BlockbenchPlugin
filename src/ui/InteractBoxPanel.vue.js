@@ -10,6 +10,7 @@
  * 支持交互模式（fast/accurate）和条件逻辑（AND/OR/NAND/NOR/XOR/XNOR）。
  */
 var nameUtils = require('../utils/name_utils.js');
+var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
 
 Vue.component('mm-interact-box-panel', {
     template: typeof TEMPLATE_INTERACT_BOX_PANEL !== 'undefined' ? TEMPLATE_INTERACT_BOX_PANEL : '<p>交互区面板加载中...</p>',
@@ -65,16 +66,10 @@ Vue.component('mm-interact-box-panel', {
             return Object.keys(this.signalTargetEntries).length;
         },
         /**
-         * 常用频道名补全列表
+         * 常用频道名补全列表（统一来自 constants.js 唯一真源）
          */
         channelHints: function () {
-            return [
-                'interact', 'interact_left_front_door', 'interact_right_front_door',
-                'interact_left_back_door', 'interact_right_back_door',
-                'interact_hood', 'interact_trunk', 'interact_seat',
-                'trunk_interact', 'lever_pull', 'button_press',
-                'door_interact', 'switch_toggle', 'interact_custom',
-            ];
+            return SIGNAL_CHANNEL_HINTS;
         },
     },
     methods: {
@@ -107,98 +102,12 @@ Vue.component('mm-interact-box-panel', {
             this.$emit('navigate-to-sub-part', this.parentSubPartKey);
         },
 
-        // ===== 信号目标编辑 =====
+        // ===== 信号目标编辑（共享组件 mm-signal-target-editor） =====
         /**
-         * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
-         * 但保留当前项自身，防止 <select> 因无匹配 option 而显示空白
-         * @param {string} channel - 频道名
-         * @param {string} [currentValue] - 当前项的值，此值不会被过滤
-         * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
+         * 信号目标变更回调：由共享组件 emit，深拷贝后提交 field-change
+         * @param {Object} entries - 变更后的 { channel: [target, ...] } 映射
          */
-        getFilteredTargets: function (channel, currentValue) {
-            var allTargets = this.signalTargetHints;
-            if (!allTargets || allTargets.length === 0) return [];
-            var entries = this.signalTargetEntries;
-            var usedTargets = entries[channel];
-            if (!usedTargets || usedTargets.length === 0) return allTargets;
-            var filtered = [];
-            for (var i = 0; i < allTargets.length; i++) {
-                var t = allTargets[i];
-                if (t.value === currentValue || usedTargets.indexOf(t.value) === -1) {
-                    filtered.push(t);
-                }
-            }
-            return filtered;
-        },
-        /**
-         * 添加新的信号频道
-         */
-        addSignalTargetChannel: function () {
-            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
-            var newChan = 'interact';
-            var idx = 1;
-            while (entries[newChan]) {
-                newChan = 'interact_' + idx;
-                idx++;
-            }
-            entries[newChan] = [];
-            this.emitSignalTargets(entries);
-        },
-        /**
-         * 删除信号频道
-         */
-        removeSignalTargetChannel: function (channel) {
-            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
-            delete entries[channel];
-            this.emitSignalTargets(entries);
-        },
-        /**
-         * 重命名信号频道
-         */
-        onSignalTargetChannelChange: function (oldChannel, newChannel) {
-            if (!newChannel || oldChannel === newChannel) return;
-            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
-            var targets = entries[oldChannel];
-            if (targets === undefined) return;
-            delete entries[oldChannel];
-            entries[newChannel] = targets;
-            this.emitSignalTargets(entries);
-        },
-        /**
-         * 为指定频道添加信号目标项
-         */
-        addSignalTargetItem: function (channel) {
-            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
-            if (!entries[channel]) {
-                entries[channel] = [];
-            }
-            entries[channel].push('');
-            this.emitSignalTargets(entries);
-        },
-        /**
-         * 删除信号频道的指定目标项
-         */
-        removeSignalTargetItem: function (channel, index) {
-            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
-            if (entries[channel]) {
-                entries[channel].splice(index, 1);
-                this.emitSignalTargets(entries);
-            }
-        },
-        /**
-         * 更新信号频道的指定目标值
-         */
-        updateSignalTargetItem: function (channel, index, value) {
-            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
-            if (entries[channel]) {
-                entries[channel][index] = value;
-                this.emitSignalTargets(entries);
-            }
-        },
-        /**
-         * 触发 signal_targets 字段变更事件
-         */
-        emitSignalTargets: function (entries) {
+        onSignalTargetsChange: function (entries) {
             this.$emit('field-change', 'signal_targets', JSON.parse(JSON.stringify(entries)));
         },
     },

@@ -17,6 +17,7 @@ const { refreshOutlinerIcons } = require('../mode/icons.js');
 const { showToast } = require('../utils/notify.js');
 const content_pack_manager = require('../core/content_pack_manager.js');
 const nameUtils = require('../utils/name_utils.js');
+const { buildSignalTargetOptions } = require('../utils/signal_target_options.js');
 var { showAddTagDialog, _hashTagColor } = require('./tag_dialog_helper.js');
 
 /** 模块日志 */
@@ -33,6 +34,10 @@ require('./ConnectorPanel.vue.js');
 require('./SubsystemPanel.vue.js');
 
 require('./components/KeyValueEditor.vue.js');
+
+require('./components/SignalTargetEditor.vue.js');
+
+require('./components/LocatorPicker.vue.js');
 
 const MMMainPanel = Vue.component('mm-main-panel', {
     template: TEMPLATE_PART_PANEL,
@@ -196,8 +201,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         availableConnectorDefs: function () {
             if (!this.config) return {};
             var result = content_pack_manager.loadMergedDefs(this.config, 'connectors').defs;
-            var keys = Object.keys(result);
-            log.info('availableConnectorDefs: 共 ' + keys.length + ' 个连接点定义' + (keys.length > 0 ? '，列表=' + keys.join(',') : ''));
+            log.debug('availableConnectorDefs: 共 ' + Object.keys(result).length + ' 个连接点定义');
             return result;
         },
         selectedMarker: function () {
@@ -316,11 +320,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             }
             var cp = require('../core/content_pack_manager.js');
             var result = cp.loadMergedDefs(this.config, 'subsystems').defs;
-            var keys = Object.keys(result);
-            log.info('availableSubsystemDefs: 共 ' + keys.length + ' 个子系统定义' + (keys.length > 0 ? '，列表=' + keys.join(',') : ''));
-            // 与连接点数量对比，帮助定位问题
-            var connKeys = Object.keys(cp.loadMergedDefs(this.config, 'connectors').defs);
-            log.info('availableSubsystemDefs: 对照 — 连接点共 ' + connKeys.length + ' 个');
+            log.debug('availableSubsystemDefs: 共 ' + Object.keys(result).length + ' 个子系统定义');
             return result;
         },
         /**
@@ -345,7 +345,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             }
             var projectile_manager = require('../managers/projectile_manager.js');
             var result = projectile_manager.getProjectileMap(this.config);
-            log.info('availableProjectileTypes: 共 ' + Object.keys(result).length + ' 个投射物');
+            log.debug('availableProjectileTypes: 共 ' + Object.keys(result).length + ' 个投射物');
             return result;
         },
         /**
@@ -358,29 +358,29 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             return sp.connectors;
         },
         /**
+         * 获取指定子零件的信号目标选项列表（唯一实现）
+         * 供 currentSignalTargetOptions / connectorParentSignalTargetHints /
+         * interactBoxParentSignalTargetHints 三个计算属性复用。
+         * @param {string} spKey - 子零件 key
+         * @returns {Array<{value: string, label: string}>} 信号目标选项列表
+         */
+        signalTargetOptionsFor: function (spKey) {
+            void this.markerVersion.v;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) {
+                return [{ value: 'subpart', label: 'subpart' }, { value: 'vehicle', label: 'vehicle' }];
+            }
+            return buildSignalTargetOptions(
+                this.currentVariant.sub_parts[spKey],
+                (this.config && this.config.namespace) || 'machine_max'
+            );
+        },
+        /**
          * 当前子零件内所有目标 key（用于信号目标下拉选择）
          * 返回 {value, label}[]，value=完整键，label=[类型]短名
          */
         currentSignalTargetOptions: function () {
-            void this.markerVersion.v;
             if (!this.isSubsystemSelected || !this.currentVariant) return [];
-            var sp = this.currentVariant.sub_parts[this.subsystemSelection.spKey];
-            if (!sp) return [{value: 'subpart', label: 'subpart'}, {value: 'vehicle', label: 'vehicle'}];
-            var ns = (this.config && this.config.namespace) || 'machine_max';
-            var result = [{value: 'subpart', label: 'subpart'}, {value: 'vehicle', label: 'vehicle'}];
-            if (sp.connectors) {
-                var connKeys = Object.keys(sp.connectors);
-                for (var i = 0; i < connKeys.length; i++) {
-                    result.push({value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], 'zh', ns)});
-                }
-            }
-            if (sp.subsystems) {
-                var ssKeys = Object.keys(sp.subsystems);
-                for (var j = 0; j < ssKeys.length; j++) {
-                    result.push({value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], 'zh', ns)});
-                }
-            }
-            return result;
+            return this.signalTargetOptionsFor(this.subsystemSelection.spKey);
         },
         /**
          * 动态检测碰撞箱所属子零件（沿父链向上遍历）
@@ -434,26 +434,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
          * 返回 {value, label}[]，value=完整键，label=[类型]短名
          */
         connectorParentSignalTargetHints: function () {
-            void this.markerVersion.v;
-            var spKey = this.connectorParentSubPartKey;
-            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
-            var sp = this.currentVariant.sub_parts[spKey];
-            if (!sp) return [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
-            var ns = (this.config && this.config.namespace) || 'machine_max';
-            var result = [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
-            if (sp.connectors) {
-                var connKeys = Object.keys(sp.connectors);
-                for (var i = 0; i < connKeys.length; i++) {
-                    result.push({value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], 'zh', ns)});
-                }
-            }
-            if (sp.subsystems) {
-                var ssKeys = Object.keys(sp.subsystems);
-                for (var j = 0; j < ssKeys.length; j++) {
-                    result.push({value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], 'zh', ns)});
-                }
-            }
-            return result;
+            return this.signalTargetOptionsFor(this.connectorParentSubPartKey);
         },
         /**
          * 当前选中碰撞箱的配置对象（从所属子零件的 hit_boxes 中获取）
@@ -526,26 +507,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
          * 返回 {value, label}[]，value=完整键，label=[类型]短名
          */
         interactBoxParentSignalTargetHints: function () {
-            void this.markerVersion.v;
-            var spKey = this.interactBoxParentSubPartKey;
-            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
-            var sp = this.currentVariant.sub_parts[spKey];
-            if (!sp) return [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
-            var ns = (this.config && this.config.namespace) || 'machine_max';
-            var result = [{value:'subpart',label:'subpart'},{value:'vehicle',label:'vehicle'}];
-            if (sp.connectors) {
-                var connKeys = Object.keys(sp.connectors);
-                for (var i = 0; i < connKeys.length; i++) {
-                    result.push({value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], 'zh', ns)});
-                }
-            }
-            if (sp.subsystems) {
-                var ssKeys = Object.keys(sp.subsystems);
-                for (var j = 0; j < ssKeys.length; j++) {
-                    result.push({value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], 'zh', ns)});
-                }
-            }
-            return result;
+            return this.signalTargetOptionsFor(this.interactBoxParentSubPartKey);
         },
         /**
          * 当前选中交互区的配置对象（从所属子零件的 interact_boxes 中获取）

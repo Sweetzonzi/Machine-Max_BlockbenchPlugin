@@ -55,7 +55,7 @@
   var define_BUILTIN_SUBSYSTEMS_default;
   var init_define_BUILTIN_SUBSYSTEMS = __esm({
     "<define:__BUILTIN_SUBSYSTEMS__>"() {
-      define_BUILTIN_SUBSYSTEMS_default = { default_glass: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:basic", basic_durability: 2, pass_damage: false, limit_damage: false, sounds: { on_destroyed: { sound_id: "machine_max:subsystem.baisc.glass.break", range: 32 } }, hidden: true }, large_battery: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:battery", basic_durability: 100, max_stored_energy: 5e5, max_charge_rate: 5e3, max_discharge_rate: 1e4 }, medium_battery: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:battery", basic_durability: 50, max_stored_energy: 1e5, max_charge_rate: 2e3, max_discharge_rate: 5e3 }, small_battery: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:battery", basic_durability: 20, max_stored_energy: 2e4, max_charge_rate: 500, max_discharge_rate: 1e3 }, targeting_pod: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:camera", basic_durability: 8, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 16.7, min_pitch: -80, max_pitch: 80, yaw_limit: 360, hud_components: [], tracking_target_inputs: [], discovery_inputs: ["targeting_pod_sight"], allow_cycle: true }, default_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 150, min_steering_radius: 5, lateral_acceleration: 50, max_drift_angular_velocity: 2, manual_gear_shift: false, auto_hand_brake: true, drift_assist: true }, light_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 80, max_power: 8e4, max_torque: 175, idle_rpm: 850, max_torque_rpm: 4e3, red_line_rpm: 6300, red_line_torque_ratio: 0.75, inertia: 10, cylinder: 4, damping_factors: [2, 0.03, 2e-5] }, medium_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 150, max_power: 18e4, max_torque: 380, idle_rpm: 750, max_torque_rpm: 4e3, red_line_rpm: 6e3, red_line_torque_ratio: 0.65, inertia: 15, cylinder: 6, damping_factors: [2, 0.03, 2e-5] }, motorcycle_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 30, max_power: 6e3, max_torque: 9, idle_rpm: 500, max_torque_rpm: 7e3, red_line_rpm: 9500, red_line_torque_ratio: 0.7, inertia: 2, cylinder: 1, damping_factors: [1, 0.02, 1e-5] }, sport_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 100, max_power: 45e4, max_torque: 700, idle_rpm: 500, max_torque_rpm: 5500, red_line_rpm: 9e3, red_line_torque_ratio: 0.9, inertia: 20, cylinder: 8, damping_factors: [2, 0.03, 2e-5] }, truck_diesel_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 400, max_power: 37e4, max_torque: 2500, idle_rpm: 550, max_torque_rpm: 1500, red_line_rpm: 2200, red_line_torque_ratio: 0.9, inertia: 50, cylinder: 6, damping_factors: [5, 0.05, 1e-5] }, light_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 8, ratios: [-3.5, 3.5, 2.5, 1.75, 1.4, 1.15, 0.85], switch_time: 0.2 }, medium_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 150, final_ratio: 10, ratios: [-3.3, 4.71, 3.14, 2.1, 1.6, 1.29, 1.1, 0.88, 0.67], switch_time: 0.2 }, motorcycle_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 40, final_ratio: 15, ratios: [-3.5, 3.5, 2.8, 2, 1.4], switch_time: 0.15 }, simple_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 60, final_ratio: 8, ratios: [2, 1.3], switch_time: 0.1 }, sport_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 10, ratios: [-3.5, 3.5, 2.5, 1.8, 1.4, 1, 0.7, 0.5], switch_time: 0.05 }, truck_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 500, final_ratio: 3.7, ratios: [-12.3, 12.1, 9.41, 7.31, 5.71, 4.46, 3.4, 2.7, 2.11, 1.84, 1.3, 1, 0.78], switch_time: 0.3 }, default_trunk: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 6, columns: 9 }, glove_box: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 50, rows: 2, columns: 3 }, basic_launcher: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:launcher", basic_durability: 80, fire_rate: 600, velocity_multiplier: 1, velocity_bonus: 0, horizontal_accuracy_multiplier: 1, vertical_accuracy_multiplier: 1, required_tags: [], acceptable_tags: [], forbidden_tags: [], control_inputs: ["weapon_control"] }, beam_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "beam", range: 16, color: [255, 245, 210], intensity: 0.5, beam_angle: 24 }, dummy_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 0, intensity: 0 }, point_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 1, color: [255, 235, 180], intensity: 0.55, beam_angle: 24 }, basic_loader: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:ammo_loader", basic_durability: 40, round_by_round: false, magazine_capacity: 30, reload_time: 10, ammo_request_channel: "ammo_request", ammo_response_channel: "ammo_response", ammo_consumed_channel: "ammo_consumed", reload_channel: "reload" }, high_power_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 120, max_power: 15e4, max_torque: 350, red_line_rpm: 15e3, red_line_power_ratio: 0.75, inertia: 8, damping_factors: [10, 0.1, 5e-5], generator_efficiency: 0.9 }, medium_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 80, max_power: 5e4, max_torque: 250, red_line_rpm: 1e4, red_line_power_ratio: 0.8, inertia: 5, damping_factors: [10, 0.1, 1e-4], generator_efficiency: 0.85 }, small_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 50, max_power: 2e4, max_torque: 85, red_line_rpm: 12e3, red_line_power_ratio: 0.8, inertia: 3, damping_factors: [5, 0.05, 5e-5], generator_efficiency: 0.85 }, default_motorbike_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motorbike_controller", basic_durability: 60, min_steering_radius: 3.5, lateral_acceleration: 20, max_drift_angular_velocity: 1.8, max_angle: 35, parking_angle: 5, correction_force_multiplier: 1 }, default_3rd_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, third_person_hud: [], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_3rd_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, default_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_person_hud: ["machine_max:example_hud"], enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, gunner_sight: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 50, vertical_stabilized: false, horizontal_stabilized: false, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, hud_components: ["machine_max:gun_sight_hud"], tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, heavy_duty_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 800, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 15 }, locked_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 400, diff_lock: "true", diff_lock_sensitivity: 1 }, open_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "false", diff_lock_sensitivity: 0.85 }, sport_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "auto", diff_lock_sensitivity: 1.5, auto_diff_lock_threshold: 5 }, standard_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 300, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 10 }, basic_azimuth_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 200, yaw: { max_force: 8e4, max_speed: 90 }, control_inputs: ["weapon_control"] }, basic_elevation_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 150, pitch: { max_force: 35e3, max_speed: 30 }, control_inputs: ["weapon_control"] }, main_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 100, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["fire_input_p0", "fire_input_p1", "fire_input_p2", "fire_input_p3", "fire_input"], aim_tolerance_deg: 60 }, secondary_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 100, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["secondary_fire_input_p0", "secondary_fire_input_p1", "secondary_fire_input_p2", "secondary_fire_input_p3", "secondary_fire_input"], aim_tolerance_deg: 60 }, light_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 800, max_hand_brake_force: 0, max_rpm: 2500 }, steering: { max_force: 2e3, max_speed: 180 }, abs_enabled: true, abs_wheel_radius: 0.35 }, light_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 1500, max_brake_force: 800, max_hand_brake_force: 1e3, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.35 }, motorcycle_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 600, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 500, max_speed: 3.14 }, abs_enabled: true, abs_wheel_radius: 0.3 }, motorcycle_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 2500, max_brake_force: 300, max_hand_brake_force: 200, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.3 }, sport_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 0, max_brake_force: 2e3, max_hand_brake_force: 0, max_speed: 3e3 }, steering: { max_force: 5e3, max_speed: 6.28 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, sport_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 5e3, max_brake_force: 2e3, max_hand_brake_force: 3e3, max_speed: 3e3 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, standard_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 0, max_brake_force: 1500, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 4e3, max_speed: 3.14 }, abs_enabled: false, abs_wheel_radius: 0.4 }, standard_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 2500, max_brake_force: 1500, max_hand_brake_force: 2500, max_speed: 2500 }, abs_enabled: false, abs_wheel_radius: 0.4 }, truck_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 0, max_brake_force: 2e4, max_hand_brake_force: 0, max_speed: 1e3 }, steering: { max_force: 5e3, max_speed: 1.5 }, abs_enabled: true, abs_wheel_radius: 0.5 }, truck_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 28e3, max_brake_force: 2e4, max_hand_brake_force: 35e3, max_speed: 1e3 }, abs_enabled: true, abs_wheel_radius: 0.5 } };
+      define_BUILTIN_SUBSYSTEMS_default = { default_glass: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:basic", basic_durability: 2, pass_damage: false, limit_damage: false, sounds: { on_destroyed: { sound_id: "machine_max:subsystem.baisc.glass.break", range: 32 } }, hidden: true }, large_battery: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:battery", basic_durability: 100, max_stored_energy: 5e5, max_charge_rate: 5e3, max_discharge_rate: 1e4 }, medium_battery: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:battery", basic_durability: 50, max_stored_energy: 1e5, max_charge_rate: 2e3, max_discharge_rate: 5e3 }, small_battery: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:battery", basic_durability: 20, max_stored_energy: 2e4, max_charge_rate: 500, max_discharge_rate: 1e3 }, targeting_pod: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:camera", basic_durability: 8, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 16.7, min_pitch: -80, max_pitch: 80, yaw_limit: 360, hud_components: [], tracking_target_inputs: [], discovery_inputs: ["targeting_pod_sight"], allow_cycle: true }, default_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 150, min_steering_radius: 5, lateral_acceleration: 50, max_drift_angular_velocity: 2, manual_gear_shift: false, auto_hand_brake: true, drift_assist: true }, light_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 80, max_power: 8e4, max_torque: 175, idle_rpm: 850, max_torque_rpm: 4e3, red_line_rpm: 6300, red_line_torque_ratio: 0.75, inertia: 10, cylinder: 4, damping_factors: [2, 0.03, 2e-5] }, medium_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 150, max_power: 18e4, max_torque: 380, idle_rpm: 750, max_torque_rpm: 4e3, red_line_rpm: 6e3, red_line_torque_ratio: 0.65, inertia: 15, cylinder: 6, damping_factors: [2, 0.03, 2e-5] }, motorcycle_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 30, max_power: 6e3, max_torque: 9, idle_rpm: 500, max_torque_rpm: 7e3, red_line_rpm: 9500, red_line_torque_ratio: 0.7, inertia: 2, cylinder: 1, damping_factors: [1, 0.02, 1e-5] }, sport_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 100, max_power: 45e4, max_torque: 700, idle_rpm: 500, max_torque_rpm: 5500, red_line_rpm: 9e3, red_line_torque_ratio: 0.9, inertia: 20, cylinder: 8, damping_factors: [2, 0.03, 2e-5] }, truck_diesel_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 400, max_power: 37e4, max_torque: 2500, idle_rpm: 550, max_torque_rpm: 1500, red_line_rpm: 2200, red_line_torque_ratio: 0.9, inertia: 50, cylinder: 6, damping_factors: [5, 0.05, 1e-5] }, light_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 8, ratios: [-3.5, 3.5, 2.5, 1.75, 1.4, 1.15, 0.85], switch_time: 0.2 }, medium_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 150, final_ratio: 10, ratios: [-3.3, 4.71, 3.14, 2.1, 1.6, 1.29, 1.1, 0.88, 0.67], switch_time: 0.2 }, motorcycle_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 40, final_ratio: 15, ratios: [-3.5, 3.5, 2.8, 2, 1.4], switch_time: 0.15 }, simple_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 60, final_ratio: 8, ratios: [2, 1.3], switch_time: 0.1 }, sport_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 10, ratios: [-3.5, 3.5, 2.5, 1.8, 1.4, 1, 0.7, 0.5], switch_time: 0.05 }, truck_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 500, final_ratio: 3.7, ratios: [-12.3, 12.1, 9.41, 7.31, 5.71, 4.46, 3.4, 2.7, 2.11, 1.84, 1.3, 1, 0.78], switch_time: 0.3 }, default_trunk: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 6, columns: 9 }, glove_box: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 50, rows: 2, columns: 3 }, basic_launcher: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:launcher", basic_durability: 80, control_inputs: ["weapon_control"], breech: { fire_rate: 600 } }, beam_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "beam", range: 16, color: [255, 245, 210], intensity: 0.5, beam_angle: 24 }, dummy_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 0, intensity: 0 }, point_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 1, color: [255, 235, 180], intensity: 0.55, beam_angle: 24 }, basic_loader: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:ammo_loader", basic_durability: 40, round_by_round: false, magazine_capacity: 30, reload_time: 10, ammo_request_channel: "ammo_request", ammo_response_channel: "ammo_response", ammo_consumed_channel: "ammo_consumed", reload_channel: "reload" }, high_power_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 120, max_power: 15e4, max_torque: 350, red_line_rpm: 15e3, red_line_power_ratio: 0.75, inertia: 8, damping_factors: [10, 0.1, 5e-5], generator_efficiency: 0.9 }, medium_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 80, max_power: 5e4, max_torque: 250, red_line_rpm: 1e4, red_line_power_ratio: 0.8, inertia: 5, damping_factors: [10, 0.1, 1e-4], generator_efficiency: 0.85 }, small_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 50, max_power: 2e4, max_torque: 85, red_line_rpm: 12e3, red_line_power_ratio: 0.8, inertia: 3, damping_factors: [5, 0.05, 5e-5], generator_efficiency: 0.85 }, default_motorbike_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motorbike_controller", basic_durability: 60, min_steering_radius: 3.5, lateral_acceleration: 20, max_drift_angular_velocity: 1.8, max_angle: 35, parking_angle: 5, correction_force_multiplier: 1 }, default_3rd_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, third_person_hud: [], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_3rd_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, default_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_person_hud: ["machine_max:example_hud"], enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, gunner_sight: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 50, vertical_stabilized: false, horizontal_stabilized: false, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, hud_components: ["machine_max:gun_sight_hud"], tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, heavy_duty_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 800, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 15 }, locked_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 400, diff_lock: "true", diff_lock_sensitivity: 1 }, open_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "false", diff_lock_sensitivity: 0.85 }, sport_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "auto", diff_lock_sensitivity: 1.5, auto_diff_lock_threshold: 5 }, standard_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 300, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 10 }, basic_azimuth_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 200, yaw: { max_force: 8e4, max_speed: 90 }, control_inputs: ["weapon_control"] }, basic_elevation_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 150, pitch: { max_force: 35e3, max_speed: 30 }, control_inputs: ["weapon_control"] }, main_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 100, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["fire_input_p0", "fire_input_p1", "fire_input_p2", "fire_input_p3", "fire_input"], aim_tolerance_deg: 60 }, secondary_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 100, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["secondary_fire_input_p0", "secondary_fire_input_p1", "secondary_fire_input_p2", "secondary_fire_input_p3", "secondary_fire_input"], aim_tolerance_deg: 60 }, light_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 800, max_hand_brake_force: 0, max_rpm: 2500 }, steering: { max_force: 2e3, max_speed: 180 }, abs_enabled: true, abs_wheel_radius: 0.35 }, light_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 1500, max_brake_force: 800, max_hand_brake_force: 1e3, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.35 }, motorcycle_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 600, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 500, max_speed: 3.14 }, abs_enabled: true, abs_wheel_radius: 0.3 }, motorcycle_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 2500, max_brake_force: 300, max_hand_brake_force: 200, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.3 }, sport_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 0, max_brake_force: 2e3, max_hand_brake_force: 0, max_speed: 3e3 }, steering: { max_force: 5e3, max_speed: 6.28 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, sport_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 5e3, max_brake_force: 2e3, max_hand_brake_force: 3e3, max_speed: 3e3 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, standard_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 0, max_brake_force: 1500, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 4e3, max_speed: 3.14 }, abs_enabled: false, abs_wheel_radius: 0.4 }, standard_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 2500, max_brake_force: 1500, max_hand_brake_force: 2500, max_speed: 2500 }, abs_enabled: false, abs_wheel_radius: 0.4 }, truck_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 0, max_brake_force: 2e4, max_hand_brake_force: 0, max_speed: 1e3 }, steering: { max_force: 5e3, max_speed: 1.5 }, abs_enabled: true, abs_wheel_radius: 0.5 }, truck_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 28e3, max_brake_force: 2e4, max_hand_brake_force: 35e3, max_speed: 1e3 }, abs_enabled: true, abs_wheel_radius: 0.5 } };
     }
   });
 
@@ -2411,6 +2411,259 @@
       "columns": 9\r
     }\r
   ]\r
+}`, "en_us/schemas/subsystem/static/launcher_static_attr.schema.json": `{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://machine_max.io/schemas/subsystem/static/launcher_static_attr.json",
+  "title": "Launcher Subsystem Static Attributes",
+  "description": "Static attributes of the launcher subsystem, containing configuration for barrel, breech, and capacitor modules.",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference path, used for editor intelligent suggestions and validation",
+      "default": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json"
+    },
+    "type": {
+      "type": "string",
+      "const": "machine_max:launcher",
+      "description": "Subsystem type, must be 'machine_max:launcher'."
+    },
+    "basic_durability": {
+      "type": "number",
+      "minimum": 0,
+      "default": 20.0,
+      "description": "Subsystem basic durability. Becomes paralyzed at 0, restores functionality when repaired to 30%."
+    },
+    "pass_damage": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to pass damage to the subsystem holder. If true, damage received by the subsystem is transferred to the part."
+    },
+    "limit_damage": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to limit damage transfer to remaining durability. e.g. 40 damage, 20 remaining, only 20 transfers."
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to hide the subsystem in HUD, commonly used for non-functional parts that only provide damage differentiation."
+    },
+    "control_inputs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["weapon_control"],
+      "description": "Fire signal input channel list, ordered by priority (highest first)."
+    },
+    "ammo_inputs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Ammunition supply discovery channel list. Empty list means universal receive mode (accepts any channel signal)."
+    },
+    "sounds": {
+      "type": "object",
+      "properties": {
+        "on_destroyed": {
+          "$ref": "../../base/sound_event.schema.json",
+          "description": "Sound event when the subsystem is destroyed.",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        },
+        "on_activate": {
+          "$ref": "../../base/sound_event.schema.json",
+          "description": "Sound event when the subsystem is activated.",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        },
+        "dry_fire": {
+          "$ref": "../../base/sound_event.schema.json",
+          "description": "Dry fire sound event (trigger pulled but no ammunition).",
+          "default": {
+            "sound_id": "machine_max:subsystem.launcher.dry_fire",
+            "range": 16
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Launcher sound attributes, including basic sounds and dry fire sound."
+    },
+    "barrel": {
+      "type": "object",
+      "properties": {
+        "durability_weight": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "Module durability weight. Total subsystem durability is distributed among modules proportionally to their weight."
+        },
+        "decay_power": {
+          "type": "number",
+          "minimum": 0,
+          "default": 2.0,
+          "description": "Barrel decay curve exponent. Higher values mean shallower initial performance degradation and steeper decline at low durability."
+        },
+        "damaged_spread": {
+          "type": "number",
+          "minimum": 0,
+          "default": 2.0,
+          "description": "Damage limit spread multiplier. Spread multiplier when durability approaches 0 but is not yet destroyed."
+        },
+        "destroyed_spread": {
+          "type": "number",
+          "minimum": 0,
+          "default": 8.0,
+          "description": "Destroyed spread multiplier. Spread multiplier when durability reaches 0 (cliff effect)."
+        },
+        "damaged_muzzle_velocity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.7,
+          "description": "Damage limit muzzle velocity multiplier. Velocity ratio when durability approaches 0 but is not yet destroyed."
+        },
+        "destroyed_muzzle_velocity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.1,
+          "description": "Destroyed muzzle velocity multiplier. Velocity ratio when durability reaches 0."
+        },
+        "velocity_multiplier": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "Velocity multiplier, applied first (determined by barrel length/rifling)."
+        },
+        "velocity_bonus": {
+          "type": "number",
+          "default": 0,
+          "description": "Velocity linear bonus (m/s)."
+        },
+        "horizontal_accuracy_multiplier": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "Horizontal accuracy multiplier. 1.0 = no change from projectile's default horizontal accuracy."
+        },
+        "vertical_accuracy_multiplier": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "Vertical accuracy multiplier. 1.0 = no change from projectile's default vertical accuracy."
+        },
+        "recoil_multiplier": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.5,
+          "description": "Recoil multiplier. Total recoil impulse = projectile total momentum \xD7 this value. 1.0 = projectile only; default 1.5 \u2248 projectile + propellant gas (muzzle blast); muzzle brake < 1.0; recoilless \u2248 0."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Barrel module attributes - defines baseline accuracy, muzzle velocity, recoil, and damage/destroyed decay."
+    },
+    "breech": {
+      "type": "object",
+      "properties": {
+        "durability_weight": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "Module durability weight. Total subsystem durability is distributed among modules proportionally to their weight."
+        },
+        "fire_rate": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Fire rate (RPM)."
+        },
+        "required_tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Ammunition tags that must all be present. Empty list means no requirement."
+        },
+        "acceptable_tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Ammunition tags where at least one must be present. Empty list means any is accepted."
+        },
+        "forbidden_tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Ammunition tags that must not be present. Empty list means no restriction."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Breech module attributes - defines fire rate and ammunition compatibility constraints."
+    },
+    "capacitor": {
+      "type": "object",
+      "properties": {
+        "durability_weight": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "Module durability weight. Total subsystem durability is distributed among modules proportionally to their weight."
+        },
+        "decay_power": {
+          "type": "number",
+          "minimum": 0,
+          "default": 2.0,
+          "description": "Capacitor decay curve exponent."
+        },
+        "damaged_charge_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.5,
+          "description": "Damage limit charge rate multiplier."
+        },
+        "destroyed_charge_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.0,
+          "description": "Destroyed charge rate multiplier."
+        },
+        "damaged_max_power": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.7,
+          "description": "Damage limit max power multiplier."
+        },
+        "destroyed_max_power": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.0,
+          "description": "Destroyed max power multiplier."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Capacitor module attributes (optional, used for railgun-style charge weapons)."
+    }
+  },
+  "required": ["type"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "type": "machine_max:launcher",
+      "description": "Minimal example - required fields only, uses all defaults"
+    },
+    {
+      "type": "machine_max:launcher",
+      "basic_durability": 80,
+      "control_inputs": ["weapon_control"],
+      "ammo_inputs": ["ammo_main"],
+      "description": "Standard example - basic launcher configuration"
+    }
+  ]
 }`, "en_us/schemas/subsystem/static/lighting_static_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/static/lighting_static_attr.json",\r
@@ -3845,7 +4098,7 @@
       "abs_wheel_radius": 0.35\r
     }\r
   ]\r
-}`, "en_us/schemas/subsystem/subsystem_dynamic_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subsystem/subsystem_dynamic_attr.json",\r\n  "title": "Subsystem Dynamic Attributes",\r\n  "description": "Top-level architecture for subsystem dynamic attributes, dispatched to specific subsystem dynamic attribute schemas based on the type field.",\r\n  "type": "object",\r\n  "properties": {\r\n    "type": {\r\n      "type": "string",\r\n      "enum": [\r\n        "machine_max:basic",\r\n        "machine_max:camera",\r\n        "machine_max:car_controller",\r\n        "machine_max:motorbike_controller",\r\n        "machine_max:engine",\r\n        "machine_max:gearbox",\r\n        "machine_max:item_storage",\r\n        "machine_max:motor",\r\n        "machine_max:seat",\r\n        "machine_max:sight",\r\n        "machine_max:transmission",\r\n        "machine_max:wheel_driver",\r\n        "machine_max:lighting",\r\n        "machine_max:turret_driver",\r\n        "machine_max:weapon_controller"\r\n      ],\r\n      "description": "Subsystem type, determines which specific subsystem schema to use."\r\n    }\r\n  },\r\n  "additionalProperties": true,\r\n  "required": [\r\n    "type"\r\n  ],\r\n  "allOf": [\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:camera"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/camera_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:car_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/car_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:engine"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/engine_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:gearbox"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/gearbox_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:item_storage"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/item_storage_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motor"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/motor_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motor_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/motorbike_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:seat"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/seat_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:sight"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/sight_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:transmission"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/transmission_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:wheel_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/wheel_driver_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:lighting"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/lighting_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:turret_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/turret_driver_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:weapon_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/weapon_controller_dynamic_attr.schema.json"\r\n      }\r\n    }\r\n  ],\r\n  "examples": [\r\n    {\r\n      "type": "machine_max:car_controller",\r\n      "definition": "machine_max:ae86at_car_controller",\r\n      "control_outputs": {\r\n        "car_control": [\r\n          "subsystem.machine_max.engine",\r\n          "subsystem.machine_max.left_front_wheel_driver",\r\n          "subsystem.machine_max.right_front_wheel_driver",\r\n          "subsystem.machine_max.left_back_wheel_driver",\r\n          "subsystem.machine_max.right_back_wheel_driver",\r\n          "subsystem.machine_max.gearbox"\r\n        ]\r\n      }\r\n    },\r\n    {\r\n      "type": "machine_max:engine",\r\n      "definition": "machine_max:ae86at_engine",\r\n      "power_output": "gearbox"\r\n    }\r\n  ]\r\n}', "en_us/schemas/subsystem/subsystem_static_attr.schema.json": '{\n  "$schema": "http://json-schema.org/draft-07/schema#",\n  "$id": "https://machine_max.io/schemas/subsystem/subsystem_static_attr.json",\n  "title": "Subsystem Static Attributes",\n  "description": "Top-level architecture for subsystem static attributes, dispatched to specific subsystem types based on the type field.",\n  "type": "object",\n  "properties": {\n    "type": {\n      "type": "string",\n      "enum": [\n        "machine_max:basic",\n        "machine_max:camera",\n        "machine_max:car_controller",\n        "machine_max:engine",\n        "machine_max:gearbox",\n        "machine_max:item_storage",\n        "machine_max:motor",\n        "machine_max:motor_controller",\n        "machine_max:regen_loader",\n        "machine_max:seat",\n        "machine_max:sight",\n        "machine_max:transmission",\n        "machine_max:wheel_driver",\n        "machine_max:lighting",\n        "machine_max:turret_driver",\n        "machine_max:weapon_controller"\n      ],\n      "description": "Subsystem type, determines which specific subsystem schema to use."\n    }\n  },\n  "additionalProperties": true,\n  "required": [\n    "type"\n  ],\n  "allOf": [\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:camera"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/camera_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:car_controller"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/car_controller_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:engine"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/engine_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:gearbox"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/gearbox_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:item_storage"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/item_storage_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:motor"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/motor_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:motor_controller"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/motorbike_controller_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:seat"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/seat_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:sight"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/sight_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:transmission"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/transmission_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:wheel_driver"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/wheel_driver_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:lighting"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/lighting_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:turret_driver"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/turret_driver_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:regen_loader"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/regen_loader_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:weapon_controller"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/weapon_controller_static_attr.schema.json"\n      }\n    }\n  ],\n  "examples": [\n    {\n      "$schema": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json",\n      "type": "machine_max:item_storage",\n      "basic_durability": 100.0,\n      "rows": 6,\n      "columns": 9\n    },\n    {\n      "$schema": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json",\n      "type": "machine_max:engine",\n      "max_power": 75000.0,\n      "max_torque": 130.0,\n      "red_line_rpm": 6500.0\n    }\n  ]\n}', "en_us/schemas/\u5982\u4F55\u4F7F\u7528JSON\u6A21\u677F.md": '# JSON Schema\u5728Machine-Max\u5185\u5BB9\u5305\u5236\u4F5C\u4E2D\u7684\u5E94\u7528\u6307\u5357\r\n\r\n## \u4EC0\u4E48\u662FJSON Schema\uFF1F\r\n\r\nJSON Schema\u662F\u4E00\u79CD\u7528\u4E8E\u63CF\u8FF0\u548C\u9A8C\u8BC1JSON\u6587\u6863\u7ED3\u6784\u7684\u89C4\u8303\u3002\u5BF9\u4E8EMachine-Max\u7684\u5185\u5BB9\u5305\u5236\u4F5C\uFF0CJSON Schema\u80FD\u591F\u5E2E\u52A9\u4F60\uFF1A\r\n\r\n- **\u9A8C\u8BC1\u914D\u7F6E\u683C\u5F0F**\uFF1A\u786E\u4FDD\u4F60\u7684JSON\u914D\u7F6E\u6587\u4EF6\u683C\u5F0F\u6B63\u786E\r\n- **\u63D0\u4F9B\u667A\u80FD\u63D0\u793A**\uFF1A\u5728\u652F\u6301\u7684\u7F16\u8F91\u5668\u4E2D\u663E\u793A\u5C5E\u6027\u8BF4\u660E\u548C\u7C7B\u578B\u8981\u6C42\r\n- **\u51CF\u5C11\u9519\u8BEF**\uFF1A\u63D0\u524D\u53D1\u73B0\u914D\u7F6E\u9519\u8BEF\uFF0C\u907F\u514D\u6E38\u620F\u5185\u95EE\u9898\r\n\r\n## \u4E3A\u4EC0\u4E48\u5185\u5BB9\u5305\u5236\u4F5C\u8005\u9700\u8981\u5173\u6CE8JSON Schema\uFF1F\r\n\r\n\u5373\u4F7F\u4F60\u6CA1\u6709\u7F16\u7A0B\u7ECF\u9A8C\uFF0CJSON Schema\u4E5F\u80FD\u8BA9\u4F60\u7684\u5185\u5BB9\u5305\u5236\u4F5C\u8FC7\u7A0B\u66F4\u987A\u7545\uFF1A\r\n\r\n1. **\u81EA\u52A8\u8865\u5168**\uFF1A\u73B0\u4EE3\u7F16\u8F91\u5668\uFF08\u5982VSCode\uFF09\u53EF\u4EE5\u6839\u636ESchema\u63D0\u4F9B\u5C5E\u6027\u540D\u81EA\u52A8\u8865\u5168\r\n2. **\u9519\u8BEF\u63D0\u793A**\uFF1A\u5728\u914D\u7F6E\u9519\u8BEF\u65F6\u7ACB\u5373\u63D0\u793A\uFF0C\u800C\u4E0D\u662F\u7B49\u5230\u6E38\u620F\u4E2D\u624D\u53D1\u73B0\u95EE\u9898\r\n3. **\u5C5E\u6027\u8BF4\u660E**\uFF1A\u67E5\u770B\u6BCF\u4E2A\u914D\u7F6E\u9879\u7684\u5177\u4F53\u542B\u4E49\u548C\u4F7F\u7528\u65B9\u6CD5\r\n4. **\u7C7B\u578B\u68C0\u67E5**\uFF1A\u786E\u4FDD\u4F60\u8F93\u5165\u7684\u6570\u636E\u7C7B\u578B\u6B63\u786E\uFF08\u6570\u5B57\u3001\u5B57\u7B26\u4E32\u3001\u5E03\u5C14\u503C\u7B49\uFF09\r\n\r\n## \u5982\u4F55\u4F7F\u7528JSON Schema\uFF1F\r\n\r\n### 1. \u914D\u7F6E\u7F16\u8F91\u5668\u652F\u6301\r\n\r\n\u5728\u4F60\u7684JSON\u6587\u4EF6\u9876\u90E8\u6DFB\u52A0`$schema`\u5B57\u6BB5\uFF0C\u6216\u76F4\u63A5\u590D\u5236\u5DF2\u6709\u7684\u793A\u4F8BJSON\uFF0C\u4F8B\u5982\uFF1A\r\n\r\n```json\r\n{\r\n  "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",\r\n  "vehicle_durability_rate": 1.0,\r\n  "variants": {\r\n    "default": {\r\n      "icon": "machine_max:textures/icon/example.png",\r\n      "models": "machine_max:example.geo"\r\n    }\r\n  }\r\n}\r\n```\r\n\u6CE8\u610F\uFF0C\u5728\u8FD9\u91CC`$schema`\u5B57\u6BB5\u7684\u503C\u4E3A\u76F8\u5BF9\u8DEF\u5F84\uFF0C"../"\u8868\u793A\u5F53\u524D\u6587\u4EF6\u7684\u4E0A\u7EA7\u76EE\u5F55\u3002\r\n\r\n### 2. \u63A8\u8350\u7F16\u8F91\u5668\r\n\r\n- **VSCode**\uFF1A\u539F\u751F\u652F\u6301JSON Schema\r\n\r\n### 3. \u5728VSCode\u4E2D\u542F\u7528JSON Schema\u9A8C\u8BC1\r\n\r\n **\u63A8\u8350\u76F4\u63A5\u590D\u7528\u5B98\u65B9\u5185\u5BB9\u5305\u7684\u6587\u4EF6\u7ED3\u6784\uFF0C\u5E76\u539F\u6837\u590D\u5236docs\u6587\u4EF6\u5939\u5230\u4F60\u81EA\u5DF1\u7684\u5185\u5BB9\u5305\uFF0C\u518D\u5728\u90E8\u4EF6\u548C\u5B50\u7CFB\u7EDFjson\u6587\u4EF6\u5F00\u5934\u6DFB\u52A0`$schema`\u5F15\u7528\u5373\u53EF\u3002**\r\n\r\n## \u5B9E\u9645\u5236\u4F5C\u4E2D\u7684\u5E94\u7528\u793A\u4F8B\r\n\r\n### \u6B65\u9AA41\uFF1A\u521B\u5EFA\u65B0\u90E8\u4EF6\r\n\r\n1. \u590D\u5236\u73B0\u6709\u7684\u90E8\u4EF6JSON\u6587\u4EF6\u4F5C\u4E3A\u6A21\u677F\r\n2. \u5728\u6587\u4EF6\u5F00\u5934\u6DFB\u52A0`$schema`\u5F15\u7528\r\n3. \u6839\u636E\u7F16\u8F91\u5668\u7684\u667A\u80FD\u63D0\u793A\u6DFB\u52A0\u914D\u7F6E\u9879\r\n\r\n### \u6B65\u9AA42\uFF1A\u9A8C\u8BC1\u914D\u7F6E\r\n\r\n1. \u4FDD\u5B58\u6587\u4EF6\u540E\u67E5\u770B\u7F16\u8F91\u5668\u662F\u5426\u663E\u793A\u9519\u8BEF\r\n2. \u6839\u636E\u63D0\u793A\u4FEE\u6B63\u914D\u7F6E\u683C\u5F0F\u95EE\u9898\r\n3. \u6D4B\u8BD5\u5185\u5BB9\u5305\u5728\u6E38\u620F\u4E2D\u662F\u5426\u6B63\u5E38\u5DE5\u4F5C\r\n\r\n### \u6B65\u9AA43\uFF1A\u8C03\u8BD5\u95EE\u9898\r\n\r\n\u5982\u679C\u5185\u5BB9\u5305\u5728\u6E38\u620F\u4E2D\u4E0D\u5DE5\u4F5C\uFF0C\u68C0\u67E5\uFF1A\r\n\r\n1. JSON\u683C\u5F0F\u662F\u5426\u6B63\u786E\uFF08\u4F7F\u7528Schema\u9A8C\u8BC1\uFF09\r\n2. \u6240\u6709\u5FC5\u9700\u5B57\u6BB5\u662F\u5426\u90FD\u5DF2\u586B\u5199\r\n3. \u6570\u636E\u7C7B\u578B\u662F\u5426\u5339\u914D\uFF08\u6570\u5B57 vs \u5B57\u7B26\u4E32\u7B49\uFF09\r\n\r\n## \u5E38\u89C1\u95EE\u9898\u4E0E\u89E3\u51B3\u65B9\u6848\r\n\r\n### Q: \u7F16\u8F91\u5668\u63D0\u793A\u9519\u8BEF\uFF0C\u4F46\u914D\u7F6E\u770B\u8D77\u6765\u662F\u6B63\u786E\u7684\uFF1F\r\nA: \u68C0\u67E5\uFF1A\r\n- JSON\u8BED\u6CD5\u662F\u5426\u6B63\u786E\uFF08\u9017\u53F7\u3001\u62EC\u53F7\u662F\u5426\u6709\u7F3A\u6F0F\u7B49\uFF0C\u52A1\u5FC5\u6CE8\u610F\u4E0D\u8981\u4F7F\u7528\u4E2D\u6587\u6807\u70B9\u7B26\u53F7\uFF09\r\n- \u5B57\u6BB5\u540D\u79F0\u662F\u5426\u62FC\u5199\u6B63\u786E\r\n- \u6570\u636E\u7C7B\u578B\u662F\u5426\u5339\u914D\uFF08\u5982\u9700\u8981\u6570\u5B57\u4F46\u8F93\u5165\u4E86\u5B57\u7B26\u4E32\uFF09\r\n\r\n### Q: \u5982\u4F55\u77E5\u9053\u54EA\u4E9B\u5B57\u6BB5\u662F\u5FC5\u9700\u7684\uFF1F\r\nA: \u67E5\u770BSchema\u6587\u4EF6\u4E2D\u7684`required`\u5B57\u6BB5\uFF0C\u6216\u8005\u5728\u652F\u6301\u7684\u7F16\u8F91\u5668\u4E2D\u4F1A\u6709\u76F8\u5E94\u63D0\u793A\u3002\r\n\r\n### Q: \u8FD9\u4E9B\u5B57\u6BB5\u7684\u4F5C\u7528\u90FD\u662F\u4EC0\u4E48\uFF1F\r\nA: \u5C06\u9F20\u6807\u653E\u5230\u5B57\u6BB5\u4E0A\uFF0C\u5373\u53EF\u67E5\u770B\u5B57\u6BB5\u7684\u8BF4\u660E\u548C\u7C7B\u578B\u8981\u6C42\u3002\r\n\r\n## \u63D0\u9AD8\u6548\u7387\u7684\u6280\u5DE7\r\n\r\n1. **\u4F7F\u7528\u6A21\u677F**\uFF1A\u57FA\u4E8E\u73B0\u6709\u5DE5\u4F5C\u6B63\u5E38\u7684\u914D\u7F6E\u521B\u5EFA\u65B0\u914D\u7F6E\r\n2. **\u9010\u6B65\u6DFB\u52A0**\uFF1A\u5148\u6DFB\u52A0\u57FA\u672C\u914D\u7F6E\uFF0C\u9A8C\u8BC1\u65E0\u8BEF\u540E\u518D\u6DFB\u52A0\u9AD8\u7EA7\u9009\u9879\r\n3. **\u53C2\u8003\u793A\u4F8B**\uFF1A\u67E5\u770B\u5B98\u65B9\u5305\u4E2D\u7684\u793A\u4F8B\u914D\u7F6E\u6587\u4EF6\r\n4. **\u5B9E\u65F6\u9A8C\u8BC1**\uFF1A\u5728\u7F16\u8F91\u5668\u4E2D\u5B9E\u65F6\u67E5\u770B\u9A8C\u8BC1\u7ED3\u679C\r\n\r\n## \u603B\u7ED3\r\n\r\nJSON Schema\u662F\u5185\u5BB9\u5305\u5236\u4F5C\u7684\u5F3A\u5927\u8F85\u52A9\u5DE5\u5177\uFF0C\u5B83\u80FD\u5E2E\u52A9\u4F60\u521B\u5EFA\u683C\u5F0F\u6B63\u786E\u3001\u7ED3\u6784\u5B8C\u6574\u7684\u914D\u7F6E\u6587\u4EF6\u3002\u5373\u4F7F\u6CA1\u6709\u7F16\u7A0B\u7ECF\u9A8C\uFF0C\u4F7F\u7528\u652F\u6301Schema\u7684\u7F16\u8F91\u5668\u4E5F\u80FD\u5927\u5927\u63D0\u9AD8\u5236\u4F5C\u6548\u7387\u548C\u51C6\u786E\u6027\u3002\r\n\r\n\u5F00\u59CB\u4F7F\u7528\u65F6\uFF0C\u5EFA\u8BAE\u5148\u4ECE\u7B80\u5355\u7684\u914D\u7F6E\u5F00\u59CB\uFF0C\u9010\u6B65\u719F\u6089Schema\u63D0\u4F9B\u7684\u5404\u79CD\u529F\u80FD\uFF0C\u968F\u7740\u7ECF\u9A8C\u7684\u79EF\u7D2F\uFF0C\u4F60\u4F1A\u53D1\u73B0\u5236\u4F5C\u5185\u5BB9\u5305\u53D8\u5F97\u66F4\u52A0\u7B80\u5355\u548C\u53EF\u9760\u3002', "zh_cn/hud.md": '# HUD \u7F16\u5199\u6307\u5357\r\n\r\nMachine-Max \u63D0\u4F9B\u4E86\u5F3A\u5927\u7684\u81EA\u5B9A\u4E49HUD\u7CFB\u7EDF\uFF0C\u5141\u8BB8\u4E3A\u4E0D\u540C\u7684\u8F66\u8F86\u548C\u5B50\u7CFB\u7EDF\u521B\u5EFA\u4E13\u5C5E\u7684\u754C\u9762\u663E\u793A\u3002HUD\u7CFB\u7EDF\u57FA\u4E8E\u6A21\u578B\u3001\u52A8\u753B\u548CMolang\u811A\u672C\uFF0C\u53EF\u4EE5\u5B9E\u73B0\u52A8\u6001\u7684\u4EEA\u8868\u76D8\u3001\u72B6\u6001\u6307\u793A\u5668\u548C\u4FE1\u606F\u663E\u793A\u3002\r\n\r\n## HUD\u7CFB\u7EDF\u6982\u8FF0\r\n\r\n### \u6838\u5FC3\u7EC4\u4EF6\u6587\u4EF6\u8DEF\u5F84\r\n\r\n\u4EE5\u4E0B\u662F\u793A\u4F8BHUD\u7684\u6838\u5FC3\u7EC4\u4EF6\u6587\u4EF6\u8DEF\u5F84\uFF0C\u60A8\u53EF\u4EE5\u5728\u8FD9\u4E9B\u4F4D\u7F6E\u627E\u5230\u5B8C\u6574\u7684\u5B9E\u73B0\u793A\u4F8B\uFF1A\r\n\r\n- **HUD\u914D\u7F6E\u6587\u4EF6**: [huds/example_hud.json](../../huds/example_hud.json)\r\n- **3D\u6A21\u578B\u6587\u4EF6**: [models/hud/example_hud.geo.json](../../models/hud/example_hud.geo.json)\r\n- **\u52A8\u753B\u6587\u4EF6**: [animations/hud/example_hud/example_hud.animation.json](../../animations/hud/example_hud/example_hud.animation.json)\r\n- **\u7EB9\u7406\u6587\u4EF6**: [textures/hud/example_hud.png](../../textures/hud/example_hud.png)\r\n- **\u8BED\u8A00\u6587\u4EF6**: [lang/zh_cn.json](../../lang/zh_cn.json)\r\n- **\u5B50\u7CFB\u7EDF\u914D\u7F6E**: [subsystems/default_seat.json](../../subsystems/default_seat.json)\r\n- **\u9AD8\u7EA7\u5B50\u7CFB\u7EDF\u914D\u7F6E**: [subsystems/senna_gtr/senna_gtr_seat.json](../../subsystems/senna_gtr/senna_gtr_seat.json)\r\n\r\n\r\n## \u76EE\u5F55\u7ED3\u6784\r\n- [HUD\u7CFB\u7EDF\u6982\u8FF0](#hud\u7CFB\u7EDF\u6982\u8FF0)\r\n- [HUD\u914D\u7F6E\u6587\u4EF6\u7ED3\u6784](#hud\u914D\u7F6E\u6587\u4EF6\u7ED3\u6784)\r\n- [\u6A21\u578B\u548C\u52A8\u753B\u8981\u6C42](#\u6A21\u578B\u548C\u52A8\u753B\u8981\u6C42)\r\n- [\u6587\u672C\u663E\u793A\u914D\u7F6E](#\u6587\u672C\u663E\u793A\u914D\u7F6E)\r\n- [Molang\u5728HUD\u4E2D\u7684\u5E94\u7528](#molang\u5728hud\u4E2D\u7684\u5E94\u7528)\r\n- [\u5B50\u7CFB\u7EDFHUD\u5173\u8054](#\u5B50\u7CFB\u7EDFhud\u5173\u8054)\r\n- [\u5B9E\u9645\u6848\u4F8B\u89E3\u6790](#\u5B9E\u9645\u6848\u4F8B\u89E3\u6790)\r\n- [\u6700\u4F73\u5B9E\u8DF5](#\u6700\u4F73\u5B9E\u8DF5)\r\n\r\n## HUD\u7CFB\u7EDF\u6982\u8FF0\r\n\r\nMachine-Max\u7684HUD\u7CFB\u7EDF\u5305\u542B\u4EE5\u4E0B\u6838\u5FC3\u7EC4\u4EF6\uFF1A\r\n\r\n1. **HUD\u914D\u7F6E** (`.json`\u6587\u4EF6) - \u5B9A\u4E49HUD\u7684\u57FA\u672C\u5C5E\u6027\u548C\u6587\u672C\u663E\u793A\r\n2. **3D\u6A21\u578B** (`.geo.json`\u6587\u4EF6) - \u63D0\u4F9BHUD\u7684\u51E0\u4F55\u5F62\u72B6\u548C\u9AA8\u9ABC\u7ED3\u6784\r\n3. **\u52A8\u753B\u6587\u4EF6** (`.animation.json`\u6587\u4EF6) - \u63A7\u5236HUD\u5143\u7D20\u7684\u52A8\u6001\u884C\u4E3A\r\n4. **\u7EB9\u7406\u6587\u4EF6** (`.png`\u6587\u4EF6) - \u63D0\u4F9BHUD\u7684\u89C6\u89C9\u5916\u89C2\r\n5. **\u5B50\u7CFB\u7EDF\u914D\u7F6E** - \u5C06HUD\u4E0E\u7279\u5B9A\u7684\u5EA7\u6905\u5B50\u7CFB\u7EDF\u5173\u8054\r\n\r\n## HUD\u914D\u7F6E\u6587\u4EF6\u7ED3\u6784\r\n\r\nHUD\u914D\u7F6E\u6587\u4EF6\u662FHUD\u7CFB\u7EDF\u7684\u6838\u5FC3\uFF0C\u5B9A\u4E49\u4E86HUD\u7684\u57FA\u672C\u5C5E\u6027\u548C\u663E\u793A\u884C\u4E3A\u3002\r\n\r\n### \u57FA\u672C\u7ED3\u6784\r\n```json\r\n{\r\n  "model": "machine_max:example_hud.geo",\r\n  "animation": "machine_max:example_hud",\r\n  "texture": "machine_max:textures/hud/example_hud.png",\r\n  "offset": [95, 55, -135],\r\n  "rotation": [-25, -30, 0],\r\n  "scale": [15, 15, 15],\r\n  "color": [255, 255, 255],\r\n  "alpha": 255,\r\n  "perspective": true,\r\n  "texts": {\r\n    // \u6587\u672C\u914D\u7F6E\r\n  },\r\n  "scissor": {\r\n    "enable": false,\r\n    "x": 0,\r\n    "y": 0,\r\n    "width": 0,\r\n    "height": 0\r\n  }\r\n}\r\n```\r\n\r\n### \u914D\u7F6E\u53C2\u6570\u8BF4\u660E\r\n\r\n#### \u57FA\u672C\u5C5E\u6027\r\n- **model** (\u5FC5\u9700): HUD\u76843D\u6A21\u578B\u8D44\u6E90\u5730\u5740\uFF0C\u5982 `machine_max:example_hud.geo`\r\n- **animation** (\u5FC5\u9700): HUD\u7684\u52A8\u753B\u8D44\u6E90\u5730\u5740\uFF0C\u5982 `machine_max:example_hud`\r\n- **texture** (\u5FC5\u9700): HUD\u7684\u7EB9\u7406\u8D44\u6E90\u5730\u5740\uFF0C\u5982 `machine_max:textures/hud/example_hud.png`\r\n- **offset** (\u53EF\u9009): \u76F8\u5BF9\u5C4F\u5E55\u4E2D\u5FC3\u7684\u504F\u79FB\u91CF\uFF0C\u900F\u89C6\u6295\u5F71\u4E0B\u5355\u4F4D\u4E3A\u7C73\uFF0C\u6B63\u4EA4\u6295\u5F71\u4E0B\u5355\u4F4D\u4E3A\u50CF\u7D20\r\n- **rotation** (\u53EF\u9009): \u65CB\u8F6C\u89D2\u5EA6\uFF0C\u5355\u4F4D\u4E3A\u5EA6\r\n- **scale** (\u53EF\u9009): \u7F29\u653E\u6BD4\u4F8B\r\n- **color** (\u53EF\u9009): RGB\u989C\u8272\uFF0C\u9ED8\u8BA4\u767D\u8272\r\n- **alpha** (\u53EF\u9009): \u900F\u660E\u5EA6\uFF0C\u9ED8\u8BA4255\r\n- **perspective** (\u53EF\u9009): \u662F\u5426\u91C7\u7528\u900F\u89C6\u6295\u5F71\u6E32\u67D3\uFF0C\u9ED8\u8BA4true\r\n\r\n\r\n#### \u6587\u672C\u663E\u793A\r\n```json\r\n"texts": {\r\n  "locator_name": {\r\n    "key": "translation.key",\r\n    "centered": true,\r\n    "shadow": false,\r\n    "scale": [0.7, 0.7, 0.7],\r\n    "color": [255, 0, 0],\r\n    "molang_args": ["expression1", "expression2"],\r\n    "significand": 0\r\n  }\r\n}\r\n```\r\n\r\n- **locator_name**: \u5B9A\u4F4D\u5668\u540D\u79F0\uFF0C\u7528\u4E8E\u63A7\u5236\u6587\u5B57\u7684\u663E\u793A\u4F4D\u7F6E\u548C\u65CB\u8F6C\r\n- **key**: \u7FFB\u8BD1\u952E\uFF0C\u7528\u4E8E\u7FFB\u8BD1\u6587\u672C\r\n- **centered**: \u662F\u5426\u5C45\u4E2D\u663E\u793A\uFF0C\u9ED8\u8BA4true\r\n- **shadow**: \u662F\u5426\u6E32\u67D3\u6587\u5B57\u9634\u5F71\uFF0C\u9ED8\u8BA4false\r\n- **scale**: \u7F29\u653E\u6BD4\u4F8B\uFF0C\u9ED8\u8BA4[1, 1, 1]\r\n- **color**: RGB\u989C\u8272\r\n- **molang_args**: Molang\u53C2\u6570\uFF0C\u7528\u4E8E\u586B\u5145\u7FFB\u8BD1\u6587\u672C\u9884\u7559\u7684\u53C2\u6570\u4F4D\u7F6E\r\n- **significand**: Molang\u53C2\u6570\u8BA1\u7B97\u7ED3\u679C\u4E3A\u6570\u5B57\u65F6\uFF0C\u4FDD\u7559\u7684\u5C0F\u6570\u70B9\u540E\u4F4D\u6570\uFF0C\u9ED8\u8BA40\r\n\r\n#### \u526A\u88C1\u533A\u57DF\r\n- **scissor**: \u526A\u88C1\u77E9\u5F62\u914D\u7F6E\uFF08\u53EF\u9009\uFF0C\u9ED8\u8BA4\u4E0D\u542F\u7528\uFF09\r\n  - **enable**: \u662F\u5426\u542F\u7528\u526A\u88C1\u77E9\u5F62\r\n  - **x**: \u526A\u88C1\u77E9\u5F62\u4E2D\u5FC3 x \u5750\u6807\uFF08\u50CF\u7D20\uFF09\r\n  - **y**: \u526A\u88C1\u77E9\u5F62\u4E2D\u5FC3 y \u5750\u6807\uFF08\u50CF\u7D20\uFF09\r\n  - **width**: \u526A\u88C1\u77E9\u5F62\u5BBD\u5EA6\uFF08\u50CF\u7D20\uFF09\r\n  - **height**: \u526A\u88C1\u77E9\u5F62\u9AD8\u5EA6\uFF08\u50CF\u7D20\uFF09\r\n\r\n## \u6A21\u578B\u548C\u52A8\u753B\u8981\u6C42\r\n\r\n### 3D\u6A21\u578B\u89C4\u8303\r\nHUD\u6A21\u578B\u4F7F\u7528\u6807\u51C6\u7684Minecraft Bedrock\u683C\u5F0F\uFF0C\u9700\u8981\u5305\u542B\u4EE5\u4E0B\u5143\u7D20\uFF1A\r\n\r\n1. **\u9AA8\u9ABC\u7ED3\u6784**: \u6BCF\u4E2A\u9700\u8981\u663E\u793A\u6587\u672C\u7684\u4F4D\u7F6E\u9700\u8981\u4E00\u4E2A\u5BF9\u5E94\u7684\u9AA8\u9ABC\r\n2. **\u5B9A\u4F4D\u5668**: \u7528\u4E8E\u786E\u5B9A\u6587\u672C\u663E\u793A\u7684\u4F4D\u7F6E\u548C\u65B9\u5411\r\n3. **\u51E0\u4F55\u5F62\u72B6**: \u5B9A\u4E49HUD\u7684\u89C6\u89C9\u5916\u89C2\r\n\r\n\r\n### \u52A8\u753B\u6587\u4EF6\r\n\u52A8\u753B\u6587\u4EF6\u63A7\u5236HUD\u5143\u7D20\u7684\u52A8\u6001\u884C\u4E3A\uFF0C\u53EF\u4EE5\u4F7F\u7528Molang\u8868\u8FBE\u5F0F\u5B9E\u73B0\u52A8\u6001\u6548\u679C\uFF1A\r\n\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(vehicle.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\r\n## \u6587\u672C\u663E\u793A\u914D\u7F6E\r\n\r\n### \u57FA\u672C\u6587\u672C\u663E\u793A\r\n```json\r\n"speed": {\r\n  "key": "hud.machine_max.default_1.speed",\r\n  "centered": true,\r\n  "shadow": true,\r\n  "scale": [2, 2, 2]\r\n}\r\n```\r\n\r\n### \u52A8\u6001\u6587\u672C\u663E\u793A\r\n\u4F7F\u7528Molang\u53C2\u6570\u5B9E\u73B0\u52A8\u6001\u5185\u5BB9\uFF1A\r\n```json\r\n"speed": {\r\n  "key": "hud.machine_max.default_1.speed",\r\n  "molang_args": [\r\n    "math.floor((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n    "math.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n    "math.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n  ],\r\n  "significand": 0\r\n}\r\n```\r\n\r\n### \u6863\u4F4D\u663E\u793A\r\n```json\r\n"gear": {\r\n  "key": "hud.machine_max.default_1.gear",\r\n  "molang_args": ["vehicle.get(\'gear\')??\'NO GBX\'"],\r\n  "centered": true,\r\n  "shadow": true\r\n}\r\n```\r\n\r\n## Molang\u5728HUD\u4E2D\u7684\u5E94\u7528\r\n\r\nHUD\u7CFB\u7EDF\u5145\u5206\u5229\u7528\u4E86Molang\u7684\u5F3A\u5927\u529F\u80FD\uFF0C\u53EF\u4EE5\u5B9E\u73B0\u590D\u6742\u7684\u52A8\u6001\u663E\u793A\u6548\u679C\u3002\r\n\r\n### \u5E38\u7528Molang\u6A21\u5F0F\r\n\r\n#### \u4FE1\u53F7\u83B7\u53D6\u548C\u5355\u4F4D\u8F6C\u6362\r\n```molang\r\n// \u83B7\u53D6\u8F66\u8F86\u901F\u5EA6\u5E76\u8F6C\u6362\u4E3Akm/h\r\nmath.abs(vehicle.get(\'vehicle_speed\')??0.0) * 3.6\r\n\r\n// \u83B7\u53D6\u53D1\u52A8\u673A\u8F6C\u901F\u5E76\u8F6C\u6362\u4E3ARPM\r\nmath.abs(vehicle.get(\'engine_speed\')??0) * 30 / math.pi\r\n```\r\n\r\n#### \u6570\u5B57\u5206\u89E3\u663E\u793A\r\n```molang\r\n// \u767E\u4F4D\u6570\r\nmath.floor((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)\r\n\r\n// \u5341\u4F4D\u6570\r\nmath.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)\r\n\r\n// \u4E2A\u4F4D\u6570\r\nmath.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 10))\r\n```\r\n\r\n#### \u6761\u4EF6\u663E\u793A\r\n```molang\r\n// \u6839\u636E\u5B50\u7CFB\u7EDF\u72B6\u6001\u663E\u793A\u8B66\u544A\r\nsubpart.has_subsystem(\'engine\') && subpart.subsystem_destroyed(\'engine\') ? 1.0 : 0.0\r\n```\r\n\r\n## \u5B50\u7CFB\u7EDFHUD\u5173\u8054\r\n\r\nHUD\u901A\u8FC7\u5EA7\u6905\u5B50\u7CFB\u7EDF\u7684\u89C6\u56FE\u5C5E\u6027\u4E0E\u7279\u5B9A\u5EA7\u4F4D\u5173\u8054\uFF1A\r\n\r\n### \u5EA7\u6905\u5B50\u7CFB\u7EDF\u914D\u7F6E\r\n```json\r\n{\r\n  "type": "machine_max:seat",\r\n  "views": {\r\n    "enable_first_person": true,\r\n    "first_person_hud": ["machine_max:example_hud"],\r\n    "first_person_offset": [0, 0.15, -0.1],\r\n    "enable_third_person": true,\r\n    "third_person_hud": ["machine_max:example_hud"],\r\n    "follow_vehicle": true,\r\n    "focus_on_center": true,\r\n    "distance_scale": 1.1\r\n  }\r\n}\r\n```\r\n\r\n\r\n### \u89C6\u56FE\u5C5E\u6027\u8BF4\u660E\r\n- **enable_first_person**: \u662F\u5426\u542F\u7528\u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\r\n- **first_person_hud**: \u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u4E0B\u7684HUD\u7EC4\u4EF6\u5217\u8868\r\n- **first_person_offset**: \u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u504F\u79FB\u91CF (x+\u53F3, y+\u4E0A, z+\u540E\uFF0C\u5355\u4F4D\u7C73)\r\n- **enable_third_person**: \u662F\u5426\u542F\u7528\u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\r\n- **third_person_hud**: \u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u4E0B\u7684HUD\u7EC4\u4EF6\u5217\u8868\r\n- **follow_vehicle**: \u6444\u50CF\u673A\u662F\u5426\u8DDF\u968F\u8F66\u8F86\u65CB\u8F6C\r\n- **focus_on_center**: \u6444\u50CF\u673A\u662F\u5426\u805A\u7126\u4E8E\u8F7D\u5177\u4E2D\u5FC3\r\n- **distance_scale**: \u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u8DDD\u79BB\u500D\u7387\r\n\r\n## \u5B9E\u9645\u6848\u4F8B\u89E3\u6790\r\n\r\n### \u793A\u4F8BHUD\u5206\u6790\r\n\u4EE5 `machine_max:example_hud` \u4E3A\u4F8B\uFF0C\u5206\u6790\u5176\u5B8C\u6574\u5B9E\u73B0\u3002\u60A8\u53EF\u4EE5\u901A\u8FC7\u4EE5\u4E0B\u8DEF\u5F84\u67E5\u770B\u5B8C\u6574\u7684\u5B9E\u73B0\u6587\u4EF6\uFF1A\r\n\r\n#### 1. HUD\u914D\u7F6E ([example_hud.json](../../huds/example_hud.json))\r\n\r\n\u8FD9\u662F\u4E00\u4E2A\u529F\u80FD\u5B8C\u6574\u7684\u8F66\u8F86\u4EEA\u8868\u76D8HUD\u914D\u7F6E\uFF0C\u80FD\u591F\u540C\u65F6\u663E\u793A\u53D1\u52A8\u673A\u8F6C\u901F\u3001\u53D8\u901F\u7BB1\u6321\u4F4D\u548C\u8F7D\u5177\u901F\u5EA6\u7B49\u5173\u952E\u4FE1\u606F\u3002\r\n\r\n```json\r\n{\r\n  "model": "machine_max:example_hud.geo",\r\n  "animation": "machine_max:example_hud",\r\n  "texture": "machine_max:textures/hud/example_hud.png",\r\n  "offset": [95, 55, -135],\r\n  "rotation": [-25, -30, 0],\r\n  "scale": [15, 15, 15],\r\n  "perspective": true,\r\n  "texts": {\r\n    "speed": {\r\n      "key": "hud.machine_max.default_1.speed",\r\n      "centered": true,\r\n      "shadow": true,\r\n      "scale": [2, 2, 2],\r\n      "molang_args": [\r\n        "math.floor((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n        "math.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n        "math.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n      ]\r\n    },\r\n    "gear": {\r\n      "key": "hud.machine_max.default_1.gear",\r\n      "centered": true,\r\n      "shadow": true,\r\n      "molang_args": ["vehicle.get(\'gear\')??\'NO GBX\'"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n**HUD\u529F\u80FD\u6982\u8FF0\uFF1A**\r\n\r\n\u8FD9\u4E2AHUD\u914D\u7F6E\u5B9E\u73B0\u4E86\u4EE5\u4E0B\u6838\u5FC3\u529F\u80FD\uFF1A\r\n\r\n- **\u901F\u5EA6\u663E\u793A**\uFF1A\u5B9E\u65F6\u663E\u793A\u8F66\u8F86\u884C\u9A76\u901F\u5EA6\uFF0C\u4EE5\u516C\u91CC/\u5C0F\u65F6\u4E3A\u5355\u4F4D\uFF0C\u91C7\u7528\u4E09\u4F4D\u6570\u5B57\u663E\u793A\u683C\u5F0F\r\n- **\u6321\u4F4D\u6307\u793A**\uFF1A\u663E\u793A\u5F53\u524D\u53D8\u901F\u7BB1\u6240\u5904\u7684\u6321\u4F4D\u72B6\u6001\uFF0C\u5305\u62EC\u524D\u8FDB\u6321\u3001\u5012\u6321\u548C\u7A7A\u6321\r\n- **\u8F6C\u901F\u8868\u6307\u9488**\uFF1A\u901A\u8FC7\u52A8\u753B\u7CFB\u7EDF\u63A7\u5236\u8F6C\u901F\u8868\u6307\u9488\u7684\u52A8\u6001\u65CB\u8F6C\uFF0C\u53CD\u6620\u53D1\u52A8\u673A\u5DE5\u4F5C\u72B6\u6001\r\n\r\n\r\n##### \u7FFB\u8BD1\u952E\u503C\u5BF9\u89E3\u6790 ([lang/zh_cn.json](../../lang/zh_cn.json))\r\n\r\n\u5728\u8BED\u8A00\u6587\u4EF6\u4E2D\u5B9A\u4E49\u4E86HUD\u6587\u672C\u7684\u7FFB\u8BD1\u683C\u5F0F\uFF0C\u8FD9\u4E9B\u7FFB\u8BD1\u952E\u4E0EHUD\u914D\u7F6E\u4E2D\u7684\u6587\u672C\u663E\u793A\u7D27\u5BC6\u914D\u5408\uFF0C\u5B9E\u73B0\u4E86\u52A8\u6001\u5185\u5BB9\u7684\u683C\u5F0F\u5316\u663E\u793A\uFF1A\r\n\r\n```json\r\n"hud.machine_max.default_1.speed": "\xA7o%1$s%2$s%3$s",\r\n"hud.machine_max.default_1.gear": "\xA7o%1$s",\r\n"hud.machine_max.default_1.kmh": "\xA7oKM/H"\r\n```\r\n\r\n**\u7FFB\u8BD1\u952E\u7684\u5DE5\u4F5C\u539F\u7406**\uFF1A\r\n\r\n- **\u901F\u5EA6\u663E\u793A** (`hud.machine_max.default_1.speed`)\uFF1A\u8FD9\u4E2A\u7FFB\u8BD1\u952E\u63A5\u6536\u4E09\u4E2A\u53C2\u6570\uFF0C\u5206\u522B\u5BF9\u5E94\u901F\u5EA6\u7684\u767E\u4F4D\u3001\u5341\u4F4D\u548C\u4E2A\u4F4D\u6570\u5B57\u3002`\xA7o`\u4EE3\u7801\u8868\u793A\u4F7F\u7528\u659C\u4F53\u5B57\u4F53\u663E\u793A\uFF0C\u8BA9\u901F\u5EA6\u8BFB\u6570\u66F4\u52A0\u9192\u76EE\u3002\r\n\r\n- **\u6863\u4F4D\u663E\u793A** (`hud.machine_max.default_1.gear`)\uFF1A\u53EA\u9700\u8981\u4E00\u4E2A\u53C2\u6570\u6765\u663E\u793A\u5F53\u524D\u6863\u4F4D\u4FE1\u606F\uFF0C\u540C\u6837\u4F7F\u7528\u659C\u4F53\u683C\u5F0F\u589E\u5F3A\u53EF\u8BFB\u6027\u3002\r\n\r\n**\u6570\u5B57\u8F6C\u6362\u7684\u5B8C\u6574\u8FC7\u7A0B**\uFF1A\r\n\r\n\u5F53\u8F66\u8F86\u884C\u9A76\u65F6\uFF0CHUD\u7CFB\u7EDF\u4F1A\u5B9E\u65F6\u5904\u7406\u901F\u5EA6\u4FE1\u53F7\u5E76\u663E\u793A\u5728\u754C\u9762\u4E0A\u3002\u8FD9\u4E2A\u8FC7\u7A0B\u53EF\u4EE5\u5206\u4E3A\u4EE5\u4E0B\u51E0\u4E2A\u6B65\u9AA4\uFF1A\r\n\r\n1. **\u83B7\u53D6\u5B9E\u65F6\u6570\u636E**\uFF1A\u9996\u5148\u4ECE\u8F66\u8F86\u7CFB\u7EDF\u4E2D\u83B7\u53D6\u5F53\u524D\u7684\u901F\u5EA6\u4FE1\u53F7\uFF0C\u5355\u4F4D\u4E3A\u7C73/\u79D2\r\n2. **\u5355\u4F4D\u8F6C\u6362**\uFF1A\u5C06\u7C73/\u79D2\u8F6C\u6362\u4E3A\u66F4\u5E38\u7528\u7684\u516C\u91CC/\u5C0F\u65F6\u5355\u4F4D\r\n3. **\u6570\u5B57\u5206\u89E3**\uFF1A\u5C06\u4E09\u4F4D\u6570\u7684\u901F\u5EA6\u503C\u5206\u89E3\u4E3A\u767E\u4F4D\u3001\u5341\u4F4D\u548C\u4E2A\u4F4D\u4E09\u4E2A\u72EC\u7ACB\u7684\u6570\u5B57\r\n4. **\u683C\u5F0F\u5316\u663E\u793A**\uFF1A\u5C06\u5206\u89E3\u540E\u7684\u6570\u5B57\u586B\u5145\u5230\u7FFB\u8BD1\u952E\u7684\u5360\u4F4D\u7B26\u4E2D\uFF0C\u5E76\u5E94\u7528\u659C\u4F53\u683C\u5F0F\r\n5. **\u6700\u7EC8\u5448\u73B0**\uFF1A\u4F8B\u5982\u5F53\u8F66\u8F86\u4EE5123\u516C\u91CC/\u5C0F\u65F6\u7684\u901F\u5EA6\u884C\u9A76\u65F6\uFF0CHUD\u4F1A\u663E\u793A\u4E3A"\xA7o123"\u7684\u659C\u4F53\u6570\u5B57\r\n\r\n\u8FD9\u79CD\u8BBE\u8BA1\u4F7F\u5F97HUD\u80FD\u591F\u5B9E\u65F6\u53CD\u6620\u8F66\u8F86\u72B6\u6001\uFF0C\u540C\u65F6\u4FDD\u6301\u754C\u9762\u7684\u7F8E\u89C2\u548C\u4E00\u81F4\u6027\u3002\r\n\r\n#### 2. \u52A8\u753B\u63A7\u5236 ([example_hud.animation.json](../../animations/hud/example_hud/example_hud.animation.json))\r\n\r\n\u52A8\u753B\u6587\u4EF6\u5B9A\u4E49\u4E86HUD\u5143\u7D20\u7684\u52A8\u6001\u884C\u4E3A\uFF0C\u6BD4\u5982\u8F6C\u901F\u8868\u6307\u9488\u7684\u65CB\u8F6C\u6548\u679C\uFF1A\r\n\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(vehicle.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\u8FD9\u4E2A\u52A8\u753B\u914D\u7F6E\u5B9E\u73B0\u4E86\u8F6C\u901F\u8868\u6307\u9488\u7684\u52A8\u6001\u65CB\u8F6C\u6548\u679C\u3002\u5F53\u53D1\u52A8\u673A\u8F6C\u901F\u53D8\u5316\u65F6\uFF0C\u6307\u9488\u4F1A\u5B9E\u65F6\u65CB\u8F6C\uFF0C\u4E3A\u9A7E\u9A76\u5458\u63D0\u4F9B\u76F4\u89C2\u7684\u8F6C\u901F\u53CD\u9988\u3002\r\n\r\n#### 3. \u5B50\u7CFB\u7EDF\u5173\u8054 ([senna_gtr_seat.json](../../subsystems/senna_gtr/senna_gtr_seat.json))\r\n\r\n\u5EA7\u6905\u5B50\u7CFB\u7EDF\u914D\u7F6E\u5C06HUD\u4E0E\u7279\u5B9A\u7684\u5EA7\u4F4D\u5173\u8054\u8D77\u6765\uFF0C\u5B9A\u4E49\u4E86\u4E0D\u540C\u89C6\u89D2\u4E0B\u7684HUD\u663E\u793A\u89C4\u5219\uFF1A\r\n\r\n```json\r\n{\r\n  "views": {\r\n    "enable_first_person": true,\r\n    "first_person_hud": ["machine_max:example_hud"],\r\n    "first_person_offset": [0, 0.15, -0.1],\r\n    "enable_third_person": true,\r\n    "third_person_hud": ["machine_max:example_hud"],\r\n    "follow_vehicle": true,\r\n    "focus_on_center": true,\r\n    "distance_scale": 1.1\r\n  }\r\n}\r\n```\r\n\r\n**\u7B2C\u4E00\u4EBA\u79F0HUD\u7684\u7075\u6D3B\u6027**\uFF1A\u60A8\u53EF\u4EE5\u6839\u636E\u9700\u8981\u4E3A\u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u6DFB\u52A0\u591A\u4E2AHUD\u7EC4\u4EF6\u3002\u4F8B\u5982\uFF0C\u53EF\u4EE5\u540C\u65F6\u663E\u793A\u901F\u5EA6\u8868\u3001\u8F6C\u901F\u8868\u3001\u6CB9\u91CF\u8868\u7B49\u4E0D\u540C\u7684HUD\u5143\u7D20\uFF0C\u53EA\u9700\u5728`first_person_hud`\u6570\u7EC4\u4E2D\u6DFB\u52A0\u76F8\u5E94\u7684HUD\u8D44\u6E90\u8DEF\u5F84\u5373\u53EF\u3002', "zh_cn/molang/\u4F7F\u7528\u6848\u4F8B.md": '# Molang \u793A\u4F8B\u548C\u6848\u4F8B\r\n\r\n\u672C\u6587\u6863\u63D0\u4F9B Machine-Max \u4E2D Molang \u7684\u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\uFF0C\u5E2E\u52A9\u7406\u89E3\u5982\u4F55\u5728\u5B9E\u9645\u9879\u76EE\u4E2D\u5E94\u7528 Molang\u3002\r\n\r\n## \u6848\u4F8B 1: AE86 \u60AC\u6302\u7CFB\u7EDF\u52A8\u753B\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/animations/part/ae86/ae86.animation.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "axisRightFront": {\r\n    "rotation": [0, 0, "math.atan2(subpart.connector_offset(\'connector.machine_max.right_front_wheel\', 1)*16,20)"]\r\n  },\r\n  "rodLeftFront": {\r\n    "rotation": ["-65.7725+math.atan2(20-subpart.connector_offset(\'connector.machine_max.left_front_wheel\', 1)*16,9)", 0, 0]\r\n  },\r\n  "rodLeftFrontInner": {\r\n    "scale": [1, "math.sqrt(math.pow(20-subpart.connector_offset(\'connector.machine_max.left_front_wheel\', 1)*16,2)+81)/22", 1]\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u60AC\u6302\u9AD8\u5EA6\u83B7\u53D6**:\r\n   ```molang\r\n   subpart.connector_offset(\'connector.machine_max.left_front_wheel\', 1)\r\n   ```\r\n   - \u83B7\u53D6\u5DE6\u524D\u8F6E\u8FDE\u63A5\u5668\u7684Y\u8F74\u504F\u79FB\uFF08\u60AC\u6302\u9AD8\u5EA6\uFF09\r\n   - \u8FD4\u56DE\u503C\u5355\u4F4D\u4E3A\u7C73\r\n\r\n2. **\u60AC\u6302\u89D2\u5EA6\u8BA1\u7B97**:\r\n   ```molang\r\n   math.atan2(20 - height * 16, 9)\r\n   ```\r\n   - \u4F7F\u7528\u53CD\u6B63\u5207\u51FD\u6570\u8BA1\u7B97\u60AC\u6302\u8FDE\u6746\u7684\u89D2\u5EA6\r\n   - `20` \u662F\u57FA\u51C6\u9AD8\u5EA6\uFF0C`9` \u662F\u6C34\u5E73\u8DDD\u79BB\r\n   - `height * 16` \u662F\u5355\u4F4D\u8F6C\u6362\uFF08\u7C73\u5230\u6E38\u620F\u5355\u4F4D\uFF09\r\n\r\n3. **\u8FDE\u6746\u957F\u5EA6\u8BA1\u7B97**:\r\n   ```molang\r\n   math.sqrt(math.pow(20 - height * 16, 2) + 81) / 22\r\n   ```\r\n   - \u4F7F\u7528\u52FE\u80A1\u5B9A\u7406\u8BA1\u7B97\u8FDE\u6746\u957F\u5EA6\r\n   - `81` \u662F\u6C34\u5E73\u8DDD\u79BB\u7684\u5E73\u65B9\uFF089\xB2\uFF09\r\n   - `/22` \u662F\u5F52\u4E00\u5316\u5230\u57FA\u51C6\u957F\u5EA6\r\n\r\n### \u7269\u7406\u539F\u7406\r\n\u8FD9\u4E2A\u60AC\u6302\u7CFB\u7EDF\u6A21\u62DF\u4E86\u771F\u5B9E\u7684\u53CC\u53C9\u81C2\u60AC\u6302\uFF1A\r\n- \u5F53\u8F66\u8F6E\u4E0A\u4E0B\u79FB\u52A8\u65F6\uFF0C\u8FDE\u63A5\u5668\u504F\u79FB\u91CF\u53D8\u5316\r\n- \u901A\u8FC7\u4E09\u89D2\u51FD\u6570\u8BA1\u7B97\u60AC\u6302\u8FDE\u6746\u7684\u89D2\u5EA6\u548C\u957F\u5EA6\r\n- \u5B9E\u73B0\u771F\u5B9E\u7684\u60AC\u6302\u8FD0\u52A8\u5B66\u6548\u679C\r\n\r\n## \u6848\u4F8B 2: HUD \u8F6C\u901F\u8868\u6307\u9488\u63A7\u5236\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/animations/hud/example_hud/example_hud.animation.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(vehicle.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u53D1\u52A8\u673A\u8F6C\u901F\u83B7\u53D6**:\r\n   ```molang\r\n   vehicle.get(\'engine_speed\')??0\r\n   ```\r\n   - \u83B7\u53D6\u53D1\u52A8\u673A\u8F6C\u901F\u4FE1\u53F7\r\n   - `??0` \u662F\u7A7A\u503C\u5408\u5E76\u64CD\u4F5C\u7B26\uFF0C\u786E\u4FDD\u6709\u9ED8\u8BA4\u503C\r\n\r\n2. **\u5355\u4F4D\u8F6C\u6362**:\r\n   ```molang\r\n   math.abs(engine_speed) * 30 / math.pi\r\n   ```\r\n   - `math.abs()` \u786E\u4FDD\u8F6C\u901F\u4E3A\u6B63\u6570\r\n   - `* 30 / math.pi` \u5C06\u5F27\u5EA6/\u79D2\u8F6C\u6362\u4E3A\u8F6C/\u5206\u949F\uFF08RPM\uFF09\r\n   - \u8F6C\u6362\u516C\u5F0F\uFF1ARPM = (rad/s) \xD7 60 / (2\u03C0) = (rad/s) \xD7 30 / \u03C0\r\n\r\n3. **\u5F52\u4E00\u5316\u5904\u7406**:\r\n   ```molang\r\n   normalized_rpm = rpm / 9000\r\n   ```\r\n   - \u5047\u8BBE\u6700\u5927\u8F6C\u901F\u4E3A 9000 RPM\r\n   - \u5C06\u5B9E\u9645\u8F6C\u901F\u5F52\u4E00\u5316\u5230 0-1 \u8303\u56F4\r\n\r\n4. **\u6307\u9488\u89D2\u5EA6\u8BA1\u7B97**:\r\n   ```molang\r\n   pointer_angle = normalized_rpm * 240\r\n   ```\r\n   - \u5047\u8BBE\u8F6C\u901F\u8868\u6EE1\u91CF\u7A0B\u4E3A 240 \u5EA6\r\n   - \u5C06\u5F52\u4E00\u5316\u8F6C\u901F\u8F6C\u6362\u4E3A\u6307\u9488\u65CB\u8F6C\u89D2\u5EA6\r\n\r\n### \u4EEA\u8868\u8BBE\u8BA1\r\n- **\u91CF\u7A0B**: 0-9000 RPM\r\n- **\u6307\u9488\u8303\u56F4**: 0-240 \u5EA6\r\n- **\u7A7A\u8F6C\u4FDD\u62A4**: \u4F7F\u7528 `??0` \u5904\u7406\u4FE1\u53F7\u4E22\u5931\u60C5\u51B5\r\n\r\n## \u6848\u4F8B 3: HUD \u901F\u5EA6\u663E\u793A\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/huds/example_hud.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "speed": {\r\n    "molang_args": [\r\n      "math.floor((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n      "math.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n      "math.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u901F\u5EA6\u83B7\u53D6\u548C\u5355\u4F4D\u8F6C\u6362**:\r\n   ```molang\r\n   speed_kmh = math.abs(vehicle.get(\'vehicle_speed\')??0.0) * 3.6\r\n   ```\r\n   - \u83B7\u53D6\u8F66\u8F86\u901F\u5EA6\uFF08\u7C73/\u79D2\uFF09\r\n   - \u8F6C\u6362\u4E3A\u516C\u91CC/\u5C0F\u65F6\uFF1Akm/h = m/s \xD7 3.6\r\n\r\n2. **\u767E\u4F4D\u6570\u63D0\u53D6**:\r\n   ```molang\r\n   hundreds = math.floor(speed_kmh / 100)\r\n   ```\r\n   - \u8BA1\u7B97\u901F\u5EA6\u7684\u767E\u4F4D\u6570\r\n   - \u4F8B\u5982\uFF1A123 km/h \u2192 \u767E\u4F4D\u6570\u4E3A 1\r\n\r\n3. **\u5341\u4F4D\u6570\u63D0\u53D6**:\r\n   ```molang\r\n   tens = math.floor(math.mod(speed_kmh, 100) / 10)\r\n   ```\r\n   - \u5148\u53D6\u6A21100\u5F97\u5230\u540E\u4E24\u4F4D\u6570\r\n   - \u518D\u9664\u4EE510\u53D6\u6574\u5F97\u5230\u5341\u4F4D\u6570\r\n   - \u4F8B\u5982\uFF1A123 km/h \u2192 \u6A21100\u5F9723 \u2192 \u9664\u4EE510\u5F972.3 \u2192 \u53D6\u6574\u5F972\r\n\r\n4. **\u4E2A\u4F4D\u6570\u63D0\u53D6**:\r\n   ```molang\r\n   units = math.floor(math.mod(speed_kmh, 10))\r\n   ```\r\n   - \u76F4\u63A5\u53D6\u6A2110\u5F97\u5230\u4E2A\u4F4D\u6570\r\n   - \u4F8B\u5982\uFF1A123 km/h \u2192 \u6A2110\u5F973\r\n\r\n### \u663E\u793A\u903B\u8F91\r\n\u8FD9\u79CD\u65B9\u6CD5\u5C06\u4E09\u4F4D\u6570\u901F\u5EA6\u5206\u89E3\u4E3A\u4E09\u4E2A\u72EC\u7ACB\u7684\u6570\u5B57\uFF0C\u4FBF\u4E8E\u5728HUD\u4E2D\u4F7F\u7528\u4E09\u4E2A\u4E0D\u540C\u7684\u6587\u672C\u5143\u7D20\u663E\u793A\uFF0C\u5B9E\u73B0\u6570\u5B57\u5F0F\u901F\u5EA6\u8868\u3002\r\n\r\n## \u6848\u4F8B 4: \u65B9\u5411\u76D8\u52A8\u753B\u63A7\u5236\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/animations/part/ae86/ae86.animation.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "rot2": {\r\n    "rotation": [0, 0, "vehicle.get(\'steering\')*225"]\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u8F6C\u5411\u4FE1\u53F7\u83B7\u53D6**:\r\n   ```molang\r\n   steering_input = vehicle.get(\'steering\')\r\n   ```\r\n   - \u83B7\u53D6\u8F6C\u5411\u8F93\u5165\u4FE1\u53F7\r\n   - \u8303\u56F4\uFF1A-1.0\uFF08\u5DE6\u8F6C\uFF09\u5230 1.0\uFF08\u53F3\u8F6C\uFF09\r\n\r\n2. **\u89D2\u5EA6\u8F6C\u6362**:\r\n   ```molang\r\n   steering_angle = steering_input * 225\r\n   ```\r\n   - \u5C06\u8F93\u5165\u4FE1\u53F7\u8F6C\u6362\u4E3A\u65CB\u8F6C\u89D2\u5EA6\r\n   - 225\u5EA6\u662F\u6700\u5927\u8F6C\u5411\u89D2\u5EA6\r\n   - \u5DE6\u8F6C\uFF1A-1.0 \xD7 225 = -225\u5EA6\r\n   - \u53F3\u8F6C\uFF1A1.0 \xD7 225 = 225\u5EA6\r\n\r\n### \u8F6C\u5411\u7CFB\u7EDF\u8BBE\u8BA1\r\n- **\u8F6C\u5411\u6BD4**: 1:225\uFF08\u8F93\u5165\u4FE1\u53F7\u5230\u89D2\u5EA6\uFF09\r\n- **\u8F6C\u5411\u8303\u56F4**: \xB1225\u5EA6\r\n- **\u7EBF\u6027\u6620\u5C04**: \u7B80\u5355\u7684\u4E58\u6CD5\u5173\u7CFB\uFF0C\u786E\u4FDD\u8F6C\u5411\u54CD\u5E94\u7EBF\u6027\r\n\r\n## \u6700\u4F73\u5B9E\u8DF5\r\n\r\n### 1. \u9519\u8BEF\u5904\u7406\r\n```molang\r\n// \u4F7F\u7528\u7A7A\u503C\u5408\u5E76\u64CD\u4F5C\u7B26\r\nvehicle.get(\'signal_name\')??default_value\r\n\r\n// \u68C0\u67E5\u5B50\u7CFB\u7EDF\u5B58\u5728\u6027\r\nsubpart.has_subsystem(\'engine\') ? subpart.subsystem_durability(\'engine\') : 0.0\r\n```\r\n\r\n### 2. \u6027\u80FD\u4F18\u5316\r\n```molang\r\n// \u907F\u514D\u91CD\u590D\u8BA1\u7B97\r\nlet speed = math.abs(vehicle.get(\'vehicle_speed\')??0.0) * 3.6;\r\nmath.floor(speed / 100), math.floor(math.mod(speed, 100) / 10), math.floor(math.mod(speed, 10))\r\n\r\n// \u4F7F\u7528\u7B80\u5355\u7684\u6570\u5B66\u8FD0\u7B97\r\n// \u907F\u514D\u590D\u6742\u7684\u4E09\u89D2\u51FD\u6570\u548C\u6307\u6570\u8FD0\u7B97\r\n```\r\n\r\n### 3. \u53EF\u8BFB\u6027\r\n```molang\r\n// \u4F7F\u7528\u6709\u610F\u4E49\u7684\u53D8\u91CF\u540D\r\nlet engine_rpm = math.abs(vehicle.get(\'engine_speed\')??0) * 30 / math.pi;\r\nlet max_rpm = 9000;\r\nlet pointer_range = 240;\r\nlet pointer_angle = (engine_rpm / max_rpm) * pointer_range;\r\n\r\n// \u6DFB\u52A0\u6CE8\u91CA\u8BF4\u660E\u590D\u6742\u8BA1\u7B97\r\n```\r\n\r\n## \u8C03\u8BD5\u6280\u5DE7\r\n\r\n1. **\u9010\u6B65\u6D4B\u8BD5**: \u5C06\u590D\u6742\u8868\u8FBE\u5F0F\u5206\u89E3\u4E3A\u591A\u4E2A\u6B65\u9AA4\u6D4B\u8BD5\r\n2. **\u8FB9\u754C\u503C\u6D4B\u8BD5**: \u6D4B\u8BD5\u6700\u5C0F\u503C\u3001\u6700\u5927\u503C\u548C\u8FB9\u754C\u60C5\u51B5\r\n3. **\u5355\u4F4D\u9A8C\u8BC1**: \u786E\u4FDD\u6240\u6709\u5355\u4F4D\u8F6C\u6362\u6B63\u786E\r\n4. **\u6027\u80FD\u76D1\u63A7**: \u76D1\u63A7\u590D\u6742\u8868\u8FBE\u5F0F\u7684\u6267\u884C\u6027\u80FD\r\n\r\n\u8FD9\u4E9B\u6848\u4F8B\u5C55\u793A\u4E86 Molang \u5728 Machine-Max \u4E2D\u7684\u5F3A\u5927\u5E94\u7528\u80FD\u529B\uFF0C\u4ECE\u7B80\u5355\u7684\u4FE1\u53F7\u6620\u5C04\u5230\u590D\u6742\u7684\u7269\u7406\u6A21\u62DF\uFF0CMolang \u90FD\u80FD\u63D0\u4F9B\u7075\u6D3B\u800C\u9AD8\u6548\u7684\u89E3\u51B3\u65B9\u6848\u3002', "zh_cn/molang/\u603B\u89C8.md": "# Molang \u6587\u6863\r\n\r\nMachine-Max \u4F7F\u7528 Molang \u811A\u672C\u7CFB\u7EDF\u6765\u63A7\u5236\u8F66\u8F86\u52A8\u753B\u3001HUD\u663E\u793A\u548C\u4EA4\u4E92\u903B\u8F91\u3002Molang \u662F\u4E00\u79CD\u8F7B\u91CF\u7EA7\u7684\u811A\u672C\u8BED\u8A00\uFF0C\u4E13\u95E8\u7528\u4E8E\u5B9E\u65F6\u8BA1\u7B97\u548C\u52A8\u753B\u63A7\u5236\u3002\r\n\r\n## \u76EE\u5F55\u7ED3\u6784\r\n\r\n- [subpart \u65B9\u6CD5](./subpart.md) - \u96F6\u4EF6\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [vehicle \u65B9\u6CD5](./vehicle.md) - \u8F66\u8F86\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [math \u51FD\u6570](./math.md) - \u6570\u5B66\u8BA1\u7B97\u51FD\u6570\r\n- [\u793A\u4F8B\u548C\u6848\u4F8B](./examples.md) - \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n## \u57FA\u672C\u8BED\u6CD5\r\n\r\nMolang \u8868\u8FBE\u5F0F\u4F7F\u7528\u7C7B\u4F3C JavaScript \u7684\u8BED\u6CD5\uFF0C\u652F\u6301\u57FA\u672C\u7684\u6570\u5B66\u8FD0\u7B97\u3001\u6761\u4EF6\u5224\u65AD\u548C\u51FD\u6570\u8C03\u7528\uFF1A\r\n\r\n```molang\r\n// \u57FA\u672C\u8FD0\u7B97\r\n1.0 + 2.0 * 3.0\r\n\r\n// \u6761\u4EF6\u8868\u8FBE\u5F0F\r\nvariable > 0 ? 1.0 : 0.0\r\n\r\n// \u51FD\u6570\u8C03\u7528\r\nmath.sin(angle)\r\nsubpart.has_subsystem('engine')\r\n```\r\n\r\n## \u53D8\u91CF\u548C\u4E0A\u4E0B\u6587\r\n\r\nMolang \u8868\u8FBE\u5F0F\u5728\u4E0D\u540C\u7684\u4E0A\u4E0B\u6587\u4E2D\u6267\u884C\uFF0C\u53EF\u4EE5\u8BBF\u95EE\u4E0D\u540C\u7684\u53D8\u91CF\u548C\u65B9\u6CD5\uFF1A\r\n\r\n- **\u52A8\u753B\u4E0A\u4E0B\u6587**: \u5728\u6A21\u578B\u52A8\u753B\u4E2D\u4F7F\u7528\uFF0C\u53EF\u4EE5\u8BBF\u95EE `subpart` \u548C `vehicle` \u5BF9\u8C61\r\n- **HUD\u4E0A\u4E0B\u6587**: \u5728HUD\u663E\u793A\u4E2D\u4F7F\u7528\uFF0C\u53EF\u4EE5\u8BBF\u95EE\u73A9\u5BB6\u5B9E\u4F53\u3001 `subpart` \u548C `vehicle` \u5BF9\u8C61\r\n\r\n## \u5E38\u7528\u6A21\u5F0F\r\n\r\n### \u4FE1\u53F7\u83B7\u53D6\r\n```molang\r\n// \u83B7\u53D6\u8F66\u8F86\u5728\u67D0\u4E2A\u9891\u9053\u7684\u4FE1\u53F7\u503C\r\nvehicle.get('signal_channel')\r\n\r\n// \u83B7\u53D6\u96F6\u4EF6\u5728\u67D0\u4E2A\u9891\u9053\u7684\u4FE1\u53F7\u503C\r\nsubpart.get('signal_channel')\r\n```\r\n\r\n### \u6761\u4EF6\u52A8\u753B\r\n```molang\r\n// \u6839\u636E\u6761\u4EF6\u63A7\u5236\u52A8\u753B\r\nsubpart.has_subsystem('engine') ? 1.0 : 0.0\r\n```\r\n\r\n### \u6570\u5B66\u8BA1\u7B97\r\n```molang\r\n// \u5355\u4F4D\u8F6C\u6362\uFF08\u7C73/\u79D2\u8F6C\u516C\u91CC/\u5C0F\u65F6\uFF09\r\nmath.abs(vehicle.get('vehicle_speed')) * 3.6\r\n```", "zh_cn/molang/\u6570\u5B66\u51FD\u6570.md": "# math \u51FD\u6570\r\n\r\n`math` \u5BF9\u8C61\u63D0\u4F9B\u4E86\u6570\u5B66\u8BA1\u7B97\u529F\u80FD\uFF0C\u5305\u62EC\u4E09\u89D2\u51FD\u6570\u3001\u6307\u6570\u51FD\u6570\u3001\u53D6\u6574\u51FD\u6570\u7B49\u3002\r\n\r\n## \u4E09\u89D2\u51FD\u6570\r\n\r\n### math.sin(value)\r\n\u8BA1\u7B97\u89D2\u5EA6\u7684\u6B63\u5F26\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u6B63\u5F26\u503C\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\nmath.sin(90)  // \u8FD4\u56DE 1.0\r\n```\r\n\r\n### math.cos(value)\r\n\u8BA1\u7B97\u89D2\u5EA6\u7684\u4F59\u5F26\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u4F59\u5F26\u503C\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\nmath.cos(0)  // \u8FD4\u56DE 1.0\r\n```\r\n\r\n### math.tan(value)\r\n\u8BA1\u7B97\u89D2\u5EA6\u7684\u6B63\u5207\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u6B63\u5207\u503C\r\n\r\n### math.asin(value)\r\n\u8BA1\u7B97\u503C\u7684\u53CD\u6B63\u5F26\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08-1.0 \u5230 1.0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n### math.acos(value)\r\n\u8BA1\u7B97\u503C\u7684\u53CD\u4F59\u5F26\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08-1.0 \u5230 1.0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n### math.atan(value)\r\n\u8BA1\u7B97\u503C\u7684\u53CD\u6B63\u5207\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n### math.atan2(y, x)\r\n\u8BA1\u7B97 y/x \u7684\u53CD\u6B63\u5207\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `y` (double): Y\u5750\u6807\u503C\r\n- `x` (double): X\u5750\u6807\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728AE86\u60AC\u6302\u52A8\u753B\u4E2D\u4F7F\u7528\r\nmath.atan2(subpart.connector_offset('connector.machine_max.right_front_wheel', 1)*16, 20)\r\n```\r\n\r\n## \u6307\u6570\u548C\u5BF9\u6570\u51FD\u6570\r\n\r\n### math.exp(value)\r\n\u8BA1\u7B97 e \u7684 value \u6B21\u5E42\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u6307\u6570\r\n\r\n**\u8FD4\u56DE\u503C**: e^value\r\n\r\n### math.log(value)\r\n\u8BA1\u7B97\u503C\u7684\u81EA\u7136\u5BF9\u6570\uFF08\u4EE5 e \u4E3A\u5E95\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08> 0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u81EA\u7136\u5BF9\u6570\r\n\r\n### math.pow(base, exponent)\r\n\u8BA1\u7B97 base \u7684 exponent \u6B21\u5E42\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `base` (double): \u5E95\u6570\r\n- `exponent` (double): \u6307\u6570\r\n\r\n**\u8FD4\u56DE\u503C**: base^exponent\r\n\r\n### math.sqrt(value)\r\n\u8BA1\u7B97\u503C\u7684\u5E73\u65B9\u6839\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08\u2265 0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u5E73\u65B9\u6839\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728AE86\u60AC\u6302\u52A8\u753B\u4E2D\u8BA1\u7B97\u8FDE\u6746\u957F\u5EA6\r\nmath.sqrt(math.pow(20-subpart.connector_offset('connector.machine_max.left_front_wheel', 1)*16, 2)+81)\r\n```\r\n\r\n## \u53D6\u6574\u51FD\u6570\r\n\r\n### math.floor(value)\r\n\u5411\u4E0B\u53D6\u6574\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u5C0F\u4E8E\u7B49\u4E8E value \u7684\u6700\u5927\u6574\u6570\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728HUD\u901F\u5EA6\u663E\u793A\u4E2D\u4F7F\u7528\r\nmath.floor((math.abs(vehicle.get('vehicle_speed')??0.0)) * 3.6 / 100)\r\n```\r\n\r\n### math.ceil(value)\r\n\u5411\u4E0A\u53D6\u6574\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u5927\u4E8E\u7B49\u4E8E value \u7684\u6700\u5C0F\u6574\u6570\r\n\r\n### math.round(value)\r\n\u56DB\u820D\u4E94\u5165\u53D6\u6574\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u6700\u63A5\u8FD1\u7684\u6574\u6570\r\n\r\n## \u5176\u4ED6\u6570\u5B66\u51FD\u6570\r\n\r\n### math.abs(value)\r\n\u8BA1\u7B97\u7EDD\u5BF9\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u7EDD\u5BF9\u503C\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u786E\u4FDD\u901F\u5EA6\u503C\u4E3A\u6B63\u6570\r\nmath.abs(vehicle.get('vehicle_speed')??0.0)\r\n```\r\n\r\n### math.mod(value1, value2)\r\n\u8BA1\u7B97 value1 \u9664\u4EE5 value2 \u7684\u4F59\u6570\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value1` (double): \u88AB\u9664\u6570\r\n- `value2` (double): \u9664\u6570\r\n\r\n**\u8FD4\u56DE\u503C**: \u4F59\u6570\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728HUD\u901F\u5EA6\u663E\u793A\u4E2D\u63D0\u53D6\u5341\u4F4D\u6570\r\nmath.floor(math.mod((math.abs(vehicle.get('vehicle_speed')??0.0)) * 3.6, 100) / 10)\r\n```\r\n\r\n### math.sign(value)\r\n\u83B7\u53D6\u503C\u7684\u7B26\u53F7\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: 1.0\uFF08\u6B63\u6570\uFF09\u3001-1.0\uFF08\u8D1F\u6570\uFF09\u30010.0\uFF08\u96F6\uFF09\r\n\r\n### math.min(value1, value2)\r\n\u8FD4\u56DE\u4E24\u4E2A\u503C\u4E2D\u7684\u8F83\u5C0F\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value1` (double): \u7B2C\u4E00\u4E2A\u503C\r\n- `value2` (double): \u7B2C\u4E8C\u4E2A\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u8F83\u5C0F\u503C\r\n\r\n### math.max(value1, value2)\r\n\u8FD4\u56DE\u4E24\u4E2A\u503C\u4E2D\u7684\u8F83\u5927\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value1` (double): \u7B2C\u4E00\u4E2A\u503C\r\n- `value2` (double): \u7B2C\u4E8C\u4E2A\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u8F83\u5927\u503C\r\n\r\n### math.clamp(value, min, max)\r\n\u5C06\u503C\u9650\u5236\u5728\u6307\u5B9A\u8303\u56F4\u5185\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u8981\u9650\u5236\u7684\u503C\r\n- `min` (double): \u6700\u5C0F\u503C\r\n- `max` (double): \u6700\u5927\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u9650\u5236\u540E\u7684\u503C\r\n\r\n### math.lerp(start, end, alpha)\r\n\u7EBF\u6027\u63D2\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `start` (double): \u8D77\u59CB\u503C\r\n- `end` (double): \u7ED3\u675F\u503C\r\n- `alpha` (double): \u63D2\u503C\u7CFB\u6570\uFF080.0 \u5230 1.0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u63D2\u503C\u7ED3\u679C\r\n\r\n## \u6570\u5B66\u5E38\u91CF\r\n\r\n### math.pi\r\n\u5706\u5468\u7387 \u03C0 \u7684\u503C\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\r\n\r\n**\u503C**: \u7EA6\u7B49\u4E8E 3.141592653589793\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5F27\u5EA6\u8F6C\u89D2\u5EA6\r\nradians * 180 / math.pi\r\n\r\n// \u89D2\u5EA6\u8F6C\u5F27\u5EA6\r\ndegrees * math.pi / 180\r\n```\r\n\r\n## \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n### 1. \u5355\u4F4D\u8F6C\u6362\r\n```molang\r\n// \u7C73/\u79D2\u8F6C\u516C\u91CC/\u5C0F\u65F6\r\nvehicle.get('vehicle_speed') * 3.6\r\n\r\n// \u5F27\u5EA6/\u79D2\u8F6C\u8F6C/\u5206\u949F\uFF08RPM\uFF09\r\nvehicle.get('engine_speed') * 30 / math.pi\r\n```\r\n\r\n### 2. \u52A8\u753B\u63A7\u5236\r\n```molang\r\n// \u5E73\u6ED1\u52A8\u753B\u63D2\u503C\r\nmath.lerp(current_angle, target_angle, 0.1)\r\n\r\n// \u9650\u5236\u65CB\u8F6C\u89D2\u5EA6\u5728\u5408\u7406\u8303\u56F4\u5185\r\nmath.clamp(rotation_angle, -180, 180)\r\n```\r\n\r\n### 3. \u7269\u7406\u8BA1\u7B97\r\n```molang\r\n// \u8BA1\u7B97\u4E24\u70B9\u95F4\u8DDD\u79BB\r\nmath.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2) + math.pow(z2-z1, 2))\r\n\r\n// \u8BA1\u7B97\u89D2\u5EA6\u5DEE\r\nmath.abs(math.mod(angle1 - angle2 + 180, 360) - 180)\r\n```\r\n\r\n## \u6CE8\u610F\u4E8B\u9879\r\n\r\n1. **\u89D2\u5EA6\u5355\u4F4D**: \u6240\u6709\u4E09\u89D2\u51FD\u6570\u4F7F\u7528\u5EA6\u4E3A\u5355\u4F4D\uFF0C\u800C\u4E0D\u662F\u5F27\u5EA6\r\n2. **\u6027\u80FD\u8003\u8651**: \u590D\u6742\u7684\u6570\u5B66\u8BA1\u7B97\u53EF\u80FD\u5F71\u54CD\u6027\u80FD\uFF0C\u5C3D\u91CF\u7B80\u5316\u8868\u8FBE\u5F0F\r\n3. **\u6570\u503C\u8303\u56F4**: \u6CE8\u610F\u51FD\u6570\u7684\u5B9A\u4E49\u57DF\u548C\u503C\u57DF\uFF0C\u907F\u514D\u6570\u5B66\u9519\u8BEF\r\n4. **\u7CBE\u5EA6\u95EE\u9898**: \u6D6E\u70B9\u6570\u8BA1\u7B97\u53EF\u80FD\u5B58\u5728\u7CBE\u5EA6\u8BEF\u5DEE\uFF0C\u91CD\u8981\u8BA1\u7B97\u5E94\u8FDB\u884C\u9002\u5F53\u7684\u820D\u5165", "zh_cn/molang/\u8F7D\u5177\u65B9\u6CD5.md": "# Molang \u6587\u6863\r\n\r\nMachine-Max \u4F7F\u7528 Molang \u811A\u672C\u7CFB\u7EDF\u6765\u63A7\u5236\u8F66\u8F86\u52A8\u753B\u3001HUD\u663E\u793A\u548C\u4EA4\u4E92\u903B\u8F91\u3002Molang \u662F\u4E00\u79CD\u8F7B\u91CF\u7EA7\u7684\u811A\u672C\u8BED\u8A00\uFF0C\u4E13\u95E8\u7528\u4E8E\u5B9E\u65F6\u8BA1\u7B97\u548C\u52A8\u753B\u63A7\u5236\u3002\r\n\r\n## \u76EE\u5F55\u7ED3\u6784\r\n\r\n- [\u96F6\u4EF6\u65B9\u6CD5](./\u96F6\u4EF6\u65B9\u6CD5.md) - \u96F6\u4EF6\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [\u8F66\u8F86\u65B9\u6CD5](./\u8F66\u8F86\u65B9\u6CD5.md) - \u8F66\u8F86\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [\u6570\u5B66\u51FD\u6570](./\u6570\u5B66\u51FD\u6570.md) - \u6570\u5B66\u8BA1\u7B97\u51FD\u6570\r\n- [\u4F7F\u7528\u6848\u4F8B](./\u4F7F\u7528\u6848\u4F8B.md) - \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n## \u57FA\u672C\u8BED\u6CD5\r\n\r\nMolang \u8868\u8FBE\u5F0F\u4F7F\u7528\u7C7B\u4F3C JavaScript \u7684\u8BED\u6CD5\uFF0C\u652F\u6301\u57FA\u672C\u7684\u6570\u5B66\u8FD0\u7B97\u3001\u6761\u4EF6\u5224\u65AD\u548C\u51FD\u6570\u8C03\u7528\u3002\r\n\r\n### \u57FA\u672C\u8FD0\u7B97\r\n```molang\r\n// \u7B97\u672F\u8FD0\u7B97\r\n1.0 + 2.0 * 3.0  // \u7ED3\u679C\u4E3A 7.0\r\n(1.0 + 2.0) * 3.0  // \u7ED3\u679C\u4E3A 9.0\r\n\r\n// \u6BD4\u8F83\u8FD0\u7B97\r\nspeed > 0  // \u5927\u4E8E\u6BD4\u8F83\r\ndurability <= max_durability  // \u5C0F\u4E8E\u7B49\u4E8E\u6BD4\u8F83\r\nv.a == 3.0  // \u7B49\u4E8E\u6BD4\u8F83\r\n```\r\n\r\n### \u4E09\u5143\u8868\u8FBE\u5F0F\uFF08\u6761\u4EF6\u8FD0\u7B97\u7B26\uFF09\r\n```molang\r\n// \u57FA\u672C\u8BED\u6CD5\uFF1A\u6761\u4EF6 ? \u771F\u503C : \u5047\u503C\r\nvariable > 0 ? 1.0 : 0.0\r\n\r\n// \u5B9E\u9645\u5E94\u7528\uFF1A\u6839\u636E\u5B50\u7CFB\u7EDF\u72B6\u6001\u663E\u793A\u8B66\u544A\u706F\r\nsubpart.has_subsystem('engine') && subpart.subsystem_destroyed('engine') ? 1.0 : 0.0\r\n\r\n// \u5D4C\u5957\u4F7F\u7528\r\nv.fuel_level > 50 ? 0.0 : (v.fuel_level > 10 ? 0.5 : 1.0)\r\n```\r\n\r\n### \u7A7A\u503C\u5408\u5E76\u8FD0\u7B97\u7B26\uFF08??\uFF09\r\n```molang\r\n// \u57FA\u672C\u8BED\u6CD5\uFF1A\u503C ?? \u9ED8\u8BA4\u503C\r\nvehicle.get('signal_name')??0.0\r\n\r\n// \u5B9E\u9645\u5E94\u7528\uFF1A\u5904\u7406\u53EF\u80FD\u4E0D\u5B58\u5728\u7684\u4FE1\u53F7\r\nmath.abs(vehicle.get('vehicle_speed')??0.0) * 3.6\r\n\r\n// \u94FE\u5F0F\u4F7F\u7528\r\nvehicle.get('engine_speed')??vehicle.get('motor_speed')??0.0\r\n```\r\n\r\n### \u51FD\u6570\u8C03\u7528\r\n```molang\r\n// \u6570\u5B66\u51FD\u6570\r\nmath.sin(angle)\r\nmath.floor(value)\r\n\r\n// \u8F66\u8F86\u548C\u96F6\u4EF6\u65B9\u6CD5\r\nvehicle.get('steering')\r\nsubpart.has_subsystem('engine')\r\n```\r\n\r\n## \u5E38\u7528\u6A21\u5F0F\r\n\r\n### \u4FE1\u53F7\u83B7\u53D6\u548C\u5B89\u5168\u8BBF\u95EE\r\n```molang\r\n// \u5B89\u5168\u83B7\u53D6\u4FE1\u53F7\u503C\r\nvehicle.get('signal_name')??default_value\r\n\r\n// \u6761\u4EF6\u68C0\u67E5\u540E\u8BBF\u95EE\r\nsubpart.has_subsystem('engine') ? subpart.subsystem_durability('engine') : 0.0\r\n```\r\n\r\n### \u5355\u4F4D\u8F6C\u6362\r\n```molang\r\n// \u7C73/\u79D2\u8F6C\u516C\u91CC/\u5C0F\u65F6\r\nvehicle.get('vehicle_speed')??0.0 * 3.6\r\n\r\n// \u5F27\u5EA6/\u79D2\u8F6C\u8F6C/\u5206\u949F\uFF08RPM\uFF09\r\nvehicle.get('engine_speed')??0.0 * 30 / math.pi\r\n```\r\n\r\n## \u4E0B\u4E00\u6B65\r\n\r\n- \u67E5\u770B [\u96F6\u4EF6\u65B9\u6CD5](./\u96F6\u4EF6\u65B9\u6CD5.md) \u4E86\u89E3\u96F6\u4EF6\u76F8\u5173\u7684\u6240\u6709\u65B9\u6CD5\r\n- \u67E5\u770B [\u8F66\u8F86\u65B9\u6CD5](./\u8F66\u8F86\u65B9\u6CD5.md) \u4E86\u89E3\u8F66\u8F86\u4FE1\u53F7\u83B7\u53D6\u65B9\u6CD5\r\n- \u67E5\u770B [\u6570\u5B66\u51FD\u6570](./\u6570\u5B66\u51FD\u6570.md) \u5B66\u4E60\u53EF\u7528\u7684\u6570\u5B66\u8BA1\u7B97\u529F\u80FD\r\n- \u67E5\u770B [\u4F7F\u7528\u6848\u4F8B](./\u4F7F\u7528\u6848\u4F8B.md) \u5B66\u4E60\u5B9E\u9645\u5E94\u7528\u793A\u4F8B", "zh_cn/molang/\u96F6\u4EF6\u65B9\u6CD5.md": "# subpart \u65B9\u6CD5\r\n\r\n`subpart` \u5BF9\u8C61\u63D0\u4F9B\u4E86\u8BBF\u95EE\u96F6\u4EF6\u72B6\u6001\u3001\u8FDE\u63A5\u5668\u548C\u5B50\u7CFB\u7EDF\u7684\u65B9\u6CD5\u3002\r\n\r\n## \u4FE1\u53F7\u76F8\u5173\u65B9\u6CD5\r\n\r\n### subpart.get(channel)\r\n\r\n\u83B7\u53D6\u96F6\u4EF6\u4FE1\u53F7\u5B58\u50A8\u4E2D\u7684\u503C\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.get(channel_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `channel_name` (\u5B57\u7B26\u4E32): \u4FE1\u53F7\u9891\u9053\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u4FE1\u53F7\u503C\uFF0C\u5982\u679C\u9891\u9053\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE `null`\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u83B7\u53D6\u96F6\u4EF6\u7279\u5B9A\u4FE1\u53F7\r\nsubpart.get('custom_signal')\r\n```\r\n\r\n## \u8FDE\u63A5\u5668\u76F8\u5173\u65B9\u6CD5\r\n\r\n### subpart.has_connector(connectorName)\r\n\r\n\u68C0\u67E5\u96F6\u4EF6\u662F\u5426\u62E5\u6709\u6307\u5B9A\u8FDE\u63A5\u5668\uFF0C\u5E76\u4E14\u8FDE\u63A5\u5668\u662F\u5426\u8FDE\u63A5\u4E86\u96F6\u4EF6\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.has_connector(connector_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `connector_name` (\u5B57\u7B26\u4E32): \u8FDE\u63A5\u5668\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u8FDE\u63A5\u5668\u5B58\u5728\u4E14\u5DF2\u8FDE\u63A5\u96F6\u4EF6\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u68C0\u67E5\u524D\u8F6E\u8FDE\u63A5\u5668\u662F\u5426\u8FDE\u63A5\r\nsubpart.has_connector('connector.machine_max.front_wheel')\r\n```\r\n\r\n### subpart.connector_offset(connectorName, axis)\r\n\r\n\u83B7\u53D6\u8FDE\u63A5\u5668\u7684\u504F\u79FB\u91CF\uFF08\u4F4D\u7F6E\uFF09\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.connector_offset(connector_name, axis)`\r\n\r\n**\u53C2\u6570**:\r\n- `connector_name` (\u5B57\u7B26\u4E32): \u8FDE\u63A5\u5668\u540D\u79F0\r\n- `axis` (\u6574\u6570): \u5750\u6807\u8F74 (0=X, 1=Y, 2=Z)\r\n\r\n**\u8FD4\u56DE\u503C**: \u6307\u5B9A\u8F74\u7684\u504F\u79FB\u91CF\uFF08\u7C73\uFF09\uFF0C\u5982\u679C\u8FDE\u63A5\u5668\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u83B7\u53D6\u524D\u8F6E\u8FDE\u63A5\u5668\u7684Y\u8F74\u504F\u79FB\uFF08\u60AC\u6302\u9AD8\u5EA6\uFF09\r\nsubpart.connector_offset('connector.machine_max.front_wheel', 1)\r\n```\r\n\r\n### subpart.connector_rotation(connectorName, axis)\r\n\r\n\u83B7\u53D6\u8FDE\u63A5\u5668\u7684\u65CB\u8F6C\u89D2\u5EA6\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.connector_rotation(connector_name, axis)`\r\n\r\n**\u53C2\u6570**:\r\n- `connector_name` (\u5B57\u7B26\u4E32): \u8FDE\u63A5\u5668\u540D\u79F0\r\n- `axis` (\u6574\u6570): \u65CB\u8F6C\u8F74 (0=X, 1=Y, 2=Z)\r\n\r\n**\u8FD4\u56DE\u503C**: \u6307\u5B9A\u8F74\u7684\u65CB\u8F6C\u89D2\u5EA6\uFF08\u5EA6\uFF09\uFF0C\u5982\u679C\u8FDE\u63A5\u5668\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n## \u5B50\u7CFB\u7EDF\u76F8\u5173\u65B9\u6CD5\r\n\r\n### subpart.has_subsystem(subsystemName)\r\n\r\n\u68C0\u67E5\u96F6\u4EF6\u662F\u5426\u62E5\u6709\u6307\u5B9A\u540D\u79F0\u7684\u5B50\u7CFB\u7EDF\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.has_subsystem(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u62E5\u6709\u8BE5\u5B50\u7CFB\u7EDF\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u68C0\u67E5\u662F\u5426\u6709\u53D1\u52A8\u673A\u5B50\u7CFB\u7EDF\r\nsubpart.has_subsystem('subsystem.machine_max.engine')\r\n```\r\n\r\n### subpart.subsystem_durability(subsystemName)\r\n\r\n\u83B7\u53D6\u6307\u5B9A\u5B50\u7CFB\u7EDF\u7684\u5F53\u524D\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.subsystem_durability(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5B50\u7CFB\u7EDF\u8010\u4E45\u5EA6\uFF0C\u5982\u679C\u5B50\u7CFB\u7EDF\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n### subpart.subsystem_max_durability(subsystemName)\r\n\r\n\u83B7\u53D6\u6307\u5B9A\u5B50\u7CFB\u7EDF\u7684\u6700\u5927\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.subsystem_max_durability(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5B50\u7CFB\u7EDF\u6700\u5927\u8010\u4E45\u5EA6\uFF0C\u5982\u679C\u5B50\u7CFB\u7EDF\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n### subpart.subsystem_active(subsystemName)\r\n\r\n\u68C0\u67E5\u6307\u5B9A\u5B50\u7CFB\u7EDF\u662F\u5426\u5904\u4E8E\u6FC0\u6D3B\u72B6\u6001\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.subsystem_active(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u5B50\u7CFB\u7EDF\u6FC0\u6D3B\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n### subpart.subsystem_destroyed(subsystemName)\r\n\r\n\u68C0\u67E5\u6307\u5B9A\u5B50\u7CFB\u7EDF\u662F\u5426\u5DF2\u88AB\u6467\u6BC1\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.subsystem_destroyed(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n## \u96F6\u4EF6\u5C5E\u6027\r\n\r\n### subpart.durability\r\n\r\n\u96F6\u4EF6\u7684\u5F53\u524D\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\r\n\r\n### subpart.max_durability\r\n\r\n\u96F6\u4EF6\u7684\u6700\u5927\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\r\n\r\n### subpart.is_destroyed\r\n\r\n\u96F6\u4EF6\u662F\u5426\u5DF2\u88AB\u6467\u6BC1\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\uFF081.0=\u5DF2\u6467\u6BC1\uFF0C0.0=\u6B63\u5E38\uFF09\r\n\r\n## \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n### 1. \u60AC\u6302\u7CFB\u7EDF\u52A8\u753B\r\n\u5728 AE86 \u52A8\u753B\u4E2D\u4F7F\u7528\u8FDE\u63A5\u5668\u504F\u79FB\u63A7\u5236\u60AC\u6302\u7CFB\u7EDF\uFF1A\r\n\r\n```json\r\n{\r\n  \"axisRightFront\": {\r\n    \"rotation\": [0, 0, \"math.atan2(subpart.connector_offset('connector.machine_max.right_front_wheel', 1)*16,20)\"]\r\n  },\r\n  \"rodLeftFront\": {\r\n    \"rotation\": [\"-65.7725+math.atan2(20-subpart.connector_offset('connector.machine_max.left_front_wheel', 1)*16,9)\", 0, 0]\r\n  },\r\n  \"rodLeftFrontInner\": {\r\n    \"scale\": [1, \"math.sqrt(math.pow(20-subpart.connector_offset('connector.machine_max.left_front_wheel', 1)*16,2)+81)/22\", 1]\r\n  }\r\n}\r\n```\r\n\r\n**\u89E3\u91CA**:\r\n- \u4F7F\u7528 `subpart.connector_offset` \u83B7\u53D6\u8F66\u8F6E\u8FDE\u63A5\u5668\u7684Y\u8F74\u504F\u79FB\uFF08\u60AC\u6302\u9AD8\u5EA6\uFF09\r\n- \u901A\u8FC7\u4E09\u89D2\u51FD\u6570\u8BA1\u7B97\u60AC\u6302\u8FDE\u6746\u7684\u89D2\u5EA6\u548C\u957F\u5EA6\r\n- \u5B9E\u73B0\u771F\u5B9E\u7684\u60AC\u6302\u7CFB\u7EDF\u8FD0\u52A8\u5B66\r\n\r\n### 2. \u5B50\u7CFB\u7EDF\u72B6\u6001\u663E\u793A\r\n\u5728HUD\u4E2D\u4F7F\u7528\u5B50\u7CFB\u7EDF\u72B6\u6001\u63A7\u5236\u8B66\u544A\u706F\uFF1A\r\n\r\n```molang\r\n// \u53D1\u52A8\u673A\u5B50\u7CFB\u7EDF\u72B6\u6001\u68C0\u67E5\r\nsubpart.has_subsystem('engine') && subpart.subsystem_active('engine') ? 1.0 : 0.0\r\n\r\n// \u71C3\u6CB9\u5B50\u7CFB\u7EDF\u4F4E\u6CB9\u91CF\u8B66\u544A\r\nsubpart.has_subsystem('fuel_tank') && subpart.subsystem_durability('fuel_tank') < 10.0 ? 1.0 : 0.0\r\n\r\n// \u53D1\u52A8\u673A\u8FC7\u70ED\u8B66\u544A\r\nsubpart.has_subsystem('engine') && subpart.subsystem_destroyed('engine') ? 1.0 : 0.0\r\n```\r\n\r\n### 3. \u6761\u4EF6\u52A8\u753B\u63A7\u5236\r\n\u6839\u636E\u5B50\u7CFB\u7EDF\u72B6\u6001\u63A7\u5236\u96F6\u4EF6\u52A8\u753B\uFF1A\r\n\r\n```json\r\n{\r\n  \"engine_cover\": {\r\n    \"rotation\": [\r\n      \"subpart.has_subsystem('engine') ? 45.0 : 0.0\", \r\n      0, \r\n      0\r\n    ]\r\n  },\r\n  \"warning_light\": {\r\n    \"scale\": [\r\n      \"subpart.subsystem_destroyed('engine') ? 1.5 : 1.0\", \r\n      \"subpart.subsystem_destroyed('engine') ? 1.5 : 1.0\", \r\n      \"subpart.subsystem_destroyed('engine') ? 1.5 : 1.0\"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n## \u6CE8\u610F\u4E8B\u9879\r\n\r\n1. **\u8FDE\u63A5\u5668\u547D\u540D**: \u8FDE\u63A5\u5668\u540D\u79F0\u901A\u5E38\u9075\u5FAA `connector.machine_max.xxx` \u7684\u547D\u540D\u7EA6\u5B9A\r\n2. **\u5B50\u7CFB\u7EDF\u547D\u540D**: \u5B50\u7CFB\u7EDF\u540D\u79F0\u901A\u5E38\u9075\u5FAA `subsystem.machine_max.xxx` \u7684\u547D\u540D\u7EA6\u5B9A\r\n3. **\u5750\u6807\u7CFB**: \u8FDE\u63A5\u5668\u504F\u79FB\u548C\u65CB\u8F6C\u4F7F\u7528\u5C40\u90E8\u5750\u6807\u7CFB\r\n4. **\u6027\u80FD\u4F18\u5316**: \u9891\u7E41\u8C03\u7528\u7684\u65B9\u6CD5\u5E94\u8003\u8651\u6027\u80FD\u5F71\u54CD", "zh_cn/schemas/base/axis.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/axis.json",\r\n  "title": "\u8F74\u65B9\u5411",\r\n  "description": "\u8868\u793A\u4E09\u7EF4\u7A7A\u95F4\u4E2D\u7684\u8F74\u65B9\u5411\uFF0C\u7528\u4E8E\u5B9A\u4E49\u8FDE\u63A5\u70B9\u7684\u6CD5\u7EBF\u65B9\u5411\u3002",\r\n  "type": "string",\r\n  "enum": ["xp", "xn", "yp", "yn", "zp", "zn"],\r\n  "default": "yp",\r\n  "examples": ["yp", "xn", "zp"],\r\n  "description_map": {\r\n    "xp": "\u6B63X\u8F74\u65B9\u5411",\r\n    "xn": "\u8D1FX\u8F74\u65B9\u5411",\r\n    "yp": "\u6B63Y\u8F74\u65B9\u5411",\r\n    "yn": "\u8D1FY\u8F74\u65B9\u5411",\r\n    "zp": "\u6B63Z\u8F74\u65B9\u5411",\r\n    "zn": "\u8D1FZ\u8F74\u65B9\u5411"\r\n  }\r\n}', "zh_cn/schemas/base/material_attr.schema.json": '{\n  "$schema": "http://json-schema.org/draft-07/schema#",\n  "$id": "https://machine_max.io/schemas/base/material_attr.json",\n  "title": "\u6750\u6599\u5C5E\u6027",\n  "description": "\u5B9A\u4E49\u6750\u6599\u7684\u7269\u7406\u5C5E\u6027\u3001\u88C5\u7532\u9632\u62A4\u548C\u547D\u4E2D\u97F3\u6548\uFF0C\u6309 physics / armor / sounds \u4E09\u7EC4\u7EC4\u7EC7\u3002",\n  "type": "object",\n  "properties": {\n    "$schema": {\n      "type": "string",\n      "description": "JSON Schema\u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u667A\u80FD\u63D0\u793A\u548C\u9A8C\u8BC1",\n      "default": "../docs/zh_cn/schemas/base/material_attr.schema.json"\n    },\n    "physics": {\n      "type": "object",\n      "description": "\u7269\u7406\u5C5E\u6027\uFF1A\u6469\u64E6\u3001\u6ED1\u79FB\u3001\u5F39\u6027\u7B49\u7269\u7406\u6A21\u62DF\u53C2\u6570\u3002",\n      "properties": {\n        "friction": {\n          "$ref": "vector_3d.schema.json",\n          "default": [0.5, 0.5, 0.5],\n          "description": "\u6469\u64E6\u7CFB\u6570\u5411\u91CF\uFF0C\u683C\u5F0F\u4E3A[x, y, z]\u3002x\u4E3A\u4FA7\u5411\u6469\u64E6\u7CFB\u6570\uFF0Cy\u4E3A\u524D\u5411\u6469\u64E6\u7CFB\u6570\uFF0Cz\u65E0\u5B9E\u9645\u610F\u4E49\u3002"\n        },\n        "slip_adaptation": {\n          "type": "number",\n          "minimum": 0.0,\n          "maximum": 1.0,\n          "default": 0.5,\n          "description": "\u6ED1\u79FB\u9002\u5E94\u7CFB\u6570\uFF0C\u7528\u4E8E\u8C03\u6574\u5728\u6ED1\u52A8\u65F6\u7684\u6469\u64E6\u884C\u4E3A\u3002"\n        },\n        "slip_curve": {\n          "type": "object",\n          "description": "\u8F6E\u80CE\u6ED1\u79FB\u6469\u64E6\u66F2\u7EBF\u53C2\u6570\u3002",\n          "properties": {\n            "longitudinal": {\n              "type": "object",\n              "description": "\u7EB5\u5411\u6ED1\u79FB\u7387\u66F2\u7EBF\u53C2\u6570\u3002",\n              "properties": {\n                "peak_slip_ratio": { "type": "number", "minimum": 0.0, "default": 0.2, "description": "\u5CF0\u503C\u6ED1\u79FB\u7387\uFF08\u65E0\u91CF\u7EB2\uFF09\u3002" },\n                "base_scale": { "type": "number", "default": 1.0, "description": "\u6ED1\u79FB\u7387\u4E3A0\u65F6\u7684\u6469\u64E6\u7F29\u653E\u3002" },\n                "peak_scale": { "type": "number", "default": 1.4, "description": "\u5CF0\u503C\u6ED1\u79FB\u7387\u5904\u7684\u6469\u64E6\u7F29\u653E\u3002" },\n                "kinetic_scale": { "type": "number", "default": 0.9, "description": "\u9AD8\u6ED1\u79FB\u72B6\u6001\u4E0B\uFF08\u52A8\u6469\u64E6\u6BB5\uFF09\u7684\u6469\u64E6\u7F29\u653E\u3002" }\n              },\n              "additionalProperties": false\n            },\n            "lateral": {\n              "type": "object",\n              "description": "\u4FA7\u5411\u6ED1\u79FB\u89D2\u66F2\u7EBF\u53C2\u6570\uFF08\u89D2\u5EA6\u5355\u4F4D\u4E3A\u5EA6\uFF09\u3002",\n              "properties": {\n                "peak_angle_deg": { "type": "number", "minimum": 0.0, "default": 12.0, "description": "\u5CF0\u503C\u4FA7\u504F\u89D2\uFF08\u5EA6\uFF09\u3002" },\n                "kinetic_angle_deg": { "type": "number", "minimum": 0.0, "default": 90.0, "description": "\u8FDB\u5165\u52A8\u6469\u64E6\u5E73\u53F0\u7684\u4FA7\u504F\u89D2\uFF08\u5EA6\uFF09\u3002" },\n                "base_scale": { "type": "number", "default": 1.0, "description": "\u4FA7\u504F\u89D2\u4E3A0\u5EA6\u65F6\u7684\u6469\u64E6\u7F29\u653E\u3002" },\n                "peak_scale": { "type": "number", "default": 1.2, "description": "\u5CF0\u503C\u4FA7\u504F\u89D2\u5904\u7684\u6469\u64E6\u7F29\u653E\u3002" },\n                "kinetic_scale": { "type": "number", "default": 0.7, "description": "\u9AD8\u4FA7\u504F\u89D2\u72B6\u6001\u4E0B\uFF08\u52A8\u6469\u64E6\u6BB5\uFF09\u7684\u6469\u64E6\u7F29\u653E\u3002" }\n              },\n              "additionalProperties": false\n            }\n          },\n          "additionalProperties": false\n        },\n        "rolling_friction": { "type": "number", "minimum": 0.0, "default": 0.2, "description": "\u6EDA\u52A8\u6469\u64E6\u7CFB\u6570\u3002" },\n        "spinning_friction": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "\u65CB\u8F6C\u6469\u64E6\u7CFB\u6570\u3002" },\n        "restitution": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.1, "description": "\u6062\u590D\u7CFB\u6570\uFF08\u5F39\u6027\uFF09\uFF0C0\u4E3A\u5B8C\u5168\u975E\u5F39\u6027\u78B0\u649E\uFF0C1\u4E3A\u5B8C\u5168\u5F39\u6027\u78B0\u649E\u3002" },\n        "block_damage_factor": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "\u65B9\u5757\u7834\u574F\u7CFB\u6570\uFF0C0\u4E3A\u65E0\u6CD5\u7834\u574F\u65B9\u5757\u3002" }\n      },\n      "additionalProperties": false\n    },\n    "armor": {\n      "type": "object",\n      "description": "\u88C5\u7532\u5C5E\u6027\uFF1A\u6297\u7A7F\u3001\u7EBF\u6027\u51CF\u4F24\u3001\u767E\u5206\u6BD4\u51CF\u4F24\u3001\u8010\u4E45\u8870\u51CF\u53C2\u6570\u53CA\u6761\u4EF6\u5316\u4F24\u5BB3\u4FEE\u6B63\u5668\u3002\u4F24\u5BB3\u7BA1\u7EBF\uFF1Adamage_modifiers \u2192 (dmg - dmg_resist) * dmg_mult\u3002",\n      "properties": {\n        "rha": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "\u6750\u6599\u76F8\u5BF9\u8F67\u5236\u5747\u8D28\u88C5\u7532(RHA)\u7684\u6297\u7A7F\u80FD\u529B\u7CFB\u6570\u3002" },\n        "angle_effect": { "type": "boolean", "default": true, "description": "\u7B49\u6548\u62A4\u7532\u539A\u5EA6\u662F\u5426\u53D7\u5165\u5C04\u89D2\u5EA6\u5F71\u54CD\u3002" },\n        "dmg_resist": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "\u5168\u5C40\u7EBF\u6027\u51CF\u4F24\u503C\uFF0C\u6700\u7EC8\u4F24\u5BB3\u5C06\u88AB\u51CF\u53BB\u8BE5\u503C\uFF08\u53D7\u8010\u4E45\u8870\u51CF\u5F71\u54CD\uFF09\u3002" },\n        "dmg_mult": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.95, "description": "\u5168\u5C40\u4F24\u5BB3\u4E58\u6570\uFF0C\u6700\u7EC8\u4F24\u5BB3\u5C06\u88AB\u4E58\u4EE5\u8BE5\u503C\uFF08\u53D7\u8010\u4E45\u8870\u51CF\u5F71\u54CD\uFF09\u30020.95=\u627F\u53D795%\u4F24\u5BB3\u3002" },\n        "decay_rha": { "type": "number", "minimum": 0.0, "default": 0.3, "description": "\u8010\u4E45\u5F52\u96F6\u65F6 RHA \u7CFB\u6570\u7684\u6B8B\u4F59\u503C\u3002" },\n        "decay_dmg_resist": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "\u8010\u4E45\u5F52\u96F6\u65F6\u7EBF\u6027\u51CF\u4F24\u7684\u6B8B\u4F59\u503C\uFF0C\u9ED8\u8BA40.0\u8868\u793A\u5B8C\u5168\u5F52\u96F6\u3002" },\n        "decay_dmg_mult": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 1.0, "description": "\u8010\u4E45\u5F52\u96F6\u65F6\u4F24\u5BB3\u4E58\u6570\u7684\u6B8B\u4F59\u503C\uFF0C\u9ED8\u8BA41.0\u8868\u793A\u5B8C\u5168\u5931\u6548\u3002" },\n        "decay_power": { "type": "number", "minimum": 0.0, "default": 1.5, "description": "\u88C5\u7532\u9000\u5316\u66F2\u7EBF\u6307\u6570\u3002>1\u65F6\u88C5\u7532\u524D\u671F\u9000\u5316\u6162\u3001\u4E34\u8FD1\u635F\u574F\u65F6\u5FEB\u901F\u5931\u6548\uFF08\u8106\u6027\uFF09\uFF1B=1\u65F6\u4E3A\u7EBF\u6027\u9000\u5316\u3002" },\n        "unpen_power": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "\u653B\u51FB\u672A\u80FD\u5B8C\u5168\u51FB\u7A7F\u62A4\u7532\u65F6\u7684\u4F24\u5BB3\u6307\u6570\u3002\u516C\u5F0F: \u4F24\u5BB3*(\u7A7F\u6DF1/\u7B49\u6548\u62A4\u7532)^unpen_power\u3002" },\n        "impact_modifiers": {\n          "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json",\n          "description": "\u6761\u4EF6\u9A71\u52A8\u7684\u51B2\u51FB\u4FEE\u6B63\u5668\u3002"\n        },\n        "penetration_modifiers": {\n          "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json",\n          "description": "\u6761\u4EF6\u9A71\u52A8\u7684\u7A7F\u6DF1\u4FEE\u6B63\u5668\u3002"\n        },\n        "damage_modifiers": {\n          "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json",\n          "description": "\u6761\u4EF6\u9A71\u52A8\u7684\u4F24\u5BB3\u4FEE\u6B63\u5668\uFF08\u7C7B\u578B/\u5B9E\u4F53\u7279\u5B9A\u8C03\u8282\uFF09\u3002"\n        }\n      },\n      "additionalProperties": false\n    },\n    "sounds": {\n      "type": "object",\n      "properties": {\n        "hit_un_pen": {\n          "$ref": "sound_event.schema.json",\n          "description": "\u78B0\u649E\u7BB1\u88AB\u547D\u4E2D\u4F46\u672A\u7A7F\u900F\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\n          "default": { "sound_id": "machine_max:hit_box.hit.up_pen.metal", "range": 64 }\n        },\n        "hit_pen": {\n          "$ref": "sound_event.schema.json",\n          "description": "\u78B0\u649E\u7BB1\u88AB\u547D\u4E2D\u4E14\u7A7F\u900F\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\n          "default": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }\n        }\n      },\n      "additionalProperties": false,\n      "description": "\u6750\u6599\u547D\u4E2D\u97F3\u6548\u914D\u7F6E\u3002"\n    }\n  },\n  "additionalProperties": false,\n  "examples": [\n    {\n      "physics": { "friction": [0.5, 0.5, 0.5] },\n      "armor": {\n        "rha": 1.0,\n        "dmg_resist": 1.0,\n        "dmg_mult": 0.95\n      },\n      "sounds": {\n        "hit_un_pen": { "sound_id": "machine_max:hit_box.hit.up_pen.metal", "range": 64 },\n        "hit_pen": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }\n      }\n    }\n  ]\n}', "zh_cn/schemas/base/operation.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/operation.json",\r\n  "title": "\u64CD\u4F5C\u7B26",\r\n  "description": "\u6570\u5B66\u64CD\u4F5C\u7B26\uFF0C\u7528\u4E8E\u4FEE\u6539\u5668\u4E2D\u7684\u6570\u503C\u8FD0\u7B97",\r\n  "type": "string",\r\n  "enum": ["add", "multiply"],\r\n  "default": "add",\r\n  "examples": ["add", "multiply"]\r\n}', "zh_cn/schemas/base/resource_location.schema.json": `{\r
+}`, "en_us/schemas/subsystem/subsystem_dynamic_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subsystem/subsystem_dynamic_attr.json",\r\n  "title": "Subsystem Dynamic Attributes",\r\n  "description": "Top-level architecture for subsystem dynamic attributes, dispatched to specific subsystem dynamic attribute schemas based on the type field.",\r\n  "type": "object",\r\n  "properties": {\r\n    "type": {\r\n      "type": "string",\r\n      "enum": [\r\n        "machine_max:basic",\r\n        "machine_max:camera",\r\n        "machine_max:car_controller",\r\n        "machine_max:motorbike_controller",\r\n        "machine_max:engine",\r\n        "machine_max:gearbox",\r\n        "machine_max:item_storage",\r\n        "machine_max:motor",\r\n        "machine_max:seat",\r\n        "machine_max:sight",\r\n        "machine_max:transmission",\r\n        "machine_max:wheel_driver",\r\n        "machine_max:lighting",\r\n        "machine_max:turret_driver",\r\n        "machine_max:weapon_controller"\r\n      ],\r\n      "description": "Subsystem type, determines which specific subsystem schema to use."\r\n    }\r\n  },\r\n  "additionalProperties": true,\r\n  "required": [\r\n    "type"\r\n  ],\r\n  "allOf": [\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:camera"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/camera_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:car_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/car_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:engine"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/engine_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:gearbox"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/gearbox_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:item_storage"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/item_storage_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motor"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/motor_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motor_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/motorbike_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:seat"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/seat_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:sight"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/sight_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:transmission"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/transmission_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:wheel_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/wheel_driver_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:lighting"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/lighting_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:turret_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/turret_driver_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:weapon_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/weapon_controller_dynamic_attr.schema.json"\r\n      }\r\n    }\r\n  ],\r\n  "examples": [\r\n    {\r\n      "type": "machine_max:car_controller",\r\n      "definition": "machine_max:ae86at_car_controller",\r\n      "control_outputs": {\r\n        "car_control": [\r\n          "subsystem.machine_max.engine",\r\n          "subsystem.machine_max.left_front_wheel_driver",\r\n          "subsystem.machine_max.right_front_wheel_driver",\r\n          "subsystem.machine_max.left_back_wheel_driver",\r\n          "subsystem.machine_max.right_back_wheel_driver",\r\n          "subsystem.machine_max.gearbox"\r\n        ]\r\n      }\r\n    },\r\n    {\r\n      "type": "machine_max:engine",\r\n      "definition": "machine_max:ae86at_engine",\r\n      "power_output": "gearbox"\r\n    }\r\n  ]\r\n}', "en_us/schemas/subsystem/subsystem_static_attr.schema.json": '{\n  "$schema": "http://json-schema.org/draft-07/schema#",\n  "$id": "https://machine_max.io/schemas/subsystem/subsystem_static_attr.json",\n  "title": "Subsystem Static Attributes",\n  "description": "Top-level architecture for subsystem static attributes, dispatched to specific subsystem types based on the type field.",\n  "type": "object",\n  "properties": {\n    "type": {\n      "type": "string",\n      "enum": [\n        "machine_max:basic",\n        "machine_max:camera",\n        "machine_max:car_controller",\n        "machine_max:engine",\n        "machine_max:gearbox",\n        "machine_max:item_storage",\n        "machine_max:launcher",\n        "machine_max:motor",\n        "machine_max:motor_controller",\n        "machine_max:regen_loader",\n        "machine_max:seat",\n        "machine_max:sight",\n        "machine_max:transmission",\n        "machine_max:wheel_driver",\n        "machine_max:lighting",\n        "machine_max:turret_driver",\n        "machine_max:weapon_controller"\n      ],\n      "description": "Subsystem type, determines which specific subsystem schema to use."\n    }\n  },\n  "additionalProperties": true,\n  "required": [\n    "type"\n  ],\n  "allOf": [\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:camera"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/camera_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:car_controller"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/car_controller_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:engine"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/engine_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:gearbox"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/gearbox_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:item_storage"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/item_storage_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:launcher"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/launcher_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:motor"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/motor_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:motor_controller"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/motorbike_controller_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:seat"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/seat_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:sight"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/sight_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:transmission"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/transmission_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:wheel_driver"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/wheel_driver_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:lighting"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/lighting_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:turret_driver"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/turret_driver_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:regen_loader"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/regen_loader_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:weapon_controller"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/weapon_controller_static_attr.schema.json"\n      }\n    }\n  ],\n  "examples": [\n    {\n      "$schema": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json",\n      "type": "machine_max:item_storage",\n      "basic_durability": 100.0,\n      "rows": 6,\n      "columns": 9\n    },\n    {\n      "$schema": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json",\n      "type": "machine_max:engine",\n      "max_power": 75000.0,\n      "max_torque": 130.0,\n      "red_line_rpm": 6500.0\n    }\n  ]\n}', "en_us/schemas/\u5982\u4F55\u4F7F\u7528JSON\u6A21\u677F.md": '# JSON Schema\u5728Machine-Max\u5185\u5BB9\u5305\u5236\u4F5C\u4E2D\u7684\u5E94\u7528\u6307\u5357\r\n\r\n## \u4EC0\u4E48\u662FJSON Schema\uFF1F\r\n\r\nJSON Schema\u662F\u4E00\u79CD\u7528\u4E8E\u63CF\u8FF0\u548C\u9A8C\u8BC1JSON\u6587\u6863\u7ED3\u6784\u7684\u89C4\u8303\u3002\u5BF9\u4E8EMachine-Max\u7684\u5185\u5BB9\u5305\u5236\u4F5C\uFF0CJSON Schema\u80FD\u591F\u5E2E\u52A9\u4F60\uFF1A\r\n\r\n- **\u9A8C\u8BC1\u914D\u7F6E\u683C\u5F0F**\uFF1A\u786E\u4FDD\u4F60\u7684JSON\u914D\u7F6E\u6587\u4EF6\u683C\u5F0F\u6B63\u786E\r\n- **\u63D0\u4F9B\u667A\u80FD\u63D0\u793A**\uFF1A\u5728\u652F\u6301\u7684\u7F16\u8F91\u5668\u4E2D\u663E\u793A\u5C5E\u6027\u8BF4\u660E\u548C\u7C7B\u578B\u8981\u6C42\r\n- **\u51CF\u5C11\u9519\u8BEF**\uFF1A\u63D0\u524D\u53D1\u73B0\u914D\u7F6E\u9519\u8BEF\uFF0C\u907F\u514D\u6E38\u620F\u5185\u95EE\u9898\r\n\r\n## \u4E3A\u4EC0\u4E48\u5185\u5BB9\u5305\u5236\u4F5C\u8005\u9700\u8981\u5173\u6CE8JSON Schema\uFF1F\r\n\r\n\u5373\u4F7F\u4F60\u6CA1\u6709\u7F16\u7A0B\u7ECF\u9A8C\uFF0CJSON Schema\u4E5F\u80FD\u8BA9\u4F60\u7684\u5185\u5BB9\u5305\u5236\u4F5C\u8FC7\u7A0B\u66F4\u987A\u7545\uFF1A\r\n\r\n1. **\u81EA\u52A8\u8865\u5168**\uFF1A\u73B0\u4EE3\u7F16\u8F91\u5668\uFF08\u5982VSCode\uFF09\u53EF\u4EE5\u6839\u636ESchema\u63D0\u4F9B\u5C5E\u6027\u540D\u81EA\u52A8\u8865\u5168\r\n2. **\u9519\u8BEF\u63D0\u793A**\uFF1A\u5728\u914D\u7F6E\u9519\u8BEF\u65F6\u7ACB\u5373\u63D0\u793A\uFF0C\u800C\u4E0D\u662F\u7B49\u5230\u6E38\u620F\u4E2D\u624D\u53D1\u73B0\u95EE\u9898\r\n3. **\u5C5E\u6027\u8BF4\u660E**\uFF1A\u67E5\u770B\u6BCF\u4E2A\u914D\u7F6E\u9879\u7684\u5177\u4F53\u542B\u4E49\u548C\u4F7F\u7528\u65B9\u6CD5\r\n4. **\u7C7B\u578B\u68C0\u67E5**\uFF1A\u786E\u4FDD\u4F60\u8F93\u5165\u7684\u6570\u636E\u7C7B\u578B\u6B63\u786E\uFF08\u6570\u5B57\u3001\u5B57\u7B26\u4E32\u3001\u5E03\u5C14\u503C\u7B49\uFF09\r\n\r\n## \u5982\u4F55\u4F7F\u7528JSON Schema\uFF1F\r\n\r\n### 1. \u914D\u7F6E\u7F16\u8F91\u5668\u652F\u6301\r\n\r\n\u5728\u4F60\u7684JSON\u6587\u4EF6\u9876\u90E8\u6DFB\u52A0`$schema`\u5B57\u6BB5\uFF0C\u6216\u76F4\u63A5\u590D\u5236\u5DF2\u6709\u7684\u793A\u4F8BJSON\uFF0C\u4F8B\u5982\uFF1A\r\n\r\n```json\r\n{\r\n  "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",\r\n  "vehicle_durability_rate": 1.0,\r\n  "variants": {\r\n    "default": {\r\n      "icon": "machine_max:textures/icon/example.png",\r\n      "models": "machine_max:example.geo"\r\n    }\r\n  }\r\n}\r\n```\r\n\u6CE8\u610F\uFF0C\u5728\u8FD9\u91CC`$schema`\u5B57\u6BB5\u7684\u503C\u4E3A\u76F8\u5BF9\u8DEF\u5F84\uFF0C"../"\u8868\u793A\u5F53\u524D\u6587\u4EF6\u7684\u4E0A\u7EA7\u76EE\u5F55\u3002\r\n\r\n### 2. \u63A8\u8350\u7F16\u8F91\u5668\r\n\r\n- **VSCode**\uFF1A\u539F\u751F\u652F\u6301JSON Schema\r\n\r\n### 3. \u5728VSCode\u4E2D\u542F\u7528JSON Schema\u9A8C\u8BC1\r\n\r\n **\u63A8\u8350\u76F4\u63A5\u590D\u7528\u5B98\u65B9\u5185\u5BB9\u5305\u7684\u6587\u4EF6\u7ED3\u6784\uFF0C\u5E76\u539F\u6837\u590D\u5236docs\u6587\u4EF6\u5939\u5230\u4F60\u81EA\u5DF1\u7684\u5185\u5BB9\u5305\uFF0C\u518D\u5728\u90E8\u4EF6\u548C\u5B50\u7CFB\u7EDFjson\u6587\u4EF6\u5F00\u5934\u6DFB\u52A0`$schema`\u5F15\u7528\u5373\u53EF\u3002**\r\n\r\n## \u5B9E\u9645\u5236\u4F5C\u4E2D\u7684\u5E94\u7528\u793A\u4F8B\r\n\r\n### \u6B65\u9AA41\uFF1A\u521B\u5EFA\u65B0\u90E8\u4EF6\r\n\r\n1. \u590D\u5236\u73B0\u6709\u7684\u90E8\u4EF6JSON\u6587\u4EF6\u4F5C\u4E3A\u6A21\u677F\r\n2. \u5728\u6587\u4EF6\u5F00\u5934\u6DFB\u52A0`$schema`\u5F15\u7528\r\n3. \u6839\u636E\u7F16\u8F91\u5668\u7684\u667A\u80FD\u63D0\u793A\u6DFB\u52A0\u914D\u7F6E\u9879\r\n\r\n### \u6B65\u9AA42\uFF1A\u9A8C\u8BC1\u914D\u7F6E\r\n\r\n1. \u4FDD\u5B58\u6587\u4EF6\u540E\u67E5\u770B\u7F16\u8F91\u5668\u662F\u5426\u663E\u793A\u9519\u8BEF\r\n2. \u6839\u636E\u63D0\u793A\u4FEE\u6B63\u914D\u7F6E\u683C\u5F0F\u95EE\u9898\r\n3. \u6D4B\u8BD5\u5185\u5BB9\u5305\u5728\u6E38\u620F\u4E2D\u662F\u5426\u6B63\u5E38\u5DE5\u4F5C\r\n\r\n### \u6B65\u9AA43\uFF1A\u8C03\u8BD5\u95EE\u9898\r\n\r\n\u5982\u679C\u5185\u5BB9\u5305\u5728\u6E38\u620F\u4E2D\u4E0D\u5DE5\u4F5C\uFF0C\u68C0\u67E5\uFF1A\r\n\r\n1. JSON\u683C\u5F0F\u662F\u5426\u6B63\u786E\uFF08\u4F7F\u7528Schema\u9A8C\u8BC1\uFF09\r\n2. \u6240\u6709\u5FC5\u9700\u5B57\u6BB5\u662F\u5426\u90FD\u5DF2\u586B\u5199\r\n3. \u6570\u636E\u7C7B\u578B\u662F\u5426\u5339\u914D\uFF08\u6570\u5B57 vs \u5B57\u7B26\u4E32\u7B49\uFF09\r\n\r\n## \u5E38\u89C1\u95EE\u9898\u4E0E\u89E3\u51B3\u65B9\u6848\r\n\r\n### Q: \u7F16\u8F91\u5668\u63D0\u793A\u9519\u8BEF\uFF0C\u4F46\u914D\u7F6E\u770B\u8D77\u6765\u662F\u6B63\u786E\u7684\uFF1F\r\nA: \u68C0\u67E5\uFF1A\r\n- JSON\u8BED\u6CD5\u662F\u5426\u6B63\u786E\uFF08\u9017\u53F7\u3001\u62EC\u53F7\u662F\u5426\u6709\u7F3A\u6F0F\u7B49\uFF0C\u52A1\u5FC5\u6CE8\u610F\u4E0D\u8981\u4F7F\u7528\u4E2D\u6587\u6807\u70B9\u7B26\u53F7\uFF09\r\n- \u5B57\u6BB5\u540D\u79F0\u662F\u5426\u62FC\u5199\u6B63\u786E\r\n- \u6570\u636E\u7C7B\u578B\u662F\u5426\u5339\u914D\uFF08\u5982\u9700\u8981\u6570\u5B57\u4F46\u8F93\u5165\u4E86\u5B57\u7B26\u4E32\uFF09\r\n\r\n### Q: \u5982\u4F55\u77E5\u9053\u54EA\u4E9B\u5B57\u6BB5\u662F\u5FC5\u9700\u7684\uFF1F\r\nA: \u67E5\u770BSchema\u6587\u4EF6\u4E2D\u7684`required`\u5B57\u6BB5\uFF0C\u6216\u8005\u5728\u652F\u6301\u7684\u7F16\u8F91\u5668\u4E2D\u4F1A\u6709\u76F8\u5E94\u63D0\u793A\u3002\r\n\r\n### Q: \u8FD9\u4E9B\u5B57\u6BB5\u7684\u4F5C\u7528\u90FD\u662F\u4EC0\u4E48\uFF1F\r\nA: \u5C06\u9F20\u6807\u653E\u5230\u5B57\u6BB5\u4E0A\uFF0C\u5373\u53EF\u67E5\u770B\u5B57\u6BB5\u7684\u8BF4\u660E\u548C\u7C7B\u578B\u8981\u6C42\u3002\r\n\r\n## \u63D0\u9AD8\u6548\u7387\u7684\u6280\u5DE7\r\n\r\n1. **\u4F7F\u7528\u6A21\u677F**\uFF1A\u57FA\u4E8E\u73B0\u6709\u5DE5\u4F5C\u6B63\u5E38\u7684\u914D\u7F6E\u521B\u5EFA\u65B0\u914D\u7F6E\r\n2. **\u9010\u6B65\u6DFB\u52A0**\uFF1A\u5148\u6DFB\u52A0\u57FA\u672C\u914D\u7F6E\uFF0C\u9A8C\u8BC1\u65E0\u8BEF\u540E\u518D\u6DFB\u52A0\u9AD8\u7EA7\u9009\u9879\r\n3. **\u53C2\u8003\u793A\u4F8B**\uFF1A\u67E5\u770B\u5B98\u65B9\u5305\u4E2D\u7684\u793A\u4F8B\u914D\u7F6E\u6587\u4EF6\r\n4. **\u5B9E\u65F6\u9A8C\u8BC1**\uFF1A\u5728\u7F16\u8F91\u5668\u4E2D\u5B9E\u65F6\u67E5\u770B\u9A8C\u8BC1\u7ED3\u679C\r\n\r\n## \u603B\u7ED3\r\n\r\nJSON Schema\u662F\u5185\u5BB9\u5305\u5236\u4F5C\u7684\u5F3A\u5927\u8F85\u52A9\u5DE5\u5177\uFF0C\u5B83\u80FD\u5E2E\u52A9\u4F60\u521B\u5EFA\u683C\u5F0F\u6B63\u786E\u3001\u7ED3\u6784\u5B8C\u6574\u7684\u914D\u7F6E\u6587\u4EF6\u3002\u5373\u4F7F\u6CA1\u6709\u7F16\u7A0B\u7ECF\u9A8C\uFF0C\u4F7F\u7528\u652F\u6301Schema\u7684\u7F16\u8F91\u5668\u4E5F\u80FD\u5927\u5927\u63D0\u9AD8\u5236\u4F5C\u6548\u7387\u548C\u51C6\u786E\u6027\u3002\r\n\r\n\u5F00\u59CB\u4F7F\u7528\u65F6\uFF0C\u5EFA\u8BAE\u5148\u4ECE\u7B80\u5355\u7684\u914D\u7F6E\u5F00\u59CB\uFF0C\u9010\u6B65\u719F\u6089Schema\u63D0\u4F9B\u7684\u5404\u79CD\u529F\u80FD\uFF0C\u968F\u7740\u7ECF\u9A8C\u7684\u79EF\u7D2F\uFF0C\u4F60\u4F1A\u53D1\u73B0\u5236\u4F5C\u5185\u5BB9\u5305\u53D8\u5F97\u66F4\u52A0\u7B80\u5355\u548C\u53EF\u9760\u3002', "zh_cn/hud.md": '# HUD \u7F16\u5199\u6307\u5357\r\n\r\nMachine-Max \u63D0\u4F9B\u4E86\u5F3A\u5927\u7684\u81EA\u5B9A\u4E49HUD\u7CFB\u7EDF\uFF0C\u5141\u8BB8\u4E3A\u4E0D\u540C\u7684\u8F66\u8F86\u548C\u5B50\u7CFB\u7EDF\u521B\u5EFA\u4E13\u5C5E\u7684\u754C\u9762\u663E\u793A\u3002HUD\u7CFB\u7EDF\u57FA\u4E8E\u6A21\u578B\u3001\u52A8\u753B\u548CMolang\u811A\u672C\uFF0C\u53EF\u4EE5\u5B9E\u73B0\u52A8\u6001\u7684\u4EEA\u8868\u76D8\u3001\u72B6\u6001\u6307\u793A\u5668\u548C\u4FE1\u606F\u663E\u793A\u3002\r\n\r\n## HUD\u7CFB\u7EDF\u6982\u8FF0\r\n\r\n### \u6838\u5FC3\u7EC4\u4EF6\u6587\u4EF6\u8DEF\u5F84\r\n\r\n\u4EE5\u4E0B\u662F\u793A\u4F8BHUD\u7684\u6838\u5FC3\u7EC4\u4EF6\u6587\u4EF6\u8DEF\u5F84\uFF0C\u60A8\u53EF\u4EE5\u5728\u8FD9\u4E9B\u4F4D\u7F6E\u627E\u5230\u5B8C\u6574\u7684\u5B9E\u73B0\u793A\u4F8B\uFF1A\r\n\r\n- **HUD\u914D\u7F6E\u6587\u4EF6**: [huds/example_hud.json](../../huds/example_hud.json)\r\n- **3D\u6A21\u578B\u6587\u4EF6**: [models/hud/example_hud.geo.json](../../models/hud/example_hud.geo.json)\r\n- **\u52A8\u753B\u6587\u4EF6**: [animations/hud/example_hud/example_hud.animation.json](../../animations/hud/example_hud/example_hud.animation.json)\r\n- **\u7EB9\u7406\u6587\u4EF6**: [textures/hud/example_hud.png](../../textures/hud/example_hud.png)\r\n- **\u8BED\u8A00\u6587\u4EF6**: [lang/zh_cn.json](../../lang/zh_cn.json)\r\n- **\u5B50\u7CFB\u7EDF\u914D\u7F6E**: [subsystems/default_seat.json](../../subsystems/default_seat.json)\r\n- **\u9AD8\u7EA7\u5B50\u7CFB\u7EDF\u914D\u7F6E**: [subsystems/senna_gtr/senna_gtr_seat.json](../../subsystems/senna_gtr/senna_gtr_seat.json)\r\n\r\n\r\n## \u76EE\u5F55\u7ED3\u6784\r\n- [HUD\u7CFB\u7EDF\u6982\u8FF0](#hud\u7CFB\u7EDF\u6982\u8FF0)\r\n- [HUD\u914D\u7F6E\u6587\u4EF6\u7ED3\u6784](#hud\u914D\u7F6E\u6587\u4EF6\u7ED3\u6784)\r\n- [\u6A21\u578B\u548C\u52A8\u753B\u8981\u6C42](#\u6A21\u578B\u548C\u52A8\u753B\u8981\u6C42)\r\n- [\u6587\u672C\u663E\u793A\u914D\u7F6E](#\u6587\u672C\u663E\u793A\u914D\u7F6E)\r\n- [Molang\u5728HUD\u4E2D\u7684\u5E94\u7528](#molang\u5728hud\u4E2D\u7684\u5E94\u7528)\r\n- [\u5B50\u7CFB\u7EDFHUD\u5173\u8054](#\u5B50\u7CFB\u7EDFhud\u5173\u8054)\r\n- [\u5B9E\u9645\u6848\u4F8B\u89E3\u6790](#\u5B9E\u9645\u6848\u4F8B\u89E3\u6790)\r\n- [\u6700\u4F73\u5B9E\u8DF5](#\u6700\u4F73\u5B9E\u8DF5)\r\n\r\n## HUD\u7CFB\u7EDF\u6982\u8FF0\r\n\r\nMachine-Max\u7684HUD\u7CFB\u7EDF\u5305\u542B\u4EE5\u4E0B\u6838\u5FC3\u7EC4\u4EF6\uFF1A\r\n\r\n1. **HUD\u914D\u7F6E** (`.json`\u6587\u4EF6) - \u5B9A\u4E49HUD\u7684\u57FA\u672C\u5C5E\u6027\u548C\u6587\u672C\u663E\u793A\r\n2. **3D\u6A21\u578B** (`.geo.json`\u6587\u4EF6) - \u63D0\u4F9BHUD\u7684\u51E0\u4F55\u5F62\u72B6\u548C\u9AA8\u9ABC\u7ED3\u6784\r\n3. **\u52A8\u753B\u6587\u4EF6** (`.animation.json`\u6587\u4EF6) - \u63A7\u5236HUD\u5143\u7D20\u7684\u52A8\u6001\u884C\u4E3A\r\n4. **\u7EB9\u7406\u6587\u4EF6** (`.png`\u6587\u4EF6) - \u63D0\u4F9BHUD\u7684\u89C6\u89C9\u5916\u89C2\r\n5. **\u5B50\u7CFB\u7EDF\u914D\u7F6E** - \u5C06HUD\u4E0E\u7279\u5B9A\u7684\u5EA7\u6905\u5B50\u7CFB\u7EDF\u5173\u8054\r\n\r\n## HUD\u914D\u7F6E\u6587\u4EF6\u7ED3\u6784\r\n\r\nHUD\u914D\u7F6E\u6587\u4EF6\u662FHUD\u7CFB\u7EDF\u7684\u6838\u5FC3\uFF0C\u5B9A\u4E49\u4E86HUD\u7684\u57FA\u672C\u5C5E\u6027\u548C\u663E\u793A\u884C\u4E3A\u3002\r\n\r\n### \u57FA\u672C\u7ED3\u6784\r\n```json\r\n{\r\n  "model": "machine_max:example_hud.geo",\r\n  "animation": "machine_max:example_hud",\r\n  "texture": "machine_max:textures/hud/example_hud.png",\r\n  "offset": [95, 55, -135],\r\n  "rotation": [-25, -30, 0],\r\n  "scale": [15, 15, 15],\r\n  "color": [255, 255, 255],\r\n  "alpha": 255,\r\n  "perspective": true,\r\n  "texts": {\r\n    // \u6587\u672C\u914D\u7F6E\r\n  },\r\n  "scissor": {\r\n    "enable": false,\r\n    "x": 0,\r\n    "y": 0,\r\n    "width": 0,\r\n    "height": 0\r\n  }\r\n}\r\n```\r\n\r\n### \u914D\u7F6E\u53C2\u6570\u8BF4\u660E\r\n\r\n#### \u57FA\u672C\u5C5E\u6027\r\n- **model** (\u5FC5\u9700): HUD\u76843D\u6A21\u578B\u8D44\u6E90\u5730\u5740\uFF0C\u5982 `machine_max:example_hud.geo`\r\n- **animation** (\u5FC5\u9700): HUD\u7684\u52A8\u753B\u8D44\u6E90\u5730\u5740\uFF0C\u5982 `machine_max:example_hud`\r\n- **texture** (\u5FC5\u9700): HUD\u7684\u7EB9\u7406\u8D44\u6E90\u5730\u5740\uFF0C\u5982 `machine_max:textures/hud/example_hud.png`\r\n- **offset** (\u53EF\u9009): \u76F8\u5BF9\u5C4F\u5E55\u4E2D\u5FC3\u7684\u504F\u79FB\u91CF\uFF0C\u900F\u89C6\u6295\u5F71\u4E0B\u5355\u4F4D\u4E3A\u7C73\uFF0C\u6B63\u4EA4\u6295\u5F71\u4E0B\u5355\u4F4D\u4E3A\u50CF\u7D20\r\n- **rotation** (\u53EF\u9009): \u65CB\u8F6C\u89D2\u5EA6\uFF0C\u5355\u4F4D\u4E3A\u5EA6\r\n- **scale** (\u53EF\u9009): \u7F29\u653E\u6BD4\u4F8B\r\n- **color** (\u53EF\u9009): RGB\u989C\u8272\uFF0C\u9ED8\u8BA4\u767D\u8272\r\n- **alpha** (\u53EF\u9009): \u900F\u660E\u5EA6\uFF0C\u9ED8\u8BA4255\r\n- **perspective** (\u53EF\u9009): \u662F\u5426\u91C7\u7528\u900F\u89C6\u6295\u5F71\u6E32\u67D3\uFF0C\u9ED8\u8BA4true\r\n\r\n\r\n#### \u6587\u672C\u663E\u793A\r\n```json\r\n"texts": {\r\n  "locator_name": {\r\n    "key": "translation.key",\r\n    "centered": true,\r\n    "shadow": false,\r\n    "scale": [0.7, 0.7, 0.7],\r\n    "color": [255, 0, 0],\r\n    "molang_args": ["expression1", "expression2"],\r\n    "significand": 0\r\n  }\r\n}\r\n```\r\n\r\n- **locator_name**: \u5B9A\u4F4D\u5668\u540D\u79F0\uFF0C\u7528\u4E8E\u63A7\u5236\u6587\u5B57\u7684\u663E\u793A\u4F4D\u7F6E\u548C\u65CB\u8F6C\r\n- **key**: \u7FFB\u8BD1\u952E\uFF0C\u7528\u4E8E\u7FFB\u8BD1\u6587\u672C\r\n- **centered**: \u662F\u5426\u5C45\u4E2D\u663E\u793A\uFF0C\u9ED8\u8BA4true\r\n- **shadow**: \u662F\u5426\u6E32\u67D3\u6587\u5B57\u9634\u5F71\uFF0C\u9ED8\u8BA4false\r\n- **scale**: \u7F29\u653E\u6BD4\u4F8B\uFF0C\u9ED8\u8BA4[1, 1, 1]\r\n- **color**: RGB\u989C\u8272\r\n- **molang_args**: Molang\u53C2\u6570\uFF0C\u7528\u4E8E\u586B\u5145\u7FFB\u8BD1\u6587\u672C\u9884\u7559\u7684\u53C2\u6570\u4F4D\u7F6E\r\n- **significand**: Molang\u53C2\u6570\u8BA1\u7B97\u7ED3\u679C\u4E3A\u6570\u5B57\u65F6\uFF0C\u4FDD\u7559\u7684\u5C0F\u6570\u70B9\u540E\u4F4D\u6570\uFF0C\u9ED8\u8BA40\r\n\r\n#### \u526A\u88C1\u533A\u57DF\r\n- **scissor**: \u526A\u88C1\u77E9\u5F62\u914D\u7F6E\uFF08\u53EF\u9009\uFF0C\u9ED8\u8BA4\u4E0D\u542F\u7528\uFF09\r\n  - **enable**: \u662F\u5426\u542F\u7528\u526A\u88C1\u77E9\u5F62\r\n  - **x**: \u526A\u88C1\u77E9\u5F62\u4E2D\u5FC3 x \u5750\u6807\uFF08\u50CF\u7D20\uFF09\r\n  - **y**: \u526A\u88C1\u77E9\u5F62\u4E2D\u5FC3 y \u5750\u6807\uFF08\u50CF\u7D20\uFF09\r\n  - **width**: \u526A\u88C1\u77E9\u5F62\u5BBD\u5EA6\uFF08\u50CF\u7D20\uFF09\r\n  - **height**: \u526A\u88C1\u77E9\u5F62\u9AD8\u5EA6\uFF08\u50CF\u7D20\uFF09\r\n\r\n## \u6A21\u578B\u548C\u52A8\u753B\u8981\u6C42\r\n\r\n### 3D\u6A21\u578B\u89C4\u8303\r\nHUD\u6A21\u578B\u4F7F\u7528\u6807\u51C6\u7684Minecraft Bedrock\u683C\u5F0F\uFF0C\u9700\u8981\u5305\u542B\u4EE5\u4E0B\u5143\u7D20\uFF1A\r\n\r\n1. **\u9AA8\u9ABC\u7ED3\u6784**: \u6BCF\u4E2A\u9700\u8981\u663E\u793A\u6587\u672C\u7684\u4F4D\u7F6E\u9700\u8981\u4E00\u4E2A\u5BF9\u5E94\u7684\u9AA8\u9ABC\r\n2. **\u5B9A\u4F4D\u5668**: \u7528\u4E8E\u786E\u5B9A\u6587\u672C\u663E\u793A\u7684\u4F4D\u7F6E\u548C\u65B9\u5411\r\n3. **\u51E0\u4F55\u5F62\u72B6**: \u5B9A\u4E49HUD\u7684\u89C6\u89C9\u5916\u89C2\r\n\r\n\r\n### \u52A8\u753B\u6587\u4EF6\r\n\u52A8\u753B\u6587\u4EF6\u63A7\u5236HUD\u5143\u7D20\u7684\u52A8\u6001\u884C\u4E3A\uFF0C\u53EF\u4EE5\u4F7F\u7528Molang\u8868\u8FBE\u5F0F\u5B9E\u73B0\u52A8\u6001\u6548\u679C\uFF1A\r\n\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(vehicle.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\r\n## \u6587\u672C\u663E\u793A\u914D\u7F6E\r\n\r\n### \u57FA\u672C\u6587\u672C\u663E\u793A\r\n```json\r\n"speed": {\r\n  "key": "hud.machine_max.default_1.speed",\r\n  "centered": true,\r\n  "shadow": true,\r\n  "scale": [2, 2, 2]\r\n}\r\n```\r\n\r\n### \u52A8\u6001\u6587\u672C\u663E\u793A\r\n\u4F7F\u7528Molang\u53C2\u6570\u5B9E\u73B0\u52A8\u6001\u5185\u5BB9\uFF1A\r\n```json\r\n"speed": {\r\n  "key": "hud.machine_max.default_1.speed",\r\n  "molang_args": [\r\n    "math.floor((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n    "math.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n    "math.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n  ],\r\n  "significand": 0\r\n}\r\n```\r\n\r\n### \u6863\u4F4D\u663E\u793A\r\n```json\r\n"gear": {\r\n  "key": "hud.machine_max.default_1.gear",\r\n  "molang_args": ["vehicle.get(\'gear\')??\'NO GBX\'"],\r\n  "centered": true,\r\n  "shadow": true\r\n}\r\n```\r\n\r\n## Molang\u5728HUD\u4E2D\u7684\u5E94\u7528\r\n\r\nHUD\u7CFB\u7EDF\u5145\u5206\u5229\u7528\u4E86Molang\u7684\u5F3A\u5927\u529F\u80FD\uFF0C\u53EF\u4EE5\u5B9E\u73B0\u590D\u6742\u7684\u52A8\u6001\u663E\u793A\u6548\u679C\u3002\r\n\r\n### \u5E38\u7528Molang\u6A21\u5F0F\r\n\r\n#### \u4FE1\u53F7\u83B7\u53D6\u548C\u5355\u4F4D\u8F6C\u6362\r\n```molang\r\n// \u83B7\u53D6\u8F66\u8F86\u901F\u5EA6\u5E76\u8F6C\u6362\u4E3Akm/h\r\nmath.abs(vehicle.get(\'vehicle_speed\')??0.0) * 3.6\r\n\r\n// \u83B7\u53D6\u53D1\u52A8\u673A\u8F6C\u901F\u5E76\u8F6C\u6362\u4E3ARPM\r\nmath.abs(vehicle.get(\'engine_speed\')??0) * 30 / math.pi\r\n```\r\n\r\n#### \u6570\u5B57\u5206\u89E3\u663E\u793A\r\n```molang\r\n// \u767E\u4F4D\u6570\r\nmath.floor((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)\r\n\r\n// \u5341\u4F4D\u6570\r\nmath.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)\r\n\r\n// \u4E2A\u4F4D\u6570\r\nmath.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 10))\r\n```\r\n\r\n#### \u6761\u4EF6\u663E\u793A\r\n```molang\r\n// \u6839\u636E\u5B50\u7CFB\u7EDF\u72B6\u6001\u663E\u793A\u8B66\u544A\r\nsubpart.has_subsystem(\'engine\') && subpart.subsystem_destroyed(\'engine\') ? 1.0 : 0.0\r\n```\r\n\r\n## \u5B50\u7CFB\u7EDFHUD\u5173\u8054\r\n\r\nHUD\u901A\u8FC7\u5EA7\u6905\u5B50\u7CFB\u7EDF\u7684\u89C6\u56FE\u5C5E\u6027\u4E0E\u7279\u5B9A\u5EA7\u4F4D\u5173\u8054\uFF1A\r\n\r\n### \u5EA7\u6905\u5B50\u7CFB\u7EDF\u914D\u7F6E\r\n```json\r\n{\r\n  "type": "machine_max:seat",\r\n  "views": {\r\n    "enable_first_person": true,\r\n    "first_person_hud": ["machine_max:example_hud"],\r\n    "first_person_offset": [0, 0.15, -0.1],\r\n    "enable_third_person": true,\r\n    "third_person_hud": ["machine_max:example_hud"],\r\n    "follow_vehicle": true,\r\n    "focus_on_center": true,\r\n    "distance_scale": 1.1\r\n  }\r\n}\r\n```\r\n\r\n\r\n### \u89C6\u56FE\u5C5E\u6027\u8BF4\u660E\r\n- **enable_first_person**: \u662F\u5426\u542F\u7528\u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\r\n- **first_person_hud**: \u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u4E0B\u7684HUD\u7EC4\u4EF6\u5217\u8868\r\n- **first_person_offset**: \u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u504F\u79FB\u91CF (x+\u53F3, y+\u4E0A, z+\u540E\uFF0C\u5355\u4F4D\u7C73)\r\n- **enable_third_person**: \u662F\u5426\u542F\u7528\u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\r\n- **third_person_hud**: \u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u4E0B\u7684HUD\u7EC4\u4EF6\u5217\u8868\r\n- **follow_vehicle**: \u6444\u50CF\u673A\u662F\u5426\u8DDF\u968F\u8F66\u8F86\u65CB\u8F6C\r\n- **focus_on_center**: \u6444\u50CF\u673A\u662F\u5426\u805A\u7126\u4E8E\u8F7D\u5177\u4E2D\u5FC3\r\n- **distance_scale**: \u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u8DDD\u79BB\u500D\u7387\r\n\r\n## \u5B9E\u9645\u6848\u4F8B\u89E3\u6790\r\n\r\n### \u793A\u4F8BHUD\u5206\u6790\r\n\u4EE5 `machine_max:example_hud` \u4E3A\u4F8B\uFF0C\u5206\u6790\u5176\u5B8C\u6574\u5B9E\u73B0\u3002\u60A8\u53EF\u4EE5\u901A\u8FC7\u4EE5\u4E0B\u8DEF\u5F84\u67E5\u770B\u5B8C\u6574\u7684\u5B9E\u73B0\u6587\u4EF6\uFF1A\r\n\r\n#### 1. HUD\u914D\u7F6E ([example_hud.json](../../huds/example_hud.json))\r\n\r\n\u8FD9\u662F\u4E00\u4E2A\u529F\u80FD\u5B8C\u6574\u7684\u8F66\u8F86\u4EEA\u8868\u76D8HUD\u914D\u7F6E\uFF0C\u80FD\u591F\u540C\u65F6\u663E\u793A\u53D1\u52A8\u673A\u8F6C\u901F\u3001\u53D8\u901F\u7BB1\u6321\u4F4D\u548C\u8F7D\u5177\u901F\u5EA6\u7B49\u5173\u952E\u4FE1\u606F\u3002\r\n\r\n```json\r\n{\r\n  "model": "machine_max:example_hud.geo",\r\n  "animation": "machine_max:example_hud",\r\n  "texture": "machine_max:textures/hud/example_hud.png",\r\n  "offset": [95, 55, -135],\r\n  "rotation": [-25, -30, 0],\r\n  "scale": [15, 15, 15],\r\n  "perspective": true,\r\n  "texts": {\r\n    "speed": {\r\n      "key": "hud.machine_max.default_1.speed",\r\n      "centered": true,\r\n      "shadow": true,\r\n      "scale": [2, 2, 2],\r\n      "molang_args": [\r\n        "math.floor((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n        "math.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n        "math.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n      ]\r\n    },\r\n    "gear": {\r\n      "key": "hud.machine_max.default_1.gear",\r\n      "centered": true,\r\n      "shadow": true,\r\n      "molang_args": ["vehicle.get(\'gear\')??\'NO GBX\'"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n**HUD\u529F\u80FD\u6982\u8FF0\uFF1A**\r\n\r\n\u8FD9\u4E2AHUD\u914D\u7F6E\u5B9E\u73B0\u4E86\u4EE5\u4E0B\u6838\u5FC3\u529F\u80FD\uFF1A\r\n\r\n- **\u901F\u5EA6\u663E\u793A**\uFF1A\u5B9E\u65F6\u663E\u793A\u8F66\u8F86\u884C\u9A76\u901F\u5EA6\uFF0C\u4EE5\u516C\u91CC/\u5C0F\u65F6\u4E3A\u5355\u4F4D\uFF0C\u91C7\u7528\u4E09\u4F4D\u6570\u5B57\u663E\u793A\u683C\u5F0F\r\n- **\u6321\u4F4D\u6307\u793A**\uFF1A\u663E\u793A\u5F53\u524D\u53D8\u901F\u7BB1\u6240\u5904\u7684\u6321\u4F4D\u72B6\u6001\uFF0C\u5305\u62EC\u524D\u8FDB\u6321\u3001\u5012\u6321\u548C\u7A7A\u6321\r\n- **\u8F6C\u901F\u8868\u6307\u9488**\uFF1A\u901A\u8FC7\u52A8\u753B\u7CFB\u7EDF\u63A7\u5236\u8F6C\u901F\u8868\u6307\u9488\u7684\u52A8\u6001\u65CB\u8F6C\uFF0C\u53CD\u6620\u53D1\u52A8\u673A\u5DE5\u4F5C\u72B6\u6001\r\n\r\n\r\n##### \u7FFB\u8BD1\u952E\u503C\u5BF9\u89E3\u6790 ([lang/zh_cn.json](../../lang/zh_cn.json))\r\n\r\n\u5728\u8BED\u8A00\u6587\u4EF6\u4E2D\u5B9A\u4E49\u4E86HUD\u6587\u672C\u7684\u7FFB\u8BD1\u683C\u5F0F\uFF0C\u8FD9\u4E9B\u7FFB\u8BD1\u952E\u4E0EHUD\u914D\u7F6E\u4E2D\u7684\u6587\u672C\u663E\u793A\u7D27\u5BC6\u914D\u5408\uFF0C\u5B9E\u73B0\u4E86\u52A8\u6001\u5185\u5BB9\u7684\u683C\u5F0F\u5316\u663E\u793A\uFF1A\r\n\r\n```json\r\n"hud.machine_max.default_1.speed": "\xA7o%1$s%2$s%3$s",\r\n"hud.machine_max.default_1.gear": "\xA7o%1$s",\r\n"hud.machine_max.default_1.kmh": "\xA7oKM/H"\r\n```\r\n\r\n**\u7FFB\u8BD1\u952E\u7684\u5DE5\u4F5C\u539F\u7406**\uFF1A\r\n\r\n- **\u901F\u5EA6\u663E\u793A** (`hud.machine_max.default_1.speed`)\uFF1A\u8FD9\u4E2A\u7FFB\u8BD1\u952E\u63A5\u6536\u4E09\u4E2A\u53C2\u6570\uFF0C\u5206\u522B\u5BF9\u5E94\u901F\u5EA6\u7684\u767E\u4F4D\u3001\u5341\u4F4D\u548C\u4E2A\u4F4D\u6570\u5B57\u3002`\xA7o`\u4EE3\u7801\u8868\u793A\u4F7F\u7528\u659C\u4F53\u5B57\u4F53\u663E\u793A\uFF0C\u8BA9\u901F\u5EA6\u8BFB\u6570\u66F4\u52A0\u9192\u76EE\u3002\r\n\r\n- **\u6863\u4F4D\u663E\u793A** (`hud.machine_max.default_1.gear`)\uFF1A\u53EA\u9700\u8981\u4E00\u4E2A\u53C2\u6570\u6765\u663E\u793A\u5F53\u524D\u6863\u4F4D\u4FE1\u606F\uFF0C\u540C\u6837\u4F7F\u7528\u659C\u4F53\u683C\u5F0F\u589E\u5F3A\u53EF\u8BFB\u6027\u3002\r\n\r\n**\u6570\u5B57\u8F6C\u6362\u7684\u5B8C\u6574\u8FC7\u7A0B**\uFF1A\r\n\r\n\u5F53\u8F66\u8F86\u884C\u9A76\u65F6\uFF0CHUD\u7CFB\u7EDF\u4F1A\u5B9E\u65F6\u5904\u7406\u901F\u5EA6\u4FE1\u53F7\u5E76\u663E\u793A\u5728\u754C\u9762\u4E0A\u3002\u8FD9\u4E2A\u8FC7\u7A0B\u53EF\u4EE5\u5206\u4E3A\u4EE5\u4E0B\u51E0\u4E2A\u6B65\u9AA4\uFF1A\r\n\r\n1. **\u83B7\u53D6\u5B9E\u65F6\u6570\u636E**\uFF1A\u9996\u5148\u4ECE\u8F66\u8F86\u7CFB\u7EDF\u4E2D\u83B7\u53D6\u5F53\u524D\u7684\u901F\u5EA6\u4FE1\u53F7\uFF0C\u5355\u4F4D\u4E3A\u7C73/\u79D2\r\n2. **\u5355\u4F4D\u8F6C\u6362**\uFF1A\u5C06\u7C73/\u79D2\u8F6C\u6362\u4E3A\u66F4\u5E38\u7528\u7684\u516C\u91CC/\u5C0F\u65F6\u5355\u4F4D\r\n3. **\u6570\u5B57\u5206\u89E3**\uFF1A\u5C06\u4E09\u4F4D\u6570\u7684\u901F\u5EA6\u503C\u5206\u89E3\u4E3A\u767E\u4F4D\u3001\u5341\u4F4D\u548C\u4E2A\u4F4D\u4E09\u4E2A\u72EC\u7ACB\u7684\u6570\u5B57\r\n4. **\u683C\u5F0F\u5316\u663E\u793A**\uFF1A\u5C06\u5206\u89E3\u540E\u7684\u6570\u5B57\u586B\u5145\u5230\u7FFB\u8BD1\u952E\u7684\u5360\u4F4D\u7B26\u4E2D\uFF0C\u5E76\u5E94\u7528\u659C\u4F53\u683C\u5F0F\r\n5. **\u6700\u7EC8\u5448\u73B0**\uFF1A\u4F8B\u5982\u5F53\u8F66\u8F86\u4EE5123\u516C\u91CC/\u5C0F\u65F6\u7684\u901F\u5EA6\u884C\u9A76\u65F6\uFF0CHUD\u4F1A\u663E\u793A\u4E3A"\xA7o123"\u7684\u659C\u4F53\u6570\u5B57\r\n\r\n\u8FD9\u79CD\u8BBE\u8BA1\u4F7F\u5F97HUD\u80FD\u591F\u5B9E\u65F6\u53CD\u6620\u8F66\u8F86\u72B6\u6001\uFF0C\u540C\u65F6\u4FDD\u6301\u754C\u9762\u7684\u7F8E\u89C2\u548C\u4E00\u81F4\u6027\u3002\r\n\r\n#### 2. \u52A8\u753B\u63A7\u5236 ([example_hud.animation.json](../../animations/hud/example_hud/example_hud.animation.json))\r\n\r\n\u52A8\u753B\u6587\u4EF6\u5B9A\u4E49\u4E86HUD\u5143\u7D20\u7684\u52A8\u6001\u884C\u4E3A\uFF0C\u6BD4\u5982\u8F6C\u901F\u8868\u6307\u9488\u7684\u65CB\u8F6C\u6548\u679C\uFF1A\r\n\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(vehicle.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\u8FD9\u4E2A\u52A8\u753B\u914D\u7F6E\u5B9E\u73B0\u4E86\u8F6C\u901F\u8868\u6307\u9488\u7684\u52A8\u6001\u65CB\u8F6C\u6548\u679C\u3002\u5F53\u53D1\u52A8\u673A\u8F6C\u901F\u53D8\u5316\u65F6\uFF0C\u6307\u9488\u4F1A\u5B9E\u65F6\u65CB\u8F6C\uFF0C\u4E3A\u9A7E\u9A76\u5458\u63D0\u4F9B\u76F4\u89C2\u7684\u8F6C\u901F\u53CD\u9988\u3002\r\n\r\n#### 3. \u5B50\u7CFB\u7EDF\u5173\u8054 ([senna_gtr_seat.json](../../subsystems/senna_gtr/senna_gtr_seat.json))\r\n\r\n\u5EA7\u6905\u5B50\u7CFB\u7EDF\u914D\u7F6E\u5C06HUD\u4E0E\u7279\u5B9A\u7684\u5EA7\u4F4D\u5173\u8054\u8D77\u6765\uFF0C\u5B9A\u4E49\u4E86\u4E0D\u540C\u89C6\u89D2\u4E0B\u7684HUD\u663E\u793A\u89C4\u5219\uFF1A\r\n\r\n```json\r\n{\r\n  "views": {\r\n    "enable_first_person": true,\r\n    "first_person_hud": ["machine_max:example_hud"],\r\n    "first_person_offset": [0, 0.15, -0.1],\r\n    "enable_third_person": true,\r\n    "third_person_hud": ["machine_max:example_hud"],\r\n    "follow_vehicle": true,\r\n    "focus_on_center": true,\r\n    "distance_scale": 1.1\r\n  }\r\n}\r\n```\r\n\r\n**\u7B2C\u4E00\u4EBA\u79F0HUD\u7684\u7075\u6D3B\u6027**\uFF1A\u60A8\u53EF\u4EE5\u6839\u636E\u9700\u8981\u4E3A\u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u6DFB\u52A0\u591A\u4E2AHUD\u7EC4\u4EF6\u3002\u4F8B\u5982\uFF0C\u53EF\u4EE5\u540C\u65F6\u663E\u793A\u901F\u5EA6\u8868\u3001\u8F6C\u901F\u8868\u3001\u6CB9\u91CF\u8868\u7B49\u4E0D\u540C\u7684HUD\u5143\u7D20\uFF0C\u53EA\u9700\u5728`first_person_hud`\u6570\u7EC4\u4E2D\u6DFB\u52A0\u76F8\u5E94\u7684HUD\u8D44\u6E90\u8DEF\u5F84\u5373\u53EF\u3002', "zh_cn/molang/\u4F7F\u7528\u6848\u4F8B.md": '# Molang \u793A\u4F8B\u548C\u6848\u4F8B\r\n\r\n\u672C\u6587\u6863\u63D0\u4F9B Machine-Max \u4E2D Molang \u7684\u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\uFF0C\u5E2E\u52A9\u7406\u89E3\u5982\u4F55\u5728\u5B9E\u9645\u9879\u76EE\u4E2D\u5E94\u7528 Molang\u3002\r\n\r\n## \u6848\u4F8B 1: AE86 \u60AC\u6302\u7CFB\u7EDF\u52A8\u753B\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/animations/part/ae86/ae86.animation.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "axisRightFront": {\r\n    "rotation": [0, 0, "math.atan2(subpart.connector_offset(\'connector.machine_max.right_front_wheel\', 1)*16,20)"]\r\n  },\r\n  "rodLeftFront": {\r\n    "rotation": ["-65.7725+math.atan2(20-subpart.connector_offset(\'connector.machine_max.left_front_wheel\', 1)*16,9)", 0, 0]\r\n  },\r\n  "rodLeftFrontInner": {\r\n    "scale": [1, "math.sqrt(math.pow(20-subpart.connector_offset(\'connector.machine_max.left_front_wheel\', 1)*16,2)+81)/22", 1]\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u60AC\u6302\u9AD8\u5EA6\u83B7\u53D6**:\r\n   ```molang\r\n   subpart.connector_offset(\'connector.machine_max.left_front_wheel\', 1)\r\n   ```\r\n   - \u83B7\u53D6\u5DE6\u524D\u8F6E\u8FDE\u63A5\u5668\u7684Y\u8F74\u504F\u79FB\uFF08\u60AC\u6302\u9AD8\u5EA6\uFF09\r\n   - \u8FD4\u56DE\u503C\u5355\u4F4D\u4E3A\u7C73\r\n\r\n2. **\u60AC\u6302\u89D2\u5EA6\u8BA1\u7B97**:\r\n   ```molang\r\n   math.atan2(20 - height * 16, 9)\r\n   ```\r\n   - \u4F7F\u7528\u53CD\u6B63\u5207\u51FD\u6570\u8BA1\u7B97\u60AC\u6302\u8FDE\u6746\u7684\u89D2\u5EA6\r\n   - `20` \u662F\u57FA\u51C6\u9AD8\u5EA6\uFF0C`9` \u662F\u6C34\u5E73\u8DDD\u79BB\r\n   - `height * 16` \u662F\u5355\u4F4D\u8F6C\u6362\uFF08\u7C73\u5230\u6E38\u620F\u5355\u4F4D\uFF09\r\n\r\n3. **\u8FDE\u6746\u957F\u5EA6\u8BA1\u7B97**:\r\n   ```molang\r\n   math.sqrt(math.pow(20 - height * 16, 2) + 81) / 22\r\n   ```\r\n   - \u4F7F\u7528\u52FE\u80A1\u5B9A\u7406\u8BA1\u7B97\u8FDE\u6746\u957F\u5EA6\r\n   - `81` \u662F\u6C34\u5E73\u8DDD\u79BB\u7684\u5E73\u65B9\uFF089\xB2\uFF09\r\n   - `/22` \u662F\u5F52\u4E00\u5316\u5230\u57FA\u51C6\u957F\u5EA6\r\n\r\n### \u7269\u7406\u539F\u7406\r\n\u8FD9\u4E2A\u60AC\u6302\u7CFB\u7EDF\u6A21\u62DF\u4E86\u771F\u5B9E\u7684\u53CC\u53C9\u81C2\u60AC\u6302\uFF1A\r\n- \u5F53\u8F66\u8F6E\u4E0A\u4E0B\u79FB\u52A8\u65F6\uFF0C\u8FDE\u63A5\u5668\u504F\u79FB\u91CF\u53D8\u5316\r\n- \u901A\u8FC7\u4E09\u89D2\u51FD\u6570\u8BA1\u7B97\u60AC\u6302\u8FDE\u6746\u7684\u89D2\u5EA6\u548C\u957F\u5EA6\r\n- \u5B9E\u73B0\u771F\u5B9E\u7684\u60AC\u6302\u8FD0\u52A8\u5B66\u6548\u679C\r\n\r\n## \u6848\u4F8B 2: HUD \u8F6C\u901F\u8868\u6307\u9488\u63A7\u5236\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/animations/hud/example_hud/example_hud.animation.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(vehicle.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u53D1\u52A8\u673A\u8F6C\u901F\u83B7\u53D6**:\r\n   ```molang\r\n   vehicle.get(\'engine_speed\')??0\r\n   ```\r\n   - \u83B7\u53D6\u53D1\u52A8\u673A\u8F6C\u901F\u4FE1\u53F7\r\n   - `??0` \u662F\u7A7A\u503C\u5408\u5E76\u64CD\u4F5C\u7B26\uFF0C\u786E\u4FDD\u6709\u9ED8\u8BA4\u503C\r\n\r\n2. **\u5355\u4F4D\u8F6C\u6362**:\r\n   ```molang\r\n   math.abs(engine_speed) * 30 / math.pi\r\n   ```\r\n   - `math.abs()` \u786E\u4FDD\u8F6C\u901F\u4E3A\u6B63\u6570\r\n   - `* 30 / math.pi` \u5C06\u5F27\u5EA6/\u79D2\u8F6C\u6362\u4E3A\u8F6C/\u5206\u949F\uFF08RPM\uFF09\r\n   - \u8F6C\u6362\u516C\u5F0F\uFF1ARPM = (rad/s) \xD7 60 / (2\u03C0) = (rad/s) \xD7 30 / \u03C0\r\n\r\n3. **\u5F52\u4E00\u5316\u5904\u7406**:\r\n   ```molang\r\n   normalized_rpm = rpm / 9000\r\n   ```\r\n   - \u5047\u8BBE\u6700\u5927\u8F6C\u901F\u4E3A 9000 RPM\r\n   - \u5C06\u5B9E\u9645\u8F6C\u901F\u5F52\u4E00\u5316\u5230 0-1 \u8303\u56F4\r\n\r\n4. **\u6307\u9488\u89D2\u5EA6\u8BA1\u7B97**:\r\n   ```molang\r\n   pointer_angle = normalized_rpm * 240\r\n   ```\r\n   - \u5047\u8BBE\u8F6C\u901F\u8868\u6EE1\u91CF\u7A0B\u4E3A 240 \u5EA6\r\n   - \u5C06\u5F52\u4E00\u5316\u8F6C\u901F\u8F6C\u6362\u4E3A\u6307\u9488\u65CB\u8F6C\u89D2\u5EA6\r\n\r\n### \u4EEA\u8868\u8BBE\u8BA1\r\n- **\u91CF\u7A0B**: 0-9000 RPM\r\n- **\u6307\u9488\u8303\u56F4**: 0-240 \u5EA6\r\n- **\u7A7A\u8F6C\u4FDD\u62A4**: \u4F7F\u7528 `??0` \u5904\u7406\u4FE1\u53F7\u4E22\u5931\u60C5\u51B5\r\n\r\n## \u6848\u4F8B 3: HUD \u901F\u5EA6\u663E\u793A\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/huds/example_hud.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "speed": {\r\n    "molang_args": [\r\n      "math.floor((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n      "math.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n      "math.floor(math.mod((math.abs(vehicle.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u901F\u5EA6\u83B7\u53D6\u548C\u5355\u4F4D\u8F6C\u6362**:\r\n   ```molang\r\n   speed_kmh = math.abs(vehicle.get(\'vehicle_speed\')??0.0) * 3.6\r\n   ```\r\n   - \u83B7\u53D6\u8F66\u8F86\u901F\u5EA6\uFF08\u7C73/\u79D2\uFF09\r\n   - \u8F6C\u6362\u4E3A\u516C\u91CC/\u5C0F\u65F6\uFF1Akm/h = m/s \xD7 3.6\r\n\r\n2. **\u767E\u4F4D\u6570\u63D0\u53D6**:\r\n   ```molang\r\n   hundreds = math.floor(speed_kmh / 100)\r\n   ```\r\n   - \u8BA1\u7B97\u901F\u5EA6\u7684\u767E\u4F4D\u6570\r\n   - \u4F8B\u5982\uFF1A123 km/h \u2192 \u767E\u4F4D\u6570\u4E3A 1\r\n\r\n3. **\u5341\u4F4D\u6570\u63D0\u53D6**:\r\n   ```molang\r\n   tens = math.floor(math.mod(speed_kmh, 100) / 10)\r\n   ```\r\n   - \u5148\u53D6\u6A21100\u5F97\u5230\u540E\u4E24\u4F4D\u6570\r\n   - \u518D\u9664\u4EE510\u53D6\u6574\u5F97\u5230\u5341\u4F4D\u6570\r\n   - \u4F8B\u5982\uFF1A123 km/h \u2192 \u6A21100\u5F9723 \u2192 \u9664\u4EE510\u5F972.3 \u2192 \u53D6\u6574\u5F972\r\n\r\n4. **\u4E2A\u4F4D\u6570\u63D0\u53D6**:\r\n   ```molang\r\n   units = math.floor(math.mod(speed_kmh, 10))\r\n   ```\r\n   - \u76F4\u63A5\u53D6\u6A2110\u5F97\u5230\u4E2A\u4F4D\u6570\r\n   - \u4F8B\u5982\uFF1A123 km/h \u2192 \u6A2110\u5F973\r\n\r\n### \u663E\u793A\u903B\u8F91\r\n\u8FD9\u79CD\u65B9\u6CD5\u5C06\u4E09\u4F4D\u6570\u901F\u5EA6\u5206\u89E3\u4E3A\u4E09\u4E2A\u72EC\u7ACB\u7684\u6570\u5B57\uFF0C\u4FBF\u4E8E\u5728HUD\u4E2D\u4F7F\u7528\u4E09\u4E2A\u4E0D\u540C\u7684\u6587\u672C\u5143\u7D20\u663E\u793A\uFF0C\u5B9E\u73B0\u6570\u5B57\u5F0F\u901F\u5EA6\u8868\u3002\r\n\r\n## \u6848\u4F8B 4: \u65B9\u5411\u76D8\u52A8\u753B\u63A7\u5236\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/animations/part/ae86/ae86.animation.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "rot2": {\r\n    "rotation": [0, 0, "vehicle.get(\'steering\')*225"]\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u8F6C\u5411\u4FE1\u53F7\u83B7\u53D6**:\r\n   ```molang\r\n   steering_input = vehicle.get(\'steering\')\r\n   ```\r\n   - \u83B7\u53D6\u8F6C\u5411\u8F93\u5165\u4FE1\u53F7\r\n   - \u8303\u56F4\uFF1A-1.0\uFF08\u5DE6\u8F6C\uFF09\u5230 1.0\uFF08\u53F3\u8F6C\uFF09\r\n\r\n2. **\u89D2\u5EA6\u8F6C\u6362**:\r\n   ```molang\r\n   steering_angle = steering_input * 225\r\n   ```\r\n   - \u5C06\u8F93\u5165\u4FE1\u53F7\u8F6C\u6362\u4E3A\u65CB\u8F6C\u89D2\u5EA6\r\n   - 225\u5EA6\u662F\u6700\u5927\u8F6C\u5411\u89D2\u5EA6\r\n   - \u5DE6\u8F6C\uFF1A-1.0 \xD7 225 = -225\u5EA6\r\n   - \u53F3\u8F6C\uFF1A1.0 \xD7 225 = 225\u5EA6\r\n\r\n### \u8F6C\u5411\u7CFB\u7EDF\u8BBE\u8BA1\r\n- **\u8F6C\u5411\u6BD4**: 1:225\uFF08\u8F93\u5165\u4FE1\u53F7\u5230\u89D2\u5EA6\uFF09\r\n- **\u8F6C\u5411\u8303\u56F4**: \xB1225\u5EA6\r\n- **\u7EBF\u6027\u6620\u5C04**: \u7B80\u5355\u7684\u4E58\u6CD5\u5173\u7CFB\uFF0C\u786E\u4FDD\u8F6C\u5411\u54CD\u5E94\u7EBF\u6027\r\n\r\n## \u6700\u4F73\u5B9E\u8DF5\r\n\r\n### 1. \u9519\u8BEF\u5904\u7406\r\n```molang\r\n// \u4F7F\u7528\u7A7A\u503C\u5408\u5E76\u64CD\u4F5C\u7B26\r\nvehicle.get(\'signal_name\')??default_value\r\n\r\n// \u68C0\u67E5\u5B50\u7CFB\u7EDF\u5B58\u5728\u6027\r\nsubpart.has_subsystem(\'engine\') ? subpart.subsystem_durability(\'engine\') : 0.0\r\n```\r\n\r\n### 2. \u6027\u80FD\u4F18\u5316\r\n```molang\r\n// \u907F\u514D\u91CD\u590D\u8BA1\u7B97\r\nlet speed = math.abs(vehicle.get(\'vehicle_speed\')??0.0) * 3.6;\r\nmath.floor(speed / 100), math.floor(math.mod(speed, 100) / 10), math.floor(math.mod(speed, 10))\r\n\r\n// \u4F7F\u7528\u7B80\u5355\u7684\u6570\u5B66\u8FD0\u7B97\r\n// \u907F\u514D\u590D\u6742\u7684\u4E09\u89D2\u51FD\u6570\u548C\u6307\u6570\u8FD0\u7B97\r\n```\r\n\r\n### 3. \u53EF\u8BFB\u6027\r\n```molang\r\n// \u4F7F\u7528\u6709\u610F\u4E49\u7684\u53D8\u91CF\u540D\r\nlet engine_rpm = math.abs(vehicle.get(\'engine_speed\')??0) * 30 / math.pi;\r\nlet max_rpm = 9000;\r\nlet pointer_range = 240;\r\nlet pointer_angle = (engine_rpm / max_rpm) * pointer_range;\r\n\r\n// \u6DFB\u52A0\u6CE8\u91CA\u8BF4\u660E\u590D\u6742\u8BA1\u7B97\r\n```\r\n\r\n## \u8C03\u8BD5\u6280\u5DE7\r\n\r\n1. **\u9010\u6B65\u6D4B\u8BD5**: \u5C06\u590D\u6742\u8868\u8FBE\u5F0F\u5206\u89E3\u4E3A\u591A\u4E2A\u6B65\u9AA4\u6D4B\u8BD5\r\n2. **\u8FB9\u754C\u503C\u6D4B\u8BD5**: \u6D4B\u8BD5\u6700\u5C0F\u503C\u3001\u6700\u5927\u503C\u548C\u8FB9\u754C\u60C5\u51B5\r\n3. **\u5355\u4F4D\u9A8C\u8BC1**: \u786E\u4FDD\u6240\u6709\u5355\u4F4D\u8F6C\u6362\u6B63\u786E\r\n4. **\u6027\u80FD\u76D1\u63A7**: \u76D1\u63A7\u590D\u6742\u8868\u8FBE\u5F0F\u7684\u6267\u884C\u6027\u80FD\r\n\r\n\u8FD9\u4E9B\u6848\u4F8B\u5C55\u793A\u4E86 Molang \u5728 Machine-Max \u4E2D\u7684\u5F3A\u5927\u5E94\u7528\u80FD\u529B\uFF0C\u4ECE\u7B80\u5355\u7684\u4FE1\u53F7\u6620\u5C04\u5230\u590D\u6742\u7684\u7269\u7406\u6A21\u62DF\uFF0CMolang \u90FD\u80FD\u63D0\u4F9B\u7075\u6D3B\u800C\u9AD8\u6548\u7684\u89E3\u51B3\u65B9\u6848\u3002', "zh_cn/molang/\u603B\u89C8.md": "# Molang \u6587\u6863\r\n\r\nMachine-Max \u4F7F\u7528 Molang \u811A\u672C\u7CFB\u7EDF\u6765\u63A7\u5236\u8F66\u8F86\u52A8\u753B\u3001HUD\u663E\u793A\u548C\u4EA4\u4E92\u903B\u8F91\u3002Molang \u662F\u4E00\u79CD\u8F7B\u91CF\u7EA7\u7684\u811A\u672C\u8BED\u8A00\uFF0C\u4E13\u95E8\u7528\u4E8E\u5B9E\u65F6\u8BA1\u7B97\u548C\u52A8\u753B\u63A7\u5236\u3002\r\n\r\n## \u76EE\u5F55\u7ED3\u6784\r\n\r\n- [subpart \u65B9\u6CD5](./subpart.md) - \u96F6\u4EF6\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [vehicle \u65B9\u6CD5](./vehicle.md) - \u8F66\u8F86\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [math \u51FD\u6570](./math.md) - \u6570\u5B66\u8BA1\u7B97\u51FD\u6570\r\n- [\u793A\u4F8B\u548C\u6848\u4F8B](./examples.md) - \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n## \u57FA\u672C\u8BED\u6CD5\r\n\r\nMolang \u8868\u8FBE\u5F0F\u4F7F\u7528\u7C7B\u4F3C JavaScript \u7684\u8BED\u6CD5\uFF0C\u652F\u6301\u57FA\u672C\u7684\u6570\u5B66\u8FD0\u7B97\u3001\u6761\u4EF6\u5224\u65AD\u548C\u51FD\u6570\u8C03\u7528\uFF1A\r\n\r\n```molang\r\n// \u57FA\u672C\u8FD0\u7B97\r\n1.0 + 2.0 * 3.0\r\n\r\n// \u6761\u4EF6\u8868\u8FBE\u5F0F\r\nvariable > 0 ? 1.0 : 0.0\r\n\r\n// \u51FD\u6570\u8C03\u7528\r\nmath.sin(angle)\r\nsubpart.has_subsystem('engine')\r\n```\r\n\r\n## \u53D8\u91CF\u548C\u4E0A\u4E0B\u6587\r\n\r\nMolang \u8868\u8FBE\u5F0F\u5728\u4E0D\u540C\u7684\u4E0A\u4E0B\u6587\u4E2D\u6267\u884C\uFF0C\u53EF\u4EE5\u8BBF\u95EE\u4E0D\u540C\u7684\u53D8\u91CF\u548C\u65B9\u6CD5\uFF1A\r\n\r\n- **\u52A8\u753B\u4E0A\u4E0B\u6587**: \u5728\u6A21\u578B\u52A8\u753B\u4E2D\u4F7F\u7528\uFF0C\u53EF\u4EE5\u8BBF\u95EE `subpart` \u548C `vehicle` \u5BF9\u8C61\r\n- **HUD\u4E0A\u4E0B\u6587**: \u5728HUD\u663E\u793A\u4E2D\u4F7F\u7528\uFF0C\u53EF\u4EE5\u8BBF\u95EE\u73A9\u5BB6\u5B9E\u4F53\u3001 `subpart` \u548C `vehicle` \u5BF9\u8C61\r\n\r\n## \u5E38\u7528\u6A21\u5F0F\r\n\r\n### \u4FE1\u53F7\u83B7\u53D6\r\n```molang\r\n// \u83B7\u53D6\u8F66\u8F86\u5728\u67D0\u4E2A\u9891\u9053\u7684\u4FE1\u53F7\u503C\r\nvehicle.get('signal_channel')\r\n\r\n// \u83B7\u53D6\u96F6\u4EF6\u5728\u67D0\u4E2A\u9891\u9053\u7684\u4FE1\u53F7\u503C\r\nsubpart.get('signal_channel')\r\n```\r\n\r\n### \u6761\u4EF6\u52A8\u753B\r\n```molang\r\n// \u6839\u636E\u6761\u4EF6\u63A7\u5236\u52A8\u753B\r\nsubpart.has_subsystem('engine') ? 1.0 : 0.0\r\n```\r\n\r\n### \u6570\u5B66\u8BA1\u7B97\r\n```molang\r\n// \u5355\u4F4D\u8F6C\u6362\uFF08\u7C73/\u79D2\u8F6C\u516C\u91CC/\u5C0F\u65F6\uFF09\r\nmath.abs(vehicle.get('vehicle_speed')) * 3.6\r\n```", "zh_cn/molang/\u6570\u5B66\u51FD\u6570.md": "# math \u51FD\u6570\r\n\r\n`math` \u5BF9\u8C61\u63D0\u4F9B\u4E86\u6570\u5B66\u8BA1\u7B97\u529F\u80FD\uFF0C\u5305\u62EC\u4E09\u89D2\u51FD\u6570\u3001\u6307\u6570\u51FD\u6570\u3001\u53D6\u6574\u51FD\u6570\u7B49\u3002\r\n\r\n## \u4E09\u89D2\u51FD\u6570\r\n\r\n### math.sin(value)\r\n\u8BA1\u7B97\u89D2\u5EA6\u7684\u6B63\u5F26\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u6B63\u5F26\u503C\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\nmath.sin(90)  // \u8FD4\u56DE 1.0\r\n```\r\n\r\n### math.cos(value)\r\n\u8BA1\u7B97\u89D2\u5EA6\u7684\u4F59\u5F26\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u4F59\u5F26\u503C\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\nmath.cos(0)  // \u8FD4\u56DE 1.0\r\n```\r\n\r\n### math.tan(value)\r\n\u8BA1\u7B97\u89D2\u5EA6\u7684\u6B63\u5207\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u6B63\u5207\u503C\r\n\r\n### math.asin(value)\r\n\u8BA1\u7B97\u503C\u7684\u53CD\u6B63\u5F26\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08-1.0 \u5230 1.0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n### math.acos(value)\r\n\u8BA1\u7B97\u503C\u7684\u53CD\u4F59\u5F26\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08-1.0 \u5230 1.0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n### math.atan(value)\r\n\u8BA1\u7B97\u503C\u7684\u53CD\u6B63\u5207\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n### math.atan2(y, x)\r\n\u8BA1\u7B97 y/x \u7684\u53CD\u6B63\u5207\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `y` (double): Y\u5750\u6807\u503C\r\n- `x` (double): X\u5750\u6807\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728AE86\u60AC\u6302\u52A8\u753B\u4E2D\u4F7F\u7528\r\nmath.atan2(subpart.connector_offset('connector.machine_max.right_front_wheel', 1)*16, 20)\r\n```\r\n\r\n## \u6307\u6570\u548C\u5BF9\u6570\u51FD\u6570\r\n\r\n### math.exp(value)\r\n\u8BA1\u7B97 e \u7684 value \u6B21\u5E42\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u6307\u6570\r\n\r\n**\u8FD4\u56DE\u503C**: e^value\r\n\r\n### math.log(value)\r\n\u8BA1\u7B97\u503C\u7684\u81EA\u7136\u5BF9\u6570\uFF08\u4EE5 e \u4E3A\u5E95\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08> 0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u81EA\u7136\u5BF9\u6570\r\n\r\n### math.pow(base, exponent)\r\n\u8BA1\u7B97 base \u7684 exponent \u6B21\u5E42\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `base` (double): \u5E95\u6570\r\n- `exponent` (double): \u6307\u6570\r\n\r\n**\u8FD4\u56DE\u503C**: base^exponent\r\n\r\n### math.sqrt(value)\r\n\u8BA1\u7B97\u503C\u7684\u5E73\u65B9\u6839\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08\u2265 0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u5E73\u65B9\u6839\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728AE86\u60AC\u6302\u52A8\u753B\u4E2D\u8BA1\u7B97\u8FDE\u6746\u957F\u5EA6\r\nmath.sqrt(math.pow(20-subpart.connector_offset('connector.machine_max.left_front_wheel', 1)*16, 2)+81)\r\n```\r\n\r\n## \u53D6\u6574\u51FD\u6570\r\n\r\n### math.floor(value)\r\n\u5411\u4E0B\u53D6\u6574\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u5C0F\u4E8E\u7B49\u4E8E value \u7684\u6700\u5927\u6574\u6570\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728HUD\u901F\u5EA6\u663E\u793A\u4E2D\u4F7F\u7528\r\nmath.floor((math.abs(vehicle.get('vehicle_speed')??0.0)) * 3.6 / 100)\r\n```\r\n\r\n### math.ceil(value)\r\n\u5411\u4E0A\u53D6\u6574\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u5927\u4E8E\u7B49\u4E8E value \u7684\u6700\u5C0F\u6574\u6570\r\n\r\n### math.round(value)\r\n\u56DB\u820D\u4E94\u5165\u53D6\u6574\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u6700\u63A5\u8FD1\u7684\u6574\u6570\r\n\r\n## \u5176\u4ED6\u6570\u5B66\u51FD\u6570\r\n\r\n### math.abs(value)\r\n\u8BA1\u7B97\u7EDD\u5BF9\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u7EDD\u5BF9\u503C\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u786E\u4FDD\u901F\u5EA6\u503C\u4E3A\u6B63\u6570\r\nmath.abs(vehicle.get('vehicle_speed')??0.0)\r\n```\r\n\r\n### math.mod(value1, value2)\r\n\u8BA1\u7B97 value1 \u9664\u4EE5 value2 \u7684\u4F59\u6570\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value1` (double): \u88AB\u9664\u6570\r\n- `value2` (double): \u9664\u6570\r\n\r\n**\u8FD4\u56DE\u503C**: \u4F59\u6570\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728HUD\u901F\u5EA6\u663E\u793A\u4E2D\u63D0\u53D6\u5341\u4F4D\u6570\r\nmath.floor(math.mod((math.abs(vehicle.get('vehicle_speed')??0.0)) * 3.6, 100) / 10)\r\n```\r\n\r\n### math.sign(value)\r\n\u83B7\u53D6\u503C\u7684\u7B26\u53F7\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: 1.0\uFF08\u6B63\u6570\uFF09\u3001-1.0\uFF08\u8D1F\u6570\uFF09\u30010.0\uFF08\u96F6\uFF09\r\n\r\n### math.min(value1, value2)\r\n\u8FD4\u56DE\u4E24\u4E2A\u503C\u4E2D\u7684\u8F83\u5C0F\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value1` (double): \u7B2C\u4E00\u4E2A\u503C\r\n- `value2` (double): \u7B2C\u4E8C\u4E2A\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u8F83\u5C0F\u503C\r\n\r\n### math.max(value1, value2)\r\n\u8FD4\u56DE\u4E24\u4E2A\u503C\u4E2D\u7684\u8F83\u5927\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value1` (double): \u7B2C\u4E00\u4E2A\u503C\r\n- `value2` (double): \u7B2C\u4E8C\u4E2A\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u8F83\u5927\u503C\r\n\r\n### math.clamp(value, min, max)\r\n\u5C06\u503C\u9650\u5236\u5728\u6307\u5B9A\u8303\u56F4\u5185\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u8981\u9650\u5236\u7684\u503C\r\n- `min` (double): \u6700\u5C0F\u503C\r\n- `max` (double): \u6700\u5927\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u9650\u5236\u540E\u7684\u503C\r\n\r\n### math.lerp(start, end, alpha)\r\n\u7EBF\u6027\u63D2\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `start` (double): \u8D77\u59CB\u503C\r\n- `end` (double): \u7ED3\u675F\u503C\r\n- `alpha` (double): \u63D2\u503C\u7CFB\u6570\uFF080.0 \u5230 1.0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u63D2\u503C\u7ED3\u679C\r\n\r\n## \u6570\u5B66\u5E38\u91CF\r\n\r\n### math.pi\r\n\u5706\u5468\u7387 \u03C0 \u7684\u503C\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\r\n\r\n**\u503C**: \u7EA6\u7B49\u4E8E 3.141592653589793\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5F27\u5EA6\u8F6C\u89D2\u5EA6\r\nradians * 180 / math.pi\r\n\r\n// \u89D2\u5EA6\u8F6C\u5F27\u5EA6\r\ndegrees * math.pi / 180\r\n```\r\n\r\n## \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n### 1. \u5355\u4F4D\u8F6C\u6362\r\n```molang\r\n// \u7C73/\u79D2\u8F6C\u516C\u91CC/\u5C0F\u65F6\r\nvehicle.get('vehicle_speed') * 3.6\r\n\r\n// \u5F27\u5EA6/\u79D2\u8F6C\u8F6C/\u5206\u949F\uFF08RPM\uFF09\r\nvehicle.get('engine_speed') * 30 / math.pi\r\n```\r\n\r\n### 2. \u52A8\u753B\u63A7\u5236\r\n```molang\r\n// \u5E73\u6ED1\u52A8\u753B\u63D2\u503C\r\nmath.lerp(current_angle, target_angle, 0.1)\r\n\r\n// \u9650\u5236\u65CB\u8F6C\u89D2\u5EA6\u5728\u5408\u7406\u8303\u56F4\u5185\r\nmath.clamp(rotation_angle, -180, 180)\r\n```\r\n\r\n### 3. \u7269\u7406\u8BA1\u7B97\r\n```molang\r\n// \u8BA1\u7B97\u4E24\u70B9\u95F4\u8DDD\u79BB\r\nmath.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2) + math.pow(z2-z1, 2))\r\n\r\n// \u8BA1\u7B97\u89D2\u5EA6\u5DEE\r\nmath.abs(math.mod(angle1 - angle2 + 180, 360) - 180)\r\n```\r\n\r\n## \u6CE8\u610F\u4E8B\u9879\r\n\r\n1. **\u89D2\u5EA6\u5355\u4F4D**: \u6240\u6709\u4E09\u89D2\u51FD\u6570\u4F7F\u7528\u5EA6\u4E3A\u5355\u4F4D\uFF0C\u800C\u4E0D\u662F\u5F27\u5EA6\r\n2. **\u6027\u80FD\u8003\u8651**: \u590D\u6742\u7684\u6570\u5B66\u8BA1\u7B97\u53EF\u80FD\u5F71\u54CD\u6027\u80FD\uFF0C\u5C3D\u91CF\u7B80\u5316\u8868\u8FBE\u5F0F\r\n3. **\u6570\u503C\u8303\u56F4**: \u6CE8\u610F\u51FD\u6570\u7684\u5B9A\u4E49\u57DF\u548C\u503C\u57DF\uFF0C\u907F\u514D\u6570\u5B66\u9519\u8BEF\r\n4. **\u7CBE\u5EA6\u95EE\u9898**: \u6D6E\u70B9\u6570\u8BA1\u7B97\u53EF\u80FD\u5B58\u5728\u7CBE\u5EA6\u8BEF\u5DEE\uFF0C\u91CD\u8981\u8BA1\u7B97\u5E94\u8FDB\u884C\u9002\u5F53\u7684\u820D\u5165", "zh_cn/molang/\u8F7D\u5177\u65B9\u6CD5.md": "# Molang \u6587\u6863\r\n\r\nMachine-Max \u4F7F\u7528 Molang \u811A\u672C\u7CFB\u7EDF\u6765\u63A7\u5236\u8F66\u8F86\u52A8\u753B\u3001HUD\u663E\u793A\u548C\u4EA4\u4E92\u903B\u8F91\u3002Molang \u662F\u4E00\u79CD\u8F7B\u91CF\u7EA7\u7684\u811A\u672C\u8BED\u8A00\uFF0C\u4E13\u95E8\u7528\u4E8E\u5B9E\u65F6\u8BA1\u7B97\u548C\u52A8\u753B\u63A7\u5236\u3002\r\n\r\n## \u76EE\u5F55\u7ED3\u6784\r\n\r\n- [\u96F6\u4EF6\u65B9\u6CD5](./\u96F6\u4EF6\u65B9\u6CD5.md) - \u96F6\u4EF6\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [\u8F66\u8F86\u65B9\u6CD5](./\u8F66\u8F86\u65B9\u6CD5.md) - \u8F66\u8F86\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [\u6570\u5B66\u51FD\u6570](./\u6570\u5B66\u51FD\u6570.md) - \u6570\u5B66\u8BA1\u7B97\u51FD\u6570\r\n- [\u4F7F\u7528\u6848\u4F8B](./\u4F7F\u7528\u6848\u4F8B.md) - \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n## \u57FA\u672C\u8BED\u6CD5\r\n\r\nMolang \u8868\u8FBE\u5F0F\u4F7F\u7528\u7C7B\u4F3C JavaScript \u7684\u8BED\u6CD5\uFF0C\u652F\u6301\u57FA\u672C\u7684\u6570\u5B66\u8FD0\u7B97\u3001\u6761\u4EF6\u5224\u65AD\u548C\u51FD\u6570\u8C03\u7528\u3002\r\n\r\n### \u57FA\u672C\u8FD0\u7B97\r\n```molang\r\n// \u7B97\u672F\u8FD0\u7B97\r\n1.0 + 2.0 * 3.0  // \u7ED3\u679C\u4E3A 7.0\r\n(1.0 + 2.0) * 3.0  // \u7ED3\u679C\u4E3A 9.0\r\n\r\n// \u6BD4\u8F83\u8FD0\u7B97\r\nspeed > 0  // \u5927\u4E8E\u6BD4\u8F83\r\ndurability <= max_durability  // \u5C0F\u4E8E\u7B49\u4E8E\u6BD4\u8F83\r\nv.a == 3.0  // \u7B49\u4E8E\u6BD4\u8F83\r\n```\r\n\r\n### \u4E09\u5143\u8868\u8FBE\u5F0F\uFF08\u6761\u4EF6\u8FD0\u7B97\u7B26\uFF09\r\n```molang\r\n// \u57FA\u672C\u8BED\u6CD5\uFF1A\u6761\u4EF6 ? \u771F\u503C : \u5047\u503C\r\nvariable > 0 ? 1.0 : 0.0\r\n\r\n// \u5B9E\u9645\u5E94\u7528\uFF1A\u6839\u636E\u5B50\u7CFB\u7EDF\u72B6\u6001\u663E\u793A\u8B66\u544A\u706F\r\nsubpart.has_subsystem('engine') && subpart.subsystem_destroyed('engine') ? 1.0 : 0.0\r\n\r\n// \u5D4C\u5957\u4F7F\u7528\r\nv.fuel_level > 50 ? 0.0 : (v.fuel_level > 10 ? 0.5 : 1.0)\r\n```\r\n\r\n### \u7A7A\u503C\u5408\u5E76\u8FD0\u7B97\u7B26\uFF08??\uFF09\r\n```molang\r\n// \u57FA\u672C\u8BED\u6CD5\uFF1A\u503C ?? \u9ED8\u8BA4\u503C\r\nvehicle.get('signal_name')??0.0\r\n\r\n// \u5B9E\u9645\u5E94\u7528\uFF1A\u5904\u7406\u53EF\u80FD\u4E0D\u5B58\u5728\u7684\u4FE1\u53F7\r\nmath.abs(vehicle.get('vehicle_speed')??0.0) * 3.6\r\n\r\n// \u94FE\u5F0F\u4F7F\u7528\r\nvehicle.get('engine_speed')??vehicle.get('motor_speed')??0.0\r\n```\r\n\r\n### \u51FD\u6570\u8C03\u7528\r\n```molang\r\n// \u6570\u5B66\u51FD\u6570\r\nmath.sin(angle)\r\nmath.floor(value)\r\n\r\n// \u8F66\u8F86\u548C\u96F6\u4EF6\u65B9\u6CD5\r\nvehicle.get('steering')\r\nsubpart.has_subsystem('engine')\r\n```\r\n\r\n## \u5E38\u7528\u6A21\u5F0F\r\n\r\n### \u4FE1\u53F7\u83B7\u53D6\u548C\u5B89\u5168\u8BBF\u95EE\r\n```molang\r\n// \u5B89\u5168\u83B7\u53D6\u4FE1\u53F7\u503C\r\nvehicle.get('signal_name')??default_value\r\n\r\n// \u6761\u4EF6\u68C0\u67E5\u540E\u8BBF\u95EE\r\nsubpart.has_subsystem('engine') ? subpart.subsystem_durability('engine') : 0.0\r\n```\r\n\r\n### \u5355\u4F4D\u8F6C\u6362\r\n```molang\r\n// \u7C73/\u79D2\u8F6C\u516C\u91CC/\u5C0F\u65F6\r\nvehicle.get('vehicle_speed')??0.0 * 3.6\r\n\r\n// \u5F27\u5EA6/\u79D2\u8F6C\u8F6C/\u5206\u949F\uFF08RPM\uFF09\r\nvehicle.get('engine_speed')??0.0 * 30 / math.pi\r\n```\r\n\r\n## \u4E0B\u4E00\u6B65\r\n\r\n- \u67E5\u770B [\u96F6\u4EF6\u65B9\u6CD5](./\u96F6\u4EF6\u65B9\u6CD5.md) \u4E86\u89E3\u96F6\u4EF6\u76F8\u5173\u7684\u6240\u6709\u65B9\u6CD5\r\n- \u67E5\u770B [\u8F66\u8F86\u65B9\u6CD5](./\u8F66\u8F86\u65B9\u6CD5.md) \u4E86\u89E3\u8F66\u8F86\u4FE1\u53F7\u83B7\u53D6\u65B9\u6CD5\r\n- \u67E5\u770B [\u6570\u5B66\u51FD\u6570](./\u6570\u5B66\u51FD\u6570.md) \u5B66\u4E60\u53EF\u7528\u7684\u6570\u5B66\u8BA1\u7B97\u529F\u80FD\r\n- \u67E5\u770B [\u4F7F\u7528\u6848\u4F8B](./\u4F7F\u7528\u6848\u4F8B.md) \u5B66\u4E60\u5B9E\u9645\u5E94\u7528\u793A\u4F8B", "zh_cn/molang/\u96F6\u4EF6\u65B9\u6CD5.md": "# subpart \u65B9\u6CD5\r\n\r\n`subpart` \u5BF9\u8C61\u63D0\u4F9B\u4E86\u8BBF\u95EE\u96F6\u4EF6\u72B6\u6001\u3001\u8FDE\u63A5\u5668\u548C\u5B50\u7CFB\u7EDF\u7684\u65B9\u6CD5\u3002\r\n\r\n## \u4FE1\u53F7\u76F8\u5173\u65B9\u6CD5\r\n\r\n### subpart.get(channel)\r\n\r\n\u83B7\u53D6\u96F6\u4EF6\u4FE1\u53F7\u5B58\u50A8\u4E2D\u7684\u503C\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.get(channel_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `channel_name` (\u5B57\u7B26\u4E32): \u4FE1\u53F7\u9891\u9053\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u4FE1\u53F7\u503C\uFF0C\u5982\u679C\u9891\u9053\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE `null`\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u83B7\u53D6\u96F6\u4EF6\u7279\u5B9A\u4FE1\u53F7\r\nsubpart.get('custom_signal')\r\n```\r\n\r\n## \u8FDE\u63A5\u5668\u76F8\u5173\u65B9\u6CD5\r\n\r\n### subpart.has_connector(connectorName)\r\n\r\n\u68C0\u67E5\u96F6\u4EF6\u662F\u5426\u62E5\u6709\u6307\u5B9A\u8FDE\u63A5\u5668\uFF0C\u5E76\u4E14\u8FDE\u63A5\u5668\u662F\u5426\u8FDE\u63A5\u4E86\u96F6\u4EF6\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.has_connector(connector_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `connector_name` (\u5B57\u7B26\u4E32): \u8FDE\u63A5\u5668\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u8FDE\u63A5\u5668\u5B58\u5728\u4E14\u5DF2\u8FDE\u63A5\u96F6\u4EF6\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u68C0\u67E5\u524D\u8F6E\u8FDE\u63A5\u5668\u662F\u5426\u8FDE\u63A5\r\nsubpart.has_connector('connector.machine_max.front_wheel')\r\n```\r\n\r\n### subpart.connector_offset(connectorName, axis)\r\n\r\n\u83B7\u53D6\u8FDE\u63A5\u5668\u7684\u504F\u79FB\u91CF\uFF08\u4F4D\u7F6E\uFF09\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.connector_offset(connector_name, axis)`\r\n\r\n**\u53C2\u6570**:\r\n- `connector_name` (\u5B57\u7B26\u4E32): \u8FDE\u63A5\u5668\u540D\u79F0\r\n- `axis` (\u6574\u6570): \u5750\u6807\u8F74 (0=X, 1=Y, 2=Z)\r\n\r\n**\u8FD4\u56DE\u503C**: \u6307\u5B9A\u8F74\u7684\u504F\u79FB\u91CF\uFF08\u7C73\uFF09\uFF0C\u5982\u679C\u8FDE\u63A5\u5668\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u83B7\u53D6\u524D\u8F6E\u8FDE\u63A5\u5668\u7684Y\u8F74\u504F\u79FB\uFF08\u60AC\u6302\u9AD8\u5EA6\uFF09\r\nsubpart.connector_offset('connector.machine_max.front_wheel', 1)\r\n```\r\n\r\n### subpart.connector_rotation(connectorName, axis)\r\n\r\n\u83B7\u53D6\u8FDE\u63A5\u5668\u7684\u65CB\u8F6C\u89D2\u5EA6\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.connector_rotation(connector_name, axis)`\r\n\r\n**\u53C2\u6570**:\r\n- `connector_name` (\u5B57\u7B26\u4E32): \u8FDE\u63A5\u5668\u540D\u79F0\r\n- `axis` (\u6574\u6570): \u65CB\u8F6C\u8F74 (0=X, 1=Y, 2=Z)\r\n\r\n**\u8FD4\u56DE\u503C**: \u6307\u5B9A\u8F74\u7684\u65CB\u8F6C\u89D2\u5EA6\uFF08\u5EA6\uFF09\uFF0C\u5982\u679C\u8FDE\u63A5\u5668\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n## \u5B50\u7CFB\u7EDF\u76F8\u5173\u65B9\u6CD5\r\n\r\n### subpart.has_subsystem(subsystemName)\r\n\r\n\u68C0\u67E5\u96F6\u4EF6\u662F\u5426\u62E5\u6709\u6307\u5B9A\u540D\u79F0\u7684\u5B50\u7CFB\u7EDF\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.has_subsystem(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u62E5\u6709\u8BE5\u5B50\u7CFB\u7EDF\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u68C0\u67E5\u662F\u5426\u6709\u53D1\u52A8\u673A\u5B50\u7CFB\u7EDF\r\nsubpart.has_subsystem('subsystem.machine_max.engine')\r\n```\r\n\r\n### subpart.subsystem_durability(subsystemName)\r\n\r\n\u83B7\u53D6\u6307\u5B9A\u5B50\u7CFB\u7EDF\u7684\u5F53\u524D\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.subsystem_durability(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5B50\u7CFB\u7EDF\u8010\u4E45\u5EA6\uFF0C\u5982\u679C\u5B50\u7CFB\u7EDF\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n### subpart.subsystem_max_durability(subsystemName)\r\n\r\n\u83B7\u53D6\u6307\u5B9A\u5B50\u7CFB\u7EDF\u7684\u6700\u5927\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.subsystem_max_durability(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5B50\u7CFB\u7EDF\u6700\u5927\u8010\u4E45\u5EA6\uFF0C\u5982\u679C\u5B50\u7CFB\u7EDF\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n### subpart.subsystem_active(subsystemName)\r\n\r\n\u68C0\u67E5\u6307\u5B9A\u5B50\u7CFB\u7EDF\u662F\u5426\u5904\u4E8E\u6FC0\u6D3B\u72B6\u6001\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.subsystem_active(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u5B50\u7CFB\u7EDF\u6FC0\u6D3B\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n### subpart.subsystem_destroyed(subsystemName)\r\n\r\n\u68C0\u67E5\u6307\u5B9A\u5B50\u7CFB\u7EDF\u662F\u5426\u5DF2\u88AB\u6467\u6BC1\u3002\r\n\r\n**\u8BED\u6CD5**: `subpart.subsystem_destroyed(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n## \u96F6\u4EF6\u5C5E\u6027\r\n\r\n### subpart.durability\r\n\r\n\u96F6\u4EF6\u7684\u5F53\u524D\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\r\n\r\n### subpart.max_durability\r\n\r\n\u96F6\u4EF6\u7684\u6700\u5927\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\r\n\r\n### subpart.is_destroyed\r\n\r\n\u96F6\u4EF6\u662F\u5426\u5DF2\u88AB\u6467\u6BC1\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\uFF081.0=\u5DF2\u6467\u6BC1\uFF0C0.0=\u6B63\u5E38\uFF09\r\n\r\n## \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n### 1. \u60AC\u6302\u7CFB\u7EDF\u52A8\u753B\r\n\u5728 AE86 \u52A8\u753B\u4E2D\u4F7F\u7528\u8FDE\u63A5\u5668\u504F\u79FB\u63A7\u5236\u60AC\u6302\u7CFB\u7EDF\uFF1A\r\n\r\n```json\r\n{\r\n  \"axisRightFront\": {\r\n    \"rotation\": [0, 0, \"math.atan2(subpart.connector_offset('connector.machine_max.right_front_wheel', 1)*16,20)\"]\r\n  },\r\n  \"rodLeftFront\": {\r\n    \"rotation\": [\"-65.7725+math.atan2(20-subpart.connector_offset('connector.machine_max.left_front_wheel', 1)*16,9)\", 0, 0]\r\n  },\r\n  \"rodLeftFrontInner\": {\r\n    \"scale\": [1, \"math.sqrt(math.pow(20-subpart.connector_offset('connector.machine_max.left_front_wheel', 1)*16,2)+81)/22\", 1]\r\n  }\r\n}\r\n```\r\n\r\n**\u89E3\u91CA**:\r\n- \u4F7F\u7528 `subpart.connector_offset` \u83B7\u53D6\u8F66\u8F6E\u8FDE\u63A5\u5668\u7684Y\u8F74\u504F\u79FB\uFF08\u60AC\u6302\u9AD8\u5EA6\uFF09\r\n- \u901A\u8FC7\u4E09\u89D2\u51FD\u6570\u8BA1\u7B97\u60AC\u6302\u8FDE\u6746\u7684\u89D2\u5EA6\u548C\u957F\u5EA6\r\n- \u5B9E\u73B0\u771F\u5B9E\u7684\u60AC\u6302\u7CFB\u7EDF\u8FD0\u52A8\u5B66\r\n\r\n### 2. \u5B50\u7CFB\u7EDF\u72B6\u6001\u663E\u793A\r\n\u5728HUD\u4E2D\u4F7F\u7528\u5B50\u7CFB\u7EDF\u72B6\u6001\u63A7\u5236\u8B66\u544A\u706F\uFF1A\r\n\r\n```molang\r\n// \u53D1\u52A8\u673A\u5B50\u7CFB\u7EDF\u72B6\u6001\u68C0\u67E5\r\nsubpart.has_subsystem('engine') && subpart.subsystem_active('engine') ? 1.0 : 0.0\r\n\r\n// \u71C3\u6CB9\u5B50\u7CFB\u7EDF\u4F4E\u6CB9\u91CF\u8B66\u544A\r\nsubpart.has_subsystem('fuel_tank') && subpart.subsystem_durability('fuel_tank') < 10.0 ? 1.0 : 0.0\r\n\r\n// \u53D1\u52A8\u673A\u8FC7\u70ED\u8B66\u544A\r\nsubpart.has_subsystem('engine') && subpart.subsystem_destroyed('engine') ? 1.0 : 0.0\r\n```\r\n\r\n### 3. \u6761\u4EF6\u52A8\u753B\u63A7\u5236\r\n\u6839\u636E\u5B50\u7CFB\u7EDF\u72B6\u6001\u63A7\u5236\u96F6\u4EF6\u52A8\u753B\uFF1A\r\n\r\n```json\r\n{\r\n  \"engine_cover\": {\r\n    \"rotation\": [\r\n      \"subpart.has_subsystem('engine') ? 45.0 : 0.0\", \r\n      0, \r\n      0\r\n    ]\r\n  },\r\n  \"warning_light\": {\r\n    \"scale\": [\r\n      \"subpart.subsystem_destroyed('engine') ? 1.5 : 1.0\", \r\n      \"subpart.subsystem_destroyed('engine') ? 1.5 : 1.0\", \r\n      \"subpart.subsystem_destroyed('engine') ? 1.5 : 1.0\"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n## \u6CE8\u610F\u4E8B\u9879\r\n\r\n1. **\u8FDE\u63A5\u5668\u547D\u540D**: \u8FDE\u63A5\u5668\u540D\u79F0\u901A\u5E38\u9075\u5FAA `connector.machine_max.xxx` \u7684\u547D\u540D\u7EA6\u5B9A\r\n2. **\u5B50\u7CFB\u7EDF\u547D\u540D**: \u5B50\u7CFB\u7EDF\u540D\u79F0\u901A\u5E38\u9075\u5FAA `subsystem.machine_max.xxx` \u7684\u547D\u540D\u7EA6\u5B9A\r\n3. **\u5750\u6807\u7CFB**: \u8FDE\u63A5\u5668\u504F\u79FB\u548C\u65CB\u8F6C\u4F7F\u7528\u5C40\u90E8\u5750\u6807\u7CFB\r\n4. **\u6027\u80FD\u4F18\u5316**: \u9891\u7E41\u8C03\u7528\u7684\u65B9\u6CD5\u5E94\u8003\u8651\u6027\u80FD\u5F71\u54CD", "zh_cn/schemas/base/axis.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/axis.json",\r\n  "title": "\u8F74\u65B9\u5411",\r\n  "description": "\u8868\u793A\u4E09\u7EF4\u7A7A\u95F4\u4E2D\u7684\u8F74\u65B9\u5411\uFF0C\u7528\u4E8E\u5B9A\u4E49\u8FDE\u63A5\u70B9\u7684\u6CD5\u7EBF\u65B9\u5411\u3002",\r\n  "type": "string",\r\n  "enum": ["xp", "xn", "yp", "yn", "zp", "zn"],\r\n  "default": "yp",\r\n  "examples": ["yp", "xn", "zp"],\r\n  "description_map": {\r\n    "xp": "\u6B63X\u8F74\u65B9\u5411",\r\n    "xn": "\u8D1FX\u8F74\u65B9\u5411",\r\n    "yp": "\u6B63Y\u8F74\u65B9\u5411",\r\n    "yn": "\u8D1FY\u8F74\u65B9\u5411",\r\n    "zp": "\u6B63Z\u8F74\u65B9\u5411",\r\n    "zn": "\u8D1FZ\u8F74\u65B9\u5411"\r\n  }\r\n}', "zh_cn/schemas/base/material_attr.schema.json": '{\n  "$schema": "http://json-schema.org/draft-07/schema#",\n  "$id": "https://machine_max.io/schemas/base/material_attr.json",\n  "title": "\u6750\u6599\u5C5E\u6027",\n  "description": "\u5B9A\u4E49\u6750\u6599\u7684\u7269\u7406\u5C5E\u6027\u3001\u88C5\u7532\u9632\u62A4\u548C\u547D\u4E2D\u97F3\u6548\uFF0C\u6309 physics / armor / sounds \u4E09\u7EC4\u7EC4\u7EC7\u3002",\n  "type": "object",\n  "properties": {\n    "$schema": {\n      "type": "string",\n      "description": "JSON Schema\u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u667A\u80FD\u63D0\u793A\u548C\u9A8C\u8BC1",\n      "default": "../docs/zh_cn/schemas/base/material_attr.schema.json"\n    },\n    "physics": {\n      "type": "object",\n      "description": "\u7269\u7406\u5C5E\u6027\uFF1A\u6469\u64E6\u3001\u6ED1\u79FB\u3001\u5F39\u6027\u7B49\u7269\u7406\u6A21\u62DF\u53C2\u6570\u3002",\n      "properties": {\n        "friction": {\n          "$ref": "vector_3d.schema.json",\n          "default": [0.5, 0.5, 0.5],\n          "description": "\u6469\u64E6\u7CFB\u6570\u5411\u91CF\uFF0C\u683C\u5F0F\u4E3A[x, y, z]\u3002x\u4E3A\u4FA7\u5411\u6469\u64E6\u7CFB\u6570\uFF0Cy\u4E3A\u524D\u5411\u6469\u64E6\u7CFB\u6570\uFF0Cz\u65E0\u5B9E\u9645\u610F\u4E49\u3002"\n        },\n        "slip_adaptation": {\n          "type": "number",\n          "minimum": 0.0,\n          "maximum": 1.0,\n          "default": 0.5,\n          "description": "\u6ED1\u79FB\u9002\u5E94\u7CFB\u6570\uFF0C\u7528\u4E8E\u8C03\u6574\u5728\u6ED1\u52A8\u65F6\u7684\u6469\u64E6\u884C\u4E3A\u3002"\n        },\n        "slip_curve": {\n          "type": "object",\n          "description": "\u8F6E\u80CE\u6ED1\u79FB\u6469\u64E6\u66F2\u7EBF\u53C2\u6570\u3002",\n          "properties": {\n            "longitudinal": {\n              "type": "object",\n              "description": "\u7EB5\u5411\u6ED1\u79FB\u7387\u66F2\u7EBF\u53C2\u6570\u3002",\n              "properties": {\n                "peak_slip_ratio": { "type": "number", "minimum": 0.0, "default": 0.2, "description": "\u5CF0\u503C\u6ED1\u79FB\u7387\uFF08\u65E0\u91CF\u7EB2\uFF09\u3002" },\n                "base_scale": { "type": "number", "default": 1.0, "description": "\u6ED1\u79FB\u7387\u4E3A0\u65F6\u7684\u6469\u64E6\u7F29\u653E\u3002" },\n                "peak_scale": { "type": "number", "default": 1.4, "description": "\u5CF0\u503C\u6ED1\u79FB\u7387\u5904\u7684\u6469\u64E6\u7F29\u653E\u3002" },\n                "kinetic_scale": { "type": "number", "default": 0.9, "description": "\u9AD8\u6ED1\u79FB\u72B6\u6001\u4E0B\uFF08\u52A8\u6469\u64E6\u6BB5\uFF09\u7684\u6469\u64E6\u7F29\u653E\u3002" }\n              },\n              "additionalProperties": false\n            },\n            "lateral": {\n              "type": "object",\n              "description": "\u4FA7\u5411\u6ED1\u79FB\u89D2\u66F2\u7EBF\u53C2\u6570\uFF08\u89D2\u5EA6\u5355\u4F4D\u4E3A\u5EA6\uFF09\u3002",\n              "properties": {\n                "peak_angle_deg": { "type": "number", "minimum": 0.0, "default": 12.0, "description": "\u5CF0\u503C\u4FA7\u504F\u89D2\uFF08\u5EA6\uFF09\u3002" },\n                "kinetic_angle_deg": { "type": "number", "minimum": 0.0, "default": 90.0, "description": "\u8FDB\u5165\u52A8\u6469\u64E6\u5E73\u53F0\u7684\u4FA7\u504F\u89D2\uFF08\u5EA6\uFF09\u3002" },\n                "base_scale": { "type": "number", "default": 1.0, "description": "\u4FA7\u504F\u89D2\u4E3A0\u5EA6\u65F6\u7684\u6469\u64E6\u7F29\u653E\u3002" },\n                "peak_scale": { "type": "number", "default": 1.2, "description": "\u5CF0\u503C\u4FA7\u504F\u89D2\u5904\u7684\u6469\u64E6\u7F29\u653E\u3002" },\n                "kinetic_scale": { "type": "number", "default": 0.7, "description": "\u9AD8\u4FA7\u504F\u89D2\u72B6\u6001\u4E0B\uFF08\u52A8\u6469\u64E6\u6BB5\uFF09\u7684\u6469\u64E6\u7F29\u653E\u3002" }\n              },\n              "additionalProperties": false\n            }\n          },\n          "additionalProperties": false\n        },\n        "rolling_friction": { "type": "number", "minimum": 0.0, "default": 0.2, "description": "\u6EDA\u52A8\u6469\u64E6\u7CFB\u6570\u3002" },\n        "spinning_friction": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "\u65CB\u8F6C\u6469\u64E6\u7CFB\u6570\u3002" },\n        "restitution": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.1, "description": "\u6062\u590D\u7CFB\u6570\uFF08\u5F39\u6027\uFF09\uFF0C0\u4E3A\u5B8C\u5168\u975E\u5F39\u6027\u78B0\u649E\uFF0C1\u4E3A\u5B8C\u5168\u5F39\u6027\u78B0\u649E\u3002" },\n        "block_damage_factor": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "\u65B9\u5757\u7834\u574F\u7CFB\u6570\uFF0C0\u4E3A\u65E0\u6CD5\u7834\u574F\u65B9\u5757\u3002" }\n      },\n      "additionalProperties": false\n    },\n    "armor": {\n      "type": "object",\n      "description": "\u88C5\u7532\u5C5E\u6027\uFF1A\u6297\u7A7F\u3001\u7EBF\u6027\u51CF\u4F24\u3001\u767E\u5206\u6BD4\u51CF\u4F24\u3001\u8010\u4E45\u8870\u51CF\u53C2\u6570\u53CA\u6761\u4EF6\u5316\u4F24\u5BB3\u4FEE\u6B63\u5668\u3002\u4F24\u5BB3\u7BA1\u7EBF\uFF1Adamage_modifiers \u2192 (dmg - dmg_resist) * dmg_mult\u3002",\n      "properties": {\n        "rha": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "\u6750\u6599\u76F8\u5BF9\u8F67\u5236\u5747\u8D28\u88C5\u7532(RHA)\u7684\u6297\u7A7F\u80FD\u529B\u7CFB\u6570\u3002" },\n        "angle_effect": { "type": "boolean", "default": true, "description": "\u7B49\u6548\u62A4\u7532\u539A\u5EA6\u662F\u5426\u53D7\u5165\u5C04\u89D2\u5EA6\u5F71\u54CD\u3002" },\n        "dmg_resist": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "\u5168\u5C40\u7EBF\u6027\u51CF\u4F24\u503C\uFF0C\u6700\u7EC8\u4F24\u5BB3\u5C06\u88AB\u51CF\u53BB\u8BE5\u503C\uFF08\u53D7\u8010\u4E45\u8870\u51CF\u5F71\u54CD\uFF09\u3002" },\n        "dmg_mult": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.95, "description": "\u5168\u5C40\u4F24\u5BB3\u4E58\u6570\uFF0C\u6700\u7EC8\u4F24\u5BB3\u5C06\u88AB\u4E58\u4EE5\u8BE5\u503C\uFF08\u53D7\u8010\u4E45\u8870\u51CF\u5F71\u54CD\uFF09\u30020.95=\u627F\u53D795%\u4F24\u5BB3\u3002" },\n        "decay_rha": { "type": "number", "minimum": 0.0, "default": 0.3, "description": "\u8010\u4E45\u5F52\u96F6\u65F6 RHA \u7CFB\u6570\u7684\u6B8B\u4F59\u503C\u3002" },\n        "decay_dmg_resist": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "\u8010\u4E45\u5F52\u96F6\u65F6\u7EBF\u6027\u51CF\u4F24\u7684\u6B8B\u4F59\u503C\uFF0C\u9ED8\u8BA40.0\u8868\u793A\u5B8C\u5168\u5F52\u96F6\u3002" },\n        "decay_dmg_mult": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 1.0, "description": "\u8010\u4E45\u5F52\u96F6\u65F6\u4F24\u5BB3\u4E58\u6570\u7684\u6B8B\u4F59\u503C\uFF0C\u9ED8\u8BA41.0\u8868\u793A\u5B8C\u5168\u5931\u6548\u3002" },\n        "decay_power": { "type": "number", "minimum": 0.0, "default": 1.5, "description": "\u88C5\u7532\u9000\u5316\u66F2\u7EBF\u6307\u6570\u3002>1\u65F6\u88C5\u7532\u524D\u671F\u9000\u5316\u6162\u3001\u4E34\u8FD1\u635F\u574F\u65F6\u5FEB\u901F\u5931\u6548\uFF08\u8106\u6027\uFF09\uFF1B=1\u65F6\u4E3A\u7EBF\u6027\u9000\u5316\u3002" },\n        "unpen_power": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "\u653B\u51FB\u672A\u80FD\u5B8C\u5168\u51FB\u7A7F\u62A4\u7532\u65F6\u7684\u4F24\u5BB3\u6307\u6570\u3002\u516C\u5F0F: \u4F24\u5BB3*(\u7A7F\u6DF1/\u7B49\u6548\u62A4\u7532)^unpen_power\u3002" },\n        "impact_modifiers": {\n          "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json",\n          "description": "\u6761\u4EF6\u9A71\u52A8\u7684\u51B2\u51FB\u4FEE\u6B63\u5668\u3002"\n        },\n        "penetration_modifiers": {\n          "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json",\n          "description": "\u6761\u4EF6\u9A71\u52A8\u7684\u7A7F\u6DF1\u4FEE\u6B63\u5668\u3002"\n        },\n        "damage_modifiers": {\n          "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json",\n          "description": "\u6761\u4EF6\u9A71\u52A8\u7684\u4F24\u5BB3\u4FEE\u6B63\u5668\uFF08\u7C7B\u578B/\u5B9E\u4F53\u7279\u5B9A\u8C03\u8282\uFF09\u3002"\n        }\n      },\n      "additionalProperties": false\n    },\n    "sounds": {\n      "type": "object",\n      "properties": {\n        "hit_un_pen": {\n          "$ref": "sound_event.schema.json",\n          "description": "\u78B0\u649E\u7BB1\u88AB\u547D\u4E2D\u4F46\u672A\u7A7F\u900F\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\n          "default": { "sound_id": "machine_max:hit_box.hit.up_pen.metal", "range": 64 }\n        },\n        "hit_pen": {\n          "$ref": "sound_event.schema.json",\n          "description": "\u78B0\u649E\u7BB1\u88AB\u547D\u4E2D\u4E14\u7A7F\u900F\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\n          "default": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }\n        }\n      },\n      "additionalProperties": false,\n      "description": "\u6750\u6599\u547D\u4E2D\u97F3\u6548\u914D\u7F6E\u3002"\n    }\n  },\n  "additionalProperties": false,\n  "examples": [\n    {\n      "physics": { "friction": [0.5, 0.5, 0.5] },\n      "armor": {\n        "rha": 1.0,\n        "dmg_resist": 1.0,\n        "dmg_mult": 0.95\n      },\n      "sounds": {\n        "hit_un_pen": { "sound_id": "machine_max:hit_box.hit.up_pen.metal", "range": 64 },\n        "hit_pen": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }\n      }\n    }\n  ]\n}', "zh_cn/schemas/base/operation.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/operation.json",\r\n  "title": "\u64CD\u4F5C\u7B26",\r\n  "description": "\u6570\u5B66\u64CD\u4F5C\u7B26\uFF0C\u7528\u4E8E\u4FEE\u6539\u5668\u4E2D\u7684\u6570\u503C\u8FD0\u7B97",\r\n  "type": "string",\r\n  "enum": ["add", "multiply"],\r\n  "default": "add",\r\n  "examples": ["add", "multiply"]\r\n}', "zh_cn/schemas/base/resource_location.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/base/resource_location.json",\r
   "title": "\u8D44\u6E90\u4F4D\u7F6E",\r
@@ -5694,6 +5947,259 @@
       "columns": 9\r
     }\r
   ]\r
+}`, "zh_cn/schemas/subsystem/static/launcher_static_attr.schema.json": `{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://machine_max.io/schemas/subsystem/static/launcher_static_attr.json",
+  "title": "\u53D1\u5C04\u5668\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027",
+  "description": "\u53D1\u5C04\u5668\u5B50\u7CFB\u7EDF\u7684\u9759\u6001\u5C5E\u6027\uFF0C\u5305\u542B\u70AE\u7BA1\u3001\u70AE\u95E9\u3001\u7535\u5BB9\u4E09\u4E2A\u6A21\u5757\u7684\u914D\u7F6E\u3002",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema \u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u7684\u667A\u80FD\u63D0\u793A\u548C\u6821\u9A8C",
+      "default": "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json"
+    },
+    "type": {
+      "type": "string",
+      "const": "machine_max:launcher",
+      "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u5FC5\u987B\u4E3A 'machine_max:launcher'\u3002"
+    },
+    "basic_durability": {
+      "type": "number",
+      "minimum": 0,
+      "default": 20.0,
+      "description": "\u5B50\u7CFB\u7EDF\u57FA\u7840\u8010\u4E45\u5EA6\u3002\u964D\u4E3A 0 \u65F6\u762B\u75EA\uFF0C\u4FEE\u590D\u81F3 30% \u65F6\u6062\u590D\u529F\u80FD\u3002"
+    },
+    "pass_damage": {
+      "type": "boolean",
+      "default": true,
+      "description": "\u662F\u5426\u5C06\u4F24\u5BB3\u4F20\u9012\u7ED9\u5B50\u7CFB\u7EDF\u6301\u6709\u8005\u3002\u4E3A true \u65F6\u5B50\u7CFB\u7EDF\u53D7\u5230\u7684\u4F24\u5BB3\u4F1A\u4F20\u9012\u7ED9\u96F6\u4EF6\u3002"
+    },
+    "limit_damage": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u662F\u5426\u9650\u5236\u4F24\u5BB3\u4F20\u9012\u503C\u4E0D\u8D85\u8FC7\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6\u3002\u4F8B\u5982 40 \u4F24\u5BB3\u3001\u5269\u4F59 20\uFF0C\u5219\u53EA\u4F20\u9012 20\u3002"
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u662F\u5426\u5728 HUD \u4E2D\u9690\u85CF\u8BE5\u5B50\u7CFB\u7EDF\uFF0C\u5E38\u7528\u4E8E\u4EC5\u63D0\u4F9B\u6A21\u578B\u96F6\u4EF6\u4F24\u5BB3\u533A\u5206\u7684\u975E\u529F\u80FD\u5B50\u7CFB\u7EDF\u3002"
+    },
+    "control_inputs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["weapon_control"],
+      "description": "\u5F00\u706B\u4FE1\u53F7\u8F93\u5165\u9891\u9053\u5217\u8868\uFF0C\u4F18\u5148\u7EA7\u4ECE\u9AD8\u5230\u4F4E\u3002"
+    },
+    "ammo_inputs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "\u5F39\u836F\u4F9B\u7ED9\u53D1\u73B0\u9891\u9053\u5217\u8868\u3002\u7A7A\u5217\u8868\u8868\u793A\u4E07\u80FD\u63A5\u6536\u6A21\u5F0F\uFF08\u63A5\u53D7\u4EFB\u610F\u9891\u9053\u4FE1\u53F7\uFF09\u3002"
+    },
+    "sounds": {
+      "type": "object",
+      "properties": {
+        "on_destroyed": {
+          "$ref": "../../base/sound_event.schema.json",
+          "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u3002",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        },
+        "on_activate": {
+          "$ref": "../../base/sound_event.schema.json",
+          "description": "\u5B50\u7CFB\u7EDF\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u3002",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        },
+        "dry_fire": {
+          "$ref": "../../base/sound_event.schema.json",
+          "description": "\u7A7A\u819B\u51FB\u53D1\u97F3\u6548\uFF08\u6263\u6273\u673A\u4F46\u65E0\u5F39\u836F\u65F6\u64AD\u653E\uFF09\u3002",
+          "default": {
+            "sound_id": "machine_max:subsystem.launcher.dry_fire",
+            "range": 16
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "\u53D1\u5C04\u5668\u97F3\u6548\u5C5E\u6027\uFF0C\u5305\u542B\u57FA\u7840\u97F3\u6548\u548C\u7A7A\u819B\u51FB\u53D1\u97F3\u6548\u3002"
+    },
+    "barrel": {
+      "type": "object",
+      "properties": {
+        "durability_weight": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "\u6A21\u5757\u8010\u4E45\u6743\u91CD\u3002\u5B50\u7CFB\u7EDF\u603B\u8010\u4E45\u6309\u5404\u6A21\u5757\u6743\u91CD\u6BD4\u4F8B\u5206\u914D\u3002"
+        },
+        "decay_power": {
+          "type": "number",
+          "minimum": 0,
+          "default": 2.0,
+          "description": "\u70AE\u7BA1\u8870\u51CF\u66F2\u7EBF\u6307\u6570\u3002\u503C\u8D8A\u5927\uFF0C\u6218\u635F\u521D\u671F\u6027\u80FD\u4E0B\u964D\u8D8A\u5E73\u7F13\u3001\u540E\u671F\u4E0B\u964D\u8D8A\u9661\u5CED\u3002"
+        },
+        "damaged_spread": {
+          "type": "number",
+          "minimum": 0,
+          "default": 2.0,
+          "description": "\u6218\u635F\u6781\u9650\u6563\u5E03\u4E58\u6570\u3002\u8010\u4E45\u21920 \u4F46\u672A\u5F52\u96F6\u65F6\u7684\u7CBE\u5EA6\u635F\u5931\u500D\u7387\u3002"
+        },
+        "destroyed_spread": {
+          "type": "number",
+          "minimum": 0,
+          "default": 8.0,
+          "description": "\u6467\u6BC1\u6563\u5E03\u4E58\u6570\u3002\u8010\u4E45\u5F52\u96F6\u540E\u7684\u7CBE\u5EA6\u635F\u5931\u500D\u7387\uFF08\u8D28\u53D8\u60AC\u5D16\uFF09\u3002"
+        },
+        "damaged_muzzle_velocity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.7,
+          "description": "\u6218\u635F\u6781\u9650\u521D\u901F\u4E58\u6570\u3002\u8010\u4E45\u21920 \u4F46\u672A\u5F52\u96F6\u65F6\u7684\u521D\u901F\u6BD4\u4F8B\u3002"
+        },
+        "destroyed_muzzle_velocity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.1,
+          "description": "\u6467\u6BC1\u521D\u901F\u4E58\u6570\u3002\u8010\u4E45\u5F52\u96F6\u540E\u7684\u521D\u901F\u6BD4\u4F8B\u3002"
+        },
+        "velocity_multiplier": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "\u521D\u901F\u4E58\u6570\uFF0C\u5148\u5E94\u7528\u6B64\uFF08\u70AE\u7BA1\u957F\u5EA6/\u819B\u7EBF\u51B3\u5B9A\uFF09\u3002"
+        },
+        "velocity_bonus": {
+          "type": "number",
+          "default": 0,
+          "description": "\u521D\u901F\u7EBF\u6027\u52A0\u6210 (m/s)\u3002"
+        },
+        "horizontal_accuracy_multiplier": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "\u6C34\u5E73\u7CBE\u5EA6\u4E58\u5B50\u30021.0 = \u4E0D\u6539\u53D8\u5F39\u4E38\u9ED8\u8BA4\u6C34\u5E73\u7CBE\u5EA6\u3002"
+        },
+        "vertical_accuracy_multiplier": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "\u5782\u76F4\u7CBE\u5EA6\u4E58\u5B50\u30021.0 = \u4E0D\u6539\u53D8\u5F39\u4E38\u9ED8\u8BA4\u5782\u76F4\u7CBE\u5EA6\u3002"
+        },
+        "recoil_multiplier": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.5,
+          "description": "\u540E\u5750\u529B\u500D\u7387\u3002\u603B\u540E\u5750\u51B2\u91CF = \u5F39\u4E38\u603B\u52A8\u91CF \xD7 \u6B64\u503C\u30021.0 = \u4EC5\u5F39\u4E38\u52A8\u91CF\uFF1B\u9ED8\u8BA4 1.5 \u2248 \u5F39\u4E38+\u706B\u836F\u71C3\u6C14\uFF08\u70AE\u53E3\u66B4\u98CE\uFF09\uFF1B\u70AE\u53E3\u5236\u9000\u5668 < 1.0\uFF1B\u65E0\u540E\u5750\u529B\u8BBE\u8BA1 \u2248 0\u3002"
+        }
+      },
+      "additionalProperties": false,
+      "description": "\u70AE\u7BA1\u6A21\u5757\u5C5E\u6027\u2014\u2014\u5B9A\u4E49\u7CBE\u5EA6\u3001\u521D\u901F\u3001\u540E\u5750\u529B\u7684\u57FA\u51C6\u503C\u53CA\u6218\u635F/\u6467\u6BC1\u8870\u51CF\u3002"
+    },
+    "breech": {
+      "type": "object",
+      "properties": {
+        "durability_weight": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "\u6A21\u5757\u8010\u4E45\u6743\u91CD\u3002\u5B50\u7CFB\u7EDF\u603B\u8010\u4E45\u6309\u5404\u6A21\u5757\u6743\u91CD\u6BD4\u4F8B\u5206\u914D\u3002"
+        },
+        "fire_rate": {
+          "type": "number",
+          "minimum": 0,
+          "description": "\u5C04\u901F (RPM)\u3002"
+        },
+        "required_tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "\u5F39\u836F\u5FC5\u987B\u5168\u90E8\u5177\u5907\u7684 tag\u3002\u7A7A\u5217\u8868\u8868\u793A\u4E0D\u8981\u6C42\u3002"
+        },
+        "acceptable_tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "\u5F39\u836F\u81F3\u5C11\u5177\u5907\u5176\u4E00\u5373\u53EF\u7684 tag\u3002\u7A7A\u5217\u8868\u8868\u793A\u63A5\u53D7\u4EFB\u610F\u3002"
+        },
+        "forbidden_tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "\u5F39\u836F\u4E0D\u80FD\u5305\u542B\u7684 tag\u3002\u7A7A\u5217\u8868\u8868\u793A\u4E0D\u7981\u6B62\u3002"
+        }
+      },
+      "additionalProperties": false,
+      "description": "\u70AE\u95E9\u6A21\u5757\u5C5E\u6027\u2014\u2014\u5B9A\u4E49\u5C04\u901F\u548C\u5F39\u836F\u517C\u5BB9\u6027\u7EA6\u675F\u3002"
+    },
+    "capacitor": {
+      "type": "object",
+      "properties": {
+        "durability_weight": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "\u6A21\u5757\u8010\u4E45\u6743\u91CD\u3002\u5B50\u7CFB\u7EDF\u603B\u8010\u4E45\u6309\u5404\u6A21\u5757\u6743\u91CD\u6BD4\u4F8B\u5206\u914D\u3002"
+        },
+        "decay_power": {
+          "type": "number",
+          "minimum": 0,
+          "default": 2.0,
+          "description": "\u7535\u5BB9\u8870\u51CF\u66F2\u7EBF\u6307\u6570\u3002"
+        },
+        "damaged_charge_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.5,
+          "description": "\u6218\u635F\u6781\u9650\u84C4\u529B\u901F\u7387\u4E58\u6570\u3002"
+        },
+        "destroyed_charge_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.0,
+          "description": "\u6467\u6BC1\u84C4\u529B\u901F\u7387\u4E58\u6570\u3002"
+        },
+        "damaged_max_power": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.7,
+          "description": "\u6218\u635F\u6781\u9650\u6700\u5927\u529F\u7387\u4E58\u6570\u3002"
+        },
+        "destroyed_max_power": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.0,
+          "description": "\u6467\u6BC1\u6700\u5927\u529F\u7387\u4E58\u6570\u3002"
+        }
+      },
+      "additionalProperties": false,
+      "description": "\u7535\u5BB9\u6A21\u5757\u5C5E\u6027\uFF08\u53EF\u9009\uFF0C\u7528\u4E8E\u78C1\u8F68\u70AE\u7B49\u84C4\u529B\u6B66\u5668\uFF09\u3002"
+    }
+  },
+  "required": ["type"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "type": "machine_max:launcher",
+      "description": "\u6700\u7B80\u793A\u4F8B\u2014\u2014\u4EC5\u5FC5\u9700\u5B57\u6BB5\uFF0C\u4F7F\u7528\u6240\u6709\u9ED8\u8BA4\u503C"
+    },
+    {
+      "type": "machine_max:launcher",
+      "basic_durability": 80,
+      "control_inputs": ["weapon_control"],
+      "ammo_inputs": ["ammo_main"],
+      "description": "\u6807\u51C6\u793A\u4F8B\u2014\u2014\u57FA\u7840\u53D1\u5C04\u5668\u914D\u7F6E"
+    }
+  ]
 }`, "zh_cn/schemas/subsystem/static/lighting_static_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/static/lighting_static_attr.json",\r
@@ -7001,7 +7507,7 @@
       "abs_wheel_radius": 0.35\r
     }\r
   ]\r
-}`, "zh_cn/schemas/subsystem/subsystem_dynamic_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subsystem/subsystem_dynamic_attr.json",\r\n  "title": "\u5B50\u7CFB\u7EDF\u52A8\u6001\u5C5E\u6027",\r\n  "description": "\u5B50\u7CFB\u7EDF\u52A8\u6001\u5C5E\u6027\u7684\u9876\u5C42\u67B6\u6784\uFF0C\u6839\u636E type \u5B57\u6BB5\u5206\u6D3E\u5230\u5177\u4F53\u5B50\u7CFB\u7EDF\u52A8\u6001\u5C5E\u6027\u67B6\u6784\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "type": {\r\n      "type": "string",\r\n      "enum": [\r\n        "machine_max:basic",\r\n        "machine_max:camera",\r\n        "machine_max:car_controller",\r\n        "machine_max:motorbike_controller",\r\n        "machine_max:engine",\r\n        "machine_max:gearbox",\r\n        "machine_max:item_storage",\r\n        "machine_max:motor",\r\n        "machine_max:motor_controller",\r\n        "machine_max:seat",\r\n        "machine_max:sight",\r\n        "machine_max:transmission",\r\n        "machine_max:wheel_driver",\r\n        "machine_max:lighting",\r\n        "machine_max:turret_driver",\r\n        "machine_max:weapon_controller"\r\n      ],\r\n      "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u51B3\u5B9A\u4F7F\u7528\u54EA\u4E2A\u5177\u4F53\u7684\u5B50\u7CFB\u7EDF\u67B6\u6784\u3002"\r\n    }\r\n  },\r\n  "additionalProperties": true,\r\n  "required": [\r\n    "type"\r\n  ],\r\n  "allOf": [\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:camera"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/camera_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:car_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/car_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:engine"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/engine_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:gearbox"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/gearbox_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:item_storage"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/item_storage_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motor"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/motor_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motor_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/motorbike_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:seat"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/seat_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:sight"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/sight_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:transmission"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/transmission_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:wheel_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/wheel_driver_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:lighting"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/lighting_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:turret_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/turret_driver_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:weapon_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/weapon_controller_dynamic_attr.schema.json"\r\n      }\r\n    }\r\n  ],\r\n  "examples": [\r\n    {\r\n      "type": "machine_max:car_controller",\r\n      "definition": "machine_max:ae86at_car_controller",\r\n      "control_outputs": {\r\n        "car_control": [\r\n          "subsystem.machine_max.engine",\r\n          "subsystem.machine_max.left_front_wheel_driver",\r\n          "subsystem.machine_max.right_front_wheel_driver",\r\n          "subsystem.machine_max.left_back_wheel_driver",\r\n          "subsystem.machine_max.right_back_wheel_driver",\r\n          "subsystem.machine_max.gearbox"\r\n        ]\r\n      }\r\n    },\r\n    {\r\n      "type": "machine_max:engine",\r\n      "definition": "machine_max:ae86at_engine",\r\n      "power_output": "gearbox"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/subsystem/subsystem_static_attr.schema.json": '{\n  "$schema": "http://json-schema.org/draft-07/schema#",\n  "$id": "https://machine_max.io/schemas/subsystem/subsystem_static_attr.json",\n  "title": "\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027",\n  "description": "\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027\u7684\u9876\u5C42\u67B6\u6784\uFF0C\u6839\u636E type \u5B57\u6BB5\u5206\u6D3E\u5230\u5177\u4F53\u5B50\u7CFB\u7EDF\u7C7B\u578B\u3002",\n  "type": "object",\n  "properties": {\n    "type": {\n      "type": "string",\n      "enum": [\n        "machine_max:basic",\n        "machine_max:camera",\n        "machine_max:car_controller",\n        "machine_max:engine",\n        "machine_max:gearbox",\n        "machine_max:item_storage",\n        "machine_max:motor",\n        "machine_max:motor_controller",\n        "machine_max:regen_loader",\n        "machine_max:seat",\n        "machine_max:sight",\n        "machine_max:transmission",\n        "machine_max:wheel_driver",\n        "machine_max:lighting",\n        "machine_max:turret_driver",\n        "machine_max:weapon_controller"\n      ],\n      "description": "Subsystem type, determines which specific subsystem schema to use."\n    }\n  },\n  "additionalProperties": true,\n  "required": [\n    "type"\n  ],\n  "allOf": [\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:camera"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/camera_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:car_controller"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/car_controller_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:engine"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/engine_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:gearbox"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/gearbox_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:item_storage"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/item_storage_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:motor"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/motor_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:motor_controller"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/motorbike_controller_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:seat"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/seat_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:sight"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/sight_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:transmission"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/transmission_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:wheel_driver"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/wheel_driver_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:lighting"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/lighting_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:turret_driver"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/turret_driver_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:regen_loader"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/regen_loader_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:weapon_controller"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/weapon_controller_static_attr.schema.json"\n      }\n    }\n  ],\n  "examples": [\n    {\n      "$schema": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json",\n      "type": "machine_max:item_storage",\n      "basic_durability": 100.0,\n      "rows": 6,\n      "columns": 9\n    },\n    {\n      "$schema": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json",\n      "type": "machine_max:engine",\n      "max_power": 75000.0,\n      "max_torque": 130.0,\n      "red_line_rpm": 6500.0\n    }\n  ]\n}', "zh_cn/schemas/\u5982\u4F55\u4F7F\u7528JSON\u6A21\u677F.md": '# JSON Schema\u5728Machine-Max\u5185\u5BB9\u5305\u5236\u4F5C\u4E2D\u7684\u5E94\u7528\u6307\u5357\r\n\r\n## \u4EC0\u4E48\u662FJSON Schema\uFF1F\r\n\r\nJSON Schema\u662F\u4E00\u79CD\u7528\u4E8E\u63CF\u8FF0\u548C\u9A8C\u8BC1JSON\u6587\u6863\u7ED3\u6784\u7684\u89C4\u8303\u3002\u5BF9\u4E8EMachine-Max\u7684\u5185\u5BB9\u5305\u5236\u4F5C\uFF0CJSON Schema\u80FD\u591F\u5E2E\u52A9\u4F60\uFF1A\r\n\r\n- **\u9A8C\u8BC1\u914D\u7F6E\u683C\u5F0F**\uFF1A\u786E\u4FDD\u4F60\u7684JSON\u914D\u7F6E\u6587\u4EF6\u683C\u5F0F\u6B63\u786E\r\n- **\u63D0\u4F9B\u667A\u80FD\u63D0\u793A**\uFF1A\u5728\u652F\u6301\u7684\u7F16\u8F91\u5668\u4E2D\u663E\u793A\u5C5E\u6027\u8BF4\u660E\u548C\u7C7B\u578B\u8981\u6C42\r\n- **\u51CF\u5C11\u9519\u8BEF**\uFF1A\u63D0\u524D\u53D1\u73B0\u914D\u7F6E\u9519\u8BEF\uFF0C\u907F\u514D\u6E38\u620F\u5185\u95EE\u9898\r\n\r\n## \u4E3A\u4EC0\u4E48\u5185\u5BB9\u5305\u5236\u4F5C\u8005\u9700\u8981\u5173\u6CE8JSON Schema\uFF1F\r\n\r\n\u5373\u4F7F\u4F60\u6CA1\u6709\u7F16\u7A0B\u7ECF\u9A8C\uFF0CJSON Schema\u4E5F\u80FD\u8BA9\u4F60\u7684\u5185\u5BB9\u5305\u5236\u4F5C\u8FC7\u7A0B\u66F4\u987A\u7545\uFF1A\r\n\r\n1. **\u81EA\u52A8\u8865\u5168**\uFF1A\u73B0\u4EE3\u7F16\u8F91\u5668\uFF08\u5982VSCode\uFF09\u53EF\u4EE5\u6839\u636ESchema\u63D0\u4F9B\u5C5E\u6027\u540D\u81EA\u52A8\u8865\u5168\r\n2. **\u9519\u8BEF\u63D0\u793A**\uFF1A\u5728\u914D\u7F6E\u9519\u8BEF\u65F6\u7ACB\u5373\u63D0\u793A\uFF0C\u800C\u4E0D\u662F\u7B49\u5230\u6E38\u620F\u4E2D\u624D\u53D1\u73B0\u95EE\u9898\r\n3. **\u5C5E\u6027\u8BF4\u660E**\uFF1A\u67E5\u770B\u6BCF\u4E2A\u914D\u7F6E\u9879\u7684\u5177\u4F53\u542B\u4E49\u548C\u4F7F\u7528\u65B9\u6CD5\r\n4. **\u7C7B\u578B\u68C0\u67E5**\uFF1A\u786E\u4FDD\u4F60\u8F93\u5165\u7684\u6570\u636E\u7C7B\u578B\u6B63\u786E\uFF08\u6570\u5B57\u3001\u5B57\u7B26\u4E32\u3001\u5E03\u5C14\u503C\u7B49\uFF09\r\n\r\n## \u5982\u4F55\u4F7F\u7528JSON Schema\uFF1F\r\n\r\n### 1. \u914D\u7F6E\u7F16\u8F91\u5668\u652F\u6301\r\n\r\n\u5728\u4F60\u7684JSON\u6587\u4EF6\u9876\u90E8\u6DFB\u52A0`$schema`\u5B57\u6BB5\uFF0C\u6216\u76F4\u63A5\u590D\u5236\u5DF2\u6709\u7684\u793A\u4F8BJSON\uFF0C\u4F8B\u5982\uFF1A\r\n\r\n```json\r\n{\r\n  "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",\r\n  "vehicle_durability_rate": 1.0,\r\n  "variants": {\r\n    "default": {\r\n      "icon": "machine_max:textures/icon/example.png",\r\n      "models": "machine_max:example.geo"\r\n    }\r\n  }\r\n}\r\n```\r\n\u6CE8\u610F\uFF0C\u5728\u8FD9\u91CC`$schema`\u5B57\u6BB5\u7684\u503C\u4E3A\u76F8\u5BF9\u8DEF\u5F84\uFF0C"../"\u8868\u793A\u5F53\u524D\u6587\u4EF6\u7684\u4E0A\u7EA7\u76EE\u5F55\u3002\r\n\r\n### 2. \u63A8\u8350\u7F16\u8F91\u5668\r\n\r\n- **VSCode**\uFF1A\u539F\u751F\u652F\u6301JSON Schema\r\n\r\n### 3. \u5728VSCode\u4E2D\u542F\u7528JSON Schema\u9A8C\u8BC1\r\n\r\n **\u63A8\u8350\u76F4\u63A5\u590D\u7528\u5B98\u65B9\u5185\u5BB9\u5305\u7684\u6587\u4EF6\u7ED3\u6784\uFF0C\u5E76\u539F\u6837\u590D\u5236docs\u6587\u4EF6\u5939\u5230\u4F60\u81EA\u5DF1\u7684\u5185\u5BB9\u5305\uFF0C\u518D\u5728\u90E8\u4EF6\u548C\u5B50\u7CFB\u7EDFjson\u6587\u4EF6\u5F00\u5934\u6DFB\u52A0`$schema`\u5F15\u7528\u5373\u53EF\u3002**\r\n\r\n## \u5B9E\u9645\u5236\u4F5C\u4E2D\u7684\u5E94\u7528\u793A\u4F8B\r\n\r\n### \u6B65\u9AA41\uFF1A\u521B\u5EFA\u65B0\u90E8\u4EF6\r\n\r\n1. \u590D\u5236\u73B0\u6709\u7684\u90E8\u4EF6JSON\u6587\u4EF6\u4F5C\u4E3A\u6A21\u677F\r\n2. \u5728\u6587\u4EF6\u5F00\u5934\u6DFB\u52A0`$schema`\u5F15\u7528\r\n3. \u6839\u636E\u7F16\u8F91\u5668\u7684\u667A\u80FD\u63D0\u793A\u6DFB\u52A0\u914D\u7F6E\u9879\r\n\r\n### \u6B65\u9AA42\uFF1A\u9A8C\u8BC1\u914D\u7F6E\r\n\r\n1. \u4FDD\u5B58\u6587\u4EF6\u540E\u67E5\u770B\u7F16\u8F91\u5668\u662F\u5426\u663E\u793A\u9519\u8BEF\r\n2. \u6839\u636E\u63D0\u793A\u4FEE\u6B63\u914D\u7F6E\u683C\u5F0F\u95EE\u9898\r\n3. \u6D4B\u8BD5\u5185\u5BB9\u5305\u5728\u6E38\u620F\u4E2D\u662F\u5426\u6B63\u5E38\u5DE5\u4F5C\r\n\r\n### \u6B65\u9AA43\uFF1A\u8C03\u8BD5\u95EE\u9898\r\n\r\n\u5982\u679C\u5185\u5BB9\u5305\u5728\u6E38\u620F\u4E2D\u4E0D\u5DE5\u4F5C\uFF0C\u68C0\u67E5\uFF1A\r\n\r\n1. JSON\u683C\u5F0F\u662F\u5426\u6B63\u786E\uFF08\u4F7F\u7528Schema\u9A8C\u8BC1\uFF09\r\n2. \u6240\u6709\u5FC5\u9700\u5B57\u6BB5\u662F\u5426\u90FD\u5DF2\u586B\u5199\r\n3. \u6570\u636E\u7C7B\u578B\u662F\u5426\u5339\u914D\uFF08\u6570\u5B57 vs \u5B57\u7B26\u4E32\u7B49\uFF09\r\n\r\n## \u5E38\u89C1\u95EE\u9898\u4E0E\u89E3\u51B3\u65B9\u6848\r\n\r\n### Q: \u7F16\u8F91\u5668\u63D0\u793A\u9519\u8BEF\uFF0C\u4F46\u914D\u7F6E\u770B\u8D77\u6765\u662F\u6B63\u786E\u7684\uFF1F\r\nA: \u68C0\u67E5\uFF1A\r\n- JSON\u8BED\u6CD5\u662F\u5426\u6B63\u786E\uFF08\u9017\u53F7\u3001\u62EC\u53F7\u662F\u5426\u6709\u7F3A\u6F0F\u7B49\uFF0C\u52A1\u5FC5\u6CE8\u610F\u4E0D\u8981\u4F7F\u7528\u4E2D\u6587\u6807\u70B9\u7B26\u53F7\uFF09\r\n- \u5B57\u6BB5\u540D\u79F0\u662F\u5426\u62FC\u5199\u6B63\u786E\r\n- \u6570\u636E\u7C7B\u578B\u662F\u5426\u5339\u914D\uFF08\u5982\u9700\u8981\u6570\u5B57\u4F46\u8F93\u5165\u4E86\u5B57\u7B26\u4E32\uFF09\r\n\r\n### Q: \u5982\u4F55\u77E5\u9053\u54EA\u4E9B\u5B57\u6BB5\u662F\u5FC5\u9700\u7684\uFF1F\r\nA: \u67E5\u770BSchema\u6587\u4EF6\u4E2D\u7684`required`\u5B57\u6BB5\uFF0C\u6216\u8005\u5728\u652F\u6301\u7684\u7F16\u8F91\u5668\u4E2D\u4F1A\u6709\u76F8\u5E94\u63D0\u793A\u3002\r\n\r\n### Q: \u8FD9\u4E9B\u5B57\u6BB5\u7684\u4F5C\u7528\u90FD\u662F\u4EC0\u4E48\uFF1F\r\nA: \u5C06\u9F20\u6807\u653E\u5230\u5B57\u6BB5\u4E0A\uFF0C\u5373\u53EF\u67E5\u770B\u5B57\u6BB5\u7684\u8BF4\u660E\u548C\u7C7B\u578B\u8981\u6C42\u3002\r\n\r\n## \u63D0\u9AD8\u6548\u7387\u7684\u6280\u5DE7\r\n\r\n1. **\u4F7F\u7528\u6A21\u677F**\uFF1A\u57FA\u4E8E\u73B0\u6709\u5DE5\u4F5C\u6B63\u5E38\u7684\u914D\u7F6E\u521B\u5EFA\u65B0\u914D\u7F6E\r\n2. **\u9010\u6B65\u6DFB\u52A0**\uFF1A\u5148\u6DFB\u52A0\u57FA\u672C\u914D\u7F6E\uFF0C\u9A8C\u8BC1\u65E0\u8BEF\u540E\u518D\u6DFB\u52A0\u9AD8\u7EA7\u9009\u9879\r\n3. **\u53C2\u8003\u793A\u4F8B**\uFF1A\u67E5\u770B\u5B98\u65B9\u5305\u4E2D\u7684\u793A\u4F8B\u914D\u7F6E\u6587\u4EF6\r\n4. **\u5B9E\u65F6\u9A8C\u8BC1**\uFF1A\u5728\u7F16\u8F91\u5668\u4E2D\u5B9E\u65F6\u67E5\u770B\u9A8C\u8BC1\u7ED3\u679C\r\n\r\n## \u603B\u7ED3\r\n\r\nJSON Schema\u662F\u5185\u5BB9\u5305\u5236\u4F5C\u7684\u5F3A\u5927\u8F85\u52A9\u5DE5\u5177\uFF0C\u5B83\u80FD\u5E2E\u52A9\u4F60\u521B\u5EFA\u683C\u5F0F\u6B63\u786E\u3001\u7ED3\u6784\u5B8C\u6574\u7684\u914D\u7F6E\u6587\u4EF6\u3002\u5373\u4F7F\u6CA1\u6709\u7F16\u7A0B\u7ECF\u9A8C\uFF0C\u4F7F\u7528\u652F\u6301Schema\u7684\u7F16\u8F91\u5668\u4E5F\u80FD\u5927\u5927\u63D0\u9AD8\u5236\u4F5C\u6548\u7387\u548C\u51C6\u786E\u6027\u3002\r\n\r\n\u5F00\u59CB\u4F7F\u7528\u65F6\uFF0C\u5EFA\u8BAE\u5148\u4ECE\u7B80\u5355\u7684\u914D\u7F6E\u5F00\u59CB\uFF0C\u9010\u6B65\u719F\u6089Schema\u63D0\u4F9B\u7684\u5404\u79CD\u529F\u80FD\uFF0C\u968F\u7740\u7ECF\u9A8C\u7684\u79EF\u7D2F\uFF0C\u4F60\u4F1A\u53D1\u73B0\u5236\u4F5C\u5185\u5BB9\u5305\u53D8\u5F97\u66F4\u52A0\u7B80\u5355\u548C\u53EF\u9760\u3002', "zh_cn/\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93.md": '# \u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93\r\n\r\n\u672C\u6559\u7A0B\u76EE\u6807\uFF1A\r\n- \u8BB2\u6E05\u5B50\u7CFB\u7EDF\u5982\u4F55\u8D4B\u4E88\u96F6\u90E8\u4EF6\u201C\u5B9E\u9645\u529F\u80FD\u201D\u3002\r\n- \u8BB2\u6E05\u4FE1\u53F7\u5982\u4F55\u5728\u5B50\u7CFB\u7EDF\u3001\u4EA4\u4E92\u533A\u3001\u8FDE\u63A5\u70B9\u3001vehicle \u4E4B\u95F4\u4F20\u9012\u3002\r\n- \u6559\u4F60\u5728\u5185\u5BB9\u5305\u5C42\uFF08JSON\uFF09\u521B\u5EFA\u201C\u81EA\u5DF1\u7684\u5B50\u7CFB\u7EDF\u578B\u53F7\u201D\uFF08\u590D\u7528\u73B0\u6709 type\uFF09\u3002\r\n\r\n\r\n---\r\n\r\n## 1. \u5B50\u7CFB\u7EDF\u7531\u8C01\u521B\u5EFA\r\n\r\n\u5728 `parts/*.json` \u7684 `sub_parts -> subsystems` \u4E2D\u914D\u7F6E\u540E\uFF1A\r\n1. \u7CFB\u7EDF\u8BFB\u53D6\u6BCF\u4E2A\u5B50\u7CFB\u7EDF\u6761\u76EE\uFF08\u540D\u79F0 -> \u52A8\u6001\u5C5E\u6027\uFF09\u3002\r\n2. \u901A\u8FC7 `type + definition` \u627E\u5230\u5BF9\u5E94\u903B\u8F91\u4E0E\u9759\u6001\u53C2\u6570\u3002\r\n3. \u8FD0\u884C\u65F6\u521B\u5EFA\u5177\u4F53\u5B50\u7CFB\u7EDF\u5B9E\u4F8B\u5E76\u6302\u5230 subpart\u3002\r\n\r\n\u6E90\u7801\u951A\u70B9\uFF1A\r\n- `AbstractSubsystemAttr`\uFF1A\u52A8\u6001\u5C5E\u6027\u57FA\u7C7B\uFF0C\u8D1F\u8D23 `createSubsystem`\u3002\r\n- `Part.createSubsystems()`\uFF1A\u628A JSON \u6761\u76EE\u5B9E\u4F8B\u5316\u5E76\u653E\u5165 `subPart.subsystems`\u3002\r\n- `AbstractSubsystem`\uFF1A\u751F\u547D\u5468\u671F\u3001\u8010\u4E45\u3001\u4FE1\u53F7\u63A5\u6536\u4E0E\u8F93\u51FA\u3002\r\n\r\n---\r\n\r\n## 2. `type + definition` \u7684\u804C\u8D23\u5206\u79BB\r\n\r\n- `type`\uFF1A\u9009\u62E9\u201C\u884C\u4E3A\u7C7B\u522B\u201D\uFF08\u4F8B\u5982 `machine_max:item_storage`\u3001`machine_max:engine`\uFF09\u3002\r\n- `definition`\uFF1A\u9009\u62E9\u8BE5\u7C7B\u522B\u4E0B\u7684\u201C\u5177\u4F53\u578B\u53F7\u53C2\u6570\u201D\u3002\r\n\r\n\u53EF\u628A\u5B83\u7406\u89E3\u4E3A\uFF1A\r\n- `type` = \u7C7B\r\n- `definition` = \u914D\u7F6E\u5316\u5B9E\u4F8B\u6A21\u677F\r\n\r\n\u793A\u4F8B\uFF1A\r\n\r\n```json\r\n"subsystems": {\r\n  "subsystem.machine_max.trunk": {\r\n    "type": "machine_max:item_storage",\r\n    "definition": "machine_max:default_trunk"\r\n  }\r\n}\r\n```\r\n\r\n---\r\n\r\n## 3. \u5982\u4F55\u521B\u5EFA\u201C\u81EA\u5DF1\u7684\u5B50\u7CFB\u7EDF\u201D\uFF08\u5185\u5BB9\u5305\u5C42\uFF09\r\n\r\n\u8FD9\u91CC\u7684\u201C\u81EA\u5DF1\u7684\u201D\u6307\uFF1A\r\n- \u4E0D\u5199 Java \u65B0\u7C7B\u578B\uFF1B\r\n- \u901A\u8FC7\u65B0\u5EFA definition \u6587\u4EF6\uFF0C\u4EA7\u51FA\u4F60\u81EA\u5DF1\u7684\u578B\u53F7\u3002\r\n\r\n\u6B65\u9AA4\uFF1A\r\n1. \u5728 `machine_max/subsystems/` \u4E0B\u590D\u5236\u4E00\u4E2A\u63A5\u8FD1\u7684\u5B98\u65B9\u5B9A\u4E49\u3002\r\n2. \u6539\u540D\u5E76\u8C03\u6574\u53C2\u6570\uFF08\u5BB9\u91CF\u3001\u529F\u7387\u3001\u66F2\u7EBF\u3001\u8010\u4E45\u3001\u97F3\u6548\u7B49\uFF09\u3002\r\n3. \u5728 part \u7684 `subsystems` \u4E2D\u7528\u539F\u6709 `type` \u5F15\u7528\u4F60\u7684\u65B0 `definition`\u3002\r\n4. \u8FDB\u6E38\u620F\u9A8C\u8BC1\u529F\u80FD\u4E0E\u4EA4\u4E92\u3002\r\n\r\n\u9AD8\u9891\u9519\u8BEF\uFF1A\r\n- `definition` \u8DEF\u5F84\u5B58\u5728\u4F46 `type` \u4E0D\u5339\u914D\u3002\r\n- \u540D\u79F0\u7A7A\u95F4\u5199\u9519\u5BFC\u81F4\u627E\u4E0D\u5230\u5B9A\u4E49\u3002\r\n\r\n---\r\n\r\n## 4. \u4FE1\u53F7\u901A\u8DEF\u603B\u89C8\r\n\r\n\u4FE1\u53F7\u6838\u5FC3\u63A5\u53E3\uFF1A\r\n- \u53D1\u9001\uFF1A`ISignalSender`\r\n- \u63A5\u6536\uFF1A`ISignalReceiver`\r\n- \u5B58\u50A8\u9891\u9053\uFF1A`SignalChannel`\r\n- \u8DE8\u8FDE\u63A5\u70B9\u8F6C\u53D1\u7AEF\u53E3\uFF1A`SignalPort`\r\n\r\n\u6E90\u7801\u951A\u70B9\uFF1A\r\n- `ISignalSender.sendSignalToTarget/sendSignalToAllTargets`\r\n- `ISignalReceiver.getSignalChannel/onSignalUpdated`\r\n- `SignalPort.onSignalUpdated`\uFF08\u8DE8\u90E8\u4EF6\u8FDE\u63A5\u540E\u8F6C\u53D1\uFF09\r\n\r\n---\r\n\r\n## 5. `signal_targets`\uFF1A\u628A\u4FE1\u53F7\u9001\u7ED9\u8C01\r\n\r\n`signal_targets` \u53EF\u51FA\u73B0\u5728\uFF1A\r\n- \u4EA4\u4E92\u533A\uFF08interact box\uFF09\r\n- \u8FDE\u63A5\u70B9\uFF08connector\uFF09\r\n- \u67D0\u4E9B\u5B50\u7CFB\u7EDF\u52A8\u6001\u914D\u7F6E\uFF08\u53D6\u51B3\u4E8E\u5177\u4F53 type\uFF09\r\n\r\n\u76EE\u6807\u540D\u53EF\u6307\u5411\uFF1A\r\n- \u67D0\u5B50\u7CFB\u7EDF\u540D\r\n- \u67D0\u8FDE\u63A5\u70B9\u540D\uFF08\u7AEF\u53E3\uFF09\r\n- `subpart`\r\n- `vehicle`\r\n\r\n\u793A\u4F8B\uFF08\u4EA4\u4E92\u533A\u628A\u4FE1\u53F7\u53D1\u7ED9\u5B50\u7CFB\u7EDF\uFF09\uFF1A\r\n\r\n```json\r\n"interact_boxes": {\r\n  "interact.machine_max.trunk": {\r\n    "bone": "TrunkInteractZone",\r\n    "signal_targets": {\r\n      "trunk_interact": ["subsystem.machine_max.trunk"]\r\n    },\r\n    "interact_mode": "accurate"\r\n  }\r\n}\r\n```\r\n\r\n---\r\n\r\n## 6. `signal_translations`\uFF1A\u8DE8\u8FDE\u63A5\u70B9\u6539\u9891\u9053\u540D\r\n\r\n\u5F53\u4FE1\u53F7\u7ECF\u8FC7\u8FDE\u63A5\u70B9\u7AEF\u53E3\u8F6C\u53D1\u5230\u5BF9\u4FA7\u65F6\uFF0C\u53EF\u505A\u9891\u9053\u540D\u6620\u5C04\u3002\r\n\r\n\u4F7F\u7528\u573A\u666F\uFF1A\r\n- A \u96F6\u4EF6\u5185\u90E8\u53EB `interact_left_door`\uFF0C\r\n- \u5BF9\u4FA7\u7CFB\u7EDF\u5E0C\u671B\u63A5\u6536 `door_toggle`\u3002\r\n\r\n\u53EF\u5728\u8FDE\u63A5\u70B9\u914D\u7F6E\u91CC\u5199\uFF1A\r\n\r\n```json\r\n"connectors": {\r\n  "connector.machine_max.example": {\r\n    "locator": "AttachPoint",\r\n    "definition": "machine_max:fixed_front",\r\n    "signal_translations": {\r\n      "interact_left_door": "door_toggle"\r\n    },\r\n    "signal_targets": {\r\n      "door_toggle": ["subsystem.machine_max.door_ctrl"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\u673A\u5236\u8981\u70B9\uFF1A\r\n- \u9891\u9053\u8F6C\u8BD1\u5728 `SignalPort` \u5C42\u5B8C\u6210\u3002\r\n- \u76EE\u6807\u9891\u9053\u5FC5\u987B\u5728\u5BF9\u4FA7\u76EE\u6807\u8868\u4E2D\u5B58\u5728\uFF0C\u5426\u5219\u4E0D\u4F1A\u88AB\u6D88\u8D39\u3002\r\n\r\n---\r\n\r\n## 7. \u5B8C\u6574\u6700\u5C0F\u94FE\u8DEF\u793A\u4F8B\r\n\r\n\u76EE\u6807\uFF1A\u73A9\u5BB6\u4EA4\u4E92 -> \u89E6\u53D1\u4FE1\u53F7 -> \u5B50\u7CFB\u7EDF\u54CD\u5E94\u3002\r\n\r\n\u94FE\u8DEF\uFF1A\r\n1. `interact_boxes` \u4EA7\u751F `trunk_interact`\u3002\r\n2. \u901A\u8FC7 `signal_targets` \u53D1\u9001\u5230 `subsystem.machine_max.trunk`\u3002\r\n3. \u5B50\u7CFB\u7EDF\u5728 `onSignalUpdated` \u6216\u5185\u90E8\u903B\u8F91\u4E2D\u5904\u7406\u3002\r\n\r\n\u8DE8\u90E8\u4EF6\u65F6\uFF1A\r\n1. \u672C\u4FA7 connector \u6536\u5230\u9891\u9053 A\u3002\r\n2. `signal_translations` \u8F6C\u6210\u9891\u9053 B\u3002\r\n3. \u5BF9\u4FA7 connector \u6839\u636E `signal_targets` \u628A B \u9001\u7ED9\u76EE\u6807\u5B50\u7CFB\u7EDF\u3002\r\n\r\n---\r\n\r\n## 8. \u8C03\u8BD5\u987A\u5E8F\uFF08\u5F3A\u70C8\u5EFA\u8BAE\uFF09\r\n\r\n1. \u5148\u786E\u8BA4\u5B50\u7CFB\u7EDF\u672C\u4F53\u5DE5\u4F5C\uFF08\u4E0D\u8DE8\u8FDE\u63A5\u70B9\uFF09\u3002\r\n2. \u518D\u52A0\u4EA4\u4E92\u533A\u5230\u5B50\u7CFB\u7EDF\u7684\u76F4\u8FDE\u4FE1\u53F7\u3002\r\n3. \u6700\u540E\u518D\u5F15\u5165 connector \u8F6C\u53D1\u4E0E\u9891\u9053\u7FFB\u8BD1\u3002\r\n\r\n\u6BCF\u6B21\u53EA\u65B0\u589E\u4E00\u6BB5\u94FE\u8DEF\uFF0C\u907F\u514D\u4E00\u6B21\u6027\u6392\u67E5\u8FC7\u591A\u53D8\u91CF\u3002\r\n\r\n---\r\n\r\n## 9. \u9AD8\u9891\u95EE\u9898\u6392\u67E5\r\n\r\n### \u95EE\u9898 A\uFF1A\u5B50\u7CFB\u7EDF\u5B8C\u5168\u65E0\u53CD\u5E94\r\n\r\n\u68C0\u67E5\uFF1A\r\n- `type` \u4E0E `definition` \u662F\u5426\u5339\u914D\u3002\r\n- \u5B50\u7CFB\u7EDF\u540D\u5B57\u662F\u5426\u4E0E `signal_targets` \u76EE\u6807\u540D\u5B8C\u5168\u4E00\u81F4\u3002\r\n\r\n### \u95EE\u9898 B\uFF1A\u8DE8\u90E8\u4EF6\u540E\u4FE1\u53F7\u4E22\u5931\r\n\r\n\u68C0\u67E5\uFF1A\r\n- \u8FDE\u63A5\u70B9\u662F\u5426\u771F\u7684\u5904\u4E8E\u8FDE\u63A5\u72B6\u6001\u3002\r\n- `signal_translations` \u6620\u5C04\u540E\u7684\u9891\u9053\u540D\uFF0C\u662F\u5426\u88AB\u5BF9\u4FA7 `signal_targets` \u76D1\u542C\u3002\r\n\r\n### \u95EE\u9898 C\uFF1A\u9891\u9053\u540D\u770B\u8D77\u6765\u5BF9\uFF0C\u4F46\u4ECD\u4E0D\u89E6\u53D1\r\n\r\n\u68C0\u67E5\uFF1A\r\n- \u5927\u5C0F\u5199\u4E0E\u4E0B\u5212\u7EBF\u662F\u5426\u5B8C\u5168\u4E00\u81F4\u3002\r\n- \u662F\u5426\u5728\u9519\u8BEF\u5BF9\u8C61\u4E0A\u914D\u7F6E\u4E86 `signal_targets`\uFF08\u4F8B\u5982\u5199\u5728\u4E86\u4E0D\u6D88\u8D39\u8BE5\u9891\u9053\u7684\u5BF9\u8C61\u4E0A\uFF09\u3002\r\n\r\n---\r\n\r\n## 10. \u80FD\u529B\u8FB9\u754C\r\n\r\nJSON \u5C42\u53EF\u4EE5\u5B8C\u6210\uFF1A\r\n- \u5B50\u7CFB\u7EDF\u578B\u53F7\u6269\u5C55\uFF08\u65B0 definition\uFF09\u3002\r\n- \u4FE1\u53F7\u8DEF\u7531\u4E0E\u9891\u9053\u7FFB\u8BD1\u3002\r\n- \u4EA4\u4E92\u5230\u529F\u80FD\u7684\u591A\u6570\u5E38\u89C1\u73A9\u6CD5\u3002\r\n\r\n\u82E5\u4F60\u8981\u65B0\u589E\u201C\u5168\u65B0 type \u8BED\u4E49\u201D\uFF08\u5373\u5168\u65B0\u8FD0\u884C\u903B\u8F91\uFF09\uFF0C\u9700\u8981 Java \u6269\u5C55\uFF08\u672C\u6587\u4E0D\u5C55\u5F00\uFF09\u3002\r\n\r\n---\r\n\r\n## 11. \u76F8\u5173\u6559\u7A0B\r\n\r\n1. [\u7B2C\u4E00\u4E2A\u6700\u7B80\u96F6\u90E8\u4EF6](./\u7B2C\u4E00\u4E2A\u6700\u7B80\u96F6\u90E8\u4EF6.md)\r\n2. [\u8FDE\u63A5\u70B9\u5165\u95E8\uFF08fixed\uFF09](./\u8FDE\u63A5\u70B9\u5165\u95E8\uFF08fixed\uFF09.md)\r\n3. [\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09](./\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09.md)', "zh_cn/\u7B2C\u4E00\u4E2A\u6700\u7B80\u96F6\u90E8\u4EF6.md": '# \u7B2C\u4E00\u4E2A\u6700\u7B80\u96F6\u90E8\u4EF6\uFF08\u4EC5\u78B0\u649E\u4F53\u79EF\uFF09\r\n\r\n\u672C\u6559\u7A0B\u76EE\u6807\uFF1A\r\n- \u521B\u5EFA\u4E00\u4E2A\u201C\u80FD\u88AB\u52A0\u8F7D\u3001\u80FD\u53C2\u4E0E\u78B0\u649E\u201D\u7684\u6700\u7B80\u96F6\u90E8\u4EF6\u3002\r\n\r\n---\r\n\r\n## 1. \u5148\u7406\u89E3\u6700\u5C0F\u673A\u5236\r\n\r\n\u4E00\u4E2A\u96F6\u90E8\u4EF6\uFF08part\uFF09\u5728\u8FD0\u884C\u65F6\u4F1A\u7ECF\u5386\uFF1A\r\n1. \u8BFB\u53D6 `parts/*.json` -> \u89E3\u6790 `variants` \u4E0E `sub_parts`\u3002\r\n2. \u6BCF\u4E2A `sub_part` \u81F3\u5C11\u8981\u6709\u4E00\u4E2A `hit_boxes` \u6761\u76EE\u3002\r\n3. \u6839\u636E\u9AA8\u9ABC\u4E0A\u7684\u65B9\u5757\uFF08cube\uFF09\u751F\u6210\u771F\u5B9E\u78B0\u649E\u5F62\u72B6\u3002\r\n\r\n\u5982\u679C `hit_boxes` \u4E3A\u7A7A\uFF0C\u8BFB\u53D6\u9636\u6BB5\u4F1A\u76F4\u63A5\u62A5\u9519\u3002\r\n\r\n\u6E90\u7801\u951A\u70B9\uFF1A\r\n- `SubPartAttr`\uFF1A`hit_boxes` \u4E3A\u7A7A\u65F6\u629B\u9519\uFF1B\u6309\u9AA8\u9ABC\u6784\u5EFA\u78B0\u649E\u5F62\u72B6\u3002\r\n- `Part.createSubParts()`\uFF1A\u521B\u5EFA SubPart\u3001\u547D\u4E2D\u6846\u4E0E\u7269\u7406\u4F53\u3002\r\n- `SubPart`\uFF1A\u5B9E\u9645\u6301\u6709\u521A\u4F53\u5E76\u53C2\u4E0E\u78B0\u649E\u3002\r\n\r\n---\r\n\r\n## 2. \u6587\u4EF6\u653E\u7F6E\u4E0E\u547D\u540D\r\n\r\n\u5EFA\u8BAE\u5148\u590D\u5236\u4E00\u4EFD\u5B98\u65B9\u7B80\u5355\u90E8\u4EF6\u518D\u6539\u540D\u3002\u6700\u7B80\u76EE\u5F55\u793A\u4F8B\uFF1A\r\n\r\n- `machine_max/parts/my_first_part.json`\r\n- \u8BE5 JSON \u5F15\u7528\u7684\u6A21\u578B\u4E0E\u8D34\u56FE\u6587\u4EF6\uFF08\u53EF\u5148\u590D\u7528\u5B98\u65B9\u73B0\u6210\u8D44\u6E90\uFF09\r\n\r\n`$schema` \u5EFA\u8BAE\u4FDD\u7559\uFF0C\u4FBF\u4E8E\u7F16\u8F91\u5668\u63D0\u793A\u4E0E\u6821\u9A8C\u3002\r\n\r\n---\r\n\r\n## 3. \u6700\u5C0F\u53EF\u8FD0\u884C JSON\uFF08\u65E0\u5B50\u7CFB\u7EDF\u3001\u65E0\u8FDE\u63A5\u70B9\uFF09\r\n\r\n```json\r\n{\r\n  "$schema": "../docs/zh_cn/schemas/part_definition_schema.json",\r\n  "icon": "machine_max:textures/icon/container_16x16x8_icon.png",\r\n  "variants": {\r\n    "model": "machine_max:container_16x16x8.geo",\r\n    "textures": "machine_max:textures/part/container_16x16x8.png",\r\n    "animations": "machine_max:empty",\r\n    "sub_parts": {\r\n      "sub_part.machine_max.main": {\r\n        "durability": 100.0,\r\n        "mass": 25.0,\r\n        "block_collision": "true",\r\n        "hit_boxes": {\r\n          "Shape": {\r\n            "type": "box",\r\n            "material": "machine_max:structural_steel"\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\u8BF4\u660E\uFF1A\r\n- `hit_boxes` \u7684\u952E\uFF08\u793A\u4F8B\u91CC\u662F `Shape`\uFF09\u5FC5\u987B\u80FD\u5728\u6A21\u578B\u9AA8\u9ABC\u4E2D\u627E\u5230\u540C\u540D\u9AA8\u9ABC\u3002\r\n- \u672C\u793A\u4F8B\u6545\u610F\u4E0D\u5199 `subsystems`\u3001`connectors`\uFF0C\u8FD9\u662F\u9884\u671F\u884C\u4E3A\u3002\r\n- `type` \u53EF\u5148\u7528 `box`\uFF0C\u6700\u7A33\u5B9A\uFF0C\u4FBF\u4E8E\u521D\u5B66\u8C03\u8BD5\u3002\r\n\r\n---\r\n\r\n## 4. \u6700\u5C0F\u6210\u529F\u6807\u51C6\r\n\r\n\u6EE1\u8DB3\u4EE5\u4E0B 3 \u70B9\u5373\u7B97\u901A\u8FC7\uFF1A\r\n1. \u5185\u5BB9\u5305\u52A0\u8F7D\u65E0 JSON/Schema \u62A5\u9519\u3002\r\n2. \u7269\u4F53\u53EF\u751F\u6210\u5E76\u5177\u6709\u78B0\u649E\u4F53\u79EF\u3002\r\n3. \u6CA1\u6709\u4EFB\u4F55\u529F\u80FD\u6027\u4EA4\u4E92\uFF08\u8FD9\u5728\u672C\u6559\u7A0B\u662F\u6B63\u786E\u7ED3\u679C\uFF09\u3002\r\n\r\n---\r\n\r\n## 5. \u9AD8\u9891\u62A5\u9519\u4E0E\u6392\u67E5\r\n\r\n### \u95EE\u9898 A\uFF1A\u63D0\u793A\u627E\u4E0D\u5230\u78B0\u649E\u9AA8\u9ABC\r\n\r\n\u5E38\u89C1\u539F\u56E0\uFF1A`hit_boxes` \u7684\u952E\u540D\u548C\u6A21\u578B\u9AA8\u9ABC\u540D\u4E0D\u4E00\u81F4\u3002\r\n\r\n\u5904\u7406\uFF1A\r\n- \u628A\u952E\u540D\u6539\u6210\u6A21\u578B\u91CC\u771F\u5B9E\u5B58\u5728\u7684\u9AA8\u9ABC\u540D\u3002\r\n- \u5148\u7528\u4E00\u4E2A\u9AA8\u9ABC\u8DD1\u901A\uFF0C\u518D\u9010\u6B65\u589E\u52A0\u3002\r\n\r\n### \u95EE\u9898 B\uFF1A\u63D0\u793A\u78B0\u649E\u5F62\u72B6\u4E3A\u7A7A\r\n\r\n\u5E38\u89C1\u539F\u56E0\uFF1A\u9AA8\u9ABC\u5B58\u5728\uFF0C\u4F46\u9AA8\u9ABC\u4E0B\u6CA1\u6709 cube\u3002\r\n\r\n\u5904\u7406\uFF1A\r\n- \u5728\u5EFA\u6A21\u8F6F\u4EF6\u4E2D\u786E\u8BA4\u8BE5\u9AA8\u9ABC\u4E0B\u786E\u5B9E\u6709\u51E0\u4F55\u65B9\u5757\u3002\r\n- \u6216\u6539\u4E3A\u4F7F\u7528\u6709 cube \u7684\u9AA8\u9ABC\u3002\r\n\r\n### \u95EE\u9898 C\uFF1AJSON \u770B\u8D77\u6765\u5BF9\u4F46\u4E0D\u751F\u6548\r\n\r\n\u5E38\u89C1\u539F\u56E0\uFF1A\u8D44\u6E90\u8DEF\u5F84\u6216\u547D\u540D\u7A7A\u95F4\u5199\u9519\u3002\r\n\r\n\u5904\u7406\uFF1A\r\n- \u68C0\u67E5 `machine_max:...` \u7684\u8DEF\u5F84\u62FC\u5199\u3002\r\n- \u786E\u8BA4\u6587\u4EF6\u786E\u5B9E\u5728\u5BF9\u5E94\u76EE\u5F55\u3002\r\n\r\n---\r\n\r\n## 6. \u7ED9 LLM \u7684\u534F\u4F5C\u63D0\u793A\u8BCD\u6A21\u677F\r\n\r\n\u53EF\u76F4\u63A5\u7ED9 LLM\uFF1A\r\n\r\n```text\r\n\u8BF7\u57FA\u4E8E Machine-Max part_definition_schema\uFF0C\u751F\u6210\u4E00\u4E2A\u201C\u4EC5\u78B0\u649E\u3001\u65E0\u5B50\u7CFB\u7EDF\u3001\u65E0\u8FDE\u63A5\u70B9\u201D\u7684\u6700\u5C0F part JSON\u3002\r\n\u8981\u6C42\uFF1A\r\n1) \u4FDD\u7559 $schema\r\n2) \u4EC5 1 \u4E2A sub_part\r\n3) \u4EC5 1 \u4E2A box hit_box\r\n4) \u4E0D\u8981\u5305\u542B subsystems/connectors/interact_boxes\r\n5) \u8F93\u51FA\u540E\u518D\u81EA\u68C0\u5B57\u6BB5\u62FC\u5199\u4E0E\u8DEF\u5F84\u683C\u5F0F(namespace:path)\r\n```\r\n\r\n---\r\n\r\n## 7. \u4E0B\u4E00\u6B65\u5B66\u4E60\r\n\r\n\u5B8C\u6210\u672C\u7BC7\u540E\uFF0C\u5EFA\u8BAE\u7EE7\u7EED\uFF1A\r\n1. [\u8FDE\u63A5\u70B9\u5165\u95E8\uFF08fixed\uFF09](./\u8FDE\u63A5\u70B9\u5165\u95E8\uFF08fixed\uFF09.md)\r\n2. [\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09](./\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09.md)\r\n3. [\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93](./\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93.md)', "zh_cn/\u8FDE\u63A5\u70B9\u5165\u95E8\uFF08fixed\uFF09.md": '# \u8FDE\u63A5\u70B9\u5165\u95E8\uFF08fixed\uFF09\r\n\r\n\u672C\u6559\u7A0B\u76EE\u6807\uFF1A\r\n- \u5B66\u4F1A\u6700\u57FA\u7840\u7684\u8FDE\u63A5\u70B9\u914D\u7F6E\u4E0E\u4F7F\u7528\u3002\r\n- \u4ECE `fixed_*` \u8FD9\u7C7B\u56FA\u5B9A\u8FDE\u63A5\u5B9A\u4E49\u5F00\u59CB\uFF0C\u5B8C\u6210\u201C\u53EF\u8FDE\u63A5\u201D\u800C\u975E\u201C\u9AD8\u7EA7\u5173\u8282\u8C03\u53C2\u201D\u3002\r\n- \u672C\u7BC7\u4E0D\u8BB2\u4FE1\u53F7\u4F20\u8F93\uFF1B\u4FE1\u53F7\u8BF7\u770B\u300A\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93\u300B\u3002\r\n\r\n---\r\n\r\n## 1. \u8FDE\u63A5\u70B9\u7684\u4E24\u5C42\u914D\u7F6E\r\n\r\n\u8FDE\u63A5\u70B9\u5206\u4E24\u5C42\uFF1A\r\n\r\n1. \u9759\u6001\u5B9A\u4E49\u5C42\uFF08connector definition\uFF09\r\n- \u4F4D\u7F6E\uFF1A`machine_max/connectors/*.json`\r\n- \u4F5C\u7528\uFF1A\u5B9A\u4E49\u7C7B\u578B\u3001\u65B9\u5411\u3001\u7ED3\u6784\u5B8C\u6574\u6027\u7B49\u57FA\u7840\u89C4\u5219\u3002\r\n\r\n2. \u96F6\u4EF6\u5F15\u7528\u5C42\uFF08part \u5185 connectors\uFF09\r\n- \u4F4D\u7F6E\uFF1A`machine_max/parts/*.json` -> `variants -> sub_parts -> ... -> connectors`\r\n- \u4F5C\u7528\uFF1A\u58F0\u660E\u201C\u8FD9\u4E2A\u96F6\u4EF6\u5728\u54EA\u4E2A locator \u4E0A\u6302\u54EA\u4E2A\u5B9A\u4E49\u201D\u3002\r\n\r\n\u6E90\u7801\u951A\u70B9\uFF1A\r\n- `ConnectorAttr`\uFF1A\u89E3\u6790 `locator`\u3001`definition` \u7B49\u5B57\u6BB5\u5E76\u5408\u5E76\u6700\u7EC8\u5C5E\u6027\u3002\r\n- `Part.createConnectors()`\uFF1A\u6309 `locator` \u521B\u5EFA\u8FDE\u63A5\u70B9\u5B9E\u4F8B\u3002\r\n- `AbstractConnector`\uFF1A\u5904\u7406\u8FDE\u63A5/\u65AD\u5F00\u4E0E\u7269\u7406\u5173\u8282\u3002\r\n\r\n---\r\n\r\n## 2. \u4ECE fixed \u5B9A\u4E49\u5F00\u59CB\r\n\r\n\u5B98\u65B9\u793A\u4F8B\uFF08\u8282\u9009\uFF09\uFF1A\r\n\r\n```json\r\n{\r\n  "$schema": "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json",\r\n  "type": "Simple",\r\n  "direction": "zn",\r\n  "integrity": 20.0,\r\n  "impact_absorption": 0.2,\r\n  "impact_reduction": 2.0,\r\n  "impact_multiplier": 1.0\r\n}\r\n```\r\n\r\n\u5173\u952E\u7406\u89E3\uFF1A\r\n- `type: "Simple"`\uFF1A\u57FA\u7840\u8FDE\u63A5\u7C7B\u578B\uFF0C\u4F18\u5148\u7528\u4E8E\u5165\u95E8\u3002\r\n- `direction`\uFF1A\u8FDE\u63A5\u70B9\u6CD5\u7EBF\u65B9\u5411\uFF0C\u7528\u4E8E\u5BF9\u63A5\u59FF\u6001\u5224\u5B9A\u3002\r\n- \u5176\u4F59\u51B2\u51FB\u53C2\u6570\u53EF\u5148\u4FDD\u6301\u9ED8\u8BA4\u793A\u4F8B\uFF0C\u4E0D\u8981\u4E00\u5F00\u59CB\u5C31\u5927\u6539\u3002\r\n\r\n---\r\n\r\n## 3. \u5728 part \u4E2D\u5F15\u7528 fixed \u8FDE\u63A5\u70B9\r\n\r\n\u5728\u67D0\u4E2A `sub_part` \u91CC\u6DFB\u52A0\uFF1A\r\n\r\n```json\r\n"connectors": {\r\n  "connector.machine_max.up": {\r\n    "locator": "up",\r\n    "definition": "machine_max:fixed_up"\r\n  },\r\n  "connector.machine_max.down": {\r\n    "locator": "down",\r\n    "definition": "machine_max:fixed_down"\r\n  }\r\n}\r\n```\r\n\r\n\u8BF4\u660E\uFF1A\r\n- `connector.machine_max.up` \u662F\u4F60\u5728\u6B64 subpart \u5185\u90E8\u4F7F\u7528\u7684\u8FDE\u63A5\u70B9\u540D\u79F0\u3002\r\n- `locator` \u5FC5\u987B\u5BF9\u5E94\u6A21\u578B\u4E2D\u771F\u5B9E\u5B58\u5728\u7684 locator \u540D\u3002\r\n- `definition` \u5FC5\u987B\u6307\u5411 `connectors/*.json` \u7684\u6CE8\u518C\u8DEF\u5F84\u3002\r\n\r\n---\r\n\r\n## 4. \u5FC5\u61C2\u5B57\u6BB5\uFF08\u5165\u95E8\u7248\uFF09\r\n\r\n### `locator`\r\n\u8FDE\u63A5\u70B9\u7A7A\u95F4\u4F4D\u7F6E\u6765\u6E90\u3002\u82E5\u627E\u4E0D\u5230\u4F1A\u76F4\u63A5\u5931\u8D25\u3002\r\n\r\n### `definition`\r\n\u5F15\u7528\u9759\u6001\u8FDE\u63A5\u70B9\u5B9A\u4E49\uFF08\u4F8B\u5982 `machine_max:fixed_front`\uFF09\u3002\r\n\r\n### `direction`\r\n\u4E0D\u5728 part \u5F15\u7528\u5C42\u5199\uFF0C\u800C\u5728 definition \u91CC\u5199\u3002\u51B3\u5B9A\u8FDE\u63A5\u70B9\u6CD5\u7EBF\u65B9\u5411\u3002\r\n\r\n### `type`\r\n\u5728 definition \u91CC\u5199\u3002\u5165\u95E8\u9636\u6BB5\u4F18\u5148 `Simple`\u3002\r\n\r\n---\r\n\r\n## 5. \u6700\u5C0F\u6210\u529F\u6807\u51C6\r\n\r\n1. \u5185\u5BB9\u5305\u52A0\u8F7D\u901A\u8FC7\u3002\r\n2. \u6E38\u620F\u5185\u53EF\u770B\u5230\u5E76\u4F7F\u7528\u8FDE\u63A5\u70B9\u8FDB\u884C\u5B89\u88C5\u3002\r\n3. \u65E0\u9700\u4EFB\u4F55\u4FE1\u53F7\u914D\u7F6E\u4E5F\u80FD\u5B8C\u6210\u57FA\u7840\u5BF9\u63A5\u3002\r\n\r\n---\r\n\r\n## 6. \u5E38\u89C1\u5931\u8D25\u4E0E\u6392\u67E5\r\n\r\n### \u95EE\u9898 A\uFF1A\u62A5 locator \u4E0D\u5B58\u5728\r\n\r\n\u539F\u56E0\uFF1A`locator` \u540D\u79F0\u4E0E\u6A21\u578B\u4E0D\u4E00\u81F4\u3002\r\n\r\n\u5904\u7406\uFF1A\r\n- \u6838\u5BF9\u6A21\u578B locator \u62FC\u5199\uFF08\u5927\u5C0F\u5199\u3001\u4E0B\u5212\u7EBF\uFF09\u3002\r\n- \u5148\u53EA\u4FDD\u7559 1 \u4E2A\u8FDE\u63A5\u70B9\u9A8C\u8BC1\u3002\r\n\r\n### \u95EE\u9898 B\uFF1Adefinition \u627E\u4E0D\u5230\r\n\r\n\u539F\u56E0\uFF1A`machine_max:xxx` \u4E0E `connectors/xxx.json` \u4E0D\u5339\u914D\u3002\r\n\r\n\u5904\u7406\uFF1A\r\n- \u68C0\u67E5\u547D\u540D\u7A7A\u95F4\u548C\u6587\u4EF6\u540D\u3002\r\n- \u786E\u8BA4 JSON \u4F4D\u4E8E `machine_max/connectors/` \u4E0B\u3002\r\n\r\n### \u95EE\u9898 C\uFF1A\u8FDE\u63A5\u65B9\u5411\u4E0D\u5BF9\uFF0C\u5B89\u88C5\u59FF\u6001\u5F02\u5E38\r\n\r\n\u539F\u56E0\uFF1Adefinition \u7684 `direction` \u4E0E\u8BBE\u8BA1\u610F\u56FE\u4E0D\u4E00\u81F4\u3002\r\n\r\n\u5904\u7406\uFF1A\r\n- \u5148\u7528\u5B98\u65B9 `fixed_front/up/down/...` \u5BF9\u7167\u6D4B\u8BD5\u3002\r\n- \u786E\u8BA4\u6A21\u578B\u4E2D locator \u671D\u5411\u4E0E\u9884\u671F\u4E00\u81F4\u3002\r\n\r\n---\r\n\r\n## 7. \u672C\u7BC7\u8FB9\u754C\uFF08\u91CD\u8981\uFF09\r\n\r\n\u672C\u7BC7\u53EA\u8BB2\u8FDE\u63A5\u672C\u4F53\uFF0C\u4E0D\u8BB2\uFF1A\r\n- `signal_targets`\r\n- `signal_translations`\r\n- \u8DE8\u90E8\u4EF6\u4FE1\u53F7\u8DEF\u7531\r\n\r\n\u8FD9\u4E9B\u5185\u5BB9\u7EDF\u4E00\u89C1\uFF1A[\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93](./\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93.md)\r\n\r\n---\r\n\r\n## 8. \u4E0B\u4E00\u6B65\r\n\r\n\u5B8C\u6210 fixed \u5165\u95E8\u540E\uFF0C\u8BF7\u7EE7\u7EED\uFF1A\r\n- [\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09](./\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09.md)', "zh_cn/\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09.md": '# \u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09\r\n\r\n\u672C\u6559\u7A0B\u76EE\u6807\uFF1A\r\n- \u5728\u5B8C\u6210 fixed \u5165\u95E8\u540E\uFF0C\u5B66\u4E60 Advanced \u8FDE\u63A5\u70B9\u7684\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\u914D\u7F6E\u3002\r\n- \u7406\u89E3 `joint_attrs`\u3001\u5F39\u7C27\u963B\u5C3C\u3001\u51B2\u51FB\u53C2\u6570\u7684\u5B9E\u9645\u6548\u679C\u4E0E\u8C03\u53C2\u65B9\u6CD5\u3002\r\n\r\n---\r\n\r\n## 1. \u4EC0\u4E48\u65F6\u5019\u7528 Advanced\r\n\r\n\u9002\u5408\u8FD9\u4E9B\u573A\u666F\uFF1A\r\n- \u8F66\u95E8\u94F0\u94FE\u3001\u53EF\u8F6C\u5411\u673A\u6784\u3001\u6446\u81C2\u3001\u60AC\u6302\u7B49\u9700\u8981\u201C\u53EF\u52A8\u8FDE\u63A5\u201D\u7684\u7ED3\u6784\u3002\r\n- \u9700\u8981\u9650\u5236\u67D0\u4E9B\u8F74\u8FD0\u52A8\u3001\u653E\u5F00\u67D0\u4E9B\u8F74\u8FD0\u52A8\u7684\u8FDE\u63A5\u3002\r\n\r\n\u5982\u679C\u53EA\u662F\u521A\u6027\u62FC\u88C5\uFF0C\u4F18\u5148\u7EE7\u7EED\u4F7F\u7528 `Simple + fixed_*`\u3002\r\n\r\n---\r\n\r\n## 2. \u81EA\u7531\u5EA6\u4E0E\u8F74\u5411\r\n\r\n\u5728\u5173\u8282\u91CC\uFF0C\u5E38\u89C1\u7EA6\u5B9A\uFF1A\r\n- \u8F74 0~2\uFF1A\u5E73\u79FB\u81EA\u7531\u5EA6\uFF08X/Y/Z\uFF09\r\n- \u8F74 3~5\uFF1A\u65CB\u8F6C\u81EA\u7531\u5EA6\uFF08X/Y/Z\uFF09\r\n\r\n`joint_attrs` \u7684\u952E\u901A\u5E38\u6309\u8F74\u540D\u7EC4\u7EC7\uFF08\u5982 `x/y/z`\uFF0C\u5177\u4F53\u4EE5 schema \u4E3A\u51C6\uFF09\uFF0C\u6BCF\u8F74\u53EF\u914D\u7F6E\uFF1A\r\n- `lower_limit`\r\n- `upper_limit`\r\n- `equilibrium`\r\n- `stiffness`\r\n- `damping`\r\n\r\n---\r\n\r\n## 3. \u9AD8\u7EA7\u5B9A\u4E49\u6700\u5C0F\u793A\u4F8B\uFF08\u94F0\u94FE\u95E8\u601D\u8DEF\uFF09\r\n\r\n\u4E0B\u9762\u793A\u4F8B\u5C55\u793A\u201C\u4EC5\u653E\u5F00\u4E00\u4E2A\u65CB\u8F6C\u8F74\u201D\u7684\u601D\u8DEF\uFF08\u5B57\u6BB5\u540D\u4EE5\u4F60\u7684 schema \u81EA\u52A8\u63D0\u793A\u4E3A\u51C6\uFF09\uFF1A\r\n\r\n```json\r\n{\r\n  "$schema": "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json",\r\n  "type": "Advanced",\r\n  "direction": "xp",\r\n  "integrity": 30.0,\r\n  "joint_attrs": {\r\n    "x": {\r\n      "lower_limit": 0.0,\r\n      "upper_limit": 0.0\r\n    },\r\n    "y": {\r\n      "lower_limit": 0.0,\r\n      "upper_limit": 0.0\r\n    },\r\n    "z": {\r\n      "lower_limit": -70.0,\r\n      "upper_limit": 5.0,\r\n      "stiffness": 5.0,\r\n      "damping": 1.0\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\u8C03\u53C2\u903B\u8F91\uFF1A\r\n1. \u5148\u53EA\u5F00\u9650\u4F4D\uFF0C\u4E0D\u52A0\u5F39\u7C27\u963B\u5C3C\u3002\r\n2. \u52A8\u4F5C\u786E\u8BA4\u6B63\u786E\u540E\uFF0C\u518D\u52A0\u5C0F `stiffness/damping`\u3002\r\n3. \u6700\u540E\u518D\u5FAE\u8C03\u624B\u611F\u3002\r\n\r\n---\r\n\r\n## 4. \u8F6F\u8FDE\u63A5\u60AC\u6302\uFF08\u601D\u8DEF\u6A21\u677F\uFF09\r\n\r\n\u76EE\u6807\uFF1A\u5141\u8BB8\u5C0F\u8303\u56F4\u4F4D\u79FB\u5E76\u5E26\u56DE\u6B63\u8D8B\u52BF\u3002\r\n\r\n\u7B56\u7565\uFF1A\r\n- \u5BF9\u5E73\u79FB\u8F74\u7ED9\u5F88\u5C0F\u8303\u56F4 `lower/upper`\u3002\r\n- \u589E\u52A0\u4E2D\u4F4E `stiffness` + \u4E2D\u4F4E `damping`\u3002\r\n- \u4FDD\u6301\u5176\u4F59\u8F74\u9501\u5B9A\uFF0C\u907F\u514D\u7CFB\u7EDF\u8FC7\u5EA6\u81EA\u7531\u3002\r\n\r\n\u793A\u4F8B\uFF08\u6982\u5FF5\u6A21\u677F\uFF09\uFF1A\r\n\r\n```json\r\n"joint_attrs": {\r\n  "y": {\r\n    "lower_limit": -0.08,\r\n    "upper_limit": 0.08,\r\n    "equilibrium": 0.0,\r\n    "stiffness": 3.0,\r\n    "damping": 0.8\r\n  }\r\n}\r\n```\r\n\r\n---\r\n\r\n## 5. \u51B2\u51FB\u53C2\u6570\u4E0E\u8131\u843D\u673A\u5236\r\n\r\n\u8FDE\u63A5\u70B9\u65AD\u5F00\u4E0D\u53EA\u770B\u81EA\u7531\u5EA6\uFF0C\u4E5F\u53D7\u51B2\u51FB\u53C2\u6570\u5F71\u54CD\uFF1A\r\n- `integrity`\uFF1A\u7ED3\u6784\u5B8C\u6574\u5EA6\u4E0A\u9650\u3002\r\n- `impact_absorption`\uFF1A\u51B2\u51FB\u8F6C\u4E3A\u5B8C\u6574\u6027\u635F\u8017\u7684\u6BD4\u4F8B\u3002\r\n- `impact_reduction`\uFF1A\u51B2\u51FB\u51CF\u514D\u3002\r\n- `impact_multiplier`\uFF1A\u51B2\u51FB\u653E\u5927/\u7F29\u5C0F\u500D\u7387\u3002\r\n\r\n\u8C03\u53C2\u5EFA\u8BAE\uFF1A\r\n1. \u5148\u4FDD\u5B88\u503C\uFF0C\u786E\u4FDD\u4E0D\u4F1A\u8F7B\u6613\u8131\u843D\u3002\r\n2. \u518D\u9010\u6B65\u63D0\u9AD8\u771F\u5B9E\u611F\uFF08\u4F8B\u5982\u9AD8\u8F7D\u8377\u7ED3\u6784\u66F4\u6613\u65AD\uFF09\u3002\r\n\r\n\u6E90\u7801\u951A\u70B9\uFF1A\r\n- `AbstractConnector.handleAccumulatedImpact()`\uFF1A\u51B2\u51FB\u7D2F\u8BA1\u4E0E\u65AD\u5F00\u903B\u8F91\u3002\r\n\r\n---\r\n\r\n## 6. \u7A33\u5B9A\u6027\u5B9E\u8DF5\uFF08\u91CD\u70B9\uFF09\r\n\r\n\u63A8\u8350\u987A\u5E8F\uFF1A\r\n1. \u9501\u6B7B\u5168\u90E8\u8F74\uFF0C\u786E\u8BA4\u8FDE\u63A5\u65B9\u5411\u6B63\u786E\u3002\r\n2. \u53EA\u653E\u5F00 1 \u4E2A\u8F74\uFF0C\u9A8C\u8BC1\u8FD0\u52A8\u65B9\u5411\u3002\r\n3. \u8BBE\u7F6E\u9650\u4F4D\uFF0C\u518D\u52A0\u4F4E\u521A\u5EA6\u4F4E\u963B\u5C3C\u3002\r\n4. \u5C0F\u6B65\u589E\u91CF\u8C03\u53C2\uFF0C\u6BCF\u6B21\u53EA\u6539 1~2 \u4E2A\u53C2\u6570\u3002\r\n\r\n\u907F\u514D\u4E00\u6B21\u6027\u628A\u521A\u5EA6/\u963B\u5C3C\u62C9\u592A\u9AD8\uFF0C\u5426\u5219\u5BB9\u6613\u51FA\u73B0\uFF1A\r\n- \u6296\u52A8\uFF08\u632F\u8361\uFF09\r\n- \u7206\u632F\uFF08\u77AC\u95F4\u5931\u7A33\uFF09\r\n- \u9501\u6B7B\uFF08\u8FD0\u52A8\u5F02\u5E38\u53D7\u9650\uFF09\r\n\r\n`AbstractConnector.adjustJoint()` \u5185\u6709\u7A33\u5B9A\u6027\u4FDD\u62A4\u548C\u4E0A\u9650\u7EA6\u675F\uFF0C\u8BF4\u660E\u201C\u6781\u7AEF\u53C2\u6570\u201D\u4F1A\u88AB\u9650\u5236\uFF0C\u4ECD\u5EFA\u8BAE\u4F60\u4ECE\u4F4E\u503C\u5F00\u59CB\u3002\r\n\r\n---\r\n\r\n## 7. \u9AD8\u9891\u95EE\u9898\u6392\u67E5\r\n\r\n### \u95EE\u9898 A\uFF1A\u95E8\u8F74\u53CD\u5411\u6216\u5F00\u5408\u65B9\u5411\u602A\u5F02\r\n\r\n\u5904\u7406\uFF1A\r\n- \u5148\u68C0\u67E5 `direction`\u3002\r\n- \u518D\u68C0\u67E5\u6A21\u578B locator \u671D\u5411\u3002\r\n- \u6700\u540E\u518D\u8C03\u6574\u9650\u4F4D\u6B63\u8D1F\u8303\u56F4\u3002\r\n\r\n### \u95EE\u9898 B\uFF1A\u4E00\u52A0\u5F39\u7C27\u963B\u5C3C\u5C31\u6296\r\n\r\n\u5904\u7406\uFF1A\r\n- \u540C\u65F6\u964D\u4F4E `stiffness` \u4E0E `damping`\u3002\r\n- \u7F29\u5C0F\u53EF\u52A8\u8303\u56F4\uFF08`lower/upper`\uFF09\u3002\r\n- \u5148\u4FDD\u8BC1\u5355\u8F74\u53EF\u63A7\uFF0C\u518D\u6269\u5C55\u591A\u8F74\u3002\r\n\r\n### \u95EE\u9898 C\uFF1A\u8FDE\u63A5\u70B9\u592A\u5BB9\u6613\u65AD\r\n\r\n\u5904\u7406\uFF1A\r\n- \u589E\u52A0 `integrity`\u3002\r\n- \u9002\u5EA6\u63D0\u9AD8 `impact_reduction` \u6216\u964D\u4F4E `impact_multiplier`\u3002\r\n\r\n---\r\n\r\n## 8. \u672C\u7BC7\u8FB9\u754C\r\n\r\n\u672C\u7BC7\u4E0D\u8BB2 `signal_targets/signal_translations`\u3002\u5982\u9700\u8FDE\u63A5\u540E\u8FDB\u884C\u63A7\u5236/\u6570\u636E\u4F20\u8F93\uFF0C\u8BF7\u770B\uFF1A\r\n- [\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93](./\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93.md)' };
+}`, "zh_cn/schemas/subsystem/subsystem_dynamic_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subsystem/subsystem_dynamic_attr.json",\r\n  "title": "\u5B50\u7CFB\u7EDF\u52A8\u6001\u5C5E\u6027",\r\n  "description": "\u5B50\u7CFB\u7EDF\u52A8\u6001\u5C5E\u6027\u7684\u9876\u5C42\u67B6\u6784\uFF0C\u6839\u636E type \u5B57\u6BB5\u5206\u6D3E\u5230\u5177\u4F53\u5B50\u7CFB\u7EDF\u52A8\u6001\u5C5E\u6027\u67B6\u6784\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "type": {\r\n      "type": "string",\r\n      "enum": [\r\n        "machine_max:basic",\r\n        "machine_max:camera",\r\n        "machine_max:car_controller",\r\n        "machine_max:motorbike_controller",\r\n        "machine_max:engine",\r\n        "machine_max:gearbox",\r\n        "machine_max:item_storage",\r\n        "machine_max:motor",\r\n        "machine_max:motor_controller",\r\n        "machine_max:seat",\r\n        "machine_max:sight",\r\n        "machine_max:transmission",\r\n        "machine_max:wheel_driver",\r\n        "machine_max:lighting",\r\n        "machine_max:turret_driver",\r\n        "machine_max:weapon_controller"\r\n      ],\r\n      "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u51B3\u5B9A\u4F7F\u7528\u54EA\u4E2A\u5177\u4F53\u7684\u5B50\u7CFB\u7EDF\u67B6\u6784\u3002"\r\n    }\r\n  },\r\n  "additionalProperties": true,\r\n  "required": [\r\n    "type"\r\n  ],\r\n  "allOf": [\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:camera"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/camera_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:car_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/car_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:engine"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/engine_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:gearbox"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/gearbox_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:item_storage"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/item_storage_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motor"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/motor_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motor_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/motorbike_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:seat"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/seat_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:sight"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/sight_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:transmission"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/transmission_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:wheel_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/wheel_driver_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:lighting"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/lighting_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:turret_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/turret_driver_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:weapon_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/weapon_controller_dynamic_attr.schema.json"\r\n      }\r\n    }\r\n  ],\r\n  "examples": [\r\n    {\r\n      "type": "machine_max:car_controller",\r\n      "definition": "machine_max:ae86at_car_controller",\r\n      "control_outputs": {\r\n        "car_control": [\r\n          "subsystem.machine_max.engine",\r\n          "subsystem.machine_max.left_front_wheel_driver",\r\n          "subsystem.machine_max.right_front_wheel_driver",\r\n          "subsystem.machine_max.left_back_wheel_driver",\r\n          "subsystem.machine_max.right_back_wheel_driver",\r\n          "subsystem.machine_max.gearbox"\r\n        ]\r\n      }\r\n    },\r\n    {\r\n      "type": "machine_max:engine",\r\n      "definition": "machine_max:ae86at_engine",\r\n      "power_output": "gearbox"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/subsystem/subsystem_static_attr.schema.json": '{\n  "$schema": "http://json-schema.org/draft-07/schema#",\n  "$id": "https://machine_max.io/schemas/subsystem/subsystem_static_attr.json",\n  "title": "\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027",\n  "description": "\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027\u7684\u9876\u5C42\u67B6\u6784\uFF0C\u6839\u636E type \u5B57\u6BB5\u5206\u6D3E\u5230\u5177\u4F53\u5B50\u7CFB\u7EDF\u7C7B\u578B\u3002",\n  "type": "object",\n  "properties": {\n    "type": {\n      "type": "string",\n      "enum": [\n        "machine_max:basic",\n        "machine_max:camera",\n        "machine_max:car_controller",\n        "machine_max:engine",\n        "machine_max:gearbox",\n        "machine_max:item_storage",\n        "machine_max:launcher",\n        "machine_max:motor",\n        "machine_max:motor_controller",\n        "machine_max:regen_loader",\n        "machine_max:seat",\n        "machine_max:sight",\n        "machine_max:transmission",\n        "machine_max:wheel_driver",\n        "machine_max:lighting",\n        "machine_max:turret_driver",\n        "machine_max:weapon_controller"\n      ],\n      "description": "Subsystem type, determines which specific subsystem schema to use."\n    }\n  },\n  "additionalProperties": true,\n  "required": [\n    "type"\n  ],\n  "allOf": [\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:camera"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/camera_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:car_controller"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/car_controller_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:engine"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/engine_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:gearbox"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/gearbox_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:item_storage"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/item_storage_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:launcher"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/launcher_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:motor"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/motor_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:motor_controller"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/motorbike_controller_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:seat"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/seat_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:sight"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/sight_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:transmission"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/transmission_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:wheel_driver"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/wheel_driver_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:lighting"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/lighting_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:turret_driver"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/turret_driver_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:regen_loader"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/regen_loader_static_attr.schema.json"\n      }\n    },\n    {\n      "if": {\n        "properties": {\n          "type": {\n            "const": "machine_max:weapon_controller"\n          }\n        }\n      },\n      "then": {\n        "$ref": "static/weapon_controller_static_attr.schema.json"\n      }\n    }\n  ],\n  "examples": [\n    {\n      "$schema": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json",\n      "type": "machine_max:item_storage",\n      "basic_durability": 100.0,\n      "rows": 6,\n      "columns": 9\n    },\n    {\n      "$schema": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json",\n      "type": "machine_max:engine",\n      "max_power": 75000.0,\n      "max_torque": 130.0,\n      "red_line_rpm": 6500.0\n    }\n  ]\n}', "zh_cn/schemas/\u5982\u4F55\u4F7F\u7528JSON\u6A21\u677F.md": '# JSON Schema\u5728Machine-Max\u5185\u5BB9\u5305\u5236\u4F5C\u4E2D\u7684\u5E94\u7528\u6307\u5357\r\n\r\n## \u4EC0\u4E48\u662FJSON Schema\uFF1F\r\n\r\nJSON Schema\u662F\u4E00\u79CD\u7528\u4E8E\u63CF\u8FF0\u548C\u9A8C\u8BC1JSON\u6587\u6863\u7ED3\u6784\u7684\u89C4\u8303\u3002\u5BF9\u4E8EMachine-Max\u7684\u5185\u5BB9\u5305\u5236\u4F5C\uFF0CJSON Schema\u80FD\u591F\u5E2E\u52A9\u4F60\uFF1A\r\n\r\n- **\u9A8C\u8BC1\u914D\u7F6E\u683C\u5F0F**\uFF1A\u786E\u4FDD\u4F60\u7684JSON\u914D\u7F6E\u6587\u4EF6\u683C\u5F0F\u6B63\u786E\r\n- **\u63D0\u4F9B\u667A\u80FD\u63D0\u793A**\uFF1A\u5728\u652F\u6301\u7684\u7F16\u8F91\u5668\u4E2D\u663E\u793A\u5C5E\u6027\u8BF4\u660E\u548C\u7C7B\u578B\u8981\u6C42\r\n- **\u51CF\u5C11\u9519\u8BEF**\uFF1A\u63D0\u524D\u53D1\u73B0\u914D\u7F6E\u9519\u8BEF\uFF0C\u907F\u514D\u6E38\u620F\u5185\u95EE\u9898\r\n\r\n## \u4E3A\u4EC0\u4E48\u5185\u5BB9\u5305\u5236\u4F5C\u8005\u9700\u8981\u5173\u6CE8JSON Schema\uFF1F\r\n\r\n\u5373\u4F7F\u4F60\u6CA1\u6709\u7F16\u7A0B\u7ECF\u9A8C\uFF0CJSON Schema\u4E5F\u80FD\u8BA9\u4F60\u7684\u5185\u5BB9\u5305\u5236\u4F5C\u8FC7\u7A0B\u66F4\u987A\u7545\uFF1A\r\n\r\n1. **\u81EA\u52A8\u8865\u5168**\uFF1A\u73B0\u4EE3\u7F16\u8F91\u5668\uFF08\u5982VSCode\uFF09\u53EF\u4EE5\u6839\u636ESchema\u63D0\u4F9B\u5C5E\u6027\u540D\u81EA\u52A8\u8865\u5168\r\n2. **\u9519\u8BEF\u63D0\u793A**\uFF1A\u5728\u914D\u7F6E\u9519\u8BEF\u65F6\u7ACB\u5373\u63D0\u793A\uFF0C\u800C\u4E0D\u662F\u7B49\u5230\u6E38\u620F\u4E2D\u624D\u53D1\u73B0\u95EE\u9898\r\n3. **\u5C5E\u6027\u8BF4\u660E**\uFF1A\u67E5\u770B\u6BCF\u4E2A\u914D\u7F6E\u9879\u7684\u5177\u4F53\u542B\u4E49\u548C\u4F7F\u7528\u65B9\u6CD5\r\n4. **\u7C7B\u578B\u68C0\u67E5**\uFF1A\u786E\u4FDD\u4F60\u8F93\u5165\u7684\u6570\u636E\u7C7B\u578B\u6B63\u786E\uFF08\u6570\u5B57\u3001\u5B57\u7B26\u4E32\u3001\u5E03\u5C14\u503C\u7B49\uFF09\r\n\r\n## \u5982\u4F55\u4F7F\u7528JSON Schema\uFF1F\r\n\r\n### 1. \u914D\u7F6E\u7F16\u8F91\u5668\u652F\u6301\r\n\r\n\u5728\u4F60\u7684JSON\u6587\u4EF6\u9876\u90E8\u6DFB\u52A0`$schema`\u5B57\u6BB5\uFF0C\u6216\u76F4\u63A5\u590D\u5236\u5DF2\u6709\u7684\u793A\u4F8BJSON\uFF0C\u4F8B\u5982\uFF1A\r\n\r\n```json\r\n{\r\n  "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",\r\n  "vehicle_durability_rate": 1.0,\r\n  "variants": {\r\n    "default": {\r\n      "icon": "machine_max:textures/icon/example.png",\r\n      "models": "machine_max:example.geo"\r\n    }\r\n  }\r\n}\r\n```\r\n\u6CE8\u610F\uFF0C\u5728\u8FD9\u91CC`$schema`\u5B57\u6BB5\u7684\u503C\u4E3A\u76F8\u5BF9\u8DEF\u5F84\uFF0C"../"\u8868\u793A\u5F53\u524D\u6587\u4EF6\u7684\u4E0A\u7EA7\u76EE\u5F55\u3002\r\n\r\n### 2. \u63A8\u8350\u7F16\u8F91\u5668\r\n\r\n- **VSCode**\uFF1A\u539F\u751F\u652F\u6301JSON Schema\r\n\r\n### 3. \u5728VSCode\u4E2D\u542F\u7528JSON Schema\u9A8C\u8BC1\r\n\r\n **\u63A8\u8350\u76F4\u63A5\u590D\u7528\u5B98\u65B9\u5185\u5BB9\u5305\u7684\u6587\u4EF6\u7ED3\u6784\uFF0C\u5E76\u539F\u6837\u590D\u5236docs\u6587\u4EF6\u5939\u5230\u4F60\u81EA\u5DF1\u7684\u5185\u5BB9\u5305\uFF0C\u518D\u5728\u90E8\u4EF6\u548C\u5B50\u7CFB\u7EDFjson\u6587\u4EF6\u5F00\u5934\u6DFB\u52A0`$schema`\u5F15\u7528\u5373\u53EF\u3002**\r\n\r\n## \u5B9E\u9645\u5236\u4F5C\u4E2D\u7684\u5E94\u7528\u793A\u4F8B\r\n\r\n### \u6B65\u9AA41\uFF1A\u521B\u5EFA\u65B0\u90E8\u4EF6\r\n\r\n1. \u590D\u5236\u73B0\u6709\u7684\u90E8\u4EF6JSON\u6587\u4EF6\u4F5C\u4E3A\u6A21\u677F\r\n2. \u5728\u6587\u4EF6\u5F00\u5934\u6DFB\u52A0`$schema`\u5F15\u7528\r\n3. \u6839\u636E\u7F16\u8F91\u5668\u7684\u667A\u80FD\u63D0\u793A\u6DFB\u52A0\u914D\u7F6E\u9879\r\n\r\n### \u6B65\u9AA42\uFF1A\u9A8C\u8BC1\u914D\u7F6E\r\n\r\n1. \u4FDD\u5B58\u6587\u4EF6\u540E\u67E5\u770B\u7F16\u8F91\u5668\u662F\u5426\u663E\u793A\u9519\u8BEF\r\n2. \u6839\u636E\u63D0\u793A\u4FEE\u6B63\u914D\u7F6E\u683C\u5F0F\u95EE\u9898\r\n3. \u6D4B\u8BD5\u5185\u5BB9\u5305\u5728\u6E38\u620F\u4E2D\u662F\u5426\u6B63\u5E38\u5DE5\u4F5C\r\n\r\n### \u6B65\u9AA43\uFF1A\u8C03\u8BD5\u95EE\u9898\r\n\r\n\u5982\u679C\u5185\u5BB9\u5305\u5728\u6E38\u620F\u4E2D\u4E0D\u5DE5\u4F5C\uFF0C\u68C0\u67E5\uFF1A\r\n\r\n1. JSON\u683C\u5F0F\u662F\u5426\u6B63\u786E\uFF08\u4F7F\u7528Schema\u9A8C\u8BC1\uFF09\r\n2. \u6240\u6709\u5FC5\u9700\u5B57\u6BB5\u662F\u5426\u90FD\u5DF2\u586B\u5199\r\n3. \u6570\u636E\u7C7B\u578B\u662F\u5426\u5339\u914D\uFF08\u6570\u5B57 vs \u5B57\u7B26\u4E32\u7B49\uFF09\r\n\r\n## \u5E38\u89C1\u95EE\u9898\u4E0E\u89E3\u51B3\u65B9\u6848\r\n\r\n### Q: \u7F16\u8F91\u5668\u63D0\u793A\u9519\u8BEF\uFF0C\u4F46\u914D\u7F6E\u770B\u8D77\u6765\u662F\u6B63\u786E\u7684\uFF1F\r\nA: \u68C0\u67E5\uFF1A\r\n- JSON\u8BED\u6CD5\u662F\u5426\u6B63\u786E\uFF08\u9017\u53F7\u3001\u62EC\u53F7\u662F\u5426\u6709\u7F3A\u6F0F\u7B49\uFF0C\u52A1\u5FC5\u6CE8\u610F\u4E0D\u8981\u4F7F\u7528\u4E2D\u6587\u6807\u70B9\u7B26\u53F7\uFF09\r\n- \u5B57\u6BB5\u540D\u79F0\u662F\u5426\u62FC\u5199\u6B63\u786E\r\n- \u6570\u636E\u7C7B\u578B\u662F\u5426\u5339\u914D\uFF08\u5982\u9700\u8981\u6570\u5B57\u4F46\u8F93\u5165\u4E86\u5B57\u7B26\u4E32\uFF09\r\n\r\n### Q: \u5982\u4F55\u77E5\u9053\u54EA\u4E9B\u5B57\u6BB5\u662F\u5FC5\u9700\u7684\uFF1F\r\nA: \u67E5\u770BSchema\u6587\u4EF6\u4E2D\u7684`required`\u5B57\u6BB5\uFF0C\u6216\u8005\u5728\u652F\u6301\u7684\u7F16\u8F91\u5668\u4E2D\u4F1A\u6709\u76F8\u5E94\u63D0\u793A\u3002\r\n\r\n### Q: \u8FD9\u4E9B\u5B57\u6BB5\u7684\u4F5C\u7528\u90FD\u662F\u4EC0\u4E48\uFF1F\r\nA: \u5C06\u9F20\u6807\u653E\u5230\u5B57\u6BB5\u4E0A\uFF0C\u5373\u53EF\u67E5\u770B\u5B57\u6BB5\u7684\u8BF4\u660E\u548C\u7C7B\u578B\u8981\u6C42\u3002\r\n\r\n## \u63D0\u9AD8\u6548\u7387\u7684\u6280\u5DE7\r\n\r\n1. **\u4F7F\u7528\u6A21\u677F**\uFF1A\u57FA\u4E8E\u73B0\u6709\u5DE5\u4F5C\u6B63\u5E38\u7684\u914D\u7F6E\u521B\u5EFA\u65B0\u914D\u7F6E\r\n2. **\u9010\u6B65\u6DFB\u52A0**\uFF1A\u5148\u6DFB\u52A0\u57FA\u672C\u914D\u7F6E\uFF0C\u9A8C\u8BC1\u65E0\u8BEF\u540E\u518D\u6DFB\u52A0\u9AD8\u7EA7\u9009\u9879\r\n3. **\u53C2\u8003\u793A\u4F8B**\uFF1A\u67E5\u770B\u5B98\u65B9\u5305\u4E2D\u7684\u793A\u4F8B\u914D\u7F6E\u6587\u4EF6\r\n4. **\u5B9E\u65F6\u9A8C\u8BC1**\uFF1A\u5728\u7F16\u8F91\u5668\u4E2D\u5B9E\u65F6\u67E5\u770B\u9A8C\u8BC1\u7ED3\u679C\r\n\r\n## \u603B\u7ED3\r\n\r\nJSON Schema\u662F\u5185\u5BB9\u5305\u5236\u4F5C\u7684\u5F3A\u5927\u8F85\u52A9\u5DE5\u5177\uFF0C\u5B83\u80FD\u5E2E\u52A9\u4F60\u521B\u5EFA\u683C\u5F0F\u6B63\u786E\u3001\u7ED3\u6784\u5B8C\u6574\u7684\u914D\u7F6E\u6587\u4EF6\u3002\u5373\u4F7F\u6CA1\u6709\u7F16\u7A0B\u7ECF\u9A8C\uFF0C\u4F7F\u7528\u652F\u6301Schema\u7684\u7F16\u8F91\u5668\u4E5F\u80FD\u5927\u5927\u63D0\u9AD8\u5236\u4F5C\u6548\u7387\u548C\u51C6\u786E\u6027\u3002\r\n\r\n\u5F00\u59CB\u4F7F\u7528\u65F6\uFF0C\u5EFA\u8BAE\u5148\u4ECE\u7B80\u5355\u7684\u914D\u7F6E\u5F00\u59CB\uFF0C\u9010\u6B65\u719F\u6089Schema\u63D0\u4F9B\u7684\u5404\u79CD\u529F\u80FD\uFF0C\u968F\u7740\u7ECF\u9A8C\u7684\u79EF\u7D2F\uFF0C\u4F60\u4F1A\u53D1\u73B0\u5236\u4F5C\u5185\u5BB9\u5305\u53D8\u5F97\u66F4\u52A0\u7B80\u5355\u548C\u53EF\u9760\u3002', "zh_cn/\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93.md": '# \u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93\r\n\r\n\u672C\u6559\u7A0B\u76EE\u6807\uFF1A\r\n- \u8BB2\u6E05\u5B50\u7CFB\u7EDF\u5982\u4F55\u8D4B\u4E88\u96F6\u90E8\u4EF6\u201C\u5B9E\u9645\u529F\u80FD\u201D\u3002\r\n- \u8BB2\u6E05\u4FE1\u53F7\u5982\u4F55\u5728\u5B50\u7CFB\u7EDF\u3001\u4EA4\u4E92\u533A\u3001\u8FDE\u63A5\u70B9\u3001vehicle \u4E4B\u95F4\u4F20\u9012\u3002\r\n- \u6559\u4F60\u5728\u5185\u5BB9\u5305\u5C42\uFF08JSON\uFF09\u521B\u5EFA\u201C\u81EA\u5DF1\u7684\u5B50\u7CFB\u7EDF\u578B\u53F7\u201D\uFF08\u590D\u7528\u73B0\u6709 type\uFF09\u3002\r\n\r\n\r\n---\r\n\r\n## 1. \u5B50\u7CFB\u7EDF\u7531\u8C01\u521B\u5EFA\r\n\r\n\u5728 `parts/*.json` \u7684 `sub_parts -> subsystems` \u4E2D\u914D\u7F6E\u540E\uFF1A\r\n1. \u7CFB\u7EDF\u8BFB\u53D6\u6BCF\u4E2A\u5B50\u7CFB\u7EDF\u6761\u76EE\uFF08\u540D\u79F0 -> \u52A8\u6001\u5C5E\u6027\uFF09\u3002\r\n2. \u901A\u8FC7 `type + definition` \u627E\u5230\u5BF9\u5E94\u903B\u8F91\u4E0E\u9759\u6001\u53C2\u6570\u3002\r\n3. \u8FD0\u884C\u65F6\u521B\u5EFA\u5177\u4F53\u5B50\u7CFB\u7EDF\u5B9E\u4F8B\u5E76\u6302\u5230 subpart\u3002\r\n\r\n\u6E90\u7801\u951A\u70B9\uFF1A\r\n- `AbstractSubsystemAttr`\uFF1A\u52A8\u6001\u5C5E\u6027\u57FA\u7C7B\uFF0C\u8D1F\u8D23 `createSubsystem`\u3002\r\n- `Part.createSubsystems()`\uFF1A\u628A JSON \u6761\u76EE\u5B9E\u4F8B\u5316\u5E76\u653E\u5165 `subPart.subsystems`\u3002\r\n- `AbstractSubsystem`\uFF1A\u751F\u547D\u5468\u671F\u3001\u8010\u4E45\u3001\u4FE1\u53F7\u63A5\u6536\u4E0E\u8F93\u51FA\u3002\r\n\r\n---\r\n\r\n## 2. `type + definition` \u7684\u804C\u8D23\u5206\u79BB\r\n\r\n- `type`\uFF1A\u9009\u62E9\u201C\u884C\u4E3A\u7C7B\u522B\u201D\uFF08\u4F8B\u5982 `machine_max:item_storage`\u3001`machine_max:engine`\uFF09\u3002\r\n- `definition`\uFF1A\u9009\u62E9\u8BE5\u7C7B\u522B\u4E0B\u7684\u201C\u5177\u4F53\u578B\u53F7\u53C2\u6570\u201D\u3002\r\n\r\n\u53EF\u628A\u5B83\u7406\u89E3\u4E3A\uFF1A\r\n- `type` = \u7C7B\r\n- `definition` = \u914D\u7F6E\u5316\u5B9E\u4F8B\u6A21\u677F\r\n\r\n\u793A\u4F8B\uFF1A\r\n\r\n```json\r\n"subsystems": {\r\n  "subsystem.machine_max.trunk": {\r\n    "type": "machine_max:item_storage",\r\n    "definition": "machine_max:default_trunk"\r\n  }\r\n}\r\n```\r\n\r\n---\r\n\r\n## 3. \u5982\u4F55\u521B\u5EFA\u201C\u81EA\u5DF1\u7684\u5B50\u7CFB\u7EDF\u201D\uFF08\u5185\u5BB9\u5305\u5C42\uFF09\r\n\r\n\u8FD9\u91CC\u7684\u201C\u81EA\u5DF1\u7684\u201D\u6307\uFF1A\r\n- \u4E0D\u5199 Java \u65B0\u7C7B\u578B\uFF1B\r\n- \u901A\u8FC7\u65B0\u5EFA definition \u6587\u4EF6\uFF0C\u4EA7\u51FA\u4F60\u81EA\u5DF1\u7684\u578B\u53F7\u3002\r\n\r\n\u6B65\u9AA4\uFF1A\r\n1. \u5728 `machine_max/subsystems/` \u4E0B\u590D\u5236\u4E00\u4E2A\u63A5\u8FD1\u7684\u5B98\u65B9\u5B9A\u4E49\u3002\r\n2. \u6539\u540D\u5E76\u8C03\u6574\u53C2\u6570\uFF08\u5BB9\u91CF\u3001\u529F\u7387\u3001\u66F2\u7EBF\u3001\u8010\u4E45\u3001\u97F3\u6548\u7B49\uFF09\u3002\r\n3. \u5728 part \u7684 `subsystems` \u4E2D\u7528\u539F\u6709 `type` \u5F15\u7528\u4F60\u7684\u65B0 `definition`\u3002\r\n4. \u8FDB\u6E38\u620F\u9A8C\u8BC1\u529F\u80FD\u4E0E\u4EA4\u4E92\u3002\r\n\r\n\u9AD8\u9891\u9519\u8BEF\uFF1A\r\n- `definition` \u8DEF\u5F84\u5B58\u5728\u4F46 `type` \u4E0D\u5339\u914D\u3002\r\n- \u540D\u79F0\u7A7A\u95F4\u5199\u9519\u5BFC\u81F4\u627E\u4E0D\u5230\u5B9A\u4E49\u3002\r\n\r\n---\r\n\r\n## 4. \u4FE1\u53F7\u901A\u8DEF\u603B\u89C8\r\n\r\n\u4FE1\u53F7\u6838\u5FC3\u63A5\u53E3\uFF1A\r\n- \u53D1\u9001\uFF1A`ISignalSender`\r\n- \u63A5\u6536\uFF1A`ISignalReceiver`\r\n- \u5B58\u50A8\u9891\u9053\uFF1A`SignalChannel`\r\n- \u8DE8\u8FDE\u63A5\u70B9\u8F6C\u53D1\u7AEF\u53E3\uFF1A`SignalPort`\r\n\r\n\u6E90\u7801\u951A\u70B9\uFF1A\r\n- `ISignalSender.sendSignalToTarget/sendSignalToAllTargets`\r\n- `ISignalReceiver.getSignalChannel/onSignalUpdated`\r\n- `SignalPort.onSignalUpdated`\uFF08\u8DE8\u90E8\u4EF6\u8FDE\u63A5\u540E\u8F6C\u53D1\uFF09\r\n\r\n---\r\n\r\n## 5. `signal_targets`\uFF1A\u628A\u4FE1\u53F7\u9001\u7ED9\u8C01\r\n\r\n`signal_targets` \u53EF\u51FA\u73B0\u5728\uFF1A\r\n- \u4EA4\u4E92\u533A\uFF08interact box\uFF09\r\n- \u8FDE\u63A5\u70B9\uFF08connector\uFF09\r\n- \u67D0\u4E9B\u5B50\u7CFB\u7EDF\u52A8\u6001\u914D\u7F6E\uFF08\u53D6\u51B3\u4E8E\u5177\u4F53 type\uFF09\r\n\r\n\u76EE\u6807\u540D\u53EF\u6307\u5411\uFF1A\r\n- \u67D0\u5B50\u7CFB\u7EDF\u540D\r\n- \u67D0\u8FDE\u63A5\u70B9\u540D\uFF08\u7AEF\u53E3\uFF09\r\n- `subpart`\r\n- `vehicle`\r\n\r\n\u793A\u4F8B\uFF08\u4EA4\u4E92\u533A\u628A\u4FE1\u53F7\u53D1\u7ED9\u5B50\u7CFB\u7EDF\uFF09\uFF1A\r\n\r\n```json\r\n"interact_boxes": {\r\n  "interact.machine_max.trunk": {\r\n    "bone": "TrunkInteractZone",\r\n    "signal_targets": {\r\n      "trunk_interact": ["subsystem.machine_max.trunk"]\r\n    },\r\n    "interact_mode": "accurate"\r\n  }\r\n}\r\n```\r\n\r\n---\r\n\r\n## 6. `signal_translations`\uFF1A\u8DE8\u8FDE\u63A5\u70B9\u6539\u9891\u9053\u540D\r\n\r\n\u5F53\u4FE1\u53F7\u7ECF\u8FC7\u8FDE\u63A5\u70B9\u7AEF\u53E3\u8F6C\u53D1\u5230\u5BF9\u4FA7\u65F6\uFF0C\u53EF\u505A\u9891\u9053\u540D\u6620\u5C04\u3002\r\n\r\n\u4F7F\u7528\u573A\u666F\uFF1A\r\n- A \u96F6\u4EF6\u5185\u90E8\u53EB `interact_left_door`\uFF0C\r\n- \u5BF9\u4FA7\u7CFB\u7EDF\u5E0C\u671B\u63A5\u6536 `door_toggle`\u3002\r\n\r\n\u53EF\u5728\u8FDE\u63A5\u70B9\u914D\u7F6E\u91CC\u5199\uFF1A\r\n\r\n```json\r\n"connectors": {\r\n  "connector.machine_max.example": {\r\n    "locator": "AttachPoint",\r\n    "definition": "machine_max:fixed_front",\r\n    "signal_translations": {\r\n      "interact_left_door": "door_toggle"\r\n    },\r\n    "signal_targets": {\r\n      "door_toggle": ["subsystem.machine_max.door_ctrl"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\u673A\u5236\u8981\u70B9\uFF1A\r\n- \u9891\u9053\u8F6C\u8BD1\u5728 `SignalPort` \u5C42\u5B8C\u6210\u3002\r\n- \u76EE\u6807\u9891\u9053\u5FC5\u987B\u5728\u5BF9\u4FA7\u76EE\u6807\u8868\u4E2D\u5B58\u5728\uFF0C\u5426\u5219\u4E0D\u4F1A\u88AB\u6D88\u8D39\u3002\r\n\r\n---\r\n\r\n## 7. \u5B8C\u6574\u6700\u5C0F\u94FE\u8DEF\u793A\u4F8B\r\n\r\n\u76EE\u6807\uFF1A\u73A9\u5BB6\u4EA4\u4E92 -> \u89E6\u53D1\u4FE1\u53F7 -> \u5B50\u7CFB\u7EDF\u54CD\u5E94\u3002\r\n\r\n\u94FE\u8DEF\uFF1A\r\n1. `interact_boxes` \u4EA7\u751F `trunk_interact`\u3002\r\n2. \u901A\u8FC7 `signal_targets` \u53D1\u9001\u5230 `subsystem.machine_max.trunk`\u3002\r\n3. \u5B50\u7CFB\u7EDF\u5728 `onSignalUpdated` \u6216\u5185\u90E8\u903B\u8F91\u4E2D\u5904\u7406\u3002\r\n\r\n\u8DE8\u90E8\u4EF6\u65F6\uFF1A\r\n1. \u672C\u4FA7 connector \u6536\u5230\u9891\u9053 A\u3002\r\n2. `signal_translations` \u8F6C\u6210\u9891\u9053 B\u3002\r\n3. \u5BF9\u4FA7 connector \u6839\u636E `signal_targets` \u628A B \u9001\u7ED9\u76EE\u6807\u5B50\u7CFB\u7EDF\u3002\r\n\r\n---\r\n\r\n## 8. \u8C03\u8BD5\u987A\u5E8F\uFF08\u5F3A\u70C8\u5EFA\u8BAE\uFF09\r\n\r\n1. \u5148\u786E\u8BA4\u5B50\u7CFB\u7EDF\u672C\u4F53\u5DE5\u4F5C\uFF08\u4E0D\u8DE8\u8FDE\u63A5\u70B9\uFF09\u3002\r\n2. \u518D\u52A0\u4EA4\u4E92\u533A\u5230\u5B50\u7CFB\u7EDF\u7684\u76F4\u8FDE\u4FE1\u53F7\u3002\r\n3. \u6700\u540E\u518D\u5F15\u5165 connector \u8F6C\u53D1\u4E0E\u9891\u9053\u7FFB\u8BD1\u3002\r\n\r\n\u6BCF\u6B21\u53EA\u65B0\u589E\u4E00\u6BB5\u94FE\u8DEF\uFF0C\u907F\u514D\u4E00\u6B21\u6027\u6392\u67E5\u8FC7\u591A\u53D8\u91CF\u3002\r\n\r\n---\r\n\r\n## 9. \u9AD8\u9891\u95EE\u9898\u6392\u67E5\r\n\r\n### \u95EE\u9898 A\uFF1A\u5B50\u7CFB\u7EDF\u5B8C\u5168\u65E0\u53CD\u5E94\r\n\r\n\u68C0\u67E5\uFF1A\r\n- `type` \u4E0E `definition` \u662F\u5426\u5339\u914D\u3002\r\n- \u5B50\u7CFB\u7EDF\u540D\u5B57\u662F\u5426\u4E0E `signal_targets` \u76EE\u6807\u540D\u5B8C\u5168\u4E00\u81F4\u3002\r\n\r\n### \u95EE\u9898 B\uFF1A\u8DE8\u90E8\u4EF6\u540E\u4FE1\u53F7\u4E22\u5931\r\n\r\n\u68C0\u67E5\uFF1A\r\n- \u8FDE\u63A5\u70B9\u662F\u5426\u771F\u7684\u5904\u4E8E\u8FDE\u63A5\u72B6\u6001\u3002\r\n- `signal_translations` \u6620\u5C04\u540E\u7684\u9891\u9053\u540D\uFF0C\u662F\u5426\u88AB\u5BF9\u4FA7 `signal_targets` \u76D1\u542C\u3002\r\n\r\n### \u95EE\u9898 C\uFF1A\u9891\u9053\u540D\u770B\u8D77\u6765\u5BF9\uFF0C\u4F46\u4ECD\u4E0D\u89E6\u53D1\r\n\r\n\u68C0\u67E5\uFF1A\r\n- \u5927\u5C0F\u5199\u4E0E\u4E0B\u5212\u7EBF\u662F\u5426\u5B8C\u5168\u4E00\u81F4\u3002\r\n- \u662F\u5426\u5728\u9519\u8BEF\u5BF9\u8C61\u4E0A\u914D\u7F6E\u4E86 `signal_targets`\uFF08\u4F8B\u5982\u5199\u5728\u4E86\u4E0D\u6D88\u8D39\u8BE5\u9891\u9053\u7684\u5BF9\u8C61\u4E0A\uFF09\u3002\r\n\r\n---\r\n\r\n## 10. \u80FD\u529B\u8FB9\u754C\r\n\r\nJSON \u5C42\u53EF\u4EE5\u5B8C\u6210\uFF1A\r\n- \u5B50\u7CFB\u7EDF\u578B\u53F7\u6269\u5C55\uFF08\u65B0 definition\uFF09\u3002\r\n- \u4FE1\u53F7\u8DEF\u7531\u4E0E\u9891\u9053\u7FFB\u8BD1\u3002\r\n- \u4EA4\u4E92\u5230\u529F\u80FD\u7684\u591A\u6570\u5E38\u89C1\u73A9\u6CD5\u3002\r\n\r\n\u82E5\u4F60\u8981\u65B0\u589E\u201C\u5168\u65B0 type \u8BED\u4E49\u201D\uFF08\u5373\u5168\u65B0\u8FD0\u884C\u903B\u8F91\uFF09\uFF0C\u9700\u8981 Java \u6269\u5C55\uFF08\u672C\u6587\u4E0D\u5C55\u5F00\uFF09\u3002\r\n\r\n---\r\n\r\n## 11. \u76F8\u5173\u6559\u7A0B\r\n\r\n1. [\u7B2C\u4E00\u4E2A\u6700\u7B80\u96F6\u90E8\u4EF6](./\u7B2C\u4E00\u4E2A\u6700\u7B80\u96F6\u90E8\u4EF6.md)\r\n2. [\u8FDE\u63A5\u70B9\u5165\u95E8\uFF08fixed\uFF09](./\u8FDE\u63A5\u70B9\u5165\u95E8\uFF08fixed\uFF09.md)\r\n3. [\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09](./\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09.md)', "zh_cn/\u7B2C\u4E00\u4E2A\u6700\u7B80\u96F6\u90E8\u4EF6.md": '# \u7B2C\u4E00\u4E2A\u6700\u7B80\u96F6\u90E8\u4EF6\uFF08\u4EC5\u78B0\u649E\u4F53\u79EF\uFF09\r\n\r\n\u672C\u6559\u7A0B\u76EE\u6807\uFF1A\r\n- \u521B\u5EFA\u4E00\u4E2A\u201C\u80FD\u88AB\u52A0\u8F7D\u3001\u80FD\u53C2\u4E0E\u78B0\u649E\u201D\u7684\u6700\u7B80\u96F6\u90E8\u4EF6\u3002\r\n\r\n---\r\n\r\n## 1. \u5148\u7406\u89E3\u6700\u5C0F\u673A\u5236\r\n\r\n\u4E00\u4E2A\u96F6\u90E8\u4EF6\uFF08part\uFF09\u5728\u8FD0\u884C\u65F6\u4F1A\u7ECF\u5386\uFF1A\r\n1. \u8BFB\u53D6 `parts/*.json` -> \u89E3\u6790 `variants` \u4E0E `sub_parts`\u3002\r\n2. \u6BCF\u4E2A `sub_part` \u81F3\u5C11\u8981\u6709\u4E00\u4E2A `hit_boxes` \u6761\u76EE\u3002\r\n3. \u6839\u636E\u9AA8\u9ABC\u4E0A\u7684\u65B9\u5757\uFF08cube\uFF09\u751F\u6210\u771F\u5B9E\u78B0\u649E\u5F62\u72B6\u3002\r\n\r\n\u5982\u679C `hit_boxes` \u4E3A\u7A7A\uFF0C\u8BFB\u53D6\u9636\u6BB5\u4F1A\u76F4\u63A5\u62A5\u9519\u3002\r\n\r\n\u6E90\u7801\u951A\u70B9\uFF1A\r\n- `SubPartAttr`\uFF1A`hit_boxes` \u4E3A\u7A7A\u65F6\u629B\u9519\uFF1B\u6309\u9AA8\u9ABC\u6784\u5EFA\u78B0\u649E\u5F62\u72B6\u3002\r\n- `Part.createSubParts()`\uFF1A\u521B\u5EFA SubPart\u3001\u547D\u4E2D\u6846\u4E0E\u7269\u7406\u4F53\u3002\r\n- `SubPart`\uFF1A\u5B9E\u9645\u6301\u6709\u521A\u4F53\u5E76\u53C2\u4E0E\u78B0\u649E\u3002\r\n\r\n---\r\n\r\n## 2. \u6587\u4EF6\u653E\u7F6E\u4E0E\u547D\u540D\r\n\r\n\u5EFA\u8BAE\u5148\u590D\u5236\u4E00\u4EFD\u5B98\u65B9\u7B80\u5355\u90E8\u4EF6\u518D\u6539\u540D\u3002\u6700\u7B80\u76EE\u5F55\u793A\u4F8B\uFF1A\r\n\r\n- `machine_max/parts/my_first_part.json`\r\n- \u8BE5 JSON \u5F15\u7528\u7684\u6A21\u578B\u4E0E\u8D34\u56FE\u6587\u4EF6\uFF08\u53EF\u5148\u590D\u7528\u5B98\u65B9\u73B0\u6210\u8D44\u6E90\uFF09\r\n\r\n`$schema` \u5EFA\u8BAE\u4FDD\u7559\uFF0C\u4FBF\u4E8E\u7F16\u8F91\u5668\u63D0\u793A\u4E0E\u6821\u9A8C\u3002\r\n\r\n---\r\n\r\n## 3. \u6700\u5C0F\u53EF\u8FD0\u884C JSON\uFF08\u65E0\u5B50\u7CFB\u7EDF\u3001\u65E0\u8FDE\u63A5\u70B9\uFF09\r\n\r\n```json\r\n{\r\n  "$schema": "../docs/zh_cn/schemas/part_definition_schema.json",\r\n  "icon": "machine_max:textures/icon/container_16x16x8_icon.png",\r\n  "variants": {\r\n    "model": "machine_max:container_16x16x8.geo",\r\n    "textures": "machine_max:textures/part/container_16x16x8.png",\r\n    "animations": "machine_max:empty",\r\n    "sub_parts": {\r\n      "sub_part.machine_max.main": {\r\n        "durability": 100.0,\r\n        "mass": 25.0,\r\n        "block_collision": "true",\r\n        "hit_boxes": {\r\n          "Shape": {\r\n            "type": "box",\r\n            "material": "machine_max:structural_steel"\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\u8BF4\u660E\uFF1A\r\n- `hit_boxes` \u7684\u952E\uFF08\u793A\u4F8B\u91CC\u662F `Shape`\uFF09\u5FC5\u987B\u80FD\u5728\u6A21\u578B\u9AA8\u9ABC\u4E2D\u627E\u5230\u540C\u540D\u9AA8\u9ABC\u3002\r\n- \u672C\u793A\u4F8B\u6545\u610F\u4E0D\u5199 `subsystems`\u3001`connectors`\uFF0C\u8FD9\u662F\u9884\u671F\u884C\u4E3A\u3002\r\n- `type` \u53EF\u5148\u7528 `box`\uFF0C\u6700\u7A33\u5B9A\uFF0C\u4FBF\u4E8E\u521D\u5B66\u8C03\u8BD5\u3002\r\n\r\n---\r\n\r\n## 4. \u6700\u5C0F\u6210\u529F\u6807\u51C6\r\n\r\n\u6EE1\u8DB3\u4EE5\u4E0B 3 \u70B9\u5373\u7B97\u901A\u8FC7\uFF1A\r\n1. \u5185\u5BB9\u5305\u52A0\u8F7D\u65E0 JSON/Schema \u62A5\u9519\u3002\r\n2. \u7269\u4F53\u53EF\u751F\u6210\u5E76\u5177\u6709\u78B0\u649E\u4F53\u79EF\u3002\r\n3. \u6CA1\u6709\u4EFB\u4F55\u529F\u80FD\u6027\u4EA4\u4E92\uFF08\u8FD9\u5728\u672C\u6559\u7A0B\u662F\u6B63\u786E\u7ED3\u679C\uFF09\u3002\r\n\r\n---\r\n\r\n## 5. \u9AD8\u9891\u62A5\u9519\u4E0E\u6392\u67E5\r\n\r\n### \u95EE\u9898 A\uFF1A\u63D0\u793A\u627E\u4E0D\u5230\u78B0\u649E\u9AA8\u9ABC\r\n\r\n\u5E38\u89C1\u539F\u56E0\uFF1A`hit_boxes` \u7684\u952E\u540D\u548C\u6A21\u578B\u9AA8\u9ABC\u540D\u4E0D\u4E00\u81F4\u3002\r\n\r\n\u5904\u7406\uFF1A\r\n- \u628A\u952E\u540D\u6539\u6210\u6A21\u578B\u91CC\u771F\u5B9E\u5B58\u5728\u7684\u9AA8\u9ABC\u540D\u3002\r\n- \u5148\u7528\u4E00\u4E2A\u9AA8\u9ABC\u8DD1\u901A\uFF0C\u518D\u9010\u6B65\u589E\u52A0\u3002\r\n\r\n### \u95EE\u9898 B\uFF1A\u63D0\u793A\u78B0\u649E\u5F62\u72B6\u4E3A\u7A7A\r\n\r\n\u5E38\u89C1\u539F\u56E0\uFF1A\u9AA8\u9ABC\u5B58\u5728\uFF0C\u4F46\u9AA8\u9ABC\u4E0B\u6CA1\u6709 cube\u3002\r\n\r\n\u5904\u7406\uFF1A\r\n- \u5728\u5EFA\u6A21\u8F6F\u4EF6\u4E2D\u786E\u8BA4\u8BE5\u9AA8\u9ABC\u4E0B\u786E\u5B9E\u6709\u51E0\u4F55\u65B9\u5757\u3002\r\n- \u6216\u6539\u4E3A\u4F7F\u7528\u6709 cube \u7684\u9AA8\u9ABC\u3002\r\n\r\n### \u95EE\u9898 C\uFF1AJSON \u770B\u8D77\u6765\u5BF9\u4F46\u4E0D\u751F\u6548\r\n\r\n\u5E38\u89C1\u539F\u56E0\uFF1A\u8D44\u6E90\u8DEF\u5F84\u6216\u547D\u540D\u7A7A\u95F4\u5199\u9519\u3002\r\n\r\n\u5904\u7406\uFF1A\r\n- \u68C0\u67E5 `machine_max:...` \u7684\u8DEF\u5F84\u62FC\u5199\u3002\r\n- \u786E\u8BA4\u6587\u4EF6\u786E\u5B9E\u5728\u5BF9\u5E94\u76EE\u5F55\u3002\r\n\r\n---\r\n\r\n## 6. \u7ED9 LLM \u7684\u534F\u4F5C\u63D0\u793A\u8BCD\u6A21\u677F\r\n\r\n\u53EF\u76F4\u63A5\u7ED9 LLM\uFF1A\r\n\r\n```text\r\n\u8BF7\u57FA\u4E8E Machine-Max part_definition_schema\uFF0C\u751F\u6210\u4E00\u4E2A\u201C\u4EC5\u78B0\u649E\u3001\u65E0\u5B50\u7CFB\u7EDF\u3001\u65E0\u8FDE\u63A5\u70B9\u201D\u7684\u6700\u5C0F part JSON\u3002\r\n\u8981\u6C42\uFF1A\r\n1) \u4FDD\u7559 $schema\r\n2) \u4EC5 1 \u4E2A sub_part\r\n3) \u4EC5 1 \u4E2A box hit_box\r\n4) \u4E0D\u8981\u5305\u542B subsystems/connectors/interact_boxes\r\n5) \u8F93\u51FA\u540E\u518D\u81EA\u68C0\u5B57\u6BB5\u62FC\u5199\u4E0E\u8DEF\u5F84\u683C\u5F0F(namespace:path)\r\n```\r\n\r\n---\r\n\r\n## 7. \u4E0B\u4E00\u6B65\u5B66\u4E60\r\n\r\n\u5B8C\u6210\u672C\u7BC7\u540E\uFF0C\u5EFA\u8BAE\u7EE7\u7EED\uFF1A\r\n1. [\u8FDE\u63A5\u70B9\u5165\u95E8\uFF08fixed\uFF09](./\u8FDE\u63A5\u70B9\u5165\u95E8\uFF08fixed\uFF09.md)\r\n2. [\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09](./\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09.md)\r\n3. [\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93](./\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93.md)', "zh_cn/\u8FDE\u63A5\u70B9\u5165\u95E8\uFF08fixed\uFF09.md": '# \u8FDE\u63A5\u70B9\u5165\u95E8\uFF08fixed\uFF09\r\n\r\n\u672C\u6559\u7A0B\u76EE\u6807\uFF1A\r\n- \u5B66\u4F1A\u6700\u57FA\u7840\u7684\u8FDE\u63A5\u70B9\u914D\u7F6E\u4E0E\u4F7F\u7528\u3002\r\n- \u4ECE `fixed_*` \u8FD9\u7C7B\u56FA\u5B9A\u8FDE\u63A5\u5B9A\u4E49\u5F00\u59CB\uFF0C\u5B8C\u6210\u201C\u53EF\u8FDE\u63A5\u201D\u800C\u975E\u201C\u9AD8\u7EA7\u5173\u8282\u8C03\u53C2\u201D\u3002\r\n- \u672C\u7BC7\u4E0D\u8BB2\u4FE1\u53F7\u4F20\u8F93\uFF1B\u4FE1\u53F7\u8BF7\u770B\u300A\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93\u300B\u3002\r\n\r\n---\r\n\r\n## 1. \u8FDE\u63A5\u70B9\u7684\u4E24\u5C42\u914D\u7F6E\r\n\r\n\u8FDE\u63A5\u70B9\u5206\u4E24\u5C42\uFF1A\r\n\r\n1. \u9759\u6001\u5B9A\u4E49\u5C42\uFF08connector definition\uFF09\r\n- \u4F4D\u7F6E\uFF1A`machine_max/connectors/*.json`\r\n- \u4F5C\u7528\uFF1A\u5B9A\u4E49\u7C7B\u578B\u3001\u65B9\u5411\u3001\u7ED3\u6784\u5B8C\u6574\u6027\u7B49\u57FA\u7840\u89C4\u5219\u3002\r\n\r\n2. \u96F6\u4EF6\u5F15\u7528\u5C42\uFF08part \u5185 connectors\uFF09\r\n- \u4F4D\u7F6E\uFF1A`machine_max/parts/*.json` -> `variants -> sub_parts -> ... -> connectors`\r\n- \u4F5C\u7528\uFF1A\u58F0\u660E\u201C\u8FD9\u4E2A\u96F6\u4EF6\u5728\u54EA\u4E2A locator \u4E0A\u6302\u54EA\u4E2A\u5B9A\u4E49\u201D\u3002\r\n\r\n\u6E90\u7801\u951A\u70B9\uFF1A\r\n- `ConnectorAttr`\uFF1A\u89E3\u6790 `locator`\u3001`definition` \u7B49\u5B57\u6BB5\u5E76\u5408\u5E76\u6700\u7EC8\u5C5E\u6027\u3002\r\n- `Part.createConnectors()`\uFF1A\u6309 `locator` \u521B\u5EFA\u8FDE\u63A5\u70B9\u5B9E\u4F8B\u3002\r\n- `AbstractConnector`\uFF1A\u5904\u7406\u8FDE\u63A5/\u65AD\u5F00\u4E0E\u7269\u7406\u5173\u8282\u3002\r\n\r\n---\r\n\r\n## 2. \u4ECE fixed \u5B9A\u4E49\u5F00\u59CB\r\n\r\n\u5B98\u65B9\u793A\u4F8B\uFF08\u8282\u9009\uFF09\uFF1A\r\n\r\n```json\r\n{\r\n  "$schema": "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json",\r\n  "type": "Simple",\r\n  "direction": "zn",\r\n  "integrity": 20.0,\r\n  "impact_absorption": 0.2,\r\n  "impact_reduction": 2.0,\r\n  "impact_multiplier": 1.0\r\n}\r\n```\r\n\r\n\u5173\u952E\u7406\u89E3\uFF1A\r\n- `type: "Simple"`\uFF1A\u57FA\u7840\u8FDE\u63A5\u7C7B\u578B\uFF0C\u4F18\u5148\u7528\u4E8E\u5165\u95E8\u3002\r\n- `direction`\uFF1A\u8FDE\u63A5\u70B9\u6CD5\u7EBF\u65B9\u5411\uFF0C\u7528\u4E8E\u5BF9\u63A5\u59FF\u6001\u5224\u5B9A\u3002\r\n- \u5176\u4F59\u51B2\u51FB\u53C2\u6570\u53EF\u5148\u4FDD\u6301\u9ED8\u8BA4\u793A\u4F8B\uFF0C\u4E0D\u8981\u4E00\u5F00\u59CB\u5C31\u5927\u6539\u3002\r\n\r\n---\r\n\r\n## 3. \u5728 part \u4E2D\u5F15\u7528 fixed \u8FDE\u63A5\u70B9\r\n\r\n\u5728\u67D0\u4E2A `sub_part` \u91CC\u6DFB\u52A0\uFF1A\r\n\r\n```json\r\n"connectors": {\r\n  "connector.machine_max.up": {\r\n    "locator": "up",\r\n    "definition": "machine_max:fixed_up"\r\n  },\r\n  "connector.machine_max.down": {\r\n    "locator": "down",\r\n    "definition": "machine_max:fixed_down"\r\n  }\r\n}\r\n```\r\n\r\n\u8BF4\u660E\uFF1A\r\n- `connector.machine_max.up` \u662F\u4F60\u5728\u6B64 subpart \u5185\u90E8\u4F7F\u7528\u7684\u8FDE\u63A5\u70B9\u540D\u79F0\u3002\r\n- `locator` \u5FC5\u987B\u5BF9\u5E94\u6A21\u578B\u4E2D\u771F\u5B9E\u5B58\u5728\u7684 locator \u540D\u3002\r\n- `definition` \u5FC5\u987B\u6307\u5411 `connectors/*.json` \u7684\u6CE8\u518C\u8DEF\u5F84\u3002\r\n\r\n---\r\n\r\n## 4. \u5FC5\u61C2\u5B57\u6BB5\uFF08\u5165\u95E8\u7248\uFF09\r\n\r\n### `locator`\r\n\u8FDE\u63A5\u70B9\u7A7A\u95F4\u4F4D\u7F6E\u6765\u6E90\u3002\u82E5\u627E\u4E0D\u5230\u4F1A\u76F4\u63A5\u5931\u8D25\u3002\r\n\r\n### `definition`\r\n\u5F15\u7528\u9759\u6001\u8FDE\u63A5\u70B9\u5B9A\u4E49\uFF08\u4F8B\u5982 `machine_max:fixed_front`\uFF09\u3002\r\n\r\n### `direction`\r\n\u4E0D\u5728 part \u5F15\u7528\u5C42\u5199\uFF0C\u800C\u5728 definition \u91CC\u5199\u3002\u51B3\u5B9A\u8FDE\u63A5\u70B9\u6CD5\u7EBF\u65B9\u5411\u3002\r\n\r\n### `type`\r\n\u5728 definition \u91CC\u5199\u3002\u5165\u95E8\u9636\u6BB5\u4F18\u5148 `Simple`\u3002\r\n\r\n---\r\n\r\n## 5. \u6700\u5C0F\u6210\u529F\u6807\u51C6\r\n\r\n1. \u5185\u5BB9\u5305\u52A0\u8F7D\u901A\u8FC7\u3002\r\n2. \u6E38\u620F\u5185\u53EF\u770B\u5230\u5E76\u4F7F\u7528\u8FDE\u63A5\u70B9\u8FDB\u884C\u5B89\u88C5\u3002\r\n3. \u65E0\u9700\u4EFB\u4F55\u4FE1\u53F7\u914D\u7F6E\u4E5F\u80FD\u5B8C\u6210\u57FA\u7840\u5BF9\u63A5\u3002\r\n\r\n---\r\n\r\n## 6. \u5E38\u89C1\u5931\u8D25\u4E0E\u6392\u67E5\r\n\r\n### \u95EE\u9898 A\uFF1A\u62A5 locator \u4E0D\u5B58\u5728\r\n\r\n\u539F\u56E0\uFF1A`locator` \u540D\u79F0\u4E0E\u6A21\u578B\u4E0D\u4E00\u81F4\u3002\r\n\r\n\u5904\u7406\uFF1A\r\n- \u6838\u5BF9\u6A21\u578B locator \u62FC\u5199\uFF08\u5927\u5C0F\u5199\u3001\u4E0B\u5212\u7EBF\uFF09\u3002\r\n- \u5148\u53EA\u4FDD\u7559 1 \u4E2A\u8FDE\u63A5\u70B9\u9A8C\u8BC1\u3002\r\n\r\n### \u95EE\u9898 B\uFF1Adefinition \u627E\u4E0D\u5230\r\n\r\n\u539F\u56E0\uFF1A`machine_max:xxx` \u4E0E `connectors/xxx.json` \u4E0D\u5339\u914D\u3002\r\n\r\n\u5904\u7406\uFF1A\r\n- \u68C0\u67E5\u547D\u540D\u7A7A\u95F4\u548C\u6587\u4EF6\u540D\u3002\r\n- \u786E\u8BA4 JSON \u4F4D\u4E8E `machine_max/connectors/` \u4E0B\u3002\r\n\r\n### \u95EE\u9898 C\uFF1A\u8FDE\u63A5\u65B9\u5411\u4E0D\u5BF9\uFF0C\u5B89\u88C5\u59FF\u6001\u5F02\u5E38\r\n\r\n\u539F\u56E0\uFF1Adefinition \u7684 `direction` \u4E0E\u8BBE\u8BA1\u610F\u56FE\u4E0D\u4E00\u81F4\u3002\r\n\r\n\u5904\u7406\uFF1A\r\n- \u5148\u7528\u5B98\u65B9 `fixed_front/up/down/...` \u5BF9\u7167\u6D4B\u8BD5\u3002\r\n- \u786E\u8BA4\u6A21\u578B\u4E2D locator \u671D\u5411\u4E0E\u9884\u671F\u4E00\u81F4\u3002\r\n\r\n---\r\n\r\n## 7. \u672C\u7BC7\u8FB9\u754C\uFF08\u91CD\u8981\uFF09\r\n\r\n\u672C\u7BC7\u53EA\u8BB2\u8FDE\u63A5\u672C\u4F53\uFF0C\u4E0D\u8BB2\uFF1A\r\n- `signal_targets`\r\n- `signal_translations`\r\n- \u8DE8\u90E8\u4EF6\u4FE1\u53F7\u8DEF\u7531\r\n\r\n\u8FD9\u4E9B\u5185\u5BB9\u7EDF\u4E00\u89C1\uFF1A[\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93](./\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93.md)\r\n\r\n---\r\n\r\n## 8. \u4E0B\u4E00\u6B65\r\n\r\n\u5B8C\u6210 fixed \u5165\u95E8\u540E\uFF0C\u8BF7\u7EE7\u7EED\uFF1A\r\n- [\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09](./\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09.md)', "zh_cn/\u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09.md": '# \u8FDE\u63A5\u70B9\u9AD8\u7EA7\uFF08\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\uFF09\r\n\r\n\u672C\u6559\u7A0B\u76EE\u6807\uFF1A\r\n- \u5728\u5B8C\u6210 fixed \u5165\u95E8\u540E\uFF0C\u5B66\u4E60 Advanced \u8FDE\u63A5\u70B9\u7684\u81EA\u7531\u5EA6\u4E0E\u7EA6\u675F\u914D\u7F6E\u3002\r\n- \u7406\u89E3 `joint_attrs`\u3001\u5F39\u7C27\u963B\u5C3C\u3001\u51B2\u51FB\u53C2\u6570\u7684\u5B9E\u9645\u6548\u679C\u4E0E\u8C03\u53C2\u65B9\u6CD5\u3002\r\n\r\n---\r\n\r\n## 1. \u4EC0\u4E48\u65F6\u5019\u7528 Advanced\r\n\r\n\u9002\u5408\u8FD9\u4E9B\u573A\u666F\uFF1A\r\n- \u8F66\u95E8\u94F0\u94FE\u3001\u53EF\u8F6C\u5411\u673A\u6784\u3001\u6446\u81C2\u3001\u60AC\u6302\u7B49\u9700\u8981\u201C\u53EF\u52A8\u8FDE\u63A5\u201D\u7684\u7ED3\u6784\u3002\r\n- \u9700\u8981\u9650\u5236\u67D0\u4E9B\u8F74\u8FD0\u52A8\u3001\u653E\u5F00\u67D0\u4E9B\u8F74\u8FD0\u52A8\u7684\u8FDE\u63A5\u3002\r\n\r\n\u5982\u679C\u53EA\u662F\u521A\u6027\u62FC\u88C5\uFF0C\u4F18\u5148\u7EE7\u7EED\u4F7F\u7528 `Simple + fixed_*`\u3002\r\n\r\n---\r\n\r\n## 2. \u81EA\u7531\u5EA6\u4E0E\u8F74\u5411\r\n\r\n\u5728\u5173\u8282\u91CC\uFF0C\u5E38\u89C1\u7EA6\u5B9A\uFF1A\r\n- \u8F74 0~2\uFF1A\u5E73\u79FB\u81EA\u7531\u5EA6\uFF08X/Y/Z\uFF09\r\n- \u8F74 3~5\uFF1A\u65CB\u8F6C\u81EA\u7531\u5EA6\uFF08X/Y/Z\uFF09\r\n\r\n`joint_attrs` \u7684\u952E\u901A\u5E38\u6309\u8F74\u540D\u7EC4\u7EC7\uFF08\u5982 `x/y/z`\uFF0C\u5177\u4F53\u4EE5 schema \u4E3A\u51C6\uFF09\uFF0C\u6BCF\u8F74\u53EF\u914D\u7F6E\uFF1A\r\n- `lower_limit`\r\n- `upper_limit`\r\n- `equilibrium`\r\n- `stiffness`\r\n- `damping`\r\n\r\n---\r\n\r\n## 3. \u9AD8\u7EA7\u5B9A\u4E49\u6700\u5C0F\u793A\u4F8B\uFF08\u94F0\u94FE\u95E8\u601D\u8DEF\uFF09\r\n\r\n\u4E0B\u9762\u793A\u4F8B\u5C55\u793A\u201C\u4EC5\u653E\u5F00\u4E00\u4E2A\u65CB\u8F6C\u8F74\u201D\u7684\u601D\u8DEF\uFF08\u5B57\u6BB5\u540D\u4EE5\u4F60\u7684 schema \u81EA\u52A8\u63D0\u793A\u4E3A\u51C6\uFF09\uFF1A\r\n\r\n```json\r\n{\r\n  "$schema": "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json",\r\n  "type": "Advanced",\r\n  "direction": "xp",\r\n  "integrity": 30.0,\r\n  "joint_attrs": {\r\n    "x": {\r\n      "lower_limit": 0.0,\r\n      "upper_limit": 0.0\r\n    },\r\n    "y": {\r\n      "lower_limit": 0.0,\r\n      "upper_limit": 0.0\r\n    },\r\n    "z": {\r\n      "lower_limit": -70.0,\r\n      "upper_limit": 5.0,\r\n      "stiffness": 5.0,\r\n      "damping": 1.0\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\u8C03\u53C2\u903B\u8F91\uFF1A\r\n1. \u5148\u53EA\u5F00\u9650\u4F4D\uFF0C\u4E0D\u52A0\u5F39\u7C27\u963B\u5C3C\u3002\r\n2. \u52A8\u4F5C\u786E\u8BA4\u6B63\u786E\u540E\uFF0C\u518D\u52A0\u5C0F `stiffness/damping`\u3002\r\n3. \u6700\u540E\u518D\u5FAE\u8C03\u624B\u611F\u3002\r\n\r\n---\r\n\r\n## 4. \u8F6F\u8FDE\u63A5\u60AC\u6302\uFF08\u601D\u8DEF\u6A21\u677F\uFF09\r\n\r\n\u76EE\u6807\uFF1A\u5141\u8BB8\u5C0F\u8303\u56F4\u4F4D\u79FB\u5E76\u5E26\u56DE\u6B63\u8D8B\u52BF\u3002\r\n\r\n\u7B56\u7565\uFF1A\r\n- \u5BF9\u5E73\u79FB\u8F74\u7ED9\u5F88\u5C0F\u8303\u56F4 `lower/upper`\u3002\r\n- \u589E\u52A0\u4E2D\u4F4E `stiffness` + \u4E2D\u4F4E `damping`\u3002\r\n- \u4FDD\u6301\u5176\u4F59\u8F74\u9501\u5B9A\uFF0C\u907F\u514D\u7CFB\u7EDF\u8FC7\u5EA6\u81EA\u7531\u3002\r\n\r\n\u793A\u4F8B\uFF08\u6982\u5FF5\u6A21\u677F\uFF09\uFF1A\r\n\r\n```json\r\n"joint_attrs": {\r\n  "y": {\r\n    "lower_limit": -0.08,\r\n    "upper_limit": 0.08,\r\n    "equilibrium": 0.0,\r\n    "stiffness": 3.0,\r\n    "damping": 0.8\r\n  }\r\n}\r\n```\r\n\r\n---\r\n\r\n## 5. \u51B2\u51FB\u53C2\u6570\u4E0E\u8131\u843D\u673A\u5236\r\n\r\n\u8FDE\u63A5\u70B9\u65AD\u5F00\u4E0D\u53EA\u770B\u81EA\u7531\u5EA6\uFF0C\u4E5F\u53D7\u51B2\u51FB\u53C2\u6570\u5F71\u54CD\uFF1A\r\n- `integrity`\uFF1A\u7ED3\u6784\u5B8C\u6574\u5EA6\u4E0A\u9650\u3002\r\n- `impact_absorption`\uFF1A\u51B2\u51FB\u8F6C\u4E3A\u5B8C\u6574\u6027\u635F\u8017\u7684\u6BD4\u4F8B\u3002\r\n- `impact_reduction`\uFF1A\u51B2\u51FB\u51CF\u514D\u3002\r\n- `impact_multiplier`\uFF1A\u51B2\u51FB\u653E\u5927/\u7F29\u5C0F\u500D\u7387\u3002\r\n\r\n\u8C03\u53C2\u5EFA\u8BAE\uFF1A\r\n1. \u5148\u4FDD\u5B88\u503C\uFF0C\u786E\u4FDD\u4E0D\u4F1A\u8F7B\u6613\u8131\u843D\u3002\r\n2. \u518D\u9010\u6B65\u63D0\u9AD8\u771F\u5B9E\u611F\uFF08\u4F8B\u5982\u9AD8\u8F7D\u8377\u7ED3\u6784\u66F4\u6613\u65AD\uFF09\u3002\r\n\r\n\u6E90\u7801\u951A\u70B9\uFF1A\r\n- `AbstractConnector.handleAccumulatedImpact()`\uFF1A\u51B2\u51FB\u7D2F\u8BA1\u4E0E\u65AD\u5F00\u903B\u8F91\u3002\r\n\r\n---\r\n\r\n## 6. \u7A33\u5B9A\u6027\u5B9E\u8DF5\uFF08\u91CD\u70B9\uFF09\r\n\r\n\u63A8\u8350\u987A\u5E8F\uFF1A\r\n1. \u9501\u6B7B\u5168\u90E8\u8F74\uFF0C\u786E\u8BA4\u8FDE\u63A5\u65B9\u5411\u6B63\u786E\u3002\r\n2. \u53EA\u653E\u5F00 1 \u4E2A\u8F74\uFF0C\u9A8C\u8BC1\u8FD0\u52A8\u65B9\u5411\u3002\r\n3. \u8BBE\u7F6E\u9650\u4F4D\uFF0C\u518D\u52A0\u4F4E\u521A\u5EA6\u4F4E\u963B\u5C3C\u3002\r\n4. \u5C0F\u6B65\u589E\u91CF\u8C03\u53C2\uFF0C\u6BCF\u6B21\u53EA\u6539 1~2 \u4E2A\u53C2\u6570\u3002\r\n\r\n\u907F\u514D\u4E00\u6B21\u6027\u628A\u521A\u5EA6/\u963B\u5C3C\u62C9\u592A\u9AD8\uFF0C\u5426\u5219\u5BB9\u6613\u51FA\u73B0\uFF1A\r\n- \u6296\u52A8\uFF08\u632F\u8361\uFF09\r\n- \u7206\u632F\uFF08\u77AC\u95F4\u5931\u7A33\uFF09\r\n- \u9501\u6B7B\uFF08\u8FD0\u52A8\u5F02\u5E38\u53D7\u9650\uFF09\r\n\r\n`AbstractConnector.adjustJoint()` \u5185\u6709\u7A33\u5B9A\u6027\u4FDD\u62A4\u548C\u4E0A\u9650\u7EA6\u675F\uFF0C\u8BF4\u660E\u201C\u6781\u7AEF\u53C2\u6570\u201D\u4F1A\u88AB\u9650\u5236\uFF0C\u4ECD\u5EFA\u8BAE\u4F60\u4ECE\u4F4E\u503C\u5F00\u59CB\u3002\r\n\r\n---\r\n\r\n## 7. \u9AD8\u9891\u95EE\u9898\u6392\u67E5\r\n\r\n### \u95EE\u9898 A\uFF1A\u95E8\u8F74\u53CD\u5411\u6216\u5F00\u5408\u65B9\u5411\u602A\u5F02\r\n\r\n\u5904\u7406\uFF1A\r\n- \u5148\u68C0\u67E5 `direction`\u3002\r\n- \u518D\u68C0\u67E5\u6A21\u578B locator \u671D\u5411\u3002\r\n- \u6700\u540E\u518D\u8C03\u6574\u9650\u4F4D\u6B63\u8D1F\u8303\u56F4\u3002\r\n\r\n### \u95EE\u9898 B\uFF1A\u4E00\u52A0\u5F39\u7C27\u963B\u5C3C\u5C31\u6296\r\n\r\n\u5904\u7406\uFF1A\r\n- \u540C\u65F6\u964D\u4F4E `stiffness` \u4E0E `damping`\u3002\r\n- \u7F29\u5C0F\u53EF\u52A8\u8303\u56F4\uFF08`lower/upper`\uFF09\u3002\r\n- \u5148\u4FDD\u8BC1\u5355\u8F74\u53EF\u63A7\uFF0C\u518D\u6269\u5C55\u591A\u8F74\u3002\r\n\r\n### \u95EE\u9898 C\uFF1A\u8FDE\u63A5\u70B9\u592A\u5BB9\u6613\u65AD\r\n\r\n\u5904\u7406\uFF1A\r\n- \u589E\u52A0 `integrity`\u3002\r\n- \u9002\u5EA6\u63D0\u9AD8 `impact_reduction` \u6216\u964D\u4F4E `impact_multiplier`\u3002\r\n\r\n---\r\n\r\n## 8. \u672C\u7BC7\u8FB9\u754C\r\n\r\n\u672C\u7BC7\u4E0D\u8BB2 `signal_targets/signal_translations`\u3002\u5982\u9700\u8FDE\u63A5\u540E\u8FDB\u884C\u63A7\u5236/\u6570\u636E\u4F20\u8F93\uFF0C\u8BF7\u770B\uFF1A\r\n- [\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93](./\u5B50\u7CFB\u7EDF\u673A\u5236\u4E0E\u4FE1\u53F7\u4F20\u8F93.md)' };
     }
   });
 
@@ -7103,8 +7609,47 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var CONFIG_VERSION = 4;
+      var SIGNAL_CHANNEL_HINTS = [
+        // 运动 / 常规控制
+        "move_input",
+        "regular_input",
+        "engine_control",
+        "wheel_control",
+        "steering",
+        "throttle",
+        "brake",
+        "handbrake",
+        // 转速 / 速度 / 挡位
+        "engine_speed",
+        "wheel_speed",
+        "vehicle_speed",
+        "gear",
+        "clutch",
+        "parking_brake",
+        "power",
+        // 车门 / 引擎盖 / 后备箱
+        "interact_left_front_door",
+        "interact_right_front_door",
+        "interact_left_back_door",
+        "interact_right_back_door",
+        "interact_hood",
+        "interact_trunk",
+        "interact_left_front",
+        "interact_right_front",
+        "interact_left_back",
+        "interact_right_back",
+        // 交互区 / 自定义
+        "interact",
+        "interact_seat",
+        "trunk_interact",
+        "lever_pull",
+        "button_press",
+        "door_interact",
+        "switch_toggle",
+        "interact_custom"
+      ];
       if (typeof module !== "undefined" && module.exports) {
-        module.exports = { CONFIG_VERSION };
+        module.exports = { CONFIG_VERSION, SIGNAL_CHANNEL_HINTS };
       }
     }
   });
@@ -9379,8 +9924,6 @@
         writeJSONFile,
         readJSONFile,
         fileExists,
-        deleteFile,
-        extractResourceLocation,
         stripJsonComments
       } = require_file_writer();
       var zip_reader = require_zip_reader();
@@ -9637,19 +10180,6 @@
         log2.info("readAllDefs: \u5B8C\u6210", { type, dir: typeDir, count: Object.keys(result).length, ids: Object.keys(result) });
         return result;
       }
-      function writeDef(packDir, namespace, type, defId, data) {
-        var loc = extractResourceLocation(defId, namespace);
-        var defDir = path.join(packDir, namespace, type);
-        var filename = loc.path + ".json";
-        writeJSONFile(defDir, filename, data);
-        log2.debug("writeDef: \u5DF2\u5199\u5165 " + path.join(defDir, filename));
-      }
-      function deleteDef(packDir, namespace, type, defId) {
-        var loc = extractResourceLocation(defId, namespace);
-        var filePath = path.join(packDir, namespace, type, loc.path + ".json");
-        deleteFile(filePath);
-        log2.debug("deleteDef: " + filePath);
-      }
       function listDefIds(packDir, namespace, type) {
         var typeDir = path.join(packDir, namespace, type);
         var files, ids, i;
@@ -9677,8 +10207,6 @@
           createContentPack,
           openContentPack,
           readAllDefs,
-          writeDef,
-          deleteDef,
           listDefIds,
           defExists
         };
@@ -10175,6 +10703,1708 @@
       }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = { runValidation };
+      }
+    }
+  });
+
+  // src/generators/meta_generator.js
+  var require_meta_generator = __commonJS({
+    "src/generators/meta_generator.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("GenMeta");
+      function generateMeta(projectConfig) {
+        var pm = projectConfig.packMeta || {};
+        var packId = pm.id || (Project ? Project.name || "content_pack" : "content_pack");
+        packId = packId.toLowerCase().replace(/[^a-z0-9_\-.:/]/g, "_");
+        var result = {
+          id: packId,
+          version: pm.version || "1.0",
+          author: pm.author || "Anonymous",
+          description: pm.description || ""
+        };
+        var deps = pm.dependencies || [];
+        if (deps.length > 0) {
+          result.dependencies = deps.map(function(dep) {
+            var depId = dep.id || dep;
+            var depType = dep.type || "hard";
+            return { id: depId, type: depType };
+          });
+        }
+        if (typeof pm.enable_auto_pack === "boolean") {
+          result.enable_auto_pack = pm.enable_auto_pack;
+        }
+        var parts = projectConfig.parts || {};
+        var partIds = Object.keys(parts);
+        log2.info("generateMeta: \u5305ID=" + result.id + ", \u96F6\u4EF6\u6570=" + partIds.length);
+        return result;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { generateMeta };
+      }
+    }
+  });
+
+  // src/utils/name_utils.js
+  var require_name_utils = __commonJS({
+    "src/utils/name_utils.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var TYPE_LABELS = {
+        sub_part: { zh: "\u5B50\u96F6\u4EF6", en: "SubPart" },
+        interact: { zh: "\u4EA4\u4E92\u533A", en: "Interact" },
+        connector: { zh: "\u8FDE\u63A5\u70B9", en: "Connector" },
+        subsystem: { zh: "\u5B50\u7CFB\u7EDF", en: "Subsystem" }
+      };
+      var TYPE_PREFIXES = Object.keys(TYPE_LABELS);
+      function extractType(fullKey) {
+        if (!fullKey || typeof fullKey !== "string") return null;
+        for (var i = 0; i < TYPE_PREFIXES.length; i++) {
+          if (fullKey.indexOf(TYPE_PREFIXES[i] + ".") === 0) {
+            return TYPE_PREFIXES[i];
+          }
+        }
+        return null;
+      }
+      function extractShortName(fullKey, ns) {
+        if (!fullKey || typeof fullKey !== "string") return fullKey || "";
+        ns = ns || "machine_max";
+        var prefix = "." + ns + ".";
+        var idx = fullKey.indexOf(prefix);
+        if (idx >= 0) {
+          return fullKey.substring(idx + prefix.length);
+        }
+        return fullKey;
+      }
+      function buildFullKey(type, shortName, ns) {
+        if (!shortName) return "";
+        ns = ns || "machine_max";
+        var existingType = extractType(shortName);
+        if (existingType) {
+          shortName = extractShortName(shortName, ns);
+        }
+        if (type) {
+          return type + "." + ns + "." + shortName;
+        }
+        return shortName;
+      }
+      function displayLabel(fullKey, locale, ns) {
+        if (!fullKey || typeof fullKey !== "string") return fullKey || "";
+        var type = extractType(fullKey);
+        var shortName = extractShortName(fullKey, ns);
+        if (!type) return shortName;
+        var labels = TYPE_LABELS[type];
+        var label = labels ? labels[locale] || labels["zh"] || type : type;
+        return "[" + label + "]" + shortName;
+      }
+      function getTargetOptions(variant, ns) {
+        var options = [];
+        ns = ns || "machine_max";
+        if (!variant) return options;
+        var subParts = variant.sub_parts || {};
+        for (var spKey in subParts) {
+          if (!subParts.hasOwnProperty(spKey)) continue;
+          var sp = subParts[spKey];
+          if (!sp || typeof sp !== "object") continue;
+          var connectors = sp.connectors || {};
+          for (var connKey in connectors) {
+            if (!connectors.hasOwnProperty(connKey)) continue;
+            if (options.some(function(o) {
+              return o.fullKey === connKey;
+            })) continue;
+            options.push({
+              type: "connector",
+              shortName: extractShortName(connKey, ns),
+              fullKey: connKey,
+              label: displayLabel(connKey, "zh", ns)
+            });
+          }
+          var subsystems = sp.subsystems || {};
+          for (var ssKey in subsystems) {
+            if (!subsystems.hasOwnProperty(ssKey)) continue;
+            if (options.some(function(o) {
+              return o.fullKey === ssKey;
+            })) continue;
+            options.push({
+              type: "subsystem",
+              shortName: extractShortName(ssKey, ns),
+              fullKey: ssKey,
+              label: displayLabel(ssKey, "zh", ns)
+            });
+          }
+        }
+        return options;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { extractType, extractShortName, buildFullKey, displayLabel, getTargetOptions, TYPE_LABELS, TYPE_PREFIXES };
+      }
+    }
+  });
+
+  // src/generators/lang_generator.js
+  var require_lang_generator = __commonJS({
+    "src/generators/lang_generator.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var nameUtils = require_name_utils();
+      var log2 = createLogger2("GenLang");
+      function _toDisplayName(key) {
+        return key.replace(/_/g, " ").replace(/\b\w/g, function(c) {
+          return c.toUpperCase();
+        });
+      }
+      function generateAllLangs(projectConfig) {
+        var result = {};
+        var zhLang = {};
+        var enLang = {};
+        var ns = projectConfig.namespace || "machine_max";
+        var parts = projectConfig.parts || {};
+        for (var partId in parts) {
+          if (!parts.hasOwnProperty(partId)) continue;
+          var partConfig = parts[partId];
+          var partKey = ns + "." + partId;
+          enLang[partKey] = _toDisplayName(partId);
+          zhLang[partKey] = _toDisplayName(partId);
+          var variants = partConfig.variants || {};
+          var variantMap;
+          if (typeof variants.model === "string") {
+            variantMap = { _default: variants };
+          } else {
+            variantMap = variants;
+          }
+          for (var variantName in variantMap) {
+            if (!variantMap.hasOwnProperty(variantName)) continue;
+            var variant = variantMap[variantName];
+            var subParts = variant.sub_parts || {};
+            var subPartMap;
+            if (typeof subParts.durability === "number") {
+              subPartMap = { _single: subParts };
+            } else {
+              subPartMap = subParts;
+            }
+            for (var subPartKey in subPartMap) {
+              if (!subPartMap.hasOwnProperty(subPartKey)) continue;
+              var subPart = subPartMap[subPartKey];
+              if (!subPart || typeof subPart !== "object") continue;
+              if (subPartKey !== "_single" && subPartKey !== "sub_part." + ns + ".main") {
+                var spShortName = nameUtils.extractShortName(subPartKey, ns);
+                enLang[subPartKey] = _toDisplayName(spShortName);
+                zhLang[subPartKey] = _toDisplayName(spShortName);
+              }
+              var interactBoxes = subPart.interact_boxes || {};
+              for (var interactKey in interactBoxes) {
+                if (!interactBoxes.hasOwnProperty(interactKey)) continue;
+                var ibShortName = nameUtils.extractShortName(interactKey, ns);
+                enLang[interactKey] = _toDisplayName(ibShortName);
+                zhLang[interactKey] = _toDisplayName(ibShortName);
+              }
+              var connectors = subPart.connectors || {};
+              for (var connectorKey in connectors) {
+                if (!connectors.hasOwnProperty(connectorKey)) continue;
+                var connShortName = nameUtils.extractShortName(connectorKey, ns);
+                enLang[connectorKey] = _toDisplayName(connShortName);
+                zhLang[connectorKey] = _toDisplayName(connShortName);
+              }
+              var subsystems = subPart.subsystems || {};
+              for (var subsystemKey in subsystems) {
+                if (!subsystems.hasOwnProperty(subsystemKey)) continue;
+                var ssShortName = nameUtils.extractShortName(subsystemKey, ns);
+                enLang[subsystemKey] = _toDisplayName(ssShortName);
+                zhLang[subsystemKey] = _toDisplayName(ssShortName);
+              }
+            }
+          }
+        }
+        result["zh_cn"] = zhLang;
+        result["en_us"] = enLang;
+        log2.info("generateAllLangs: \u5DF2\u751F\u6210\u672C\u5730\u5316\uFF0C\u952E\u6570=" + Object.keys(zhLang).length);
+        return result;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { generateAllLangs };
+      }
+    }
+  });
+
+  // src/generators/part_generator.js
+  var require_part_generator = __commonJS({
+    "src/generators/part_generator.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var { PartCodec } = require_part_codec();
+      var log2 = createLogger2("GenPart");
+      function generatePartJSON(partConfig) {
+        return PartCodec.encode(partConfig);
+      }
+      function _resolveUUIDKeys(obj) {
+        var resolved = {};
+        for (var key in obj) {
+          var boneName = key;
+          if (typeof Group !== "undefined" && Group.all) {
+            var group = Group.all.find(function(g) {
+              return g.uuid === key;
+            });
+            if (group) boneName = group.name;
+          }
+          resolved[boneName] = obj[key];
+        }
+        return resolved;
+      }
+      function _resolveAllUUIDKeys(partConfig) {
+        if (!partConfig || !partConfig.variants) return partConfig;
+        for (var vKey in partConfig.variants) {
+          var sub_parts = partConfig.variants[vKey].sub_parts;
+          if (!sub_parts) continue;
+          for (var spKey in sub_parts) {
+            var sp = sub_parts[spKey];
+            if (!sp) continue;
+            if (sp.hit_boxes && typeof sp.hit_boxes === "object") {
+              sp.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
+            }
+            if (sp.interact_boxes && typeof sp.interact_boxes === "object") {
+              sp.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
+            }
+          }
+        }
+        return partConfig;
+      }
+      function _cleanProjectileTypes(partConfig) {
+        if (!partConfig || !partConfig.variants) return;
+        var PLACEHOLDER_PREFIX = "__new_p_";
+        for (var vKey in partConfig.variants) {
+          var sub_parts = partConfig.variants[vKey].sub_parts;
+          if (!sub_parts) continue;
+          for (var spKey in sub_parts) {
+            var sp = sub_parts[spKey];
+            if (!sp || !sp.subsystems) continue;
+            for (var ssKey in sp.subsystems) {
+              var ss = sp.subsystems[ssKey];
+              if (!ss || ss.type !== "machine_max:regen_loader") continue;
+              var pt = ss.projectile_types;
+              if (!pt || typeof pt !== "object") continue;
+              for (var k in pt) {
+                if (pt.hasOwnProperty(k) && k.indexOf(PLACEHOLDER_PREFIX) === 0) {
+                  delete pt[k];
+                }
+              }
+            }
+          }
+        }
+      }
+      function generateAllParts(projectConfig) {
+        const parts = projectConfig.parts || {};
+        const result = {};
+        for (const [partId, partConfig] of Object.entries(parts)) {
+          var cloned = JSON.parse(JSON.stringify(partConfig));
+          _resolveAllUUIDKeys(cloned);
+          _cleanProjectileTypes(cloned);
+          result[partId] = generatePartJSON(cloned);
+        }
+        log2.info("generateAllParts: \u5DF2\u751F\u6210 " + Object.keys(result).length + " \u4E2A\u96F6\u4EF6");
+        return result;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { generatePartJSON, generateAllParts };
+      }
+    }
+  });
+
+  // src/generators/connector_generator.js
+  var require_connector_generator = __commonJS({
+    "src/generators/connector_generator.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var fileWriter = require_file_writer();
+      var path = __require("path");
+      var fs = __require("fs");
+      var log2 = createLogger2("GenConnector");
+      function copyConnectorDefs(packDir, ns, targetDir, flat) {
+        var count = 0;
+        var srcDir = path.join(packDir, ns, "connectors");
+        if (!fs.existsSync(srcDir)) {
+          log2.warn("copyConnectorDefs: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
+          return 0;
+        }
+        var files = fs.readdirSync(srcDir);
+        function resolveTarget(baseDir, id2, isFlat) {
+          if (isFlat) return baseDir;
+          var seg = id2.split("_")[0];
+          return seg && seg.length > 0 ? path.join(baseDir, seg) : baseDir;
+        }
+        for (var i = 0; i < files.length; i++) {
+          var fileName = files[i];
+          if (!fileName.endsWith(".json")) continue;
+          var srcFile = path.join(srcDir, fileName);
+          try {
+            var raw = fs.readFileSync(srcFile, "utf8");
+            var content = JSON.parse(fileWriter.stripJsonComments(raw));
+            var id = fileName.slice(0, -5);
+            var loc = fileWriter.extractResourceLocation(id, ns);
+            var tDir = resolveTarget(targetDir, loc.path, flat);
+            fileWriter.writeJSONFile(tDir, loc.path + ".json", content);
+            count++;
+          } catch (e) {
+            log2.warn("\u590D\u5236\u8FDE\u63A5\u70B9\u6587\u4EF6\u5931\u8D25: " + srcFile, e);
+          }
+        }
+        log2.info("copyConnectorDefs: \u5DF2\u590D\u5236 " + count + " \u4E2A\u8FDE\u63A5\u70B9\u5B9A\u4E49");
+        return count;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { copyConnectorDefs };
+      }
+    }
+  });
+
+  // src/generators/subsystem_generator.js
+  var require_subsystem_generator = __commonJS({
+    "src/generators/subsystem_generator.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var fileWriter = require_file_writer();
+      var path = __require("path");
+      var fs = __require("fs");
+      var log2 = createLogger2("GenSubsystem");
+      function copySubsystemDefs(packDir, ns, targetDir, flat) {
+        var count = 0;
+        var srcDir = path.join(packDir, ns, "subsystems");
+        if (!fs.existsSync(srcDir)) {
+          log2.warn("copySubsystemDefs: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
+          return 0;
+        }
+        var files = fs.readdirSync(srcDir);
+        function resolveTarget(baseDir, id2, isFlat) {
+          if (isFlat) return baseDir;
+          var seg = id2.split("_")[0];
+          return seg && seg.length > 0 ? path.join(baseDir, seg) : baseDir;
+        }
+        for (var i = 0; i < files.length; i++) {
+          var fileName = files[i];
+          if (!fileName.endsWith(".json")) continue;
+          var srcFile = path.join(srcDir, fileName);
+          try {
+            var raw = fs.readFileSync(srcFile, "utf8");
+            var content = JSON.parse(fileWriter.stripJsonComments(raw));
+            var id = fileName.slice(0, -5);
+            var loc = fileWriter.extractResourceLocation(id, ns);
+            var tDir = resolveTarget(targetDir, loc.path, flat);
+            fileWriter.writeJSONFile(tDir, loc.path + ".json", content);
+            count++;
+          } catch (e) {
+            log2.warn("\u590D\u5236\u5B50\u7CFB\u7EDF\u6587\u4EF6\u5931\u8D25: " + srcFile, e);
+          }
+        }
+        log2.info("copySubsystemDefs: \u5DF2\u590D\u5236 " + count + " \u4E2A\u5B50\u7CFB\u7EDF\u5B9A\u4E49");
+        return count;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { copySubsystemDefs };
+      }
+    }
+  });
+
+  // src/generators/material_generator.js
+  var require_material_generator = __commonJS({
+    "src/generators/material_generator.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var fileWriter = require_file_writer();
+      var path = __require("path");
+      var fs = __require("fs");
+      var log2 = createLogger2("GenMaterial");
+      function copyMaterialDefs(packDir, ns, targetDir) {
+        var count = 0;
+        var srcDir = path.join(packDir, ns, "materials");
+        if (!fs.existsSync(srcDir)) {
+          log2.warn("copyMaterialDefs: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
+          return 0;
+        }
+        var files = fs.readdirSync(srcDir);
+        for (var i = 0; i < files.length; i++) {
+          var fileName = files[i];
+          if (!fileName.endsWith(".json")) continue;
+          var srcFile = path.join(srcDir, fileName);
+          try {
+            var raw = fs.readFileSync(srcFile, "utf8");
+            var content = JSON.parse(fileWriter.stripJsonComments(raw));
+            var id = fileName.slice(0, -5);
+            var loc = fileWriter.extractResourceLocation(id, ns);
+            fileWriter.writeJSONFile(targetDir, loc.path + ".json", content);
+            count++;
+          } catch (e) {
+            log2.warn("\u590D\u5236\u6750\u6599\u6587\u4EF6\u5931\u8D25: " + srcFile, e);
+          }
+        }
+        log2.info("copyMaterialDefs: \u5DF2\u590D\u5236 " + count + " \u4E2A\u6750\u6599\u5B9A\u4E49");
+        return count;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { copyMaterialDefs };
+      }
+    }
+  });
+
+  // src/ui/export/export_pipeline.js
+  var require_export_pipeline = __commonJS({
+    "src/ui/export/export_pipeline.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var fileWriter = require_file_writer();
+      var log2 = createLogger2("ExportPipeline");
+      function executeExport(config, packMeta, exportDir, packFolderName) {
+        var fs = __require("fs");
+        var path = __require("path");
+        if (!fs.existsSync(exportDir)) {
+          fs.mkdirSync(exportDir, { recursive: true });
+        }
+        var packRoot = path.join(exportDir, packFolderName);
+        if (!fs.existsSync(packRoot)) {
+          fs.mkdirSync(packRoot, { recursive: true });
+        }
+        var ns = config.namespace || "machine_max";
+        var stats = { parts: 0, connectors: 0, subsystems: 0, materials: 0, langs: 0 };
+        var isFlat = packMeta.flat_export !== false;
+        function _resolveTargetDir(baseDir, id, flat) {
+          if (flat) return baseDir;
+          var seg = id.split("_")[0];
+          return seg && seg.length > 0 ? path.join(baseDir, seg) : baseDir;
+        }
+        function _writeSchemasFromConstant(destBaseDir) {
+          var schemasRaw = typeof define_SCHEMAS_default !== "undefined" ? define_SCHEMAS_default : null;
+          if (!schemasRaw) {
+            log2.warn("_writeSchemasFromConstant: __SCHEMAS__ \u672A\u6CE8\u5165\u6216\u4E3A\u7A7A\uFF0CSchema \u6587\u4EF6\u5C06\u4E0D\u4F1A\u5199\u5165");
+            return;
+          }
+          var schemas = typeof schemasRaw === "string" ? JSON.parse(schemasRaw) : schemasRaw;
+          var keys = Object.keys(schemas);
+          for (var i = 0; i < keys.length; i++) {
+            var relPath = keys[i];
+            var destPath = path.join(destBaseDir, relPath);
+            fileWriter.ensureDir(path.dirname(destPath));
+            fs.writeFileSync(destPath, schemas[relPath], "utf-8");
+          }
+          log2.info("_writeSchemasFromConstant: \u5DF2\u5199\u5165 " + keys.length + " \u4E2A schema \u6587\u4EF6");
+        }
+        function _getSchemaLocale() {
+          var lang = "";
+          if (typeof navigator !== "undefined" && navigator.language) {
+            lang = navigator.language;
+          } else if (typeof Blockbench !== "undefined" && Blockbench.locale) {
+            lang = Blockbench.locale;
+          }
+          return lang.indexOf("zh") === 0 ? "zh_cn" : "en_us";
+        }
+        function _injectSchemaReferences(nsDir) {
+          var schemaLocale = _getSchemaLocale();
+          var schemaMap = {
+            parts: "docs/" + schemaLocale + "/schemas/part_definition_schema.json",
+            connectors: "docs/" + schemaLocale + "/schemas/part/subpart/connector/connector_static_attr.schema.json",
+            subsystems: "docs/" + schemaLocale + "/schemas/subsystem/subsystem_static_attr.schema.json",
+            materials: "docs/" + schemaLocale + "/schemas/base/material_attr.schema.json"
+          };
+          var recipeSchemaMap = {
+            "machine_max:research": "docs/" + schemaLocale + "/schemas/recipe/research_recipe.schema.json",
+            "machine_max:fabricating": "docs/" + schemaLocale + "/schemas/recipe/fabricating_recipe.schema.json",
+            "machine_max:blueprint_research": "docs/" + schemaLocale + "/schemas/recipe/blueprint_research_recipe.schema.json"
+          };
+          var dirs = ["parts", "connectors", "subsystems", "materials", "recipe"];
+          for (var d = 0; d < dirs.length; d++) {
+            var typeDir = path.join(nsDir, dirs[d]);
+            if (!fs.existsSync(typeDir)) continue;
+            _walkAndInject(typeDir, nsDir, dirs[d], schemaMap, recipeSchemaMap);
+          }
+        }
+        function _walkAndInject(currentDir, nsDir, typeName, schemaMap, recipeSchemaMap) {
+          var entries = fs.readdirSync(currentDir);
+          for (var e = 0; e < entries.length; e++) {
+            var fullPath = path.join(currentDir, entries[e]);
+            var stat = fs.statSync(fullPath);
+            if (stat.isDirectory()) {
+              _walkAndInject(fullPath, nsDir, typeName, schemaMap, recipeSchemaMap);
+            } else if (entries[e].endsWith(".json")) {
+              try {
+                var rawContent = fs.readFileSync(fullPath, "utf8");
+                var content = JSON.parse(fileWriter.stripJsonComments(rawContent));
+                var schemaRel;
+                if (typeName === "recipe") {
+                  schemaRel = recipeSchemaMap[content.type] || "docs/schemas/recipe/research_recipe.schema.json";
+                } else {
+                  schemaRel = schemaMap[typeName];
+                }
+                if (!schemaRel) continue;
+                var relDir = path.relative(path.dirname(fullPath), nsDir);
+                var schemaPath = path.join(relDir, schemaRel).replace(/\\/g, "/");
+                content["$schema"] = schemaPath;
+                fs.writeFileSync(fullPath, JSON.stringify(content, null, 2), "utf8");
+              } catch (_err) {
+                log2.warn("\u6CE8\u5165 $schema \u5931\u8D25: " + fullPath, _err);
+              }
+            }
+          }
+        }
+        var genMeta = require_meta_generator();
+        var savedPackMeta = config.packMeta;
+        config.packMeta = packMeta;
+        var meta = genMeta.generateMeta(config);
+        config.packMeta = savedPackMeta;
+        fileWriter.writeJSONFile(packRoot, "meta.json", meta);
+        var _emptyDirs = [
+          "textures/hud",
+          "textures/icon",
+          "textures/part",
+          "models/hud",
+          "huds",
+          "animations/hud",
+          "animations/part",
+          "assemblies",
+          "font",
+          "tooltips",
+          "templates",
+          "docs"
+        ];
+        var _nsDir = path.join(packRoot, ns);
+        for (var _ei = 0; _ei < _emptyDirs.length; _ei++) {
+          fileWriter.ensureDir(path.join(_nsDir, _emptyDirs[_ei]));
+        }
+        _writeSchemasFromConstant(path.join(_nsDir, "docs"));
+        try {
+          if (typeof Codecs !== "undefined" && Codecs.bedrock && Project) {
+            var modelDir = path.join(packRoot, ns, "models", "part");
+            var modelName = Project.geometry_name || Project.name || "model";
+            var geoContent = Codecs.bedrock.compile();
+            fileWriter.writeTextFile(modelDir, modelName + ".geo.json", geoContent);
+            log2.info("\u5DF2\u5BFC\u51FA Bedrock \u51E0\u4F55\u4F53\u6A21\u578B: " + modelName + ".geo.json");
+          }
+        } catch (e) {
+          log2.warn("\u65E0\u6CD5\u5BFC\u51FA Bedrock \u51E0\u4F55\u4F53\u6A21\u578B\uFF08\u53EF\u80FD\u975E Bedrock \u683C\u5F0F\uFF09", e);
+        }
+        var genLang = require_lang_generator();
+        var allLangs = genLang.generateAllLangs(config);
+        if (allLangs) {
+          var langDir = path.join(packRoot, ns, "lang");
+          for (var locale in allLangs) {
+            if (allLangs.hasOwnProperty(locale)) {
+              fileWriter.mergeJSONFile(langDir, locale + ".json", allLangs[locale]);
+              stats.langs++;
+            }
+          }
+        }
+        var genParts = require_part_generator();
+        var allParts = genParts.generateAllParts(config);
+        var partsBaseDir = path.join(packRoot, ns, "parts");
+        for (var partId in allParts) {
+          if (allParts.hasOwnProperty(partId)) {
+            var partsTargetDir = _resolveTargetDir(partsBaseDir, partId, isFlat);
+            fileWriter.writeJSONFile(partsTargetDir, partId + ".json", allParts[partId]);
+            stats.parts++;
+          }
+        }
+        if (config.recipes && Object.keys(config.recipes).length > 0) {
+          var recipeDir = path.join(packRoot, ns, "recipe");
+          for (var recipeId in config.recipes) {
+            if (config.recipes.hasOwnProperty(recipeId)) {
+              fileWriter.writeJSONFile(recipeDir, recipeId + ".json", config.recipes[recipeId]);
+            }
+          }
+        }
+        var packDir = config.contentPackPath;
+        if (packDir && fs.existsSync(packDir)) {
+          var genConn = require_connector_generator();
+          var genSub = require_subsystem_generator();
+          var genMat = require_material_generator();
+          stats.connectors = genConn.copyConnectorDefs(packDir, ns, path.join(packRoot, ns, "connectors"), isFlat);
+          stats.subsystems = genSub.copySubsystemDefs(packDir, ns, path.join(packRoot, ns, "subsystems"), isFlat);
+          stats.materials = genMat.copyMaterialDefs(packDir, ns, path.join(packRoot, ns, "materials"));
+          var depSrcDir = path.join(packDir, "dependency");
+          if (fs.existsSync(depSrcDir)) {
+            var depTargetDir = path.join(packRoot, "dependency");
+            fileWriter.ensureDir(depTargetDir);
+            var depFiles = fs.readdirSync(depSrcDir);
+            var j, depFile, depSrcFile, depContent;
+            for (j = 0; j < depFiles.length; j++) {
+              depFile = depFiles[j];
+              if (depFile.indexOf(".json") !== depFile.length - 5) continue;
+              depSrcFile = path.join(depSrcDir, depFile);
+              try {
+                depContent = fs.readFileSync(depSrcFile, "utf8");
+                fs.writeFileSync(path.join(depTargetDir, depFile), depContent, "utf8");
+              } catch (e) {
+                log2.warn("\u590D\u5236\u4F9D\u8D56\u5305\u5B9A\u4E49\u5931\u8D25: " + depSrcFile, e);
+              }
+            }
+          }
+        } else {
+          log2.warn("\u5185\u5BB9\u5305\u76EE\u5F55\u672A\u8BBE\u7F6E\u6216\u4E0D\u5B58\u5728\uFF0C\u8DF3\u8FC7\u8FDE\u63A5\u70B9/\u5B50\u7CFB\u7EDF/\u6750\u6599\u590D\u5236: " + packDir);
+        }
+        _injectSchemaReferences(_nsDir);
+        log2.info("\u5BFC\u51FA\u5B8C\u6210, \u96F6\u4EF6=" + stats.parts + ", \u8FDE\u63A5\u70B9=" + stats.connectors + ", \u5B50\u7CFB\u7EDF=" + stats.subsystems + ", \u6750\u6599=" + stats.materials + ", \u8BED\u8A00=" + stats.langs);
+        return stats;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          executeExport
+        };
+      }
+    }
+  });
+
+  // src/ui/dialogs/pack_common.js
+  var require_pack_common = __commonJS({
+    "src/ui/dialogs/pack_common.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var DEP_TYPES = ["hard", "soft", "override", "conflict"];
+      var DEP_TYPE_LABELS = {
+        hard: "\u786C\u4F9D\u8D56 (\u5FC5\u9700)",
+        soft: "\u8F6F\u4F9D\u8D56 (\u53EF\u9009)",
+        override: "\u8986\u76D6 (\u66FF\u6362)",
+        conflict: "\u51B2\u7A81 (\u4E0D\u517C\u5BB9)"
+      };
+      function isConfigValid(config) {
+        return config && typeof config === "object";
+      }
+      function sanitizeFolderName(name) {
+        if (!name) return "";
+        return String(name).replace(/[<>:"/\\|?*\s]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").substring(0, 64);
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          DEP_TYPES,
+          DEP_TYPE_LABELS,
+          isConfigValid,
+          sanitizeFolderName
+        };
+      }
+    }
+  });
+
+  // src/ui/dialogs/dependency_editor.js
+  var require_dependency_editor = __commonJS({
+    "src/ui/dialogs/dependency_editor.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var fs = __require("fs");
+      var path = __require("path");
+      var content_pack = require_content_pack();
+      var persistence = require_persistence();
+      var { showToast: showToast2 } = require_notify();
+      var { createLogger: createLogger2 } = require_logger();
+      var { DEP_TYPE_LABELS } = require_pack_common();
+      var log2 = createLogger2("DependencyEditor");
+      function _findPackInSiblings(parentDir, packId) {
+        if (!packId || !parentDir || !fs.existsSync(parentDir)) return null;
+        var entries, i, fullPath, stat, meta;
+        try {
+          entries = fs.readdirSync(parentDir);
+        } catch (e) {
+          return null;
+        }
+        for (i = 0; i < entries.length; i++) {
+          fullPath = path.join(parentDir, entries[i]);
+          try {
+            stat = fs.statSync(fullPath);
+          } catch (e) {
+            continue;
+          }
+          if (stat.isDirectory()) {
+            meta = content_pack.readPackMeta(fullPath);
+            if (meta && meta.id === packId) {
+              return fullPath;
+            }
+          }
+          if (stat.isFile() && fullPath.toLowerCase().endsWith(".zip")) {
+            meta = content_pack.readPackMeta(fullPath);
+            if (meta && meta.id === packId) {
+              return fullPath;
+            }
+          }
+        }
+        return null;
+      }
+      function _resolveChainDependencies(directDeps, parentDir) {
+        var indirect = [];
+        var processed = {};
+        var i, j, dep, depMeta, depDeps, depDep, depId, found;
+        for (i = 0; i < directDeps.length; i++) {
+          if (directDeps[i].path) {
+            processed[directDeps[i].path] = true;
+          }
+        }
+        for (i = 0; i < directDeps.length; i++) {
+          dep = directDeps[i];
+          if (!dep.path) continue;
+          depMeta = content_pack.readPackMeta(dep.path);
+          if (!depMeta || !depMeta.dependencies || !depMeta.dependencies.length) continue;
+          depDeps = depMeta.dependencies;
+          for (j = 0; j < depDeps.length; j++) {
+            depDep = depDeps[j];
+            depId = depDep.id || depDep;
+            found = _findPackInSiblings(parentDir, depId);
+            if (found && !processed[found]) {
+              processed[found] = true;
+              indirect.push({
+                path: found,
+                type: depDep.type || "hard",
+                isIndirect: true
+              });
+              log2.info('\u94FE\u5F0F\u89E3\u6790: \u53D1\u73B0\u95F4\u63A5\u4F9D\u8D56 "' + depId + '" \u2192 ' + found);
+            }
+          }
+        }
+        return {
+          direct: directDeps,
+          indirect
+        };
+      }
+      function showDependencyPathEditor(existingDeps, contextParentDir, options, onComplete) {
+        if (typeof options === "function") {
+          onComplete = options;
+          options = {};
+        }
+        var opts = options || {};
+        var defaultKeepAdding = opts.defaultKeepAdding !== false;
+        var selected = existingDeps ? existingDeps.slice() : [];
+        var stepNum = selected.length + 1;
+        function _buildDepListHtml() {
+          if (selected.length === 0) return "\uFF08\u6682\u65E0\u4F9D\u8D56\uFF09";
+          var html = "";
+          for (var i = 0; i < selected.length; i++) {
+            var d = selected[i];
+            html += '<div style="margin:2px 0;padding:4px 8px;background:#333;border-radius:3px;font-size:12px">' + (d.isIndirect ? "\u21B3 \u95F4\u63A5 " : "") + "<code>" + d.path + "</code> \u2014 " + DEP_TYPE_LABELS[d.type] + "</div>";
+          }
+          return html;
+        }
+        function _buildRemoveOptions() {
+          var opts2 = { _none_: "\uFF08\u4E0D\u79FB\u9664\uFF09" };
+          for (var i = 0; i < selected.length; i++) {
+            if (selected[i].isIndirect) continue;
+            var label = i + 1 + ": " + (selected[i].path || "?") + " [" + selected[i].type + "]";
+            if (label.length > 60) label = label.substring(0, 57) + "...";
+            opts2["del_" + i] = label;
+          }
+          return opts2;
+        }
+        function _showOneStep() {
+          try {
+            var formFields = {
+              currentList: {
+                type: "info",
+                text: "<b>\u5DF2\u9009\u62E9\u7684\u4F9D\u8D56\u5305\uFF1A</b><br>" + _buildDepListHtml()
+              }
+            };
+            var directCount = 0;
+            for (var di = 0; di < selected.length; di++) {
+              if (!selected[di].isIndirect) directCount++;
+            }
+            if (directCount > 0) {
+              formFields.removeDep = {
+                type: "select",
+                label: "\u79FB\u9664\u4F9D\u8D56",
+                options: _buildRemoveOptions(),
+                value: "_none_"
+              };
+            }
+            formFields.depDir = {
+              type: "folder",
+              label: "\u9009\u62E9\u5185\u5BB9\u5305\u76EE\u5F55",
+              value: "",
+              description: "\u9009\u62E9\u4E00\u4E2A\u5DF2\u5B58\u5728\u7684 MachineMax \u5185\u5BB9\u5305\u76EE\u5F55\u6216 .zip \u6587\u4EF6\u3002\u53EA\u79FB\u9664\u800C\u4E0D\u6DFB\u52A0\u65F6\u7559\u7A7A\u3002"
+            };
+            formFields.depType = {
+              type: "select",
+              label: "\u4F9D\u8D56\u7C7B\u578B",
+              options: {
+                hard: DEP_TYPE_LABELS.hard,
+                soft: DEP_TYPE_LABELS.soft,
+                override: DEP_TYPE_LABELS.override,
+                conflict: DEP_TYPE_LABELS.conflict
+              },
+              value: "hard"
+            };
+            formFields.keepAdding = {
+              type: "checkbox",
+              label: "\u7EE7\u7EED\u6DFB\u52A0\u66F4\u591A\u4F9D\u8D56",
+              value: defaultKeepAdding
+            };
+            new Dialog({
+              id: "mm_dep_editor_step_" + stepNum,
+              title: "\u914D\u7F6E\u672C\u5730\u4F9D\u8D56\u8DEF\u5F84 (" + stepNum + ")",
+              width: 620,
+              form: formFields,
+              onConfirm: function(formData) {
+                if (formData.removeDep && formData.removeDep !== "_none_") {
+                  var idxStr = formData.removeDep.replace("del_", "");
+                  var rmIdx = parseInt(idxStr, 10);
+                  if (!isNaN(rmIdx) && rmIdx >= 0 && rmIdx < selected.length) {
+                    var removedPath = selected[rmIdx].path;
+                    selected.splice(rmIdx, 1);
+                    log2.info("\u4F9D\u8D56\u8DEF\u5F84\u7F16\u8F91\u5668: \u5DF2\u79FB\u9664 " + removedPath);
+                  }
+                  stepNum++;
+                  this.hide();
+                  _showOneStep();
+                  return;
+                }
+                if (formData.depDir && formData.depDir.trim()) {
+                  var depPath = formData.depDir.trim();
+                  var r = content_pack.openContentPack(depPath);
+                  if (!r.valid) {
+                    showToast2("\u6240\u9009\u76EE\u5F55\u4E0D\u662F\u6709\u6548\u5185\u5BB9\u5305: " + (r.error || "\u7F3A\u5C11 meta.json"), "warning");
+                    stepNum++;
+                    this.hide();
+                    _showOneStep();
+                    return;
+                  }
+                  var dup = false;
+                  for (var k = 0; k < selected.length; k++) {
+                    if (selected[k].path === depPath) {
+                      dup = true;
+                      break;
+                    }
+                  }
+                  if (dup) {
+                    showToast2("\u8BE5\u5185\u5BB9\u5305\u5DF2\u5728\u4F9D\u8D56\u5217\u8868\u4E2D", "info");
+                    stepNum++;
+                    this.hide();
+                    _showOneStep();
+                    return;
+                  }
+                  selected.push({ path: depPath, type: formData.depType || "hard", isIndirect: false });
+                }
+                if (formData.keepAdding) {
+                  stepNum++;
+                  this.hide();
+                  _showOneStep();
+                  return;
+                }
+                this.hide();
+                var resolved = { direct: selected, indirect: [] };
+                if (selected.length > 0 && contextParentDir) {
+                  resolved = _resolveChainDependencies(selected, contextParentDir);
+                  for (var j = 0; j < resolved.indirect.length; j++) {
+                    selected.push(resolved.indirect[j]);
+                  }
+                }
+                if (typeof onComplete === "function") onComplete(resolved);
+              },
+              onCancel: function() {
+                this.hide();
+                var resolved = { direct: selected, indirect: [] };
+                if (selected.length > 0 && contextParentDir) {
+                  resolved = _resolveChainDependencies(selected, contextParentDir);
+                }
+                if (typeof onComplete === "function") onComplete(resolved);
+              }
+            }).show();
+          } catch (e) {
+            log2.error("showDependencyPathEditor \u6B65\u9AA4\u5931\u8D25", e);
+            if (typeof onComplete === "function") onComplete({ direct: [], indirect: [] });
+          }
+        }
+        _showOneStep();
+      }
+      function showManageDependenciesDialog(config, onSave) {
+        var { isConfigValid } = require_pack_common();
+        if (!isConfigValid(config)) {
+          showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+          return;
+        }
+        var deps = config.dependencyPaths || [];
+        var depsHtml = "";
+        var i;
+        if (deps.length === 0) {
+          depsHtml = "\uFF08\u6682\u65E0\u4F9D\u8D56\u5305\uFF09";
+        } else {
+          depsHtml = '<ol style="margin:4px 0;padding-left:20px">';
+          for (i = 0; i < deps.length; i++) {
+            depsHtml += "<li><code>" + deps[i] + "</code></li>";
+          }
+          depsHtml += "</ol>";
+        }
+        try {
+          new Dialog({
+            id: "mm_manage_deps",
+            title: "\u7BA1\u7406\u4F9D\u8D56\u5305",
+            width: 560,
+            form: {
+              currentDepsInfo: {
+                type: "info",
+                text: "<b>\u5F53\u524D\u5DF2\u6DFB\u52A0\u7684\u4F9D\u8D56\u5305\u76EE\u5F55\uFF1A</b>" + depsHtml + '<br><span style="color:#888;font-size:11px">\u63D0\u793A\uFF1A\u4F9D\u8D56\u5305\u662F\u5F53\u524D\u5185\u5BB9\u5305\u5F15\u7528\u7684\u5176\u4ED6\u5185\u5BB9\u5305\uFF0C\u7528\u4E8E\u5171\u4EAB\u96F6\u4EF6\u3001\u5B50\u7CFB\u7EDF\u7B49\u5B9A\u4E49\u3002</span>'
+              },
+              depPathToRemove: {
+                type: "text",
+                label: "\u79FB\u9664\u4F9D\u8D56\u5305\u8DEF\u5F84",
+                value: "",
+                description: "\u8F93\u5165\u8981\u79FB\u9664\u7684\u4F9D\u8D56\u5305\u5B8C\u6574\u76EE\u5F55\u8DEF\u5F84\uFF0C\u7559\u7A7A\u8868\u793A\u4E0D\u79FB\u9664"
+              },
+              newDepPath: {
+                type: "folder",
+                label: "\u6DFB\u52A0\u65B0\u4F9D\u8D56\u5305\u76EE\u5F55",
+                value: "",
+                description: "\u9009\u62E9\u5305\u542B meta.json \u7684\u5185\u5BB9\u5305\u76EE\u5F55\u6216 .zip \u6587\u4EF6\u4F5C\u4E3A\u4F9D\u8D56"
+              }
+            },
+            onConfirm: function(formData) {
+              var changed = false;
+              var removePath, addPath, oldLen;
+              if (formData.depPathToRemove && formData.depPathToRemove.trim()) {
+                removePath = formData.depPathToRemove.trim();
+                oldLen = (config.dependencyPaths || []).length;
+                persistence.removeDependencyPath(config, removePath);
+                if ((config.dependencyPaths || []).length < oldLen) {
+                  changed = true;
+                  log2.info("\u5DF2\u79FB\u9664\u4F9D\u8D56\u5305: " + removePath);
+                } else {
+                  showToast2("\u672A\u627E\u5230\u5339\u914D\u7684\u4F9D\u8D56\u8DEF\u5F84: " + removePath, "warning");
+                  return false;
+                }
+              }
+              if (formData.newDepPath && formData.newDepPath.trim()) {
+                addPath = formData.newDepPath.trim();
+                oldLen = (config.dependencyPaths || []).length;
+                persistence.addDependencyPath(config, addPath);
+                if ((config.dependencyPaths || []).length > oldLen) {
+                  changed = true;
+                  log2.info("\u5DF2\u6DFB\u52A0\u4F9D\u8D56\u5305: " + addPath);
+                } else {
+                  showToast2("\u4F9D\u8D56\u8DEF\u5F84\u5DF2\u5B58\u5728: " + addPath, "info");
+                }
+              }
+              if (changed) {
+                persistence.saveConfig();
+                showToast2("\u4F9D\u8D56\u5305\u5DF2\u66F4\u65B0", "positive");
+                if (typeof onSave === "function") onSave(config);
+              } else if (!formData.depPathToRemove || !formData.depPathToRemove.trim()) {
+                showToast2("\u672A\u505A\u4EFB\u4F55\u66F4\u6539", "info");
+              }
+              this.hide();
+            }
+          }).show();
+        } catch (e) {
+          log2.error("showManageDependenciesDialog \u5931\u8D25", e);
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u4F9D\u8D56\u7BA1\u7406\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          showDependencyPathEditor,
+          showManageDependenciesDialog,
+          _resolveChainDependencies,
+          _findPackInSiblings
+        };
+      }
+    }
+  });
+
+  // src/ui/dialogs/pack_create_dialog.js
+  var require_pack_create_dialog = __commonJS({
+    "src/ui/dialogs/pack_create_dialog.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var path = __require("path");
+      var content_pack = require_content_pack();
+      var persistence = require_persistence();
+      var { showToast: showToast2 } = require_notify();
+      var { createLogger: createLogger2 } = require_logger();
+      var { isConfigValid, sanitizeFolderName } = require_pack_common();
+      var { showDependencyPathEditor } = require_dependency_editor();
+      var log2 = createLogger2("PackCreate");
+      function showCreatePackDialog(config, onSave) {
+        if (!isConfigValid(config)) {
+          showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+          return;
+        }
+        var ns = config.namespace || "machine_max";
+        var defaultPackId = ns + ":" + (Project && Project.name ? Project.name : "content_pack");
+        try {
+          new Dialog({
+            id: "mm_create_pack",
+            title: "\u521B\u5EFA\u65B0\u5185\u5BB9\u5305",
+            width: 520,
+            form: {
+              packId: {
+                type: "text",
+                label: "\u5185\u5BB9\u5305 ID",
+                value: defaultPackId,
+                description: "\u683C\u5F0F: namespace:name\uFF0C\u5982 machine_max:my_pack\u3002\u4EC5\u9650\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001_ - . / :"
+              },
+              packVersion: {
+                type: "text",
+                label: "\u7248\u672C\u53F7",
+                value: "1.0",
+                description: "\u9075\u5FAA SemVer \u683C\u5F0F\uFF0C\u5982 1.0.0"
+              },
+              packName: {
+                type: "text",
+                label: "\u663E\u793A\u540D\u79F0",
+                value: "",
+                description: "\u5185\u5BB9\u5305\u7684\u663E\u793A\u540D\u79F0\uFF08\u652F\u6301 Minecraft \u6587\u672C\u7EC4\u4EF6\u683C\u5F0F\uFF09"
+              },
+              packAuthor: {
+                type: "text",
+                label: "\u4F5C\u8005",
+                value: "",
+                description: "\u5185\u5BB9\u5305\u4F5C\u8005\u540D"
+              },
+              packDescription: {
+                type: "textarea",
+                label: "\u63CF\u8FF0",
+                value: "",
+                height: 70,
+                description: "\u5185\u5BB9\u5305\u63CF\u8FF0\u4FE1\u606F"
+              },
+              packDir: {
+                type: "folder",
+                label: "\u521B\u5EFA\u76EE\u5F55\uFF08\u7236\u76EE\u5F55\uFF09",
+                value: "",
+                description: "\u9009\u62E9\u4E00\u4E2A\u7236\u76EE\u5F55\uFF0C\u5C06\u5728\u5176\u4E2D\u4EE5\u663E\u793A\u540D\u79F0\u521B\u5EFA\u5185\u5BB9\u5305\u5B50\u6587\u4EF6\u5939"
+              },
+              depNote: {
+                type: "info",
+                text: '<span style="color:#888;font-size:11px">\u63D0\u793A\uFF1A\u521B\u5EFA\u5B8C\u6210\u540E\u5C06\u7ACB\u5373\u8FDB\u5165\u4F9D\u8D56\u7BA1\u7406\u754C\u9762\u3002\u57FA\u7840\u5B9A\u4E49\uFF08\u901A\u7528\u8FDE\u63A5\u70B9\u3001\u5B50\u7CFB\u7EDF\u6A21\u677F\u3001\u6750\u6599\uFF09\u5DF2\u5185\u7F6E\uFF0C\u65E0\u9700\u989D\u5916\u4F9D\u8D56\u3002\u5982\u679C\u9700\u8981\u5B98\u65B9\u8F66\u8F86\u96F6\u4EF6\uFF08\u5982 AE86\u3001Jeep \u7B49\u8F66\u578B\uFF09\uFF0C\u53EF\u6DFB\u52A0 machine_max:official \u4F5C\u4E3A\u4F9D\u8D56\u3002</span>'
+              }
+            },
+            onConfirm: function(formData) {
+              if (!formData.packId || !formData.packId.trim()) {
+                showToast2("\u8BF7\u8F93\u5165\u5185\u5BB9\u5305 ID", "error");
+                return false;
+              }
+              if (!formData.packDir || !formData.packDir.trim()) {
+                showToast2("\u8BF7\u9009\u62E9\u521B\u5EFA\u76EE\u5F55", "error");
+                return false;
+              }
+              var packId = formData.packId.trim();
+              var parentDir = formData.packDir.trim();
+              var folderName = sanitizeFolderName(formData.packName || packId.split(":").pop() || "content_pack");
+              var packDirPath = path.join(parentDir, folderName);
+              var meta = {
+                id: packId,
+                version: formData.packVersion || "1.0",
+                author: formData.packAuthor || "",
+                description: formData.packDescription || ""
+              };
+              var result = content_pack.createContentPack(packDirPath, meta);
+              if (!result.success) {
+                showToast2("\u521B\u5EFA\u5931\u8D25: " + (result.error || "\u672A\u77E5\u9519\u8BEF"), "error");
+                return false;
+              }
+              persistence.setPackPath(config, packDirPath);
+              config.namespace = result.namespace || "";
+              config.packMeta = meta;
+              persistence.saveConfig();
+              var namespace = result.namespace || "";
+              var displayName = folderName || packId.split(":").pop() || packId;
+              log2.info("\u5185\u5BB9\u5305\u521B\u5EFA\u6210\u529F", { path: packDirPath, namespace, id: packId, name: displayName });
+              this.hide();
+              showDependencyPathEditor([], parentDir, { defaultKeepAdding: false }, function(resolved) {
+                var directDeps = resolved.direct || [];
+                var indirectDeps = resolved.indirect || [];
+                for (var d = 0; d < directDeps.length; d++) {
+                  persistence.addDependencyPath(config, directDeps[d].path);
+                }
+                for (var k = 0; k < indirectDeps.length; k++) {
+                  persistence.addDependencyPath(config, indirectDeps[k].path);
+                }
+                persistence.saveConfig();
+                var msg = "\u5185\u5BB9\u5305 " + displayName + " \u521B\u5EFA\u6210\u529F";
+                if (directDeps.length > 0) {
+                  msg += "\uFF0C\u5DF2\u6DFB\u52A0 " + directDeps.length + " \u4E2A\u76F4\u63A5\u4F9D\u8D56";
+                }
+                if (indirectDeps.length > 0) {
+                  msg += "\uFF0C\u89E3\u6790 " + indirectDeps.length + " \u4E2A\u95F4\u63A5\u4F9D\u8D56";
+                }
+                showToast2(msg, "positive", 5e3);
+                if (typeof onSave === "function") onSave(config);
+              });
+            }
+          }).show();
+        } catch (e) {
+          log2.error("showCreatePackDialog \u5931\u8D25", e);
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u521B\u5EFA\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          showCreatePackDialog
+        };
+      }
+    }
+  });
+
+  // src/ui/dialogs/pack_open_dialog.js
+  var require_pack_open_dialog = __commonJS({
+    "src/ui/dialogs/pack_open_dialog.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var path = __require("path");
+      var content_pack = require_content_pack();
+      var persistence = require_persistence();
+      var { showToast: showToast2 } = require_notify();
+      var { createLogger: createLogger2 } = require_logger();
+      var { isConfigValid } = require_pack_common();
+      var log2 = createLogger2("PackOpen");
+      function showOpenPackDialog(config, onSave) {
+        if (!isConfigValid(config)) {
+          showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+          return;
+        }
+        try {
+          new Dialog({
+            id: "mm_open_pack",
+            title: "\u6253\u5F00\u5DF2\u6709\u5185\u5BB9\u5305",
+            width: 520,
+            form: {
+              packDir: {
+                type: "folder",
+                label: "\u5185\u5BB9\u5305\u76EE\u5F55",
+                value: "",
+                description: "\u9009\u62E9\u5305\u542B meta.json \u7684\u5185\u5BB9\u5305\u6839\u76EE\u5F55\u6216 .zip \u6587\u4EF6"
+              },
+              depNote: {
+                type: "info",
+                text: '<span style="color:#888;font-size:11px">\u63D0\u793A\uFF1A\u6253\u5F00\u5185\u5BB9\u5305\u540E\uFF0C\u53EF\u5728 MachineMax \u83DC\u5355 \u2192 "\u7F16\u8F91\u5185\u5BB9\u5305\u4FE1\u606F"\u4E2D\u4FEE\u6539\u5143\u6570\u636E\uFF0C\u6216\u901A\u8FC7\u83DC\u5355\u9879\u7BA1\u7406\u672C\u5730\u4F9D\u8D56\u8DEF\u5F84\u3002</span>'
+              }
+            },
+            onConfirm: function(formData) {
+              if (!formData.packDir || !formData.packDir.trim()) {
+                showToast2("\u8BF7\u9009\u62E9\u5185\u5BB9\u5305\u76EE\u5F55", "error");
+                return false;
+              }
+              var dirPath = formData.packDir.trim();
+              var result = content_pack.openContentPack(dirPath);
+              if (!result.valid) {
+                showToast2("\u5185\u5BB9\u5305\u65E0\u6548: " + (result.error || "\u76EE\u5F55\u4E2D\u7F3A\u5C11 meta.json \u6216\u5FC5\u8981\u5B50\u76EE\u5F55"), "error");
+                return false;
+              }
+              var meta = result.meta || {};
+              log2.debug("showOpenPackDialog: \u6253\u5F00\u5185\u5BB9\u5305\u7ED3\u679C", {
+                metaType: typeof meta,
+                metaKeys: Object.keys(meta),
+                authorType: typeof meta.author,
+                descType: typeof meta.description,
+                nameExists: "name" in meta,
+                metaJSON: JSON.stringify(meta).substring(0, 500),
+                namespace: result.namespace
+              });
+              persistence.setPackPath(config, dirPath);
+              config.namespace = result.namespace || "";
+              config.packMeta = meta;
+              log2.debug("showOpenPackDialog: packMeta \u5DF2\u8BBE\u7F6E", {
+                packMetaType: typeof config.packMeta,
+                packMetaKeys: Object.keys(config.packMeta),
+                name: config.packMeta.name,
+                author: config.packMeta.author,
+                description: config.packMeta.description,
+                full: JSON.stringify(config.packMeta).substring(0, 500)
+              });
+              persistence.saveConfig();
+              var displayName = path.basename(dirPath) || result.namespace || "";
+              showToast2("\u5185\u5BB9\u5305 " + displayName + " \u5DF2\u52A0\u8F7D", "positive", 5e3);
+              log2.info("\u5185\u5BB9\u5305\u5DF2\u6253\u5F00", { path: dirPath, namespace: result.namespace, id: meta.id });
+              if (typeof onSave === "function") onSave(config);
+              this.hide();
+            }
+          }).show();
+        } catch (e) {
+          log2.error("showOpenPackDialog \u5931\u8D25", e);
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          showOpenPackDialog
+        };
+      }
+    }
+  });
+
+  // src/ui/dialogs/pack_setup_dialog.js
+  var require_pack_setup_dialog = __commonJS({
+    "src/ui/dialogs/pack_setup_dialog.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { showToast: showToast2 } = require_notify();
+      var { createLogger: createLogger2 } = require_logger();
+      var { isConfigValid } = require_pack_common();
+      var { showCreatePackDialog } = require_pack_create_dialog();
+      var { showOpenPackDialog } = require_pack_open_dialog();
+      var { showDependencyPathEditor, showManageDependenciesDialog } = require_dependency_editor();
+      var log2 = createLogger2("PackSetup");
+      var _packSetupShowing = false;
+      function showPackSetupDialog(config, onSave) {
+        if (_packSetupShowing) {
+          log2.debug("showPackSetupDialog: \u5DF2\u6709\u5411\u5BFC\u7A97\u53E3\u6253\u5F00\u4E2D\uFF0C\u8DF3\u8FC7\u91CD\u590D\u8C03\u7528");
+          return;
+        }
+        if (!isConfigValid(config)) {
+          showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+          return;
+        }
+        _packSetupShowing = true;
+        try {
+          new Dialog({
+            id: "mm_pack_setup",
+            title: "MachineMax \u5185\u5BB9\u5305\u8BBE\u7F6E\u5411\u5BFC",
+            width: 500,
+            form: {
+              infoText: {
+                type: "info",
+                text: "<b>\u5185\u5BB9\u5305\u8BBE\u7F6E\u5411\u5BFC</b><br><br>\u5185\u5BB9\u5305\u662F MachineMax \u5B9A\u4E49\u7684\u7EC4\u7EC7\u5355\u4F4D\uFF0C\u5305\u542B\u96F6\u4EF6\u3001\u5B50\u7CFB\u7EDF\u3001\u8FDE\u63A5\u70B9\u7B49\u914D\u7F6E\u3002\u9996\u6B21\u4F7F\u7528\u8BF7\u5148\u521B\u5EFA\u6216\u6253\u5F00\u4E00\u4E2A\u5185\u5BB9\u5305\u3002"
+              },
+              currentPack: {
+                type: "info",
+                text: config.contentPackPath ? "\u5F53\u524D\u5185\u5BB9\u5305\u76EE\u5F55\uFF1A<br><code>" + config.contentPackPath + "</code>" : "\u5F53\u524D\u672A\u8BBE\u7F6E\u5185\u5BB9\u5305\u3002"
+              },
+              action: {
+                type: "select",
+                label: "\u9009\u62E9\u64CD\u4F5C",
+                options: {
+                  create: "\u521B\u5EFA\u65B0\u5185\u5BB9\u5305",
+                  open: "\u6253\u5F00\u5DF2\u6709\u5185\u5BB9\u5305",
+                  deps: "\u7BA1\u7406\u4F9D\u8D56\u5305"
+                },
+                value: config.contentPackPath ? "open" : "create"
+              }
+            },
+            onConfirm: function(formData) {
+              _packSetupShowing = false;
+              this.hide();
+              try {
+                if (formData.action === "create") {
+                  showCreatePackDialog(config, onSave);
+                } else if (formData.action === "open") {
+                  showOpenPackDialog(config, onSave);
+                } else if (formData.action === "deps") {
+                  showManageDependenciesDialog(config, onSave);
+                }
+              } catch (e) {
+                log2.error("\u8DF3\u8F6C\u5B50\u5BF9\u8BDD\u6846\u5931\u8D25", e);
+                showToast2("\u64CD\u4F5C\u5931\u8D25: " + (e.message || e), "error");
+              }
+            },
+            onCancel: function() {
+              _packSetupShowing = false;
+              this.hide();
+            }
+          }).show();
+        } catch (e) {
+          _packSetupShowing = false;
+          log2.error("showPackSetupDialog \u5931\u8D25", e);
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u8BBE\u7F6E\u5411\u5BFC: " + (e.message || e), "error");
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          showPackSetupDialog,
+          showCreatePackDialog,
+          showOpenPackDialog,
+          showManageDependenciesDialog,
+          showDependencyPathEditor
+        };
+      }
+    }
+  });
+
+  // src/ui/export/export_dialog.js
+  var require_export_dialog = __commonJS({
+    "src/ui/export/export_dialog.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var { getConfig, saveConfig, addDependencyPath } = require_persistence();
+      var { showToast: showToast2 } = require_notify();
+      var { runValidation } = require_mode();
+      var { executeExport } = require_export_pipeline();
+      var path = __require("path");
+      var log2 = createLogger2("ExportDialog");
+      function _getDefaultExportDir(pm) {
+        var path2 = __require("path");
+        var cached = pm && pm.exportDir;
+        if (cached) return cached;
+        var config = getConfig();
+        if (config && config.contentPackPath) {
+          return path2.dirname(config.contentPackPath);
+        }
+        var bbmodelPath = Project && Project.file_path ? Project.file_path : "";
+        if (bbmodelPath) {
+          return path2.join(path2.dirname(bbmodelPath), "machine_max_content_pack");
+        }
+        return "";
+      }
+      function showPackSettingsDialog() {
+        var config = getConfig();
+        if (!config) {
+          showToast2("\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+          return;
+        }
+        var pm = config.packMeta || {};
+        var ns = config.namespace || "machine_max";
+        log2.debug("showPackSettingsDialog: \u6253\u5F00\u8BBE\u7F6E\u5BF9\u8BDD\u6846", {
+          packMetaExists: !!config.packMeta,
+          pmType: typeof pm,
+          pmKeys: Object.keys(pm),
+          nameType: typeof pm.name,
+          name: pm.name,
+          authorType: typeof pm.author,
+          author: pm.author,
+          descType: typeof pm.description,
+          description: pm.description,
+          contentPackPath: config.contentPackPath,
+          fallbackName: config.contentPackPath ? path.basename(config.contentPackPath) : "(\u65E0\u8DEF\u5F84)"
+        });
+        var defaultPackId = pm.id || ns + ":" + (Project ? Project.name || "content_pack" : "content_pack");
+        var defaultExportDir = pm.exportDir || _getDefaultExportDir(pm);
+        try {
+          new Dialog({
+            title: "MachineMax \u5185\u5BB9\u5305\u8BBE\u7F6E",
+            width: 520,
+            form: {
+              packId: {
+                type: "text",
+                label: "\u5305 ID\uFF08ResourceLocation\uFF09",
+                value: defaultPackId,
+                description: "\u683C\u5F0F\u4E3A namespace:pack_name\uFF0C\u5982 machine_max:wine_fox_parts\u3002\u4EC5\u9650\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001_ - . / :"
+              },
+              packVersion: {
+                type: "text",
+                label: "\u7248\u672C\u53F7",
+                value: pm.version || "1.0",
+                description: "\u9075\u5FAA SemVer \u683C\u5F0F\uFF0C\u5982 1.0.0"
+              },
+              packName: {
+                type: "text",
+                label: "\u663E\u793A\u540D\u79F0",
+                value: pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : ""),
+                description: "\u5185\u5BB9\u5305\u7684\u663E\u793A\u540D\u79F0\uFF08\u5B58\u50A8\u5728\u914D\u7F6E\u4E2D\uFF0C\u4E0D\u4F1A\u5199\u5165 meta.json\uFF09"
+              },
+              packAuthor: {
+                type: "text",
+                label: "\u4F5C\u8005",
+                value: pm.author || "",
+                description: "\u5185\u5BB9\u5305\u4F5C\u8005\u540D"
+              },
+              packDescription: {
+                type: "textarea",
+                label: "\u63CF\u8FF0",
+                value: pm.description || "",
+                height: 90,
+                description: "\u5185\u5BB9\u5305\u63CF\u8FF0\u4FE1\u606F"
+              },
+              exportDir: {
+                type: "folder",
+                label: "\u9ED8\u8BA4\u5BFC\u51FA\u76EE\u5F55",
+                value: defaultExportDir,
+                description: "\u70B9\u51FB\u53F3\u4FA7\u6D4F\u89C8\u6309\u94AE\u9009\u62E9\u5185\u5BB9\u5305\u9ED8\u8BA4\u5BFC\u51FA\u76EE\u5F55"
+              },
+              enableAutoPack: {
+                type: "checkbox",
+                label: "\u542F\u7528\u81EA\u52A8\u6253\u5305",
+                value: pm.enable_auto_pack !== false,
+                description: "\u4EC5 Mod \u5F00\u53D1\u9700\u8981\u8003\u8651\u6B64\u9009\u9879\u3002\u82E5\u542F\u7528\uFF0CSpark-Core \u5C06\u5728\u542F\u52A8\u65F6\u81EA\u52A8\u4ECE Mod \u8D44\u6E90\u4E2D\u6253\u5305 .zip\u3002\u4E00\u822C\u5185\u5BB9\u5305\u4F5C\u8005\u4FDD\u6301\u5173\u95ED\u5373\u53EF\u3002"
+              },
+              flatExport: {
+                type: "checkbox",
+                label: "\u6241\u5E73\u5316\u5BFC\u51FA",
+                value: pm.flat_export !== false,
+                description: "\u82E5\u542F\u7528\uFF0C\u96F6\u4EF6/\u5B50\u7CFB\u7EDF/\u8FDE\u63A5\u70B9\u5C06\u6241\u5E73\u5B58\u653E\uFF1B\u5173\u95ED\u5219\u6309\u6A21\u578B\u540D\u5206\u5165\u5B50\u6587\u4EF6\u5939"
+              },
+              manageDeps: {
+                type: "checkbox",
+                label: "\u4FDD\u5B58\u540E\u7BA1\u7406\u4F9D\u8D56\u5305",
+                value: false,
+                description: "\u4FDD\u5B58\u5143\u6570\u636E\u540E\u7ACB\u5373\u8FDB\u5165\u4F9D\u8D56\u7BA1\u7406\u754C\u9762\uFF0C\u53EF\u6DFB\u52A0/\u79FB\u9664\u672C\u5730\u8DEF\u5F84\u4F9D\u8D56\u53CA\u94FE\u5F0F\u89E3\u6790\u3002"
+              }
+            },
+            onConfirm: function(formData) {
+              if (!config.packMeta) config.packMeta = {};
+              var packMeta = config.packMeta;
+              packMeta.id = formData.packId || defaultPackId;
+              packMeta.version = formData.packVersion || "1.0";
+              packMeta.name = formData.packName || "";
+              packMeta.author = formData.packAuthor || "";
+              packMeta.description = formData.packDescription || "";
+              packMeta.exportDir = formData.exportDir || defaultExportDir;
+              packMeta.enable_auto_pack = !!formData.enableAutoPack;
+              packMeta.flat_export = !!formData.flatExport;
+              saveConfig();
+              this.hide();
+              if (formData.manageDeps) {
+                var existing = (config.dependencyPaths || []).map(function(p) {
+                  return { path: p, type: "hard" };
+                });
+                var pdir = config.contentPackPath ? __require("path").dirname(config.contentPackPath) : "";
+                var pd = require_pack_setup_dialog();
+                pd.showDependencyPathEditor(existing, pdir, function(resolved) {
+                  config.dependencyPaths = [];
+                  var directDeps = resolved.direct || [];
+                  var indirectDeps = resolved.indirect || [];
+                  for (var d = 0; d < directDeps.length; d++) {
+                    addDependencyPath(config, directDeps[d].path);
+                  }
+                  for (var k = 0; k < indirectDeps.length; k++) {
+                    addDependencyPath(config, indirectDeps[k].path);
+                  }
+                  saveConfig();
+                  showToast2("\u5185\u5BB9\u5305\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\uFF0C\u4F9D\u8D56\u5DF2\u66F4\u65B0", "positive");
+                });
+              } else {
+                showToast2("\u5185\u5BB9\u5305\u8BBE\u7F6E\u5DF2\u4FDD\u5B58", "positive");
+              }
+              log2.info("\u5185\u5BB9\u5305\u8BBE\u7F6E\u5DF2\u66F4\u65B0", {
+                packId: packMeta.id,
+                version: packMeta.version,
+                name: packMeta.name,
+                exportDir: packMeta.exportDir
+              });
+            }
+          }).show();
+        } catch (e) {
+          log2.error("\u5185\u5BB9\u5305\u8BBE\u7F6E Dialog \u5931\u8D25", e);
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u8BBE\u7F6E\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
+        }
+      }
+      function _sanitizeFolderName(name) {
+        if (!name) return "";
+        return name.replace(/[<>:"/\\|?*\s]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").substring(0, 64);
+      }
+      function _parseDependencyText(text) {
+        if (!text || !text.trim()) return [];
+        var validTypes = ["hard", "soft", "override", "conflict"];
+        return text.split("\n").map(function(line) {
+          return line.trim();
+        }).filter(function(line) {
+          return line.length > 0;
+        }).map(function(line) {
+          var parts = line.split(/\s+/);
+          var depId = parts[0];
+          var depType = parts[1] || "hard";
+          if (!validTypes.includes(depType)) depType = "hard";
+          return { id: depId, type: depType };
+        });
+      }
+      function showExportDialog() {
+        var config = getConfig();
+        if (!config) {
+          showToast2("\u6CA1\u6709\u53EF\u5BFC\u51FA\u7684\u914D\u7F6E\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+          return;
+        }
+        var parts = config.parts || {};
+        var partCount = Object.keys(parts).length;
+        if (partCount === 0) {
+          showToast2("\u6CA1\u6709\u5B9A\u4E49\u4EFB\u4F55\u96F6\u4EF6\uFF0C\u8BF7\u5148\u65B0\u5EFA\u96F6\u4EF6", "warning");
+          return;
+        }
+        var pm = config.packMeta || {};
+        var ns = config.namespace || "machine_max";
+        log2.debug("showExportDialog: \u6253\u5F00\u5BFC\u51FA\u5BF9\u8BDD\u6846", {
+          packMetaExists: !!config.packMeta,
+          pmType: typeof pm,
+          pmKeys: Object.keys(pm),
+          nameType: typeof pm.name,
+          name: pm.name,
+          authorType: typeof pm.author,
+          author: pm.author,
+          descType: typeof pm.description,
+          description: pm.description,
+          contentPackPath: config.contentPackPath,
+          fallbackName: config.contentPackPath ? path.basename(config.contentPackPath) : "(\u65E0\u8DEF\u5F84)"
+        });
+        var defaultPackId = pm.id || ns + ":" + (Project ? Project.name || "content_pack" : "content_pack");
+        var defaultExportDir = pm.exportDir || _getDefaultExportDir(pm);
+        var errors = runValidation(config);
+        var errorText = "";
+        if (errors.length > 0) {
+          errorText = "<br>\u6821\u9A8C\u53D1\u73B0 " + errors.length + " \u4E2A\u95EE\u9898:<br>" + errors.map(function(e) {
+            return "&nbsp;&nbsp;\u2022 " + e;
+          }).join("<br>");
+        }
+        var statLines = [
+          "\u6A21\u578B: " + (Project ? Project.name : "\u672A\u547D\u540D"),
+          "\u5185\u5BB9\u5305\u8DEF\u5F84: " + (config.contentPackPath || "\u672A\u8BBE\u7F6E"),
+          "\u96F6\u4EF6: " + partCount
+        ];
+        try {
+          new Dialog({
+            title: "\u5BFC\u51FA MachineMax \u5185\u5BB9\u5305",
+            width: 580,
+            form: {
+              validationInfo: {
+                type: "info",
+                text: (errorText || "\u6821\u9A8C\u901A\u8FC7\uFF0C\u672A\u53D1\u73B0\u95EE\u9898\u3002") + "<br><br>" + statLines.join("<br>")
+              },
+              exportDir: {
+                type: "folder",
+                label: "\u5BFC\u51FA\u76EE\u5F55",
+                value: defaultExportDir,
+                description: "\u70B9\u51FB\u53F3\u4FA7\u6D4F\u89C8\u6309\u94AE\u9009\u62E9\u5185\u5BB9\u5305\u5BFC\u51FA\u76EE\u5F55"
+              },
+              packId: {
+                type: "text",
+                label: "\u5305 ID",
+                value: defaultPackId,
+                description: "\u683C\u5F0F namespace:pack_name\uFF0C\u5BFC\u51FA\u4E3A meta.json \u7684 id \u5B57\u6BB5"
+              },
+              packVersion: {
+                type: "text",
+                label: "\u7248\u672C\u53F7",
+                value: pm.version || "1.0"
+              },
+              packName: {
+                type: "text",
+                label: "\u663E\u793A\u540D\u79F0",
+                value: pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : "")
+              },
+              packAuthor: {
+                type: "text",
+                label: "\u4F5C\u8005",
+                value: pm.author || ""
+              },
+              packDescription: {
+                type: "textarea",
+                label: "\u63CF\u8FF0",
+                value: pm.description || "",
+                height: 90
+              },
+              flatExport: {
+                type: "checkbox",
+                label: "\u6241\u5E73\u5316\u5BFC\u51FA",
+                value: pm.flat_export !== false,
+                description: "\u82E5\u542F\u7528\uFF0C\u96F6\u4EF6/\u5B50\u7CFB\u7EDF/\u8FDE\u63A5\u70B9\u5C06\u6241\u5E73\u5B58\u653E\uFF1B\u5173\u95ED\u5219\u6309\u6A21\u578B\u540D\u5206\u5165\u5B50\u6587\u4EF6\u5939"
+              },
+              dependencies: {
+                type: "textarea",
+                label: "\u4F9D\u8D56\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09",
+                value: (function() {
+                  var deps = pm.dependencies || [];
+                  var lines = deps.map(function(d) {
+                    return typeof d === "string" ? d : d.id + " " + (d.type || "hard");
+                  });
+                  var hasBuiltin = false;
+                  for (var di = 0; di < deps.length; di++) {
+                    var did = typeof deps[di] === "string" ? deps[di] : deps[di].id;
+                    if (did === "machine_max:builtin") {
+                      hasBuiltin = true;
+                      break;
+                    }
+                  }
+                  if (!hasBuiltin && pm.id !== "machine_max:builtin") {
+                    lines.unshift("machine_max:builtin hard");
+                  }
+                  return lines.join("\n");
+                })(),
+                height: 100,
+                description: '\u683C\u5F0F\uFF1A\u6BCF\u884C "\u4F9D\u8D56ID \u7C7B\u578B"\u3002\u7C7B\u578B: hard(\u5FC5\u9700), soft(\u53EF\u9009), override(\u8986\u76D6), conflict(\u51B2\u7A81)\n\u793A\u4F8B: machine_max:builtin hard'
+              }
+            },
+            onConfirm: function(formData) {
+              var exportDir = formData.exportDir || defaultExportDir;
+              if (!exportDir) {
+                showToast2("\u8BF7\u5148\u9009\u62E9\u5BFC\u51FA\u76EE\u5F55", "warning");
+                return;
+              }
+              var packFolderName = _sanitizeFolderName(formData.packName) || _sanitizeFolderName(pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : "")) || (Project ? Project.name : "content_pack");
+              var overriddenMeta = {
+                id: formData.packId || defaultPackId,
+                version: formData.packVersion || "1.0",
+                name: formData.packName || pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : ""),
+                author: formData.packAuthor || pm.author || "",
+                description: formData.packDescription || pm.description || "",
+                enable_auto_pack: pm.enable_auto_pack !== false,
+                exportDir,
+                dependencies: _parseDependencyText(formData.dependencies || ""),
+                flat_export: !!formData.flatExport
+              };
+              if (!config.packMeta) config.packMeta = {};
+              Object.assign(config.packMeta, overriddenMeta);
+              try {
+                var stats = executeExport(config, overriddenMeta, exportDir, packFolderName);
+                saveConfig();
+                showToast2(
+                  "\u5BFC\u51FA\u6210\u529F\uFF01\n\u96F6\u4EF6: " + stats.parts + ", \u8FDE\u63A5\u70B9: " + stats.connectors + ", \u5B50\u7CFB\u7EDF: " + stats.subsystems + ", \u6750\u6599: " + stats.materials + ", \u8BED\u8A00: " + stats.langs,
+                  "positive",
+                  6e3
+                );
+                log2.info("MachineMax \u83DC\u5355: \u5BFC\u51FA\u5B8C\u6210", stats);
+              } catch (e) {
+                log2.error("\u5BFC\u51FA\u5931\u8D25", e);
+                showToast2("\u5BFC\u51FA\u5931\u8D25: " + (e.message || e), "error", 5e3);
+              }
+              this.hide();
+            }
+          }).show();
+        } catch (e) {
+          log2.error("\u5BFC\u51FA Dialog \u521B\u5EFA\u5931\u8D25", e);
+          showToast2("\u65E0\u6CD5\u521B\u5EFA\u5BFC\u51FA\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          showExportDialog,
+          showPackSettingsDialog
+        };
       }
     }
   });
@@ -10913,587 +13143,6 @@
     }
   });
 
-  // src/ui/dialogs/pack_setup_dialog.js
-  var require_pack_setup_dialog = __commonJS({
-    "src/ui/dialogs/pack_setup_dialog.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var fs = __require("fs");
-      var path = __require("path");
-      var content_pack = require_content_pack();
-      var persistence = require_persistence();
-      var { showToast: showToast2 } = require_notify();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("PackSetup");
-      var DEP_TYPE_LABELS = {
-        hard: "\u786C\u4F9D\u8D56 (\u5FC5\u9700)",
-        soft: "\u8F6F\u4F9D\u8D56 (\u53EF\u9009)",
-        override: "\u8986\u76D6 (\u66FF\u6362)",
-        conflict: "\u51B2\u7A81 (\u4E0D\u517C\u5BB9)"
-      };
-      function _isConfigValid(config) {
-        return config && typeof config === "object";
-      }
-      function _sanitizeFolderName(name) {
-        if (!name) return "";
-        return String(name).replace(/[<>:"/\\|?*\s]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").substring(0, 64);
-      }
-      function _findPackInSiblings(parentDir, packId) {
-        if (!packId || !parentDir || !fs.existsSync(parentDir)) return null;
-        var entries, i, fullPath, stat, meta;
-        try {
-          entries = fs.readdirSync(parentDir);
-        } catch (e) {
-          return null;
-        }
-        for (i = 0; i < entries.length; i++) {
-          fullPath = path.join(parentDir, entries[i]);
-          try {
-            stat = fs.statSync(fullPath);
-          } catch (e) {
-            continue;
-          }
-          if (stat.isDirectory()) {
-            meta = content_pack.readPackMeta(fullPath);
-            if (meta && meta.id === packId) {
-              return fullPath;
-            }
-          }
-          if (stat.isFile() && fullPath.toLowerCase().endsWith(".zip")) {
-            meta = content_pack.readPackMeta(fullPath);
-            if (meta && meta.id === packId) {
-              return fullPath;
-            }
-          }
-        }
-        return null;
-      }
-      function _resolveChainDependencies(directDeps, parentDir) {
-        var indirect = [];
-        var processed = {};
-        var i, j, dep, depMeta, depDeps, depDep, depId, found;
-        for (i = 0; i < directDeps.length; i++) {
-          if (directDeps[i].path) {
-            processed[directDeps[i].path] = true;
-          }
-        }
-        for (i = 0; i < directDeps.length; i++) {
-          dep = directDeps[i];
-          if (!dep.path) continue;
-          depMeta = content_pack.readPackMeta(dep.path);
-          if (!depMeta || !depMeta.dependencies || !depMeta.dependencies.length) continue;
-          depDeps = depMeta.dependencies;
-          for (j = 0; j < depDeps.length; j++) {
-            depDep = depDeps[j];
-            depId = depDep.id || depDep;
-            found = _findPackInSiblings(parentDir, depId);
-            if (found && !processed[found]) {
-              processed[found] = true;
-              indirect.push({
-                path: found,
-                type: depDep.type || "hard",
-                isIndirect: true
-              });
-              log2.info('\u94FE\u5F0F\u89E3\u6790: \u53D1\u73B0\u95F4\u63A5\u4F9D\u8D56 "' + depId + '" \u2192 ' + found);
-            }
-          }
-        }
-        return {
-          direct: directDeps,
-          indirect
-        };
-      }
-      function _showDependencyPathEditor(existingDeps, contextParentDir, options, onComplete) {
-        if (typeof options === "function") {
-          onComplete = options;
-          options = {};
-        }
-        var opts = options || {};
-        var defaultKeepAdding = opts.defaultKeepAdding !== false;
-        var selected = existingDeps ? existingDeps.slice() : [];
-        var stepNum = selected.length + 1;
-        function _buildDepListHtml() {
-          if (selected.length === 0) return "\uFF08\u6682\u65E0\u4F9D\u8D56\uFF09";
-          var html = "";
-          for (var i = 0; i < selected.length; i++) {
-            var d = selected[i];
-            html += '<div style="margin:2px 0;padding:4px 8px;background:#333;border-radius:3px;font-size:12px">' + (d.isIndirect ? "\u21B3 \u95F4\u63A5 " : "") + "<code>" + d.path + "</code> \u2014 " + DEP_TYPE_LABELS[d.type] + "</div>";
-          }
-          return html;
-        }
-        function _buildRemoveOptions() {
-          var opts2 = { _none_: "\uFF08\u4E0D\u79FB\u9664\uFF09" };
-          for (var i = 0; i < selected.length; i++) {
-            if (selected[i].isIndirect) continue;
-            var label = i + 1 + ": " + (selected[i].path || "?") + " [" + selected[i].type + "]";
-            if (label.length > 60) label = label.substring(0, 57) + "...";
-            opts2["del_" + i] = label;
-          }
-          return opts2;
-        }
-        function _showOneStep() {
-          try {
-            var formFields = {
-              currentList: {
-                type: "info",
-                text: "<b>\u5DF2\u9009\u62E9\u7684\u4F9D\u8D56\u5305\uFF1A</b><br>" + _buildDepListHtml()
-              }
-            };
-            var directCount = 0;
-            for (var di = 0; di < selected.length; di++) {
-              if (!selected[di].isIndirect) directCount++;
-            }
-            if (directCount > 0) {
-              formFields.removeDep = {
-                type: "select",
-                label: "\u79FB\u9664\u4F9D\u8D56",
-                options: _buildRemoveOptions(),
-                value: "_none_"
-              };
-            }
-            formFields.depDir = {
-              type: "folder",
-              label: "\u9009\u62E9\u5185\u5BB9\u5305\u76EE\u5F55",
-              value: "",
-              description: "\u9009\u62E9\u4E00\u4E2A\u5DF2\u5B58\u5728\u7684 MachineMax \u5185\u5BB9\u5305\u76EE\u5F55\u6216 .zip \u6587\u4EF6\u3002\u53EA\u79FB\u9664\u800C\u4E0D\u6DFB\u52A0\u65F6\u7559\u7A7A\u3002"
-            };
-            formFields.depType = {
-              type: "select",
-              label: "\u4F9D\u8D56\u7C7B\u578B",
-              options: {
-                hard: DEP_TYPE_LABELS.hard,
-                soft: DEP_TYPE_LABELS.soft,
-                override: DEP_TYPE_LABELS.override,
-                conflict: DEP_TYPE_LABELS.conflict
-              },
-              value: "hard"
-            };
-            formFields.keepAdding = {
-              type: "checkbox",
-              label: "\u7EE7\u7EED\u6DFB\u52A0\u66F4\u591A\u4F9D\u8D56",
-              value: defaultKeepAdding
-            };
-            new Dialog({
-              id: "mm_dep_editor_step_" + stepNum,
-              title: "\u914D\u7F6E\u672C\u5730\u4F9D\u8D56\u8DEF\u5F84 (" + stepNum + ")",
-              width: 620,
-              form: formFields,
-              onConfirm: function(formData) {
-                if (formData.removeDep && formData.removeDep !== "_none_") {
-                  var idxStr = formData.removeDep.replace("del_", "");
-                  var rmIdx = parseInt(idxStr, 10);
-                  if (!isNaN(rmIdx) && rmIdx >= 0 && rmIdx < selected.length) {
-                    var removedPath = selected[rmIdx].path;
-                    selected.splice(rmIdx, 1);
-                    log2.info("\u4F9D\u8D56\u8DEF\u5F84\u7F16\u8F91\u5668: \u5DF2\u79FB\u9664 " + removedPath);
-                  }
-                  stepNum++;
-                  this.hide();
-                  _showOneStep();
-                  return;
-                }
-                if (formData.depDir && formData.depDir.trim()) {
-                  var depPath = formData.depDir.trim();
-                  var r = content_pack.openContentPack(depPath);
-                  if (!r.valid) {
-                    showToast2("\u6240\u9009\u76EE\u5F55\u4E0D\u662F\u6709\u6548\u5185\u5BB9\u5305: " + (r.error || "\u7F3A\u5C11 meta.json"), "warning");
-                    stepNum++;
-                    this.hide();
-                    _showOneStep();
-                    return;
-                  }
-                  var dup = false;
-                  for (var k = 0; k < selected.length; k++) {
-                    if (selected[k].path === depPath) {
-                      dup = true;
-                      break;
-                    }
-                  }
-                  if (dup) {
-                    showToast2("\u8BE5\u5185\u5BB9\u5305\u5DF2\u5728\u4F9D\u8D56\u5217\u8868\u4E2D", "info");
-                    stepNum++;
-                    this.hide();
-                    _showOneStep();
-                    return;
-                  }
-                  selected.push({ path: depPath, type: formData.depType || "hard", isIndirect: false });
-                }
-                if (formData.keepAdding) {
-                  stepNum++;
-                  this.hide();
-                  _showOneStep();
-                  return;
-                }
-                this.hide();
-                var resolved = { direct: selected, indirect: [] };
-                if (selected.length > 0 && contextParentDir) {
-                  resolved = _resolveChainDependencies(selected, contextParentDir);
-                  for (var j = 0; j < resolved.indirect.length; j++) {
-                    selected.push(resolved.indirect[j]);
-                  }
-                }
-                if (typeof onComplete === "function") onComplete(resolved);
-              },
-              onCancel: function() {
-                this.hide();
-                var resolved = { direct: selected, indirect: [] };
-                if (selected.length > 0 && contextParentDir) {
-                  resolved = _resolveChainDependencies(selected, contextParentDir);
-                }
-                if (typeof onComplete === "function") onComplete(resolved);
-              }
-            }).show();
-          } catch (e) {
-            log2.error("_showDependencyPathEditor \u6B65\u9AA4\u5931\u8D25", e);
-            if (typeof onComplete === "function") onComplete({ direct: [], indirect: [] });
-          }
-        }
-        _showOneStep();
-      }
-      function showCreatePackDialog(config, onSave) {
-        if (!_isConfigValid(config)) {
-          showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
-          return;
-        }
-        var ns = config.namespace || "machine_max";
-        var defaultPackId = ns + ":" + (Project && Project.name ? Project.name : "content_pack");
-        try {
-          new Dialog({
-            id: "mm_create_pack",
-            title: "\u521B\u5EFA\u65B0\u5185\u5BB9\u5305",
-            width: 520,
-            form: {
-              packId: {
-                type: "text",
-                label: "\u5185\u5BB9\u5305 ID",
-                value: defaultPackId,
-                description: "\u683C\u5F0F: namespace:name\uFF0C\u5982 machine_max:my_pack\u3002\u4EC5\u9650\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001_ - . / :"
-              },
-              packVersion: {
-                type: "text",
-                label: "\u7248\u672C\u53F7",
-                value: "1.0",
-                description: "\u9075\u5FAA SemVer \u683C\u5F0F\uFF0C\u5982 1.0.0"
-              },
-              packName: {
-                type: "text",
-                label: "\u663E\u793A\u540D\u79F0",
-                value: "",
-                description: "\u5185\u5BB9\u5305\u7684\u663E\u793A\u540D\u79F0\uFF08\u652F\u6301 Minecraft \u6587\u672C\u7EC4\u4EF6\u683C\u5F0F\uFF09"
-              },
-              packAuthor: {
-                type: "text",
-                label: "\u4F5C\u8005",
-                value: "",
-                description: "\u5185\u5BB9\u5305\u4F5C\u8005\u540D"
-              },
-              packDescription: {
-                type: "textarea",
-                label: "\u63CF\u8FF0",
-                value: "",
-                height: 70,
-                description: "\u5185\u5BB9\u5305\u63CF\u8FF0\u4FE1\u606F"
-              },
-              packDir: {
-                type: "folder",
-                label: "\u521B\u5EFA\u76EE\u5F55\uFF08\u7236\u76EE\u5F55\uFF09",
-                value: "",
-                description: "\u9009\u62E9\u4E00\u4E2A\u7236\u76EE\u5F55\uFF0C\u5C06\u5728\u5176\u4E2D\u4EE5\u663E\u793A\u540D\u79F0\u521B\u5EFA\u5185\u5BB9\u5305\u5B50\u6587\u4EF6\u5939"
-              },
-              depNote: {
-                type: "info",
-                text: '<span style="color:#888;font-size:11px">\u63D0\u793A\uFF1A\u521B\u5EFA\u5B8C\u6210\u540E\u5C06\u7ACB\u5373\u8FDB\u5165\u4F9D\u8D56\u7BA1\u7406\u754C\u9762\u3002\u57FA\u7840\u5B9A\u4E49\uFF08\u901A\u7528\u8FDE\u63A5\u70B9\u3001\u5B50\u7CFB\u7EDF\u6A21\u677F\u3001\u6750\u6599\uFF09\u5DF2\u5185\u7F6E\uFF0C\u65E0\u9700\u989D\u5916\u4F9D\u8D56\u3002\u5982\u679C\u9700\u8981\u5B98\u65B9\u8F66\u8F86\u96F6\u4EF6\uFF08\u5982 AE86\u3001Jeep \u7B49\u8F66\u578B\uFF09\uFF0C\u53EF\u6DFB\u52A0 machine_max:official \u4F5C\u4E3A\u4F9D\u8D56\u3002</span>'
-              }
-            },
-            onConfirm: function(formData) {
-              if (!formData.packId || !formData.packId.trim()) {
-                showToast2("\u8BF7\u8F93\u5165\u5185\u5BB9\u5305 ID", "error");
-                return false;
-              }
-              if (!formData.packDir || !formData.packDir.trim()) {
-                showToast2("\u8BF7\u9009\u62E9\u521B\u5EFA\u76EE\u5F55", "error");
-                return false;
-              }
-              var packId = formData.packId.trim();
-              var parentDir = formData.packDir.trim();
-              var folderName = _sanitizeFolderName(formData.packName || packId.split(":").pop() || "content_pack");
-              var packDirPath = path.join(parentDir, folderName);
-              var meta = {
-                id: packId,
-                version: formData.packVersion || "1.0",
-                author: formData.packAuthor || "",
-                description: formData.packDescription || ""
-              };
-              var result = content_pack.createContentPack(packDirPath, meta);
-              if (!result.success) {
-                showToast2("\u521B\u5EFA\u5931\u8D25: " + (result.error || "\u672A\u77E5\u9519\u8BEF"), "error");
-                return false;
-              }
-              persistence.setPackPath(config, packDirPath);
-              config.namespace = result.namespace || "";
-              config.packMeta = meta;
-              persistence.saveConfig();
-              var namespace = result.namespace || "";
-              var displayName = folderName || packId.split(":").pop() || packId;
-              log2.info("\u5185\u5BB9\u5305\u521B\u5EFA\u6210\u529F", { path: packDirPath, namespace, id: packId, name: displayName });
-              this.hide();
-              _showDependencyPathEditor([], parentDir, { defaultKeepAdding: false }, function(resolved) {
-                var directDeps = resolved.direct || [];
-                var indirectDeps = resolved.indirect || [];
-                for (var d = 0; d < directDeps.length; d++) {
-                  persistence.addDependencyPath(config, directDeps[d].path);
-                }
-                for (var k = 0; k < indirectDeps.length; k++) {
-                  persistence.addDependencyPath(config, indirectDeps[k].path);
-                }
-                persistence.saveConfig();
-                var msg = "\u5185\u5BB9\u5305 " + displayName + " \u521B\u5EFA\u6210\u529F";
-                if (directDeps.length > 0) {
-                  msg += "\uFF0C\u5DF2\u6DFB\u52A0 " + directDeps.length + " \u4E2A\u76F4\u63A5\u4F9D\u8D56";
-                }
-                if (indirectDeps.length > 0) {
-                  msg += "\uFF0C\u89E3\u6790 " + indirectDeps.length + " \u4E2A\u95F4\u63A5\u4F9D\u8D56";
-                }
-                showToast2(msg, "positive", 5e3);
-                if (typeof onSave === "function") onSave(config);
-              });
-            }
-          }).show();
-        } catch (e) {
-          log2.error("showCreatePackDialog \u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u521B\u5EFA\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
-        }
-      }
-      function showOpenPackDialog(config, onSave) {
-        if (!_isConfigValid(config)) {
-          showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
-          return;
-        }
-        try {
-          new Dialog({
-            id: "mm_open_pack",
-            title: "\u6253\u5F00\u5DF2\u6709\u5185\u5BB9\u5305",
-            width: 520,
-            form: {
-              packDir: {
-                type: "folder",
-                label: "\u5185\u5BB9\u5305\u76EE\u5F55",
-                value: "",
-                description: "\u9009\u62E9\u5305\u542B meta.json \u7684\u5185\u5BB9\u5305\u6839\u76EE\u5F55\u6216 .zip \u6587\u4EF6"
-              },
-              depNote: {
-                type: "info",
-                text: '<span style="color:#888;font-size:11px">\u63D0\u793A\uFF1A\u6253\u5F00\u5185\u5BB9\u5305\u540E\uFF0C\u53EF\u5728 MachineMax \u83DC\u5355 \u2192 "\u7F16\u8F91\u5185\u5BB9\u5305\u4FE1\u606F"\u4E2D\u4FEE\u6539\u5143\u6570\u636E\uFF0C\u6216\u901A\u8FC7\u83DC\u5355\u9879\u7BA1\u7406\u672C\u5730\u4F9D\u8D56\u8DEF\u5F84\u3002</span>'
-              }
-            },
-            onConfirm: function(formData) {
-              if (!formData.packDir || !formData.packDir.trim()) {
-                showToast2("\u8BF7\u9009\u62E9\u5185\u5BB9\u5305\u76EE\u5F55", "error");
-                return false;
-              }
-              var dirPath = formData.packDir.trim();
-              var result = content_pack.openContentPack(dirPath);
-              if (!result.valid) {
-                showToast2("\u5185\u5BB9\u5305\u65E0\u6548: " + (result.error || "\u76EE\u5F55\u4E2D\u7F3A\u5C11 meta.json \u6216\u5FC5\u8981\u5B50\u76EE\u5F55"), "error");
-                return false;
-              }
-              var meta = result.meta || {};
-              log2.debug("showOpenPackDialog: \u6253\u5F00\u5185\u5BB9\u5305\u7ED3\u679C", {
-                metaType: typeof meta,
-                metaKeys: Object.keys(meta),
-                authorType: typeof meta.author,
-                descType: typeof meta.description,
-                nameExists: "name" in meta,
-                metaJSON: JSON.stringify(meta).substring(0, 500),
-                namespace: result.namespace
-              });
-              persistence.setPackPath(config, dirPath);
-              config.namespace = result.namespace || "";
-              config.packMeta = meta;
-              log2.debug("showOpenPackDialog: packMeta \u5DF2\u8BBE\u7F6E", {
-                packMetaType: typeof config.packMeta,
-                packMetaKeys: Object.keys(config.packMeta),
-                name: config.packMeta.name,
-                author: config.packMeta.author,
-                description: config.packMeta.description,
-                full: JSON.stringify(config.packMeta).substring(0, 500)
-              });
-              persistence.saveConfig();
-              var displayName = path.basename(dirPath) || result.namespace || "";
-              showToast2("\u5185\u5BB9\u5305 " + displayName + " \u5DF2\u52A0\u8F7D", "positive", 5e3);
-              log2.info("\u5185\u5BB9\u5305\u5DF2\u6253\u5F00", { path: dirPath, namespace: result.namespace, id: meta.id });
-              if (typeof onSave === "function") onSave(config);
-              this.hide();
-            }
-          }).show();
-        } catch (e) {
-          log2.error("showOpenPackDialog \u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
-        }
-      }
-      function showManageDependenciesDialog(config, onSave) {
-        if (!_isConfigValid(config)) {
-          showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
-          return;
-        }
-        var deps = config.dependencyPaths || [];
-        var depsHtml = "";
-        var i;
-        if (deps.length === 0) {
-          depsHtml = "\uFF08\u6682\u65E0\u4F9D\u8D56\u5305\uFF09";
-        } else {
-          depsHtml = '<ol style="margin:4px 0;padding-left:20px">';
-          for (i = 0; i < deps.length; i++) {
-            depsHtml += "<li><code>" + deps[i] + "</code></li>";
-          }
-          depsHtml += "</ol>";
-        }
-        try {
-          new Dialog({
-            id: "mm_manage_deps",
-            title: "\u7BA1\u7406\u4F9D\u8D56\u5305",
-            width: 560,
-            form: {
-              currentDepsInfo: {
-                type: "info",
-                text: "<b>\u5F53\u524D\u5DF2\u6DFB\u52A0\u7684\u4F9D\u8D56\u5305\u76EE\u5F55\uFF1A</b>" + depsHtml + '<br><span style="color:#888;font-size:11px">\u63D0\u793A\uFF1A\u4F9D\u8D56\u5305\u662F\u5F53\u524D\u5185\u5BB9\u5305\u5F15\u7528\u7684\u5176\u4ED6\u5185\u5BB9\u5305\uFF0C\u7528\u4E8E\u5171\u4EAB\u96F6\u4EF6\u3001\u5B50\u7CFB\u7EDF\u7B49\u5B9A\u4E49\u3002</span>'
-              },
-              depPathToRemove: {
-                type: "text",
-                label: "\u79FB\u9664\u4F9D\u8D56\u5305\u8DEF\u5F84",
-                value: "",
-                description: "\u8F93\u5165\u8981\u79FB\u9664\u7684\u4F9D\u8D56\u5305\u5B8C\u6574\u76EE\u5F55\u8DEF\u5F84\uFF0C\u7559\u7A7A\u8868\u793A\u4E0D\u79FB\u9664"
-              },
-              newDepPath: {
-                type: "folder",
-                label: "\u6DFB\u52A0\u65B0\u4F9D\u8D56\u5305\u76EE\u5F55",
-                value: "",
-                description: "\u9009\u62E9\u5305\u542B meta.json \u7684\u5185\u5BB9\u5305\u76EE\u5F55\u6216 .zip \u6587\u4EF6\u4F5C\u4E3A\u4F9D\u8D56"
-              }
-            },
-            onConfirm: function(formData) {
-              var changed = false;
-              var removePath, addPath, oldLen;
-              if (formData.depPathToRemove && formData.depPathToRemove.trim()) {
-                removePath = formData.depPathToRemove.trim();
-                oldLen = (config.dependencyPaths || []).length;
-                persistence.removeDependencyPath(config, removePath);
-                if ((config.dependencyPaths || []).length < oldLen) {
-                  changed = true;
-                  log2.info("\u5DF2\u79FB\u9664\u4F9D\u8D56\u5305: " + removePath);
-                } else {
-                  showToast2("\u672A\u627E\u5230\u5339\u914D\u7684\u4F9D\u8D56\u8DEF\u5F84: " + removePath, "warning");
-                  return false;
-                }
-              }
-              if (formData.newDepPath && formData.newDepPath.trim()) {
-                addPath = formData.newDepPath.trim();
-                oldLen = (config.dependencyPaths || []).length;
-                persistence.addDependencyPath(config, addPath);
-                if ((config.dependencyPaths || []).length > oldLen) {
-                  changed = true;
-                  log2.info("\u5DF2\u6DFB\u52A0\u4F9D\u8D56\u5305: " + addPath);
-                } else {
-                  showToast2("\u4F9D\u8D56\u8DEF\u5F84\u5DF2\u5B58\u5728: " + addPath, "info");
-                }
-              }
-              if (changed) {
-                persistence.saveConfig();
-                showToast2("\u4F9D\u8D56\u5305\u5DF2\u66F4\u65B0", "positive");
-                if (typeof onSave === "function") onSave(config);
-              } else if (!formData.depPathToRemove || !formData.depPathToRemove.trim()) {
-                showToast2("\u672A\u505A\u4EFB\u4F55\u66F4\u6539", "info");
-              }
-              this.hide();
-            }
-          }).show();
-        } catch (e) {
-          log2.error("showManageDependenciesDialog \u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u4F9D\u8D56\u7BA1\u7406\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
-        }
-      }
-      var _packSetupShowing = false;
-      function showPackSetupDialog(config, onSave) {
-        if (_packSetupShowing) {
-          log2.debug("showPackSetupDialog: \u5DF2\u6709\u5411\u5BFC\u7A97\u53E3\u6253\u5F00\u4E2D\uFF0C\u8DF3\u8FC7\u91CD\u590D\u8C03\u7528");
-          return;
-        }
-        if (!_isConfigValid(config)) {
-          showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
-          return;
-        }
-        _packSetupShowing = true;
-        try {
-          new Dialog({
-            id: "mm_pack_setup",
-            title: "MachineMax \u5185\u5BB9\u5305\u8BBE\u7F6E\u5411\u5BFC",
-            width: 500,
-            form: {
-              infoText: {
-                type: "info",
-                text: "<b>\u5185\u5BB9\u5305\u8BBE\u7F6E\u5411\u5BFC</b><br><br>\u5185\u5BB9\u5305\u662F MachineMax \u5B9A\u4E49\u7684\u7EC4\u7EC7\u5355\u4F4D\uFF0C\u5305\u542B\u96F6\u4EF6\u3001\u5B50\u7CFB\u7EDF\u3001\u8FDE\u63A5\u70B9\u7B49\u914D\u7F6E\u3002\u9996\u6B21\u4F7F\u7528\u8BF7\u5148\u521B\u5EFA\u6216\u6253\u5F00\u4E00\u4E2A\u5185\u5BB9\u5305\u3002"
-              },
-              currentPack: {
-                type: "info",
-                text: config.contentPackPath ? "\u5F53\u524D\u5185\u5BB9\u5305\u76EE\u5F55\uFF1A<br><code>" + config.contentPackPath + "</code>" : "\u5F53\u524D\u672A\u8BBE\u7F6E\u5185\u5BB9\u5305\u3002"
-              },
-              action: {
-                type: "select",
-                label: "\u9009\u62E9\u64CD\u4F5C",
-                options: {
-                  create: "\u521B\u5EFA\u65B0\u5185\u5BB9\u5305",
-                  open: "\u6253\u5F00\u5DF2\u6709\u5185\u5BB9\u5305",
-                  deps: "\u7BA1\u7406\u4F9D\u8D56\u5305"
-                },
-                value: config.contentPackPath ? "open" : "create"
-              }
-            },
-            onConfirm: function(formData) {
-              _packSetupShowing = false;
-              this.hide();
-              try {
-                if (formData.action === "create") {
-                  showCreatePackDialog(config, onSave);
-                } else if (formData.action === "open") {
-                  showOpenPackDialog(config, onSave);
-                } else if (formData.action === "deps") {
-                  showManageDependenciesDialog(config, onSave);
-                }
-              } catch (e) {
-                log2.error("\u8DF3\u8F6C\u5B50\u5BF9\u8BDD\u6846\u5931\u8D25", e);
-                showToast2("\u64CD\u4F5C\u5931\u8D25: " + (e.message || e), "error");
-              }
-            },
-            onCancel: function() {
-              _packSetupShowing = false;
-              this.hide();
-            }
-          }).show();
-        } catch (e) {
-          _packSetupShowing = false;
-          log2.error("showPackSetupDialog \u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u8BBE\u7F6E\u5411\u5BFC: " + (e.message || e), "error");
-        }
-      }
-      function showDependencyPathEditor(existingDeps, parentDir, options, onComplete) {
-        _showDependencyPathEditor(existingDeps, parentDir, options, onComplete);
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          showPackSetupDialog,
-          showCreatePackDialog,
-          showOpenPackDialog,
-          showManageDependenciesDialog,
-          showDependencyPathEditor
-        };
-      }
-    }
-  });
-
   // src/core/builtin_pack.js
   var require_builtin_pack = __commonJS({
     "src/core/builtin_pack.js"(exports, module) {
@@ -11504,36 +13153,8 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
+      var { stripJsonComments } = require_file_writer();
       var log2 = createLogger2("BuiltinPack");
-      function stripJsonComments(content) {
-        var lines, result, li, line, inString, i, ch, commentStart, stripped;
-        if (typeof content !== "string") return content;
-        lines = content.split("\n");
-        result = [];
-        for (li = 0; li < lines.length; li++) {
-          line = lines[li];
-          inString = false;
-          commentStart = -1;
-          for (i = 0; i < line.length; i++) {
-            ch = line[i];
-            if (ch === '"' && (i === 0 || line[i - 1] !== "\\")) {
-              inString = !inString;
-            } else if (ch === "/" && line[i + 1] === "/" && !inString) {
-              commentStart = i;
-              break;
-            }
-          }
-          if (commentStart >= 0) {
-            stripped = line.substring(0, commentStart);
-            if (stripped.trim().length > 0) {
-              result.push(stripped);
-            }
-          } else {
-            result.push(line);
-          }
-        }
-        return result.join("\n");
-      }
       function normalizeDefs(rawDefs) {
         var result, keys, i, key, value, defId, lastSlash, stripped;
         if (!rawDefs || typeof rawDefs !== "object") return {};
@@ -11879,6 +13500,135 @@
     }
   });
 
+  // src/utils/html.js
+  var require_html = __commonJS({
+    "src/utils/html.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      function escapeHtml(str) {
+        if (typeof str !== "string") return String(str == null ? "" : str);
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+      }
+      function isBuiltin(source) {
+        return source === "builtin";
+      }
+      function isDependency(source) {
+        return !!source && source.indexOf("dependency:") === 0;
+      }
+      function isCurrent(source) {
+        return source === "current";
+      }
+      function sourceLabel(source) {
+        if (isBuiltin(source)) return "\u5185\u7F6E";
+        if (isDependency(source)) return "\u4F9D\u8D56";
+        if (isCurrent(source)) return "\u5F53\u524D";
+        return "\u672A\u77E5";
+      }
+      function sourceColor(source) {
+        if (isBuiltin(source)) return "#888";
+        if (isDependency(source)) return "#2196F3";
+        if (isCurrent(source)) return "#4CAF50";
+        return "#888";
+      }
+      function sourceBadgeClass(source) {
+        if (isBuiltin(source)) return "mm-badge-builtin";
+        if (isDependency(source)) return "mm-badge-dependency";
+        if (isCurrent(source)) return "mm-badge-current";
+        return "mm-badge-unknown";
+      }
+      function sourceStats(items) {
+        var stats = { builtin: 0, dependency: 0, current: 0, unknown: 0 };
+        if (!items) return stats;
+        for (var i = 0; i < items.length; i++) {
+          var source = items[i].source;
+          if (isBuiltin(source)) stats.builtin++;
+          else if (isDependency(source)) stats.dependency++;
+          else if (isCurrent(source)) stats.current++;
+          else stats.unknown++;
+        }
+        return stats;
+      }
+      function sourceStatsHtml(items) {
+        var stats = sourceStats(items);
+        return '<div class="mm-def-stats"><span class="mm-def-stat"><span class="mm-dot mm-dot-builtin"></span>\u5185\u7F6E: ' + stats.builtin + '</span><span class="mm-def-stat"><span class="mm-dot mm-dot-dependency"></span>\u4F9D\u8D56: ' + stats.dependency + '</span><span class="mm-def-stat"><span class="mm-dot mm-dot-current"></span>\u5F53\u524D: ' + stats.current + '</span><span class="mm-def-stat">\u5171 ' + (items ? items.length : 0) + " \u9879</span></div>";
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          escapeHtml,
+          isBuiltin,
+          isDependency,
+          isCurrent,
+          sourceLabel,
+          sourceColor,
+          sourceBadgeClass,
+          sourceStats,
+          sourceStatsHtml
+        };
+      }
+    }
+  });
+
+  // src/ui/components/definition_viewer.js
+  var require_definition_viewer = __commonJS({
+    "src/ui/components/definition_viewer.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var { escapeHtml, sourceLabel, sourceBadgeClass, sourceStatsHtml } = require_html();
+      var log2 = createLogger2("DefinitionViewer");
+      function _buildListHtml(items) {
+        if (!items || items.length === 0) {
+          return '<p class="mm-def-empty">\uFF08\u6682\u65E0\u5B9A\u4E49\uFF09</p>';
+        }
+        var rows = "";
+        for (var i = 0; i < items.length; i++) {
+          var item = items[i];
+          var readonlyMark = item.editable ? "" : '<span class="mm-def-readonly">\u53EA\u8BFB</span>';
+          var subLabel = item.subLabel ? '<span class="mm-def-sublabel">' + escapeHtml(item.subLabel) + "</span>" : "";
+          rows += '<tr><td class="mm-def-id-cell"><span class="mm-def-id">' + escapeHtml(item.id) + "</span>" + readonlyMark + '</td><td class="mm-def-source-cell"><span class="mm-badge ' + sourceBadgeClass(item.source) + '">' + sourceLabel(item.source) + "</span></td></tr>";
+        }
+        return '<div class="mm-def-list"><table class="mm-def-table"><thead><tr><th class="mm-def-th">\u5B9A\u4E49 ID</th><th class="mm-def-th">\u6765\u6E90</th></tr></thead><tbody>' + rows + "</tbody></table></div>";
+      }
+      function showDefinitionViewer(options) {
+        var opts = options || {};
+        var items = opts.items || [];
+        var defaultHint = "\u5B9A\u4E49\u6587\u4EF6\u4F4D\u4E8E\u5185\u5BB9\u5305\u5BF9\u5E94\u7C7B\u578B\u76EE\u5F55\u4E0B\uFF08\u5982 materials/\u3001connectors/\u3001subsystems/\uFF09\uFF0C\u53EF\u76F4\u63A5\u7F16\u8F91 JSON \u6587\u4EF6\u3002";
+        var hint = opts.hint !== void 0 ? opts.hint : defaultHint;
+        try {
+          new Dialog({
+            id: "mm_definition_viewer",
+            title: opts.title || "\u67E5\u770B\u5B9A\u4E49",
+            width: opts.width || 640,
+            height: opts.height || 480,
+            lines: [
+              sourceStatsHtml(items),
+              _buildListHtml(items),
+              '<p class="mm-def-hint">' + escapeHtml(hint) + "</p>"
+            ],
+            onConfirm: function() {
+              this.hide();
+            }
+          }).show();
+        } catch (e) {
+          log2.error("showDefinitionViewer \u5931\u8D25", e);
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          showDefinitionViewer
+        };
+      }
+    }
+  });
+
   // src/ui/dialogs/control_group_dialog.js
   var require_control_group_dialog = __commonJS({
     "src/ui/dialogs/control_group_dialog.js"(exports, module) {
@@ -11888,161 +13638,26 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var control_group_manager = require_control_group_manager();
       var { createLogger: createLogger2 } = require_logger();
+      var { showToast: showToast2 } = require_notify();
+      var control_group_manager = require_control_group_manager();
+      var { showDefinitionViewer } = require_definition_viewer();
       var log2 = createLogger2("ControlGroupDialog");
-      function _escapeHtml(text) {
-        if (typeof text !== "string") return String(text || "");
-        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-      }
-      function _renderTargets(targets) {
-        if (!targets || Object.keys(targets).length === 0) {
-          return '<span style="color:#666">\uFF08\u7A7A\uFF09</span>';
-        }
-        var html = '<table style="width:100%;border-collapse:collapse;font-size:11px">';
-        var keys = Object.keys(targets);
-        for (var i = 0; i < keys.length; i++) {
-          var key = keys[i];
-          var vals = targets[key];
-          html += '<tr><td style="padding:2px 6px;border:1px solid #444;font-weight:bold;width:140px">' + _escapeHtml(key) + '</td><td style="padding:2px 6px;border:1px solid #444">' + _escapeHtml(Array.isArray(vals) ? vals.join(", ") : String(vals)) + "</td></tr>";
-        }
-        html += "</table>";
-        return html;
-      }
-      function _renderBindings(bindings) {
-        if (!bindings || bindings.length === 0) {
-          return '<span style="color:#666">\uFF08\u65E0\u7ED1\u5B9A\uFF09</span>';
-        }
-        var html = '<table style="width:100%;border-collapse:collapse;font-size:11px"><tr><th style="padding:2px 6px;border:1px solid #444;text-align:left">\u89E6\u53D1\u952E</th><th style="padding:2px 6px;border:1px solid #444;text-align:left">\u52A8\u4F5C</th><th style="padding:2px 6px;border:1px solid #444;text-align:left">\u9891\u9053</th><th style="padding:2px 6px;border:1px solid #444;text-align:left">\u76EE\u6807</th></tr>';
-        for (var i = 0; i < bindings.length; i++) {
-          var b = bindings[i];
-          html += '<tr><td style="padding:2px 6px;border:1px solid #444">' + _escapeHtml(b.trigger || "") + '</td><td style="padding:2px 6px;border:1px solid #444">' + _escapeHtml(b.action || "") + '</td><td style="padding:2px 6px;border:1px solid #444">' + _escapeHtml(b.channel || "") + '</td><td style="padding:2px 6px;border:1px solid #444">' + _escapeHtml(Array.isArray(b.targets) ? b.targets.join(", ") : String(b.targets || "")) + "</td></tr>";
-        }
-        html += "</table>";
-        return html;
-      }
-      function _renderGuiActions(guiActions) {
-        if (!guiActions || guiActions.length === 0) {
-          return '<span style="color:#666">\uFF08\u65E0 GUI \u4EA4\u4E92\u5143\u7D20\uFF09</span>';
-        }
-        var html = '<table style="width:100%;border-collapse:collapse;font-size:11px"><tr><th style="padding:2px 6px;border:1px solid #444;text-align:left">\u6807\u7B7E</th><th style="padding:2px 6px;border:1px solid #444;text-align:left">\u7C7B\u578B</th><th style="padding:2px 6px;border:1px solid #444;text-align:left">\u9891\u9053</th><th style="padding:2px 6px;border:1px solid #444;text-align:left">\u76EE\u6807</th></tr>';
-        for (var i = 0; i < guiActions.length; i++) {
-          var g = guiActions[i];
-          var typeName = "\u672A\u77E5";
-          if (g.type === "TOGGLE") typeName = "\u52FE\u9009\u6846";
-          else if (g.type === "PULSE") typeName = "\u8109\u51B2\u6309\u94AE";
-          else if (g.type === "SLIDER") typeName = "\u6ED1\u52A8\u6761";
-          html += '<tr><td style="padding:2px 6px;border:1px solid #444">' + _escapeHtml(g.label || "") + '</td><td style="padding:2px 6px;border:1px solid #444">' + typeName + '</td><td style="padding:2px 6px;border:1px solid #444">' + _escapeHtml(g.channel || "") + '</td><td style="padding:2px 6px;border:1px solid #444">' + _escapeHtml(Array.isArray(g.targets) ? g.targets.join(", ") : String(g.targets || "")) + "</td></tr>";
-        }
-        html += "</table>";
-        return html;
-      }
-      function _buildPresetListHtml(presets) {
-        if (!presets || presets.length === 0) {
-          return '<p style="color:#666;text-align:center;padding:20px">\u5F53\u524D\u65E0\u53EF\u7528\u63A7\u5236\u7EC4\u9884\u8BBE</p>';
-        }
-        var html = '<div style="max-height:400px;overflow-y:auto">';
-        html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
-        html += '<tr><th style="padding:6px;border:1px solid #444;text-align:left;width:30px"></th><th style="padding:6px;border:1px solid #444;text-align:left">\u9884\u8BBE ID</th><th style="padding:6px;border:1px solid #444;text-align:left">\u63A7\u5236\u6A21\u5F0F</th><th style="padding:6px;border:1px solid #444;text-align:left">\u6765\u6E90</th><th style="padding:6px;border:1px solid #444;text-align:center">\u7ED1\u5B9A\u6570</th></tr>';
-        for (var i = 0; i < presets.length; i++) {
-          var p = presets[i];
-          var baseGroup = p.data && p.data.base_group;
-          var mode = baseGroup ? baseGroup.control_mode : "?";
-          var bindCount = baseGroup && baseGroup.bindings ? baseGroup.bindings.length : 0;
-          var sourceLabel = p.source;
-          if (sourceLabel === "builtin") sourceLabel = "\u5185\u7F6E";
-          else if (sourceLabel === "current") sourceLabel = "\u5F53\u524D\u5305";
-          else if (sourceLabel && sourceLabel.indexOf("dependency:") === 0) sourceLabel = "\u4F9D\u8D56\u5305";
-          html += '<tr data-mm-cg-row style="cursor:pointer"><td style="padding:4px 6px;border:1px solid #444;text-align:center"><input type="radio" name="mm_cg_select" value="' + i + '" data-index="' + i + '"></td><td style="padding:4px 6px;border:1px solid #444">' + _escapeHtml(p.id) + '</td><td style="padding:4px 6px;border:1px solid #444">' + _escapeHtml(mode) + '</td><td style="padding:4px 6px;border:1px solid #444">' + _escapeHtml(sourceLabel) + '</td><td style="padding:4px 6px;border:1px solid #444;text-align:center">' + bindCount + "</td></tr>";
-        }
-        html += "</table></div>";
-        return html;
-      }
-      function _buildDetailHtml(preset) {
-        if (!preset || !preset.data) {
-          return '<p style="color:#666">\u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u9884\u8BBE</p>';
-        }
-        var bg = preset.data.base_group || {};
-        var activeIndex = preset.data.active_index;
-        var groups = preset.data.groups || [];
-        var guiActions = preset.data.gui_actions || [];
-        var html = '<div style="max-height:600px;overflow-y:auto;padding:8px">';
-        html += '<h4 style="margin:0 0 8px 0;color:#ffa726">\u9884\u8BBE: ' + _escapeHtml(preset.id) + "</h4>";
-        html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px">';
-        html += '<tr><td style="padding:4px 8px;background:#2a2a2a;font-weight:bold;width:100px">\u540D\u79F0</td><td style="padding:4px 8px">' + _escapeHtml(bg.name || "base") + "</td></tr>";
-        html += '<tr><td style="padding:4px 8px;background:#2a2a2a;font-weight:bold">\u63A7\u5236\u6A21\u5F0F</td><td style="padding:4px 8px">' + _escapeHtml(bg.control_mode || "inherit") + "</td></tr>";
-        html += '<tr><td style="padding:4px 8px;background:#2a2a2a;font-weight:bold">\u5B50\u7EC4\u6570</td><td style="padding:4px 8px">' + groups.length + "</td></tr>";
-        html += '<tr><td style="padding:4px 8px;background:#2a2a2a;font-weight:bold">\u6FC0\u6D3B\u7D22\u5F15</td><td style="padding:4px 8px">' + (activeIndex !== void 0 ? activeIndex : -1) + "</td></tr>";
-        html += "</table>";
-        html += '<h5 style="margin:8px 0 4px 0;color:#aaa">\u79FB\u52A8\u76EE\u6807 (move_targets)</h5>';
-        html += _renderTargets(bg.move_targets);
-        html += '<h5 style="margin:8px 0 4px 0;color:#aaa">\u89C6\u89D2\u76EE\u6807 (view_targets)</h5>';
-        html += _renderTargets(bg.view_targets);
-        html += '<h5 style="margin:8px 0 4px 0;color:#aaa">\u5E38\u89C4\u76EE\u6807 (regular_targets)</h5>';
-        html += _renderTargets(bg.regular_targets);
-        html += '<h5 style="margin:8px 0 4px 0;color:#aaa">\u6309\u952E\u7ED1\u5B9A (bindings)</h5>';
-        html += _renderBindings(bg.bindings);
-        html += '<h5 style="margin:8px 0 4px 0;color:#aaa">GUI \u4EA4\u4E92\u5143\u7D20 (gui_actions)</h5>';
-        html += _renderGuiActions(guiActions);
-        if (groups.length > 0) {
-          html += '<h5 style="margin:8px 0 4px 0;color:#aaa">\u5B50\u63A7\u5236\u7EC4 (' + groups.length + " \u4E2A)</h5>";
-          for (var gi = 0; gi < groups.length; gi++) {
-            var sg = groups[gi];
-            html += '<div style="margin:4px 0;padding:4px 8px;background:#2a2a2a;border-radius:3px;font-size:11px"><b>#' + gi + "</b> " + _escapeHtml(sg.name || "unnamed") + " &nbsp;|&nbsp; mode=" + _escapeHtml(sg.control_mode || "inherit") + " &nbsp;|&nbsp; \u7ED1\u5B9A=" + (sg.bindings ? sg.bindings.length : 0) + "</div>";
-          }
-        }
-        html += "</div>";
-        return html;
-      }
       function showControlGroupManagerDialog(config) {
-        var presets = control_group_manager.listControlGroups(config);
-        log2.info("showControlGroupManagerDialog: \u5171 " + presets.length + " \u4E2A\u9884\u8BBE");
+        if (!config || typeof config !== "object") {
+          showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+          return;
+        }
         try {
-          new Dialog({
-            title: "MachineMax \u63A7\u5236\u7EC4\u9884\u8BBE\u67E5\u770B\u5668",
-            width: 800,
-            height: 600,
-            lines: [
-              '<p style="margin:0 0 8px 0;color:#aaa;font-size:12px">\u5171 ' + presets.length + " \u4E2A\u9884\u8BBE \xB7 \u9009\u4E2D\u4E00\u9879\u540E\u5728\u4E0B\u65B9\u9762\u677F\u67E5\u770B\u8BE6\u60C5</p>",
-              _buildPresetListHtml(presets),
-              '<hr style="border-color:#444;margin:8px 0">',
-              '<div id="mm_cg_detail" style="min-height:100px"><p style="color:#666;text-align:center">\u8BF7\u5728\u4E0A\u65B9\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u9884\u8BBE\u67E5\u770B\u8BE6\u60C5</p></div>'
-            ],
-            onConfirm: function() {
-              this.hide();
-            }
-          }).show();
-          setTimeout(function() {
-            var radios = document.querySelectorAll('[name="mm_cg_select"]');
-            var detailDiv = document.getElementById("mm_cg_detail");
-            if (!radios || !detailDiv) return;
-            function onSelect(index) {
-              var preset = presets[index];
-              if (preset) {
-                detailDiv.innerHTML = _buildDetailHtml(preset);
-              }
-            }
-            for (var i = 0; i < radios.length; i++) {
-              radios[i].addEventListener("change", function() {
-                var idx = parseInt(this.getAttribute("data-index"), 10);
-                onSelect(idx);
-              });
-            }
-            var rows = document.querySelectorAll("[data-mm-cg-row]");
-            for (var j = 0; j < rows.length; j++) {
-              (function(rowIdx) {
-                rows[j].addEventListener("click", function() {
-                  var radio = this.querySelector('[name="mm_cg_select"]');
-                  if (radio) {
-                    radio.checked = true;
-                    radio.dispatchEvent(new Event("change"));
-                  }
-                });
-              })(j);
-            }
-          }, 100);
+          var presets = control_group_manager.listControlGroups(config);
+          showDefinitionViewer({
+            title: "\u67E5\u770B\u63A7\u5236\u7EC4\u9884\u8BBE",
+            items: presets,
+            hint: "\u63A7\u5236\u7EC4\u9884\u8BBE\u5B9A\u4E49\u6587\u4EF6\u4F4D\u4E8E\u5185\u5BB9\u5305 control_groups/ \u76EE\u5F55\u4E0B\uFF0C\u53EF\u76F4\u63A5\u7F16\u8F91 JSON \u6587\u4EF6\u3002"
+          });
         } catch (e) {
-          log2.error("showControlGroupManagerDialog: \u521B\u5EFA\u5931\u8D25", e);
+          log2.error("showControlGroupManagerDialog \u5931\u8D25", e);
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u63A7\u5236\u7EC4\u9884\u8BBE\u67E5\u770B\u5668: " + (e.message || e), "error");
         }
       }
       if (typeof module !== "undefined" && module.exports) {
@@ -12112,90 +13727,26 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var projectile_manager = require_projectile_manager();
       var { createLogger: createLogger2 } = require_logger();
+      var { showToast: showToast2 } = require_notify();
+      var projectile_manager = require_projectile_manager();
+      var { showDefinitionViewer } = require_definition_viewer();
       var log2 = createLogger2("ProjectileDialog");
-      function _escapeHtml(text) {
-        if (typeof text !== "string") return String(text || "");
-        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-      }
-      function _buildProjectileListHtml(projectiles) {
-        if (!projectiles || projectiles.length === 0) {
-          return '<p style="color:#666;text-align:center;padding:20px">\u5F53\u524D\u65E0\u53EF\u7528\u6295\u5C04\u7269\u5B9A\u4E49</p>';
-        }
-        var html = '<div style="max-height:300px;overflow-y:auto">';
-        html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
-        html += '<tr><th style="padding:6px;border:1px solid #444;text-align:left;width:30px"></th><th style="padding:6px;border:1px solid #444;text-align:left">\u6295\u5C04\u7269 ID</th><th style="padding:6px;border:1px solid #444;text-align:left">\u6765\u6E90</th></tr>';
-        for (var i = 0; i < projectiles.length; i++) {
-          var p = projectiles[i];
-          var sourceLabel = p.source;
-          if (sourceLabel === "builtin") sourceLabel = "\u5185\u7F6E";
-          else if (sourceLabel === "current") sourceLabel = "\u5F53\u524D\u5305";
-          else if (sourceLabel && sourceLabel.indexOf("dependency:") === 0) sourceLabel = "\u4F9D\u8D56\u5305";
-          html += '<tr data-mm-proj-row style="cursor:pointer"><td style="padding:4px 6px;border:1px solid #444;text-align:center"><input type="radio" name="mm_proj_select" value="' + i + '" data-index="' + i + '"></td><td style="padding:4px 6px;border:1px solid #444">' + _escapeHtml(p.id) + '</td><td style="padding:4px 6px;border:1px solid #444">' + _escapeHtml(sourceLabel) + "</td></tr>";
-        }
-        html += "</table></div>";
-        return html;
-      }
-      function _buildDetailHtml(projectile) {
-        if (!projectile || !projectile.data) {
-          return '<p style="color:#666">\u8BF7\u9009\u62E9\u4E00\u4E2A\u6295\u5C04\u7269\u67E5\u770B\u8BE6\u60C5</p>';
-        }
-        var html = '<div style="max-height:400px;overflow-y:auto;padding:8px">';
-        html += '<h4 style="margin:0 0 8px 0;color:#ffa726">\u6295\u5C04\u7269: ' + _escapeHtml(projectile.id) + "</h4>";
-        html += '<pre style="background:#1e1e1e;padding:8px;border-radius:3px;font-size:11px;overflow:auto">' + _escapeHtml(JSON.stringify(projectile.data, null, 2)) + "</pre>";
-        html += "</div>";
-        return html;
-      }
       function showProjectileManagerDialog(config) {
-        var projectiles = projectile_manager.listProjectiles(config);
-        log2.info("showProjectileManagerDialog: \u5171 " + projectiles.length + " \u4E2A\u6295\u5C04\u7269");
+        if (!config || typeof config !== "object") {
+          showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+          return;
+        }
         try {
-          new Dialog({
-            title: "MachineMax \u6295\u5C04\u7269\u5B9A\u4E49\u67E5\u770B\u5668",
-            width: 700,
-            height: 600,
-            lines: [
-              '<p style="margin:0 0 8px 0;color:#aaa;font-size:12px">\u5171 ' + projectiles.length + " \u4E2A\u6295\u5C04\u7269\u5B9A\u4E49 \xB7 \u9009\u4E2D\u4E00\u9879\u540E\u5728\u4E0B\u65B9\u9762\u677F\u67E5\u770B\u8BE6\u60C5</p>",
-              _buildProjectileListHtml(projectiles),
-              '<hr style="border-color:#444;margin:8px 0">',
-              '<div id="mm_proj_detail" style="min-height:100px"><p style="color:#666;text-align:center">\u8BF7\u5728\u4E0A\u65B9\u5217\u8868\u4E2D\u9009\u62E9\u4E00\u4E2A\u6295\u5C04\u7269\u67E5\u770B\u8BE6\u60C5</p></div>'
-            ],
-            onConfirm: function() {
-              this.hide();
-            }
-          }).show();
-          setTimeout(function() {
-            var radios = document.querySelectorAll('[name="mm_proj_select"]');
-            var detailDiv = document.getElementById("mm_proj_detail");
-            if (!radios || !detailDiv) return;
-            function onSelect(index) {
-              var projectile = projectiles[index];
-              if (projectile) {
-                detailDiv.innerHTML = _buildDetailHtml(projectile);
-              }
-            }
-            for (var i = 0; i < radios.length; i++) {
-              radios[i].addEventListener("change", function() {
-                var idx = parseInt(this.getAttribute("data-index"), 10);
-                onSelect(idx);
-              });
-            }
-            var rows = document.querySelectorAll("[data-mm-proj-row]");
-            for (var j = 0; j < rows.length; j++) {
-              (function(rowIdx) {
-                rows[j].addEventListener("click", function() {
-                  var radio = this.querySelector('[name="mm_proj_select"]');
-                  if (radio) {
-                    radio.checked = true;
-                    radio.dispatchEvent(new Event("change"));
-                  }
-                });
-              })(j);
-            }
-          }, 100);
+          var projectiles = projectile_manager.listProjectiles(config);
+          showDefinitionViewer({
+            title: "\u67E5\u770B\u6295\u5C04\u7269\u5B9A\u4E49",
+            items: projectiles,
+            hint: "\u6295\u5C04\u7269\u5B9A\u4E49\u6587\u4EF6\u4F4D\u4E8E\u5185\u5BB9\u5305 projectiles/ \u76EE\u5F55\u4E0B\uFF0C\u53EF\u76F4\u63A5\u7F16\u8F91 JSON \u6587\u4EF6\u3002"
+          });
         } catch (e) {
-          log2.error("showProjectileManagerDialog: \u521B\u5EFA\u5931\u8D25", e);
+          log2.error("showProjectileManagerDialog \u5931\u8D25", e);
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u6295\u5C04\u7269\u5B9A\u4E49\u67E5\u770B\u5668: " + (e.message || e), "error");
         }
       }
       if (typeof module !== "undefined" && module.exports) {
@@ -12215,7 +13766,6 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var content_pack = require_content_pack();
       var content_pack_manager = require_content_pack_manager();
       var { createLogger: createLogger2 } = require_logger();
       var log2 = createLogger2("MaterialManager");
@@ -12236,72 +13786,9 @@
         log2.debug("listMaterials: \u5171 " + result.length + " \u4E2A\u6750\u6599");
         return result;
       }
-      function createMaterial(config, id, data) {
-        if (!config || !config.contentPackPath) {
-          throw new Error("\u5F53\u524D\u6CA1\u6709\u5173\u8054\u7684\u5185\u5BB9\u5305\uFF0C\u65E0\u6CD5\u521B\u5EFA\u6750\u6599");
-        }
-        var meta = content_pack.readPackMeta(config.contentPackPath);
-        if (!meta) {
-          throw new Error("\u65E0\u6CD5\u8BFB\u53D6\u5185\u5BB9\u5305 meta.json: " + config.contentPackPath);
-        }
-        var ns = content_pack.resolveNamespace(meta.id);
-        if (!ns) {
-          throw new Error("\u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace: " + meta.id);
-        }
-        var lookupId = id.indexOf(":") >= 0 ? id : ns + ":" + id;
-        var source = content_pack_manager.resolveDefSource(config, "materials", lookupId);
-        if (source === "current") {
-          throw new Error('\u6750\u6599 "' + lookupId + '" \u5DF2\u5B58\u5728\uFF0C\u8BF7\u4F7F\u7528\u66F4\u65B0\u64CD\u4F5C');
-        }
-        if (source && source.indexOf("dependency:") === 0) {
-          throw new Error('\u4E0D\u80FD\u8986\u76D6\u4F9D\u8D56\u5305\u4E2D\u7684\u6750\u6599 "' + lookupId + '"');
-        }
-        content_pack.writeDef(config.contentPackPath, ns, "materials", id, data);
-        content_pack_manager.invalidateCache();
-        log2.info('createMaterial: \u5DF2\u521B\u5EFA\u6750\u6599 "' + lookupId + '"');
-      }
-      function updateMaterial(config, id, data) {
-        if (!content_pack_manager.isDefEditable(config, "materials", id)) {
-          throw new Error('\u4E0D\u80FD\u4FEE\u6539\u5185\u7F6E\u6216\u4F9D\u8D56\u5305\u7684\u6750\u6599 "' + id + '"');
-        }
-        var meta = content_pack.readPackMeta(config.contentPackPath);
-        if (!meta) {
-          throw new Error("\u65E0\u6CD5\u8BFB\u53D6\u5185\u5BB9\u5305 meta.json: " + config.contentPackPath);
-        }
-        var ns = content_pack.resolveNamespace(meta.id);
-        if (!ns) {
-          throw new Error("\u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace: " + meta.id);
-        }
-        content_pack.writeDef(config.contentPackPath, ns, "materials", id, data);
-        content_pack_manager.invalidateCache();
-        log2.info('updateMaterial: \u5DF2\u66F4\u65B0\u6750\u6599 "' + id + '"');
-      }
-      function deleteMaterial(config, id) {
-        if (!content_pack_manager.isDefEditable(config, "materials", id)) {
-          throw new Error('\u4E0D\u80FD\u5220\u9664\u5185\u7F6E\u6216\u4F9D\u8D56\u5305\u7684\u6750\u6599 "' + id + '"');
-        }
-        var meta = content_pack.readPackMeta(config.contentPackPath);
-        if (!meta) {
-          throw new Error("\u65E0\u6CD5\u8BFB\u53D6\u5185\u5BB9\u5305 meta.json: " + config.contentPackPath);
-        }
-        var ns = content_pack.resolveNamespace(meta.id);
-        if (!ns) {
-          throw new Error("\u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace: " + meta.id);
-        }
-        content_pack.deleteDef(config.contentPackPath, ns, "materials", id);
-        content_pack_manager.invalidateCache();
-        log2.info('deleteMaterial: \u5DF2\u5220\u9664\u6750\u6599 "' + id + '"');
-      }
-      function getDefaultMaterialId(config) {
-        return content_pack_manager.getFirstDefId(config, "materials");
-      }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
-          listMaterials,
-          createMaterial,
-          updateMaterial,
-          deleteMaterial,
-          getDefaultMaterialId
+          listMaterials
         };
       }
     }
@@ -12319,326 +13806,29 @@
       var { createLogger: createLogger2 } = require_logger();
       var { showToast: showToast2 } = require_notify();
       var material_manager = require_material_manager();
+      var { showDefinitionViewer } = require_definition_viewer();
       var log2 = createLogger2("MaterialDialog");
-      function _sourceLabel(source) {
-        if (source === "builtin") return "\u5185\u7F6E";
-        if (source && source.indexOf("dependency:") === 0) return "\u4F9D\u8D56";
-        if (source === "current") return "\u5F53\u524D";
-        return "\u672A\u77E5";
-      }
-      function _sourceColor(source) {
-        if (source === "builtin") return "#888";
-        if (source && source.indexOf("dependency:") === 0) return "#2196F3";
-        if (source === "current") return "#4CAF50";
-        return "#888";
-      }
-      function _buildMaterialListHtml(materials) {
-        var i, m, sourceLabel, sourceColor, editable, editBtn, deleteBtn, rowColor;
-        var rows = "";
-        if (!materials || materials.length === 0) {
-          return '<span style="color:#888;font-style:italic">\uFF08\u6682\u65E0\u6750\u6599\u5B9A\u4E49\uFF09</span>';
-        }
-        for (i = 0; i < materials.length; i++) {
-          m = materials[i];
-          sourceLabel = _sourceLabel(m.source);
-          sourceColor = _sourceColor(m.source);
-          editable = m.editable;
-          editBtn = editable ? '<button class="mm_mat_edit" data-id="' + m.id + '" style="padding:2px 8px;margin:0 2px;cursor:pointer;border:1px solid #4CAF50;border-radius:3px;background:transparent;color:#4CAF50;font-size:12px">\u7F16\u8F91</button>' : '<span style="color:#888;font-size:12px;margin:0 4px">\uFF08\u53EA\u8BFB\uFF09</span>';
-          deleteBtn = editable ? '<button class="mm_mat_delete" data-id="' + m.id + '" style="padding:2px 8px;margin:0 2px;cursor:pointer;border:1px solid #F44336;border-radius:3px;background:transparent;color:#F44336;font-size:12px">\u5220\u9664</button>' : "";
-          rowColor = editable ? "#fff" : "#999";
-          rows += '<tr style="border-bottom:1px solid #333"><td style="padding:6px 8px;color:' + rowColor + ';font-family:monospace;font-size:13px">' + _escapeHtml(m.id) + '</td><td style="padding:6px 8px"><span style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:11px;color:' + sourceColor + ";border:1px solid " + sourceColor + '">' + sourceLabel + '</span></td><td style="padding:6px 8px;text-align:right;white-space:nowrap">' + editBtn + deleteBtn + "</td></tr>";
-        }
-        return '<table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid #555"><th style="padding:6px 8px;text-align:left;font-size:12px;color:#aaa;font-weight:normal">\u6750\u6599 ID</th><th style="padding:6px 8px;text-align:left;font-size:12px;color:#aaa;font-weight:normal">\u6765\u6E90</th><th style="padding:6px 8px;text-align:right;font-size:12px;color:#aaa;font-weight:normal">\u64CD\u4F5C</th></tr></thead><tbody>' + rows + "</tbody></table>";
-      }
-      function _escapeHtml(str) {
-        if (typeof str !== "string") return String(str || "");
-        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-      }
-      function _getField(data, field, fallback) {
-        if (data && typeof data[field] !== "undefined" && data[field] !== null) {
-          return data[field];
-        }
-        return fallback;
-      }
-      function _validateFriction(fx, fy, fz) {
-        return !Number.isNaN(fx) && Number.isFinite(fx) && fx >= 0 && !Number.isNaN(fy) && Number.isFinite(fy) && fy >= 0 && !Number.isNaN(fz) && Number.isFinite(fz) && fz >= 0;
-      }
-      function _showEditDialog(config, materialId, materialData, isNew) {
-        var friction = _getField(materialData, "friction", [0.5, 0.5, 0.5]);
-        var formFields = {};
-        if (isNew) {
-          formFields.newMaterialId = {
-            type: "text",
-            label: "\u6750\u6599 ID",
-            value: "",
-            description: "\u6750\u6599\u6807\u8BC6\u7B26\uFF0C\u5982 machine_max:steel"
-          };
-        } else {
-          formFields.materialIdDisplay = {
-            type: "info",
-            text: "<b>\u6750\u6599 ID\uFF1A</b><code>" + _escapeHtml(materialId) + "</code>"
-          };
-        }
-        formFields.frictionInfo = {
-          type: "info",
-          text: '<span style="color:#aaa;font-size:11px">\u6469\u64E6\u7CFB\u6570\u5411\u91CF [x, y, z]\uFF0C\u5404\u5206\u91CF \u2265 0</span>'
-        };
-        formFields.friction_x = {
-          type: "number",
-          label: "\u6469\u64E6\u7CFB\u6570 X",
-          value: friction[0] !== void 0 ? friction[0] : 0.5,
-          hint: "\u4FA7\u5411\u6469\u64E6\u7CFB\u6570"
-        };
-        formFields.friction_y = {
-          type: "number",
-          label: "\u6469\u64E6\u7CFB\u6570 Y",
-          value: friction[1] !== void 0 ? friction[1] : 0.5,
-          hint: "\u524D\u5411\u6469\u64E6\u7CFB\u6570"
-        };
-        formFields.friction_z = {
-          type: "number",
-          label: "\u6469\u64E6\u7CFB\u6570 Z",
-          value: friction[2] !== void 0 ? friction[2] : 0.5,
-          hint: "\u5782\u76F4\u6469\u64E6\u7CFB\u6570"
-        };
-        formFields.restitution = {
-          type: "number",
-          label: "\u6062\u590D\u7CFB\u6570",
-          value: _getField(materialData, "restitution", 0.1),
-          hint: "0.0\uFF08\u5B8C\u5168\u975E\u5F39\u6027\uFF09~ 1.0\uFF08\u5B8C\u5168\u5F39\u6027\uFF09"
-        };
-        new Dialog({
-          id: isNew ? "mm_material_create" : "mm_material_edit",
-          title: isNew ? "\u65B0\u5EFA\u6750\u6599" : "\u7F16\u8F91\u6750\u6599 \u2014 " + materialId,
-          width: 480,
-          form: formFields,
-          onConfirm: function(formData) {
-            var id = isNew ? (formData.newMaterialId || "").trim() : materialId;
-            if (isNew && !id) {
-              showToast2("\u8BF7\u8F93\u5165\u6750\u6599 ID", "error");
-              return false;
-            }
-            var fx = parseFloat(formData.friction_x);
-            var fy = parseFloat(formData.friction_y);
-            var fz = parseFloat(formData.friction_z);
-            if (!_validateFriction(fx, fy, fz)) {
-              showToast2("\u6469\u64E6\u7CFB\u6570\u5404\u5206\u91CF\u5FC5\u987B\u4E3A \u2265 0 \u7684\u6709\u6548\u6570\u5B57", "error");
-              return false;
-            }
-            var restitution = parseFloat(formData.restitution);
-            if (Number.isNaN(restitution) || restitution < 0 || restitution > 1) {
-              showToast2("\u6062\u590D\u7CFB\u6570\u5FC5\u987B\u5728 0.0 ~ 1.0 \u4E4B\u95F4", "error");
-              return false;
-            }
-            var data = {
-              friction: [fx, fy, fz],
-              restitution
-            };
-            try {
-              if (isNew) {
-                material_manager.createMaterial(config, id, data);
-                showToast2('\u6750\u6599 "' + id + '" \u5DF2\u521B\u5EFA', "positive");
-                log2.info("\u6750\u6599\u5DF2\u521B\u5EFA", { id, data });
-              } else {
-                material_manager.updateMaterial(config, id, data);
-                showToast2('\u6750\u6599 "' + id + '" \u5DF2\u66F4\u65B0', "positive");
-                log2.info("\u6750\u6599\u5DF2\u66F4\u65B0", { id, data });
-              }
-              this.hide();
-              showMaterialManagerDialog(config);
-            } catch (e) {
-              showToast2("\u64CD\u4F5C\u5931\u8D25: " + (e.message || e), "error");
-              log2.error("\u6750\u6599\u4FDD\u5B58\u5931\u8D25", e);
-              return false;
-            }
-          }
-        }).show();
-      }
-      function _deleteWithConfirm(config, materialId) {
-        new Dialog({
-          id: "mm_material_delete_confirm",
-          title: "\u786E\u8BA4\u5220\u9664",
-          form: {
-            confirmInfo: {
-              type: "info",
-              text: '\u786E\u8BA4\u5220\u9664\u6750\u6599 "<b>' + _escapeHtml(materialId) + '</b>" \u5417\uFF1F<br><br>\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\uFF01'
-            }
-          },
-          onConfirm: function() {
-            try {
-              material_manager.deleteMaterial(config, materialId);
-              showToast2('\u6750\u6599 "' + materialId + '" \u5DF2\u5220\u9664', "warning");
-              log2.info("\u6750\u6599\u5DF2\u5220\u9664", { id: materialId });
-              this.hide();
-              showMaterialManagerDialog(config);
-            } catch (e) {
-              showToast2("\u5220\u9664\u5931\u8D25: " + (e.message || e), "error");
-              log2.error("\u6750\u6599\u5220\u9664\u5931\u8D25", e);
-              return false;
-            }
-          }
-        }).show();
-      }
       function showMaterialManagerDialog(config) {
-        var materials, listHtml, builtinCount, depCount, currentCount, i, infoText;
-        var materialOptions = {};
         if (!config || typeof config !== "object") {
           showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
           return;
         }
         try {
-          materials = material_manager.listMaterials(config);
-          listHtml = _buildMaterialListHtml(materials);
-          builtinCount = 0;
-          depCount = 0;
-          currentCount = 0;
-          for (i = 0; i < materials.length; i++) {
-            if (materials[i].source === "builtin") builtinCount++;
-            else if (materials[i].source && materials[i].source.indexOf("dependency:") === 0) depCount++;
-            else if (materials[i].source === "current") currentCount++;
-          }
-          for (i = 0; i < materials.length; i++) {
-            materialOptions[materials[i].id] = materials[i].id + " (" + _sourceLabel(materials[i].source) + ")";
-          }
-          infoText = '<div style="font-size:11px;color:#888;margin-bottom:4px"><span style="display:inline-block;margin-right:12px"><span style="color:#888">\u25CF</span> \u5185\u7F6E: ' + builtinCount + '</span><span style="display:inline-block;margin-right:12px"><span style="color:#2196F3">\u25CF</span> \u4F9D\u8D56: ' + depCount + '</span><span style="display:inline-block;margin-right:12px"><span style="color:#4CAF50">\u25CF</span> \u5F53\u524D: ' + currentCount + "</span></div>";
-          new Dialog({
-            id: "mm_material_manager",
-            title: "\u6750\u6599\u7BA1\u7406\u5668",
-            width: 640,
-            form: {
-              stats: {
-                type: "info",
-                text: infoText
-              },
-              materialList: {
-                type: "info",
-                text: listHtml
-              },
-              readOnlyNote: {
-                type: "info",
-                text: '<span style="color:#888;font-size:11px">\u5185\u7F6E\u548C\u4F9D\u8D56\u5305\u4E2D\u7684\u6750\u6599\u4E3A\u53EA\u8BFB\uFF0C\u4E0D\u53EF\u7F16\u8F91\u6216\u5220\u9664\u3002\u4EC5\u6709\u5F53\u524D\u5305\uFF08\u6765\u6E90\u6807\u8BB0\u4E3A"\u5F53\u524D"\uFF09\u7684\u6750\u6599\u53EF\u7F16\u8F91\u3002</span>'
-              },
-              action: {
-                type: "select",
-                label: "\u64CD\u4F5C",
-                options: {
-                  add: "\u65B0\u5EFA\u6750\u6599",
-                  edit: "\u7F16\u8F91\u5DF2\u6709\u6750\u6599",
-                  delete: "\u5220\u9664\u6750\u6599"
-                },
-                value: "add"
-              },
-              materialSelect: {
-                type: "select",
-                label: "\u9009\u62E9\u6750\u6599",
-                options: materialOptions,
-                value: "",
-                description: "\u9009\u62E9\u8981\u7F16\u8F91\u6216\u5220\u9664\u7684\u6750\u6599\uFF08\u65B0\u5EFA\u64CD\u4F5C\u4E0D\u9700\u8981\u9009\u62E9\uFF09"
-              }
-            },
-            onConfirm: function(formData) {
-              var action = formData.action;
-              var selectedId = formData.materialSelect;
-              var selectedMat, mi;
-              if (action === "add") {
-                _showEditDialog(config, null, null, true);
-                this.hide();
-                return;
-              }
-              if (!selectedId) {
-                showToast2("\u8BF7\u9009\u62E9\u4E00\u4E2A\u6750\u6599", "error");
-                return false;
-              }
-              selectedMat = null;
-              for (mi = 0; mi < materials.length; mi++) {
-                if (materials[mi].id === selectedId) {
-                  selectedMat = materials[mi];
-                  break;
-                }
-              }
-              if (!selectedMat) {
-                showToast2('\u6750\u6599 "' + selectedId + '" \u672A\u627E\u5230', "error");
-                return false;
-              }
-              if (action === "edit") {
-                if (!selectedMat.editable) {
-                  showToast2("\u4E0D\u80FD\u7F16\u8F91\u5185\u7F6E\u6216\u4F9D\u8D56\u5305\u4E2D\u7684\u6750\u6599", "warning");
-                  return false;
-                }
-                _showEditDialog(config, selectedId, selectedMat.data, false);
-                this.hide();
-              } else if (action === "delete") {
-                if (!selectedMat.editable) {
-                  showToast2("\u4E0D\u80FD\u5220\u9664\u5185\u7F6E\u6216\u4F9D\u8D56\u5305\u4E2D\u7684\u6750\u6599", "warning");
-                  return false;
-                }
-                _deleteWithConfirm(config, selectedId);
-                this.hide();
-              }
-            }
-          }).show();
+          var materials = material_manager.listMaterials(config);
+          showDefinitionViewer({
+            title: "\u67E5\u770B\u6750\u6599\u5B9A\u4E49",
+            items: materials,
+            hint: "\u6750\u6599\u5B9A\u4E49\u6587\u4EF6\u4F4D\u4E8E\u5185\u5BB9\u5305 materials/ \u76EE\u5F55\u4E0B\uFF0C\u53EF\u76F4\u63A5\u7F16\u8F91 JSON \u6587\u4EF6\u3002"
+          });
         } catch (e) {
           log2.error("showMaterialManagerDialog \u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u6750\u6599\u7BA1\u7406\u5668: " + (e.message || e), "error");
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u6750\u6599\u5B9A\u4E49\u67E5\u770B\u5668: " + (e.message || e), "error");
         }
       }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
           showMaterialManagerDialog
         };
-      }
-    }
-  });
-
-  // src/generators/subsystem_generator.js
-  var require_subsystem_generator = __commonJS({
-    "src/generators/subsystem_generator.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var fileWriter = require_file_writer();
-      var { getTypeSpecificFields } = require_subsystem_types();
-      var path = __require("path");
-      var fs = __require("fs");
-      var log2 = createLogger2("GenSubsystem");
-      function copySubsystemDefs(packDir, ns, targetDir, flat) {
-        var count = 0;
-        var srcDir = path.join(packDir, ns, "subsystems");
-        if (!fs.existsSync(srcDir)) {
-          log2.warn("copySubsystemDefs: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
-          return 0;
-        }
-        var files = fs.readdirSync(srcDir);
-        function resolveTarget(baseDir, id2, isFlat) {
-          if (isFlat) return baseDir;
-          var seg = id2.split("_")[0];
-          return seg && seg.length > 0 ? path.join(baseDir, seg) : baseDir;
-        }
-        for (var i = 0; i < files.length; i++) {
-          var fileName = files[i];
-          if (!fileName.endsWith(".json")) continue;
-          var srcFile = path.join(srcDir, fileName);
-          try {
-            var raw = fs.readFileSync(srcFile, "utf8");
-            var content = JSON.parse(fileWriter.stripJsonComments(raw));
-            var id = fileName.slice(0, -5);
-            var loc = fileWriter.extractResourceLocation(id, ns);
-            var tDir = resolveTarget(targetDir, loc.path, flat);
-            fileWriter.writeJSONFile(tDir, loc.path + ".json", content);
-            count++;
-          } catch (e) {
-            log2.warn("\u590D\u5236\u5B50\u7CFB\u7EDF\u6587\u4EF6\u5931\u8D25: " + srcFile, e);
-          }
-        }
-        log2.info("copySubsystemDefs: \u5DF2\u590D\u5236 " + count + " \u4E2A\u5B50\u7CFB\u7EDF\u5B9A\u4E49");
-        return count;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { copySubsystemDefs, getTypeSpecificFields };
       }
     }
   });
@@ -12652,25 +13842,11 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var content_pack = require_content_pack();
       var content_pack_manager = require_content_pack_manager();
-      var { getTypeSpecificFields } = require_subsystem_generator();
       var { createLogger: createLogger2 } = require_logger();
       var log2 = createLogger2("SubsystemManager");
       var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
       var DEF_TYPE = "subsystems";
-      function getCurrentPackInfo(config) {
-        var packDir, openResult;
-        if (!config || !config.contentPackPath || typeof config.contentPackPath !== "string" || config.contentPackPath.trim() === "") {
-          return { packDir: "", namespace: "", error: "\u672A\u8BBE\u7F6E\u5F53\u524D\u5185\u5BB9\u5305\u8DEF\u5F84" };
-        }
-        packDir = config.contentPackPath;
-        openResult = content_pack.openContentPack(packDir);
-        if (!openResult.valid) {
-          return { packDir, namespace: "", error: "\u5F53\u524D\u5185\u5BB9\u5305\u65E0\u6548: " + openResult.error };
-        }
-        return { packDir, namespace: openResult.namespace, error: null };
-      }
       function listSubsystems(config) {
         var merged, defs, sources, result, id;
         merged = content_pack_manager.loadMergedDefs(config, DEF_TYPE);
@@ -12687,135 +13863,12 @@
             });
           }
         }
-        log2.info("listSubsystems: \u5171 " + result.length + " \u4E2A\u5B50\u7CFB\u7EDF\u5B9A\u4E49");
-        if (result.length > 0) {
-          log2.info("listSubsystems: \u8BE6\u60C5", result.map(function(r) {
-            return r.id + "=" + r.source;
-          }));
-        } else {
-          log2.warn("listSubsystems: \u672A\u627E\u5230\u4EFB\u4F55\u5B50\u7CFB\u7EDF\u5B9A\u4E49\uFF0Cdefs keys=" + Object.keys(defs).join(",") + ", sources keys=" + Object.keys(sources).join(","));
-        }
+        log2.debug("listSubsystems: \u5171 " + result.length + " \u4E2A\u5B50\u7CFB\u7EDF\u5B9A\u4E49");
         return result;
-      }
-      function createSubsystem(config, id, data) {
-        var packInfo, ns, lookupId, q;
-        if (!id || typeof id !== "string") {
-          return { success: false, error: "\u5B50\u7CFB\u7EDF ID \u65E0\u6548" };
-        }
-        packInfo = getCurrentPackInfo(config);
-        if (packInfo.error) {
-          return { success: false, error: packInfo.error };
-        }
-        ns = packInfo.namespace;
-        lookupId = id.indexOf(":") >= 0 ? id : ns + ":" + id;
-        try {
-          q = content_pack_manager.resolveDefSource(config, DEF_TYPE, lookupId);
-          if (q === "current") {
-            return { success: false, error: '\u5B50\u7CFB\u7EDF\u5B9A\u4E49 "' + lookupId + '" \u5DF2\u5B58\u5728\uFF0C\u8BF7\u4F7F\u7528\u66F4\u65B0\u64CD\u4F5C' };
-          }
-          if (q && q.indexOf("dependency:") === 0) {
-            return { success: false, error: '\u4E0D\u80FD\u8986\u76D6\u4F9D\u8D56\u5305\u4E2D\u7684\u5B50\u7CFB\u7EDF\u5B9A\u4E49 "' + lookupId + '"' };
-          }
-        } catch (e) {
-          log2.warn("createSubsystem: resolveDefSource \u5F02\u5E38\uFF0C\u8DF3\u8FC7\u51B2\u7A81\u68C0\u6D4B", e);
-        }
-        try {
-          content_pack.writeDef(packInfo.packDir, packInfo.namespace, DEF_TYPE, id, data);
-          content_pack_manager.invalidateCache();
-          log2.info("createSubsystem: \u5DF2\u521B\u5EFA\u5B50\u7CFB\u7EDF\u5B9A\u4E49 " + lookupId);
-          return { success: true, error: null };
-        } catch (e) {
-          log2.error("createSubsystem: \u5199\u5165\u5931\u8D25", e);
-          return { success: false, error: e.message };
-        }
-      }
-      function updateSubsystem(config, id, data) {
-        var packInfo;
-        if (!id || typeof id !== "string") {
-          return { success: false, error: "\u5B50\u7CFB\u7EDF ID \u65E0\u6548" };
-        }
-        if (!content_pack_manager.isDefEditable(config, DEF_TYPE, id)) {
-          log2.warn("updateSubsystem: \u5B50\u7CFB\u7EDF " + id + " \u4E0D\u53EF\u7F16\u8F91");
-          return { success: false, error: "\u5B50\u7CFB\u7EDF\u5B9A\u4E49 " + id + " \u4E0D\u53EF\u7F16\u8F91\uFF08\u6765\u81EA\u5185\u7F6E\u5305\u6216\u4F9D\u8D56\u5305\uFF09" };
-        }
-        packInfo = getCurrentPackInfo(config);
-        if (packInfo.error) {
-          return { success: false, error: packInfo.error };
-        }
-        try {
-          content_pack.writeDef(packInfo.packDir, packInfo.namespace, DEF_TYPE, id, data);
-          content_pack_manager.invalidateCache();
-          log2.info("updateSubsystem: \u5DF2\u66F4\u65B0\u5B50\u7CFB\u7EDF\u5B9A\u4E49 " + id);
-          return { success: true, error: null };
-        } catch (e) {
-          log2.error("updateSubsystem: \u5199\u5165\u5931\u8D25", e);
-          return { success: false, error: e.message };
-        }
-      }
-      function deleteSubsystem(config, id) {
-        var packInfo;
-        if (!id || typeof id !== "string") {
-          return { success: false, error: "\u5B50\u7CFB\u7EDF ID \u65E0\u6548" };
-        }
-        if (!content_pack_manager.isDefEditable(config, DEF_TYPE, id)) {
-          log2.warn("deleteSubsystem: \u5B50\u7CFB\u7EDF " + id + " \u4E0D\u53EF\u5220\u9664");
-          return { success: false, error: "\u5B50\u7CFB\u7EDF\u5B9A\u4E49 " + id + " \u4E0D\u53EF\u5220\u9664\uFF08\u6765\u81EA\u5185\u7F6E\u5305\u6216\u4F9D\u8D56\u5305\uFF09" };
-        }
-        packInfo = getCurrentPackInfo(config);
-        if (packInfo.error) {
-          return { success: false, error: packInfo.error };
-        }
-        try {
-          content_pack.deleteDef(packInfo.packDir, packInfo.namespace, DEF_TYPE, id);
-          content_pack_manager.invalidateCache();
-          log2.info("deleteSubsystem: \u5DF2\u5220\u9664\u5B50\u7CFB\u7EDF\u5B9A\u4E49 " + id);
-          return { success: true, error: null };
-        } catch (e) {
-          log2.error("deleteSubsystem: \u5220\u9664\u5931\u8D25", e);
-          return { success: false, error: e.message };
-        }
-      }
-      function getSubsystemTypes() {
-        var types = [
-          "machine_max:engine",
-          "machine_max:motor",
-          "machine_max:gearbox",
-          "machine_max:wheel_driver",
-          "machine_max:seat",
-          "machine_max:car_controller",
-          "machine_max:motorbike_controller",
-          "machine_max:transmission",
-          "machine_max:lighting",
-          "machine_max:item_storage",
-          "machine_max:basic",
-          "machine_max:battery",
-          "machine_max:joint",
-          "machine_max:signal_convert",
-          "machine_max:camera",
-          "machine_max:javascript",
-          "machine_max:turret_driver",
-          "machine_max:weapon_controller",
-          "machine_max:launcher",
-          "machine_max:sight",
-          "machine_max:ammo_loader",
-          "machine_max:regen_loader"
-        ];
-        log2.debug("getSubsystemTypes: \u5171 " + types.length + " \u79CD\u7C7B\u578B");
-        return types.slice();
-      }
-      function getTypeFields(type) {
-        var fields = getTypeSpecificFields(type);
-        log2.debug("getTypeFields: \u7C7B\u578B " + type + " \u6709 " + fields.length + " \u4E2A\u7279\u6709\u5B57\u6BB5");
-        return fields;
       }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
-          listSubsystems,
-          createSubsystem,
-          updateSubsystem,
-          deleteSubsystem,
-          getSubsystemTypes,
-          getTypeFields
+          listSubsystems
         };
       }
     }
@@ -12830,403 +13883,40 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var subsystem_manager = require_subsystem_manager();
-      var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
+      var { showToast: showToast2 } = require_notify();
+      var subsystem_manager = require_subsystem_manager();
+      var subsystem_types = require_subsystem_types();
+      var { showDefinitionViewer } = require_definition_viewer();
       var log2 = createLogger2("SubsystemDialog");
       function _isConfigValid(config) {
         return config && typeof config === "object";
       }
-      function _getTypeDisplayName(typeId) {
-        var map = {
-          "machine_max:engine": "\u5F15\u64CE (Engine)",
-          "machine_max:motor": "\u7535\u673A (Motor)",
-          "machine_max:gearbox": "\u53D8\u901F\u7BB1 (Gearbox)",
-          "machine_max:wheel_driver": "\u8F6E\u6BC2\u7535\u673A (Wheel Driver)",
-          "machine_max:seat": "\u5EA7\u6905 (Seat)",
-          "machine_max:car_controller": "\u8F7F\u8F66\u63A7\u5236\u5668 (Car Controller)",
-          "machine_max:motorbike_controller": "\u6469\u6258\u63A7\u5236\u5668 (Motorbike Controller)",
-          "machine_max:transmission": "\u5206\u52A8\u5668 (Transmission)",
-          "machine_max:lighting": "\u8F66\u706F (Lighting)",
-          "machine_max:item_storage": "\u8D27\u7BB1 (Item Storage)",
-          "machine_max:basic": "\u57FA\u7840 (Basic)",
-          "machine_max:battery": "\u7535\u6C60 (Battery)",
-          "machine_max:joint": "\u5173\u8282 (Joint)",
-          "machine_max:signal_convert": "\u4FE1\u53F7\u8F6C\u6362\u5668 (Signal Convert)",
-          "machine_max:camera": "\u6444\u50CF\u5934 (Camera)",
-          "machine_max:javascript": "\u811A\u672C (JavaScript)",
-          "machine_max:turret_driver": "\u70AE\u5854 (Turret Driver)",
-          "machine_max:weapon_controller": "\u6B66\u5668\u63A7\u5236\u5668 (Weapon Controller)",
-          "machine_max:launcher": "\u53D1\u5C04\u5668 (Launcher)"
-        };
-        return map[typeId] || typeId;
-      }
-      function _getSourceLabel(source) {
-        if (source === "current") return "\u5F53\u524D\u5305";
-        if (source === "builtin") return "\u5185\u7F6E";
-        if (source && source.indexOf("dependency:") === 0) return "\u4F9D\u8D56\u5305";
-        return source || "\u672A\u77E5";
-      }
-      function _escapeHtml(str) {
-        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-      }
-      function _buildSubsystemListHtml(subsystems) {
-        if (!subsystems || subsystems.length === 0) {
-          return '<p style="color:#888;font-style:italic">\u6682\u65E0\u5B50\u7CFB\u7EDF\u5B9A\u4E49\u3002\u70B9\u51FB"\u521B\u5EFA\u65B0\u5B50\u7CFB\u7EDF\u578B\u53F7"\u6DFB\u52A0\u7B2C\u4E00\u4E2A\u3002</p>';
-        }
-        var html = '<div style="max-height:200px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#eaeaea"><th style="padding:3px 6px;text-align:left;border-bottom:1px solid #ccc">ID</th><th style="padding:3px 6px;text-align:left;border-bottom:1px solid #ccc">\u7C7B\u578B</th><th style="padding:3px 6px;text-align:left;border-bottom:1px solid #ccc">\u6765\u6E90</th></tr></thead><tbody>';
-        var i, sub, typeLabel, sourceLabel, lockIcon;
-        for (i = 0; i < subsystems.length; i++) {
-          sub = subsystems[i];
-          typeLabel = _getTypeDisplayName(sub.data && sub.data.type);
-          sourceLabel = _getSourceLabel(sub.source);
-          lockIcon = sub.editable ? "" : " \u{1F512}";
-          html += '<tr><td style="padding:3px 6px;border-bottom:1px solid #eee;word-break:break-all">' + _escapeHtml(sub.id) + lockIcon + '</td><td style="padding:3px 6px;border-bottom:1px solid #eee">' + typeLabel + '</td><td style="padding:3px 6px;border-bottom:1px solid #eee">' + sourceLabel + "</td></tr>";
-        }
-        html += "</tbody></table></div>";
-        return html;
-      }
-      function _buildTypeOptions() {
-        var types = subsystem_manager.getSubsystemTypes();
-        var options = {};
-        var i;
-        for (i = 0; i < types.length; i++) {
-          options[types[i]] = _getTypeDisplayName(types[i]);
-        }
-        return options;
-      }
-      function _buildEditableOptions(subsystems) {
-        var options = {};
-        var i, sub;
-        for (i = 0; i < subsystems.length; i++) {
-          sub = subsystems[i];
-          if (sub.editable) {
-            options[sub.id] = sub.id + " (" + _getTypeDisplayName(sub.data && sub.data.type) + ")";
-          }
-        }
-        return options;
-      }
-      var _typeOptions = null;
-      function _getTypeOptions() {
-        if (!_typeOptions) {
-          _typeOptions = _buildTypeOptions();
-        }
-        return _typeOptions;
-      }
-      function _showCreateDialog(config) {
-        try {
-          new Dialog({
-            id: "mm_subsystem_create",
-            title: "\u521B\u5EFA\u65B0\u5B50\u7CFB\u7EDF\u578B\u53F7",
-            width: 480,
-            form: {
-              subsystemId: {
-                type: "text",
-                label: "\u5B50\u7CFB\u7EDF ID",
-                value: "",
-                description: "\u5EFA\u8BAE\u683C\u5F0F: namespace:name\uFF0C\u4EC5\u9650\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001_ - . / :"
-              },
-              type: {
-                type: "select",
-                label: "\u5B50\u7CFB\u7EDF\u7C7B\u578B",
-                options: _getTypeOptions(),
-                value: "machine_max:basic",
-                description: "\u9009\u62E9\u5B50\u7CFB\u7EDF\u529F\u80FD\u7C7B\u578B"
-              },
-              basic_durability: {
-                type: "number",
-                label: "\u57FA\u7840\u8010\u4E45\u5EA6",
-                value: 20,
-                description: "\u5B50\u7CFB\u7EDF\u57FA\u7840\u8010\u4E45\u5EA6\uFF0C\u964D\u81F3 0 \u65F6\u762B\u75EA\uFF08\u9ED8\u8BA4 20.0\uFF09"
-              },
-              pass_damage: {
-                type: "checkbox",
-                label: "\u4F20\u9012\u4F24\u5BB3",
-                value: true,
-                description: "\u82E5\u542F\u7528\uFF0C\u5B50\u7CFB\u7EDF\u53D7\u5230\u7684\u4F24\u5BB3\u4F1A\u4F20\u9012\u7ED9\u96F6\u4EF6"
-              },
-              limit_damage: {
-                type: "checkbox",
-                label: "\u9650\u5236\u4F24\u5BB3\u4F20\u9012",
-                value: false,
-                description: "\u82E5\u542F\u7528\uFF0C\u4F24\u5BB3\u4F20\u9012\u503C\u4E0D\u8D85\u8FC7\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6"
-              },
-              hidden: {
-                type: "checkbox",
-                label: "\u9690\u85CF\u663E\u793A",
-                value: false,
-                description: "\u82E5\u542F\u7528\uFF0C\u8BE5\u5B50\u7CFB\u7EDF\u4E0D\u4F1A\u5728 HUD \u7B49\u5904\u663E\u793A"
-              }
-            },
-            onConfirm: function(formData) {
-              var id = formData.subsystemId ? formData.subsystemId.trim() : "";
-              if (!id) {
-                showToast2("\u8BF7\u8F93\u5165\u5B50\u7CFB\u7EDF ID", "error");
-                return false;
-              }
-              var data = {
-                type: formData.type,
-                basic_durability: parseFloat(formData.basic_durability) || 20,
-                pass_damage: !!formData.pass_damage,
-                limit_damage: !!formData.limit_damage,
-                hidden: !!formData.hidden
-              };
-              var result = subsystem_manager.createSubsystem(config, id, data);
-              if (!result.success) {
-                showToast2("\u521B\u5EFA\u5931\u8D25: " + (result.error || "\u672A\u77E5\u9519\u8BEF"), "error");
-                return false;
-              }
-              showToast2("\u5B50\u7CFB\u7EDF\u578B\u53F7 " + id + " \u521B\u5EFA\u6210\u529F", "positive");
-              log2.info("\u5B50\u7CFB\u7EDF\u578B\u53F7\u521B\u5EFA\u6210\u529F", { id, type: data.type });
-              this.hide();
-            }
-          }).show();
-        } catch (e) {
-          log2.error("_showCreateDialog \u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u521B\u5EFA\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
-        }
-      }
-      function _showEditPickDialog(config) {
-        var subsystems = subsystem_manager.listSubsystems(config);
-        var editable = [];
-        var i;
-        for (i = 0; i < subsystems.length; i++) {
-          if (subsystems[i].editable) {
-            editable.push(subsystems[i]);
-          }
-        }
-        if (editable.length === 0) {
-          showToast2("\u6CA1\u6709\u53EF\u7F16\u8F91\u7684\u5B50\u7CFB\u7EDF\u5B9A\u4E49", "warning");
-          return;
-        }
-        try {
-          new Dialog({
-            id: "mm_subsystem_edit_pick",
-            title: "\u9009\u62E9\u8981\u7F16\u8F91\u7684\u5B50\u7CFB\u7EDF",
-            width: 480,
-            form: {
-              subsystemId: {
-                type: "select",
-                label: "\u5B50\u7CFB\u7EDF",
-                options: _buildEditableOptions(subsystems),
-                value: editable[0].id,
-                description: "\u9009\u62E9\u8981\u7F16\u8F91\u7684\u5B50\u7CFB\u7EDF\u578B\u53F7"
-              }
-            },
-            onConfirm: function(formData) {
-              this.hide();
-              _showEditFormDialog(config, formData.subsystemId);
-            }
-          }).show();
-        } catch (e) {
-          log2.error("_showEditPickDialog \u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u9009\u62E9\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
-        }
-      }
-      function _showEditFormDialog(config, subsystemId) {
-        var subsystems = subsystem_manager.listSubsystems(config);
-        var target = null;
-        var i;
-        for (i = 0; i < subsystems.length; i++) {
-          if (subsystems[i].id === subsystemId) {
-            target = subsystems[i];
-            break;
-          }
-        }
-        if (!target) {
-          showToast2("\u672A\u627E\u5230\u5B50\u7CFB\u7EDF " + subsystemId, "error");
-          return;
-        }
-        if (!target.editable) {
-          showToast2("\u5B50\u7CFB\u7EDF " + subsystemId + " \u4E0D\u53EF\u7F16\u8F91\uFF08\u6765\u81EA\u5185\u7F6E\u5305\u6216\u4F9D\u8D56\u5305\uFF09", "error");
-          return;
-        }
-        var data = target.data || {};
-        var currentType = data.type || "machine_max:basic";
-        try {
-          new Dialog({
-            id: "mm_subsystem_edit_form",
-            title: "\u7F16\u8F91\u5B50\u7CFB\u7EDF: " + subsystemId,
-            width: 480,
-            form: {
-              type: {
-                type: "select",
-                label: "\u5B50\u7CFB\u7EDF\u7C7B\u578B",
-                options: _getTypeOptions(),
-                value: currentType,
-                description: "\u66F4\u6539\u7C7B\u578B\u4F1A\u5F71\u54CD\u7C7B\u578B\u7279\u6709\u5B57\u6BB5"
-              },
-              basic_durability: {
-                type: "number",
-                label: "\u57FA\u7840\u8010\u4E45\u5EA6",
-                value: data.basic_durability !== void 0 ? data.basic_durability : 20,
-                description: "\u5B50\u7CFB\u7EDF\u57FA\u7840\u8010\u4E45\u5EA6\uFF0C\u964D\u81F3 0 \u65F6\u762B\u75EA\uFF08\u9ED8\u8BA4 20.0\uFF09"
-              },
-              pass_damage: {
-                type: "checkbox",
-                label: "\u4F20\u9012\u4F24\u5BB3",
-                value: data.pass_damage !== false,
-                description: "\u82E5\u542F\u7528\uFF0C\u5B50\u7CFB\u7EDF\u53D7\u5230\u7684\u4F24\u5BB3\u4F1A\u4F20\u9012\u7ED9\u96F6\u4EF6"
-              },
-              limit_damage: {
-                type: "checkbox",
-                label: "\u9650\u5236\u4F24\u5BB3\u4F20\u9012",
-                value: !!data.limit_damage,
-                description: "\u82E5\u542F\u7528\uFF0C\u4F24\u5BB3\u4F20\u9012\u503C\u4E0D\u8D85\u8FC7\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6"
-              },
-              hidden: {
-                type: "checkbox",
-                label: "\u9690\u85CF\u663E\u793A",
-                value: !!data.hidden,
-                description: "\u82E5\u542F\u7528\uFF0C\u8BE5\u5B50\u7CFB\u7EDF\u4E0D\u4F1A\u5728 HUD \u7B49\u5904\u663E\u793A"
-              }
-            },
-            onConfirm: function(formData) {
-              var updatedData = {
-                type: formData.type,
-                basic_durability: parseFloat(formData.basic_durability) || 20,
-                pass_damage: !!formData.pass_damage,
-                limit_damage: !!formData.limit_damage,
-                hidden: !!formData.hidden
-              };
-              var result = subsystem_manager.updateSubsystem(config, subsystemId, updatedData);
-              if (!result.success) {
-                showToast2("\u66F4\u65B0\u5931\u8D25: " + (result.error || "\u672A\u77E5\u9519\u8BEF"), "error");
-                return false;
-              }
-              showToast2("\u5B50\u7CFB\u7EDF\u578B\u53F7 " + subsystemId + " \u5DF2\u66F4\u65B0", "positive");
-              log2.info("\u5B50\u7CFB\u7EDF\u578B\u53F7\u5DF2\u66F4\u65B0", { id: subsystemId, type: updatedData.type });
-              this.hide();
-            }
-          }).show();
-        } catch (e) {
-          log2.error("_showEditFormDialog \u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u7F16\u8F91\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
-        }
-      }
-      function _showDeletePickDialog(config) {
-        var subsystems = subsystem_manager.listSubsystems(config);
-        var editable = [];
-        var i;
-        for (i = 0; i < subsystems.length; i++) {
-          if (subsystems[i].editable) {
-            editable.push(subsystems[i]);
-          }
-        }
-        if (editable.length === 0) {
-          showToast2("\u6CA1\u6709\u53EF\u5220\u9664\u7684\u5B50\u7CFB\u7EDF\u5B9A\u4E49", "warning");
-          return;
-        }
-        try {
-          new Dialog({
-            id: "mm_subsystem_delete_pick",
-            title: "\u9009\u62E9\u8981\u5220\u9664\u7684\u5B50\u7CFB\u7EDF",
-            width: 480,
-            form: {
-              subsystemId: {
-                type: "select",
-                label: "\u5B50\u7CFB\u7EDF",
-                options: _buildEditableOptions(subsystems),
-                value: editable[0].id,
-                description: "\u9009\u62E9\u8981\u5220\u9664\u7684\u5B50\u7CFB\u7EDF\u578B\u53F7\u3002\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\uFF01"
-              }
-            },
-            onConfirm: function(formData) {
-              this.hide();
-              _showDeleteConfirmDialog(config, formData.subsystemId);
-            }
-          }).show();
-        } catch (e) {
-          log2.error("_showDeletePickDialog \u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u9009\u62E9\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
-        }
-      }
-      function _showDeleteConfirmDialog(config, subsystemId) {
-        try {
-          new Dialog({
-            id: "mm_subsystem_delete_confirm",
-            title: "\u786E\u8BA4\u5220\u9664",
-            width: 420,
-            form: {
-              confirmText: {
-                type: "info",
-                text: "\u786E\u5B9A\u8981\u5220\u9664\u5B50\u7CFB\u7EDF\u578B\u53F7 <b>" + _escapeHtml(subsystemId) + '</b> \u5417\uFF1F<br><br><span style="color:#c00">\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\uFF01</span>'
-              }
-            },
-            onConfirm: function() {
-              var result = subsystem_manager.deleteSubsystem(config, subsystemId);
-              if (!result.success) {
-                showToast2("\u5220\u9664\u5931\u8D25: " + (result.error || "\u672A\u77E5\u9519\u8BEF"), "error");
-                return false;
-              }
-              showToast2("\u5B50\u7CFB\u7EDF\u578B\u53F7 " + subsystemId + " \u5DF2\u5220\u9664", "positive");
-              log2.info("\u5B50\u7CFB\u7EDF\u578B\u53F7\u5DF2\u5220\u9664", { id: subsystemId });
-              this.hide();
-            }
-          }).show();
-        } catch (e) {
-          log2.error("_showDeleteConfirmDialog \u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u786E\u8BA4\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
-        }
-      }
-      function showSubsystemManagerDialog(config, onSave) {
+      function showSubsystemManagerDialog(config) {
         if (!_isConfigValid(config)) {
           showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
           return;
         }
-        var subsystems = subsystem_manager.listSubsystems(config);
-        log2.info("showSubsystemManagerDialog: listSubsystems \u8FD4\u56DE " + (subsystems ? subsystems.length : "null") + " \u4E2A\u5B9A\u4E49");
-        if (subsystems && subsystems.length > 0) {
-          log2.info("showSubsystemManagerDialog: \u5B50\u7CFB\u7EDF\u5B9A\u4E49\u5217\u8868", subsystems.map(function(s) {
-            return s.id;
-          }));
-        } else {
-          log2.warn("showSubsystemManagerDialog: \u5B50\u7CFB\u7EDF\u5B9A\u4E49\u5217\u8868\u4E3A\u7A7A\uFF0Cconfig=" + JSON.stringify({ contentPackPath: config ? config.contentPackPath : null, dependencyPaths: config ? config.dependencyPaths : null }));
-        }
-        var listHtml = _buildSubsystemListHtml(subsystems);
         try {
-          new Dialog({
-            id: "mm_subsystem_manager",
-            title: "\u7BA1\u7406\u5B50\u7CFB\u7EDF\u578B\u53F7",
-            width: 560,
-            form: {
-              listInfo: {
-                type: "info",
-                text: "<b>\u5F53\u524D\u5B50\u7CFB\u7EDF\u578B\u53F7\u5217\u8868</b><br><br>" + listHtml + '<br><span style="color:#888;font-size:11px">\u{1F512} \u8868\u793A\u6765\u81EA\u5185\u7F6E\u5305\u6216\u4F9D\u8D56\u5305\uFF0C\u4E0D\u53EF\u7F16\u8F91\u6216\u5220\u9664\u3002</span>'
-              },
-              action: {
-                type: "select",
-                label: "\u9009\u62E9\u64CD\u4F5C",
-                options: {
-                  create: "\u521B\u5EFA\u65B0\u5B50\u7CFB\u7EDF\u578B\u53F7",
-                  edit: "\u7F16\u8F91\u5DF2\u6709\u5B50\u7CFB\u7EDF\u578B\u53F7",
-                  delete: "\u5220\u9664\u5B50\u7CFB\u7EDF\u578B\u53F7"
-                },
-                value: "create"
-              }
-            },
-            onConfirm: function(formData) {
-              this.hide();
-              try {
-                if (formData.action === "create") {
-                  _showCreateDialog(config);
-                } else if (formData.action === "edit") {
-                  _showEditPickDialog(config);
-                } else if (formData.action === "delete") {
-                  _showDeletePickDialog(config);
-                }
-              } catch (e) {
-                log2.error("\u6267\u884C\u64CD\u4F5C\u5931\u8D25", e);
-                showToast2("\u64CD\u4F5C\u5931\u8D25: " + (e.message || e), "error");
-              }
-              if (typeof onSave === "function") {
-                onSave(config);
-              }
-            }
-          }).show();
+          var subsystems = subsystem_manager.listSubsystems(config);
+          var items = subsystems.map(function(s) {
+            var meta = subsystem_types.getTypeMeta(s.data && s.data.type);
+            return {
+              id: s.id,
+              data: s.data,
+              source: s.source,
+              editable: s.editable,
+              subLabel: meta ? meta.displayName : String(s.data && s.data.type || "")
+            };
+          });
+          showDefinitionViewer({
+            title: "\u67E5\u770B\u5B50\u7CFB\u7EDF\u578B\u53F7",
+            items,
+            hint: "\u5B50\u7CFB\u7EDF\u5B9A\u4E49\u6587\u4EF6\u4F4D\u4E8E\u5185\u5BB9\u5305 subsystems/ \u76EE\u5F55\u4E0B\uFF0C\u53EF\u76F4\u63A5\u7F16\u8F91 JSON \u6587\u4EF6\u3002"
+          });
         } catch (e) {
           log2.error("showSubsystemManagerDialog \u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u7BA1\u7406\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u5B50\u7CFB\u7EDF\u578B\u53F7\u67E5\u770B\u5668: " + (e.message || e), "error");
         }
       }
       if (typeof module !== "undefined" && module.exports) {
@@ -13246,7 +13936,6 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var content_pack = require_content_pack();
       var content_pack_manager = require_content_pack_manager();
       var { createLogger: createLogger2 } = require_logger();
       var log2 = createLogger2("ConnectorManager");
@@ -13264,85 +13953,12 @@
             editable: content_pack_manager.isDefEditable(config, "connectors", id)
           });
         }
-        log2.info("listConnectors: \u5171 " + result.length + " \u4E2A\u8FDE\u63A5\u5668");
-        log2.info("listConnectors: \u6765\u6E90\u5206\u5E03", result.map(function(r) {
-          return r.id + "=" + r.source;
-        }));
+        log2.debug("listConnectors: \u5171 " + result.length + " \u4E2A\u8FDE\u63A5\u5668");
         return result;
-      }
-      function createConnector(config, id, data) {
-        var source, meta, ns, lookupId;
-        if (!config || !config.contentPackPath) {
-          throw new Error("\u5F53\u524D\u6CA1\u6709\u5173\u8054\u7684\u5185\u5BB9\u5305\uFF0C\u65E0\u6CD5\u521B\u5EFA\u8FDE\u63A5\u5668");
-        }
-        meta = content_pack.readPackMeta(config.contentPackPath);
-        if (!meta) {
-          throw new Error("\u65E0\u6CD5\u8BFB\u53D6\u5185\u5BB9\u5305 meta.json: " + config.contentPackPath);
-        }
-        ns = content_pack.resolveNamespace(meta.id);
-        if (!ns) {
-          throw new Error("\u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace: " + meta.id);
-        }
-        lookupId = id.indexOf(":") >= 0 ? id : ns + ":" + id;
-        source = content_pack_manager.resolveDefSource(config, "connectors", lookupId);
-        if (source === "current") {
-          throw new Error('\u8FDE\u63A5\u5668 "' + lookupId + '" \u5DF2\u5B58\u5728\uFF0C\u8BF7\u4F7F\u7528\u66F4\u65B0\u64CD\u4F5C');
-        }
-        if (source && source.indexOf("dependency:") === 0) {
-          throw new Error('\u4E0D\u80FD\u8986\u76D6\u4F9D\u8D56\u5305\u4E2D\u7684\u8FDE\u63A5\u5668 "' + lookupId + '"');
-        }
-        content_pack.writeDef(config.contentPackPath, ns, "connectors", id, data);
-        content_pack_manager.invalidateCache();
-        log2.info('createConnector: \u5DF2\u521B\u5EFA\u8FDE\u63A5\u5668 "' + lookupId + '"');
-      }
-      function updateConnector(config, id, data) {
-        var meta, ns;
-        if (!content_pack_manager.isDefEditable(config, "connectors", id)) {
-          throw new Error('\u4E0D\u80FD\u4FEE\u6539\u5185\u7F6E\u6216\u4F9D\u8D56\u5305\u7684\u8FDE\u63A5\u5668 "' + id + '"');
-        }
-        meta = content_pack.readPackMeta(config.contentPackPath);
-        if (!meta) {
-          throw new Error("\u65E0\u6CD5\u8BFB\u53D6\u5185\u5BB9\u5305 meta.json: " + config.contentPackPath);
-        }
-        ns = content_pack.resolveNamespace(meta.id);
-        if (!ns) {
-          throw new Error("\u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace: " + meta.id);
-        }
-        content_pack.writeDef(config.contentPackPath, ns, "connectors", id, data);
-        content_pack_manager.invalidateCache();
-        log2.info('updateConnector: \u5DF2\u66F4\u65B0\u8FDE\u63A5\u5668 "' + id + '"');
-      }
-      function deleteConnector(config, id) {
-        var meta, ns;
-        if (!content_pack_manager.isDefEditable(config, "connectors", id)) {
-          throw new Error('\u4E0D\u80FD\u5220\u9664\u5185\u7F6E\u6216\u4F9D\u8D56\u5305\u7684\u8FDE\u63A5\u5668 "' + id + '"');
-        }
-        meta = content_pack.readPackMeta(config.contentPackPath);
-        if (!meta) {
-          throw new Error("\u65E0\u6CD5\u8BFB\u53D6\u5185\u5BB9\u5305 meta.json: " + config.contentPackPath);
-        }
-        ns = content_pack.resolveNamespace(meta.id);
-        if (!ns) {
-          throw new Error("\u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace: " + meta.id);
-        }
-        content_pack.deleteDef(config.contentPackPath, ns, "connectors", id);
-        content_pack_manager.invalidateCache();
-        log2.info('deleteConnector: \u5DF2\u5220\u9664\u8FDE\u63A5\u5668 "' + id + '"');
-      }
-      function getConnectorTypes() {
-        return ["Simple", "Advanced"];
-      }
-      function getConnectorDirections() {
-        return ["xp", "yp", "zp", "xn", "yn", "zn"];
       }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
-          listConnectors,
-          createConnector,
-          updateConnector,
-          deleteConnector,
-          getConnectorTypes,
-          getConnectorDirections
+          listConnectors
         };
       }
     }
@@ -13357,766 +13973,35 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var connector_manager = require_connector_manager();
-      var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
+      var { showToast: showToast2 } = require_notify();
+      var connector_manager = require_connector_manager();
+      var { showDefinitionViewer } = require_definition_viewer();
       var log2 = createLogger2("ConnectorDialog");
-      var DIRECTION_LABELS = {
-        xp: "X+ (\u4E1C)",
-        yp: "Y+ (\u4E0A)",
-        zp: "Z+ (\u5357)",
-        xn: "X- (\u897F)",
-        yn: "Y- (\u4E0B)",
-        zn: "Z- (\u5317)"
-      };
-      var SOURCE_LABELS = {
-        current: "\u5F53\u524D\u5305",
-        builtin: "\u5185\u7F6E"
-      };
       function _isConfigValid(config) {
         return config && typeof config === "object";
-      }
-      function _hasContentPack(config) {
-        return config && config.contentPackPath;
-      }
-      function _getConnectorTypeLabel(type) {
-        return type === "Advanced" ? "Advanced\uFF08\u9AD8\u7EA7\uFF09" : "Simple\uFF08\u7B80\u5355\uFF09";
-      }
-      function _getDirectionLabel(dir) {
-        return DIRECTION_LABELS[dir] || dir;
-      }
-      function _getSourceLabel(source) {
-        if (SOURCE_LABELS[source]) return SOURCE_LABELS[source];
-        if (source && source.indexOf("dependency:") === 0) {
-          return "\u4F9D\u8D56\u5305";
-        }
-        return source || "\u672A\u77E5";
-      }
-      function _isReadOnly(item) {
-        return !item || !item.editable;
-      }
-      function _buildConnectorListHtml(items) {
-        if (!items || items.length === 0) {
-          return '<p style="color:#888;text-align:center;padding:12px 0">\uFF08\u6682\u65E0\u8FDE\u63A5\u70B9\u5B9A\u4E49\uFF09</p>';
-        }
-        var rows = "";
-        var i, item, data, typeLabel, dirLabel, sourceLabel, readonlyBadge;
-        for (i = 0; i < items.length; i++) {
-          item = items[i];
-          data = item.data || {};
-          typeLabel = _getConnectorTypeLabel(data.type);
-          dirLabel = _getDirectionLabel(data.direction);
-          sourceLabel = _getSourceLabel(item.source);
-          readonlyBadge = _isReadOnly(item) ? ' <span style="color:#999;font-size:10px">[\u53EA\u8BFB]</span>' : "";
-          rows += '<tr><td style="padding:4px 8px;border-bottom:1px solid #333;font-family:monospace;font-size:12px">' + item.id + readonlyBadge + '</td><td style="padding:4px 8px;border-bottom:1px solid #333;font-size:12px">' + typeLabel + '</td><td style="padding:4px 8px;border-bottom:1px solid #333;font-size:12px">' + dirLabel + '</td><td style="padding:4px 8px;border-bottom:1px solid #333;font-size:11px;color:#888">' + sourceLabel + "</td></tr>";
-        }
-        return '<table style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:4px 8px;border-bottom:2px solid #555;text-align:left;font-size:11px;color:#aaa">ID</th><th style="padding:4px 8px;border-bottom:2px solid #555;text-align:left;font-size:11px;color:#aaa">\u7C7B\u578B</th><th style="padding:4px 8px;border-bottom:2px solid #555;text-align:left;font-size:11px;color:#aaa">\u65B9\u5411</th><th style="padding:4px 8px;border-bottom:2px solid #555;text-align:left;font-size:11px;color:#aaa">\u6765\u6E90</th></tr></thead><tbody>' + rows + "</tbody></table>";
-      }
-      function _getDefaultConnectorData() {
-        return {
-          type: "Simple",
-          direction: "xp",
-          integrity: 1,
-          damage_reduction: 0,
-          damage_multiplier: 1,
-          damage_absorption: 0
-        };
-      }
-      function _extractConnectorData(formData) {
-        return {
-          type: formData.connType || "Simple",
-          direction: formData.connDirection || "xp",
-          integrity: parseFloat(formData.connIntegrity) || 0,
-          damage_reduction: parseFloat(formData.connDamageReduction) || 0,
-          damage_multiplier: parseFloat(formData.connDamageMultiplier) || 0,
-          damage_absorption: parseFloat(formData.connDamageAbsorption) || 0
-        };
-      }
-      function _showConnectorEditDialog(config, existingId, existingData, onSaved) {
-        var isEdit = !!existingId;
-        var defaultData = existingData || _getDefaultConnectorData();
-        try {
-          new Dialog({
-            id: isEdit ? "mm_connector_edit" : "mm_connector_create",
-            title: isEdit ? "\u7F16\u8F91\u8FDE\u63A5\u70B9\u5B9A\u4E49" : "\u521B\u5EFA\u65B0\u8FDE\u63A5\u70B9\u5B9A\u4E49",
-            width: 460,
-            form: {
-              connId: {
-                type: "text",
-                label: "\u8FDE\u63A5\u70B9 ID",
-                value: existingId || "",
-                description: "\u683C\u5F0F\uFF1Anamespace:name\u3002\u65B0\u5EFA\u65F6\u8BF7\u4F7F\u7528\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001_ - . / :"
-              },
-              connType: {
-                type: "select",
-                label: "\u8FDE\u63A5\u7C7B\u578B",
-                options: {
-                  Simple: "Simple\uFF08\u7B80\u5355\uFF09",
-                  Advanced: "Advanced\uFF08\u9AD8\u7EA7\uFF09"
-                },
-                value: defaultData.type || "Simple",
-                description: "Simple=\u521A\u6027\u65E0\u5173\u8282\uFF0CAdvanced=\u652F\u6301\u7269\u7406\u5173\u8282\u53C2\u6570"
-              },
-              connDirection: {
-                type: "select",
-                label: "\u8FDE\u63A5\u65B9\u5411",
-                options: {
-                  xp: "X+\uFF08\u4E1C\uFF09",
-                  yp: "Y+\uFF08\u4E0A\uFF09",
-                  zp: "Z+\uFF08\u5357\uFF09",
-                  xn: "X-\uFF08\u897F\uFF09",
-                  yn: "Y-\uFF08\u4E0B\uFF09",
-                  zn: "Z-\uFF08\u5317\uFF09"
-                },
-                value: defaultData.direction || "xp",
-                description: "\u8FDE\u63A5\u70B9\u7684\u671D\u5411\uFF0C\u4E0E\u96F6\u4EF6\u78B0\u649E\u7BB1\u76F8\u5BF9\u4F4D\u7F6E\u6709\u5173"
-              },
-              connIntegrity: {
-                type: "number",
-                label: "\u7ED3\u6784\u5B8C\u6574\u6027\uFF08integrity\uFF09",
-                value: defaultData.integrity !== void 0 ? defaultData.integrity : 1,
-                description: "\u8FDE\u63A5\u7684\u7ED3\u6784\u5F3A\u5EA6\uFF0C0=\u6781\u5F31\uFF0C1=\u6807\u51C6"
-              },
-              connDamageReduction: {
-                type: "number",
-                label: "\u4F24\u5BB3\u51CF\u514D\uFF08damage_reduction\uFF09",
-                value: defaultData.damage_reduction !== void 0 ? defaultData.damage_reduction : 0,
-                description: "\u901A\u8FC7\u6B64\u8FDE\u63A5\u4F20\u8F93\u7684\u4F24\u5BB3\u51CF\u514D\u6BD4\u4F8B\uFF0C0.0=\u65E0\u51CF\u514D"
-              },
-              connDamageMultiplier: {
-                type: "number",
-                label: "\u4F24\u5BB3\u500D\u7387\uFF08damage_multiplier\uFF09",
-                value: defaultData.damage_multiplier !== void 0 ? defaultData.damage_multiplier : 1,
-                description: "\u901A\u8FC7\u6B64\u8FDE\u63A5\u4F20\u8F93\u7684\u4F24\u5BB3\u500D\u7387\uFF0C1.0=\u6807\u51C6\u500D\u7387"
-              },
-              connDamageAbsorption: {
-                type: "number",
-                label: "\u4F24\u5BB3\u5438\u6536\uFF08damage_absorption\uFF09",
-                value: defaultData.damage_absorption !== void 0 ? defaultData.damage_absorption : 0,
-                description: "\u8FDE\u63A5\u672C\u8EAB\u80FD\u5438\u6536\u7684\u4F24\u5BB3\u91CF\uFF0C\u8D85\u8FC7\u540E\u8FDE\u63A5\u65AD\u88C2"
-              },
-              infoAdvanced: {
-                type: "info",
-                text: '<span style="color:#888;font-size:11px">\u63D0\u793A\uFF1A\u8FDE\u63A5\u5173\u8282\uFF08joints\uFF09\u548C\u6807\u7B7E\uFF08tags\uFF09\u7B49\u9AD8\u7EA7\u5B57\u6BB5\u5C06\u5728\u540E\u7EED\u7248\u672C\u4E2D\u63D0\u4F9B\u3002</span>'
-              }
-            },
-            onConfirm: function(formData) {
-              var id = formData.connId ? formData.connId.trim() : "";
-              if (!id) {
-                showToast2("\u8BF7\u8F93\u5165\u8FDE\u63A5\u70B9 ID", "error");
-                return false;
-              }
-              var data = _extractConnectorData(formData);
-              try {
-                if (isEdit) {
-                  connector_manager.updateConnector(config, id, data);
-                  showToast2('\u8FDE\u63A5\u70B9 "' + id + '" \u5DF2\u66F4\u65B0', "positive");
-                  log2.info('connector_dialog: \u5DF2\u66F4\u65B0\u8FDE\u63A5\u70B9 "' + id + '"');
-                } else {
-                  connector_manager.createConnector(config, id, data);
-                  showToast2('\u8FDE\u63A5\u70B9 "' + id + '" \u5DF2\u521B\u5EFA', "positive");
-                  log2.info('connector_dialog: \u5DF2\u521B\u5EFA\u8FDE\u63A5\u70B9 "' + id + '"');
-                }
-                if (typeof onSaved === "function") onSaved(config);
-                this.hide();
-              } catch (e) {
-                showToast2("\u64CD\u4F5C\u5931\u8D25: " + (e.message || e), "error");
-                log2.error("connector_dialog: \u4FDD\u5B58\u8FDE\u63A5\u70B9\u5931\u8D25", e);
-                return false;
-              }
-            }
-          }).show();
-        } catch (e) {
-          log2.error("connector_dialog: " + (isEdit ? "\u7F16\u8F91" : "\u521B\u5EFA") + "\u5BF9\u8BDD\u6846\u6253\u5F00\u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u8FDE\u63A5\u70B9\u7F16\u8F91\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
-        }
-      }
-      function _showConnectorDeleteConfirm(config, id, onSaved) {
-        try {
-          new Dialog({
-            id: "mm_connector_delete",
-            title: "\u5220\u9664\u8FDE\u63A5\u70B9\u5B9A\u4E49",
-            width: 400,
-            form: {
-              confirmInfo: {
-                type: "info",
-                text: '<span style="color:#e74c3c">\u786E\u5B9A\u8981\u5220\u9664\u8FDE\u63A5\u70B9 "<code>' + id + '</code>" \u5417\uFF1F</span><br><br>\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002'
-              },
-              confirm: {
-                type: "checkbox",
-                label: "\u6211\u786E\u8BA4\u8981\u5220\u9664\u6B64\u8FDE\u63A5\u70B9",
-                value: false
-              }
-            },
-            onConfirm: function(formData) {
-              if (!formData.confirm) {
-                showToast2("\u8BF7\u5148\u52FE\u9009\u786E\u8BA4\u6846", "warning");
-                return false;
-              }
-              try {
-                connector_manager.deleteConnector(config, id);
-                showToast2('\u8FDE\u63A5\u70B9 "' + id + '" \u5DF2\u5220\u9664', "positive");
-                log2.info('connector_dialog: \u5DF2\u5220\u9664\u8FDE\u63A5\u70B9 "' + id + '"');
-                if (typeof onSaved === "function") onSaved(config);
-                this.hide();
-              } catch (e) {
-                showToast2("\u5220\u9664\u5931\u8D25: " + (e.message || e), "error");
-                log2.error("connector_dialog: \u5220\u9664\u8FDE\u63A5\u70B9\u5931\u8D25", e);
-                return false;
-              }
-            }
-          }).show();
-        } catch (e) {
-          log2.error("connector_dialog: \u5220\u9664\u5BF9\u8BDD\u6846\u6253\u5F00\u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u5220\u9664\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
-        }
       }
       function showConnectorManagerDialog(config) {
         if (!_isConfigValid(config)) {
           showToast2("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
           return;
         }
-        var connectors = connector_manager.listConnectors(config);
-        log2.info("showConnectorManagerDialog: listConnectors \u8FD4\u56DE " + (connectors ? connectors.length : "null") + " \u4E2A\u5B9A\u4E49");
-        if (connectors && connectors.length > 0) {
-          log2.info("showConnectorManagerDialog: \u8FDE\u63A5\u70B9\u5B9A\u4E49\u5217\u8868", connectors.map(function(c) {
-            return c.id;
-          }));
-        } else {
-          log2.warn("showConnectorManagerDialog: \u8FDE\u63A5\u70B9\u5B9A\u4E49\u5217\u8868\u4E3A\u7A7A");
-        }
-        var listHtml = _buildConnectorListHtml(connectors);
-        var hasContentPack = _hasContentPack(config);
         try {
-          new Dialog({
-            id: "mm_connector_manager",
-            title: "\u8FDE\u63A5\u70B9\u5B9A\u4E49\u7BA1\u7406",
-            width: 640,
-            form: {
-              connectorList: {
-                type: "info",
-                text: "<b>\u5DF2\u5B9A\u4E49\u7684\u8FDE\u63A5\u70B9\uFF1A</b><br><br>" + listHtml + '<br><span style="color:#888;font-size:11px">\u63D0\u793A\uFF1A\u8FDE\u63A5\u70B9\u5B9A\u4E49\u96F6\u4EF6\u4E4B\u95F4\u7684\u8FDE\u63A5\u89C4\u5219\u3002\u8FDE\u63A5\u65B9\u5411\u51B3\u5B9A\u96F6\u4EF6\u5728\u54EA\u4E2A\u9762\u53EF\u4EE5\u4E0E\u5176\u4ED6\u96F6\u4EF6\u5BF9\u63A5\u3002</span>'
-              },
-              action: {
-                type: "select",
-                label: "\u9009\u62E9\u64CD\u4F5C",
-                options: {
-                  create: "\u521B\u5EFA\u65B0\u8FDE\u63A5\u70B9",
-                  edit: "\u7F16\u8F91\u5DF2\u6709\u8FDE\u63A5\u70B9",
-                  delete: "\u5220\u9664\u8FDE\u63A5\u70B9"
-                },
-                value: "create"
-              },
-              connectorId: {
-                type: "text",
-                label: "\u8FDE\u63A5\u70B9 ID\uFF08\u7F16\u8F91/\u5220\u9664\u65F6\u586B\u5199\uFF09",
-                value: "",
-                description: "\u9009\u62E9\u7F16\u8F91\u6216\u5220\u9664\u64CD\u4F5C\u65F6\uFF0C\u5728\u6B64\u8F93\u5165\u76EE\u6807\u8FDE\u63A5\u70B9\u7684\u5B8C\u6574 ID"
-              }
-            },
-            onConfirm: function(formData) {
-              var action = formData.action;
-              var connId = formData.connectorId ? formData.connectorId.trim() : "";
-              var editItem, delItem, i;
-              this.hide();
-              try {
-                if (action === "create") {
-                  if (!hasContentPack) {
-                    showToast2("\u8BF7\u5148\u5173\u8054\u5185\u5BB9\u5305\uFF0C\u518D\u521B\u5EFA\u8FDE\u63A5\u70B9", "warning");
-                    return;
-                  }
-                  _showConnectorEditDialog(config, null, null, function() {
-                    showConnectorManagerDialog(config);
-                  });
-                } else if (action === "edit") {
-                  if (!connId) {
-                    showToast2("\u8BF7\u586B\u5199\u8981\u7F16\u8F91\u7684\u8FDE\u63A5\u70B9 ID", "warning");
-                    return;
-                  }
-                  if (!hasContentPack) {
-                    showToast2("\u6CA1\u6709\u5173\u8054\u5185\u5BB9\u5305\uFF0C\u65E0\u6CD5\u7F16\u8F91", "warning");
-                    return;
-                  }
-                  editItem = null;
-                  for (i = 0; i < connectors.length; i++) {
-                    if (connectors[i].id === connId) {
-                      editItem = connectors[i];
-                      break;
-                    }
-                  }
-                  if (!editItem) {
-                    showToast2('\u672A\u627E\u5230\u8FDE\u63A5\u70B9 "' + connId + '"', "error");
-                    return;
-                  }
-                  if (_isReadOnly(editItem)) {
-                    showToast2("\u4E0D\u80FD\u7F16\u8F91\u5185\u7F6E\u6216\u4F9D\u8D56\u5305\u4E2D\u7684\u8FDE\u63A5\u70B9", "warning");
-                    return;
-                  }
-                  _showConnectorEditDialog(config, connId, editItem.data, function() {
-                    showConnectorManagerDialog(config);
-                  });
-                } else if (action === "delete") {
-                  if (!connId) {
-                    showToast2("\u8BF7\u586B\u5199\u8981\u5220\u9664\u7684\u8FDE\u63A5\u70B9 ID", "warning");
-                    return;
-                  }
-                  if (!hasContentPack) {
-                    showToast2("\u6CA1\u6709\u5173\u8054\u5185\u5BB9\u5305\uFF0C\u65E0\u6CD5\u5220\u9664", "warning");
-                    return;
-                  }
-                  delItem = null;
-                  for (i = 0; i < connectors.length; i++) {
-                    if (connectors[i].id === connId) {
-                      delItem = connectors[i];
-                      break;
-                    }
-                  }
-                  if (!delItem) {
-                    showToast2('\u672A\u627E\u5230\u8FDE\u63A5\u70B9 "' + connId + '"', "error");
-                    return;
-                  }
-                  if (_isReadOnly(delItem)) {
-                    showToast2("\u4E0D\u80FD\u5220\u9664\u5185\u7F6E\u6216\u4F9D\u8D56\u5305\u4E2D\u7684\u8FDE\u63A5\u70B9", "warning");
-                    return;
-                  }
-                  _showConnectorDeleteConfirm(config, connId, function() {
-                    showConnectorManagerDialog(config);
-                  });
-                }
-              } catch (e) {
-                log2.error("connector_dialog: \u64CD\u4F5C\u5931\u8D25", e);
-                showToast2("\u64CD\u4F5C\u5931\u8D25: " + (e.message || e), "error");
-              }
-            }
-          }).show();
+          var connectors = connector_manager.listConnectors(config);
+          showDefinitionViewer({
+            title: "\u67E5\u770B\u8FDE\u63A5\u70B9\u5B9A\u4E49",
+            items: connectors,
+            hint: "\u8FDE\u63A5\u70B9\u5B9A\u4E49\u6587\u4EF6\u4F4D\u4E8E\u5185\u5BB9\u5305 connectors/ \u76EE\u5F55\u4E0B\uFF0C\u53EF\u76F4\u63A5\u7F16\u8F91 JSON \u6587\u4EF6\u3002"
+          });
         } catch (e) {
-          log2.error("connector_dialog: \u4E3B\u5BF9\u8BDD\u6846\u6253\u5F00\u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u8FDE\u63A5\u70B9\u7BA1\u7406\u5668: " + (e.message || e), "error");
+          log2.error("showConnectorManagerDialog \u5931\u8D25", e);
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u8FDE\u63A5\u70B9\u5B9A\u4E49\u67E5\u770B\u5668: " + (e.message || e), "error");
         }
       }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
           showConnectorManagerDialog
         };
-      }
-    }
-  });
-
-  // src/generators/meta_generator.js
-  var require_meta_generator = __commonJS({
-    "src/generators/meta_generator.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("GenMeta");
-      function generateMeta(projectConfig) {
-        var pm = projectConfig.packMeta || {};
-        var packId = pm.id || (Project ? Project.name || "content_pack" : "content_pack");
-        packId = packId.toLowerCase().replace(/[^a-z0-9_\-.:/]/g, "_");
-        var result = {
-          id: packId,
-          version: pm.version || "1.0",
-          author: pm.author || "Anonymous",
-          description: pm.description || ""
-        };
-        var deps = pm.dependencies || [];
-        if (deps.length > 0) {
-          result.dependencies = deps.map(function(dep) {
-            var depId = dep.id || dep;
-            var depType = dep.type || "hard";
-            return { id: depId, type: depType };
-          });
-        }
-        if (typeof pm.enable_auto_pack === "boolean") {
-          result.enable_auto_pack = pm.enable_auto_pack;
-        }
-        var parts = projectConfig.parts || {};
-        var partIds = Object.keys(parts);
-        log2.info("generateMeta: \u5305ID=" + result.id + ", \u96F6\u4EF6\u6570=" + partIds.length);
-        return result;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { generateMeta };
-      }
-    }
-  });
-
-  // src/utils/name_utils.js
-  var require_name_utils = __commonJS({
-    "src/utils/name_utils.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var TYPE_LABELS = {
-        sub_part: { zh: "\u5B50\u96F6\u4EF6", en: "SubPart" },
-        interact: { zh: "\u4EA4\u4E92\u533A", en: "Interact" },
-        connector: { zh: "\u8FDE\u63A5\u70B9", en: "Connector" },
-        subsystem: { zh: "\u5B50\u7CFB\u7EDF", en: "Subsystem" }
-      };
-      var TYPE_PREFIXES = Object.keys(TYPE_LABELS);
-      function extractType(fullKey) {
-        if (!fullKey || typeof fullKey !== "string") return null;
-        for (var i = 0; i < TYPE_PREFIXES.length; i++) {
-          if (fullKey.indexOf(TYPE_PREFIXES[i] + ".") === 0) {
-            return TYPE_PREFIXES[i];
-          }
-        }
-        return null;
-      }
-      function extractShortName(fullKey, ns) {
-        if (!fullKey || typeof fullKey !== "string") return fullKey || "";
-        ns = ns || "machine_max";
-        var prefix = "." + ns + ".";
-        var idx = fullKey.indexOf(prefix);
-        if (idx >= 0) {
-          return fullKey.substring(idx + prefix.length);
-        }
-        return fullKey;
-      }
-      function buildFullKey(type, shortName, ns) {
-        if (!shortName) return "";
-        ns = ns || "machine_max";
-        var existingType = extractType(shortName);
-        if (existingType) {
-          shortName = extractShortName(shortName, ns);
-        }
-        if (type) {
-          return type + "." + ns + "." + shortName;
-        }
-        return shortName;
-      }
-      function displayLabel(fullKey, locale, ns) {
-        if (!fullKey || typeof fullKey !== "string") return fullKey || "";
-        var type = extractType(fullKey);
-        var shortName = extractShortName(fullKey, ns);
-        if (!type) return shortName;
-        var labels = TYPE_LABELS[type];
-        var label = labels ? labels[locale] || labels["zh"] || type : type;
-        return "[" + label + "]" + shortName;
-      }
-      function getTargetOptions(variant, ns) {
-        var options = [];
-        ns = ns || "machine_max";
-        if (!variant) return options;
-        var subParts = variant.sub_parts || {};
-        for (var spKey in subParts) {
-          if (!subParts.hasOwnProperty(spKey)) continue;
-          var sp = subParts[spKey];
-          if (!sp || typeof sp !== "object") continue;
-          var connectors = sp.connectors || {};
-          for (var connKey in connectors) {
-            if (!connectors.hasOwnProperty(connKey)) continue;
-            if (options.some(function(o) {
-              return o.fullKey === connKey;
-            })) continue;
-            options.push({
-              type: "connector",
-              shortName: extractShortName(connKey, ns),
-              fullKey: connKey,
-              label: displayLabel(connKey, "zh", ns)
-            });
-          }
-          var subsystems = sp.subsystems || {};
-          for (var ssKey in subsystems) {
-            if (!subsystems.hasOwnProperty(ssKey)) continue;
-            if (options.some(function(o) {
-              return o.fullKey === ssKey;
-            })) continue;
-            options.push({
-              type: "subsystem",
-              shortName: extractShortName(ssKey, ns),
-              fullKey: ssKey,
-              label: displayLabel(ssKey, "zh", ns)
-            });
-          }
-        }
-        return options;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { extractType, extractShortName, buildFullKey, displayLabel, getTargetOptions, TYPE_LABELS, TYPE_PREFIXES };
-      }
-    }
-  });
-
-  // src/generators/lang_generator.js
-  var require_lang_generator = __commonJS({
-    "src/generators/lang_generator.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var nameUtils = require_name_utils();
-      var log2 = createLogger2("GenLang");
-      function _toDisplayName(key) {
-        return key.replace(/_/g, " ").replace(/\b\w/g, function(c) {
-          return c.toUpperCase();
-        });
-      }
-      function generateAllLangs(projectConfig) {
-        var result = {};
-        var zhLang = {};
-        var enLang = {};
-        var ns = projectConfig.namespace || "machine_max";
-        var parts = projectConfig.parts || {};
-        for (var partId in parts) {
-          if (!parts.hasOwnProperty(partId)) continue;
-          var partConfig = parts[partId];
-          var partKey = ns + "." + partId;
-          enLang[partKey] = _toDisplayName(partId);
-          zhLang[partKey] = _toDisplayName(partId);
-          var variants = partConfig.variants || {};
-          var variantMap;
-          if (typeof variants.model === "string") {
-            variantMap = { _default: variants };
-          } else {
-            variantMap = variants;
-          }
-          for (var variantName in variantMap) {
-            if (!variantMap.hasOwnProperty(variantName)) continue;
-            var variant = variantMap[variantName];
-            var subParts = variant.sub_parts || {};
-            var subPartMap;
-            if (typeof subParts.durability === "number") {
-              subPartMap = { _single: subParts };
-            } else {
-              subPartMap = subParts;
-            }
-            for (var subPartKey in subPartMap) {
-              if (!subPartMap.hasOwnProperty(subPartKey)) continue;
-              var subPart = subPartMap[subPartKey];
-              if (!subPart || typeof subPart !== "object") continue;
-              if (subPartKey !== "_single" && subPartKey !== "sub_part." + ns + ".main") {
-                var spShortName = nameUtils.extractShortName(subPartKey, ns);
-                enLang[subPartKey] = _toDisplayName(spShortName);
-                zhLang[subPartKey] = _toDisplayName(spShortName);
-              }
-              var interactBoxes = subPart.interact_boxes || {};
-              for (var interactKey in interactBoxes) {
-                if (!interactBoxes.hasOwnProperty(interactKey)) continue;
-                var ibShortName = nameUtils.extractShortName(interactKey, ns);
-                enLang[interactKey] = _toDisplayName(ibShortName);
-                zhLang[interactKey] = _toDisplayName(ibShortName);
-              }
-              var connectors = subPart.connectors || {};
-              for (var connectorKey in connectors) {
-                if (!connectors.hasOwnProperty(connectorKey)) continue;
-                var connShortName = nameUtils.extractShortName(connectorKey, ns);
-                enLang[connectorKey] = _toDisplayName(connShortName);
-                zhLang[connectorKey] = _toDisplayName(connShortName);
-              }
-              var subsystems = subPart.subsystems || {};
-              for (var subsystemKey in subsystems) {
-                if (!subsystems.hasOwnProperty(subsystemKey)) continue;
-                var ssShortName = nameUtils.extractShortName(subsystemKey, ns);
-                enLang[subsystemKey] = _toDisplayName(ssShortName);
-                zhLang[subsystemKey] = _toDisplayName(ssShortName);
-              }
-            }
-          }
-        }
-        result["zh_cn"] = zhLang;
-        result["en_us"] = enLang;
-        log2.info("generateAllLangs: \u5DF2\u751F\u6210\u672C\u5730\u5316\uFF0C\u952E\u6570=" + Object.keys(zhLang).length);
-        return result;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { generateAllLangs };
-      }
-    }
-  });
-
-  // src/generators/part_generator.js
-  var require_part_generator = __commonJS({
-    "src/generators/part_generator.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var { PartCodec } = require_part_codec();
-      var log2 = createLogger2("GenPart");
-      function generatePartJSON(partConfig) {
-        return PartCodec.encode(partConfig);
-      }
-      function _resolveUUIDKeys(obj) {
-        var resolved = {};
-        for (var key in obj) {
-          var boneName = key;
-          if (typeof Group !== "undefined" && Group.all) {
-            var group = Group.all.find(function(g) {
-              return g.uuid === key;
-            });
-            if (group) boneName = group.name;
-          }
-          resolved[boneName] = obj[key];
-        }
-        return resolved;
-      }
-      function _resolveAllUUIDKeys(partConfig) {
-        if (!partConfig || !partConfig.variants) return partConfig;
-        for (var vKey in partConfig.variants) {
-          var sub_parts = partConfig.variants[vKey].sub_parts;
-          if (!sub_parts) continue;
-          for (var spKey in sub_parts) {
-            var sp = sub_parts[spKey];
-            if (!sp) continue;
-            if (sp.hit_boxes && typeof sp.hit_boxes === "object") {
-              sp.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
-            }
-            if (sp.interact_boxes && typeof sp.interact_boxes === "object") {
-              sp.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
-            }
-          }
-        }
-        return partConfig;
-      }
-      function _cleanProjectileTypes(partConfig) {
-        if (!partConfig || !partConfig.variants) return;
-        var PLACEHOLDER_PREFIX = "__new_p_";
-        for (var vKey in partConfig.variants) {
-          var sub_parts = partConfig.variants[vKey].sub_parts;
-          if (!sub_parts) continue;
-          for (var spKey in sub_parts) {
-            var sp = sub_parts[spKey];
-            if (!sp || !sp.subsystems) continue;
-            for (var ssKey in sp.subsystems) {
-              var ss = sp.subsystems[ssKey];
-              if (!ss || ss.type !== "machine_max:regen_loader") continue;
-              var pt = ss.projectile_types;
-              if (!pt || typeof pt !== "object") continue;
-              for (var k in pt) {
-                if (pt.hasOwnProperty(k) && k.indexOf(PLACEHOLDER_PREFIX) === 0) {
-                  delete pt[k];
-                }
-              }
-            }
-          }
-        }
-      }
-      function generateAllParts(projectConfig) {
-        const parts = projectConfig.parts || {};
-        const result = {};
-        for (const [partId, partConfig] of Object.entries(parts)) {
-          var cloned = JSON.parse(JSON.stringify(partConfig));
-          _resolveAllUUIDKeys(cloned);
-          _cleanProjectileTypes(cloned);
-          result[partId] = generatePartJSON(cloned);
-        }
-        log2.info("generateAllParts: \u5DF2\u751F\u6210 " + Object.keys(result).length + " \u4E2A\u96F6\u4EF6");
-        return result;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { generatePartJSON, generateAllParts };
-      }
-    }
-  });
-
-  // src/generators/connector_generator.js
-  var require_connector_generator = __commonJS({
-    "src/generators/connector_generator.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var fileWriter = require_file_writer();
-      var path = __require("path");
-      var fs = __require("fs");
-      var log2 = createLogger2("GenConnector");
-      function copyConnectorDefs(packDir, ns, targetDir, flat) {
-        var count = 0;
-        var srcDir = path.join(packDir, ns, "connectors");
-        if (!fs.existsSync(srcDir)) {
-          log2.warn("copyConnectorDefs: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
-          return 0;
-        }
-        var files = fs.readdirSync(srcDir);
-        function resolveTarget(baseDir, id2, isFlat) {
-          if (isFlat) return baseDir;
-          var seg = id2.split("_")[0];
-          return seg && seg.length > 0 ? path.join(baseDir, seg) : baseDir;
-        }
-        for (var i = 0; i < files.length; i++) {
-          var fileName = files[i];
-          if (!fileName.endsWith(".json")) continue;
-          var srcFile = path.join(srcDir, fileName);
-          try {
-            var raw = fs.readFileSync(srcFile, "utf8");
-            var content = JSON.parse(fileWriter.stripJsonComments(raw));
-            var id = fileName.slice(0, -5);
-            var loc = fileWriter.extractResourceLocation(id, ns);
-            var tDir = resolveTarget(targetDir, loc.path, flat);
-            fileWriter.writeJSONFile(tDir, loc.path + ".json", content);
-            count++;
-          } catch (e) {
-            log2.warn("\u590D\u5236\u8FDE\u63A5\u70B9\u6587\u4EF6\u5931\u8D25: " + srcFile, e);
-          }
-        }
-        log2.info("copyConnectorDefs: \u5DF2\u590D\u5236 " + count + " \u4E2A\u8FDE\u63A5\u70B9\u5B9A\u4E49");
-        return count;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { copyConnectorDefs };
-      }
-    }
-  });
-
-  // src/generators/material_generator.js
-  var require_material_generator = __commonJS({
-    "src/generators/material_generator.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var fileWriter = require_file_writer();
-      var path = __require("path");
-      var fs = __require("fs");
-      var log2 = createLogger2("GenMaterial");
-      function copyMaterialDefs(packDir, ns, targetDir) {
-        var count = 0;
-        var srcDir = path.join(packDir, ns, "materials");
-        if (!fs.existsSync(srcDir)) {
-          log2.warn("copyMaterialDefs: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
-          return 0;
-        }
-        var files = fs.readdirSync(srcDir);
-        for (var i = 0; i < files.length; i++) {
-          var fileName = files[i];
-          if (!fileName.endsWith(".json")) continue;
-          var srcFile = path.join(srcDir, fileName);
-          try {
-            var raw = fs.readFileSync(srcFile, "utf8");
-            var content = JSON.parse(fileWriter.stripJsonComments(raw));
-            var id = fileName.slice(0, -5);
-            var loc = fileWriter.extractResourceLocation(id, ns);
-            fileWriter.writeJSONFile(targetDir, loc.path + ".json", content);
-            count++;
-          } catch (e) {
-            log2.warn("\u590D\u5236\u6750\u6599\u6587\u4EF6\u5931\u8D25: " + srcFile, e);
-          }
-        }
-        log2.info("copyMaterialDefs: \u5DF2\u590D\u5236 " + count + " \u4E2A\u6750\u6599\u5B9A\u4E49");
-        return count;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { copyMaterialDefs };
       }
     }
   });
@@ -14131,12 +14016,9 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
-      var { getConfig, saveConfig, addDependencyPath } = require_persistence();
+      var { getConfig, saveConfig } = require_persistence();
       var { showToast: showToast2 } = require_notify();
-      var { runValidation } = require_mode();
       var content_pack = require_content_pack();
-      var fileWriter = require_file_writer();
-      var path = __require("path");
       var log2 = createLogger2("Menu");
       var _machineMaxMenu = null;
       function registerMachineMaxMenu2() {
@@ -14163,7 +14045,7 @@
               }
               _ensurePackValid(config, function(valid) {
                 if (valid) {
-                  _showExportDialog();
+                  require_export_dialog().showExportDialog();
                 } else {
                   showToast2("\u8BF7\u5148\u8BBE\u7F6E\u6709\u6548\u7684\u5185\u5BB9\u5305", "warning");
                 }
@@ -14271,7 +14153,7 @@
                 return;
               }
               _ensurePackValid(config, function() {
-                _showPackSettingsDialog();
+                require_export_dialog().showPackSettingsDialog();
               });
             }
           },
@@ -14304,7 +14186,7 @@
           },
           "_",
           {
-            name: "\u521B\u5EFA/\u7BA1\u7406\u6750\u6599\u7C7B\u578B",
+            name: "\u67E5\u770B\u6750\u6599\u5B9A\u4E49",
             icon: "Texture",
             id: "mm_menu_materials",
             click: function() {
@@ -14317,7 +14199,7 @@
             }
           },
           {
-            name: "\u7BA1\u7406\u5B50\u7CFB\u7EDF\u578B\u53F7",
+            name: "\u67E5\u770B\u5B50\u7CFB\u7EDF\u578B\u53F7",
             icon: "precision_manufacturing",
             id: "mm_menu_subsystems",
             click: function() {
@@ -14330,7 +14212,7 @@
             }
           },
           {
-            name: "\u7BA1\u7406\u8FDE\u63A5\u70B9\u5B9A\u4E49",
+            name: "\u67E5\u770B\u8FDE\u63A5\u70B9\u5B9A\u4E49",
             icon: "link",
             id: "mm_menu_connectors",
             click: function() {
@@ -14385,517 +14267,8 @@
           }
         });
       }
-      function _getDefaultExportDir(pm) {
-        var path2 = __require("path");
-        var cached = pm && pm.exportDir;
-        if (cached) return cached;
-        var config = getConfig();
-        if (config && config.contentPackPath) {
-          return path2.dirname(config.contentPackPath);
-        }
-        var bbmodelPath = Project && Project.file_path ? Project.file_path : "";
-        if (bbmodelPath) {
-          return path2.join(path2.dirname(bbmodelPath), "machine_max_content_pack");
-        }
-        return "";
-      }
-      function _showPackSettingsDialog() {
-        var config = getConfig();
-        if (!config) {
-          showToast2("\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
-          return;
-        }
-        var pm = config.packMeta || {};
-        var ns = config.namespace || "machine_max";
-        log2.debug("_showPackSettingsDialog: \u6253\u5F00\u8BBE\u7F6E\u5BF9\u8BDD\u6846", {
-          packMetaExists: !!config.packMeta,
-          pmType: typeof pm,
-          pmKeys: Object.keys(pm),
-          nameType: typeof pm.name,
-          name: pm.name,
-          authorType: typeof pm.author,
-          author: pm.author,
-          descType: typeof pm.description,
-          description: pm.description,
-          contentPackPath: config.contentPackPath,
-          fallbackName: config.contentPackPath ? path.basename(config.contentPackPath) : "(\u65E0\u8DEF\u5F84)"
-        });
-        var defaultPackId = pm.id || ns + ":" + (Project ? Project.name || "content_pack" : "content_pack");
-        var defaultExportDir = pm.exportDir || _getDefaultExportDir(pm);
-        try {
-          new Dialog({
-            title: "MachineMax \u5185\u5BB9\u5305\u8BBE\u7F6E",
-            width: 520,
-            form: {
-              packId: {
-                type: "text",
-                label: "\u5305 ID\uFF08ResourceLocation\uFF09",
-                value: defaultPackId,
-                description: "\u683C\u5F0F\u4E3A namespace:pack_name\uFF0C\u5982 machine_max:wine_fox_parts\u3002\u4EC5\u9650\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001_ - . / :"
-              },
-              packVersion: {
-                type: "text",
-                label: "\u7248\u672C\u53F7",
-                value: pm.version || "1.0",
-                description: "\u9075\u5FAA SemVer \u683C\u5F0F\uFF0C\u5982 1.0.0"
-              },
-              packName: {
-                type: "text",
-                label: "\u663E\u793A\u540D\u79F0",
-                value: pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : ""),
-                description: "\u5185\u5BB9\u5305\u7684\u663E\u793A\u540D\u79F0\uFF08\u5B58\u50A8\u5728\u914D\u7F6E\u4E2D\uFF0C\u4E0D\u4F1A\u5199\u5165 meta.json\uFF09"
-              },
-              packAuthor: {
-                type: "text",
-                label: "\u4F5C\u8005",
-                value: pm.author || "",
-                description: "\u5185\u5BB9\u5305\u4F5C\u8005\u540D"
-              },
-              packDescription: {
-                type: "textarea",
-                label: "\u63CF\u8FF0",
-                value: pm.description || "",
-                height: 90,
-                description: "\u5185\u5BB9\u5305\u63CF\u8FF0\u4FE1\u606F"
-              },
-              exportDir: {
-                type: "folder",
-                label: "\u9ED8\u8BA4\u5BFC\u51FA\u76EE\u5F55",
-                value: defaultExportDir,
-                description: "\u70B9\u51FB\u53F3\u4FA7\u6D4F\u89C8\u6309\u94AE\u9009\u62E9\u5185\u5BB9\u5305\u9ED8\u8BA4\u5BFC\u51FA\u76EE\u5F55"
-              },
-              enableAutoPack: {
-                type: "checkbox",
-                label: "\u542F\u7528\u81EA\u52A8\u6253\u5305",
-                value: pm.enable_auto_pack !== false,
-                description: "\u4EC5 Mod \u5F00\u53D1\u9700\u8981\u8003\u8651\u6B64\u9009\u9879\u3002\u82E5\u542F\u7528\uFF0CSpark-Core \u5C06\u5728\u542F\u52A8\u65F6\u81EA\u52A8\u4ECE Mod \u8D44\u6E90\u4E2D\u6253\u5305 .zip\u3002\u4E00\u822C\u5185\u5BB9\u5305\u4F5C\u8005\u4FDD\u6301\u5173\u95ED\u5373\u53EF\u3002"
-              },
-              flatExport: {
-                type: "checkbox",
-                label: "\u6241\u5E73\u5316\u5BFC\u51FA",
-                value: pm.flat_export !== false,
-                description: "\u82E5\u542F\u7528\uFF0C\u96F6\u4EF6/\u5B50\u7CFB\u7EDF/\u8FDE\u63A5\u70B9\u5C06\u6241\u5E73\u5B58\u653E\uFF1B\u5173\u95ED\u5219\u6309\u6A21\u578B\u540D\u5206\u5165\u5B50\u6587\u4EF6\u5939"
-              },
-              manageDeps: {
-                type: "checkbox",
-                label: "\u4FDD\u5B58\u540E\u7BA1\u7406\u4F9D\u8D56\u5305",
-                value: false,
-                description: "\u4FDD\u5B58\u5143\u6570\u636E\u540E\u7ACB\u5373\u8FDB\u5165\u4F9D\u8D56\u7BA1\u7406\u754C\u9762\uFF0C\u53EF\u6DFB\u52A0/\u79FB\u9664\u672C\u5730\u8DEF\u5F84\u4F9D\u8D56\u53CA\u94FE\u5F0F\u89E3\u6790\u3002"
-              }
-            },
-            onConfirm: function(formData) {
-              if (!config.packMeta) config.packMeta = {};
-              var packMeta = config.packMeta;
-              packMeta.id = formData.packId || defaultPackId;
-              packMeta.version = formData.packVersion || "1.0";
-              packMeta.name = formData.packName || "";
-              packMeta.author = formData.packAuthor || "";
-              packMeta.description = formData.packDescription || "";
-              packMeta.exportDir = formData.exportDir || defaultExportDir;
-              packMeta.enable_auto_pack = !!formData.enableAutoPack;
-              packMeta.flat_export = !!formData.flatExport;
-              saveConfig();
-              this.hide();
-              if (formData.manageDeps) {
-                var existing = (config.dependencyPaths || []).map(function(p) {
-                  return { path: p, type: "hard" };
-                });
-                var pdir = config.contentPackPath ? __require("path").dirname(config.contentPackPath) : "";
-                var pd = require_pack_setup_dialog();
-                pd.showDependencyPathEditor(existing, pdir, function(resolved) {
-                  config.dependencyPaths = [];
-                  var directDeps = resolved.direct || [];
-                  var indirectDeps = resolved.indirect || [];
-                  for (var d = 0; d < directDeps.length; d++) {
-                    addDependencyPath(config, directDeps[d].path);
-                  }
-                  for (var k = 0; k < indirectDeps.length; k++) {
-                    addDependencyPath(config, indirectDeps[k].path);
-                  }
-                  saveConfig();
-                  showToast2("\u5185\u5BB9\u5305\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\uFF0C\u4F9D\u8D56\u5DF2\u66F4\u65B0", "positive");
-                });
-              } else {
-                showToast2("\u5185\u5BB9\u5305\u8BBE\u7F6E\u5DF2\u4FDD\u5B58", "positive");
-              }
-              log2.info("\u5185\u5BB9\u5305\u8BBE\u7F6E\u5DF2\u66F4\u65B0", {
-                packId: packMeta.id,
-                version: packMeta.version,
-                name: packMeta.name,
-                exportDir: packMeta.exportDir
-              });
-            }
-          }).show();
-        } catch (e) {
-          log2.error("\u5185\u5BB9\u5305\u8BBE\u7F6E Dialog \u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u6253\u5F00\u8BBE\u7F6E\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
-        }
-      }
-      function _showExportDialog() {
-        var config = getConfig();
-        if (!config) {
-          showToast2("\u6CA1\u6709\u53EF\u5BFC\u51FA\u7684\u914D\u7F6E\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
-          return;
-        }
-        var parts = config.parts || {};
-        var partCount = Object.keys(parts).length;
-        if (partCount === 0) {
-          showToast2("\u6CA1\u6709\u5B9A\u4E49\u4EFB\u4F55\u96F6\u4EF6\uFF0C\u8BF7\u5148\u65B0\u5EFA\u96F6\u4EF6", "warning");
-          return;
-        }
-        var pm = config.packMeta || {};
-        var ns = config.namespace || "machine_max";
-        log2.debug("_showExportDialog: \u6253\u5F00\u5BFC\u51FA\u5BF9\u8BDD\u6846", {
-          packMetaExists: !!config.packMeta,
-          pmType: typeof pm,
-          pmKeys: Object.keys(pm),
-          nameType: typeof pm.name,
-          name: pm.name,
-          authorType: typeof pm.author,
-          author: pm.author,
-          descType: typeof pm.description,
-          description: pm.description,
-          contentPackPath: config.contentPackPath,
-          fallbackName: config.contentPackPath ? path.basename(config.contentPackPath) : "(\u65E0\u8DEF\u5F84)"
-        });
-        var defaultPackId = pm.id || ns + ":" + (Project ? Project.name || "content_pack" : "content_pack");
-        var defaultExportDir = pm.exportDir || _getDefaultExportDir(pm);
-        var errors = runValidation(config);
-        var errorText = "";
-        if (errors.length > 0) {
-          errorText = "<br>\u6821\u9A8C\u53D1\u73B0 " + errors.length + " \u4E2A\u95EE\u9898:<br>" + errors.map(function(e) {
-            return "&nbsp;&nbsp;\u2022 " + e;
-          }).join("<br>");
-        }
-        var statLines = [
-          "\u6A21\u578B: " + (Project ? Project.name : "\u672A\u547D\u540D"),
-          "\u5185\u5BB9\u5305\u8DEF\u5F84: " + (config.contentPackPath || "\u672A\u8BBE\u7F6E"),
-          "\u96F6\u4EF6: " + partCount
-        ];
-        try {
-          new Dialog({
-            title: "\u5BFC\u51FA MachineMax \u5185\u5BB9\u5305",
-            width: 580,
-            form: {
-              validationInfo: {
-                type: "info",
-                text: (errorText || "\u6821\u9A8C\u901A\u8FC7\uFF0C\u672A\u53D1\u73B0\u95EE\u9898\u3002") + "<br><br>" + statLines.join("<br>")
-              },
-              exportDir: {
-                type: "folder",
-                label: "\u5BFC\u51FA\u76EE\u5F55",
-                value: defaultExportDir,
-                description: "\u70B9\u51FB\u53F3\u4FA7\u6D4F\u89C8\u6309\u94AE\u9009\u62E9\u5185\u5BB9\u5305\u5BFC\u51FA\u76EE\u5F55"
-              },
-              packId: {
-                type: "text",
-                label: "\u5305 ID",
-                value: defaultPackId,
-                description: "\u683C\u5F0F namespace:pack_name\uFF0C\u5BFC\u51FA\u4E3A meta.json \u7684 id \u5B57\u6BB5"
-              },
-              packVersion: {
-                type: "text",
-                label: "\u7248\u672C\u53F7",
-                value: pm.version || "1.0"
-              },
-              packName: {
-                type: "text",
-                label: "\u663E\u793A\u540D\u79F0",
-                value: pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : "")
-              },
-              packAuthor: {
-                type: "text",
-                label: "\u4F5C\u8005",
-                value: pm.author || ""
-              },
-              packDescription: {
-                type: "textarea",
-                label: "\u63CF\u8FF0",
-                value: pm.description || "",
-                height: 90
-              },
-              flatExport: {
-                type: "checkbox",
-                label: "\u6241\u5E73\u5316\u5BFC\u51FA",
-                value: pm.flat_export !== false,
-                description: "\u82E5\u542F\u7528\uFF0C\u96F6\u4EF6/\u5B50\u7CFB\u7EDF/\u8FDE\u63A5\u70B9\u5C06\u6241\u5E73\u5B58\u653E\uFF1B\u5173\u95ED\u5219\u6309\u6A21\u578B\u540D\u5206\u5165\u5B50\u6587\u4EF6\u5939"
-              },
-              dependencies: {
-                type: "textarea",
-                label: "\u4F9D\u8D56\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09",
-                value: (function() {
-                  var deps = pm.dependencies || [];
-                  var lines = deps.map(function(d) {
-                    return typeof d === "string" ? d : d.id + " " + (d.type || "hard");
-                  });
-                  var hasBuiltin = false;
-                  for (var di = 0; di < deps.length; di++) {
-                    var did = typeof deps[di] === "string" ? deps[di] : deps[di].id;
-                    if (did === "machine_max:builtin") {
-                      hasBuiltin = true;
-                      break;
-                    }
-                  }
-                  if (!hasBuiltin && pm.id !== "machine_max:builtin") {
-                    lines.unshift("machine_max:builtin hard");
-                  }
-                  return lines.join("\n");
-                })(),
-                height: 100,
-                description: '\u683C\u5F0F\uFF1A\u6BCF\u884C "\u4F9D\u8D56ID \u7C7B\u578B"\u3002\u7C7B\u578B: hard(\u5FC5\u9700), soft(\u53EF\u9009), override(\u8986\u76D6), conflict(\u51B2\u7A81)\n\u793A\u4F8B: machine_max:builtin hard'
-              }
-            },
-            onConfirm: function(formData) {
-              var exportDir = formData.exportDir || defaultExportDir;
-              if (!exportDir) {
-                showToast2("\u8BF7\u5148\u9009\u62E9\u5BFC\u51FA\u76EE\u5F55", "warning");
-                return;
-              }
-              var packFolderName = _sanitizeFolderName(formData.packName) || _sanitizeFolderName(pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : "")) || (Project ? Project.name : "content_pack");
-              var overriddenMeta = {
-                id: formData.packId || defaultPackId,
-                version: formData.packVersion || "1.0",
-                name: formData.packName || pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : ""),
-                author: formData.packAuthor || pm.author || "",
-                description: formData.packDescription || pm.description || "",
-                enable_auto_pack: pm.enable_auto_pack !== false,
-                exportDir,
-                dependencies: _parseDependencyText(formData.dependencies || ""),
-                flat_export: !!formData.flatExport
-              };
-              if (!config.packMeta) config.packMeta = {};
-              Object.assign(config.packMeta, overriddenMeta);
-              try {
-                var stats = _executeExport(config, overriddenMeta, exportDir, packFolderName);
-                saveConfig();
-                showToast2(
-                  "\u5BFC\u51FA\u6210\u529F\uFF01\n\u96F6\u4EF6: " + stats.parts + ", \u8FDE\u63A5\u70B9: " + stats.connectors + ", \u5B50\u7CFB\u7EDF: " + stats.subsystems + ", \u6750\u6599: " + stats.materials + ", \u8BED\u8A00: " + stats.langs,
-                  "positive",
-                  6e3
-                );
-                log2.info("MachineMax \u83DC\u5355: \u5BFC\u51FA\u5B8C\u6210", stats);
-              } catch (e) {
-                log2.error("\u5BFC\u51FA\u5931\u8D25", e);
-                showToast2("\u5BFC\u51FA\u5931\u8D25: " + (e.message || e), "error", 5e3);
-              }
-              this.hide();
-            }
-          }).show();
-        } catch (e) {
-          log2.error("\u5BFC\u51FA Dialog \u521B\u5EFA\u5931\u8D25", e);
-          showToast2("\u65E0\u6CD5\u521B\u5EFA\u5BFC\u51FA\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
-        }
-      }
-      function _sanitizeFolderName(name) {
-        if (!name) return "";
-        return name.replace(/[<>:"/\\|?*\s]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").substring(0, 64);
-      }
-      function _parseDependencyText(text) {
-        if (!text || !text.trim()) return [];
-        var validTypes = ["hard", "soft", "override", "conflict"];
-        return text.split("\n").map(function(line) {
-          return line.trim();
-        }).filter(function(line) {
-          return line.length > 0;
-        }).map(function(line) {
-          var parts = line.split(/\s+/);
-          var depId = parts[0];
-          var depType = parts[1] || "hard";
-          if (!validTypes.includes(depType)) depType = "hard";
-          return { id: depId, type: depType };
-        });
-      }
-      function _executeExport(config, packMeta, exportDir, packFolderName) {
-        var fs = __require("fs");
-        var path2 = __require("path");
-        if (!fs.existsSync(exportDir)) {
-          fs.mkdirSync(exportDir, { recursive: true });
-        }
-        var packRoot = path2.join(exportDir, packFolderName);
-        if (!fs.existsSync(packRoot)) {
-          fs.mkdirSync(packRoot, { recursive: true });
-        }
-        var ns = config.namespace || "machine_max";
-        var stats = { parts: 0, connectors: 0, subsystems: 0, materials: 0, langs: 0 };
-        var isFlat = packMeta.flat_export !== false;
-        function _resolveTargetDir(baseDir, id, flat) {
-          if (flat) return baseDir;
-          var seg = id.split("_")[0];
-          return seg && seg.length > 0 ? path2.join(baseDir, seg) : baseDir;
-        }
-        function _writeSchemasFromConstant(destBaseDir) {
-          var schemasRaw = typeof define_SCHEMAS_default !== "undefined" ? define_SCHEMAS_default : null;
-          if (!schemasRaw) {
-            log2.warn("_writeSchemasFromConstant: __SCHEMAS__ \u672A\u6CE8\u5165\u6216\u4E3A\u7A7A\uFF0CSchema \u6587\u4EF6\u5C06\u4E0D\u4F1A\u5199\u5165");
-            return;
-          }
-          var schemas = typeof schemasRaw === "string" ? JSON.parse(schemasRaw) : schemasRaw;
-          var keys = Object.keys(schemas);
-          for (var i = 0; i < keys.length; i++) {
-            var relPath = keys[i];
-            var destPath = path2.join(destBaseDir, relPath);
-            fileWriter.ensureDir(path2.dirname(destPath));
-            fs.writeFileSync(destPath, schemas[relPath], "utf-8");
-          }
-          log2.info("_writeSchemasFromConstant: \u5DF2\u5199\u5165 " + keys.length + " \u4E2A schema \u6587\u4EF6");
-        }
-        function _getSchemaLocale() {
-          var lang = "";
-          if (typeof navigator !== "undefined" && navigator.language) {
-            lang = navigator.language;
-          } else if (typeof Blockbench !== "undefined" && Blockbench.locale) {
-            lang = Blockbench.locale;
-          }
-          return lang.indexOf("zh") === 0 ? "zh_cn" : "en_us";
-        }
-        function _injectSchemaReferences(nsDir) {
-          var schemaLocale = _getSchemaLocale();
-          var schemaMap = {
-            parts: "docs/" + schemaLocale + "/schemas/part_definition_schema.json",
-            connectors: "docs/" + schemaLocale + "/schemas/part/subpart/connector/connector_static_attr.schema.json",
-            subsystems: "docs/" + schemaLocale + "/schemas/subsystem/subsystem_static_attr.schema.json",
-            materials: "docs/" + schemaLocale + "/schemas/base/material_attr.schema.json"
-          };
-          var recipeSchemaMap = {
-            "machine_max:research": "docs/" + schemaLocale + "/schemas/recipe/research_recipe.schema.json",
-            "machine_max:fabricating": "docs/" + schemaLocale + "/schemas/recipe/fabricating_recipe.schema.json",
-            "machine_max:blueprint_research": "docs/" + schemaLocale + "/schemas/recipe/blueprint_research_recipe.schema.json"
-          };
-          var dirs = ["parts", "connectors", "subsystems", "materials", "recipe"];
-          for (var d = 0; d < dirs.length; d++) {
-            var typeDir = path2.join(nsDir, dirs[d]);
-            if (!fs.existsSync(typeDir)) continue;
-            _walkAndInject(typeDir, nsDir, dirs[d], schemaMap, recipeSchemaMap);
-          }
-        }
-        function _walkAndInject(currentDir, nsDir, typeName, schemaMap, recipeSchemaMap) {
-          var entries = fs.readdirSync(currentDir);
-          for (var e = 0; e < entries.length; e++) {
-            var fullPath = path2.join(currentDir, entries[e]);
-            var stat = fs.statSync(fullPath);
-            if (stat.isDirectory()) {
-              _walkAndInject(fullPath, nsDir, typeName, schemaMap, recipeSchemaMap);
-            } else if (entries[e].endsWith(".json")) {
-              try {
-                var rawContent = fs.readFileSync(fullPath, "utf8");
-                var content = JSON.parse(fileWriter.stripJsonComments(rawContent));
-                var schemaRel;
-                if (typeName === "recipe") {
-                  schemaRel = recipeSchemaMap[content.type] || "docs/schemas/recipe/research_recipe.schema.json";
-                } else {
-                  schemaRel = schemaMap[typeName];
-                }
-                if (!schemaRel) continue;
-                var relDir = path2.relative(path2.dirname(fullPath), nsDir);
-                var schemaPath = path2.join(relDir, schemaRel).replace(/\\/g, "/");
-                content["$schema"] = schemaPath;
-                fs.writeFileSync(fullPath, JSON.stringify(content, null, 2), "utf8");
-              } catch (_err) {
-                log2.warn("\u6CE8\u5165 $schema \u5931\u8D25: " + fullPath, _err);
-              }
-            }
-          }
-        }
-        var genMeta = require_meta_generator();
-        var savedPackMeta = config.packMeta;
-        config.packMeta = packMeta;
-        var meta = genMeta.generateMeta(config);
-        config.packMeta = savedPackMeta;
-        fileWriter.writeJSONFile(packRoot, "meta.json", meta);
-        var _emptyDirs = [
-          "textures/hud",
-          "textures/icon",
-          "textures/part",
-          "models/hud",
-          "huds",
-          "animations/hud",
-          "animations/part",
-          "assemblies",
-          "font",
-          "tooltips",
-          "templates",
-          "docs"
-        ];
-        var _nsDir = path2.join(packRoot, ns);
-        for (var _ei = 0; _ei < _emptyDirs.length; _ei++) {
-          fileWriter.ensureDir(path2.join(_nsDir, _emptyDirs[_ei]));
-        }
-        _writeSchemasFromConstant(path2.join(_nsDir, "docs"));
-        try {
-          if (typeof Codecs !== "undefined" && Codecs.bedrock && Project) {
-            var modelDir = path2.join(packRoot, ns, "models", "part");
-            var modelName = Project.geometry_name || Project.name || "model";
-            var geoContent = Codecs.bedrock.compile();
-            fileWriter.writeTextFile(modelDir, modelName + ".geo.json", geoContent);
-            log2.info("\u5DF2\u5BFC\u51FA Bedrock \u51E0\u4F55\u4F53\u6A21\u578B: " + modelName + ".geo.json");
-          }
-        } catch (e) {
-          log2.warn("\u65E0\u6CD5\u5BFC\u51FA Bedrock \u51E0\u4F55\u4F53\u6A21\u578B\uFF08\u53EF\u80FD\u975E Bedrock \u683C\u5F0F\uFF09", e);
-        }
-        var genLang = require_lang_generator();
-        var allLangs = genLang.generateAllLangs(config);
-        if (allLangs) {
-          var langDir = path2.join(packRoot, ns, "lang");
-          for (var locale in allLangs) {
-            if (allLangs.hasOwnProperty(locale)) {
-              fileWriter.mergeJSONFile(langDir, locale + ".json", allLangs[locale]);
-              stats.langs++;
-            }
-          }
-        }
-        var genParts = require_part_generator();
-        var allParts = genParts.generateAllParts(config);
-        var partsBaseDir = path2.join(packRoot, ns, "parts");
-        for (var partId in allParts) {
-          if (allParts.hasOwnProperty(partId)) {
-            var partsTargetDir = _resolveTargetDir(partsBaseDir, partId, isFlat);
-            fileWriter.writeJSONFile(partsTargetDir, partId + ".json", allParts[partId]);
-            stats.parts++;
-          }
-        }
-        if (config.recipes && Object.keys(config.recipes).length > 0) {
-          var recipeDir = path2.join(packRoot, ns, "recipe");
-          for (var recipeId in config.recipes) {
-            if (config.recipes.hasOwnProperty(recipeId)) {
-              fileWriter.writeJSONFile(recipeDir, recipeId + ".json", config.recipes[recipeId]);
-            }
-          }
-        }
-        var packDir = config.contentPackPath;
-        if (packDir && fs.existsSync(packDir)) {
-          var genConn = require_connector_generator();
-          var genSub = require_subsystem_generator();
-          var genMat = require_material_generator();
-          stats.connectors = genConn.copyConnectorDefs(packDir, ns, path2.join(packRoot, ns, "connectors"), isFlat);
-          stats.subsystems = genSub.copySubsystemDefs(packDir, ns, path2.join(packRoot, ns, "subsystems"), isFlat);
-          stats.materials = genMat.copyMaterialDefs(packDir, ns, path2.join(packRoot, ns, "materials"));
-          var depSrcDir = path2.join(packDir, "dependency");
-          if (fs.existsSync(depSrcDir)) {
-            var depTargetDir = path2.join(packRoot, "dependency");
-            fileWriter.ensureDir(depTargetDir);
-            var depFiles = fs.readdirSync(depSrcDir);
-            var j, depFile, depSrcFile, depContent;
-            for (j = 0; j < depFiles.length; j++) {
-              depFile = depFiles[j];
-              if (depFile.indexOf(".json") !== depFile.length - 5) continue;
-              depSrcFile = path2.join(depSrcDir, depFile);
-              try {
-                depContent = fs.readFileSync(depSrcFile, "utf8");
-                fs.writeFileSync(path2.join(depTargetDir, depFile), depContent, "utf8");
-              } catch (e) {
-                log2.warn("\u590D\u5236\u4F9D\u8D56\u5305\u5B9A\u4E49\u5931\u8D25: " + depSrcFile, e);
-              }
-            }
-          }
-        } else {
-          log2.warn("\u5185\u5BB9\u5305\u76EE\u5F55\u672A\u8BBE\u7F6E\u6216\u4E0D\u5B58\u5728\uFF0C\u8DF3\u8FC7\u8FDE\u63A5\u70B9/\u5B50\u7CFB\u7EDF/\u6750\u6599\u590D\u5236: " + packDir);
-        }
-        _injectSchemaReferences(_nsDir);
-        log2.info("\u5BFC\u51FA\u5B8C\u6210, \u96F6\u4EF6=" + stats.parts + ", \u8FDE\u63A5\u70B9=" + stats.connectors + ", \u5B50\u7CFB\u7EDF=" + stats.subsystems + ", \u6750\u6599=" + stats.materials + ", \u8BED\u8A00=" + stats.langs);
-        return stats;
-      }
       function showExportDialog() {
-        _showExportDialog();
+        require_export_dialog().showExportDialog();
       }
       function ensurePackValid(config, onResult) {
         _ensurePackValid(config, onResult);
@@ -15814,6 +15187,42 @@
     }
   });
 
+  // src/utils/signal_target_options.js
+  var require_signal_target_options = __commonJS({
+    "src/utils/signal_target_options.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var nameUtils = require_name_utils();
+      function buildSignalTargetOptions(subPart, namespace) {
+        var ns = namespace || "machine_max";
+        var result = [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
+        if (!subPart) return result;
+        if (subPart.connectors) {
+          var connKeys = Object.keys(subPart.connectors);
+          for (var i = 0; i < connKeys.length; i++) {
+            result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
+          }
+        }
+        if (subPart.subsystems) {
+          var ssKeys = Object.keys(subPart.subsystems);
+          for (var j = 0; j < ssKeys.length; j++) {
+            result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
+          }
+        }
+        return result;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          buildSignalTargetOptions
+        };
+      }
+    }
+  });
+
   // src/ui/tag_dialog_helper.js
   var require_tag_dialog_helper = __commonJS({
     "src/ui/tag_dialog_helper.js"(exports, module) {
@@ -16674,6 +16083,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var nameUtils = require_name_utils();
+      var { SIGNAL_CHANNEL_HINTS } = require_constants();
       Vue.component("mm-interact-box-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -16750,32 +16160,15 @@
     <div class="mm-section">
         <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
             <span>\u4FE1\u53F7\u76EE\u6807</span>
-            <button class="mm-btn mm-btn-sm" @click="addSignalTargetChannel" title="\u6DFB\u52A0\u4FE1\u53F7\u9891\u9053" style="font-size:18px;font-weight:bold">+</button>
         </h4>
         <div v-if="signalTargetChannelCount === 0" class="mm-element-info" style="color:#888;font-size:11px">
-            \u65E0\u4FE1\u53F7\u76EE\u6807 \u2014 \u70B9\u51FB [+ ] \u6DFB\u52A0\u9891\u9053
+            \u65E0\u4FE1\u53F7\u76EE\u6807 \u2014 \u5728\u4E0B\u65B9\u70B9\u51FB"+ \u6DFB\u52A0\u9891\u9053"
         </div>
-        <div v-for="(targets, channel, ci) in signalTargetEntries" :key="ci" class="mm-signal-card">
-            <div class="mm-signal-header">
-                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel"
-                    @change="onSignalTargetChannelChange(channel, $event.target.value)"
-                    :list="'ib-sig-chan-'+_uid" placeholder="\u9891\u9053\u540D" />
-                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetChannel(channel)" title="\u5220\u9664\u9891\u9053">\xD7</button>
-            </div>
-            <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
-                <select class="mm-select" style="flex:1;font-size:11px;min-width:120px"
-                    :value="t"
-                    @change="updateSignalTargetItem(channel, ti, $event.target.value)">
-                    <option value="">\uFF08\u9009\u62E9\u76EE\u6807\uFF09</option>
-                    <option v-for="opt in getFilteredTargets(channel, t)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                </select>
-                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
-            </div>
-            <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTargetItem(channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
-        </div>
-        <datalist :id="'ib-sig-chan-'+_uid">
-            <option v-for="h in channelHints" :key="h" :value="h" />
-        </datalist>
+        <mm-signal-target-editor
+            :entries="signalTargetEntries"
+            :target-options="signalTargetHints"
+            :channel-hints="channelHints"
+            @change="onSignalTargetsChange($event)" />
     </div>
 
     <div class="mm-section">
@@ -16846,25 +16239,10 @@
             return Object.keys(this.signalTargetEntries).length;
           },
           /**
-           * 常用频道名补全列表
+           * 常用频道名补全列表（统一来自 constants.js 唯一真源）
            */
           channelHints: function() {
-            return [
-              "interact",
-              "interact_left_front_door",
-              "interact_right_front_door",
-              "interact_left_back_door",
-              "interact_right_back_door",
-              "interact_hood",
-              "interact_trunk",
-              "interact_seat",
-              "trunk_interact",
-              "lever_pull",
-              "button_press",
-              "door_interact",
-              "switch_toggle",
-              "interact_custom"
-            ];
+            return SIGNAL_CHANNEL_HINTS;
           }
         },
         methods: {
@@ -16896,98 +16274,12 @@
           navigateToSubPart: function() {
             this.$emit("navigate-to-sub-part", this.parentSubPartKey);
           },
-          // ===== 信号目标编辑 =====
+          // ===== 信号目标编辑（共享组件 mm-signal-target-editor） =====
           /**
-           * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
-           * 但保留当前项自身，防止 <select> 因无匹配 option 而显示空白
-           * @param {string} channel - 频道名
-           * @param {string} [currentValue] - 当前项的值，此值不会被过滤
-           * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
+           * 信号目标变更回调：由共享组件 emit，深拷贝后提交 field-change
+           * @param {Object} entries - 变更后的 { channel: [target, ...] } 映射
            */
-          getFilteredTargets: function(channel, currentValue) {
-            var allTargets = this.signalTargetHints;
-            if (!allTargets || allTargets.length === 0) return [];
-            var entries = this.signalTargetEntries;
-            var usedTargets = entries[channel];
-            if (!usedTargets || usedTargets.length === 0) return allTargets;
-            var filtered = [];
-            for (var i = 0; i < allTargets.length; i++) {
-              var t = allTargets[i];
-              if (t.value === currentValue || usedTargets.indexOf(t.value) === -1) {
-                filtered.push(t);
-              }
-            }
-            return filtered;
-          },
-          /**
-           * 添加新的信号频道
-           */
-          addSignalTargetChannel: function() {
-            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
-            var newChan = "interact";
-            var idx = 1;
-            while (entries[newChan]) {
-              newChan = "interact_" + idx;
-              idx++;
-            }
-            entries[newChan] = [];
-            this.emitSignalTargets(entries);
-          },
-          /**
-           * 删除信号频道
-           */
-          removeSignalTargetChannel: function(channel) {
-            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
-            delete entries[channel];
-            this.emitSignalTargets(entries);
-          },
-          /**
-           * 重命名信号频道
-           */
-          onSignalTargetChannelChange: function(oldChannel, newChannel) {
-            if (!newChannel || oldChannel === newChannel) return;
-            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
-            var targets = entries[oldChannel];
-            if (targets === void 0) return;
-            delete entries[oldChannel];
-            entries[newChannel] = targets;
-            this.emitSignalTargets(entries);
-          },
-          /**
-           * 为指定频道添加信号目标项
-           */
-          addSignalTargetItem: function(channel) {
-            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
-            if (!entries[channel]) {
-              entries[channel] = [];
-            }
-            entries[channel].push("");
-            this.emitSignalTargets(entries);
-          },
-          /**
-           * 删除信号频道的指定目标项
-           */
-          removeSignalTargetItem: function(channel, index) {
-            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
-            if (entries[channel]) {
-              entries[channel].splice(index, 1);
-              this.emitSignalTargets(entries);
-            }
-          },
-          /**
-           * 更新信号频道的指定目标值
-           */
-          updateSignalTargetItem: function(channel, index, value) {
-            var entries = JSON.parse(JSON.stringify(this.signalTargetEntries));
-            if (entries[channel]) {
-              entries[channel][index] = value;
-              this.emitSignalTargets(entries);
-            }
-          },
-          /**
-           * 触发 signal_targets 字段变更事件
-           */
-          emitSignalTargets: function(entries) {
+          onSignalTargetsChange: function(entries) {
             this.$emit("field-change", "signal_targets", JSON.parse(JSON.stringify(entries)));
           }
         }
@@ -17008,6 +16300,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var nameUtils = require_name_utils();
+      var { SIGNAL_CHANNEL_HINTS } = require_constants();
       Vue.component("mm-connector-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -17044,14 +16337,7 @@
         <h4 class="mm-section-title">\u5B9A\u4F4D\u5668</h4>
         <div class="mm-field">
             <label title="\u8BE5\u8FDE\u63A5\u70B9\u7ED1\u5B9A\u7684\u5B9A\u4F4D\u5668\u540D\u79F0\uFF0C\u51B3\u5B9A\u8FDE\u63A5\u70B9\u5728 3D \u7A7A\u95F4\u4E2D\u7684\u4F4D\u7F6E\u548C\u671D\u5411">\u7ED1\u5B9A\u5B9A\u4F4D\u5668</label>
-            <input type="text" class="mm-input"
-                v-model="editingLocator"
-                @change="onLocatorChange($event.target.value)"
-                :list="locatorListId"
-                placeholder="\u641C\u7D22\u5E76\u9009\u62E9\u5B9A\u4F4D\u5668\u2026" />
-            <datalist :id="locatorListId">
-                <option v-for="(name, idx) in allLocatorNames" :key="idx" :value="name" />
-            </datalist>
+            <locator-picker :options="allLocatorNames" :value="editingLocator" @change="onLocatorChange($event)" />
             <p v-if="allLocatorNames.length === 0" class="mm-element-info" style="color:#888;font-size:10px">
                 \u5F53\u524D\u6A21\u578B\u4E2D\u6CA1\u6709\u4EFB\u4F55\u5B9A\u4F4D\u5668\uFF08Locator\uFF09
             </p>
@@ -17078,32 +16364,15 @@
     <div class="mm-section">
         <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
             <span>\u4FE1\u53F7\u76EE\u6807</span>
-            <button class="mm-btn mm-btn-sm" @click="addSignalTargetChannel" title="\u6DFB\u52A0\u4FE1\u53F7\u9891\u9053" style="font-size:18px;font-weight:bold">+</button>
         </h4>
         <div v-if="signalTargetChannelCount === 0" class="mm-element-info" style="color:#888;font-size:11px">
-            \u65E0\u4FE1\u53F7\u76EE\u6807 \u2014 \u70B9\u51FB [+ ] \u6DFB\u52A0\u9891\u9053
+            \u65E0\u4FE1\u53F7\u76EE\u6807 \u2014 \u5728\u4E0B\u65B9\u70B9\u51FB"+ \u6DFB\u52A0\u9891\u9053"
         </div>
-        <div v-for="(targets, channel, ci) in signalTargetEntries" :key="ci" class="mm-signal-card">
-            <div class="mm-signal-header">
-                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel"
-                    @change="onSignalTargetChannelChange(channel, $event.target.value)"
-                    :list="'cn-sig-chan-'+_uid" placeholder="\u9891\u9053\u540D" />
-                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetChannel(channel)" title="\u5220\u9664\u9891\u9053">\xD7</button>
-            </div>
-            <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
-                <select class="mm-select" style="flex:1;font-size:11px;min-width:120px"
-                    :value="t"
-                    @change="updateSignalTargetItem(channel, ti, $event.target.value)">
-                    <option value="">\uFF08\u9009\u62E9\u76EE\u6807\uFF09</option>
-                    <option v-for="opt in getFilteredTargets(channel, t)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                </select>
-                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
-            </div>
-            <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTargetItem(channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
-        </div>
-        <datalist :id="'cn-sig-chan-'+_uid">
-            <option v-for="h in channelHints" :key="h" :value="h" />
-        </datalist>
+        <mm-signal-target-editor
+            :entries="signalTargetEntries"
+            :target-options="signalTargetHints"
+            :channel-hints="channelHints"
+            @change="onSignalTargetsChange($event)" />
     </div>
 
     <!-- === \u4FE1\u53F7\u8F6C\u8BD1 (signal_translations) === -->
@@ -17211,9 +16480,6 @@
           namePrefix: function() {
             return "connector." + this.namespace + ".";
           },
-          locatorListId: function() {
-            return "mm-connector-loc-list-" + this._uid;
-          },
           hasDefinition: function() {
             return !!(this.config && this.config.definition);
           },
@@ -17245,36 +16511,10 @@
             return Object.keys(this.overwriteEntries).length;
           },
           /**
-           * 常用频道名补全列表
+           * 常用频道名补全列表（统一来自 constants.js 唯一真源）
            */
           channelHints: function() {
-            return [
-              "move_input",
-              "regular_input",
-              "engine_control",
-              "wheel_control",
-              "steering",
-              "throttle",
-              "brake",
-              "handbrake",
-              "engine_speed",
-              "wheel_speed",
-              "vehicle_speed",
-              "gear",
-              "clutch",
-              "parking_brake",
-              "power",
-              "interact_left_front_door",
-              "interact_right_front_door",
-              "interact_left_back_door",
-              "interact_right_back_door",
-              "interact_hood",
-              "interact_trunk",
-              "interact_left_front",
-              "interact_right_front",
-              "interact_left_back",
-              "interact_right_back"
-            ];
+            return SIGNAL_CHANNEL_HINTS;
           }
         },
         methods: {
@@ -17293,6 +16533,9 @@
             event.target.style.background = "transparent";
           },
           onLocatorChange: function(value) {
+            if (value !== this.editingLocator) {
+              this.editingLocator = value;
+            }
             if (value !== (this.config.locator || this.elementName)) {
               this.$emit("locator-change", this.elementName, value);
             }
@@ -17312,98 +16555,12 @@
           navigateToSubPart: function() {
             this.$emit("navigate-to-sub-part", this.parentSubPartKey);
           },
-          // ===== 信号目标编辑 =====
+          // ===== 信号目标编辑（共享组件 mm-signal-target-editor） =====
           /**
-           * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
-           * 但保留当前项自身，防止 <select> 因无匹配 option 而显示空白
-           * @param {string} channel - 频道名
-           * @param {string} [currentValue] - 当前项的值，此值不会被过滤
-           * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
+           * 信号目标变更回调：由共享组件 emit，深拷贝后提交 field-change
+           * @param {Object} entries - 变更后的 { channel: [target, ...] } 映射
            */
-          getFilteredTargets: function(channel, currentValue) {
-            var allTargets = this.signalTargetHints;
-            if (!allTargets || allTargets.length === 0) return [];
-            var entries = this.signalTargetEntries;
-            var usedTargets = entries[channel];
-            if (!usedTargets || usedTargets.length === 0) return allTargets;
-            var filtered = [];
-            for (var i = 0; i < allTargets.length; i++) {
-              var t = allTargets[i];
-              if (t.value === currentValue || usedTargets.indexOf(t.value) === -1) {
-                filtered.push(t);
-              }
-            }
-            return filtered;
-          },
-          /**
-           * 添加新的信号频道
-           */
-          addSignalTargetChannel: function() {
-            var entries = this.signalTargetEntries;
-            var newChan = "new_channel";
-            var idx = 1;
-            while (entries[newChan]) {
-              newChan = "new_channel_" + idx;
-              idx++;
-            }
-            this.$set(entries, newChan, []);
-            this.emitSignalTargets(entries);
-          },
-          /**
-           * 删除信号频道
-           */
-          removeSignalTargetChannel: function(channel) {
-            var entries = this.signalTargetEntries;
-            this.$delete(entries, channel);
-            this.emitSignalTargets(entries);
-          },
-          /**
-           * 重命名信号频道
-           */
-          onSignalTargetChannelChange: function(oldChannel, newChannel) {
-            if (!newChannel || oldChannel === newChannel) return;
-            var entries = this.signalTargetEntries;
-            var targets = entries[oldChannel];
-            if (targets === void 0) return;
-            this.$delete(entries, oldChannel);
-            this.$set(entries, newChannel, targets);
-            this.emitSignalTargets(entries);
-          },
-          /**
-           * 为指定频道添加信号目标项
-           */
-          addSignalTargetItem: function(channel) {
-            var entries = this.signalTargetEntries;
-            if (!entries[channel]) {
-              this.$set(entries, channel, []);
-            }
-            entries[channel].push("");
-            this.emitSignalTargets(entries);
-          },
-          /**
-           * 删除信号频道的指定目标项
-           */
-          removeSignalTargetItem: function(channel, index) {
-            var entries = this.signalTargetEntries;
-            if (entries[channel]) {
-              entries[channel].splice(index, 1);
-              this.emitSignalTargets(entries);
-            }
-          },
-          /**
-           * 更新信号频道的指定目标值
-           */
-          updateSignalTargetItem: function(channel, index, value) {
-            var entries = this.signalTargetEntries;
-            if (entries[channel]) {
-              this.$set(entries[channel], index, value);
-              this.emitSignalTargets(entries);
-            }
-          },
-          /**
-           * 触发 signal_targets 字段变更事件
-           */
-          emitSignalTargets: function(entries) {
+          onSignalTargetsChange: function(entries) {
             this.$emit("field-change", "signal_targets", JSON.parse(JSON.stringify(entries)));
           },
           // ===== 信号转译编辑 =====
@@ -17527,6 +16684,7 @@
       init_define_SCHEMAS();
       var ssTypes = require_subsystem_types();
       var nameUtils = require_name_utils();
+      var { SIGNAL_CHANNEL_HINTS } = require_constants();
       var { createLogger: createLogger2 } = require_logger();
       var log2 = createLogger2("SubsystemPanel");
       var PLACEHOLDER_PREFIX = "__new_p_";
@@ -17584,13 +16742,11 @@
         <div v-for="field in nonDefFields" :key="field.field" class="mm-field">
             <label :title="field.field">{{ field.label }}</label>
 
-            <!-- \u5B9A\u4F4D\u5668\u9009\u62E9\u5668\uFF08\u8303\u56F4\u9650\u5236\u5728\u5F53\u524D\u5B50\u96F6\u4EF6\u9AA8\u9ABC\u6811\u4E0B\uFF09 -->
-            <select v-if="field.editor === 'locator_selector'" class="mm-select"
-                :value="config[field.field]"
-                @change="onFieldChange(field.field, $event.target.value)">
-                <option value="">\uFF08\u65E0\uFF09</option>
-                <option v-for="(l, i) in ownedLocatorNames" :key="i" :value="l">{{ l }}</option>
-            </select>
+            <!-- \u5B9A\u4F4D\u5668\u9009\u62E9\u5668\uFF08\u8F93\u5165\u6846 + datalist \u63D0\u793A + \u81EA\u7531\u6587\u672C\uFF0C\u8303\u56F4\u9650\u5236\u5728\u5F53\u524D\u5B50\u96F6\u4EF6\u9AA8\u9ABC\u6811\u4E0B\uFF09 -->
+            <locator-picker v-if="field.editor === 'locator_selector'"
+                :options="ownedLocatorNames"
+                :value="config[field.field] || ''"
+                @change="onFieldChange(field.field, $event)" />
 
             <!-- \u8FDE\u63A5\u70B9\u9009\u62E9\u5668 -->
             <select v-else-if="field.editor === 'connector_selector'" class="mm-select"
@@ -17669,30 +16825,11 @@
             </div>
 
             <!-- \u4FE1\u53F7\u9891\u9053\u7F16\u8F91\u5668\uFF08signal_targets\uFF0C\u503C\u7C7B\u578B\u4E3A <string, string[]>\uFF09 -->
-            <div v-else-if="field.editor === 'signal_targets'" class="mm-signal-editor">
-                <div v-for="(targets, channel, ci) in getSignalEntries(field.field)" :key="ci" class="mm-signal-card">
-                    <div class="mm-signal-header">
-                        <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel"
-                            @change="onSignalChannelChange(field.field, channel, $event.target.value)"
-                            :list="'sig-channel-hints-'+_uid" placeholder="\u9891\u9053\u540D" />
-                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalChannel(field.field, channel)" title="\u5220\u9664\u9891\u9053">\xD7</button>
-                    </div>
-                    <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
-                        <select class="mm-select" style="flex:1;font-size:11px;min-width:120px"
-                            :value="t"
-                            @change="updateSignalTarget(field.field, channel, ti, $event.target.value)">
-                            <option value="">\uFF08\u9009\u62E9\u76EE\u6807\uFF09</option>
-                            <option v-for="opt in getFilteredTargets(field.field, channel, t)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                        </select>
-                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTarget(field.field, channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button>
-                    </div>
-                    <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTarget(field.field, channel)">+ \u6DFB\u52A0\u76EE\u6807</button>
-                </div>
-                <button class="mm-btn" style="font-size:11px" @click="addSignalChannel(field.field)">+ \u6DFB\u52A0\u9891\u9053</button>
-                <datalist :id="'sig-channel-hints-'+_uid">
-                    <option v-for="h in channelHints" :key="h" :value="h" />
-                </datalist>
-            </div>
+            <mm-signal-target-editor v-else-if="field.editor === 'signal_targets'"
+                :entries="getSignalEntries(field.field)"
+                :target-options="signalTargetOptions"
+                :channel-hints="channelHints"
+                @change="onSignalTargetsChange(field.field, $event)" />
 
             <!-- \u6587\u672C\u8F93\u5165 -->
             <input v-else-if="field.editor === 'text_input'" type="text" class="mm-input"
@@ -17833,33 +16970,9 @@
             var count = this.nonDefFields.length;
             return "\u52A8\u6001\u5C5E\u6027 (" + count + " \u9879)";
           },
+          /** 常用频道名补全列表（统一来自 constants.js 唯一真源） */
           channelHints: function() {
-            return [
-              "move_input",
-              "regular_input",
-              "engine_control",
-              "wheel_control",
-              "steering",
-              "throttle",
-              "brake",
-              "handbrake",
-              "engine_speed",
-              "wheel_speed",
-              "vehicle_speed",
-              "gear",
-              "clutch",
-              "parking_brake",
-              "interact_left_front_door",
-              "interact_right_front_door",
-              "interact_left_back_door",
-              "interact_right_back_door",
-              "interact_hood",
-              "interact_trunk",
-              "interact_left_front",
-              "interact_right_front",
-              "interact_left_back",
-              "interact_right_back"
-            ];
+            return SIGNAL_CHANNEL_HINTS;
           }
         },
         methods: {
@@ -17892,74 +17005,13 @@
             return {};
           },
           /**
-           * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
-           * 但保留当前项自身，防止 <select> 因无匹配 option 而显示空白
+           * 信号目标变更回调：由 mm-signal-target-editor 组件 emit，
+           * 深拷贝后写入对应字段（保持 Vue 2 响应式）
            * @param {string} sigField - 信号字段名（如 control_outputs）
-           * @param {string} channel - 频道名
-           * @param {string} [currentValue] - 当前项的值，此值不会被过滤
-           * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
+           * @param {Object} entries - 变更后的 { channel: [target, ...] } 映射
            */
-          getFilteredTargets: function(sigField, channel, currentValue) {
-            var allTargets = this.signalTargetOptions;
-            if (!allTargets || allTargets.length === 0) return [];
-            var entries = this.getSignalEntries(sigField);
-            var usedTargets = entries[channel];
-            if (!usedTargets || usedTargets.length === 0) return allTargets;
-            var filtered = [];
-            for (var i = 0; i < allTargets.length; i++) {
-              var t = allTargets[i];
-              if (t.value === currentValue || usedTargets.indexOf(t.value) === -1) {
-                filtered.push(t);
-              }
-            }
-            return filtered;
-          },
-          addSignalChannel: function(sigField) {
-            var entries = this.getSignalEntries(sigField);
-            var newChan = "new_channel";
-            var idx = 1;
-            while (entries[newChan]) {
-              newChan = "new_channel_" + idx;
-              idx++;
-            }
-            entries[newChan] = [];
+          onSignalTargetsChange: function(sigField, entries) {
             this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
-          },
-          removeSignalChannel: function(sigField, channel) {
-            var entries = this.getSignalEntries(sigField);
-            this.$delete(entries, channel);
-            this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
-          },
-          onSignalChannelChange: function(sigField, oldChannel, newChannel) {
-            if (!newChannel || oldChannel === newChannel) return;
-            var entries = this.getSignalEntries(sigField);
-            var targets = entries[oldChannel];
-            if (targets === void 0) return;
-            this.$delete(entries, oldChannel);
-            this.$set(entries, newChannel, targets);
-            this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
-          },
-          addSignalTarget: function(sigField, channel) {
-            var entries = this.getSignalEntries(sigField);
-            if (!entries[channel]) {
-              this.$set(entries, channel, []);
-            }
-            entries[channel].push("");
-            this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
-          },
-          removeSignalTarget: function(sigField, channel, index) {
-            var entries = this.getSignalEntries(sigField);
-            if (entries[channel]) {
-              entries[channel].splice(index, 1);
-              this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
-            }
-          },
-          updateSignalTarget: function(sigField, channel, index, value) {
-            var entries = this.getSignalEntries(sigField);
-            if (entries[channel]) {
-              this.$set(entries[channel], index, value);
-              this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
-            }
           },
           // ─── 功率输出映射编辑器（power_outputs_map，Map<string, number>） ──
           /**
@@ -18240,6 +17292,198 @@
     }
   });
 
+  // src/ui/components/SignalTargetEditor.vue.js
+  var require_SignalTargetEditor_vue = __commonJS({
+    "src/ui/components/SignalTargetEditor.vue.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      Vue.component("mm-signal-target-editor", {
+        template: '<div class="mm-signal-editor"><div v-for="(targets, channel, ci) in entries" :key="ci" class="mm-signal-card"><div class="mm-signal-header"><input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel" @change="onChannelChange(channel, $event.target.value)" :list="hintsId" placeholder="\u9891\u9053\u540D" /><button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeChannel(channel)" title="\u5220\u9664\u9891\u9053">\xD7</button></div><div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px"><select class="mm-select" style="flex:1;font-size:11px;min-width:120px" :value="t" @change="updateTarget(channel, ti, $event.target.value)"><option value="">\uFF08\u9009\u62E9\u76EE\u6807\uFF09</option><option v-for="opt in getFilteredTargets(channel, t)" :key="opt.value" :value="opt.value">{{ opt.label }}</option></select><button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeTarget(channel, ti)" title="\u5220\u9664\u76EE\u6807">\xD7</button></div><button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addTarget(channel)">+ \u6DFB\u52A0\u76EE\u6807</button></div><button class="mm-btn" style="font-size:11px" @click="addChannel">+ \u6DFB\u52A0\u9891\u9053</button><datalist :id="hintsId"><option v-for="h in channelHints" :key="h" :value="h" /></datalist></div>',
+        props: {
+          /** 信号目标条目映射 { channel: [target, ...] } */
+          entries: { type: Object, default: function() {
+            return {};
+          } },
+          /** 可选目标列表 [{ value, label }] */
+          targetOptions: { type: Array, default: function() {
+            return [];
+          } },
+          /** 频道名补全提示列表 */
+          channelHints: { type: Array, default: function() {
+            return [];
+          } }
+        },
+        computed: {
+          /** datalist 唯一 id（基于组件实例 _uid） */
+          hintsId: function() {
+            return "mm-ste-hints-" + this._uid;
+          }
+        },
+        methods: {
+          /** 深拷贝当前条目（组件内所有操作基于副本，避免污染 props） */
+          _cloneEntries: function() {
+            return JSON.parse(JSON.stringify(this.entries || {}));
+          },
+          /** 提交变更：深拷贝后 emit */
+          _emit: function(entries) {
+            this.$emit("change", JSON.parse(JSON.stringify(entries)));
+          },
+          /**
+           * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择，
+           * 但保留当前项自身，防止 <select> 因无匹配 option 而显示空白
+           * @param {string} channel - 频道名
+           * @param {string} [currentValue] - 当前项的值，此值不会被过滤
+           * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
+           */
+          getFilteredTargets: function(channel, currentValue) {
+            var allTargets = this.targetOptions;
+            if (!allTargets || allTargets.length === 0) return [];
+            var entries = this.entries || {};
+            var usedTargets = entries[channel];
+            if (!usedTargets || usedTargets.length === 0) return allTargets;
+            var filtered = [];
+            for (var i = 0; i < allTargets.length; i++) {
+              var t = allTargets[i];
+              if (t.value === currentValue || usedTargets.indexOf(t.value) === -1) {
+                filtered.push(t);
+              }
+            }
+            return filtered;
+          },
+          /** 添加新的信号频道（默认名 new_channel / new_channel_N） */
+          addChannel: function() {
+            var entries = this._cloneEntries();
+            var newChan = "new_channel";
+            var idx = 1;
+            while (entries[newChan]) {
+              newChan = "new_channel_" + idx;
+              idx++;
+            }
+            entries[newChan] = [];
+            this._emit(entries);
+          },
+          /** 删除信号频道 */
+          removeChannel: function(channel) {
+            var entries = this._cloneEntries();
+            delete entries[channel];
+            this._emit(entries);
+          },
+          /** 重命名信号频道 */
+          onChannelChange: function(oldChannel, newChannel) {
+            if (!newChannel || oldChannel === newChannel) return;
+            var entries = this._cloneEntries();
+            var targets = entries[oldChannel];
+            if (targets === void 0) return;
+            if (entries.hasOwnProperty(newChannel)) {
+              return;
+            }
+            delete entries[oldChannel];
+            entries[newChannel] = targets;
+            this._emit(entries);
+          },
+          /** 为指定频道添加信号目标项 */
+          addTarget: function(channel) {
+            var entries = this._cloneEntries();
+            if (!entries[channel]) {
+              entries[channel] = [];
+            }
+            entries[channel].push("");
+            this._emit(entries);
+          },
+          /** 删除信号频道的指定目标项 */
+          removeTarget: function(channel, index) {
+            var entries = this._cloneEntries();
+            if (entries[channel]) {
+              entries[channel].splice(index, 1);
+              this._emit(entries);
+            }
+          },
+          /** 更新信号频道的指定目标值 */
+          updateTarget: function(channel, index, value) {
+            var entries = this._cloneEntries();
+            if (entries[channel]) {
+              entries[channel][index] = value;
+              this._emit(entries);
+            }
+          }
+        }
+      });
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {};
+      }
+    }
+  });
+
+  // src/ui/components/LocatorPicker.vue.js
+  var require_LocatorPicker_vue = __commonJS({
+    "src/ui/components/LocatorPicker.vue.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      Vue.component("locator-picker", {
+        template: '<div class="mm-field"><input type="text" class="mm-input" :value="localValue" @input="onPreview($event.target.value)" @change="onCommit($event.target.value)" :list="listId" placeholder="\u641C\u7D22\u5E76\u9009\u62E9\u5B9A\u4F4D\u5668\u2026" :class="inputClass" /><datalist :id="listId"><option v-for="(name, idx) in options" :key="idx" :value="name" /></datalist><span v-if="isMissing && localValue" class="mm-locator-warn">\u26A0 \u672A\u627E\u5230\u5B9A\u4F4D\u5668\uFF08\u81EA\u7531\u6587\u672C\uFF0C\u5C06\u539F\u6837\u4FDD\u5B58\uFF09</span></div>',
+        props: {
+          /** 可选定位器名称列表 */
+          options: { type: Array, default: function() {
+            return [];
+          } },
+          /** 当前值（自由文本，可不在 options 中） */
+          value: { type: String, default: "" }
+        },
+        data: function() {
+          return {
+            /** 本地编辑值：输入过程实时更新，失焦时提交给父组件 */
+            localValue: this.value || ""
+          };
+        },
+        watch: {
+          /** 外部值变化（如切换到其他元素）时同步本地值 */
+          value: function(newVal) {
+            if (newVal !== this.localValue) {
+              this.localValue = newVal || "";
+            }
+          }
+        },
+        computed: {
+          listId: function() {
+            return "mm-loc-picker-" + this._uid;
+          },
+          /** 输入值是否不在可选范围内 */
+          isMissing: function() {
+            var v = this.localValue;
+            if (!v) return false;
+            return this.options.indexOf(v) === -1;
+          },
+          /** 输入框视觉标记：未找到标红 */
+          inputClass: function() {
+            return this.isMissing ? "mm-locator-invalid" : "";
+          }
+        },
+        methods: {
+          /** 输入预览：仅更新本地值（驱动红/黄标记），不触发父组件提交 */
+          onPreview: function(val) {
+            this.localValue = val;
+          },
+          /** 失焦/回车提交：同步本地值并 emit 变更 */
+          onCommit: function(val) {
+            this.localValue = val;
+            this.$emit("change", val);
+          }
+        }
+      });
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {};
+      }
+    }
+  });
+
   // src/ui/App.vue.js
   var require_App_vue = __commonJS({
     "src/ui/App.vue.js"(exports, module) {
@@ -18257,6 +17501,7 @@
       var { showToast: showToast2 } = require_notify();
       var content_pack_manager = require_content_pack_manager();
       var nameUtils = require_name_utils();
+      var { buildSignalTargetOptions } = require_signal_target_options();
       var { showAddTagDialog, _hashTagColor } = require_tag_dialog_helper();
       var log2 = createLogger2("UI");
       require_SubPartPanel_vue();
@@ -18265,6 +17510,8 @@
       require_ConnectorPanel_vue();
       require_SubsystemPanel_vue();
       require_KeyValueEditor_vue();
+      require_SignalTargetEditor_vue();
+      require_LocatorPicker_vue();
       var MMMainPanel = Vue.component("mm-main-panel", {
         template: `<div class="mm-panel capture_tab_key" v-if="config">
     <div class="mm-panel-header">
@@ -18657,8 +17904,7 @@
           availableConnectorDefs: function() {
             if (!this.config) return {};
             var result = content_pack_manager.loadMergedDefs(this.config, "connectors").defs;
-            var keys = Object.keys(result);
-            log2.info("availableConnectorDefs: \u5171 " + keys.length + " \u4E2A\u8FDE\u63A5\u70B9\u5B9A\u4E49" + (keys.length > 0 ? "\uFF0C\u5217\u8868=" + keys.join(",") : ""));
+            log2.debug("availableConnectorDefs: \u5171 " + Object.keys(result).length + " \u4E2A\u8FDE\u63A5\u70B9\u5B9A\u4E49");
             return result;
           },
           selectedMarker: function() {
@@ -18772,10 +18018,7 @@
             }
             var cp = require_content_pack_manager();
             var result = cp.loadMergedDefs(this.config, "subsystems").defs;
-            var keys = Object.keys(result);
-            log2.info("availableSubsystemDefs: \u5171 " + keys.length + " \u4E2A\u5B50\u7CFB\u7EDF\u5B9A\u4E49" + (keys.length > 0 ? "\uFF0C\u5217\u8868=" + keys.join(",") : ""));
-            var connKeys = Object.keys(cp.loadMergedDefs(this.config, "connectors").defs);
-            log2.info("availableSubsystemDefs: \u5BF9\u7167 \u2014 \u8FDE\u63A5\u70B9\u5171 " + connKeys.length + " \u4E2A");
+            log2.debug("availableSubsystemDefs: \u5171 " + Object.keys(result).length + " \u4E2A\u5B50\u7CFB\u7EDF\u5B9A\u4E49");
             return result;
           },
           /**
@@ -18800,7 +18043,7 @@
             }
             var projectile_manager = require_projectile_manager();
             var result = projectile_manager.getProjectileMap(this.config);
-            log2.info("availableProjectileTypes: \u5171 " + Object.keys(result).length + " \u4E2A\u6295\u5C04\u7269");
+            log2.debug("availableProjectileTypes: \u5171 " + Object.keys(result).length + " \u4E2A\u6295\u5C04\u7269");
             return result;
           },
           /**
@@ -18813,29 +18056,29 @@
             return sp.connectors;
           },
           /**
+           * 获取指定子零件的信号目标选项列表（唯一实现）
+           * 供 currentSignalTargetOptions / connectorParentSignalTargetHints /
+           * interactBoxParentSignalTargetHints 三个计算属性复用。
+           * @param {string} spKey - 子零件 key
+           * @returns {Array<{value: string, label: string}>} 信号目标选项列表
+           */
+          signalTargetOptionsFor: function(spKey) {
+            void this.markerVersion.v;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) {
+              return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
+            }
+            return buildSignalTargetOptions(
+              this.currentVariant.sub_parts[spKey],
+              this.config && this.config.namespace || "machine_max"
+            );
+          },
+          /**
            * 当前子零件内所有目标 key（用于信号目标下拉选择）
            * 返回 {value, label}[]，value=完整键，label=[类型]短名
            */
           currentSignalTargetOptions: function() {
-            void this.markerVersion.v;
             if (!this.isSubsystemSelected || !this.currentVariant) return [];
-            var sp = this.currentVariant.sub_parts[this.subsystemSelection.spKey];
-            if (!sp) return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
-            var ns = this.config && this.config.namespace || "machine_max";
-            var result = [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
-            if (sp.connectors) {
-              var connKeys = Object.keys(sp.connectors);
-              for (var i = 0; i < connKeys.length; i++) {
-                result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
-              }
-            }
-            if (sp.subsystems) {
-              var ssKeys = Object.keys(sp.subsystems);
-              for (var j = 0; j < ssKeys.length; j++) {
-                result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
-              }
-            }
-            return result;
+            return this.signalTargetOptionsFor(this.subsystemSelection.spKey);
           },
           /**
            * 动态检测碰撞箱所属子零件（沿父链向上遍历）
@@ -18889,26 +18132,7 @@
            * 返回 {value, label}[]，value=完整键，label=[类型]短名
            */
           connectorParentSignalTargetHints: function() {
-            void this.markerVersion.v;
-            var spKey = this.connectorParentSubPartKey;
-            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
-            var sp = this.currentVariant.sub_parts[spKey];
-            if (!sp) return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
-            var ns = this.config && this.config.namespace || "machine_max";
-            var result = [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
-            if (sp.connectors) {
-              var connKeys = Object.keys(sp.connectors);
-              for (var i = 0; i < connKeys.length; i++) {
-                result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
-              }
-            }
-            if (sp.subsystems) {
-              var ssKeys = Object.keys(sp.subsystems);
-              for (var j = 0; j < ssKeys.length; j++) {
-                result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
-              }
-            }
-            return result;
+            return this.signalTargetOptionsFor(this.connectorParentSubPartKey);
           },
           /**
            * 当前选中碰撞箱的配置对象（从所属子零件的 hit_boxes 中获取）
@@ -18978,26 +18202,7 @@
            * 返回 {value, label}[]，value=完整键，label=[类型]短名
            */
           interactBoxParentSignalTargetHints: function() {
-            void this.markerVersion.v;
-            var spKey = this.interactBoxParentSubPartKey;
-            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
-            var sp = this.currentVariant.sub_parts[spKey];
-            if (!sp) return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
-            var ns = this.config && this.config.namespace || "machine_max";
-            var result = [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
-            if (sp.connectors) {
-              var connKeys = Object.keys(sp.connectors);
-              for (var i = 0; i < connKeys.length; i++) {
-                result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
-              }
-            }
-            if (sp.subsystems) {
-              var ssKeys = Object.keys(sp.subsystems);
-              for (var j = 0; j < ssKeys.length; j++) {
-                result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
-              }
-            }
-            return result;
+            return this.signalTargetOptionsFor(this.interactBoxParentSubPartKey);
           },
           /**
            * 当前选中交互区的配置对象（从所属子零件的 interact_boxes 中获取）
@@ -21300,7 +20505,7 @@
         }
         if (!_mmCssInserted) {
           try {
-            const mmCss = ".mm-panel {\n    padding: 12px;\n    height: 100%;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n}\n\n.mm-panel-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n}\n\n.mm-panel-header {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n.mm-nav-row {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    margin-bottom: 6px;\n}\n\n.mm-label {\n    font-size: 12px;\n    color: #aaa;\n    min-width: 32px;\n    flex-shrink: 0;\n}\n\n.mm-select {\n    flex: 1;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    cursor: pointer;\n}\n\n.mm-input {\n    width: 100%;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    box-sizing: border-box;\n}\n\n.mm-input:focus {\n    border-color: #4A90D9;\n    outline: none;\n}\n\n.mm-btn {\n    background: var(--btn-bg, #3a3a3a);\n    border: 1px solid var(--border-color, #555);\n    color: var(--text-color, #ddd);\n    border-radius: 3px;\n    cursor: pointer;\n    font-size: 12px;\n    white-space: nowrap;\n}\n\n.mm-btn:hover {\n    background: var(--btn-hover-bg, #4a4a4a);\n}\n\n.mm-btn-sm {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    padding: 0;\n    font-size: 14px;\n    line-height: 1;\n    width: 30px;\n    height: 30px;\n    min-width: 30px;\n    min-height: 30px;\n    box-sizing: border-box;\n}\n\n.mm-btn-danger {\n    background: var(--btn-danger-bg, #5a2a2a);\n    border-color: var(--btn-danger-border, #8a3a3a);\n    color: #ff6b6b;\n}\n\n.mm-btn-danger:hover:not(:disabled) {\n    background: var(--btn-danger-hover-bg, #7a3a3a);\n    color: #ff9999;\n}\n\n.mm-btn-danger:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n\n.mm-section {\n    margin-bottom: 16px;\n}\n\n.mm-section-title {\n    font-size: 13px;\n    font-weight: 600;\n    margin: 0 0 8px 0;\n    padding-bottom: 4px;\n    border-bottom: 1px solid var(--border-color, #333);\n    color: var(--heading-color, #eee);\n}\n\n.mm-field {\n    margin-bottom: 8px;\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n\n.mm-field label {\n    font-size: 11px;\n    color: #999;\n    margin-bottom: 1px;\n}\n\n.mm-field-row {\n    flex-direction: row;\n    align-items: center;\n    gap: 8px;\n}\n\n.mm-field-row label {\n    margin-bottom: 0;\n}\n\n.mm-tags {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-tag {\n    background: var(--tag-bg, #3a6a9a);\n    color: white;\n    padding: 2px 8px;\n    border-radius: 3px;\n    font-size: 11px;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n\n.mm-tag-remove {\n    cursor: pointer;\n    font-weight: bold;\n    font-size: 14px;\n    line-height: 1;\n}\n\n.mm-tag-remove:hover {\n    color: #ff6b6b;\n}\n\n.mm-variant-list {\n    list-style: none;\n    padding: 0;\n    margin: 0;\n}\n\n.mm-variant-list li {\n    padding: 4px 8px;\n    cursor: pointer;\n    font-size: 12px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    border-radius: 3px;\n}\n\n.mm-variant-list li:hover {\n    background: var(--hover-bg, #333);\n}\n\n.mm-variant-list li.active {\n    background: var(--active-bg, #2a4a6a);\n    color: white;\n}\n\n.mm-variant-remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-weight: bold;\n}\n\n.mm-element-info {\n    font-size: 11px;\n    color: #888;\n    margin: 2px 0;\n}\n\n.mm-marker-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: white;\n    margin-left: 6px;\n    vertical-align: middle;\n}\n\n.mm-panel-hint {\n    color: #666;\n    font-size: 12px;\n    text-align: center;\n    padding: 20px;\n}\n\n.mm-panel-body {\n    flex: 1;\n    overflow-y: auto;\n}\n\n/* \u56FA\u5B9A\u5728\u9762\u677F\u9876\u90E8\u7684\u6807\u9898\u680F\uFF0C\u6EDA\u52A8\u65F6\u59CB\u7EC8\u53EF\u89C1 */\n.mm-sticky-title {\n    position: sticky;\n    top: 0;\n    z-index: 1;\n    background: var(--panel-bg, #1e1e1e);\n    padding: 8px 0 4px 0;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u6761\u76EE\u884C */\n.mm-sub-item-row {\n    display: flex;\n    flex-direction: column;\n    padding: 4px 8px;\n    border-radius: 3px;\n    margin-bottom: 2px;\n}\n.mm-sub-item-row.mm-clickable {\n    cursor: pointer;\n}\n.mm-sub-item-row.mm-clickable:hover {\n    background: var(--hover-bg, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u540D\u79F0\u884C */\n.mm-sub-item-name {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 12px;\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u5143\u4FE1\u606F\u884C */\n.mm-sub-item-meta {\n    font-size: 10px;\n    color: #888;\n    margin-left: 4px;\n}\n\n/* \u53EF\u70B9\u51FB\u7684\u5F52\u5C5E\u6807\u7B7E */\n.mm-clickable-tag:hover {\n    filter: brightness(1.3);\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5361\u7247 */\n.mm-signal-card {\n    margin-bottom: 4px;\n    padding: 4px;\n    background: #252525;\n    border-radius: 3px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5934\u90E8 */\n.mm-signal-header {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n    margin-bottom: 2px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u5220\u9664\u6309\u94AE */\n.mm-btn-sm.mm-btn-danger-light {\n    color: #ff6b6b;\n}\n\n.mm-btn-sm.mm-btn-danger-light:hover {\n    color: #ff9999;\n}\n\n/* ===== \u4FE1\u53F7\u6D41\u56FE\u9762\u677F ===== */\n.mm-signal-flow {\n    padding: 8px 12px;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n}\n\n.mm-signal-flow-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n    font-size: 12px;\n}\n\n.mm-signal-flow-header {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding-bottom: 8px;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n}\n\n.mm-signal-flow-title {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 14px;\n    font-weight: 600;\n    color: var(--heading-color, #eee);\n}\n\n.mm-flow-icon {\n    font-size: 16px;\n    color: #4A90D9;\n}\n\n.mm-signal-flow-meta {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 11px;\n    color: #888;\n}\n\n.mm-flow-meta-item {\n    background: #2a2a2a;\n    padding: 1px 6px;\n    border-radius: 3px;\n    color: #aaa;\n}\n\n.mm-flow-meta-sep {\n    color: #555;\n}\n\n.mm-signal-flow-body {\n    flex: 1;\n    display: flex;\n    overflow: auto;\n}\n\n.mm-signal-flow-placeholder {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    width: 100%;\n    gap: 12px;\n}\n\n.mm-flow-placeholder-icon {\n    font-size: 36px;\n    color: #4a4a4a;\n    opacity: 0.5;\n}\n\n.mm-flow-placeholder-text {\n    font-size: 13px;\n    color: #666;\n}\n\n.mm-flow-placeholder-hint {\n    font-size: 11px;\n    color: #555;\n    text-align: center;\n}\n\n.mm-flow-stats {\n    display: flex;\n    gap: 24px;\n    margin: 8px 0;\n}\n\n.mm-flow-stat {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    gap: 2px;\n}\n\n.mm-flow-stat-value {\n    font-size: 18px;\n    font-weight: 600;\n    color: #4A90D9;\n}\n\n.mm-flow-stat-label {\n    font-size: 10px;\n    color: #888;\n    text-transform: uppercase;\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u753B\u5E03 */\n.mm-flow-canvas {\n    flex: 1;\n    overflow: hidden;\n    background: #1a1a1a;\n    border-radius: 4px;\n    border: 1px solid var(--border-color, #333);\n    min-height: 200px;\n}\n\n.mm-flow-canvas svg {\n    display: block;\n    width: 100%;\n    height: 100%;\n}\n\n/* \u8FDE\u7EBF\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-edge-hovered {\n    stroke-opacity: 1 !important;\n}\n\n/* \u8282\u70B9\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-node-hovered {\n    stroke: #fff !important;\n    stroke-width: 1.5 !important;\n    filter: brightness(1.2);\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u64CD\u4F5C\u6309\u94AE */\n.mm-signal-flow-actions {\n    margin-left: auto;\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n/* \u56FE\u4F8B */\n.mm-signal-flow-legend {\n    display: flex;\n    gap: 12px;\n    padding-top: 6px;\n    margin-top: 4px;\n    border-top: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n    flex-wrap: wrap;\n}\n\n.mm-flow-legend-item {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 10px;\n    color: #999;\n    cursor: default;\n}\n\n.mm-flow-legend-item:hover {\n    color: #ccc;\n}\n\n.mm-flow-legend-dot {\n    width: 8px;\n    height: 8px;\n    border-radius: 2px;\n    flex-shrink: 0;\n}\n\n.mm-flow-legend-line {\n    width: 14px;\n    height: 3px;\n    border-radius: 1px;\n    flex-shrink: 0;\n}\n\n/* ==================== \u952E\u503C\u5BF9\u7F16\u8F91\u5668 ==================== */\n\n.mm-kv-editor {\n    display: flex;\n    flex-direction: column;\n    gap: 4px;\n}\n\n.mm-kv-row {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-kv-key {\n    flex: 1 1 30%;\n    min-width: 60px;\n}\n\n.mm-kv-value {\n    flex: 2 1 70%;\n    min-width: 100px;\n}\n\n.mm-kv-add {\n    border-top: 1px solid #373a40;\n    padding-top: 4px;\n}\n\n.mm-btn-danger {\n    color: #D94A4A;\n    border: 1px solid #D94A4A;\n    background: transparent;\n}\n.mm-btn-danger:hover {\n    background: #D94A4A;\n    color: #fff;\n}";
+            const mmCss = ".mm-panel {\n    padding: 12px;\n    height: 100%;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n}\n\n.mm-panel-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n}\n\n.mm-panel-header {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n.mm-nav-row {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    margin-bottom: 6px;\n}\n\n.mm-label {\n    font-size: 12px;\n    color: #aaa;\n    min-width: 32px;\n    flex-shrink: 0;\n}\n\n.mm-select {\n    flex: 1;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    cursor: pointer;\n}\n\n.mm-input {\n    width: 100%;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    box-sizing: border-box;\n}\n\n.mm-input:focus {\n    border-color: #4A90D9;\n    outline: none;\n}\n\n.mm-btn {\n    background: var(--btn-bg, #3a3a3a);\n    border: 1px solid var(--border-color, #555);\n    color: var(--text-color, #ddd);\n    border-radius: 3px;\n    cursor: pointer;\n    font-size: 12px;\n    white-space: nowrap;\n}\n\n.mm-btn:hover {\n    background: var(--btn-hover-bg, #4a4a4a);\n}\n\n.mm-btn-sm {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    padding: 0;\n    font-size: 14px;\n    line-height: 1;\n    width: 30px;\n    height: 30px;\n    min-width: 30px;\n    min-height: 30px;\n    box-sizing: border-box;\n}\n\n.mm-btn-danger {\n    background: var(--btn-danger-bg, #5a2a2a);\n    border-color: var(--btn-danger-border, #8a3a3a);\n    color: #ff6b6b;\n}\n\n.mm-btn-danger:hover:not(:disabled) {\n    background: var(--btn-danger-hover-bg, #7a3a3a);\n    color: #ff9999;\n}\n\n.mm-btn-danger:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n\n.mm-section {\n    margin-bottom: 16px;\n}\n\n.mm-section-title {\n    font-size: 13px;\n    font-weight: 600;\n    margin: 0 0 8px 0;\n    padding-bottom: 4px;\n    border-bottom: 1px solid var(--border-color, #333);\n    color: var(--heading-color, #eee);\n}\n\n.mm-field {\n    margin-bottom: 8px;\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n\n.mm-field label {\n    font-size: 11px;\n    color: #999;\n    margin-bottom: 1px;\n}\n\n.mm-field-row {\n    flex-direction: row;\n    align-items: center;\n    gap: 8px;\n}\n\n.mm-field-row label {\n    margin-bottom: 0;\n}\n\n.mm-tags {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-tag {\n    background: var(--tag-bg, #3a6a9a);\n    color: white;\n    padding: 2px 8px;\n    border-radius: 3px;\n    font-size: 11px;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n\n.mm-tag-remove {\n    cursor: pointer;\n    font-weight: bold;\n    font-size: 14px;\n    line-height: 1;\n}\n\n.mm-tag-remove:hover {\n    color: #ff6b6b;\n}\n\n.mm-variant-list {\n    list-style: none;\n    padding: 0;\n    margin: 0;\n}\n\n.mm-variant-list li {\n    padding: 4px 8px;\n    cursor: pointer;\n    font-size: 12px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    border-radius: 3px;\n}\n\n.mm-variant-list li:hover {\n    background: var(--hover-bg, #333);\n}\n\n.mm-variant-list li.active {\n    background: var(--active-bg, #2a4a6a);\n    color: white;\n}\n\n.mm-variant-remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-weight: bold;\n}\n\n.mm-element-info {\n    font-size: 11px;\n    color: #888;\n    margin: 2px 0;\n}\n\n.mm-marker-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: white;\n    margin-left: 6px;\n    vertical-align: middle;\n}\n\n.mm-panel-hint {\n    color: #666;\n    font-size: 12px;\n    text-align: center;\n    padding: 20px;\n}\n\n.mm-panel-body {\n    flex: 1;\n    overflow-y: auto;\n}\n\n/* \u56FA\u5B9A\u5728\u9762\u677F\u9876\u90E8\u7684\u6807\u9898\u680F\uFF0C\u6EDA\u52A8\u65F6\u59CB\u7EC8\u53EF\u89C1 */\n.mm-sticky-title {\n    position: sticky;\n    top: 0;\n    z-index: 1;\n    background: var(--panel-bg, #1e1e1e);\n    padding: 8px 0 4px 0;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u6761\u76EE\u884C */\n.mm-sub-item-row {\n    display: flex;\n    flex-direction: column;\n    padding: 4px 8px;\n    border-radius: 3px;\n    margin-bottom: 2px;\n}\n.mm-sub-item-row.mm-clickable {\n    cursor: pointer;\n}\n.mm-sub-item-row.mm-clickable:hover {\n    background: var(--hover-bg, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u540D\u79F0\u884C */\n.mm-sub-item-name {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 12px;\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u5143\u4FE1\u606F\u884C */\n.mm-sub-item-meta {\n    font-size: 10px;\n    color: #888;\n    margin-left: 4px;\n}\n\n/* \u53EF\u70B9\u51FB\u7684\u5F52\u5C5E\u6807\u7B7E */\n.mm-clickable-tag:hover {\n    filter: brightness(1.3);\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5361\u7247 */\n.mm-signal-card {\n    margin-bottom: 4px;\n    padding: 4px;\n    background: #252525;\n    border-radius: 3px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5934\u90E8 */\n.mm-signal-header {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n    margin-bottom: 2px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u5220\u9664\u6309\u94AE */\n.mm-btn-sm.mm-btn-danger-light {\n    color: #ff6b6b;\n}\n\n.mm-btn-sm.mm-btn-danger-light:hover {\n    color: #ff9999;\n}\n\n/* ===== \u4FE1\u53F7\u6D41\u56FE\u9762\u677F ===== */\n.mm-signal-flow {\n    padding: 8px 12px;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n}\n\n.mm-signal-flow-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n    font-size: 12px;\n}\n\n.mm-signal-flow-header {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding-bottom: 8px;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n}\n\n.mm-signal-flow-title {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 14px;\n    font-weight: 600;\n    color: var(--heading-color, #eee);\n}\n\n.mm-flow-icon {\n    font-size: 16px;\n    color: #4A90D9;\n}\n\n.mm-signal-flow-meta {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 11px;\n    color: #888;\n}\n\n.mm-flow-meta-item {\n    background: #2a2a2a;\n    padding: 1px 6px;\n    border-radius: 3px;\n    color: #aaa;\n}\n\n.mm-flow-meta-sep {\n    color: #555;\n}\n\n.mm-signal-flow-body {\n    flex: 1;\n    display: flex;\n    overflow: auto;\n}\n\n.mm-signal-flow-placeholder {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    width: 100%;\n    gap: 12px;\n}\n\n.mm-flow-placeholder-icon {\n    font-size: 36px;\n    color: #4a4a4a;\n    opacity: 0.5;\n}\n\n.mm-flow-placeholder-text {\n    font-size: 13px;\n    color: #666;\n}\n\n.mm-flow-placeholder-hint {\n    font-size: 11px;\n    color: #555;\n    text-align: center;\n}\n\n.mm-flow-stats {\n    display: flex;\n    gap: 24px;\n    margin: 8px 0;\n}\n\n.mm-flow-stat {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    gap: 2px;\n}\n\n.mm-flow-stat-value {\n    font-size: 18px;\n    font-weight: 600;\n    color: #4A90D9;\n}\n\n.mm-flow-stat-label {\n    font-size: 10px;\n    color: #888;\n    text-transform: uppercase;\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u753B\u5E03 */\n.mm-flow-canvas {\n    flex: 1;\n    overflow: hidden;\n    background: #1a1a1a;\n    border-radius: 4px;\n    border: 1px solid var(--border-color, #333);\n    min-height: 200px;\n}\n\n.mm-flow-canvas svg {\n    display: block;\n    width: 100%;\n    height: 100%;\n}\n\n/* \u8FDE\u7EBF\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-edge-hovered {\n    stroke-opacity: 1 !important;\n}\n\n/* \u8282\u70B9\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-node-hovered {\n    stroke: #fff !important;\n    stroke-width: 1.5 !important;\n    filter: brightness(1.2);\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u64CD\u4F5C\u6309\u94AE */\n.mm-signal-flow-actions {\n    margin-left: auto;\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n/* \u56FE\u4F8B */\n.mm-signal-flow-legend {\n    display: flex;\n    gap: 12px;\n    padding-top: 6px;\n    margin-top: 4px;\n    border-top: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n    flex-wrap: wrap;\n}\n\n.mm-flow-legend-item {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 10px;\n    color: #999;\n    cursor: default;\n}\n\n.mm-flow-legend-item:hover {\n    color: #ccc;\n}\n\n.mm-flow-legend-dot {\n    width: 8px;\n    height: 8px;\n    border-radius: 2px;\n    flex-shrink: 0;\n}\n\n.mm-flow-legend-line {\n    width: 14px;\n    height: 3px;\n    border-radius: 1px;\n    flex-shrink: 0;\n}\n\n/* ==================== \u952E\u503C\u5BF9\u7F16\u8F91\u5668 ==================== */\n\n.mm-kv-editor {\n    display: flex;\n    flex-direction: column;\n    gap: 4px;\n}\n\n.mm-kv-row {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-kv-key {\n    flex: 1 1 30%;\n    min-width: 60px;\n}\n\n.mm-kv-value {\n    flex: 2 1 70%;\n    min-width: 100px;\n}\n\n.mm-kv-add {\n    border-top: 1px solid #373a40;\n    padding-top: 4px;\n}\n\n.mm-btn-danger {\n    color: #D94A4A;\n    border: 1px solid #D94A4A;\n    background: transparent;\n}\n.mm-btn-danger:hover {\n    background: #D94A4A;\n    color: #fff;\n}\n\n/* ==================== \u901A\u7528\u5B9A\u4E49\u67E5\u770B\u5668\uFF08\u53EA\u8BFB\u5217\u8868\uFF09 ==================== */\n\n/* \u6765\u6E90\u7EDF\u8BA1\u6761 */\n.mm-def-stats {\n    display: flex;\n    gap: 14px;\n    align-items: center;\n    font-size: 11px;\n    color: #aaa;\n    margin-bottom: 6px;\n}\n\n.mm-def-stat {\n    display: inline-flex;\n    align-items: center;\n    gap: 4px;\n}\n\n/* \u7EDF\u8BA1\u6761\u5F69\u8272\u5706\u70B9 */\n.mm-dot {\n    display: inline-block;\n    width: 8px;\n    height: 8px;\n    border-radius: 50%;\n}\n\n.mm-dot-builtin {\n    background: #888;\n}\n\n.mm-dot-dependency {\n    background: #2196F3;\n}\n\n.mm-dot-current {\n    background: #4CAF50;\n}\n\n/* \u5B9A\u4E49\u5217\u8868\u6EDA\u52A8\u5BB9\u5668 */\n.mm-def-list {\n    max-height: 320px;\n    overflow-y: auto;\n    border: 1px solid var(--border-color, #333);\n    border-radius: 3px;\n}\n\n/* \u5B9A\u4E49\u8868\u683C */\n.mm-def-table {\n    width: 100%;\n    border-collapse: collapse;\n    font-size: 12px;\n}\n\n.mm-def-th {\n    padding: 6px 8px;\n    text-align: left;\n    font-size: 11px;\n    color: #aaa;\n    font-weight: normal;\n    border-bottom: 2px solid #555;\n    position: sticky;\n    top: 0;\n    background: var(--panel-bg, #1e1e1e);\n    z-index: 1;\n}\n\n.mm-def-table td {\n    padding: 6px 8px;\n    border-bottom: 1px solid #333;\n}\n\n.mm-def-id {\n    font-family: monospace;\n    font-size: 13px;\n}\n\n.mm-def-sublabel {\n    margin-left: 8px;\n    font-size: 11px;\n    color: #888;\n}\n\n/* \u53EA\u8BFB\u6807\u8BB0 */\n.mm-def-readonly {\n    display: inline-block;\n    margin-left: 8px;\n    padding: 0 5px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: #999;\n    border: 1px solid #555;\n}\n\n/* \u7A7A\u5217\u8868\u63D0\u793A */\n.mm-def-empty {\n    color: #888;\n    font-style: italic;\n    text-align: center;\n    padding: 20px;\n}\n\n/* \u5E95\u90E8\u63D0\u793A\u6587\u6848 */\n.mm-def-hint {\n    font-size: 11px;\n    color: #888;\n    margin: 8px 0 0 0;\n}\n\n/* \u6765\u6E90\u5FBD\u6807\uFF08\u4E09\u8272\uFF09 */\n.mm-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 11px;\n    white-space: nowrap;\n}\n\n.mm-badge-builtin {\n    color: #888;\n    border: 1px solid #888;\n}\n\n.mm-badge-dependency {\n    color: #2196F3;\n    border: 1px solid #2196F3;\n}\n\n.mm-badge-current {\n    color: #4CAF50;\n    border: 1px solid #4CAF50;\n}\n\n.mm-badge-unknown {\n    color: #888;\n    border: 1px solid #888;\n}\n\n/* ==================== LocatorPicker\uFF08\u5B9A\u4F4D\u5668\u9009\u62E9\uFF09 ==================== */\n\n/* \u672A\u627E\u5230\u7684 locator \u8F93\u5165\u6846\uFF1A\u7EA2\u8272\u8FB9\u6846\u6807\u8BB0\uFF08\u4E0D\u62E6\u622A\u8F93\u5165\uFF09 */\n.mm-locator-invalid {\n    border-color: #e74c3c !important;\n    color: #e74c3c;\n}\n\n/* \u672A\u627E\u5230\u63D0\u793A\u6587\u6848 */\n.mm-locator-warn {\n    display: block;\n    margin-top: 2px;\n    font-size: 10px;\n    color: #f39c12;\n}";
             if (mmCss) {
               const style = document.createElement("style");
               style.setAttribute("data-mm-plugin", "true");

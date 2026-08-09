@@ -12,6 +12,7 @@
  */
 var ssTypes = require('../core/subsystem_types.js');
 var nameUtils = require('../utils/name_utils.js');
+var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
 var { createLogger } = require('../utils/logger.js');
 
 var log = createLogger('SubsystemPanel');
@@ -120,18 +121,9 @@ Vue.component('mm-subsystem-panel', {
             var count = this.nonDefFields.length;
             return '动态属性 (' + count + ' 项)';
         },
+        /** 常用频道名补全列表（统一来自 constants.js 唯一真源） */
         channelHints: function () {
-            return [
-                'move_input', 'regular_input', 'engine_control', 'wheel_control',
-                'steering', 'throttle', 'brake', 'handbrake',
-                'engine_speed', 'wheel_speed', 'vehicle_speed',
-                'gear', 'clutch', 'parking_brake',
-                'interact_left_front_door', 'interact_right_front_door',
-                'interact_left_back_door', 'interact_right_back_door',
-                'interact_hood', 'interact_trunk',
-                'interact_left_front', 'interact_right_front',
-                'interact_left_back', 'interact_right_back',
-            ];
+            return SIGNAL_CHANNEL_HINTS;
         },
     },
     methods: {
@@ -165,74 +157,13 @@ Vue.component('mm-subsystem-panel', {
             return {};
         },
         /**
-         * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
-         * 但保留当前项自身，防止 <select> 因无匹配 option 而显示空白
+         * 信号目标变更回调：由 mm-signal-target-editor 组件 emit，
+         * 深拷贝后写入对应字段（保持 Vue 2 响应式）
          * @param {string} sigField - 信号字段名（如 control_outputs）
-         * @param {string} channel - 频道名
-         * @param {string} [currentValue] - 当前项的值，此值不会被过滤
-         * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
+         * @param {Object} entries - 变更后的 { channel: [target, ...] } 映射
          */
-        getFilteredTargets: function (sigField, channel, currentValue) {
-            var allTargets = this.signalTargetOptions;
-            if (!allTargets || allTargets.length === 0) return [];
-            var entries = this.getSignalEntries(sigField);
-            var usedTargets = entries[channel];
-            if (!usedTargets || usedTargets.length === 0) return allTargets;
-            var filtered = [];
-            for (var i = 0; i < allTargets.length; i++) {
-                var t = allTargets[i];
-                if (t.value === currentValue || usedTargets.indexOf(t.value) === -1) {
-                    filtered.push(t);
-                }
-            }
-            return filtered;
-        },
-        addSignalChannel: function (sigField) {
-            var entries = this.getSignalEntries(sigField);
-            var newChan = 'new_channel';
-            var idx = 1;
-            while (entries[newChan]) {
-                newChan = 'new_channel_' + idx;
-                idx++;
-            }
-            entries[newChan] = [];
+        onSignalTargetsChange: function (sigField, entries) {
             this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
-        },
-        removeSignalChannel: function (sigField, channel) {
-            var entries = this.getSignalEntries(sigField);
-            this.$delete(entries, channel);
-            this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
-        },
-        onSignalChannelChange: function (sigField, oldChannel, newChannel) {
-            if (!newChannel || oldChannel === newChannel) return;
-            var entries = this.getSignalEntries(sigField);
-            var targets = entries[oldChannel];
-            if (targets === undefined) return;
-            this.$delete(entries, oldChannel);
-            this.$set(entries, newChannel, targets);
-            this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
-        },
-        addSignalTarget: function (sigField, channel) {
-            var entries = this.getSignalEntries(sigField);
-            if (!entries[channel]) {
-                this.$set(entries, channel, []);
-            }
-            entries[channel].push('');
-            this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
-        },
-        removeSignalTarget: function (sigField, channel, index) {
-            var entries = this.getSignalEntries(sigField);
-            if (entries[channel]) {
-                entries[channel].splice(index, 1);
-                this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
-            }
-        },
-        updateSignalTarget: function (sigField, channel, index, value) {
-            var entries = this.getSignalEntries(sigField);
-            if (entries[channel]) {
-                this.$set(entries[channel], index, value);
-                this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
-            }
         },
 
         // ─── 功率输出映射编辑器（power_outputs_map，Map<string, number>） ──

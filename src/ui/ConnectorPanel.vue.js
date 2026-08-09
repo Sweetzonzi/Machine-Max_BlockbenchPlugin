@@ -9,6 +9,7 @@
  * 扩展功能：信号目标、信号转译、机械能输出、内部连接点、属性覆写
  */
 var nameUtils = require('../utils/name_utils.js');
+var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
 
 Vue.component('mm-connector-panel', {
     template: typeof TEMPLATE_CONNECTOR_PANEL !== 'undefined' ? TEMPLATE_CONNECTOR_PANEL : '<p>连接点面板加载中...</p>',
@@ -48,9 +49,6 @@ Vue.component('mm-connector-panel', {
         namePrefix: function () {
             return 'connector.' + this.namespace + '.';
         },
-        locatorListId: function () {
-            return 'mm-connector-loc-list-' + this._uid;
-        },
         hasDefinition: function () {
             return !!(this.config && this.config.definition);
         },
@@ -82,20 +80,10 @@ Vue.component('mm-connector-panel', {
             return Object.keys(this.overwriteEntries).length;
         },
         /**
-         * 常用频道名补全列表
+         * 常用频道名补全列表（统一来自 constants.js 唯一真源）
          */
         channelHints: function () {
-            return [
-                'move_input', 'regular_input', 'engine_control', 'wheel_control',
-                'steering', 'throttle', 'brake', 'handbrake',
-                'engine_speed', 'wheel_speed', 'vehicle_speed',
-                'gear', 'clutch', 'parking_brake', 'power',
-                'interact_left_front_door', 'interact_right_front_door',
-                'interact_left_back_door', 'interact_right_back_door',
-                'interact_hood', 'interact_trunk',
-                'interact_left_front', 'interact_right_front',
-                'interact_left_back', 'interact_right_back',
-            ];
+            return SIGNAL_CHANNEL_HINTS;
         },
     },
     methods: {
@@ -114,6 +102,10 @@ Vue.component('mm-connector-panel', {
             event.target.style.background = 'transparent';
         },
         onLocatorChange: function (value) {
+            // 同步本地编辑值（共享组件单向绑定，输入时组件 emit 更新）
+            if (value !== this.editingLocator) {
+                this.editingLocator = value;
+            }
             if (value !== (this.config.locator || this.elementName)) {
                 this.$emit('locator-change', this.elementName, value);
             }
@@ -134,99 +126,12 @@ Vue.component('mm-connector-panel', {
             this.$emit('navigate-to-sub-part', this.parentSubPartKey);
         },
 
-        // ===== 信号目标编辑 =====
+        // ===== 信号目标编辑（共享组件 mm-signal-target-editor） =====
         /**
-         * 获取指定频道的过滤后目标列表：排除该频道中已选的目标，避免重复选择
-         * 但保留当前项自身，防止 <select> 因无匹配 option 而显示空白
-         * @param {string} channel - 频道名
-         * @param {string} [currentValue] - 当前项的值，此值不会被过滤
-         * @returns {{value: string, label: string}[]} 过滤后的可用目标列表
+         * 信号目标变更回调：由共享组件 emit，深拷贝后提交 field-change
+         * @param {Object} entries - 变更后的 { channel: [target, ...] } 映射
          */
-        getFilteredTargets: function (channel, currentValue) {
-            var allTargets = this.signalTargetHints;
-            if (!allTargets || allTargets.length === 0) return [];
-            var entries = this.signalTargetEntries;
-            var usedTargets = entries[channel];
-            if (!usedTargets || usedTargets.length === 0) return allTargets;
-            var filtered = [];
-            for (var i = 0; i < allTargets.length; i++) {
-                var t = allTargets[i];
-                if (t.value === currentValue || usedTargets.indexOf(t.value) === -1) {
-                    filtered.push(t);
-                }
-            }
-            return filtered;
-        },
-        /**
-         * 添加新的信号频道
-         */
-        addSignalTargetChannel: function () {
-            var entries = this.signalTargetEntries;
-            var newChan = 'new_channel';
-            var idx = 1;
-            while (entries[newChan]) {
-                newChan = 'new_channel_' + idx;
-                idx++;
-            }
-            this.$set(entries, newChan, []);
-            this.emitSignalTargets(entries);
-        },
-        /**
-         * 删除信号频道
-         */
-        removeSignalTargetChannel: function (channel) {
-            var entries = this.signalTargetEntries;
-            this.$delete(entries, channel);
-            this.emitSignalTargets(entries);
-        },
-        /**
-         * 重命名信号频道
-         */
-        onSignalTargetChannelChange: function (oldChannel, newChannel) {
-            if (!newChannel || oldChannel === newChannel) return;
-            var entries = this.signalTargetEntries;
-            var targets = entries[oldChannel];
-            if (targets === undefined) return;
-            this.$delete(entries, oldChannel);
-            this.$set(entries, newChannel, targets);
-            this.emitSignalTargets(entries);
-        },
-        /**
-         * 为指定频道添加信号目标项
-         */
-        addSignalTargetItem: function (channel) {
-            var entries = this.signalTargetEntries;
-            if (!entries[channel]) {
-                this.$set(entries, channel, []);
-            }
-            entries[channel].push('');
-            this.emitSignalTargets(entries);
-        },
-        /**
-         * 删除信号频道的指定目标项
-         */
-        removeSignalTargetItem: function (channel, index) {
-            var entries = this.signalTargetEntries;
-            if (entries[channel]) {
-                entries[channel].splice(index, 1);
-                this.emitSignalTargets(entries);
-            }
-        },
-        /**
-         * 更新信号频道的指定目标值
-         */
-        updateSignalTargetItem: function (channel, index, value) {
-            var entries = this.signalTargetEntries;
-            if (entries[channel]) {
-                this.$set(entries[channel], index, value);
-                this.emitSignalTargets(entries);
-            }
-        },
-        /**
-         * 触发 signal_targets 字段变更事件
-         */
-        emitSignalTargets: function (entries) {
-            // 深拷贝确保 Vue 响应式检测到变更
+        onSignalTargetsChange: function (entries) {
             this.$emit('field-change', 'signal_targets', JSON.parse(JSON.stringify(entries)));
         },
 

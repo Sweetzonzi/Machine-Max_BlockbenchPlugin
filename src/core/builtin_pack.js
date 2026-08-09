@@ -23,6 +23,7 @@
  */
 
 const { createLogger } = require('../utils/logger.js');
+const { stripJsonComments } = require('../utils/file_writer.js');
 
 /** 模块日志 */
 var log = createLogger('BuiltinPack');
@@ -30,51 +31,7 @@ var log = createLogger('BuiltinPack');
 // ──────────────────────────────────────────────
 // 数据规范化
 // ──────────────────────────────────────────────
-
-/**
- * 剥离 JSON 内容中的 // 单行注释（支持 inline 和独立行注释）。
- *
- * 通过跟踪双引号的奇偶性来判断 // 是否出现在字符串字面量内部，
- * 避免误删 URL（如 "http://example.com"）中的 //。
- *
- * @param {string} content - 包含 // 注释的类 JSON 文本
- * @returns {string} 剥离注释后的纯 JSON 文本
- */
-function stripJsonComments(content) {
-    var lines, result, li, line, inString, i, ch, commentStart, stripped;
-
-    if (typeof content !== 'string') return content;
-
-    lines = content.split('\n');
-    result = [];
-
-    for (li = 0; li < lines.length; li++) {
-        line = lines[li];
-        inString = false;
-        commentStart = -1;
-
-        for (i = 0; i < line.length; i++) {
-            ch = line[i];
-            if (ch === '"' && (i === 0 || line[i - 1] !== '\\')) {
-                inString = !inString;
-            } else if (ch === '/' && line[i + 1] === '/' && !inString) {
-                commentStart = i;
-                break;
-            }
-        }
-
-        if (commentStart >= 0) {
-            stripped = line.substring(0, commentStart);
-            if (stripped.trim().length > 0) {
-                result.push(stripped);
-            }
-        } else {
-            result.push(line);
-        }
-    }
-
-    return result.join('\n');
-}
+// 注：stripJsonComments 统一使用 utils/file_writer.js 的实现（避免重复）
 
 /**
  * 规范化定义数据，使其与 content_pack.readAllDefs() 格式一致

@@ -20,8 +20,6 @@ const {
     writeJSONFile,
     readJSONFile,
     fileExists,
-    deleteFile,
-    extractResourceLocation,
     stripJsonComments,
 } = require('../utils/file_writer.js');
 const zip_reader = require('./zip_reader.js');
@@ -447,42 +445,6 @@ function readAllDefs(packDir, namespace, type) {
 }
 
 /**
- * 写入一个定义文件
- *
- * 文件将写入 {packDir}/{namespace}/{type}/{defId}.json，自动创建必要目录。
- *
- * @param {string} packDir - 内容包根目录
- * @param {string} namespace - 命名空间
- * @param {'materials'|'connectors'|'subsystems'|'control_groups'|'projectiles'} type - 定义类型
- * @param {string} defId - 定义 ID（文件名，不含扩展名）
- * @param {Object} data - 要写入的数据
- */
-function writeDef(packDir, namespace, type, defId, data) {
-    // 支持 namespaced ID（如 "machine_max:steel"），自动提取裸文件名
-    var loc = extractResourceLocation(defId, namespace);
-    var defDir = path.join(packDir, namespace, type);
-    var filename = loc.path + '.json';
-    writeJSONFile(defDir, filename, data);
-    log.debug('writeDef: 已写入 ' + path.join(defDir, filename));
-}
-
-/**
- * 删除一个定义文件
- *
- * @param {string} packDir - 内容包根目录
- * @param {string} namespace - 命名空间
- * @param {'materials'|'connectors'|'subsystems'|'control_groups'|'projectiles'} type - 定义类型
- * @param {string} defId - 定义 ID（文件名，不含扩展名）
- */
-function deleteDef(packDir, namespace, type, defId) {
-    // 支持 namespaced ID（如 "machine_max:steel"），自动提取裸文件名
-    var loc = extractResourceLocation(defId, namespace);
-    var filePath = path.join(packDir, namespace, type, loc.path + '.json');
-    deleteFile(filePath);
-    log.debug('deleteDef: ' + filePath);
-}
-
-/**
  * 递归列出指定类型的所有定义 ID
  *
  * @param {string} packDir - 内容包根目录
@@ -535,8 +497,6 @@ if (typeof module !== 'undefined' && module.exports) {
         createContentPack,
         openContentPack,
         readAllDefs,
-        writeDef,
-        deleteDef,
         listDefIds,
         defExists,
     };

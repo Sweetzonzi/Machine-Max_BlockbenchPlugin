@@ -532,3 +532,156 @@
     background: #D94A4A;
     color: #fff;
 }
+
+/* ==================== 通用定义查看器（只读列表） ==================== */
+
+/* 来源统计条 */
+.mm-def-stats {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    font-size: 11px;
+    color: #aaa;
+    margin-bottom: 6px;
+}
+
+.mm-def-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 统计条彩色圆点 */
+.mm-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.mm-dot-builtin {
+    background: #888;
+}
+
+.mm-dot-dependency {
+    background: #2196F3;
+}
+
+.mm-dot-current {
+    background: #4CAF50;
+}
+
+/* 定义列表滚动容器 */
+.mm-def-list {
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color, #333);
+    border-radius: 3px;
+}
+
+/* 定义表格 */
+.mm-def-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.mm-def-th {
+    padding: 6px 8px;
+    text-align: left;
+    font-size: 11px;
+    color: #aaa;
+    font-weight: normal;
+    border-bottom: 2px solid #555;
+    position: sticky;
+    top: 0;
+    background: var(--panel-bg, #1e1e1e);
+    z-index: 1;
+}
+
+.mm-def-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #333;
+}
+
+.mm-def-id {
+    font-family: monospace;
+    font-size: 13px;
+}
+
+.mm-def-sublabel {
+    margin-left: 8px;
+    font-size: 11px;
+    color: #888;
+}
+
+/* 只读标记 */
+.mm-def-readonly {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 0 5px;
+    border-radius: 3px;
+    font-size: 10px;
+    color: #999;
+    border: 1px solid #555;
+}
+
+/* 空列表提示 */
+.mm-def-empty {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+/* 底部提示文案 */
+.mm-def-hint {
+    font-size: 11px;
+    color: #888;
+    margin: 8px 0 0 0;
+}
+
+/* 来源徽标（三色） */
+.mm-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.mm-badge-builtin {
+    color: #888;
+    border: 1px solid #888;
+}
+
+.mm-badge-dependency {
+    color: #2196F3;
+    border: 1px solid #2196F3;
+}
+
+.mm-badge-current {
+    color: #4CAF50;
+    border: 1px solid #4CAF50;
+}
+
+.mm-badge-unknown {
+    color: #888;
+    border: 1px solid #888;
+}
+
+/* ==================== LocatorPicker（定位器选择） ==================== */
+
+/* 未找到的 locator 输入框：红色边框标记（不拦截输入） */
+.mm-locator-invalid {
+    border-color: #e74c3c !important;
+    color: #e74c3c;
+}
+
+/* 未找到提示文案 */
+.mm-locator-warn {
+    display: block;
+    margin-top: 2px;
+    font-size: 10px;
+    color: #f39c12;
+}

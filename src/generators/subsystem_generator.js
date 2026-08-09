@@ -1,6 +1,5 @@
 const { createLogger } = require('../utils/logger.js');
 const fileWriter = require('../utils/file_writer.js');
-const { getTypeSpecificFields } = require('../core/subsystem_types.js');
 const path = require('path');
 const fs = require('fs');
 
@@ -53,5 +52,5 @@ function copySubsystemDefs(packDir, ns, targetDir, flat) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { copySubsystemDefs, getTypeSpecificFields };
+    module.exports = { copySubsystemDefs };
 }

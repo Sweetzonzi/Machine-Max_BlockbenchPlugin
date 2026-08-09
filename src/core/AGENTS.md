@@ -23,8 +23,8 @@ src/core/
 | 处理配置版本迁移 | `config.js` → `MIGRATIONS` 对象 | 按版本号键值存储；`migrateIfNeeded()` 循环补齐间隙 |
 | 添加新标记类型 | `element_markers.js` → `MARKER_TYPES` | 添加 `{ label, icon, color }` 条目；更新 `getMarkerTypesForElement()` |
 | 重算自动排除骨骼 | `element_markers.js` → `recalcAutoEndBones()` | 子零件标记起始骨骼变更时调用 |
-| 读写内容包定义文件 | `content_pack.js` | `readDef()`, `writeDef()`, `deleteDef()` — 按类目分别处理 parts/subsystems/connectors/materials |
-| 管理内容包 meta.json | `content_pack.js` | `openContentPack()`, `createContentPack()`, `readMeta()`, `writeMeta()` |
+| 读取内容包定义 | `content_pack.js` | `readAllDefs()`, `listDefIds()`, `defExists()` — 按类目分别处理 parts/subsystems/connectors/materials；定义文件由作者直接编辑 JSON（writeDef/deleteDef 已随只读化重构删除） |
+| 管理内容包 meta.json | `content_pack.js` | `openContentPack()`, `createContentPack()`, `readPackMeta()`, `writePackMeta()` |
 | 内容包合并视图 | `content_pack_manager.js` | 合并内置包 + 依赖包 + 当前包的定义列表，标注可编辑性 |
 
 ## 约定

@@ -73,32 +73,15 @@
     <div class="mm-section">
         <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
             <span>信号目标</span>
-            <button class="mm-btn mm-btn-sm" @click="addSignalTargetChannel" title="添加信号频道" style="font-size:18px;font-weight:bold">+</button>
         </h4>
         <div v-if="signalTargetChannelCount === 0" class="mm-element-info" style="color:#888;font-size:11px">
-            无信号目标 — 点击 [+ ] 添加频道
+            无信号目标 — 在下方点击"+ 添加频道"
         </div>
-        <div v-for="(targets, channel, ci) in signalTargetEntries" :key="ci" class="mm-signal-card">
-            <div class="mm-signal-header">
-                <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel"
-                    @change="onSignalTargetChannelChange(channel, $event.target.value)"
-                    :list="'ib-sig-chan-'+_uid" placeholder="频道名" />
-                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetChannel(channel)" title="删除频道">×</button>
-            </div>
-            <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
-                <select class="mm-select" style="flex:1;font-size:11px;min-width:120px"
-                    :value="t"
-                    @change="updateSignalTargetItem(channel, ti, $event.target.value)">
-                    <option value="">（选择目标）</option>
-                    <option v-for="opt in getFilteredTargets(channel, t)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                </select>
-                <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTargetItem(channel, ti)" title="删除目标">×</button>
-            </div>
-            <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTargetItem(channel)">+ 添加目标</button>
-        </div>
-        <datalist :id="'ib-sig-chan-'+_uid">
-            <option v-for="h in channelHints" :key="h" :value="h" />
-        </datalist>
+        <mm-signal-target-editor
+            :entries="signalTargetEntries"
+            :target-options="signalTargetHints"
+            :channel-hints="channelHints"
+            @change="onSignalTargetsChange($event)" />
     </div>
 
     <div class="mm-section">

@@ -50,13 +50,11 @@
         <div v-for="field in nonDefFields" :key="field.field" class="mm-field">
             <label :title="field.field">{{ field.label }}</label>
 
-            <!-- 定位器选择器（范围限制在当前子零件骨骼树下） -->
-            <select v-if="field.editor === 'locator_selector'" class="mm-select"
-                :value="config[field.field]"
-                @change="onFieldChange(field.field, $event.target.value)">
-                <option value="">（无）</option>
-                <option v-for="(l, i) in ownedLocatorNames" :key="i" :value="l">{{ l }}</option>
-            </select>
+            <!-- 定位器选择器（输入框 + datalist 提示 + 自由文本，范围限制在当前子零件骨骼树下） -->
+            <locator-picker v-if="field.editor === 'locator_selector'"
+                :options="ownedLocatorNames"
+                :value="config[field.field] || ''"
+                @change="onFieldChange(field.field, $event)" />
 
             <!-- 连接点选择器 -->
             <select v-else-if="field.editor === 'connector_selector'" class="mm-select"
@@ -135,30 +133,11 @@
             </div>
 
             <!-- 信号频道编辑器（signal_targets，值类型为 <string, string[]>） -->
-            <div v-else-if="field.editor === 'signal_targets'" class="mm-signal-editor">
-                <div v-for="(targets, channel, ci) in getSignalEntries(field.field)" :key="ci" class="mm-signal-card">
-                    <div class="mm-signal-header">
-                        <input type="text" class="mm-input" style="flex:1;font-size:11px" :value="channel"
-                            @change="onSignalChannelChange(field.field, channel, $event.target.value)"
-                            :list="'sig-channel-hints-'+_uid" placeholder="频道名" />
-                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalChannel(field.field, channel)" title="删除频道">×</button>
-                    </div>
-                    <div v-for="(t, ti) in targets" :key="ti" style="display:flex;gap:4px;align-items:center;margin-left:16px;margin-top:2px">
-                        <select class="mm-select" style="flex:1;font-size:11px;min-width:120px"
-                            :value="t"
-                            @change="updateSignalTarget(field.field, channel, ti, $event.target.value)">
-                            <option value="">（选择目标）</option>
-                            <option v-for="opt in getFilteredTargets(field.field, channel, t)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                        </select>
-                        <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeSignalTarget(field.field, channel, ti)" title="删除目标">×</button>
-                    </div>
-                    <button class="mm-btn" style="margin-left:16px;margin-top:2px;font-size:11px" @click="addSignalTarget(field.field, channel)">+ 添加目标</button>
-                </div>
-                <button class="mm-btn" style="font-size:11px" @click="addSignalChannel(field.field)">+ 添加频道</button>
-                <datalist :id="'sig-channel-hints-'+_uid">
-                    <option v-for="h in channelHints" :key="h" :value="h" />
-                </datalist>
-            </div>
+            <mm-signal-target-editor v-else-if="field.editor === 'signal_targets'"
+                :entries="getSignalEntries(field.field)"
+                :target-options="signalTargetOptions"
+                :channel-hints="channelHints"
+                @change="onSignalTargetsChange(field.field, $event)" />
 
             <!-- 文本输入 -->
             <input v-else-if="field.editor === 'text_input'" type="text" class="mm-input"
