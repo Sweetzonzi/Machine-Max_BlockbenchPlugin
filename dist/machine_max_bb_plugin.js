@@ -18056,23 +18056,6 @@
             return sp.connectors;
           },
           /**
-           * 获取指定子零件的信号目标选项列表（唯一实现）
-           * 供 currentSignalTargetOptions / connectorParentSignalTargetHints /
-           * interactBoxParentSignalTargetHints 三个计算属性复用。
-           * @param {string} spKey - 子零件 key
-           * @returns {Array<{value: string, label: string}>} 信号目标选项列表
-           */
-          signalTargetOptionsFor: function(spKey) {
-            void this.markerVersion.v;
-            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) {
-              return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
-            }
-            return buildSignalTargetOptions(
-              this.currentVariant.sub_parts[spKey],
-              this.config && this.config.namespace || "machine_max"
-            );
-          },
-          /**
            * 当前子零件内所有目标 key（用于信号目标下拉选择）
            * 返回 {value, label}[]，value=完整键，label=[类型]短名
            */
@@ -18291,6 +18274,25 @@
           }
         },
         methods: {
+          /**
+           * 获取指定子零件的信号目标选项列表（唯一实现）
+           * 供 currentSignalTargetOptions / connectorParentSignalTargetHints /
+           * interactBoxParentSignalTargetHints 三个计算属性复用。
+           * 注意：必须放在 methods 而非 computed —— Vue 2 会把 computed 包装成
+           * 响应式 getter 属性，带参调用会得到数组而非函数。
+           * @param {string} spKey - 子零件 key
+           * @returns {Array<{value: string, label: string}>} 信号目标选项列表
+           */
+          signalTargetOptionsFor: function(spKey) {
+            void this.markerVersion.v;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) {
+              return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
+            }
+            return buildSignalTargetOptions(
+              this.currentVariant.sub_parts[spKey],
+              this.config && this.config.namespace || "machine_max"
+            );
+          },
           getElementType: function(el) {
             if (el instanceof Group) return "\u9AA8\u9ABC (Group)";
             if (el instanceof Locator) return "\u5B9A\u4F4D\u5668 (Locator)";
