@@ -13,7 +13,8 @@ src/mode/
 ├── mode.js           # 模式注册 + 生命周期（341行，含 Vue 面板懒加载）
 ├── icons.js          # Outliner 图标刷新（82行）
 ├── patches.js        # 原型猴子补丁 + 右键菜单（623行）
-├── validation.js     # 配置校验（48行）
+├── validation.js     # 唯一校验 collectIssues() → Problem[]（约270行）
+├── validation_check.js # 接入 Blockbench 原生 ValidatorCheck（约90行）
 └── toolbar.js        # 工具栏 Action 注册（185行）
 ```
 
@@ -24,7 +25,8 @@ src/mode/
 | 修改模式生命周期 | `mode.js:registerMode()` | onSelect/onUnselect、Panel 注册、CSS 注入 |
 | 修改 Outliner 图标 | `icons.js` | `refreshOutlinerIcons()`, `resetOutlinerIcons()` |
 | 修改右键菜单 | `patches.js` | `buildMMMenuItems()`, `patchShowContextMenu()` |
-| 修改校验逻辑 | `validation.js` | `runValidation()` — 纯函数，返回错误列表 |
+| 修改校验逻辑 | `validation.js` | `collectIssues(config)` — 唯一校验源，返回 Problem[] |
+| 接入原生清单 | `validation_check.js` | `registerValidation()` / `unregisterValidation()` — ValidatorCheck 封装 |
 | 修改工具栏按钮 | `toolbar.js` | `registerToolbarActions()` — 注册 4 个 Action |
 | 添加工具栏按钮 | `toolbar.js` | 在 `_mmActionIds` 中添加 ID，push 新的 `Action()` |
 

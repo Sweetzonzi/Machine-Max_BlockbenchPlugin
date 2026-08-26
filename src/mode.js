@@ -4,7 +4,7 @@ const { showToast } = require('./utils/notify.js');
 const { createLogger } = require('./utils/logger.js');
 const content_pack = require('./core/content_pack.js');
 const { registerToolbarActions, _mmActionInstances } = require('./mode/toolbar.js');
-const { runValidation } = require('./mode/validation.js');
+const { registerValidation, unregisterValidation } = require('./mode/validation_check.js');
 const { buildMMMenuItems, patchShowContextMenu, restoreShowContextMenu, patchElementSelect, restoreElementSelect } = require('./mode/patches.js');
 const { getIconClassForType, refreshOutlinerIcons, resetOutlinerIcons } = require('./mode/icons.js');
 
@@ -251,6 +251,9 @@ function registerMode() {
         },
     });
 
+    // 接入 Blockbench 原生问题系统（幂等，防热重载重复注册）
+    registerValidation();
+
     registerToolbarActions();
 
     // 将我们的模式移到模式选择栏最前面（最左侧）
@@ -314,7 +317,7 @@ if (typeof module !== 'undefined' && module.exports) {
         registerMode,
         refreshOutlinerIcons,
         resetOutlinerIcons,
-        runValidation,
+        unregisterValidation,
         /** 卸载插件时，通过 Action.delete() 正确清理所有注册的 Action（而非仅删除 BarItems 条目） */
         unregisterActions: function () {
             if (!_mmActionInstances.length) {

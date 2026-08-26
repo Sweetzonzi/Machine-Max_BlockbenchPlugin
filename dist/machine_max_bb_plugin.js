@@ -10582,6 +10582,401 @@
     }
   });
 
+  // src/core/builtin_pack.js
+  var require_builtin_pack = __commonJS({
+    "src/core/builtin_pack.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var { stripJsonComments } = require_file_writer();
+      var log2 = createLogger2("BuiltinPack");
+      function normalizeDefs(rawDefs) {
+        var result, keys, i, key, value, defId, lastSlash, stripped;
+        if (!rawDefs || typeof rawDefs !== "object") return {};
+        result = {};
+        keys = Object.keys(rawDefs);
+        for (i = 0; i < keys.length; i++) {
+          key = keys[i];
+          value = rawDefs[key];
+          defId = key;
+          if (typeof defId === "string" && defId.endsWith(".json")) {
+            defId = defId.slice(0, -5);
+          }
+          lastSlash = defId.lastIndexOf("/");
+          if (lastSlash >= 0) {
+            defId = defId.substring(lastSlash + 1);
+          }
+          if (typeof value === "string") {
+            try {
+              stripped = stripJsonComments(value);
+              value = JSON.parse(stripped);
+            } catch (e) {
+              log2.warn("normalizeDefs: JSON \u89E3\u6790\u5931\u8D25\uFF0C\u4FDD\u7559\u539F\u503C key=" + key, e);
+            }
+          }
+          result[defId] = value;
+        }
+        return result;
+      }
+      function readDefine(injectedValue, fallback) {
+        if (typeof injectedValue === "undefined") {
+          return fallback;
+        }
+        return injectedValue;
+      }
+      var builtinMeta = readDefine(
+        typeof define_BUILTIN_PACK_META_default !== "undefined" ? define_BUILTIN_PACK_META_default : void 0,
+        { id: "", version: "0.0" }
+      );
+      var builtinMaterials = normalizeDefs(
+        readDefine(
+          typeof define_BUILTIN_MATERIALS_default !== "undefined" ? define_BUILTIN_MATERIALS_default : void 0,
+          {}
+        )
+      );
+      var builtinConnectors = normalizeDefs(
+        readDefine(
+          typeof define_BUILTIN_CONNECTORS_default !== "undefined" ? define_BUILTIN_CONNECTORS_default : void 0,
+          {}
+        )
+      );
+      var builtinSubsystems = normalizeDefs(
+        readDefine(
+          typeof define_BUILTIN_SUBSYSTEMS_default !== "undefined" ? define_BUILTIN_SUBSYSTEMS_default : void 0,
+          {}
+        )
+      );
+      var builtinControlGroups = normalizeDefs(
+        readDefine(
+          typeof define_BUILTIN_CONTROL_GROUPS_default !== "undefined" ? define_BUILTIN_CONTROL_GROUPS_default : void 0,
+          {}
+        )
+      );
+      function extractNamespace(id) {
+        if (!id || typeof id !== "string") return "machine_max";
+        var colonIdx = id.indexOf(":");
+        return colonIdx >= 0 ? id.substring(0, colonIdx) : id;
+      }
+      function getBuiltinPack() {
+        var namespace = extractNamespace(builtinMeta.id);
+        var matCount, connCount, subCount, cgCount;
+        var result = {
+          meta: builtinMeta,
+          namespace,
+          materials: builtinMaterials,
+          connectors: builtinConnectors,
+          subsystems: builtinSubsystems,
+          control_groups: builtinControlGroups
+        };
+        Object.freeze(result);
+        matCount = Object.keys(builtinMaterials).length;
+        connCount = Object.keys(builtinConnectors).length;
+        subCount = Object.keys(builtinSubsystems).length;
+        cgCount = Object.keys(builtinControlGroups).length;
+        log2.info(
+          "getBuiltinPack: \u5185\u7F6E\u57FA\u7840\u5305\u52A0\u8F7D\u5B8C\u6210 \u2014 materials=" + matCount + " connectors=" + connCount + " subsystems=" + subCount + " controlGroups=" + cgCount + " namespace=" + namespace + " metaId=" + (builtinMeta.id || "\u65E0")
+        );
+        log2.debug("getBuiltinPack: \u8FDE\u63A5\u5668\u952E\u5217\u8868", Object.keys(builtinConnectors));
+        log2.debug("getBuiltinPack: \u6750\u6599\u952E\u5217\u8868", Object.keys(builtinMaterials));
+        log2.debug("getBuiltinPack: \u5B50\u7CFB\u7EDF\u952E\u5217\u8868", Object.keys(builtinSubsystems));
+        log2.debug("getBuiltinPack: \u63A7\u5236\u7EC4\u9884\u8BBE\u952E\u5217\u8868", Object.keys(builtinControlGroups));
+        return result;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          getBuiltinPack
+        };
+      }
+    }
+  });
+
+  // src/core/content_pack_manager.js
+  var require_content_pack_manager = __commonJS({
+    "src/core/content_pack_manager.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var content_pack = require_content_pack();
+      var builtin_pack = require_builtin_pack();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("ContentPackManager");
+      var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
+      var _cache = {
+        materials: null,
+        connectors: null,
+        subsystems: null,
+        control_groups: null,
+        projectiles: null
+      };
+      function loadMergedDefs(config, type) {
+        var emptyResult;
+        var defs;
+        var sources;
+        var builtin;
+        var builtinDefs;
+        var bKey;
+        var depPaths;
+        var i;
+        var depPath;
+        var openResult;
+        var depDefs;
+        var depKey;
+        var currentPath;
+        var curOpenResult;
+        var curDefs;
+        var curKey;
+        var result;
+        var defCount;
+        if (_cache[type]) {
+          log2.debug("loadMergedDefs: \u7F13\u5B58\u547D\u4E2D " + type);
+          return _cache[type];
+        }
+        if (!config) {
+          log2.warn("loadMergedDefs: config \u4E3A\u7A7A\uFF0C\u8FD4\u56DE\u7A7A\u7ED3\u679C");
+          emptyResult = { defs: {}, sources: {} };
+          _cache[type] = emptyResult;
+          return emptyResult;
+        }
+        defs = {};
+        sources = {};
+        log2.debug("loadMergedDefs: \u5F00\u59CB\u5408\u5E76 " + type, {
+          contentPackPath: config.contentPackPath,
+          dependencyPaths: config.dependencyPaths
+        });
+        try {
+          builtin = builtin_pack.getBuiltinPack();
+          builtinDefs = builtin[type] || {};
+          for (bKey in builtinDefs) {
+            if (hasOwn(builtinDefs, bKey)) {
+              var namespacedKey = builtin.namespace + ":" + bKey;
+              defs[namespacedKey] = builtinDefs[bKey];
+              sources[namespacedKey] = "builtin";
+              log2.debug("loadMergedDefs: \u5185\u7F6E\u5305\u6DFB\u52A0 " + namespacedKey + " (source=builtin)");
+            }
+          }
+          log2.info("loadMergedDefs: \u5185\u7F6E\u5305 " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(builtinDefs).length + " \u4E2A\u5B9A\u4E49\uFF0Cnamespace=" + builtin.namespace);
+        } catch (e) {
+          log2.warn("loadMergedDefs: \u5185\u7F6E\u5305\u8BFB\u53D6\u5931\u8D25\uFF0C\u4F5C\u4E3A\u7A7A\u5305\u5904\u7406", e);
+        }
+        depPaths = config.dependencyPaths;
+        if (depPaths && Array.isArray(depPaths) && depPaths.length > 0) {
+          for (i = 0; i < depPaths.length; i++) {
+            depPath = depPaths[i];
+            if (!depPath || typeof depPath !== "string" || depPath.trim() === "") {
+              log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u8DEF\u5F84\u4E3A\u7A7A\uFF0C\u8DF3\u8FC7 index=" + i);
+              continue;
+            }
+            try {
+              openResult = content_pack.openContentPack(depPath);
+              if (!openResult.valid) {
+                log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u65E0\u6548\uFF0C\u8DF3\u8FC7: " + depPath, openResult.error);
+                continue;
+              }
+              log2.info("loadMergedDefs: \u4F9D\u8D56\u5305\u6253\u5F00\u6210\u529F", {
+                path: depPath,
+                namespace: openResult.namespace,
+                metaId: openResult.meta ? openResult.meta.id : null
+              });
+              depDefs = content_pack.readAllDefs(depPath, openResult.namespace, type);
+              for (depKey in depDefs) {
+                if (hasOwn(depDefs, depKey)) {
+                  var namespacedDepKey = openResult.namespace + ":" + depKey;
+                  var prevSource = sources[namespacedDepKey];
+                  defs[namespacedDepKey] = depDefs[depKey];
+                  sources[namespacedDepKey] = "dependency:" + i;
+                  log2.info("loadMergedDefs: \u4F9D\u8D56\u5305\u6DFB\u52A0 " + namespacedDepKey + " (source=dependency:" + i + ", \u8986\u76D6\u524D=" + (prevSource || "\u65E0") + ")");
+                }
+              }
+              log2.info("loadMergedDefs: \u4F9D\u8D56\u5305 " + depPath + " " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(depDefs).length + " \u4E2A\u5B9A\u4E49");
+            } catch (e) {
+              log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u52A0\u8F7D\u5931\u8D25\uFF0C\u8DF3\u8FC7: " + depPath, e);
+            }
+          }
+        }
+        currentPath = config.contentPackPath;
+        if (currentPath && typeof currentPath === "string" && currentPath.trim() !== "") {
+          try {
+            curOpenResult = content_pack.openContentPack(currentPath);
+            if (!curOpenResult.valid) {
+              log2.error("loadMergedDefs: \u5F53\u524D\u5185\u5BB9\u5305\u65E0\u6548: " + currentPath, curOpenResult.error);
+              log2.debug("loadMergedDefs: openContentPack \u7ED3\u679C", {
+                namespace: curOpenResult.namespace,
+                meta: curOpenResult.meta,
+                error: curOpenResult.error
+              });
+            } else {
+              log2.info("loadMergedDefs: \u5F53\u524D\u5305\u6253\u5F00\u6210\u529F", {
+                path: currentPath,
+                namespace: curOpenResult.namespace,
+                metaId: curOpenResult.meta ? curOpenResult.meta.id : null
+              });
+              curDefs = content_pack.readAllDefs(currentPath, curOpenResult.namespace, type);
+              for (curKey in curDefs) {
+                if (hasOwn(curDefs, curKey)) {
+                  var namespacedCurKey = curOpenResult.namespace + ":" + curKey;
+                  var prevSource = sources[namespacedCurKey];
+                  defs[namespacedCurKey] = curDefs[curKey];
+                  sources[namespacedCurKey] = "current";
+                  log2.info("loadMergedDefs: \u5F53\u524D\u5305\u6DFB\u52A0 " + namespacedCurKey + " (source=current, \u8986\u76D6\u524D=" + (prevSource || "\u65E0") + ")");
+                }
+              }
+              log2.info("loadMergedDefs: \u5F53\u524D\u5305 " + currentPath + " " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(curDefs).length + " \u4E2A\u5B9A\u4E49");
+            }
+          } catch (e) {
+            log2.error("loadMergedDefs: \u5F53\u524D\u5185\u5BB9\u5305\u52A0\u8F7D\u5931\u8D25: " + currentPath, e);
+          }
+        }
+        result = { defs, sources };
+        _cache[type] = result;
+        defCount = Object.keys(defs).length;
+        log2.info("loadMergedDefs: " + type + " \u5408\u5E76\u5B8C\u6210\uFF0C\u5171 " + defCount + " \u4E2A\u5B9A\u4E49");
+        log2.debug("loadMergedDefs: \u6700\u7EC8 sources", sources);
+        return result;
+      }
+      function resolveDefSource(config, type, defId) {
+        var merged = loadMergedDefs(config, type);
+        var source = merged.sources[defId];
+        if (source === void 0) {
+          log2.debug("resolveDefSource: \u672A\u627E\u5230\u5B9A\u4E49 " + type + ":" + defId);
+          return null;
+        }
+        log2.debug("resolveDefSource: " + type + ":" + defId + " -> " + source);
+        return source;
+      }
+      function isDefEditable(config, type, defId) {
+        var source = resolveDefSource(config, type, defId);
+        return source === "current";
+      }
+      function getAvailableDefsForType(config, type) {
+        var merged = loadMergedDefs(config, type);
+        return merged.defs;
+      }
+      function getFirstDefId(config, type) {
+        var defs = getAvailableDefsForType(config, type);
+        var keys = Object.keys(defs);
+        if (keys.length === 0) {
+          log2.debug("getFirstDefId: " + type + " \u65E0\u53EF\u7528\u5B9A\u4E49");
+          return null;
+        }
+        return keys[0];
+      }
+      function invalidateCache() {
+        _cache.materials = null;
+        _cache.connectors = null;
+        _cache.subsystems = null;
+        _cache.control_groups = null;
+        _cache.projectiles = null;
+        log2.debug("invalidateCache: \u7F13\u5B58\u5DF2\u6E05\u9664");
+        try {
+          throw new Error("invalidateCache \u8C03\u7528\u6808");
+        } catch (e) {
+          log2.debug("invalidateCache: \u8C03\u7528\u8005", e.stack);
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          loadMergedDefs,
+          resolveDefSource,
+          isDefEditable,
+          getAvailableDefsForType,
+          getFirstDefId,
+          invalidateCache
+        };
+      }
+    }
+  });
+
+  // src/core/validation_types.js
+  var require_validation_types = __commonJS({
+    "src/core/validation_types.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var SEVERITY_ERROR = "error";
+      var SEVERITY_WARNING = "warning";
+      var CODES = {
+        SUBSYSTEM_REQUIRED_FIELD: "subsystem_required_field",
+        // 子系统 required 字段缺失（含 ''/null/undefined）
+        DEFINITION_REQUIRED: "definition_required",
+        // 子系统/连接点的 definition 未配置（空串）
+        DEFINITION_REF_MISSING: "definition_ref_missing",
+        // definition 引用的型号定义不存在（引用断裂）
+        ORPHAN_ELEMENT: "orphan_element",
+        // 连接点/碰撞箱/交互区游离（无归属 subpart）
+        GHOST_MARKER: "ghost_marker",
+        // 幽灵标记（UUID 对应元素已删除）
+        MISSING_REQUIRED: "missing_required"
+        // 其余零件/变体/子零件级必填项（占位）
+      };
+      var SCOPE_ITEM_BUCKET = {
+        subsystem: "subsystems",
+        connector: "connectors",
+        hit_box: "hitBoxes",
+        interact_box: "interactBoxes"
+      };
+      function isMissingValue(val) {
+        return val === "" || val === null || val === void 0;
+      }
+      function aggregate(problems) {
+        var bySubPart = {};
+        var byItem = { subsystems: {}, connectors: {}, hitBoxes: {}, interactBoxes: {} };
+        var byPartVariant = [];
+        if (!Array.isArray(problems)) {
+          return { bySubPart, byItem, byPartVariant };
+        }
+        for (var i = 0; i < problems.length; i++) {
+          var p = problems[i];
+          var pi = p && p.path;
+          if (!pi) continue;
+          if (pi.subPartKey) {
+            if (!bySubPart[pi.subPartKey]) bySubPart[pi.subPartKey] = [];
+            bySubPart[pi.subPartKey].push(p);
+            if (pi.itemKey) {
+              var bucket = SCOPE_ITEM_BUCKET[pi.scope];
+              if (bucket && byItem[bucket]) {
+                if (!byItem[bucket][pi.itemKey]) byItem[bucket][pi.itemKey] = [];
+                byItem[bucket][pi.itemKey].push(p);
+              }
+            }
+          } else {
+            byPartVariant.push(p);
+          }
+        }
+        return { bySubPart, byItem, byPartVariant };
+      }
+      function resolveIssueLevel(issues) {
+        if (!issues || !Array.isArray(issues) || issues.length === 0) return "none";
+        var hasError = false;
+        for (var i = 0; i < issues.length; i++) {
+          if (issues[i] && issues[i].severity === SEVERITY_ERROR) return SEVERITY_ERROR;
+          if (issues[i] && issues[i].severity === SEVERITY_WARNING) hasError = true;
+        }
+        return hasError ? SEVERITY_WARNING : "none";
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          SEVERITY_ERROR,
+          SEVERITY_WARNING,
+          CODES,
+          SCOPE_ITEM_BUCKET,
+          isMissingValue,
+          aggregate,
+          resolveIssueLevel
+        };
+      }
+    }
+  });
+
   // src/mode/validation.js
   var require_validation = __commonJS({
     "src/mode/validation.js"(exports, module) {
@@ -10593,25 +10988,51 @@
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
       var { getMarkersForVariant, detectOwnerSubPart } = require_element_markers();
+      var ssTypes = require_subsystem_types();
+      var cp = require_content_pack_manager();
+      var { CODES, isMissingValue } = require_validation_types();
       var log2 = createLogger2("Validation");
-      function checkOrphanedMarkers(config, partId, vName, errors) {
+      function _scopeForMarkerType(type) {
+        if (type === "sub_part") return "subpart";
+        return type;
+      }
+      function _makeProblem(severity, code, message, path) {
+        return { severity, code, message, path };
+      }
+      function _mkPath(scope, partId, variantName, subPartKey, itemKey, elementUuid) {
+        var path = { scope, partId, variantName };
+        if (subPartKey) path.subPartKey = subPartKey;
+        if (itemKey) path.itemKey = itemKey;
+        if (elementUuid) path.elementUuid = elementUuid;
+        return path;
+      }
+      function _filterDefsByType(defs, typeId) {
+        var result = {};
+        if (!defs || !typeId) return result;
+        for (var id in defs) {
+          if (defs.hasOwnProperty(id) && defs[id] && defs[id].type === typeId) {
+            result[id] = defs[id];
+          }
+        }
+        return result;
+      }
+      function _collectMarkerIssues(config, partId, vName, problems) {
         var validUUIDs = {};
         var allGroups = typeof Group !== "undefined" && Group.all ? Group.all : [];
         var allLocators = typeof Locator !== "undefined" && Locator.all ? Locator.all : [];
-        for (var gi = 0; gi < allGroups.length; gi++) {
-          validUUIDs[allGroups[gi].uuid] = true;
-        }
-        for (var li = 0; li < allLocators.length; li++) {
-          validUUIDs[allLocators[li].uuid] = true;
-        }
+        for (var gi = 0; gi < allGroups.length; gi++) validUUIDs[allGroups[gi].uuid] = true;
+        for (var li = 0; li < allLocators.length; li++) validUUIDs[allLocators[li].uuid] = true;
         var markers = getMarkersForVariant(config, partId, vName);
         for (var uuid in markers) {
           var marker = markers[uuid];
           if (!validUUIDs[uuid]) {
             var typeLabel = marker.type === "sub_part" ? "\u5B50\u96F6\u4EF6" : marker.type === "hit_box" ? "\u78B0\u649E\u7BB1" : marker.type === "connector" ? "\u8FDE\u63A5\u70B9" : marker.type === "interact_box" ? "\u4EA4\u4E92\u533A" : marker.type;
-            errors.push(
-              '\u96F6\u4EF6 "' + partId + '"/' + vName + " \u4E2D\u5B58\u5728\u5E7D\u7075" + typeLabel + "\u6807\u8BB0\uFF08UUID: " + uuid + "\uFF09\uFF0C\u5BF9\u5E94\u7684\u6A21\u578B\u5143\u7D20\u5DF2\u88AB\u5220\u9664\u3002\u5EFA\u8BAE\u4FDD\u5B58\u540E\u91CD\u65B0\u6253\u5F00\u9879\u76EE\u4EE5\u81EA\u52A8\u6E05\u7406\u3002"
-            );
+            problems.push(_makeProblem(
+              "error",
+              CODES.GHOST_MARKER,
+              '\u96F6\u4EF6 "' + partId + '"/' + vName + " \u4E2D\u5B58\u5728\u5E7D\u7075" + typeLabel + "\u6807\u8BB0\uFF08UUID: " + uuid + "\uFF09\uFF0C\u5BF9\u5E94\u7684\u6A21\u578B\u5143\u7D20\u5DF2\u88AB\u5220\u9664\u3002\u5EFA\u8BAE\u4FDD\u5B58\u540E\u91CD\u65B0\u6253\u5F00\u9879\u76EE\u4EE5\u81EA\u52A8\u6E05\u7406\u3002",
+              _mkPath(_scopeForMarkerType(marker.type), partId, vName, null, null, uuid)
+            ));
             continue;
           }
           if (marker.type === "hit_box") {
@@ -10621,7 +11042,12 @@
             if (group) {
               var owner = detectOwnerSubPart(config, partId, vName, group);
               if (!owner) {
-                errors.push('\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u78B0\u649E\u7BB1 "' + group.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u4E0D\u4F1A\u88AB\u9632\u62A4\u8BA1\u7B97\u5904\u7406\uFF09');
+                problems.push(_makeProblem(
+                  "warning",
+                  CODES.ORPHAN_ELEMENT,
+                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u78B0\u649E\u7BB1 "' + group.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u4E0D\u4F1A\u88AB\u9632\u62A4\u8BA1\u7B97\u5904\u7406\uFF09',
+                  _mkPath("hit_box", partId, vName, null, null, uuid)
+                ));
               }
             }
           } else if (marker.type === "connector") {
@@ -10631,78 +11057,166 @@
             if (loc) {
               var owner = detectOwnerSubPart(config, partId, vName, loc);
               if (!owner) {
-                errors.push('\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u8FDE\u63A5\u70B9 "' + loc.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u5C06\u4E0D\u4F1A\u8BA1\u5165\u5BFC\u51FA\uFF09');
+                problems.push(_makeProblem(
+                  "warning",
+                  CODES.ORPHAN_ELEMENT,
+                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u8FDE\u63A5\u70B9 "' + loc.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u5C06\u4E0D\u4F1A\u8BA1\u5165\u5BFC\u51FA\uFF09',
+                  _mkPath("connector", partId, vName, null, null, uuid)
+                ));
+              }
+            }
+          } else if (marker.type === "interact_box") {
+            var ibGroup = allGroups.find(function(g) {
+              return g.uuid === uuid;
+            });
+            if (ibGroup) {
+              var owner = detectOwnerSubPart(config, partId, vName, ibGroup);
+              if (!owner) {
+                problems.push(_makeProblem(
+                  "warning",
+                  CODES.ORPHAN_ELEMENT,
+                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u4EA4\u4E92\u533A "' + ibGroup.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u4E0D\u4F1A\u88AB\u4EA4\u4E92\u5904\u7406\uFF09',
+                  _mkPath("interact_box", partId, vName, null, null, uuid)
+                ));
               }
             }
           }
         }
       }
-      function checkSubsystemRequiredFields(config, errors) {
-        var ssTypes = require_subsystem_types();
-        var parts = config.parts || {};
-        for (const [partId, part] of Object.entries(parts)) {
+      function collectIssues(config) {
+        var problems = [];
+        var parts = config && config.parts || {};
+        var partIds = Object.keys(parts);
+        if (partIds.length === 0) {
+          problems.push(_makeProblem(
+            "error",
+            CODES.MISSING_REQUIRED,
+            "\u672A\u5B9A\u4E49\u4EFB\u4F55\u96F6\u4EF6\uFF0C\u65E0\u6CD5\u6821\u9A8C",
+            _mkPath("part", "", "")
+          ));
+          return problems;
+        }
+        var subsystemDefs = cp.loadMergedDefs(config, "subsystems").defs || {};
+        var connectorDefs = cp.loadMergedDefs(config, "connectors").defs || {};
+        for (var i = 0; i < partIds.length; i++) {
+          var partId = partIds[i];
+          var part = parts[partId];
           var variants = part.variants || {};
-          for (const [vName, variant] of Object.entries(variants)) {
+          var variantNames = Object.keys(variants);
+          if (variantNames.length === 0) {
+            problems.push(_makeProblem(
+              "error",
+              CODES.MISSING_REQUIRED,
+              '\u96F6\u4EF6 "' + partId + '"\uFF1A\u6CA1\u6709\u5B9A\u4E49\u53D8\u4F53',
+              _mkPath("part", partId, "")
+            ));
+            continue;
+          }
+          for (var vi = 0; vi < variantNames.length; vi++) {
+            var vName = variantNames[vi];
+            var variant = variants[vName];
+            if (!variant.model) {
+              problems.push(_makeProblem(
+                "error",
+                CODES.MISSING_REQUIRED,
+                '\u96F6\u4EF6 "' + partId + '" \u53D8\u4F53 "' + vName + '"\uFF1A\u672A\u8BBE\u7F6E\u6A21\u578B\u5F15\u7528',
+                _mkPath("variant", partId, vName)
+              ));
+            }
             var subParts = variant.sub_parts || {};
-            for (const [spName, sp] of Object.entries(subParts)) {
+            var spKeys = Object.keys(subParts);
+            if (spKeys.length === 0) {
+              problems.push(_makeProblem(
+                "error",
+                CODES.MISSING_REQUIRED,
+                '\u96F6\u4EF6 "' + partId + '" \u53D8\u4F53 "' + vName + '"\uFF1A\u672A\u5B9A\u4E49\u5B50\u96F6\u4EF6',
+                _mkPath("variant", partId, vName)
+              ));
+            }
+            for (var si = 0; si < spKeys.length; si++) {
+              var spKey = spKeys[si];
+              var sp = subParts[spKey];
+              if (Object.keys(sp.hit_boxes || {}).length === 0) {
+                problems.push(_makeProblem(
+                  "error",
+                  CODES.MISSING_REQUIRED,
+                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u78B0\u649E\u7BB1\u4E3A\u7A7A',
+                  _mkPath("subpart", partId, vName, spKey)
+                ));
+              }
+              if ((sp.mass || 0) <= 0) {
+                problems.push(_makeProblem(
+                  "error",
+                  CODES.MISSING_REQUIRED,
+                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u8D28\u91CF\u5FC5\u987B\u5927\u4E8E 0',
+                  _mkPath("subpart", partId, vName, spKey)
+                ));
+              }
               var subsystems = sp.subsystems || {};
-              for (const [ssName, ss] of Object.entries(subsystems)) {
-                var typeMeta = ssTypes.getTypeMeta(ss.type);
-                if (!typeMeta) continue;
-                var fields = typeMeta.dynamicFields;
-                for (var fi = 0; fi < fields.length; fi++) {
-                  var f = fields[fi];
-                  if (f.required) {
-                    var val = ss[f.field];
-                    if (val === null || val === void 0) {
-                      errors.push(
-                        '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spName + '" \u4E2D\uFF1A' + f.label + "\uFF08" + f.field + "\uFF09\u4E3A\u5FC5\u586B\u5B57\u6BB5\u4F46\u672A\u914D\u7F6E"
-                      );
+              for (var ssName in subsystems) {
+                var ss = subsystems[ssName];
+                var meta = ssTypes.getTypeMeta(ss.type);
+                if (isMissingValue(ss.definition)) {
+                  problems.push(_makeProblem(
+                    "error",
+                    CODES.DEFINITION_REQUIRED,
+                    '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u672A\u6307\u5B9A\u578B\u53F7\u5B9A\u4E49\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u6761\u76EE\u7684\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
+                    _mkPath("subsystem", partId, vName, spKey, ssName)
+                  ));
+                } else {
+                  var availableDefs = meta ? _filterDefsByType(subsystemDefs, ss.type) : subsystemDefs;
+                  if (!availableDefs[ss.definition]) {
+                    problems.push(_makeProblem(
+                      "error",
+                      CODES.DEFINITION_REF_MISSING,
+                      '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u578B\u53F7\u5B9A\u4E49 "' + ss.definition + '" \u4E0D\u5B58\u5728\uFF08\u5F15\u7528\u65AD\u88C2\uFF09\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u6761\u76EE\u7684\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
+                      _mkPath("subsystem", partId, vName, spKey, ssName)
+                    ));
+                  }
+                }
+                if (meta && meta.dynamicFields) {
+                  var fields = meta.dynamicFields;
+                  for (var fi = 0; fi < fields.length; fi++) {
+                    var f = fields[fi];
+                    if (f.field === "definition") continue;
+                    if (f.required && isMissingValue(ss[f.field])) {
+                      problems.push(_makeProblem(
+                        "error",
+                        CODES.SUBSYSTEM_REQUIRED_FIELD,
+                        '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A' + f.label + "\uFF08" + f.field + "\uFF09\u4E3A\u5FC5\u586B\u5B57\u6BB5\u4F46\u672A\u914D\u7F6E",
+                        _mkPath("subsystem", partId, vName, spKey, ssName)
+                      ));
                     }
                   }
                 }
               }
-            }
-          }
-        }
-      }
-      function runValidation(config) {
-        const errors = [];
-        const parts = config.parts || {};
-        if (Object.keys(parts).length === 0) {
-          errors.push("\u672A\u5B9A\u4E49\u4EFB\u4F55\u96F6\u4EF6");
-          return errors;
-        }
-        for (const [partId, part] of Object.entries(parts)) {
-          const variants = part.variants || {};
-          if (Object.keys(variants).length === 0) {
-            errors.push(`\u96F6\u4EF6 "${partId}"\uFF1A\u6CA1\u6709\u5B9A\u4E49\u53D8\u4F53`);
-            continue;
-          }
-          for (const [vName, variant] of Object.entries(variants)) {
-            if (!variant.model) {
-              errors.push(`\u96F6\u4EF6 "${partId}" \u53D8\u4F53 "${vName}"\uFF1A\u672A\u8BBE\u7F6E\u6A21\u578B\u5F15\u7528`);
-            }
-            const subParts = variant.sub_parts || {};
-            if (Object.keys(subParts).length === 0) {
-              errors.push(`\u96F6\u4EF6 "${partId}" \u53D8\u4F53 "${vName}"\uFF1A\u672A\u5B9A\u4E49\u5B50\u96F6\u4EF6`);
-            }
-            for (const [spName, sp] of Object.entries(subParts)) {
-              if (Object.keys(sp.hit_boxes || {}).length === 0) {
-                errors.push(`\u96F6\u4EF6 "${partId}"/${vName} \u5B50\u96F6\u4EF6 "${spName}"\uFF1A\u78B0\u649E\u7BB1\u4E3A\u7A7A`);
-              }
-              if ((sp.mass || 0) <= 0) {
-                errors.push(`\u96F6\u4EF6 "${partId}"/${vName} \u5B50\u96F6\u4EF6 "${spName}"\uFF1A\u8D28\u91CF\u5FC5\u987B\u5927\u4E8E 0`);
+              var conns = sp.connectors || {};
+              for (var connKey in conns) {
+                var conn = conns[connKey];
+                if (isMissingValue(conn.definition)) {
+                  problems.push(_makeProblem(
+                    "error",
+                    CODES.DEFINITION_REQUIRED,
+                    '\u8FDE\u63A5\u70B9 "' + connKey + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u672A\u6307\u5B9A\u578B\u53F7\u5B9A\u4E49\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u8FDE\u63A5\u70B9\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
+                    _mkPath("connector", partId, vName, spKey, connKey)
+                  ));
+                } else if (!connectorDefs[conn.definition]) {
+                  problems.push(_makeProblem(
+                    "error",
+                    CODES.DEFINITION_REF_MISSING,
+                    '\u8FDE\u63A5\u70B9 "' + connKey + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u578B\u53F7\u5B9A\u4E49 "' + conn.definition + '" \u4E0D\u5B58\u5728\uFF08\u5F15\u7528\u65AD\u88C2\uFF09\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u8FDE\u63A5\u70B9\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
+                    _mkPath("connector", partId, vName, spKey, connKey)
+                  ));
+                }
               }
             }
-            checkOrphanedMarkers(config, partId, vName, errors);
+            _collectMarkerIssues(config, partId, vName, problems);
           }
         }
-        checkSubsystemRequiredFields(config, errors);
-        return errors;
+        return problems;
       }
       if (typeof module !== "undefined" && module.exports) {
-        module.exports = { runValidation };
+        module.exports = { collectIssues };
       }
     }
   });
@@ -12076,7 +12590,7 @@
       var { createLogger: createLogger2 } = require_logger();
       var { getConfig, saveConfig, addDependencyPath } = require_persistence();
       var { showToast: showToast2 } = require_notify();
-      var { runValidation } = require_mode();
+      var { collectIssues } = require_validation();
       var { executeExport } = require_export_pipeline();
       var path = __require("path");
       var log2 = createLogger2("ExportDialog");
@@ -12245,6 +12759,37 @@
           return { id: depId, type: depType };
         });
       }
+      function buildValidationInfo(config) {
+        var problems = collectIssues(config);
+        if (!problems || problems.length === 0) return "";
+        var tree = {};
+        for (var i = 0; i < problems.length; i++) {
+          var p = problems[i];
+          var partId = p.path.partId || "\uFF08\u5168\u5C40\uFF09";
+          var v = p.path.variantName || "";
+          if (!tree[partId]) tree[partId] = {};
+          if (!tree[partId][v]) tree[partId][v] = [];
+          tree[partId][v].push(p);
+        }
+        var lines = ['<span style="color:#ff6b6b">\u6821\u9A8C\u53D1\u73B0 ' + problems.length + " \u4E2A\u95EE\u9898</span>:"];
+        var partIds = Object.keys(tree);
+        for (var pi = 0; pi < partIds.length; pi++) {
+          var partId = partIds[pi];
+          var vs = tree[partId];
+          var vNames = Object.keys(vs);
+          for (var vi = 0; vi < vNames.length; vi++) {
+            var v = vNames[vi];
+            var list = vs[v];
+            lines.push("<b>" + partId + (v ? "/" + v : "") + "</b>");
+            for (var li = 0; li < list.length; li++) {
+              var cur = list[li];
+              var icon = cur.severity === "error" ? "\u2717" : "\u26A0";
+              lines.push("&nbsp;&nbsp;\u2022 " + icon + " " + cur.message);
+            }
+          }
+        }
+        return "<br>" + lines.join("<br>");
+      }
       function showExportDialog() {
         var config = getConfig();
         if (!config) {
@@ -12274,13 +12819,7 @@
         });
         var defaultPackId = pm.id || ns + ":" + (Project ? Project.name || "content_pack" : "content_pack");
         var defaultExportDir = pm.exportDir || _getDefaultExportDir(pm);
-        var errors = runValidation(config);
-        var errorText = "";
-        if (errors.length > 0) {
-          errorText = "<br>\u6821\u9A8C\u53D1\u73B0 " + errors.length + " \u4E2A\u95EE\u9898:<br>" + errors.map(function(e) {
-            return "&nbsp;&nbsp;\u2022 " + e;
-          }).join("<br>");
-        }
+        var errorText = buildValidationInfo(config);
         var statLines = [
           "\u6A21\u578B: " + (Project ? Project.name : "\u672A\u547D\u540D"),
           "\u5185\u5BB9\u5305\u8DEF\u5F84: " + (config.contentPackPath || "\u672A\u8BBE\u7F6E"),
@@ -13143,317 +13682,6 @@
     }
   });
 
-  // src/core/builtin_pack.js
-  var require_builtin_pack = __commonJS({
-    "src/core/builtin_pack.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var { stripJsonComments } = require_file_writer();
-      var log2 = createLogger2("BuiltinPack");
-      function normalizeDefs(rawDefs) {
-        var result, keys, i, key, value, defId, lastSlash, stripped;
-        if (!rawDefs || typeof rawDefs !== "object") return {};
-        result = {};
-        keys = Object.keys(rawDefs);
-        for (i = 0; i < keys.length; i++) {
-          key = keys[i];
-          value = rawDefs[key];
-          defId = key;
-          if (typeof defId === "string" && defId.endsWith(".json")) {
-            defId = defId.slice(0, -5);
-          }
-          lastSlash = defId.lastIndexOf("/");
-          if (lastSlash >= 0) {
-            defId = defId.substring(lastSlash + 1);
-          }
-          if (typeof value === "string") {
-            try {
-              stripped = stripJsonComments(value);
-              value = JSON.parse(stripped);
-            } catch (e) {
-              log2.warn("normalizeDefs: JSON \u89E3\u6790\u5931\u8D25\uFF0C\u4FDD\u7559\u539F\u503C key=" + key, e);
-            }
-          }
-          result[defId] = value;
-        }
-        return result;
-      }
-      function readDefine(injectedValue, fallback) {
-        if (typeof injectedValue === "undefined") {
-          return fallback;
-        }
-        return injectedValue;
-      }
-      var builtinMeta = readDefine(
-        typeof define_BUILTIN_PACK_META_default !== "undefined" ? define_BUILTIN_PACK_META_default : void 0,
-        { id: "", version: "0.0" }
-      );
-      var builtinMaterials = normalizeDefs(
-        readDefine(
-          typeof define_BUILTIN_MATERIALS_default !== "undefined" ? define_BUILTIN_MATERIALS_default : void 0,
-          {}
-        )
-      );
-      var builtinConnectors = normalizeDefs(
-        readDefine(
-          typeof define_BUILTIN_CONNECTORS_default !== "undefined" ? define_BUILTIN_CONNECTORS_default : void 0,
-          {}
-        )
-      );
-      var builtinSubsystems = normalizeDefs(
-        readDefine(
-          typeof define_BUILTIN_SUBSYSTEMS_default !== "undefined" ? define_BUILTIN_SUBSYSTEMS_default : void 0,
-          {}
-        )
-      );
-      var builtinControlGroups = normalizeDefs(
-        readDefine(
-          typeof define_BUILTIN_CONTROL_GROUPS_default !== "undefined" ? define_BUILTIN_CONTROL_GROUPS_default : void 0,
-          {}
-        )
-      );
-      function extractNamespace(id) {
-        if (!id || typeof id !== "string") return "machine_max";
-        var colonIdx = id.indexOf(":");
-        return colonIdx >= 0 ? id.substring(0, colonIdx) : id;
-      }
-      function getBuiltinPack() {
-        var namespace = extractNamespace(builtinMeta.id);
-        var matCount, connCount, subCount, cgCount;
-        var result = {
-          meta: builtinMeta,
-          namespace,
-          materials: builtinMaterials,
-          connectors: builtinConnectors,
-          subsystems: builtinSubsystems,
-          control_groups: builtinControlGroups
-        };
-        Object.freeze(result);
-        matCount = Object.keys(builtinMaterials).length;
-        connCount = Object.keys(builtinConnectors).length;
-        subCount = Object.keys(builtinSubsystems).length;
-        cgCount = Object.keys(builtinControlGroups).length;
-        log2.info(
-          "getBuiltinPack: \u5185\u7F6E\u57FA\u7840\u5305\u52A0\u8F7D\u5B8C\u6210 \u2014 materials=" + matCount + " connectors=" + connCount + " subsystems=" + subCount + " controlGroups=" + cgCount + " namespace=" + namespace + " metaId=" + (builtinMeta.id || "\u65E0")
-        );
-        log2.debug("getBuiltinPack: \u8FDE\u63A5\u5668\u952E\u5217\u8868", Object.keys(builtinConnectors));
-        log2.debug("getBuiltinPack: \u6750\u6599\u952E\u5217\u8868", Object.keys(builtinMaterials));
-        log2.debug("getBuiltinPack: \u5B50\u7CFB\u7EDF\u952E\u5217\u8868", Object.keys(builtinSubsystems));
-        log2.debug("getBuiltinPack: \u63A7\u5236\u7EC4\u9884\u8BBE\u952E\u5217\u8868", Object.keys(builtinControlGroups));
-        return result;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          getBuiltinPack
-        };
-      }
-    }
-  });
-
-  // src/core/content_pack_manager.js
-  var require_content_pack_manager = __commonJS({
-    "src/core/content_pack_manager.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var content_pack = require_content_pack();
-      var builtin_pack = require_builtin_pack();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("ContentPackManager");
-      var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
-      var _cache = {
-        materials: null,
-        connectors: null,
-        subsystems: null,
-        control_groups: null,
-        projectiles: null
-      };
-      function loadMergedDefs(config, type) {
-        var emptyResult;
-        var defs;
-        var sources;
-        var builtin;
-        var builtinDefs;
-        var bKey;
-        var depPaths;
-        var i;
-        var depPath;
-        var openResult;
-        var depDefs;
-        var depKey;
-        var currentPath;
-        var curOpenResult;
-        var curDefs;
-        var curKey;
-        var result;
-        var defCount;
-        if (_cache[type]) {
-          log2.debug("loadMergedDefs: \u7F13\u5B58\u547D\u4E2D " + type);
-          return _cache[type];
-        }
-        if (!config) {
-          log2.warn("loadMergedDefs: config \u4E3A\u7A7A\uFF0C\u8FD4\u56DE\u7A7A\u7ED3\u679C");
-          emptyResult = { defs: {}, sources: {} };
-          _cache[type] = emptyResult;
-          return emptyResult;
-        }
-        defs = {};
-        sources = {};
-        log2.debug("loadMergedDefs: \u5F00\u59CB\u5408\u5E76 " + type, {
-          contentPackPath: config.contentPackPath,
-          dependencyPaths: config.dependencyPaths
-        });
-        try {
-          builtin = builtin_pack.getBuiltinPack();
-          builtinDefs = builtin[type] || {};
-          for (bKey in builtinDefs) {
-            if (hasOwn(builtinDefs, bKey)) {
-              var namespacedKey = builtin.namespace + ":" + bKey;
-              defs[namespacedKey] = builtinDefs[bKey];
-              sources[namespacedKey] = "builtin";
-              log2.debug("loadMergedDefs: \u5185\u7F6E\u5305\u6DFB\u52A0 " + namespacedKey + " (source=builtin)");
-            }
-          }
-          log2.info("loadMergedDefs: \u5185\u7F6E\u5305 " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(builtinDefs).length + " \u4E2A\u5B9A\u4E49\uFF0Cnamespace=" + builtin.namespace);
-        } catch (e) {
-          log2.warn("loadMergedDefs: \u5185\u7F6E\u5305\u8BFB\u53D6\u5931\u8D25\uFF0C\u4F5C\u4E3A\u7A7A\u5305\u5904\u7406", e);
-        }
-        depPaths = config.dependencyPaths;
-        if (depPaths && Array.isArray(depPaths) && depPaths.length > 0) {
-          for (i = 0; i < depPaths.length; i++) {
-            depPath = depPaths[i];
-            if (!depPath || typeof depPath !== "string" || depPath.trim() === "") {
-              log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u8DEF\u5F84\u4E3A\u7A7A\uFF0C\u8DF3\u8FC7 index=" + i);
-              continue;
-            }
-            try {
-              openResult = content_pack.openContentPack(depPath);
-              if (!openResult.valid) {
-                log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u65E0\u6548\uFF0C\u8DF3\u8FC7: " + depPath, openResult.error);
-                continue;
-              }
-              log2.info("loadMergedDefs: \u4F9D\u8D56\u5305\u6253\u5F00\u6210\u529F", {
-                path: depPath,
-                namespace: openResult.namespace,
-                metaId: openResult.meta ? openResult.meta.id : null
-              });
-              depDefs = content_pack.readAllDefs(depPath, openResult.namespace, type);
-              for (depKey in depDefs) {
-                if (hasOwn(depDefs, depKey)) {
-                  var namespacedDepKey = openResult.namespace + ":" + depKey;
-                  var prevSource = sources[namespacedDepKey];
-                  defs[namespacedDepKey] = depDefs[depKey];
-                  sources[namespacedDepKey] = "dependency:" + i;
-                  log2.info("loadMergedDefs: \u4F9D\u8D56\u5305\u6DFB\u52A0 " + namespacedDepKey + " (source=dependency:" + i + ", \u8986\u76D6\u524D=" + (prevSource || "\u65E0") + ")");
-                }
-              }
-              log2.info("loadMergedDefs: \u4F9D\u8D56\u5305 " + depPath + " " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(depDefs).length + " \u4E2A\u5B9A\u4E49");
-            } catch (e) {
-              log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u52A0\u8F7D\u5931\u8D25\uFF0C\u8DF3\u8FC7: " + depPath, e);
-            }
-          }
-        }
-        currentPath = config.contentPackPath;
-        if (currentPath && typeof currentPath === "string" && currentPath.trim() !== "") {
-          try {
-            curOpenResult = content_pack.openContentPack(currentPath);
-            if (!curOpenResult.valid) {
-              log2.error("loadMergedDefs: \u5F53\u524D\u5185\u5BB9\u5305\u65E0\u6548: " + currentPath, curOpenResult.error);
-              log2.debug("loadMergedDefs: openContentPack \u7ED3\u679C", {
-                namespace: curOpenResult.namespace,
-                meta: curOpenResult.meta,
-                error: curOpenResult.error
-              });
-            } else {
-              log2.info("loadMergedDefs: \u5F53\u524D\u5305\u6253\u5F00\u6210\u529F", {
-                path: currentPath,
-                namespace: curOpenResult.namespace,
-                metaId: curOpenResult.meta ? curOpenResult.meta.id : null
-              });
-              curDefs = content_pack.readAllDefs(currentPath, curOpenResult.namespace, type);
-              for (curKey in curDefs) {
-                if (hasOwn(curDefs, curKey)) {
-                  var namespacedCurKey = curOpenResult.namespace + ":" + curKey;
-                  var prevSource = sources[namespacedCurKey];
-                  defs[namespacedCurKey] = curDefs[curKey];
-                  sources[namespacedCurKey] = "current";
-                  log2.info("loadMergedDefs: \u5F53\u524D\u5305\u6DFB\u52A0 " + namespacedCurKey + " (source=current, \u8986\u76D6\u524D=" + (prevSource || "\u65E0") + ")");
-                }
-              }
-              log2.info("loadMergedDefs: \u5F53\u524D\u5305 " + currentPath + " " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(curDefs).length + " \u4E2A\u5B9A\u4E49");
-            }
-          } catch (e) {
-            log2.error("loadMergedDefs: \u5F53\u524D\u5185\u5BB9\u5305\u52A0\u8F7D\u5931\u8D25: " + currentPath, e);
-          }
-        }
-        result = { defs, sources };
-        _cache[type] = result;
-        defCount = Object.keys(defs).length;
-        log2.info("loadMergedDefs: " + type + " \u5408\u5E76\u5B8C\u6210\uFF0C\u5171 " + defCount + " \u4E2A\u5B9A\u4E49");
-        log2.debug("loadMergedDefs: \u6700\u7EC8 sources", sources);
-        return result;
-      }
-      function resolveDefSource(config, type, defId) {
-        var merged = loadMergedDefs(config, type);
-        var source = merged.sources[defId];
-        if (source === void 0) {
-          log2.debug("resolveDefSource: \u672A\u627E\u5230\u5B9A\u4E49 " + type + ":" + defId);
-          return null;
-        }
-        log2.debug("resolveDefSource: " + type + ":" + defId + " -> " + source);
-        return source;
-      }
-      function isDefEditable(config, type, defId) {
-        var source = resolveDefSource(config, type, defId);
-        return source === "current";
-      }
-      function getAvailableDefsForType(config, type) {
-        var merged = loadMergedDefs(config, type);
-        return merged.defs;
-      }
-      function getFirstDefId(config, type) {
-        var defs = getAvailableDefsForType(config, type);
-        var keys = Object.keys(defs);
-        if (keys.length === 0) {
-          log2.debug("getFirstDefId: " + type + " \u65E0\u53EF\u7528\u5B9A\u4E49");
-          return null;
-        }
-        return keys[0];
-      }
-      function invalidateCache() {
-        _cache.materials = null;
-        _cache.connectors = null;
-        _cache.subsystems = null;
-        _cache.control_groups = null;
-        _cache.projectiles = null;
-        log2.debug("invalidateCache: \u7F13\u5B58\u5DF2\u6E05\u9664");
-        try {
-          throw new Error("invalidateCache \u8C03\u7528\u6808");
-        } catch (e) {
-          log2.debug("invalidateCache: \u8C03\u7528\u8005", e.stack);
-        }
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          loadMergedDefs,
-          resolveDefSource,
-          isDefEditable,
-          getAvailableDefsForType,
-          getFirstDefId,
-          invalidateCache
-        };
-      }
-    }
-  });
-
   // src/managers/control_group_manager.js
   var require_control_group_manager = __commonJS({
     "src/managers/control_group_manager.js"(exports, module) {
@@ -14296,7 +14524,6 @@
       var { getConfig, saveConfig } = require_persistence();
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
-      var { runValidation } = require_validation();
       var log2 = createLogger2("Mode");
       var _mmActionIds = ["mm_validate", "mm_export", "mm_new_part", "mm_project_settings"];
       var _mmActionInstances = [];
@@ -14322,22 +14549,14 @@
               showToast2("\u6CA1\u6709\u53EF\u6821\u9A8C\u7684\u914D\u7F6E", "warning");
               return;
             }
-            const errors = runValidation(config);
-            if (errors.length === 0) {
-              log2.info("\u6821\u9A8C\u901A\u8FC7\uFF0C\u65E0\u9519\u8BEF");
-              showToast2("\u6821\u9A8C\u901A\u8FC7", "positive");
-            } else {
-              log2.warn("\u6821\u9A8C\u53D1\u73B0\u95EE\u9898", { count: errors.length, details: errors });
-              showToast2("\u6821\u9A8C\u53D1\u73B0 " + errors.length + " \u4E2A\u95EE\u9898", "warning");
-              new Dialog({
-                title: "\u6821\u9A8C\u7ED3\u679C",
-                lines: ["\u53D1\u73B0 " + errors.length + " \u4E2A\u95EE\u9898\uFF1A", ...errors],
-                form: { close: "close" },
-                onConfirm: function() {
-                  this.hide();
-                }
-              }).show();
+            if (typeof Validator === "undefined") {
+              showToast2("\u5F53\u524D\u73AF\u5883\u4E0D\u652F\u6301 Blockbench \u6821\u9A8C\u6E05\u5355", "warning");
+              return;
             }
+            Validator.validate();
+            setTimeout(function() {
+              Validator.openDialog();
+            }, 60);
           }
         }));
         _mmActionInstances.push(new Action("mm_export", {
@@ -14462,6 +14681,96 @@
           registerToolbarActions,
           _mmActionInstances,
           _mmActionIds
+        };
+      }
+    }
+  });
+
+  // src/mode/validation_check.js
+  var require_validation_check = __commonJS({
+    "src/mode/validation_check.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var { getConfig } = require_persistence();
+      var { collectIssues } = require_validation();
+      var log2 = createLogger2("ValidationCheck");
+      var CHECK_ID = "mm_validation";
+      var _checkInstance = null;
+      function _getNavigator() {
+        return typeof window !== "undefined" && window.__mmNavigator || null;
+      }
+      function toWarningOrError(p) {
+        var buttons = [{
+          name: "\u5B9A\u4F4D",
+          icon: "fa-crosshairs",
+          click: function() {
+            if (typeof Validator !== "undefined" && Validator.dialog) {
+              Validator.dialog.hide();
+            }
+            var nav = _getNavigator();
+            if (nav && typeof nav.selectByIssue === "function") {
+              nav.selectByIssue(p);
+            }
+          }
+        }];
+        return { message: p.message, buttons };
+      }
+      function registerValidation() {
+        if (typeof ValidatorCheck === "undefined" || typeof Validator === "undefined") {
+          log2.warn("registerValidation: ValidatorCheck/Validator \u4E0D\u53EF\u7528\uFF0C\u8DF3\u8FC7");
+          return null;
+        }
+        if (Validator.checks && Validator.checks.some(function(c) {
+          return c.id === CHECK_ID;
+        })) {
+          log2.debug('registerValidation: check "' + CHECK_ID + '" \u5DF2\u6CE8\u518C\uFF0C\u8DF3\u8FC7');
+          return null;
+        }
+        _checkInstance = new ValidatorCheck(CHECK_ID, {
+          update_triggers: ["update_selection", "save"],
+          run: function() {
+            var config = getConfig();
+            if (!config) {
+              this.warnings.empty();
+              this.errors.empty();
+              return;
+            }
+            var problems = collectIssues(config);
+            var warnings = [];
+            var errors = [];
+            for (var i = 0; i < problems.length; i++) {
+              var p = problems[i];
+              if (p.severity === "error") {
+                errors.push(toWarningOrError(p));
+              } else {
+                warnings.push(toWarningOrError(p));
+              }
+            }
+            this.warn.apply(this, warnings);
+            this.fail.apply(this, errors);
+          }
+        });
+        log2.info('registerValidation: \u5DF2\u6CE8\u518C\u539F\u751F\u6821\u9A8C check "' + CHECK_ID + '"');
+        return _checkInstance;
+      }
+      function unregisterValidation2() {
+        if (_checkInstance && typeof _checkInstance.delete === "function") {
+          _checkInstance.delete();
+          _checkInstance = null;
+          log2.info('unregisterValidation: \u5DF2\u5378\u8F7D "' + CHECK_ID + '"');
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          registerValidation,
+          unregisterValidation: unregisterValidation2,
+          toWarningOrError,
+          _getNavigator
         };
       }
     }
@@ -15420,6 +15729,7 @@
       init_define_SCHEMAS();
       var nameUtils = require_name_utils();
       var { createLogger: createLogger2 } = require_logger();
+      var { resolveIssueLevel } = require_validation_types();
       var log2 = createLogger2("SubPartPanel");
       Vue.component("mm-sub-part-panel", {
         template: true ? `<div class="mm-section">
@@ -15434,6 +15744,7 @@
                 @change="onNameChange($event.target.value)"
                 placeholder="main"
                 title="\u5B50\u96F6\u4EF6\u540D\u79F0\u77ED\u540D\uFF0C\u4FDD\u5B58\u540E\u81EA\u52A8\u8865\u5168\u4E3A\u5B8C\u6574\u952E" />
+            <span v-if="spLevel !== 'none'" class="mm-issue-badge" :class="spLevel">{{ spIssues.length }}</span>
         </h3>
     </div>
 
@@ -15554,7 +15865,10 @@
         <div v-if="hitBoxCount === 0" class="mm-element-info" style="color:#888">
             \u6682\u65E0\u78B0\u649E\u7BB1 \u2014 \u5728 Outliner \u4E2D\u53F3\u952E\u9AA8\u9ABC\u5E76\u9009\u62E9"\u6807\u8BB0\u4E3A\u78B0\u649E\u7BB1"
         </div>
-        <div v-for="(hb, hbKey) in hitBoxes" :key="hbKey" class="mm-sub-item-row mm-clickable" :title="'\u70B9\u51FB\u8DF3\u8F6C\u5230\u78B0\u649E\u7BB1 ' + resolveHitBoxName(hbKey)" @click="navigateToHitBox(hbKey)">
+        <div v-for="(hb, hbKey) in hitBoxes" :key="hbKey" class="mm-sub-item-row mm-clickable"
+             :class="{ 'mm-item-error': rowIssueLevel('hitBoxes', hbKey) === 'error', 'mm-item-warning': rowIssueLevel('hitBoxes', hbKey) === 'warning' }"
+             :title="rowIssueTooltip('hitBoxes', hbKey, '\u70B9\u51FB\u8DF3\u8F6C\u5230\u78B0\u649E\u7BB1 ' + resolveHitBoxName(hbKey))"
+             @click="navigateToHitBox(hbKey)">
             <span class="mm-sub-item-name">
                 <span class="mm-marker-badge" style="background:#D94A4A;font-size:10px;padding:0 4px">HB</span>
                 {{ resolveHitBoxName(hbKey) }}
@@ -15568,7 +15882,10 @@
         <div v-if="interactBoxCount === 0" class="mm-element-info" style="color:#888">
             \u6682\u65E0\u4EA4\u4E92\u533A \u2014 \u5728 Outliner \u4E2D\u53F3\u952E\u9AA8\u9ABC\u5E76\u9009\u62E9"\u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A"
         </div>
-        <div v-for="(ib, ibKey) in interactBoxes" :key="ibKey" class="mm-sub-item-row mm-clickable" :title="'\u70B9\u51FB\u8DF3\u8F6C\u5230\u4EA4\u4E92\u533A ' + resolveInteractBoxName(ibKey)" @click="navigateToInteractBox(ibKey)">
+        <div v-for="(ib, ibKey) in interactBoxes" :key="ibKey" class="mm-sub-item-row mm-clickable"
+             :class="{ 'mm-item-error': rowIssueLevel('interactBoxes', ibKey) === 'error', 'mm-item-warning': rowIssueLevel('interactBoxes', ibKey) === 'warning' }"
+             :title="rowIssueTooltip('interactBoxes', ibKey, '\u70B9\u51FB\u8DF3\u8F6C\u5230\u4EA4\u4E92\u533A ' + resolveInteractBoxName(ibKey))"
+             @click="navigateToInteractBox(ibKey)">
             <span class="mm-sub-item-name">
                 <span class="mm-marker-badge" style="background:#D9A441;font-size:10px;padding:0 4px">IB</span>
                 {{ resolveInteractBoxName(ibKey) }}
@@ -15582,14 +15899,15 @@
         <div v-if="connectorCount === 0" class="mm-element-info" style="color:#888">
             \u6682\u65E0\u8FDE\u63A5\u70B9 \u2014 \u5728 Outliner \u4E2D\u53F3\u952E Locator \u5E76\u9009\u62E9"\u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9"
         </div>
-        <div v-for="(conn, connKey) in config.connectors" :key="connKey" class="mm-sub-item-row mm-clickable" :title="'\u70B9\u51FB\u8DF3\u8F6C\u5230\u8FDE\u63A5\u70B9 ' + connKey" @click="navigateToConnector(connKey)">
+        <div v-for="(conn, connKey) in config.connectors" :key="connKey" class="mm-sub-item-row mm-clickable"
+             :class="{ 'mm-item-error': rowIssueLevel('connectors', connKey) === 'error', 'mm-item-warning': rowIssueLevel('connectors', connKey) === 'warning' }"
+             :title="rowIssueTooltip('connectors', connKey, '\u70B9\u51FB\u8DF3\u8F6C\u5230\u8FDE\u63A5\u70B9 ' + connKey)"
+             @click="navigateToConnector(connKey)">
             <span class="mm-sub-item-name">
                 <span class="mm-marker-badge" style="background:#3AA83A;font-size:10px;padding:0 4px">CN</span>
                 {{ resolveConnectorName(connKey) }}
             </span>
-            <span class="mm-sub-item-meta" :style="conn.definition ? '' : 'color:#ff6b6b'">
-                <span v-if="!conn.definition" style="margin-right:4px">\u26A0</span>{{ conn.definition || '\u672A\u6307\u5B9A\u5B9A\u4E49' }}
-            </span>
+            <span class="mm-sub-item-meta">{{ conn.definition || '\u672A\u6307\u5B9A\u5B9A\u4E49' }}</span>
         </div>
     </div>
 
@@ -15601,7 +15919,10 @@
         <div v-if="subsystemCount === 0" class="mm-element-info" style="color:#888">
             \u6682\u65E0\u5B50\u7CFB\u7EDF \u2014 \u70B9\u51FB [+ ] \u6DFB\u52A0
         </div>
-        <div v-for="ssKey in subsystemKeys" :key="ssKey" class="mm-sub-item-row mm-clickable" :title="'\u70B9\u51FB\u67E5\u770B\u5B50\u7CFB\u7EDF ' + ssKey" @click="navigateToSubsystem(ssKey)">
+        <div v-for="ssKey in subsystemKeys" :key="ssKey" class="mm-sub-item-row mm-clickable"
+             :class="{ 'mm-item-error': rowIssueLevel('subsystems', ssKey) === 'error', 'mm-item-warning': rowIssueLevel('subsystems', ssKey) === 'warning' }"
+             :title="rowIssueTooltip('subsystems', ssKey, '\u70B9\u51FB\u67E5\u770B\u5B50\u7CFB\u7EDF ' + ssKey)"
+             @click="navigateToSubsystem(ssKey)">
             <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
                 <span class="mm-sub-item-name">
                     <span class="mm-marker-badge" :style="{ background: resolveSubsystemTypeColor(ssKey) }" style="font-size:10px;padding:0 4px">SS</span>
@@ -15612,7 +15933,7 @@
             <span class="mm-sub-item-meta">
                 {{ resolveSubsystemTypeName(ssKey) }}
                 <span v-if="resolveSubsystemDefinition(ssKey)" style="color:#888;margin-left:4px">| {{ resolveSubsystemDefinition(ssKey) }}</span>
-                <span v-else style="color:#ff6b6b;margin-left:4px">| \u26A0 \u672A\u6307\u5B9A\u578B\u53F7</span>
+                <span v-else style="color:#888;margin-left:4px">| \u672A\u6307\u5B9A\u578B\u53F7</span>
             </span>
         </div>
     </div>
@@ -15636,7 +15957,15 @@
           allLocatorNames: { type: Array, default: function() {
             return [];
           } },
-          refreshKey: { type: Number, default: 0 }
+          refreshKey: { type: Number, default: 0 },
+          /** 行级问题（byItem: { subsystems, connectors, hitBoxes, interactBoxes }） */
+          issues: { type: Object, default: function() {
+            return { subsystems: {}, connectors: {}, hitBoxes: {}, interactBoxes: {} };
+          } },
+          /** 本子零件下所有后代问题 + 子零件级问题（bySubPart[spKey]），用于标题徽标 */
+          spIssues: { type: Array, default: function() {
+            return [];
+          } }
         },
         data: function() {
           return {
@@ -15696,9 +16025,33 @@
           subsystemKeys: function() {
             void this.refreshKey;
             return this.config.subsystems ? Object.keys(this.config.subsystems) : [];
+          },
+          /** 子零件级总体问题级别（驱动标题徽标） */
+          spLevel: function() {
+            return resolveIssueLevel(this.spIssues);
           }
         },
         methods: {
+          /** 取指定桶（subsystems/connectors/hitBoxes/interactBoxes）下某 key 的问题列表 */
+          rowIssues: function(bucket, key) {
+            var bucketMap = this.issues && this.issues[bucket];
+            return bucketMap && bucketMap[key] || [];
+          },
+          /** 行级问题级别：error > warning > none */
+          rowIssueLevel: function(bucket, key) {
+            return resolveIssueLevel(this.rowIssues(bucket, key));
+          },
+          /** 行级悬浮提示：默认跳转提示，有问题时追加问题清单（\n 换行） */
+          rowIssueTooltip: function(bucket, key, defaultTitle) {
+            var list = this.rowIssues(bucket, key);
+            if (!list || list.length === 0) return defaultTitle;
+            var lines = [defaultTitle, "\u2014\u2014 \u5B58\u5728\u95EE\u9898 \u2014\u2014"];
+            for (var i = 0; i < list.length; i++) {
+              var p = list[i];
+              lines.push("[" + (p.severity === "error" ? "\u9519\u8BEF" : "\u8B66\u544A") + "] " + p.message);
+            }
+            return lines.join("\n");
+          },
           onFieldChange: function(field, value) {
             this.$emit("field-change", field, value);
           },
@@ -17502,6 +17855,8 @@
       var content_pack_manager = require_content_pack_manager();
       var nameUtils = require_name_utils();
       var { buildSignalTargetOptions } = require_signal_target_options();
+      var { collectIssues } = require_validation();
+      var { aggregate, resolveIssueLevel } = require_validation_types();
       var { showAddTagDialog, _hashTagColor } = require_tag_dialog_helper();
       var log2 = createLogger2("UI");
       require_SubPartPanel_vue();
@@ -17637,10 +17992,14 @@
             <div v-if="subPartEntries.length === 0" class="mm-element-info" style="color:#888">
                 \u6682\u65E0\u5B50\u96F6\u4EF6 \u2014 \u5728 Outliner \u4E2D\u53F3\u952E\u9AA8\u9ABC\u5E76\u9009\u62E9"\u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6"
             </div>
-            <div v-for="entry in subPartEntries" :key="entry.key" class="mm-sub-item-row mm-clickable" :title="'\u70B9\u51FB\u8DF3\u8F6C\u5230\u5B50\u96F6\u4EF6 ' + entry.key" @click="navigateToSubPart(entry.key)">
+            <div v-for="entry in subPartEntries" :key="entry.key" class="mm-sub-item-row mm-clickable"
+                 :class="{ 'mm-item-error': entry.issueLevel === 'error', 'mm-item-warning': entry.issueLevel === 'warning' }"
+                 :title="subPartTooltip(entry)"
+                 @click="navigateToSubPart(entry.key)">
                 <span class="mm-sub-item-name">
                     <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
                     {{ entry.shortName }}
+                    <span v-if="entry.issueLevel !== 'none'" class="mm-issue-badge" :class="entry.issueLevel">{{ entry.issues.length }}</span>
                 </span>
                 <span class="mm-sub-item-meta">{{ entry.startBone || '\uFF08\u65E0\u7ED1\u5B9A\u9AA8\u9ABC\uFF09' }} | \u78B0\u649E\u7BB1:{{ entry.hitBoxCount }} | \u4EA4\u4E92\u533A:{{ entry.interactBoxCount }} | \u8FDE\u63A5\u70B9:{{ entry.connectorCount }} | \u5B50\u7CFB\u7EDF:{{ entry.subsystemCount }}</span>
             </div>
@@ -17659,6 +18018,8 @@
             :all-bone-names="allBoneNames"
             :all-locator-names="ownedLocatorNames"
             :refresh-key="markerVersion.v"
+            :issues="subPartIssues.byItem"
+            :sp-issues="subPartIssues.bySubPart[selectedMarker ? selectedMarker.config_ref : '']"
             @field-change="updateSubPartField"
             @add-end-bone="addEndBone"
             @remove-end-bone="removeEndBone"
@@ -17753,6 +18114,16 @@
             // 虚拟选择的子系统
           };
         },
+        watch: {
+          /**
+           * 游离元素（连接点/碰撞箱/交互区无归属 subpart）在 collectIssues 中标为
+           * warning + code 'orphan_element'，且无 subPartKey → 不冒泡到面板行。
+           * 在此消费点对 validationIssues 做节流 toast（§9：collectIssues 本身无副作用，不发 toast）。
+           */
+          validationIssues: function(problems) {
+            this._maybeToastOrphans(problems);
+          }
+        },
         computed: {
           currentPart: function() {
             if (!this.config || !this.activePartId) return null;
@@ -17823,6 +18194,27 @@
             });
           },
           /**
+           * 校验问题全集（单一校验源 collectIssues）
+           * 依赖 config（字段编辑响应式）+ markerVersion.v（非响应式删除兜底）
+           */
+          validationIssues: function() {
+            if (!this.config || !this.markerVersion) return [];
+            void this.markerVersion.v;
+            return collectIssues(this.config);
+          },
+          /**
+           * 按当前零件/变体过滤后的聚合结果（bySubPart / byItem / byPartVariant）
+           * 调用方先过滤到当前 part+variant，避免 bySubPart 键跨变体/零件碰撞。
+           */
+          subPartIssues: function() {
+            var self = this;
+            var all = this.validationIssues;
+            var scoped = all.filter(function(p) {
+              return p.path && p.path.partId === self.activePartId && p.path.variantName === self.activeVariantName;
+            });
+            return aggregate(scoped);
+          },
+          /**
            * 当前变体下的所有子零件条目（含短名、起始骨骼、子系统数）
            * 用于零件/变体属性面板中的子零件列表
            */
@@ -17871,8 +18263,10 @@
               markerVersion: this.markerVersion.v
             });
             var self = this;
+            var bySubPart = self.subPartIssues.bySubPart;
             var result = keys.map(function(spKey) {
               var sp = variant.sub_parts[spKey];
+              var scopedIssues = bySubPart[spKey] || [];
               return {
                 key: spKey,
                 shortName: nameUtils.extractShortName(spKey, ns),
@@ -17880,7 +18274,9 @@
                 subsystemCount: sp && sp.subsystems ? Object.keys(sp.subsystems).length : 0,
                 hitBoxCount: sp && sp.hit_boxes ? Object.keys(sp.hit_boxes).length : 0,
                 interactBoxCount: sp && sp.interact_boxes ? Object.keys(sp.interact_boxes).length : 0,
-                connectorCount: sp && sp.connectors ? Object.keys(sp.connectors).length : 0
+                connectorCount: sp && sp.connectors ? Object.keys(sp.connectors).length : 0,
+                issues: scopedIssues,
+                issueLevel: resolveIssueLevel(scopedIssues)
               };
             });
             log2.debug("subPartEntries: \u7ED3\u679C", {
@@ -18735,6 +19131,117 @@
             }
           },
           /**
+           * 游离元素节流 toast：统计 orphan_element 问题，5 秒内只提示一次（防每次编辑刷屏）
+           */
+          _maybeToastOrphans: function(problems) {
+            if (!problems || !Array.isArray(problems)) return;
+            var orphanCount = 0;
+            for (var i = 0; i < problems.length; i++) {
+              if (problems[i] && problems[i].code === "orphan_element") orphanCount++;
+            }
+            if (orphanCount === 0) return;
+            var now = Date.now();
+            if (this._orphanToastAt && now - this._orphanToastAt < 5e3) return;
+            this._orphanToastAt = now;
+            showToast2("\u53D1\u73B0 " + orphanCount + " \u4E2A\u6E38\u79BB\u5143\u7D20\uFF08\u8FDE\u63A5\u70B9/\u78B0\u649E\u7BB1/\u4EA4\u4E92\u533A\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF09\uFF0C\u8BF7\u68C0\u67E5", "warning");
+          },
+          /**
+           * 子零件列表行的悬浮提示：默认跳转提示，有问题时追加问题清单（\n 换行）
+           */
+          subPartTooltip: function(entry) {
+            var base = "\u70B9\u51FB\u8DF3\u8F6C\u5230\u5B50\u96F6\u4EF6 " + entry.key;
+            if (!entry.issues || entry.issues.length === 0) return base;
+            var lines = [base, "\u2014\u2014 \u5B58\u5728\u95EE\u9898 \u2014\u2014"];
+            for (var i = 0; i < entry.issues.length; i++) {
+              var p = entry.issues[i];
+              lines.push("[" + (p.severity === "error" ? "\u9519\u8BEF" : "\u8B66\u544A") + "] " + p.message);
+            }
+            return lines.join("\n");
+          },
+          /**
+           * 导航统一入口 selectByIssue(problem)：
+           * 供原生清单"定位"按钮与面板红框共用。按 path.scope 分派到各导航动作。
+           * 挂载时注册为全局单例 window.__mmNavigator。
+           */
+          selectByIssue: function(problem) {
+            var pi = problem && problem.path;
+            if (!pi) return;
+            var partId = pi.partId;
+            var vName = pi.variantName;
+            var cfg = getConfig();
+            if (cfg && partId && cfg.parts && cfg.parts[partId]) {
+              if (cfg._uiState.activePartId !== partId) {
+                cfg._uiState.activePartId = partId;
+              }
+              if (vName && cfg._uiState.activeVariantName !== vName) {
+                cfg._uiState.activeVariantName = vName;
+              }
+              this.activePartId = cfg._uiState.activePartId;
+              this.activeVariantName = cfg._uiState.activeVariantName;
+              refreshOutlinerIcons2();
+            }
+            var uuid = pi.elementUuid;
+            switch (pi.scope) {
+              case "subpart":
+                if (pi.subPartKey) this.navigateToSubPart(pi.subPartKey);
+                break;
+              case "subsystem":
+                if (pi.subPartKey && pi.itemKey) {
+                  this.selectSubsystem({ spKey: pi.subPartKey, subsystemKey: pi.itemKey });
+                }
+                break;
+              case "connector":
+                this._selectConnector(pi, uuid);
+                break;
+              case "hit_box":
+              case "interact_box":
+                this._selectElementByUuid(uuid);
+                break;
+              case "part":
+              case "variant":
+              default:
+                break;
+            }
+          },
+          /** 按 UUID 选中 Group/Locator 并显示在 Outliner */
+          _selectElementByUuid: function(uuid) {
+            if (!uuid) return;
+            if (typeof Group === "undefined" || typeof Locator === "undefined") return;
+            var el = Group.all.find(function(g) {
+              return g.uuid === uuid;
+            }) || Locator.all.find(function(l) {
+              return l.uuid === uuid;
+            });
+            if (el) {
+              el.select();
+              if (el.showInOutliner) el.showInOutliner();
+              Blockbench.dispatchEvent("update_selection");
+            }
+          },
+          /** 定位到连接点：优先按 elementUuid，其次按 connectors 条目的 locator 名 */
+          _selectConnector: function(pi, uuid) {
+            var loc = null;
+            if (uuid && typeof Locator !== "undefined") {
+              loc = Locator.all.find(function(l) {
+                return l.uuid === uuid;
+              });
+            }
+            if (!loc && pi.subPartKey && pi.itemKey && this.currentVariant && this.currentVariant.sub_parts) {
+              var sp = this.currentVariant.sub_parts[pi.subPartKey];
+              var conn = sp && sp.connectors && sp.connectors[pi.itemKey];
+              if (conn && conn.locator && typeof Locator !== "undefined") {
+                loc = Locator.all.find(function(l) {
+                  return l.name === conn.locator;
+                });
+              }
+            }
+            if (loc) {
+              loc.select();
+              if (loc.showInOutliner) loc.showInOutliner();
+              Blockbench.dispatchEvent("update_selection");
+            }
+          },
+          /**
            * 更新子零件配置中的单个字段。
            * start_bone 变动时需连带迁移子零件标记。
            */
@@ -19282,6 +19789,10 @@
             log2.debug("\u4E8B\u4EF6: save \u2014 \u4FDD\u5B58\u914D\u7F6E");
             saveConfig();
           });
+          this._mmNavigatorObj = { selectByIssue: function(p) {
+            self.selectByIssue(p);
+          } };
+          window.__mmNavigator = this._mmNavigatorObj;
           log2.debug("Vue \u7EC4\u4EF6\u6302\u8F7D\u5B8C\u6210\uFF0C\u5DF2\u6CE8\u518C\u4E8B\u4EF6\u76D1\u542C");
         },
         beforeDestroy: function() {
@@ -19301,6 +19812,10 @@
           if (this._saveHandler) {
             this._saveHandler();
             log2.debug("\u5DF2\u79FB\u9664 save \u76D1\u542C");
+          }
+          if (window.__mmNavigator === this._mmNavigatorObj) {
+            delete window.__mmNavigator;
+            log2.debug("\u5DF2\u6E05\u7406\u5168\u5C40\u5BFC\u822A\u5355\u4F8B __mmNavigator");
           }
         }
       });
@@ -20390,7 +20905,7 @@
       var { createLogger: createLogger2 } = require_logger();
       var content_pack = require_content_pack();
       var { registerToolbarActions, _mmActionInstances } = require_toolbar();
-      var { runValidation } = require_validation();
+      var { registerValidation, unregisterValidation: unregisterValidation2 } = require_validation_check();
       var { buildMMMenuItems, patchShowContextMenu, restoreShowContextMenu, patchElementSelect, restoreElementSelect } = require_patches();
       var { getIconClassForType, refreshOutlinerIcons: refreshOutlinerIcons2, resetOutlinerIcons } = require_icons();
       var _mmVueComponent = null;
@@ -20507,7 +21022,7 @@
         }
         if (!_mmCssInserted) {
           try {
-            const mmCss = ".mm-panel {\n    padding: 12px;\n    height: 100%;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n}\n\n.mm-panel-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n}\n\n.mm-panel-header {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n.mm-nav-row {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    margin-bottom: 6px;\n}\n\n.mm-label {\n    font-size: 12px;\n    color: #aaa;\n    min-width: 32px;\n    flex-shrink: 0;\n}\n\n.mm-select {\n    flex: 1;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    cursor: pointer;\n}\n\n.mm-input {\n    width: 100%;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    box-sizing: border-box;\n}\n\n.mm-input:focus {\n    border-color: #4A90D9;\n    outline: none;\n}\n\n.mm-btn {\n    background: var(--btn-bg, #3a3a3a);\n    border: 1px solid var(--border-color, #555);\n    color: var(--text-color, #ddd);\n    border-radius: 3px;\n    cursor: pointer;\n    font-size: 12px;\n    white-space: nowrap;\n}\n\n.mm-btn:hover {\n    background: var(--btn-hover-bg, #4a4a4a);\n}\n\n.mm-btn-sm {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    padding: 0;\n    font-size: 14px;\n    line-height: 1;\n    width: 30px;\n    height: 30px;\n    min-width: 30px;\n    min-height: 30px;\n    box-sizing: border-box;\n}\n\n.mm-btn-danger {\n    background: var(--btn-danger-bg, #5a2a2a);\n    border-color: var(--btn-danger-border, #8a3a3a);\n    color: #ff6b6b;\n}\n\n.mm-btn-danger:hover:not(:disabled) {\n    background: var(--btn-danger-hover-bg, #7a3a3a);\n    color: #ff9999;\n}\n\n.mm-btn-danger:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n\n.mm-section {\n    margin-bottom: 16px;\n}\n\n.mm-section-title {\n    font-size: 13px;\n    font-weight: 600;\n    margin: 0 0 8px 0;\n    padding-bottom: 4px;\n    border-bottom: 1px solid var(--border-color, #333);\n    color: var(--heading-color, #eee);\n}\n\n.mm-field {\n    margin-bottom: 8px;\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n\n.mm-field label {\n    font-size: 11px;\n    color: #999;\n    margin-bottom: 1px;\n}\n\n.mm-field-row {\n    flex-direction: row;\n    align-items: center;\n    gap: 8px;\n}\n\n.mm-field-row label {\n    margin-bottom: 0;\n}\n\n.mm-tags {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-tag {\n    background: var(--tag-bg, #3a6a9a);\n    color: white;\n    padding: 2px 8px;\n    border-radius: 3px;\n    font-size: 11px;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n\n.mm-tag-remove {\n    cursor: pointer;\n    font-weight: bold;\n    font-size: 14px;\n    line-height: 1;\n}\n\n.mm-tag-remove:hover {\n    color: #ff6b6b;\n}\n\n.mm-variant-list {\n    list-style: none;\n    padding: 0;\n    margin: 0;\n}\n\n.mm-variant-list li {\n    padding: 4px 8px;\n    cursor: pointer;\n    font-size: 12px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    border-radius: 3px;\n}\n\n.mm-variant-list li:hover {\n    background: var(--hover-bg, #333);\n}\n\n.mm-variant-list li.active {\n    background: var(--active-bg, #2a4a6a);\n    color: white;\n}\n\n.mm-variant-remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-weight: bold;\n}\n\n.mm-element-info {\n    font-size: 11px;\n    color: #888;\n    margin: 2px 0;\n}\n\n.mm-marker-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: white;\n    margin-left: 6px;\n    vertical-align: middle;\n}\n\n.mm-panel-hint {\n    color: #666;\n    font-size: 12px;\n    text-align: center;\n    padding: 20px;\n}\n\n.mm-panel-body {\n    flex: 1;\n    overflow-y: auto;\n}\n\n/* \u56FA\u5B9A\u5728\u9762\u677F\u9876\u90E8\u7684\u6807\u9898\u680F\uFF0C\u6EDA\u52A8\u65F6\u59CB\u7EC8\u53EF\u89C1 */\n.mm-sticky-title {\n    position: sticky;\n    top: 0;\n    z-index: 1;\n    background: var(--panel-bg, #1e1e1e);\n    padding: 8px 0 4px 0;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u6761\u76EE\u884C */\n.mm-sub-item-row {\n    display: flex;\n    flex-direction: column;\n    padding: 4px 8px;\n    border-radius: 3px;\n    margin-bottom: 2px;\n}\n.mm-sub-item-row.mm-clickable {\n    cursor: pointer;\n}\n.mm-sub-item-row.mm-clickable:hover {\n    background: var(--hover-bg, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u540D\u79F0\u884C */\n.mm-sub-item-name {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 12px;\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u5143\u4FE1\u606F\u884C */\n.mm-sub-item-meta {\n    font-size: 10px;\n    color: #888;\n    margin-left: 4px;\n}\n\n/* \u53EF\u70B9\u51FB\u7684\u5F52\u5C5E\u6807\u7B7E */\n.mm-clickable-tag:hover {\n    filter: brightness(1.3);\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5361\u7247 */\n.mm-signal-card {\n    margin-bottom: 4px;\n    padding: 4px;\n    background: #252525;\n    border-radius: 3px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5934\u90E8 */\n.mm-signal-header {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n    margin-bottom: 2px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u5220\u9664\u6309\u94AE */\n.mm-btn-sm.mm-btn-danger-light {\n    color: #ff6b6b;\n}\n\n.mm-btn-sm.mm-btn-danger-light:hover {\n    color: #ff9999;\n}\n\n/* ===== \u4FE1\u53F7\u6D41\u56FE\u9762\u677F ===== */\n.mm-signal-flow {\n    padding: 8px 12px;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n}\n\n.mm-signal-flow-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n    font-size: 12px;\n}\n\n.mm-signal-flow-header {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding-bottom: 8px;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n}\n\n.mm-signal-flow-title {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 14px;\n    font-weight: 600;\n    color: var(--heading-color, #eee);\n}\n\n.mm-flow-icon {\n    font-size: 16px;\n    color: #4A90D9;\n}\n\n.mm-signal-flow-meta {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 11px;\n    color: #888;\n}\n\n.mm-flow-meta-item {\n    background: #2a2a2a;\n    padding: 1px 6px;\n    border-radius: 3px;\n    color: #aaa;\n}\n\n.mm-flow-meta-sep {\n    color: #555;\n}\n\n.mm-signal-flow-body {\n    flex: 1;\n    display: flex;\n    overflow: auto;\n}\n\n.mm-signal-flow-placeholder {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    width: 100%;\n    gap: 12px;\n}\n\n.mm-flow-placeholder-icon {\n    font-size: 36px;\n    color: #4a4a4a;\n    opacity: 0.5;\n}\n\n.mm-flow-placeholder-text {\n    font-size: 13px;\n    color: #666;\n}\n\n.mm-flow-placeholder-hint {\n    font-size: 11px;\n    color: #555;\n    text-align: center;\n}\n\n.mm-flow-stats {\n    display: flex;\n    gap: 24px;\n    margin: 8px 0;\n}\n\n.mm-flow-stat {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    gap: 2px;\n}\n\n.mm-flow-stat-value {\n    font-size: 18px;\n    font-weight: 600;\n    color: #4A90D9;\n}\n\n.mm-flow-stat-label {\n    font-size: 10px;\n    color: #888;\n    text-transform: uppercase;\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u753B\u5E03 */\n.mm-flow-canvas {\n    flex: 1;\n    overflow: hidden;\n    background: #1a1a1a;\n    border-radius: 4px;\n    border: 1px solid var(--border-color, #333);\n    min-height: 200px;\n}\n\n.mm-flow-canvas svg {\n    display: block;\n    width: 100%;\n    height: 100%;\n}\n\n/* \u8FDE\u7EBF\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-edge-hovered {\n    stroke-opacity: 1 !important;\n}\n\n/* \u8282\u70B9\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-node-hovered {\n    stroke: #fff !important;\n    stroke-width: 1.5 !important;\n    filter: brightness(1.2);\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u64CD\u4F5C\u6309\u94AE */\n.mm-signal-flow-actions {\n    margin-left: auto;\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n/* \u56FE\u4F8B */\n.mm-signal-flow-legend {\n    display: flex;\n    gap: 12px;\n    padding-top: 6px;\n    margin-top: 4px;\n    border-top: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n    flex-wrap: wrap;\n}\n\n.mm-flow-legend-item {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 10px;\n    color: #999;\n    cursor: default;\n}\n\n.mm-flow-legend-item:hover {\n    color: #ccc;\n}\n\n.mm-flow-legend-dot {\n    width: 8px;\n    height: 8px;\n    border-radius: 2px;\n    flex-shrink: 0;\n}\n\n.mm-flow-legend-line {\n    width: 14px;\n    height: 3px;\n    border-radius: 1px;\n    flex-shrink: 0;\n}\n\n/* ==================== \u952E\u503C\u5BF9\u7F16\u8F91\u5668 ==================== */\n\n.mm-kv-editor {\n    display: flex;\n    flex-direction: column;\n    gap: 4px;\n}\n\n.mm-kv-row {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-kv-key {\n    flex: 1 1 30%;\n    min-width: 60px;\n}\n\n.mm-kv-value {\n    flex: 2 1 70%;\n    min-width: 100px;\n}\n\n.mm-kv-add {\n    border-top: 1px solid #373a40;\n    padding-top: 4px;\n}\n\n.mm-btn-danger {\n    color: #D94A4A;\n    border: 1px solid #D94A4A;\n    background: transparent;\n}\n.mm-btn-danger:hover {\n    background: #D94A4A;\n    color: #fff;\n}\n\n/* ==================== \u901A\u7528\u5B9A\u4E49\u67E5\u770B\u5668\uFF08\u53EA\u8BFB\u5217\u8868\uFF09 ==================== */\n\n/* \u6765\u6E90\u7EDF\u8BA1\u6761 */\n.mm-def-stats {\n    display: flex;\n    gap: 14px;\n    align-items: center;\n    font-size: 11px;\n    color: #aaa;\n    margin-bottom: 6px;\n}\n\n.mm-def-stat {\n    display: inline-flex;\n    align-items: center;\n    gap: 4px;\n}\n\n/* \u7EDF\u8BA1\u6761\u5F69\u8272\u5706\u70B9 */\n.mm-dot {\n    display: inline-block;\n    width: 8px;\n    height: 8px;\n    border-radius: 50%;\n}\n\n.mm-dot-builtin {\n    background: #888;\n}\n\n.mm-dot-dependency {\n    background: #2196F3;\n}\n\n.mm-dot-current {\n    background: #4CAF50;\n}\n\n/* \u5B9A\u4E49\u5217\u8868\u6EDA\u52A8\u5BB9\u5668 */\n.mm-def-list {\n    max-height: 320px;\n    overflow-y: auto;\n    border: 1px solid var(--border-color, #333);\n    border-radius: 3px;\n}\n\n/* \u5B9A\u4E49\u8868\u683C */\n.mm-def-table {\n    width: 100%;\n    border-collapse: collapse;\n    font-size: 12px;\n}\n\n.mm-def-th {\n    padding: 6px 8px;\n    text-align: left;\n    font-size: 11px;\n    color: #aaa;\n    font-weight: normal;\n    border-bottom: 2px solid #555;\n    position: sticky;\n    top: 0;\n    background: var(--panel-bg, #1e1e1e);\n    z-index: 1;\n}\n\n.mm-def-table td {\n    padding: 6px 8px;\n    border-bottom: 1px solid #333;\n}\n\n.mm-def-id {\n    font-family: monospace;\n    font-size: 13px;\n}\n\n.mm-def-sublabel {\n    margin-left: 8px;\n    font-size: 11px;\n    color: #888;\n}\n\n/* \u53EA\u8BFB\u6807\u8BB0 */\n.mm-def-readonly {\n    display: inline-block;\n    margin-left: 8px;\n    padding: 0 5px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: #999;\n    border: 1px solid #555;\n}\n\n/* \u7A7A\u5217\u8868\u63D0\u793A */\n.mm-def-empty {\n    color: #888;\n    font-style: italic;\n    text-align: center;\n    padding: 20px;\n}\n\n/* \u5E95\u90E8\u63D0\u793A\u6587\u6848 */\n.mm-def-hint {\n    font-size: 11px;\n    color: #888;\n    margin: 8px 0 0 0;\n}\n\n/* \u6765\u6E90\u5FBD\u6807\uFF08\u4E09\u8272\uFF09 */\n.mm-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 11px;\n    white-space: nowrap;\n}\n\n.mm-badge-builtin {\n    color: #888;\n    border: 1px solid #888;\n}\n\n.mm-badge-dependency {\n    color: #2196F3;\n    border: 1px solid #2196F3;\n}\n\n.mm-badge-current {\n    color: #4CAF50;\n    border: 1px solid #4CAF50;\n}\n\n.mm-badge-unknown {\n    color: #888;\n    border: 1px solid #888;\n}\n\n/* ==================== LocatorPicker\uFF08\u5B9A\u4F4D\u5668\u9009\u62E9\uFF09 ==================== */\n\n/* \u672A\u627E\u5230\u7684 locator \u8F93\u5165\u6846\uFF1A\u7EA2\u8272\u8FB9\u6846\u6807\u8BB0\uFF08\u4E0D\u62E6\u622A\u8F93\u5165\uFF09 */\n.mm-locator-invalid {\n    border-color: #e74c3c !important;\n    color: #e74c3c;\n}\n\n/* \u672A\u627E\u5230\u63D0\u793A\u6587\u6848 */\n.mm-locator-warn {\n    display: block;\n    margin-top: 2px;\n    font-size: 10px;\n    color: #f39c12;\n}";
+            const mmCss = ".mm-panel {\n    padding: 12px;\n    height: 100%;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n}\n\n.mm-panel-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n}\n\n.mm-panel-header {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n.mm-nav-row {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    margin-bottom: 6px;\n}\n\n.mm-label {\n    font-size: 12px;\n    color: #aaa;\n    min-width: 32px;\n    flex-shrink: 0;\n}\n\n.mm-select {\n    flex: 1;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    cursor: pointer;\n}\n\n.mm-input {\n    width: 100%;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    box-sizing: border-box;\n}\n\n.mm-input:focus {\n    border-color: #4A90D9;\n    outline: none;\n}\n\n.mm-btn {\n    background: var(--btn-bg, #3a3a3a);\n    border: 1px solid var(--border-color, #555);\n    color: var(--text-color, #ddd);\n    border-radius: 3px;\n    cursor: pointer;\n    font-size: 12px;\n    white-space: nowrap;\n}\n\n.mm-btn:hover {\n    background: var(--btn-hover-bg, #4a4a4a);\n}\n\n.mm-btn-sm {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    padding: 0;\n    font-size: 14px;\n    line-height: 1;\n    width: 30px;\n    height: 30px;\n    min-width: 30px;\n    min-height: 30px;\n    box-sizing: border-box;\n}\n\n.mm-btn-danger {\n    background: var(--btn-danger-bg, #5a2a2a);\n    border-color: var(--btn-danger-border, #8a3a3a);\n    color: #ff6b6b;\n}\n\n.mm-btn-danger:hover:not(:disabled) {\n    background: var(--btn-danger-hover-bg, #7a3a3a);\n    color: #ff9999;\n}\n\n.mm-btn-danger:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n\n.mm-section {\n    margin-bottom: 16px;\n}\n\n.mm-section-title {\n    font-size: 13px;\n    font-weight: 600;\n    margin: 0 0 8px 0;\n    padding-bottom: 4px;\n    border-bottom: 1px solid var(--border-color, #333);\n    color: var(--heading-color, #eee);\n}\n\n.mm-field {\n    margin-bottom: 8px;\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n\n.mm-field label {\n    font-size: 11px;\n    color: #999;\n    margin-bottom: 1px;\n}\n\n.mm-field-row {\n    flex-direction: row;\n    align-items: center;\n    gap: 8px;\n}\n\n.mm-field-row label {\n    margin-bottom: 0;\n}\n\n.mm-tags {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-tag {\n    background: var(--tag-bg, #3a6a9a);\n    color: white;\n    padding: 2px 8px;\n    border-radius: 3px;\n    font-size: 11px;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n\n.mm-tag-remove {\n    cursor: pointer;\n    font-weight: bold;\n    font-size: 14px;\n    line-height: 1;\n}\n\n.mm-tag-remove:hover {\n    color: #ff6b6b;\n}\n\n.mm-variant-list {\n    list-style: none;\n    padding: 0;\n    margin: 0;\n}\n\n.mm-variant-list li {\n    padding: 4px 8px;\n    cursor: pointer;\n    font-size: 12px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    border-radius: 3px;\n}\n\n.mm-variant-list li:hover {\n    background: var(--hover-bg, #333);\n}\n\n.mm-variant-list li.active {\n    background: var(--active-bg, #2a4a6a);\n    color: white;\n}\n\n.mm-variant-remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-weight: bold;\n}\n\n.mm-element-info {\n    font-size: 11px;\n    color: #888;\n    margin: 2px 0;\n}\n\n.mm-marker-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: white;\n    margin-left: 6px;\n    vertical-align: middle;\n}\n\n.mm-panel-hint {\n    color: #666;\n    font-size: 12px;\n    text-align: center;\n    padding: 20px;\n}\n\n.mm-panel-body {\n    flex: 1;\n    overflow-y: auto;\n}\n\n/* \u56FA\u5B9A\u5728\u9762\u677F\u9876\u90E8\u7684\u6807\u9898\u680F\uFF0C\u6EDA\u52A8\u65F6\u59CB\u7EC8\u53EF\u89C1 */\n.mm-sticky-title {\n    position: sticky;\n    top: 0;\n    z-index: 1;\n    background: var(--panel-bg, #1e1e1e);\n    padding: 8px 0 4px 0;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u6761\u76EE\u884C */\n.mm-sub-item-row {\n    display: flex;\n    flex-direction: column;\n    padding: 4px 8px;\n    border-radius: 3px;\n    margin-bottom: 2px;\n}\n.mm-sub-item-row.mm-clickable {\n    cursor: pointer;\n}\n.mm-sub-item-row.mm-clickable:hover {\n    background: var(--hover-bg, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u540D\u79F0\u884C */\n.mm-sub-item-name {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 12px;\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u5143\u4FE1\u606F\u884C */\n.mm-sub-item-meta {\n    font-size: 10px;\n    color: #888;\n    margin-left: 4px;\n}\n\n/* \u2500\u2500 \u6821\u9A8C\u95EE\u9898\u884C\u7EA7\u7EA2\u6846 / \u7425\u73C0\u6846\uFF08error \u7EA2 / warning \u7425\u73C0\uFF09 \u2500\u2500 */\n.mm-sub-item-row.mm-item-error {\n    outline: 1px solid #ff6b6b;\n    background: rgba(255, 107, 107, 0.08);\n}\n.mm-sub-item-row.mm-item-warning {\n    outline: 1px solid #e2b93b;\n    background: rgba(226, 185, 59, 0.08);\n}\n\n/* \u95EE\u9898\u8BA1\u6570\u5FBD\u6807\uFF08error / warning \u5171\u7528\uFF0C\u989C\u8272\u968F\u7EA7\u522B\uFF09 */\n.mm-issue-badge {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    min-width: 16px;\n    height: 16px;\n    padding: 0 4px;\n    margin-left: 6px;\n    border-radius: 8px;\n    font-size: 10px;\n    line-height: 16px;\n    font-weight: bold;\n    color: #fff;\n}\n.mm-issue-badge.error {\n    background: #ff6b6b;\n}\n.mm-issue-badge.warning {\n    background: #e2b93b;\n}\n\n/* \u53EF\u70B9\u51FB\u7684\u5F52\u5C5E\u6807\u7B7E */\n.mm-clickable-tag:hover {\n    filter: brightness(1.3);\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5361\u7247 */\n.mm-signal-card {\n    margin-bottom: 4px;\n    padding: 4px;\n    background: #252525;\n    border-radius: 3px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5934\u90E8 */\n.mm-signal-header {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n    margin-bottom: 2px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u5220\u9664\u6309\u94AE */\n.mm-btn-sm.mm-btn-danger-light {\n    color: #ff6b6b;\n}\n\n.mm-btn-sm.mm-btn-danger-light:hover {\n    color: #ff9999;\n}\n\n/* ===== \u4FE1\u53F7\u6D41\u56FE\u9762\u677F ===== */\n.mm-signal-flow {\n    padding: 8px 12px;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n}\n\n.mm-signal-flow-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n    font-size: 12px;\n}\n\n.mm-signal-flow-header {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding-bottom: 8px;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n}\n\n.mm-signal-flow-title {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 14px;\n    font-weight: 600;\n    color: var(--heading-color, #eee);\n}\n\n.mm-flow-icon {\n    font-size: 16px;\n    color: #4A90D9;\n}\n\n.mm-signal-flow-meta {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 11px;\n    color: #888;\n}\n\n.mm-flow-meta-item {\n    background: #2a2a2a;\n    padding: 1px 6px;\n    border-radius: 3px;\n    color: #aaa;\n}\n\n.mm-flow-meta-sep {\n    color: #555;\n}\n\n.mm-signal-flow-body {\n    flex: 1;\n    display: flex;\n    overflow: auto;\n}\n\n.mm-signal-flow-placeholder {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    width: 100%;\n    gap: 12px;\n}\n\n.mm-flow-placeholder-icon {\n    font-size: 36px;\n    color: #4a4a4a;\n    opacity: 0.5;\n}\n\n.mm-flow-placeholder-text {\n    font-size: 13px;\n    color: #666;\n}\n\n.mm-flow-placeholder-hint {\n    font-size: 11px;\n    color: #555;\n    text-align: center;\n}\n\n.mm-flow-stats {\n    display: flex;\n    gap: 24px;\n    margin: 8px 0;\n}\n\n.mm-flow-stat {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    gap: 2px;\n}\n\n.mm-flow-stat-value {\n    font-size: 18px;\n    font-weight: 600;\n    color: #4A90D9;\n}\n\n.mm-flow-stat-label {\n    font-size: 10px;\n    color: #888;\n    text-transform: uppercase;\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u753B\u5E03 */\n.mm-flow-canvas {\n    flex: 1;\n    overflow: hidden;\n    background: #1a1a1a;\n    border-radius: 4px;\n    border: 1px solid var(--border-color, #333);\n    min-height: 200px;\n}\n\n.mm-flow-canvas svg {\n    display: block;\n    width: 100%;\n    height: 100%;\n}\n\n/* \u8FDE\u7EBF\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-edge-hovered {\n    stroke-opacity: 1 !important;\n}\n\n/* \u8282\u70B9\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-node-hovered {\n    stroke: #fff !important;\n    stroke-width: 1.5 !important;\n    filter: brightness(1.2);\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u64CD\u4F5C\u6309\u94AE */\n.mm-signal-flow-actions {\n    margin-left: auto;\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n/* \u56FE\u4F8B */\n.mm-signal-flow-legend {\n    display: flex;\n    gap: 12px;\n    padding-top: 6px;\n    margin-top: 4px;\n    border-top: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n    flex-wrap: wrap;\n}\n\n.mm-flow-legend-item {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 10px;\n    color: #999;\n    cursor: default;\n}\n\n.mm-flow-legend-item:hover {\n    color: #ccc;\n}\n\n.mm-flow-legend-dot {\n    width: 8px;\n    height: 8px;\n    border-radius: 2px;\n    flex-shrink: 0;\n}\n\n.mm-flow-legend-line {\n    width: 14px;\n    height: 3px;\n    border-radius: 1px;\n    flex-shrink: 0;\n}\n\n/* ==================== \u952E\u503C\u5BF9\u7F16\u8F91\u5668 ==================== */\n\n.mm-kv-editor {\n    display: flex;\n    flex-direction: column;\n    gap: 4px;\n}\n\n.mm-kv-row {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-kv-key {\n    flex: 1 1 30%;\n    min-width: 60px;\n}\n\n.mm-kv-value {\n    flex: 2 1 70%;\n    min-width: 100px;\n}\n\n.mm-kv-add {\n    border-top: 1px solid #373a40;\n    padding-top: 4px;\n}\n\n.mm-btn-danger {\n    color: #D94A4A;\n    border: 1px solid #D94A4A;\n    background: transparent;\n}\n.mm-btn-danger:hover {\n    background: #D94A4A;\n    color: #fff;\n}\n\n/* ==================== \u901A\u7528\u5B9A\u4E49\u67E5\u770B\u5668\uFF08\u53EA\u8BFB\u5217\u8868\uFF09 ==================== */\n\n/* \u6765\u6E90\u7EDF\u8BA1\u6761 */\n.mm-def-stats {\n    display: flex;\n    gap: 14px;\n    align-items: center;\n    font-size: 11px;\n    color: #aaa;\n    margin-bottom: 6px;\n}\n\n.mm-def-stat {\n    display: inline-flex;\n    align-items: center;\n    gap: 4px;\n}\n\n/* \u7EDF\u8BA1\u6761\u5F69\u8272\u5706\u70B9 */\n.mm-dot {\n    display: inline-block;\n    width: 8px;\n    height: 8px;\n    border-radius: 50%;\n}\n\n.mm-dot-builtin {\n    background: #888;\n}\n\n.mm-dot-dependency {\n    background: #2196F3;\n}\n\n.mm-dot-current {\n    background: #4CAF50;\n}\n\n/* \u5B9A\u4E49\u5217\u8868\u6EDA\u52A8\u5BB9\u5668 */\n.mm-def-list {\n    max-height: 320px;\n    overflow-y: auto;\n    border: 1px solid var(--border-color, #333);\n    border-radius: 3px;\n}\n\n/* \u5B9A\u4E49\u8868\u683C */\n.mm-def-table {\n    width: 100%;\n    border-collapse: collapse;\n    font-size: 12px;\n}\n\n.mm-def-th {\n    padding: 6px 8px;\n    text-align: left;\n    font-size: 11px;\n    color: #aaa;\n    font-weight: normal;\n    border-bottom: 2px solid #555;\n    position: sticky;\n    top: 0;\n    background: var(--panel-bg, #1e1e1e);\n    z-index: 1;\n}\n\n.mm-def-table td {\n    padding: 6px 8px;\n    border-bottom: 1px solid #333;\n}\n\n.mm-def-id {\n    font-family: monospace;\n    font-size: 13px;\n}\n\n.mm-def-sublabel {\n    margin-left: 8px;\n    font-size: 11px;\n    color: #888;\n}\n\n/* \u53EA\u8BFB\u6807\u8BB0 */\n.mm-def-readonly {\n    display: inline-block;\n    margin-left: 8px;\n    padding: 0 5px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: #999;\n    border: 1px solid #555;\n}\n\n/* \u7A7A\u5217\u8868\u63D0\u793A */\n.mm-def-empty {\n    color: #888;\n    font-style: italic;\n    text-align: center;\n    padding: 20px;\n}\n\n/* \u5E95\u90E8\u63D0\u793A\u6587\u6848 */\n.mm-def-hint {\n    font-size: 11px;\n    color: #888;\n    margin: 8px 0 0 0;\n}\n\n/* \u6765\u6E90\u5FBD\u6807\uFF08\u4E09\u8272\uFF09 */\n.mm-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 11px;\n    white-space: nowrap;\n}\n\n.mm-badge-builtin {\n    color: #888;\n    border: 1px solid #888;\n}\n\n.mm-badge-dependency {\n    color: #2196F3;\n    border: 1px solid #2196F3;\n}\n\n.mm-badge-current {\n    color: #4CAF50;\n    border: 1px solid #4CAF50;\n}\n\n.mm-badge-unknown {\n    color: #888;\n    border: 1px solid #888;\n}\n\n/* ==================== LocatorPicker\uFF08\u5B9A\u4F4D\u5668\u9009\u62E9\uFF09 ==================== */\n\n/* \u672A\u627E\u5230\u7684 locator \u8F93\u5165\u6846\uFF1A\u7EA2\u8272\u8FB9\u6846\u6807\u8BB0\uFF08\u4E0D\u62E6\u622A\u8F93\u5165\uFF09 */\n.mm-locator-invalid {\n    border-color: #e74c3c !important;\n    color: #e74c3c;\n}\n\n/* \u672A\u627E\u5230\u63D0\u793A\u6587\u6848 */\n.mm-locator-warn {\n    display: block;\n    margin-top: 2px;\n    font-size: 10px;\n    color: #f39c12;\n}";
             if (mmCss) {
               const style = document.createElement("style");
               style.setAttribute("data-mm-plugin", "true");
@@ -20617,6 +21132,7 @@
             log2.debug("onUnselect: \u914D\u7F6E\u5DF2\u4FDD\u5B58");
           }
         });
+        registerValidation();
         registerToolbarActions();
         moveModeToFront("machine_max_part");
         log2.info('registerMode: \u6A21\u5F0F "\u96F6\u4EF6\u5B9A\u4E49" \u5DF2\u6CE8\u518C');
@@ -20657,7 +21173,7 @@
           registerMode: registerMode2,
           refreshOutlinerIcons: refreshOutlinerIcons2,
           resetOutlinerIcons,
-          runValidation,
+          unregisterValidation: unregisterValidation2,
           /** 卸载插件时，通过 Action.delete() 正确清理所有注册的 Action（而非仅删除 BarItems 条目） */
           unregisterActions: function() {
             if (!_mmActionInstances.length) {
@@ -20694,7 +21210,7 @@
   init_define_SCHEMAS();
   var { createLogger } = require_logger();
   var { registerProperty } = require_persistence();
-  var { registerMode, unregisterActions } = require_mode();
+  var { registerMode, unregisterActions, unregisterValidation } = require_mode();
   var { registerMachineMaxMenu, unregisterMachineMaxMenu } = require_menu();
   var { registerDragImport, unregisterDragImport } = require_drag_import();
   var { showToast } = require_notify();
@@ -20732,6 +21248,7 @@
     onunload() {
       log.info("\u5378\u8F7D MachineMax Blockbench \u63D2\u4EF6");
       unregisterActions();
+      unregisterValidation();
       unregisterDragImport();
       unregisterMachineMaxMenu();
       log.debug("\u63D2\u4EF6\u6E05\u7406\u5B8C\u6210");

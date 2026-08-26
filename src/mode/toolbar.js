@@ -1,7 +1,6 @@
 var { getConfig, saveConfig } = require('../utils/persistence.js');
 var { showToast } = require('../utils/notify.js');
 var { createLogger } = require('../utils/logger.js');
-var { runValidation } = require('./validation.js');
 
 var log = createLogger('Mode');
 
@@ -40,20 +39,14 @@ function registerToolbarActions() {
                 return;
             }
 
-            const errors = runValidation(config);
-            if (errors.length === 0) {
-                log.info('校验通过，无错误');
-                showToast('校验通过', 'positive');
-            } else {
-                log.warn('校验发现问题', { count: errors.length, details: errors });
-                showToast('校验发现 ' + errors.length + ' 个问题', 'warning');
-                new Dialog({
-                    title: '校验结果',
-                    lines: ['发现 ' + errors.length + ' 个问题：', ...errors],
-                    form: { close: 'close' },
-                    onConfirm: function () { this.hide(); },
-                }).show();
+            // 打开 Blockbench 原生"检验"清单（含插件 mm_validation + 定位按钮）
+            // validate() 异步（40ms 去抖）重跑 mm_validation.run()；稍后打开弹窗保证读到最新结果
+            if (typeof Validator === 'undefined') {
+                showToast('当前环境不支持 Blockbench 校验清单', 'warning');
+                return;
             }
+            Validator.validate();
+            setTimeout(function () { Validator.openDialog(); }, 60);
         }
     }));
 

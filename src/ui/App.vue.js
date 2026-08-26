@@ -18,6 +18,8 @@ const { showToast } = require('../utils/notify.js');
 const content_pack_manager = require('../core/content_pack_manager.js');
 const nameUtils = require('../utils/name_utils.js');
 const { buildSignalTargetOptions } = require('../utils/signal_target_options.js');
+const { collectIssues } = require('../mode/validation.js');
+const { aggregate, resolveIssueLevel } = require('../core/validation_types.js');
 var { showAddTagDialog, _hashTagColor } = require('./tag_dialog_helper.js');
 
 /** 模块日志 */
@@ -50,6 +52,16 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             markerVersion: { v: 0 }, // 标记更新版本号，右键菜单 delete 操作后递增 v，强制计算属性重新求值。使用对象避免 Vue 2 原始类型 NaN 问题
             subsystemSelection: { spKey: '', subsystemKey: '' }, // 虚拟选择的子系统
         };
+    },
+    watch: {
+        /**
+         * 游离元素（连接点/碰撞箱/交互区无归属 subpart）在 collectIssues 中标为
+         * warning + code 'orphan_element'，且无 subPartKey → 不冒泡到面板行。
+         * 在此消费点对 validationIssues 做节流 toast（§9：collectIssues 本身无副作用，不发 toast）。
+         */
+        validationIssues: function (problems) {
+            this._maybeToastOrphans(problems);
+        },
     },
     computed: {
         currentPart: function () {
@@ -122,6 +134,27 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 .map(function (l) { return l.name; });
         },
         /**
+         * 校验问题全集（单一校验源 collectIssues）
+         * 依赖 config（字段编辑响应式）+ markerVersion.v（非响应式删除兜底）
+         */
+        validationIssues: function () {
+            if (!this.config || !this.markerVersion) return [];
+            void this.markerVersion.v;
+            return collectIssues(this.config);
+        },
+        /**
+         * 按当前零件/变体过滤后的聚合结果（bySubPart / byItem / byPartVariant）
+         * 调用方先过滤到当前 part+variant，避免 bySubPart 键跨变体/零件碰撞。
+         */
+        subPartIssues: function () {
+            var self = this;
+            var all = this.validationIssues;
+            var scoped = all.filter(function (p) {
+                return p.path && p.path.partId === self.activePartId && p.path.variantName === self.activeVariantName;
+            });
+            return aggregate(scoped);
+        },
+        /**
          * 当前变体下的所有子零件条目（含短名、起始骨骼、子系统数）
          * 用于零件/变体属性面板中的子零件列表
          */
@@ -170,8 +203,10 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 markerVersion: this.markerVersion.v,
             });
             var self = this;
+            var bySubPart = self.subPartIssues.bySubPart;
             var result = keys.map(function (spKey) {
                 var sp = variant.sub_parts[spKey];
+                var scopedIssues = bySubPart[spKey] || [];
                 return {
                     key: spKey,
                     shortName: nameUtils.extractShortName(spKey, ns),
@@ -180,6 +215,8 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                     hitBoxCount: sp && sp.hit_boxes ? Object.keys(sp.hit_boxes).length : 0,
                     interactBoxCount: sp && sp.interact_boxes ? Object.keys(sp.interact_boxes).length : 0,
                     connectorCount: sp && sp.connectors ? Object.keys(sp.connectors).length : 0,
+                    issues: scopedIssues,
+                    issueLevel: resolveIssueLevel(scopedIssues),
                 };
             });
             log.debug('subPartEntries: 结果', {
@@ -1076,6 +1113,114 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             }
         },
         /**
+         * 游离元素节流 toast：统计 orphan_element 问题，5 秒内只提示一次（防每次编辑刷屏）
+         */
+        _maybeToastOrphans: function (problems) {
+            if (!problems || !Array.isArray(problems)) return;
+            var orphanCount = 0;
+            for (var i = 0; i < problems.length; i++) {
+                if (problems[i] && problems[i].code === 'orphan_element') orphanCount++;
+            }
+            if (orphanCount === 0) return;
+            var now = Date.now();
+            if (this._orphanToastAt && (now - this._orphanToastAt < 5000)) return;
+            this._orphanToastAt = now;
+            showToast('发现 ' + orphanCount + ' 个游离元素（连接点/碰撞箱/交互区无归属子零件），请检查', 'warning');
+        },
+        /**
+         * 子零件列表行的悬浮提示：默认跳转提示，有问题时追加问题清单（\n 换行）
+         */
+        subPartTooltip: function (entry) {
+            var base = '点击跳转到子零件 ' + entry.key;
+            if (!entry.issues || entry.issues.length === 0) return base;
+            var lines = [base, '—— 存在问题 ——'];
+            for (var i = 0; i < entry.issues.length; i++) {
+                var p = entry.issues[i];
+                lines.push('[' + (p.severity === 'error' ? '错误' : '警告') + '] ' + p.message);
+            }
+            return lines.join('\n');
+        },
+        /**
+         * 导航统一入口 selectByIssue(problem)：
+         * 供原生清单"定位"按钮与面板红框共用。按 path.scope 分派到各导航动作。
+         * 挂载时注册为全局单例 window.__mmNavigator。
+         */
+        selectByIssue: function (problem) {
+            var pi = problem && problem.path;
+            if (!pi) return;
+            var partId = pi.partId;
+            var vName = pi.variantName;
+
+            // 1) 切到目标零件/变体（若与当前不同）
+            var cfg = getConfig();
+            if (cfg && partId && cfg.parts && cfg.parts[partId]) {
+                if (cfg._uiState.activePartId !== partId) {
+                    cfg._uiState.activePartId = partId;
+                }
+                if (vName && cfg._uiState.activeVariantName !== vName) {
+                    cfg._uiState.activeVariantName = vName;
+                }
+                this.activePartId = cfg._uiState.activePartId;
+                this.activeVariantName = cfg._uiState.activeVariantName;
+                refreshOutlinerIcons();
+            }
+
+            // 2) 按 scope 定位到具体元素
+            var uuid = pi.elementUuid;
+            switch (pi.scope) {
+                case 'subpart':
+                    if (pi.subPartKey) this.navigateToSubPart(pi.subPartKey);
+                    break;
+                case 'subsystem':
+                    if (pi.subPartKey && pi.itemKey) {
+                        this.selectSubsystem({ spKey: pi.subPartKey, subsystemKey: pi.itemKey });
+                    }
+                    break;
+                case 'connector':
+                    this._selectConnector(pi, uuid);
+                    break;
+                case 'hit_box':
+                case 'interact_box':
+                    this._selectElementByUuid(uuid);
+                    break;
+                case 'part':
+                case 'variant':
+                default:
+                    break; // 已在步骤 1) 切换零件/变体
+            }
+        },
+        /** 按 UUID 选中 Group/Locator 并显示在 Outliner */
+        _selectElementByUuid: function (uuid) {
+            if (!uuid) return;
+            if (typeof Group === 'undefined' || typeof Locator === 'undefined') return;
+            var el = Group.all.find(function (g) { return g.uuid === uuid; }) ||
+                     Locator.all.find(function (l) { return l.uuid === uuid; });
+            if (el) {
+                el.select();
+                if (el.showInOutliner) el.showInOutliner();
+                Blockbench.dispatchEvent('update_selection');
+            }
+        },
+        /** 定位到连接点：优先按 elementUuid，其次按 connectors 条目的 locator 名 */
+        _selectConnector: function (pi, uuid) {
+            var loc = null;
+            if (uuid && typeof Locator !== 'undefined') {
+                loc = Locator.all.find(function (l) { return l.uuid === uuid; });
+            }
+            if (!loc && pi.subPartKey && pi.itemKey && this.currentVariant && this.currentVariant.sub_parts) {
+                var sp = this.currentVariant.sub_parts[pi.subPartKey];
+                var conn = sp && sp.connectors && sp.connectors[pi.itemKey];
+                if (conn && conn.locator && typeof Locator !== 'undefined') {
+                    loc = Locator.all.find(function (l) { return l.name === conn.locator; });
+                }
+            }
+            if (loc) {
+                loc.select();
+                if (loc.showInOutliner) loc.showInOutliner();
+                Blockbench.dispatchEvent('update_selection');
+            }
+        },
+        /**
          * 更新子零件配置中的单个字段。
          * start_bone 变动时需连带迁移子零件标记。
          */
@@ -1676,6 +1821,10 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             saveConfig();
         });
 
+        // 注册全局导航单例：供原生清单"定位"按钮与插件自身共用
+        this._mmNavigatorObj = { selectByIssue: function (p) { self.selectByIssue(p); } };
+        window.__mmNavigator = this._mmNavigatorObj;
+
         log.debug('Vue 组件挂载完成，已注册事件监听');
     },
     beforeDestroy: function () {
@@ -1684,6 +1833,10 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         if (this._selectionHandler) { this._selectionHandler(); log.debug('已移除 update_selection 监听'); }
         if (this._modeHandler) { this._modeHandler(); log.debug('已移除 select_mode 监听'); }
         if (this._saveHandler) { this._saveHandler(); log.debug('已移除 save 监听'); }
+        if (window.__mmNavigator === this._mmNavigatorObj) {
+            delete window.__mmNavigator;
+            log.debug('已清理全局导航单例 __mmNavigator');
+        }
     },
 });
 

@@ -8,6 +8,7 @@
  */
 var nameUtils = require('../utils/name_utils.js');
 var { createLogger } = require('../utils/logger.js');
+var { resolveIssueLevel } = require('../core/validation_types.js');
 var log = createLogger('SubPartPanel');
 
 Vue.component('mm-sub-part-panel', {
@@ -24,6 +25,10 @@ Vue.component('mm-sub-part-panel', {
         allBoneNames: { type: Array, default: function() { return []; } },
         allLocatorNames: { type: Array, default: function() { return []; } },
         refreshKey: { type: Number, default: 0 },
+        /** 行级问题（byItem: { subsystems, connectors, hitBoxes, interactBoxes }） */
+        issues: { type: Object, default: function() { return { subsystems: {}, connectors: {}, hitBoxes: {}, interactBoxes: {} }; } },
+        /** 本子零件下所有后代问题 + 子零件级问题（bySubPart[spKey]），用于标题徽标 */
+        spIssues: { type: Array, default: function() { return []; } },
     },
     data: function () {
         return {
@@ -88,8 +93,32 @@ Vue.component('mm-sub-part-panel', {
             void this.refreshKey;
             return this.config.subsystems ? Object.keys(this.config.subsystems) : [];
         },
+        /** 子零件级总体问题级别（驱动标题徽标） */
+        spLevel: function () {
+            return resolveIssueLevel(this.spIssues);
+        },
     },
     methods: {
+        /** 取指定桶（subsystems/connectors/hitBoxes/interactBoxes）下某 key 的问题列表 */
+        rowIssues: function (bucket, key) {
+            var bucketMap = this.issues && this.issues[bucket];
+            return (bucketMap && bucketMap[key]) || [];
+        },
+        /** 行级问题级别：error > warning > none */
+        rowIssueLevel: function (bucket, key) {
+            return resolveIssueLevel(this.rowIssues(bucket, key));
+        },
+        /** 行级悬浮提示：默认跳转提示，有问题时追加问题清单（\n 换行） */
+        rowIssueTooltip: function (bucket, key, defaultTitle) {
+            var list = this.rowIssues(bucket, key);
+            if (!list || list.length === 0) return defaultTitle;
+            var lines = [defaultTitle, '—— 存在问题 ——'];
+            for (var i = 0; i < list.length; i++) {
+                var p = list[i];
+                lines.push('[' + (p.severity === 'error' ? '错误' : '警告') + '] ' + p.message);
+            }
+            return lines.join('\n');
+        },
         onFieldChange: function (field, value) {
             this.$emit('field-change', field, value);
         },

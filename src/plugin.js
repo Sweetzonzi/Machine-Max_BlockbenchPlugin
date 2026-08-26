@@ -1,6 +1,6 @@
 const { createLogger } = require('./utils/logger.js');
 const { registerProperty } = require('./utils/persistence.js');
-const { registerMode, unregisterActions } = require('./mode.js');
+const { registerMode, unregisterActions, unregisterValidation } = require('./mode.js');
 const { registerMachineMaxMenu, unregisterMachineMaxMenu } = require('./ui/menu.js');
 const { registerDragImport, unregisterDragImport } = require('./import/drag_import.js');
 const { showToast } = require('./utils/notify.js');
@@ -60,6 +60,7 @@ Plugin.register('machine_max_bb_plugin', {
     onunload() {
         log.info('卸载 MachineMax Blockbench 插件');
         unregisterActions();
+        unregisterValidation();
         unregisterDragImport();
         unregisterMachineMaxMenu();
         log.debug('插件清理完成');

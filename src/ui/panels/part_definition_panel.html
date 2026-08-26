@@ -122,10 +122,14 @@
             <div v-if="subPartEntries.length === 0" class="mm-element-info" style="color:#888">
                 暂无子零件 — 在 Outliner 中右键骨骼并选择"标记为子零件"
             </div>
-            <div v-for="entry in subPartEntries" :key="entry.key" class="mm-sub-item-row mm-clickable" :title="'点击跳转到子零件 ' + entry.key" @click="navigateToSubPart(entry.key)">
+            <div v-for="entry in subPartEntries" :key="entry.key" class="mm-sub-item-row mm-clickable"
+                 :class="{ 'mm-item-error': entry.issueLevel === 'error', 'mm-item-warning': entry.issueLevel === 'warning' }"
+                 :title="subPartTooltip(entry)"
+                 @click="navigateToSubPart(entry.key)">
                 <span class="mm-sub-item-name">
                     <span class="mm-marker-badge" style="background:#4A90D9;font-size:10px;padding:0 4px">SP</span>
                     {{ entry.shortName }}
+                    <span v-if="entry.issueLevel !== 'none'" class="mm-issue-badge" :class="entry.issueLevel">{{ entry.issues.length }}</span>
                 </span>
                 <span class="mm-sub-item-meta">{{ entry.startBone || '（无绑定骨骼）' }} | 碰撞箱:{{ entry.hitBoxCount }} | 交互区:{{ entry.interactBoxCount }} | 连接点:{{ entry.connectorCount }} | 子系统:{{ entry.subsystemCount }}</span>
             </div>
@@ -144,6 +148,8 @@
             :all-bone-names="allBoneNames"
             :all-locator-names="ownedLocatorNames"
             :refresh-key="markerVersion.v"
+            :issues="subPartIssues.byItem"
+            :sp-issues="subPartIssues.bySubPart[selectedMarker ? selectedMarker.config_ref : '']"
             @field-change="updateSubPartField"
             @add-end-bone="addEndBone"
             @remove-end-bone="removeEndBone"

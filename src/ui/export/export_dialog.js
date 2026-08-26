@@ -12,7 +12,7 @@
 const { createLogger } = require('../../utils/logger.js');
 const { getConfig, saveConfig, addDependencyPath } = require('../../utils/persistence.js');
 const { showToast } = require('../../utils/notify.js');
-const { runValidation } = require('../../mode.js');
+const { collectIssues } = require('../../mode/validation.js');
 const { executeExport } = require('./export_pipeline.js');
 const path = require('path');
 
@@ -221,6 +221,47 @@ function _parseDependencyText(text) {
 }
 
 /**
+ * 将 collectIssues(config) 的结构化结果按 path 分组渲染为 HTML 摘要。
+ * 分组层级：零件 → 变体；errors 用 ✗，warnings 用 ⚠。仅提示，不拦截导出。
+ * @param {Object} config - MM 项目配置
+ * @returns {string} HTML 字符串（无问题时为空串）
+ */
+function buildValidationInfo(config) {
+    var problems = collectIssues(config);
+    if (!problems || problems.length === 0) return '';
+
+    // 按 partId → variantName 分组
+    var tree = {};
+    for (var i = 0; i < problems.length; i++) {
+        var p = problems[i];
+        var partId = p.path.partId || '（全局）';
+        var v = p.path.variantName || '';
+        if (!tree[partId]) tree[partId] = {};
+        if (!tree[partId][v]) tree[partId][v] = [];
+        tree[partId][v].push(p);
+    }
+
+    var lines = ['<span style="color:#ff6b6b">校验发现 ' + problems.length + ' 个问题</span>:'];
+    var partIds = Object.keys(tree);
+    for (var pi = 0; pi < partIds.length; pi++) {
+        var partId = partIds[pi];
+        var vs = tree[partId];
+        var vNames = Object.keys(vs);
+        for (var vi = 0; vi < vNames.length; vi++) {
+            var v = vNames[vi];
+            var list = vs[v];
+            lines.push('<b>' + partId + (v ? '/' + v : '') + '</b>');
+            for (var li = 0; li < list.length; li++) {
+                var cur = list[li];
+                var icon = cur.severity === 'error' ? '✗' : '⚠';
+                lines.push('&nbsp;&nbsp;• ' + icon + ' ' + cur.message);
+            }
+        }
+    }
+    return '<br>' + lines.join('<br>');
+}
+
+/**
  * 显示导出对话框 — 含完整元数据字段和依赖管理
  *
  * 对话框中提供"导出目录"字段，附带浏览按钮，
@@ -259,13 +300,8 @@ function showExportDialog() {
     var defaultPackId = pm.id || ns + ':' + (Project ? (Project.name || 'content_pack') : 'content_pack');
     var defaultExportDir = pm.exportDir || _getDefaultExportDir(pm);
 
-    // 校验配置
-    var errors = runValidation(config);
-    var errorText = '';
-    if (errors.length > 0) {
-        errorText = '<br>校验发现 ' + errors.length + ' 个问题:<br>' +
-            errors.map(function (e) { return '&nbsp;&nbsp;• ' + e; }).join('<br>');
-    }
+    // 校验配置（结构化结果，按 path 分组列出，仅提示不拦截）
+    var errorText = buildValidationInfo(config);
 
     // 统计信息
     var statLines = [

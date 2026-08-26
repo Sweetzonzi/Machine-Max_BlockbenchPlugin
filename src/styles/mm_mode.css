@@ -271,6 +271,38 @@
     margin-left: 4px;
 }
 
+/* ── 校验问题行级红框 / 琥珀框（error 红 / warning 琥珀） ── */
+.mm-sub-item-row.mm-item-error {
+    outline: 1px solid #ff6b6b;
+    background: rgba(255, 107, 107, 0.08);
+}
+.mm-sub-item-row.mm-item-warning {
+    outline: 1px solid #e2b93b;
+    background: rgba(226, 185, 59, 0.08);
+}
+
+/* 问题计数徽标（error / warning 共用，颜色随级别） */
+.mm-issue-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    margin-left: 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    line-height: 16px;
+    font-weight: bold;
+    color: #fff;
+}
+.mm-issue-badge.error {
+    background: #ff6b6b;
+}
+.mm-issue-badge.warning {
+    background: #e2b93b;
+}
+
 /* 可点击的归属标签 */
 .mm-clickable-tag:hover {
     filter: brightness(1.3);
