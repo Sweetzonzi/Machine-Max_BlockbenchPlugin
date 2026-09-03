@@ -9040,7 +9040,9 @@
           if (marker && marker.type === "sub_part") {
             subPartGroups[grp.uuid] = {
               group: grp,
-              name: marker.config_ref || grp.name
+              // auto_end_bones 里存的是"骨骼名"，需取子零件起点骨骼（Group）的名称，
+              // 而不是 config_ref（子零件翻译键，如 sub_part.machine_max.main）。
+              name: grp.name
             };
           }
         }

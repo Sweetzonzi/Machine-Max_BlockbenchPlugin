@@ -379,7 +379,8 @@ function clearMarker(projectConfig, partId, variantName, uuid) {
 
 /**
  * 根据当前所有子零件标记，重新计算各个子零件的 auto_end_bones
- * 子零件 B 是子零件 A 的后代 → B 的名称自动加入 A 的 auto_end_bones
+ * 子零件 B 是子零件 A 的后代 → B 的起点骨骼名（B 所属 Group 的名称）自动加入 A 的 auto_end_bones。
+ * 注意：auto_end_bones 列表存的是"骨骼名"，而非子零件的 config_ref（翻译键）。
  */
 // 注：本函数使用直接赋值修改 variant.sub_parts[key].auto_end_bones（line 196），
 // 以及在循环中对 auto_end_bones 数组使用 push（line 210）。
@@ -401,7 +402,9 @@ function recalcAutoEndBones(projectConfig, partId, variantName) {
         if (marker && marker.type === 'sub_part') {
             subPartGroups[grp.uuid] = {
                 group: grp,
-                name: marker.config_ref || grp.name,
+                // auto_end_bones 里存的是"骨骼名"，需取子零件起点骨骼（Group）的名称，
+                // 而不是 config_ref（子零件翻译键，如 sub_part.machine_max.main）。
+                name: grp.name,
             };
         }
     }
