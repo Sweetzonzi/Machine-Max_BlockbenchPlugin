@@ -134,6 +134,7 @@ var SUBSYSTEM_TYPES = [
             { field: 'control_group_preset',    label: '控制组预设',        editor: 'control_group_selector', required: false, defaultValue: '' },
             { field: 'passenger_num_outputs',   label: '乘客数信号输出',    editor: 'signal_targets',        required: false, defaultValue: { passenger_num: ['subpart', 'vehicle'] } },
             { field: 'camera_discovery_targets', label: '摄像机发现握手目标', editor: 'signal_targets',      required: false, defaultValue: {} },
+            { field: 'dismount_locators',       label: '下车定位器（按优先级）', editor: 'locator_list', required: false, defaultValue: [] },
         ],
     },
     {
@@ -398,6 +399,7 @@ function getSignalOutputFieldNames(typeId) {
 var EDITOR_LABELS = {
     definition_selector: '型号定义选择器',
     locator_selector: '定位器选择器',
+    locator_list: '定位器列表编辑器',
     connector_selector: '连接点选择器',
     power_target: '功率目标选择器',
     signal_targets: '信号频道编辑器',

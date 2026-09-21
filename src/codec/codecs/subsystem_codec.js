@@ -34,7 +34,11 @@ const WheelDriverCodec = Codec.record({
 
 /**
  * SeatCodec — 座位
- * 字段: definition, locator, control_group_preset, passenger_num_outputs, camera_discovery_targets
+ * 字段: definition, locator, control_group_preset, passenger_num_outputs,
+ *       camera_discovery_targets, dismount_locators
+ *
+ * dismount_locators 为有序的下车定位器名称列表（列表顺序即优先级），
+ * 空列表表示该座位未声明下车点。
  */
 const SeatCodec = Codec.record({
     definition:               Codec.STRING.field(),
@@ -42,6 +46,7 @@ const SeatCodec = Codec.record({
     control_group_preset:     Codec.STRING.default(''),
     passenger_num_outputs:    Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     camera_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    dismount_locators:        Codec.STRING.list().default([]),
 });
 
 /**

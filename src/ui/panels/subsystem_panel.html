@@ -56,6 +56,24 @@
                 :value="config[field.field] || ''"
                 @change="onFieldChange(field.field, $event)" />
 
+            <!-- 定位器列表编辑器（locator_list，string[]，行序即优先级） -->
+            <div v-else-if="field.editor === 'locator_list'" class="mm-locator-list-editor">
+                <div v-for="(name, li) in getLocatorListEntries(field.field)" :key="li"
+                    style="display:flex;gap:4px;align-items:flex-start;margin-bottom:4px">
+                    <span style="font-size:10px;color:#888;width:14px;padding-top:6px">{{ li + 1 }}</span>
+                    <locator-picker style="flex:1"
+                        :options="ownedLocatorNames"
+                        :value="name"
+                        @change="onLocatorListChange(field.field, li, $event)" />
+                    <button class="mm-btn mm-btn-sm mm-btn-danger-light"
+                        @click="removeLocatorListEntry(field.field, li)" title="删除该项">×</button>
+                </div>
+                <button class="mm-btn" style="font-size:11px" @click="addLocatorListEntry(field.field)">+ 添加下车定位器</button>
+                <span class="mm-element-info" style="font-size:10px;color:#888">
+                    列表顺序即下车尝试的优先级
+                </span>
+            </div>
+
             <!-- 连接点选择器 -->
             <select v-else-if="field.editor === 'connector_selector'" class="mm-select"
                 :value="config[field.field]"

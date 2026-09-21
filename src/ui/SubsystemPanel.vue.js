@@ -6,7 +6,7 @@
  * 新增子系统类型只需在注册表中添加 dynamicFields 条目，
  * 无需修改本文件或模板。
  *
- * 支持编辑器类型：definition_selector, locator_selector, connector_selector,
+ * 支持编辑器类型：definition_selector, locator_selector, locator_list, connector_selector,
  * enum_selector, power_target, power_outputs_map, signal_targets,
  * text_input, json_textarea, control_group_selector, projectile_belt_editor.
  */
@@ -146,6 +146,60 @@ Vue.component('mm-subsystem-panel', {
         },
         navigateToSubPart: function () {
             this.$emit('navigate-to-sub-part', this.parentSubPartKey);
+        },
+
+        // ─── 下车定位器列表编辑器（locator_list，string[]） ─────────────────
+        /**
+         * 读取指定字段的定位器列表（容错：非数组一律视为空列表）
+         * @param {string} field - 字段名（如 dismount_locators）
+         * @returns {string[]}
+         */
+        getLocatorListEntries: function (field) {
+            var val = this.config[field];
+            return Array.isArray(val) ? val : [];
+        },
+        /**
+         * 追加一项：取第一个尚未被本列表使用的候选定位器作为初值。
+         * 新项直接带名称而非空串——空名在下车流程里是非法声明，会在加载期抛异常。
+         * 候选定位器已被本列表用尽时不新增条目。
+         * @param {string} field - 字段名
+         */
+        addLocatorListEntry: function (field) {
+            var next = this.getLocatorListEntries(field).slice();
+            var used = {};
+            var i;
+            for (i = 0; i < next.length; i++) used[next[i]] = true;
+            for (i = 0; i < this.ownedLocatorNames.length; i++) {
+                var candidate = this.ownedLocatorNames[i];
+                if (!used[candidate]) {
+                    next.push(candidate);
+                    this.$set(this.config, field, next);
+                    return;
+                }
+            }
+            log.debug('[addLocatorListEntry] 没有可用的候选定位器，未新增条目，field=' + field);
+        },
+        /**
+         * 删除列表中的第 index 项
+         * @param {string} field - 字段名
+         * @param {number} index - 行下标
+         */
+        removeLocatorListEntry: function (field, index) {
+            var next = this.getLocatorListEntries(field).slice();
+            next.splice(index, 1);
+            this.$set(this.config, field, next);
+        },
+        /**
+         * 改写列表中的第 index 项；改成空名视为删除该行
+         * @param {string} field - 字段名
+         * @param {number} index - 行下标
+         * @param {string} value - 新的定位器名
+         */
+        onLocatorListChange: function (field, index, value) {
+            var next = this.getLocatorListEntries(field).slice();
+            if (!value) next.splice(index, 1);
+            else next[index] = value;
+            this.$set(this.config, field, next);
         },
 
         // ─── 信号频道编辑器（signal_targets） ─────────────────────────────
