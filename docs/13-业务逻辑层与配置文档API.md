@@ -121,16 +121,22 @@ subsystem/static/{track_controller,track_drive}_static_attr.schema.json
 recipe/part_fabricating_recipe.schema.json
 ```
 
-**类型集合以 Java 为准，schema 与 Codec 都不是真源**（2026-10-20 实测）：
+**类型集合以上游 builtin 为准**（2026-10-20 实测，`--check` 零漂移）：
 
-| 来源 | 数量 | 相对 Java 的差异 |
+| 来源 | 数量 | 相对上游的差异 |
 |---|---|---|
-| **Java `SubsystemTypes` 枚举**（`common/mech/subsystem/attr/SubsystemTypes.java`，权威） | **24** | — |
-| 插件 `SubsystemDispatchCodec` | 22 | 缺 `track_controller`、`track_drive` |
-| 上游 schema `type` 枚举 | 20 | 缺 `battery`、`signal_convert`、`joint`、`javascript`、`ammo_loader`；**多 `motor_controller`**（Java 无此类型） |
-| 上游 `subsystem/dynamic/*.schema.json` 文件 | 19 | 缺上述 5 种 |
+| **上游 builtin schema**（`machine_max.builtin/docs/{zh_cn,en_us}/schemas/subsystem/`，权威） | **19** | —（dynamic 与 static 枚举已一致） |
+| 插件 `SubsystemDispatchCodec` | 22 | 多 5 个上游未收录：`battery`、`signal_convert`、`joint`、`javascript`、`ammo_loader`；缺 `track_controller`、`track_drive` |
+| Java `SubsystemTypes` 枚举 | 24 | 上游 19 + 上述 5 个 WIP 占位 |
 
-结论：**履带子系统在插件里无法创建/校验**（`Unknown dispatch type`），因为 Codec 缺 `track_controller` / `track_drive`；而 schema 本身也过期（少 5 种、多 1 种）。因此 D11 的"以 schema 为准"只适用于**字段级元数据**（类型/枚举/范围），**类型清单必须硬编码 Java 枚举或与之对账**，不能从 schema 枚举推导。
+结论：
+
+- **履带子系统在插件里无法创建/校验**（`Unknown dispatch type`）：Codec 缺 `track_controller` / `track_drive`；
+- 插件反而暴露了 5 个上游未发布的 WIP 类型，会产出上游读不懂的配置；
+- Java 枚举里有 WIP 占位（`joint` 这类虽有代码但未完成），**不能作为类型清单依据**；D11 的字段元数据与类型清单都以上游 schema 为准；
+- D13 立项范围相应扩大为"补 2 个正式类型 + 移除或标记 5 个 WIP 类型"。
+
+顺带修掉的上游缺陷（已改并重新同步）：`motor_controller` 是 `motorbike_controller` 的错写 —— 枚举中两种拼写并存，而 `if/then` 分支只用了错写那个且 `$ref` 指向 `motorbike_controller_*_attr.schema.json`，导致**正确的 `motorbike_controller` 匹配不到任何分支**（字段完全不校验）；此外 `subsystem_static_attr` 的枚举整体漏了 `motorbike_controller`（分支与 schema 文件都在）。修复后 dynamic 与 static 枚举一致为 19 种。
 
 已知 schema ↔ Codec 差异（进 allowlist 或修复）：
 
