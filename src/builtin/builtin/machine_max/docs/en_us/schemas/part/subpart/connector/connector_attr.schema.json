@@ -28,7 +28,9 @@
           "description": "Connection point type overwrite."
         },
         "direction": {
-          "$ref": "../../../base/axis.schema.json",
+          "allOf": [
+            { "$ref": "../../../base/axis.schema.json" }
+          ],
           "description": "Connection point normal direction overwrite."
         },
         "integrity": {

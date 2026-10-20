@@ -14,13 +14,17 @@
       "description": "Part tags, used for connector matching (required_tags / acceptable_tags / forbidden_tags of the opposite connector) and functional classification."
     },
     "model": {
-      "$ref": "../base/resource_location.schema.json",
+      "allOf": [
+        { "$ref": "../base/resource_location.schema.json" }
+      ],
       "description": "Model path. Leading folders are ignored: machine_max:ae86_chassis.geo matches ae86_chassis.geo.json anywhere under models/ in the content pack."
     },
     "textures": {
       "oneOf": [
         {
-          "$ref": "../base/resource_location.schema.json",
+          "allOf": [
+            { "$ref": "../base/resource_location.schema.json" }
+          ],
           "description": "Single texture, registered under the name \"default\". For example \"machine_max:textures/part/ae86/ae86_armor.png\" becomes the part's \"default\" texture."
         },
         {
@@ -38,14 +42,18 @@
       "description": "Texture configuration. The part fails to load when the resulting texture map is empty."
     },
     "animations": {
-      "$ref": "../base/resource_location.schema.json",
+      "allOf": [
+        { "$ref": "../base/resource_location.schema.json" }
+      ],
       "default": "machine_max:empty",
       "description": "Animation path. Leading folders are ignored: machine_max:ae86 matches every animation json under animations/ in the content pack whose folder is named ae86, and exposes them as available animations of the model."
     },
     "sub_parts": {
       "oneOf": [
         {
-          "$ref": "subpart/sub_part_attr.schema.json",
+          "allOf": [
+            { "$ref": "subpart/sub_part_attr.schema.json" }
+          ],
           "description": "Single sub-part, registered under the default name \"sub_part.machine_max.main\"."
         },
         {

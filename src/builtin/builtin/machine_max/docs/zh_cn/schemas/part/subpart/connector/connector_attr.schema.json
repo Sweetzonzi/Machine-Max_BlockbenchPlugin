@@ -28,7 +28,9 @@
           "description": "连接点类型覆写。"
         },
         "direction": {
-          "$ref": "../../../base/axis.schema.json",
+          "allOf": [
+            { "$ref": "../../../base/axis.schema.json" }
+          ],
           "description": "连接点法线方向覆写。"
         },
         "integrity": {

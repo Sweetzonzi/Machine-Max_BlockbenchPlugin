@@ -14,13 +14,17 @@
       "description": "部件标签，用于连接点匹配（对侧连接点的 required_tags / acceptable_tags / forbidden_tags）和功能分类。"
     },
     "model": {
-      "$ref": "../base/resource_location.schema.json",
+      "allOf": [
+        { "$ref": "../base/resource_location.schema.json" }
+      ],
       "description": "模型路径。忽略前导文件夹：machine_max:ae86_chassis.geo 会匹配内容包 models/ 目录下任意层级的 ae86_chassis.geo.json。"
     },
     "textures": {
       "oneOf": [
         {
-          "$ref": "../base/resource_location.schema.json",
+          "allOf": [
+            { "$ref": "../base/resource_location.schema.json" }
+          ],
           "description": "单一纹理，以名字 \"default\" 注册。例如 \"machine_max:textures/part/ae86/ae86_armor.png\" 会成为部件的 \"default\" 纹理。"
         },
         {
@@ -38,14 +42,18 @@
       "description": "纹理配置。最终纹理映射为空时部件加载失败。"
     },
     "animations": {
-      "$ref": "../base/resource_location.schema.json",
+      "allOf": [
+        { "$ref": "../base/resource_location.schema.json" }
+      ],
       "default": "machine_max:empty",
       "description": "动画路径。忽略前导文件夹：machine_max:ae86 会匹配内容包 animations/ 下文件夹名为 ae86 的所有动画 json，作为该模型的可用动画。"
     },
     "sub_parts": {
       "oneOf": [
         {
-          "$ref": "subpart/sub_part_attr.schema.json",
+          "allOf": [
+            { "$ref": "subpart/sub_part_attr.schema.json" }
+          ],
           "description": "单一零件，以默认名字 \"sub_part.machine_max.main\" 注册。"
         },
         {
