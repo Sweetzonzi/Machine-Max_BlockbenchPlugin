@@ -206,6 +206,54 @@ function resolveHitBoxKeys(kind, node, unresolved, basePath) {
     });
 }
 
+/**
+ * 修复存量配置里用骨骼名当 hit_boxes key 的条目，原位改成 UUID。
+ *
+ * 只处理能解析到骨骼的名字；解析不到的原样保留并记入 unresolved，交给校验报错。
+ * 幂等：已经是 UUID 的 key 不动。
+ */
+function repairHitBoxKeys(config) {
+    var fixed = 0;
+    var unresolved = [];
+    var bones = ports.get().bones;
+    var parts = (config && config.parts) || {};
+
+    Object.keys(parts).forEach(function (partId) {
+        var variants = (parts[partId] && parts[partId].variants) || {};
+        Object.keys(variants).forEach(function (variantName) {
+            var subParts = (variants[variantName] && variants[variantName].sub_parts) || {};
+            Object.keys(subParts).forEach(function (spKey) {
+                var sp = subParts[spKey];
+                if (!isObject(sp) || !isObject(sp.hit_boxes)) return;
+
+                var next = {};
+                Object.keys(sp.hit_boxes).forEach(function (key) {
+                    var uuid = bones.findByUuid(key) ? key : null;
+                    if (!uuid) {
+                        var el = bones.findByName(key);
+                        if (el && el.uuid) uuid = el.uuid;
+                    }
+                    if (!uuid) {
+                        next[key] = sp.hit_boxes[key];
+                        unresolved.push({
+                            bone: key,
+                            field: 'hit_box_key',
+                            path: ['parts', partId, 'variants', variantName,
+                                'sub_parts', spKey, 'hit_boxes', key],
+                        });
+                        return;
+                    }
+                    if (uuid !== key) fixed += 1;
+                    next[uuid] = sp.hit_boxes[key];
+                });
+                sp.hit_boxes = next;
+            });
+        });
+    });
+
+    return { repaired: fixed, unresolved: unresolved };
+}
+
 function resolveElementRefs(kind, node, unresolved, basePath) {
     var bones = ports.get().bones;
 
@@ -744,6 +792,7 @@ module.exports = {
     buildMarkerPlan: buildMarkerPlan,
     buildMarkerCleanup: buildMarkerCleanup,
     resolveHitBoxKeys: resolveHitBoxKeys,
+    repairHitBoxKeys: repairHitBoxKeys,
     resolveElementRefs: resolveElementRefs,
     projectIn: projectIn,
     projectOut: projectOut,

@@ -11,6 +11,7 @@ var ssTypes = require('../core/subsystem_types.js');
 var cp = require('../core/content_pack_manager.js');
 var { CODES, isMissingValue } = require('../core/validation_types.js');
 var docRefs = require('../doc/refs.js');
+var ports = require('../doc/ports.js');
 
 var log = createLogger('Validation');
 
@@ -238,6 +239,8 @@ function collectIssues(config) {
     var subsystemDefs = cp.loadMergedDefs(config, 'subsystems').defs || {};
     var connectorDefs = cp.loadMergedDefs(config, 'connectors').defs || {};
     var materialDefs = cp.loadMergedDefs(config, 'materials').defs || {};
+    // 没有模型元素时（测试 / 未加载模型）不判断 hit_boxes key，避免误报。
+    var boneCount = ports.get().bones.listAll().length;
 
     for (var i = 0; i < partIds.length; i++) {
         var partId = partIds[i];
@@ -296,6 +299,14 @@ function collectIssues(config) {
                 var hitBoxes = sp.hit_boxes || {};
                 for (var hbKey in hitBoxes) {
                     var hb = hitBoxes[hbKey] || {};
+                    if (boneCount > 0 && !ports.get().bones.findByUuid(hbKey)) {
+                        problems.push(_makeProblem(
+                            'error', CODES.HIT_BOX_KEY_NOT_UUID,
+                            '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '" 碰撞箱 key "'
+                            + hbKey + '" 不是骨骼 UUID；内部树只认 UUID，读/导出时才投影成骨骼名',
+                            _mkPath('hit_box', partId, vName, spKey, hbKey, hbKey, '')
+                        ));
+                    }
                     if (isMissingValue(hb.material)) {
                         problems.push(_makeProblem(
                             'error', CODES.MATERIAL_REQUIRED,

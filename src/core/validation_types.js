@@ -38,6 +38,7 @@ var CODES = {
     DANGLING_SIGNAL_TARGET: 'dangling_signal_target',     // 信号/功率目标指向不存在的节点（含 power_outputs 的 key）
     MATERIAL_REQUIRED: 'material_required',               // 碰撞箱 material 未配置（空串/null/undefined）
     MATERIAL_REF_MISSING: 'material_ref_missing',         // 碰撞箱 material 引用的材质不存在（machine_max:default 为内置兜底，不查表）
+    HIT_BOX_KEY_NOT_UUID: 'hit_box_key_not_uuid',         // hit_boxes 的 key 不是骨骼 UUID（内部树只认 UUID）
 };
 
 /** scope → byItem 桶名映射（仅对"可归属到某个 subpart 条目"的 scope 有意义） */

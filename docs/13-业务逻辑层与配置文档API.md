@@ -101,7 +101,7 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 |---|---|---|
 | `src/ui/` | 27 JS + 7 模板 | 6,478 + 1,147 |
 | `src/mode/` | 5 | 1,155 |
-| `src/core/` | 12 | 4,429 |
+| `src/core/` | 12 | 4,430 |
 | `src/codec/` | 10 JS（11 含 AGENTS.md） | 1,271 |
 | `src/ops/` | 10（含 `shared.js` / `AGENTS.md`） | — |
 | `src/services/` | 6（export / export_pipeline / safe_part_ids / import / pack / validate） | 1,062 |
@@ -125,7 +125,7 @@ P2 之后两个面板不再直接写配置；P3 之后计算属性也不写配�
 
 | 副作用 | 调用点 | 文件 | 备注 |
 |---|---|---|---|
-| `saveConfig()` | 11 | 4 | P3 后只剩：`loadConfig` 迁移修复 2、`scheduleSave`/`flushSave` 内部 2、导出完成 3、`Ctrl+S` 1、拖拽导入 1、`saveConfig` 定义自身不计 |
+| `saveConfig()` | 12 | 4 | P3 后只剩：`loadConfig` 迁移修复 3、`scheduleSave`/`flushSave` 内部 2、导出完成 3、`Ctrl+S` 1、拖拽导入 1、`saveConfig` 定义自身不计 |
 | `scheduleSave()` | 所有 ops 变更 | — | UI 订阅 `mm_config_changed` 后 300ms 防抖；显式 Ctrl+S / 导出仍同步 `saveConfig()` |
 | `refreshOutlinerIcons()` | 18 | 7 | 排除 `undo.js` 后 17/6；P3 新增事件订阅 1 处 |
 | `dispatchEvent('update_selection')` | 16 | 7 | 排除 `undo.js` 后 14/6；`runConfigEdit` 统一派发 |
@@ -137,7 +137,7 @@ P2 之后两个面板不再直接写配置；P3 之后计算属性也不写配�
 
 ### 2.4 校验现状
 
-`services/validate.js → collectIssues(config)` 是唯一实现（`mode/validation_check.js` 调的也是它）：**17 个 error 产生点 / 3 个 warning 产生点**（P2 新增 `dangling_signal_target`，P3 为字段级问题补 `path.field`，P4 从 `mode/validation.js` 下沉到 `services/validate.js`，随后补 `material_required` / `material_ref_missing`），但 warning **只有 1 个 code**：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
+`services/validate.js → collectIssues(config)` 是唯一实现（`mode/validation_check.js` 调的也是它）：**18 个 error 产生点 / 3 个 warning 产生点**（P2 新增 `dangling_signal_target`，P3 为字段级问题补 `path.field`，P4 从 `mode/validation.js` 下沉到 `services/validate.js`，随后补 `material_required` / `material_ref_missing`），但 warning **只有 1 个 code**：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
 
 重复的只有名称唯一性两套：`naming.validateNameUniqueness`（UI rename 调用）与 `services/validate._collectNameConflicts`；ops 的 key/存在性检查已收口到 `doc/keys` 与各动作前置校验。
 
@@ -306,7 +306,7 @@ function canExport(config) {
 
 - `export_dialog.onConfirm`：`canExport` 失败 → `showToast` + 列出问题（复用现有 `buildValidationInfo` 的按 path 分组渲染，改为接收 `canExport` 返回的合并数组，每条挂 `__mmNavigator.selectByIssue` 定位按钮），`return false` 不关对话框。
 - **P3 已实现**：`src/services/export.js` 提供 `canExport` / `dedupeIssues` / `toProblem` / `assertSafePartIds`；`export_dialog` 打开时与 `onConfirm` 时各跑一次闸门，失败时对话框保持打开。`services/export_pipeline.executeExport` 在**任何 mkdir/writeFile 之前**调用 `assertSafePartIds`。
-- `collectIssues` 的 17 个 error 产生点逐条确认可定位（都带 `path`，字段级问题带 `path.field`）；`orphan_element` 放行；`validateTree` 的每条错误也带同样的 `path` 口径。
+- `collectIssues` 的 18 个 error 产生点逐条确认可定位（都带 `path`，字段级问题带 `path.field`）；`orphan_element` 放行；`validateTree` 的每条错误也带同样的 `path` 口径。
 - **两条闸门缺一不可**：`collectIssues` 负责业务完整性（型号是否存在、名称冲突、信号目标断裂），`validateTree` 负责 schema 值与 key。第三轮审阅的 `"banana"` / `condition:"WHATEVER"` 属于后者；`projectile_types:{}` 的 `minProperties` 也由后者报。
 - **去重按字段，不按 code**：同一路径可能同时被两层报（例如 `definition:''`：`collectIssues` 报 `definition_required`，`validateTree` 报 `missing_required`）。输出前统一 `Problem.path` 为对象并补 `field`，去重键为 `scope|partId|variantName|subPartKey|itemKey|field`；`collectIssues` 优先，`validateTree` 只补空缺。同一字段只留一条；不同字段（如 `definition` 与 `locator`）各自保留，不能因为路径相同就合并。
 - `Problem.path.field` 是本次新增的可选字段；不带字段的条目（名称冲突、孤立元素等）用空串作 key，仍参与去重。`collectIssues` 的字段级问题必须补上 `field`（`definition` / `locator` / `hit_boxes` / `mass` 等），entry 级问题留空；`validateTree` 的段数组在 `toProblem` 里按 `parts / variants / sub_parts / subsystems|connectors|interact_boxes|hit_boxes` 固定层级转成同一对象，不靠猜 key。
@@ -513,6 +513,8 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 **空段规则**：只有当前节点是 `hydrodynamics` map 时，空字符串段才是合法 key；其它 map / record 层的空段一律 `invalid_format`。JSON Pointer 的尾部 `/` 表示空段（RFC 6901），与段数组的 `''` 等价。
 
 **`hit_boxes` 双形 key**：对外是骨骼名、内存是 UUID；解析时先按 UUID 命中 `ports.bones.findByUuid`，再按骨骼名查 `Group.all`。两者都不中时，**只有读取允许**按原字符串命中（未解析的存量条目），写入需先建元素或显式给 UUID。
+
+**整表写入**：`set_node(path=[...,'hit_boxes'], value={骨骼名: {...}})` 不再绕过 key 解析：`doc.write` 会把整张表的骨骼名 key 归一化为 UUID；无法解析的名字返回 `not_found`，不写半截。存量工程由 `loadConfig` → `projection.repairHitBoxKeys` 原位修复（幂等）；修复不到的条目由 `collectIssues` 以 `hit_box_key_not_uuid` 报错，避免出现「`read_node` 有 10 条 unresolved、`validate` 却是绿的」。
 
 ### 5.2 字段规格（`field_specs.generated.js`）
 
@@ -1027,7 +1029,7 @@ Blockbench.on('mm_config_changed', function (e) {
 ### 7.3 不集中化的部分
 
 - **toast**：127 处保持原位（文案与上下文强相关，集中化需要 i18n）。约定：ops 不 toast，调用方按 `OpResult` 决定。
-- **`saveConfig`**：`Blockbench.on('save')`、导出完成、`loadConfig` 迁移修复、`scheduleSave`/`flushSave` 内部保持同步调用；其余 UI/对话框入口不再直接落盘，统一由 `mm_config_changed` 订阅触发 300ms 防抖。当前直接 `saveConfig()` 调用 11 处 / 4 文件（P3 前 20 处 / 12 文件）。
+- **`saveConfig`**：`Blockbench.on('save')`、导出完成、`loadConfig` 迁移修复、`scheduleSave`/`flushSave` 内部保持同步调用；其余 UI/对话框入口不再直接落盘，统一由 `mm_config_changed` 订阅触发 300ms 防抖。当前直接 `saveConfig()` 调用 12 处 / 4 文件（P3 前 20 处 / 12 文件）。
 
 ---
 
@@ -1064,7 +1066,7 @@ src/services/
 | 计算属性 9 处写入（含 `subPartEntries` 的 `delete`） | 渲染期改配置 | **P3 已删除**；缺条目由 `mark*` 建，面板显示「创建配置」按钮，`loadConfig` 一次性 repair |
 | `drag_import` | fs + 对话框 + 落盘 | **P4 已迁**：文件读取/带注释 JSON 解析 → `services/import.js`；冲突对话框与 `ops.importPart` 编排仍在 `import/drag_import.js` |
 | `bone_resolver` | 仅导入时用 | `doc/refs.js`（导入/删除/重命名共用，§5.3） |
-| 20 处 `saveConfig` / 17 处 refresh / 16 处 update_selection | 就地调用 | **P3 已收敛**：事件订阅 + `scheduleSave`（直接 saveConfig 11 处 / 4 文件） |
+| 20 处 `saveConfig` / 17 处 refresh / 16 处 update_selection | 就地调用 | **P3 已收敛**：事件订阅 + `scheduleSave`（直接 saveConfig 12 处 / 4 文件） |
 | `export_dialog` 忽略校验结果 | 仅提示 | **P3 已接**：`services/export.canExport` 阻断；P4 把 `executeExport` 也移入 services |
 
 ---
@@ -1144,7 +1146,7 @@ bun test test/schema/field_specs.test.js
 **交付（2026-10-21）**：
 
 - **事件单一出口**：`runConfigEdit` 提交后派发 `mm_config_changed`（`source/label/kinds/paths/persist`）；嵌套编辑只发一次，空记录不发。UI 在 `App.vue.js` mounted 订阅：`refreshOutlinerIcons()` + `markerVersion.v++` + `scheduleSave()`（300ms 防抖）。
-- **落盘收敛**：`persistence.js` 新增 `scheduleSave` / `flushSave` / `cancelScheduledSave`；直接 `saveConfig()` 从 20 处 / 12 文件降到 **11 处 / 4 文件**（保留 `Ctrl+S`、导出完成、`loadConfig` 迁移、防抖内部）。
+- **落盘收敛**：`persistence.js` 新增 `scheduleSave` / `flushSave` / `cancelScheduledSave`；直接 `saveConfig()` 从 20 处 / 12 文件降到 **12 处 / 4 文件**（保留 `Ctrl+S`、导出完成、`loadConfig` 迁移、防抖内部）。
 - **计算属性只读**：删除 `App.vue.js` 5 个计算属性里的 9 处写入（4 个 `$set` 补 map、自动建 sub_part、自动补 `auto_end_bones`、`subPartEntries` 的 `delete`）。`markSubPart` 改为在 ops 内创建 `sub_parts` 条目并绑定 `start_bone`；`loadConfig` 新增 `repairMarkerConfigs` 一次性补建四类缺失条目；面板在条目缺失时显示「创建配置」按钮，走 `ops.mark*`。
 - **`Problem.path.field`**：`collectIssues` 的字段级问题全部带 `field`（`model` / `sub_parts` / `hit_boxes` / `mass` / `definition` / 动态 required 字段 / dangling 的 `signal_targets` / `power_outputs` / `power_target` / `power_output` / `connector` / `subsystem`）；entry 级问题保持 `field:''`。
 - **导出闸门**：新增 `src/services/export.js`：`canExport = collectIssues + validateTree(completeness:true)`，`toProblem` 把段数组规范化为同一 `Problem.path`，`dedupeIssues` 按 `scope|partId|variantName|subPartKey|itemKey|field` 去重（`collectIssues` 优先）。`export_dialog` 打开与 `onConfirm` 各跑一次；失败时 toast + 保持对话框打开，信息区列出错误/警告并附「定位」按钮。

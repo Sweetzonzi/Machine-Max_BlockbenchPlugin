@@ -3,6 +3,7 @@ const { CONFIG_VERSION } = require('../core/constants.js');
 const { migrateIfNeeded, createBlankConfig } = require('../core/config.js');
 const { cleanGhostMarkers, migrateConnectorMarkerRefs, repairMarkerConfigs } = require('../core/element_markers.js');
 const { createLogger } = require('./logger.js');
+const docProjection = require('../doc/projection.js');
 
 /** 模块日志 */
 var log = createLogger('Persistence');
@@ -108,6 +109,16 @@ function loadConfig() {
             Project[PROPERTY_NAME] = blank;
             result = blank;
         }
+    }
+
+    // 修复存量 hit_boxes 用骨骼名当 key 的条目（幂等；内部树只认 UUID）
+    var hitBoxRepair = docProjection.repairHitBoxKeys(result);
+    if (hitBoxRepair.repaired > 0) {
+        log.info('loadConfig: 已把 ' + hitBoxRepair.repaired + ' 个骨骼名 hit_boxes key 归一化为 UUID');
+        saveConfig();
+    }
+    if (hitBoxRepair.unresolved.length > 0) {
+        log.warn('loadConfig: ' + hitBoxRepair.unresolved.length + ' 个 hit_boxes key 无法解析为骨骼，保留待校验');
     }
 
     // 把 connector marker 的 config_ref 从 definition 迁移为连接点 key（幂等）

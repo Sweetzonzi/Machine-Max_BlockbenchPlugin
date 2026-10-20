@@ -437,6 +437,32 @@ function resolveHitBoxWriteKey(key) {
     return null;
 }
 
+/**
+ * 整表写入 hit_boxes 时把骨骼名 key 归一化为 UUID。
+ *
+ * 单 key 写入由 resolveHitBoxWriteKey 处理；但 `set_node(path=[...,'hit_boxes'],
+ * value={骨骼名: {...}})` 走 object 分支，原先会绕过 key 解析，把骨骼名原样写进
+ * 内部树，导致 read/export 投影时出现 unresolved_bones。这里统一收口。
+ */
+function normalizeHitBoxMap(value, basePath) {
+    var out = {};
+    var errors = [];
+
+    Object.keys(value).forEach(function (key) {
+        var uuid = resolveHitBoxWriteKey(key);
+        if (!uuid) {
+            errors.push(error((basePath || []).concat([key]), 'not_found',
+                '已存在的骨骼 UUID 或骨骼名', key,
+                'hit_boxes 的 key 必须是 UUID；可传骨骼名由写入层解析，未知名字请先创建骨骼'));
+            return;
+        }
+        out[uuid] = value[key];
+    });
+
+    if (errors.length > 0) return { ok: false, errors: errors };
+    return { ok: true, value: out };
+}
+
 function write(config, path, value, opts) {
     opts = opts || {};
     var parsed = parsePath(path);
@@ -524,6 +550,14 @@ function write(config, path, value, opts) {
             objectInfo.error.errors[0].path = segments;
             return objectInfo.error;
         }
+        // 整表替换 hit_boxes：key 也必须是 UUID；允许骨骼名输入并在此归一化。
+        if (key === 'hit_boxes' && value && typeof value === 'object' && !Array.isArray(value)) {
+            var hitBoxNorm = normalizeHitBoxMap(value, segments);
+            if (!hitBoxNorm.ok) {
+                return { ok: false, errors: hitBoxNorm.errors };
+            }
+            value = hitBoxNorm.value;
+        }
         if (!own(parent.node, key)) {
             if (!opts.allowMissingLeaf) {
                 return fail(segments, 'unknown_field', '已存在的对象字段', key,
@@ -545,6 +579,14 @@ function write(config, path, value, opts) {
         if (info.error) {
             info.error.errors[0].path = segments;
             return info.error;
+        }
+        // 整表替换 hit_boxes：key 也必须是 UUID；允许骨骼名输入并在此归一化。
+        if (key === 'hit_boxes' && value && typeof value === 'object' && !Array.isArray(value)) {
+            var hitBoxNorm = normalizeHitBoxMap(value, segments);
+            if (!hitBoxNorm.ok) {
+                return { ok: false, errors: hitBoxNorm.errors };
+            }
+            value = hitBoxNorm.value;
         }
         if (!own(parent.node, key)) {
             return fail(segments, 'unknown_field', '已存在的字段', key,

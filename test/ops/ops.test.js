@@ -9,6 +9,7 @@ const em = require('../../src/core/element_markers.js');
 const undo = require('../../src/core/undo.js');
 const helpers = require('../helpers.js');
 const ops = require('../../src/ops/index.js');
+const projection = require('../../src/doc/projection.js');
 const { collectIssues } = require('../../src/services/validate.js');
 
 const BONES = [
@@ -97,6 +98,53 @@ describe('ops.setField', () => {
         expect(bad.errors[0].code).toBe('invalid_enum');
         expect(cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main']
             .hit_boxes['11111111-1111-1111-1111-111111111111'].type).toBe('box');
+    });
+
+    test('setField 整表写 hit_boxes 时把骨骼名 key 归一化为 UUID', () => {
+        const cfg = helpers.createConfig();
+        const sp = cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+
+        const r = ops.setField(cfg, {
+            path: ['parts', 'hull', 'variants', 'default', 'sub_parts',
+                'sub_part.machine_max.main', 'hit_boxes'],
+            value: { turret: { type: 'box', material: 'machine_max:default' } },
+        });
+
+        expect(r.ok).toBe(true);
+        expect(sp.hit_boxes['55555555-5555-5555-5555-555555555555']).toEqual({
+            type: 'box', material: 'machine_max:default',
+        });
+        expect(sp.hit_boxes.turret).toBeUndefined();
+    });
+
+    test('setField 整表写 hit_boxes 时未知骨骼名拒绝且不写半截', () => {
+        const cfg = helpers.createConfig();
+        const sp = cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        const before = JSON.stringify(sp.hit_boxes);
+
+        const r = ops.setField(cfg, {
+            path: ['parts', 'hull', 'variants', 'default', 'sub_parts',
+                'sub_part.machine_max.main', 'hit_boxes'],
+            value: { missing_bone: { type: 'box', material: 'machine_max:default' } },
+        });
+
+        expect(r.ok).toBe(false);
+        expect(r.errors[0].code).toBe('not_found');
+        expect(JSON.stringify(sp.hit_boxes)).toBe(before);
+    });
+
+    test('repairHitBoxKeys 把存量骨骼名 key 归一化且幂等', () => {
+        const cfg = helpers.createConfig();
+        const sp = cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.hit_boxes = { hull: sp.hit_boxes['11111111-1111-1111-1111-111111111111'] };
+
+        const first = projection.repairHitBoxKeys(cfg);
+        expect(first.repaired).toBe(1);
+        expect(sp.hit_boxes['11111111-1111-1111-1111-111111111111']).toBeDefined();
+        expect(sp.hit_boxes.hull).toBeUndefined();
+
+        const second = projection.repairHitBoxKeys(cfg);
+        expect(second.repaired).toBe(0);
     });
 
     test('start_bone 变更迁移 sub_part 标记，hit_box marker 保留归属', () => {

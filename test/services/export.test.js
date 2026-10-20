@@ -156,6 +156,27 @@ describe('services/export.canExport', () => {
         });
         expect(materialIssues).toHaveLength(0);
     });
+
+    test('hit_boxes key 不是骨骼 UUID 时校验拦截', () => {
+        const cfg = baseConfig();
+        const sp = cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        const hb = hitBox(cfg);
+        sp.hit_boxes = { hull: hb };
+
+        global.Group = { all: [{ uuid: HB_UUID, name: 'hull' }] };
+        global.Locator = { all: [] };
+        try {
+            const issues = collectIssues(cfg).filter(function (p) {
+                return p.code === 'hit_box_key_not_uuid';
+            });
+            expect(issues).toHaveLength(1);
+            expect(issues[0].path.scope).toBe('hit_box');
+            expect(issues[0].path.itemKey).toBe('hull');
+        } finally {
+            delete global.Group;
+            delete global.Locator;
+        }
+    });
 });
 
 describe('services/export.assertSafePartIds', () => {

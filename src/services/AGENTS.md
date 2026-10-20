@@ -34,6 +34,7 @@ src/services/
 - 导出闸门只做只读校验，不修改 `config`；提示文案由调用方（`export_dialog`）决定。
 - P4 已完成：`executeExport`、`drag_import` IO、pack fs 与 `collectIssues` 均已迁入本层；不再保留 `services → mode`。
 - `collectIssues` 落 `validate.js` 而不是 `core/validation.js`：它依赖 `doc/refs.js`，放 core 会反转 `core → doc` 分层（docs/13 D30）。
+- `hit_boxes` key 不是骨骼 UUID 时 `collectIssues` 报 `hit_box_key_not_uuid`；没有模型元素时跳过（测试 / 未加载模型不误报）。
 - 新增服务后同步 `docs/13` §8 与根 `AGENTS.md` 的导入图。
 
 ## 反模式

@@ -11682,2770 +11682,6 @@
     }
   });
 
-  // src/utils/persistence.js
-  var require_persistence = __commonJS({
-    "src/utils/persistence.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var PROPERTY_NAME = "machine_max_plugin";
-      var { CONFIG_VERSION } = require_constants();
-      var { migrateIfNeeded, createBlankConfig } = require_config();
-      var { cleanGhostMarkers, migrateConnectorMarkerRefs, repairMarkerConfigs } = require_element_markers();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("Persistence");
-      function registerProperty2() {
-        if (ModelProject.properties[PROPERTY_NAME]) {
-          log2.debug("registerProperty: Property \u5DF2\u6CE8\u518C\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        var existingData = Project && Project !== 0 ? Project[PROPERTY_NAME] : null;
-        var hasExisting = existingData && typeof existingData === "object" && Object.keys(existingData).length > 0;
-        new Property(ModelProject, "object", PROPERTY_NAME, {
-          default: {},
-          exposed: false
-        });
-        if (hasExisting) {
-          Project[PROPERTY_NAME] = existingData;
-          log2.info("registerProperty: \u5DF2\u8FD8\u539F\u5DF2\u6709\u914D\u7F6E\uFF08" + Object.keys(existingData).length + " \u4E2A\u952E\uFF09");
-        } else {
-          log2.info("registerProperty: Property \u5DF2\u6CE8\u518C\uFF08\u65E0\u5DF2\u6709\u914D\u7F6E\uFF09");
-        }
-      }
-      function getBBModelPath() {
-        if (!Project || Project === 0 || !Project.file_path) {
-          log2.debug("getBBModelPath: \u65E0 .bbmodel \u8DEF\u5F84");
-          return null;
-        }
-        log2.debug("getBBModelPath: " + Project.file_path);
-        return Project.file_path;
-      }
-      function loadConfig() {
-        if (!Project || Project === 0) {
-          log2.warn("loadConfig: \u5C1A\u672A\u6253\u5F00\u9879\u76EE\uFF0C\u8FD4\u56DE\u7A7A\u767D\u914D\u7F6E");
-          return createBlankConfig();
-        }
-        const propData = Project[PROPERTY_NAME];
-        var result;
-        if (propData && propData.$schema_version) {
-          log2.info("\u4ECE Property \u52A0\u8F7D\u914D\u7F6E\uFF0C\u7248\u672C: " + propData.$schema_version);
-          var migrated = migrateIfNeeded(propData);
-          Project[PROPERTY_NAME] = migrated;
-          result = migrated;
-          log2.debug("loadConfig: \u4ECE Property \u52A0\u8F7D\u5B8C\u6210", {
-            packMetaType: typeof migrated.packMeta,
-            packMetaKeys: migrated.packMeta ? Object.keys(migrated.packMeta) : [],
-            name: migrated.packMeta ? migrated.packMeta.name : null,
-            author: migrated.packMeta ? migrated.packMeta.author : null,
-            description: migrated.packMeta ? migrated.packMeta.description : null
-          });
-        } else if (propData && typeof propData === "object" && Object.keys(propData).length > 0) {
-          log2.info("\u4ECE Property \u52A0\u8F7D\u914D\u7F6E\uFF08\u65E0\u7248\u672C\u53F7\uFF0C\u5C1D\u8BD5\u4FEE\u590D\uFF09\uFF0C\u952E: " + Object.keys(propData).join(","));
-          var repaired = migrateIfNeeded(propData);
-          Project[PROPERTY_NAME] = repaired;
-          result = repaired;
-        } else {
-          const bbmodelPath = getBBModelPath();
-          if (bbmodelPath) {
-            const standalonePath = bbmodelPath.replace(/\.bbmodel$/i, ".mm_project.json");
-            try {
-              const fs = __require("fs");
-              if (fs.existsSync(standalonePath)) {
-                const raw = JSON.parse(fs.readFileSync(standalonePath, "utf-8"));
-                const config = raw.config || raw;
-                log2.info("\u4ECE\u72EC\u7ACB\u6587\u4EF6\u52A0\u8F7D\u914D\u7F6E: " + standalonePath);
-                Project[PROPERTY_NAME] = migrateIfNeeded(config);
-                result = Project[PROPERTY_NAME];
-              }
-            } catch (e) {
-              log2.error("\u5907\u9009\u914D\u7F6E\u8BFB\u53D6\u5931\u8D25", e);
-            }
-          }
-          if (!result) {
-            log2.info("\u521B\u5EFA\u7A7A\u767D\u914D\u7F6E");
-            const blank = createBlankConfig();
-            Project[PROPERTY_NAME] = blank;
-            result = blank;
-          }
-        }
-        var markerMigration = migrateConnectorMarkerRefs(result);
-        if (markerMigration.migrated > 0) {
-          log2.info("loadConfig: \u5DF2\u8FC1\u79FB " + markerMigration.migrated + " \u4E2A connector marker \u7684 config_ref");
-          saveConfig();
-        }
-        var markerRepair = repairMarkerConfigs(result);
-        if (markerRepair.repaired > 0) {
-          log2.info("loadConfig: \u5DF2\u8865\u5EFA " + markerRepair.repaired + " \u4E2A\u7F3A\u5931\u914D\u7F6E\u6761\u76EE", markerRepair.details);
-          saveConfig();
-        }
-        var ghostResult = cleanGhostMarkers(result);
-        if (ghostResult.cleanedCount > 0) {
-          log2.info("loadConfig: \u5DF2\u6E05\u7406 " + ghostResult.cleanedCount + " \u4E2A\u5E7D\u7075\u6807\u8BB0", ghostResult.details);
-          saveConfig();
-        }
-        return result;
-      }
-      var _saveTimer = null;
-      var SAVE_DEBOUNCE_MS = 300;
-      function scheduleSave(delay) {
-        if (typeof setTimeout !== "function") {
-          saveConfig();
-          return;
-        }
-        if (_saveTimer) clearTimeout(_saveTimer);
-        var wait = typeof delay === "number" ? delay : SAVE_DEBOUNCE_MS;
-        _saveTimer = setTimeout(function() {
-          _saveTimer = null;
-          saveConfig();
-        }, wait);
-      }
-      function flushSave() {
-        if (_saveTimer) {
-          clearTimeout(_saveTimer);
-          _saveTimer = null;
-        }
-        saveConfig();
-      }
-      function cancelScheduledSave() {
-        if (_saveTimer) {
-          clearTimeout(_saveTimer);
-          _saveTimer = null;
-        }
-      }
-      function saveConfig() {
-        if (!Project || Project === 0 || !Project[PROPERTY_NAME]) {
-          log2.debug("saveConfig: \u9879\u76EE\u6216\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8DF3\u8FC7\u4FDD\u5B58");
-          return;
-        }
-        const config = Project[PROPERTY_NAME];
-        const bbmodelPath = getBBModelPath();
-        if (!bbmodelPath) {
-          log2.warn("saveConfig: \u672A\u627E\u5230 .bbmodel \u8DEF\u5F84\uFF0C\u8DF3\u8FC7\u72EC\u7ACB\u5907\u4EFD");
-          return;
-        }
-        log2.debug("saveConfig: \u5373\u5C06\u4FDD\u5B58 packMeta", {
-          packMetaType: typeof config.packMeta,
-          packMetaExists: !!config.packMeta,
-          packMetaKeys: config.packMeta ? Object.keys(config.packMeta) : [],
-          name: config.packMeta ? config.packMeta.name : null,
-          nameType: config.packMeta ? typeof config.packMeta.name : "N/A",
-          author: config.packMeta ? config.packMeta.author : null,
-          authorType: config.packMeta ? typeof config.packMeta.author : "N/A",
-          description: config.packMeta ? config.packMeta.description : null,
-          descType: config.packMeta ? typeof config.packMeta.description : "N/A"
-        });
-        const standalonePath = bbmodelPath.replace(/\.bbmodel$/i, ".mm_project.json");
-        try {
-          const fs = __require("fs");
-          const path = __require("path");
-          fs.writeFileSync(
-            standalonePath,
-            JSON.stringify({
-              $schema_version: CONFIG_VERSION,
-              bbmodel: path.basename(bbmodelPath),
-              timestamp: Date.now(),
-              config: {
-                $schema_version: config.$schema_version,
-                parts: config.parts,
-                _uiState: config._uiState,
-                contentPackPath: config.contentPackPath,
-                dependencyPaths: config.dependencyPaths,
-                packMeta: config.packMeta,
-                namespace: config.namespace,
-                modelFile: config.modelFile
-              }
-            }, null, 2),
-            "utf-8"
-          );
-          log2.debug("saveConfig: \u72EC\u7ACB\u5907\u4EFD\u5DF2\u5199\u5165: " + standalonePath);
-        } catch (e) {
-          log2.error("saveConfig: \u5907\u9009\u914D\u7F6E\u5199\u5165\u5931\u8D25", e);
-        }
-        log2.info("\u914D\u7F6E\u5DF2\u4FDD\u5B58");
-      }
-      function setPackPath(config, packPath) {
-        config.contentPackPath = packPath;
-        return config;
-      }
-      function addDependencyPath(config, depPath) {
-        if (!config.dependencyPaths) config.dependencyPaths = [];
-        if (config.dependencyPaths.indexOf(depPath) === -1) {
-          config.dependencyPaths.push(depPath);
-        }
-        return config;
-      }
-      function removeDependencyPath(config, depPath) {
-        if (!config.dependencyPaths) return config;
-        var idx = config.dependencyPaths.indexOf(depPath);
-        if (idx !== -1) config.dependencyPaths.splice(idx, 1);
-        return config;
-      }
-      function getConfig() {
-        if (!Project || Project === 0) {
-          log2.debug("getConfig: \u9879\u76EE\u4E0D\u53EF\u7528");
-          return null;
-        }
-        var cfg = Project[PROPERTY_NAME] || null;
-        log2.debug("getConfig: " + (cfg ? "\u6709\u914D\u7F6E" : "\u65E0\u914D\u7F6E"));
-        return cfg;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          PROPERTY_NAME,
-          registerProperty: registerProperty2,
-          loadConfig,
-          saveConfig,
-          scheduleSave,
-          flushSave,
-          cancelScheduledSave,
-          getConfig,
-          setPackPath,
-          addDependencyPath,
-          removeDependencyPath
-        };
-      }
-    }
-  });
-
-  // src/utils/notify.js
-  var require_notify = __commonJS({
-    "src/utils/notify.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("Notify");
-      var TOAST_COLORS = {
-        positive: "#4CAF50",
-        error: "#F44336",
-        warning: "#FF9800",
-        info: "#2196F3"
-      };
-      function showToast2(text, type, expire) {
-        const color = TOAST_COLORS[type] || TOAST_COLORS.info;
-        try {
-          Blockbench.showToastNotification({
-            text: String(text),
-            color,
-            expire: expire || 3e3
-          });
-        } catch (e) {
-          log2.error("Toast \u901A\u77E5\u5931\u8D25", e);
-        }
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { showToast: showToast2, TOAST_COLORS };
-      }
-    }
-  });
-
-  // src/utils/file_writer.js
-  var require_file_writer = __commonJS({
-    "src/utils/file_writer.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var fs = __require("fs");
-      var path = __require("path");
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("FileWriter");
-      function stripJsonComments(content) {
-        if (content && content.charCodeAt(0) === 65279) {
-          content = content.slice(1);
-        }
-        var lines, result, i, line, inString, commentStart, j, ch, stripped;
-        lines = content.split("\n");
-        result = [];
-        for (i = 0; i < lines.length; i++) {
-          line = lines[i];
-          inString = false;
-          commentStart = -1;
-          for (j = 0; j < line.length; j++) {
-            ch = line[j];
-            if (ch === '"' && (j === 0 || line[j - 1] !== "\\")) {
-              inString = !inString;
-            } else if (ch === "/" && line[j + 1] === "/" && !inString) {
-              commentStart = j;
-              break;
-            }
-          }
-          if (commentStart >= 0) {
-            stripped = line.substring(0, commentStart);
-            if (stripped.trim().length > 0) {
-              result.push(stripped);
-            }
-          } else {
-            result.push(line);
-          }
-        }
-        return result.join("\n");
-      }
-      function ensureDir(dirPath) {
-        if (!fs.existsSync(dirPath)) {
-          fs.mkdirSync(dirPath, { recursive: true });
-          log2.debug("ensureDir: \u5DF2\u521B\u5EFA\u76EE\u5F55 " + dirPath);
-        }
-      }
-      function writeJSONFile(dir, filename, data) {
-        try {
-          ensureDir(dir);
-          const filePath = path.join(dir, filename);
-          fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
-          log2.debug("writeJSONFile: \u5DF2\u5199\u5165 " + filePath);
-          return filePath;
-        } catch (e) {
-          log2.error("writeJSONFile: \u5199\u5165\u5931\u8D25 " + path.join(dir, filename), e);
-          throw e;
-        }
-      }
-      function writeTextFile(dir, filename, text) {
-        try {
-          ensureDir(dir);
-          const filePath = path.join(dir, filename);
-          fs.writeFileSync(filePath, text, "utf-8");
-          log2.debug("writeTextFile: \u5DF2\u5199\u5165 " + filePath);
-          return filePath;
-        } catch (e) {
-          log2.error("writeTextFile: \u5199\u5165\u5931\u8D25 " + path.join(dir, filename), e);
-          throw e;
-        }
-      }
-      function readJSONFile(filePath) {
-        if (!fs.existsSync(filePath)) {
-          log2.debug("readJSONFile: \u6587\u4EF6\u4E0D\u5B58\u5728 " + filePath);
-          return null;
-        }
-        try {
-          const raw = fs.readFileSync(filePath, "utf-8");
-          const data = JSON.parse(stripJsonComments(raw));
-          log2.debug("readJSONFile: \u5DF2\u8BFB\u53D6 " + filePath);
-          return data;
-        } catch (e) {
-          log2.error("readJSONFile: \u8BFB\u53D6\u5931\u8D25 " + filePath, e);
-          return null;
-        }
-      }
-      function fileExists(filePath) {
-        var exists = fs.existsSync(filePath);
-        log2.debug("fileExists: " + filePath + " \u2192 " + exists);
-        return exists;
-      }
-      function _deletePermanent(filePath) {
-        if (process.platform === "win32") {
-          try {
-            var cp = __require("child_process");
-            var psCmd = 'try { [System.IO.File]::Delete("' + filePath.replace(/\\/g, "\\\\") + '") } catch {}';
-            cp.spawnSync(
-              "powershell.exe",
-              [
-                "-NoProfile",
-                "-NonInteractive",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-Command",
-                psCmd
-              ],
-              { timeout: 1e4 }
-            );
-            log2.debug("_deletePermanent: File::Delete " + filePath);
-            return;
-          } catch (_e) {
-            log2.debug("_deletePermanent: child_process \u4E0D\u53EF\u7528\uFF0C\u964D\u7EA7\u5230 fs.unlinkSync: " + _e.message);
-          }
-        } else {
-          log2.debug("_deletePermanent: \u975E Windows \u5E73\u53F0\uFF0C\u4F7F\u7528 fs.unlinkSync");
-        }
-        fs.unlinkSync(filePath);
-        log2.debug("_deletePermanent: fs.unlinkSync \u5220\u9664 " + filePath);
-      }
-      function deleteFile(filePath) {
-        if (fs.existsSync(filePath)) {
-          _deletePermanent(filePath);
-          log2.debug("deleteFile: \u5DF2\u5220\u9664 " + filePath);
-        } else {
-          log2.debug("deleteFile: \u6587\u4EF6\u4E0D\u5B58\u5728\uFF0C\u8DF3\u8FC7 " + filePath);
-        }
-      }
-      function extractResourceLocation(id, defaultNs) {
-        var str = id || "";
-        var colonIdx = str.indexOf(":");
-        if (colonIdx >= 0) {
-          return {
-            ns: str.substring(0, colonIdx),
-            path: str.substring(colonIdx + 1)
-          };
-        }
-        return { ns: defaultNs || "", path: str };
-      }
-      function mergeJSONFile(dir, filename, newData) {
-        ensureDir(dir);
-        var filePath = path.join(dir, filename);
-        var existing = readJSONFile(filePath) || {};
-        for (var key in newData) {
-          if (newData.hasOwnProperty(key) && !(key in existing)) {
-            existing[key] = newData[key];
-          }
-        }
-        try {
-          fs.writeFileSync(filePath, JSON.stringify(existing, null, 2), "utf-8");
-          log2.debug("mergeJSONFile: \u5DF2\u5408\u5E76\u5199\u5165 " + filePath + "\uFF08\u65B0\u589E " + Object.keys(newData).length + " \u6761\uFF0C\u5DF2\u6709 " + Object.keys(existing).length + " \u6761\uFF09");
-          return filePath;
-        } catch (e) {
-          log2.error("mergeJSONFile: \u5199\u5165\u5931\u8D25 " + filePath, e);
-          throw e;
-        }
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { ensureDir, writeJSONFile, writeTextFile, readJSONFile, fileExists, deleteFile, extractResourceLocation, mergeJSONFile, stripJsonComments };
-      }
-    }
-  });
-
-  // src/core/zip_reader.js
-  var require_zip_reader = __commonJS({
-    "src/core/zip_reader.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var fs = __require("fs");
-      var zlib = __require("zlib");
-      var path = __require("path");
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("ZipReader");
-      var SIG_LOCAL_FILE = 67324752;
-      var SIG_CENTRAL_DIR = 33639248;
-      var SIG_EOCD = 101010256;
-      var LOCAL_HEADER_MIN = 30;
-      var CENTRAL_DIR_MIN = 46;
-      var EOCD_MIN = 22;
-      var EOCD_MAX_SEARCH = 65557;
-      var METHOD_STORED = 0;
-      var METHOD_DEFLATED = 8;
-      function readUInt32LE(buf, offset) {
-        return buf.readUInt32LE(offset);
-      }
-      function readUInt16LE(buf, offset) {
-        return buf.readUInt16LE(offset);
-      }
-      function findSignatureFromEnd(buf, signature) {
-        var i;
-        for (i = buf.length - 4; i >= 0; i--) {
-          if (readUInt32LE(buf, i) === signature) {
-            return i;
-          }
-        }
-        return -1;
-      }
-      function normalizeZipPath(p) {
-        if (!p) return "";
-        return p.replace(/\\/g, "/");
-      }
-      function _parseEOCD(fd, fileSize) {
-        var searchSize, searchBuf, eocdOffset, cdCount, cdSize, cdOffset;
-        if (fileSize < EOCD_MIN) {
-          log2.warn("_parseEOCD: \u6587\u4EF6\u592A\u5C0F\uFF0C\u4E0D\u662F\u6709\u6548 ZIP");
-          return null;
-        }
-        searchSize = Math.min(EOCD_MAX_SEARCH, fileSize);
-        searchBuf = Buffer.alloc(searchSize);
-        fs.readSync(fd, searchBuf, 0, searchSize, fileSize - searchSize);
-        eocdOffset = findSignatureFromEnd(searchBuf, SIG_EOCD);
-        if (eocdOffset < 0) {
-          log2.warn("_parseEOCD: \u672A\u627E\u5230 EOCD \u7B7E\u540D");
-          return null;
-        }
-        if (eocdOffset + EOCD_MIN > searchBuf.length) {
-          log2.warn("_parseEOCD: EOCD \u6570\u636E\u4E0D\u5B8C\u6574");
-          return null;
-        }
-        cdCount = readUInt16LE(searchBuf, eocdOffset + 10);
-        cdSize = readUInt32LE(searchBuf, eocdOffset + 12);
-        cdOffset = readUInt32LE(searchBuf, eocdOffset + 16);
-        log2.debug("_parseEOCD: \u4E2D\u592E\u76EE\u5F55\u504F\u79FB=" + cdOffset + " \u5927\u5C0F=" + cdSize + " \u6761\u76EE=" + cdCount);
-        return { cdOffset, cdSize, cdCount };
-      }
-      function _parseCentralDirectory(fd, cdOffset, cdSize) {
-        var cdBuf, pos, fileIndex, sig, method, compressedSize, uncompressedSize, localOffset;
-        var fileNameLen, extraLen, commentLen, fileName;
-        cdBuf = Buffer.alloc(cdSize);
-        fs.readSync(fd, cdBuf, 0, cdSize, cdOffset);
-        fileIndex = {};
-        pos = 0;
-        while (pos + CENTRAL_DIR_MIN <= cdBuf.length) {
-          sig = readUInt32LE(cdBuf, pos);
-          if (sig !== SIG_CENTRAL_DIR) {
-            break;
-          }
-          method = readUInt16LE(cdBuf, pos + 10);
-          compressedSize = readUInt32LE(cdBuf, pos + 20);
-          uncompressedSize = readUInt32LE(cdBuf, pos + 24);
-          fileNameLen = readUInt16LE(cdBuf, pos + 28);
-          extraLen = readUInt16LE(cdBuf, pos + 30);
-          commentLen = readUInt16LE(cdBuf, pos + 32);
-          localOffset = readUInt32LE(cdBuf, pos + 42);
-          if (pos + CENTRAL_DIR_MIN + fileNameLen > cdBuf.length) break;
-          fileName = normalizeZipPath(cdBuf.toString("utf-8", pos + CENTRAL_DIR_MIN, pos + CENTRAL_DIR_MIN + fileNameLen));
-          if (fileName.length > 0 && !fileName.endsWith("/")) {
-            fileIndex[fileName] = {
-              method,
-              compressedSize,
-              uncompressedSize,
-              localOffset
-            };
-          }
-          pos += CENTRAL_DIR_MIN + fileNameLen + extraLen + commentLen;
-        }
-        log2.debug("_parseCentralDirectory: \u5DF2\u7D22\u5F15 " + Object.keys(fileIndex).length + " \u4E2A\u6587\u4EF6");
-        return fileIndex;
-      }
-      function _readFileData(fd, entry) {
-        var headerBuf, fileNameLen, extraLen, dataStart, compressedBuf, result;
-        headerBuf = Buffer.alloc(LOCAL_HEADER_MIN);
-        fs.readSync(fd, headerBuf, 0, LOCAL_HEADER_MIN, entry.localOffset);
-        if (readUInt32LE(headerBuf, 0) !== SIG_LOCAL_FILE) {
-          log2.warn("_readFileData: \u672C\u5730\u6587\u4EF6\u5934\u7B7E\u540D\u65E0\u6548\uFF0C\u504F\u79FB=" + entry.localOffset);
-          return null;
-        }
-        fileNameLen = readUInt16LE(headerBuf, 26);
-        extraLen = readUInt16LE(headerBuf, 28);
-        dataStart = entry.localOffset + LOCAL_HEADER_MIN + fileNameLen + extraLen;
-        compressedBuf = Buffer.alloc(entry.compressedSize);
-        fs.readSync(fd, compressedBuf, 0, entry.compressedSize, dataStart);
-        switch (entry.method) {
-          case METHOD_STORED:
-            result = compressedBuf;
-            break;
-          case METHOD_DEFLATED:
-            try {
-              result = zlib.inflateRawSync(compressedBuf);
-            } catch (e) {
-              log2.warn("_readFileData: deflate \u89E3\u538B\u5931\u8D25", e);
-              return null;
-            }
-            break;
-          default:
-            log2.warn("_readFileData: \u4E0D\u652F\u6301\u7684\u538B\u7F29\u65B9\u6CD5 " + entry.method);
-            return null;
-        }
-        return result;
-      }
-      function openZip(zipPath) {
-        var stat, fd, eocd, fileIndex;
-        try {
-          stat = fs.statSync(zipPath);
-          if (!stat.isFile()) {
-            log2.warn("openZip: \u4E0D\u662F\u666E\u901A\u6587\u4EF6 " + zipPath);
-            return null;
-          }
-        } catch (e) {
-          log2.warn("openZip: \u6587\u4EF6\u4E0D\u5B58\u5728\u6216\u65E0\u6CD5\u8BBF\u95EE " + zipPath, e);
-          return null;
-        }
-        try {
-          fd = fs.openSync(zipPath, "r");
-        } catch (e) {
-          log2.warn("openZip: \u65E0\u6CD5\u6253\u5F00\u6587\u4EF6 " + zipPath, e);
-          return null;
-        }
-        try {
-          eocd = _parseEOCD(fd, stat.size);
-          if (!eocd) {
-            log2.warn("openZip: \u65E0\u6CD5\u89E3\u6790 EOCD\uFF0C\u53EF\u80FD\u4E0D\u662F\u6709\u6548 ZIP \u6587\u4EF6");
-            return null;
-          }
-          fileIndex = _parseCentralDirectory(fd, eocd.cdOffset, eocd.cdSize);
-          if (!fileIndex) {
-            log2.warn("openZip: \u65E0\u6CD5\u89E3\u6790\u4E2D\u592E\u76EE\u5F55");
-            return null;
-          }
-        } finally {
-          try {
-            fs.closeSync(fd);
-          } catch (e) {
-          }
-        }
-        function getContent(internalPath) {
-          var normalized, entry, fd2, data;
-          normalized = normalizeZipPath(internalPath);
-          entry = fileIndex[normalized];
-          if (!entry) {
-            log2.debug("getContent: \u6587\u4EF6\u4E0D\u5728 ZIP \u4E2D: " + normalized);
-            return null;
-          }
-          try {
-            fd2 = fs.openSync(zipPath, "r");
-          } catch (e) {
-            log2.warn("getContent: \u65E0\u6CD5\u6253\u5F00 ZIP \u6587\u4EF6\u8FDB\u884C\u8BFB\u53D6", e);
-            return null;
-          }
-          try {
-            data = _readFileData(fd2, entry);
-            return data;
-          } finally {
-            try {
-              fs.closeSync(fd2);
-            } catch (e) {
-            }
-          }
-        }
-        function listFiles2() {
-          return Object.keys(fileIndex).sort();
-        }
-        log2.info("openZip: \u6210\u529F\u6253\u5F00 ZIP\uFF0C\u5171 " + Object.keys(fileIndex).length + " \u4E2A\u6587\u4EF6");
-        return {
-          files: fileIndex,
-          getContent,
-          listFiles: listFiles2
-        };
-      }
-      function readFileContent(zipPath, internalPath) {
-        var handle, content;
-        handle = openZip(zipPath);
-        if (!handle) return null;
-        content = handle.getContent(internalPath);
-        return content;
-      }
-      function listFiles(zipPath) {
-        var handle;
-        handle = openZip(zipPath);
-        if (!handle) return [];
-        return handle.listFiles();
-      }
-      function fileExists(zipPath, internalPath) {
-        var handle, normalized;
-        handle = openZip(zipPath);
-        if (!handle) return false;
-        normalized = normalizeZipPath(internalPath);
-        return handle.files.hasOwnProperty(normalized);
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          openZip,
-          readFileContent,
-          listFiles,
-          fileExists
-        };
-      }
-    }
-  });
-
-  // src/core/content_pack.js
-  var require_content_pack = __commonJS({
-    "src/core/content_pack.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var fs = __require("fs");
-      var path = __require("path");
-      var { createLogger: createLogger2 } = require_logger();
-      var {
-        ensureDir,
-        writeJSONFile,
-        readJSONFile,
-        fileExists,
-        stripJsonComments
-      } = require_file_writer();
-      var zip_reader = require_zip_reader();
-      var log2 = createLogger2("ContentPack");
-      var ROOT = path.join(__dirname, "..", "..");
-      var SCHEMAS_DIR = path.join(ROOT, "schemas");
-      function walkDefFiles(dir, ext) {
-        var results, entries, i, j, entryName, fullPath, stat, subResults, defId;
-        results = [];
-        if (!fs.existsSync(dir)) {
-          log2.warn("walkDefFiles: \u76EE\u5F55\u4E0D\u5B58\u5728 " + dir);
-          return results;
-        }
-        try {
-          entries = fs.readdirSync(dir);
-          log2.info("walkDefFiles: \u626B\u63CF\u76EE\u5F55 " + dir + " \u627E\u5230 " + entries.length + " \u4E2A\u6761\u76EE");
-          for (i = 0; i < entries.length; i++) {
-            entryName = entries[i];
-            fullPath = path.join(dir, entryName);
-            stat = fs.statSync(fullPath);
-            if (stat.isDirectory()) {
-              subResults = walkDefFiles(fullPath, ext);
-              for (j = 0; j < subResults.length; j++) {
-                results.push(subResults[j]);
-              }
-            } else if (path.extname(entryName) === ext) {
-              defId = path.basename(entryName, ext);
-              results.push({ filePath: fullPath, id: defId });
-              log2.info("walkDefFiles: \u627E\u5230\u6587\u4EF6 id=" + defId + " path=" + fullPath);
-            }
-          }
-        } catch (e) {
-          log2.warn("walkDefFiles: \u904D\u5386\u76EE\u5F55\u5931\u8D25 " + dir, e);
-        }
-        return results;
-      }
-      function copyDirRecursive(srcDir, destDir) {
-        var entries, i, srcPath, destPath, stat;
-        if (!fs.existsSync(srcDir)) {
-          log2.warn("copyDirRecursive: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
-          return;
-        }
-        ensureDir(destDir);
-        entries = fs.readdirSync(srcDir);
-        for (i = 0; i < entries.length; i++) {
-          srcPath = path.join(srcDir, entries[i]);
-          destPath = path.join(destDir, entries[i]);
-          stat = fs.statSync(srcPath);
-          if (stat.isDirectory()) {
-            copyDirRecursive(srcPath, destPath);
-          } else {
-            try {
-              fs.writeFileSync(destPath, fs.readFileSync(srcPath));
-              log2.debug("copyDirRecursive: \u5DF2\u590D\u5236 " + srcPath + " \u2192 " + destPath);
-            } catch (e) {
-              log2.warn("copyDirRecursive: \u590D\u5236\u6587\u4EF6\u5931\u8D25 " + srcPath, e);
-            }
-          }
-        }
-      }
-      function _isZipPath(p) {
-        if (!p || typeof p !== "string") return false;
-        return p.toLowerCase().endsWith(".zip");
-      }
-      function _readZipDefs(zipPath, namespace, type) {
-        var handle, allFiles, prefix, i, filePath, contentStr, defId, parsed;
-        var result = {};
-        handle = zip_reader.openZip(zipPath);
-        if (!handle) {
-          log2.warn("_readZipDefs: \u65E0\u6CD5\u6253\u5F00 ZIP " + zipPath);
-          return result;
-        }
-        allFiles = handle.listFiles();
-        prefix = namespace + "/" + type + "/";
-        log2.info("_readZipDefs: \u5F00\u59CB\u8BFB\u53D6 " + type + " ZIP=" + zipPath + " \u524D\u7F00=" + prefix + " \u603B\u6587\u4EF6\u6570=" + allFiles.length);
-        for (i = 0; i < allFiles.length; i++) {
-          filePath = allFiles[i];
-          if (filePath.indexOf(prefix) !== 0) {
-            log2.debug("_readZipDefs: \u8DF3\u8FC7\uFF08\u524D\u7F00\u4E0D\u5339\u914D\uFF09 " + filePath);
-            continue;
-          }
-          if (!filePath.endsWith(".json")) {
-            log2.debug("_readZipDefs: \u8DF3\u8FC7\uFF08\u975E .json\uFF09 " + filePath);
-            continue;
-          }
-          defId = path.basename(filePath, ".json");
-          if (!defId) continue;
-          try {
-            contentStr = handle.getContent(filePath);
-            if (!contentStr) {
-              log2.warn("_readZipDefs: \u65E0\u6CD5\u8BFB\u53D6 " + filePath);
-              continue;
-            }
-            parsed = JSON.parse(stripJsonComments(contentStr.toString("utf-8")));
-            result[defId] = parsed;
-            log2.debug("_readZipDefs: \u5DF2\u8BFB\u53D6 id=" + defId + " path=" + filePath);
-          } catch (e) {
-            log2.warn("_readZipDefs: JSON \u89E3\u6790\u5931\u8D25\uFF0C\u8DF3\u8FC7 " + filePath, e);
-          }
-        }
-        log2.info("_readZipDefs: " + type + " \u4ECE ZIP \u8BFB\u53D6\u5B8C\u6210\uFF0C\u5171 " + Object.keys(result).length + " \u4E2A\u5B9A\u4E49");
-        log2.debug("_readZipDefs: " + type + " \u952E\u5217\u8868", Object.keys(result));
-        return result;
-      }
-      function resolveNamespace(packId) {
-        var str = packId || "";
-        var colonIdx = str.indexOf(":");
-        if (colonIdx >= 0) {
-          return str.substring(0, colonIdx);
-        }
-        return str;
-      }
-      function readPackMeta(packPath) {
-        var metaPath, meta, raw;
-        if (_isZipPath(packPath)) {
-          raw = zip_reader.readFileContent(packPath, "meta.json");
-          if (!raw) {
-            log2.warn("readPackMeta: ZIP \u4E2D\u672A\u627E\u5230 meta.json: " + packPath);
-            return null;
-          }
-          try {
-            meta = JSON.parse(stripJsonComments(raw.toString("utf-8")));
-            log2.debug("readPackMeta: \u5DF2\u4ECE ZIP \u8BFB\u53D6 meta.json: " + packPath);
-            return meta;
-          } catch (e) {
-            log2.warn("readPackMeta: ZIP \u4E2D meta.json \u89E3\u6790\u5931\u8D25: " + packPath, e);
-            return null;
-          }
-        }
-        metaPath = path.join(packPath, "meta.json");
-        meta = readJSONFile(metaPath);
-        if (meta === null) {
-          log2.warn("readPackMeta: \u8BFB\u53D6\u5931\u8D25\u6216\u6587\u4EF6\u4E0D\u5B58\u5728 " + metaPath);
-        } else {
-          log2.debug("readPackMeta: \u5DF2\u8BFB\u53D6 " + metaPath, {
-            rawType: typeof meta,
-            keys: Object.keys(meta),
-            idType: typeof meta.id,
-            authorType: typeof meta.author,
-            descType: typeof meta.description,
-            id: meta.id,
-            author: meta.author,
-            description: meta.description
-          });
-        }
-        return meta;
-      }
-      function writePackMeta(dirPath, meta) {
-        try {
-          writeJSONFile(dirPath, "meta.json", meta);
-          log2.debug("writePackMeta: meta.json \u5DF2\u5199\u5165 " + dirPath);
-        } catch (e) {
-          log2.error("writePackMeta: \u5199\u5165\u5931\u8D25 " + dirPath, e);
-          throw e;
-        }
-      }
-      function createContentPack(dirPath, meta) {
-        var metaPath, namespace, nsDir, docsDir;
-        try {
-          metaPath = path.join(dirPath, "meta.json");
-          if (fileExists(metaPath)) {
-            throw new Error("\u76EE\u5F55\u5DF2\u5305\u542B meta.json\uFF0C\u4E3A\u9632\u6B62\u8986\u76D6\u8BF7\u4F7F\u7528\u5176\u4ED6\u76EE\u5F55: " + dirPath);
-          }
-          namespace = resolveNamespace(meta.id || "");
-          if (!namespace) {
-            return { success: false, namespace: "", error: "meta.id \u4E3A\u7A7A\u6216\u65E0\u6CD5\u89E3\u6790 namespace" };
-          }
-          ensureDir(dirPath);
-          nsDir = path.join(dirPath, namespace);
-          ensureDir(path.join(nsDir, "materials"));
-          ensureDir(path.join(nsDir, "connectors"));
-          ensureDir(path.join(nsDir, "subsystems"));
-          writePackMeta(dirPath, meta);
-          docsDir = path.join(nsDir, "docs");
-          copyDirRecursive(SCHEMAS_DIR, docsDir);
-          log2.info("createContentPack: \u5DF2\u590D\u5236 schemas \u5230 " + docsDir);
-          log2.info("createContentPack: \u5185\u5BB9\u5305\u521B\u5EFA\u6210\u529F", { path: dirPath, namespace });
-          return { success: true, namespace, error: null };
-        } catch (e) {
-          log2.error("createContentPack: \u521B\u5EFA\u5931\u8D25", e);
-          return { success: false, namespace: "", error: e.message };
-        }
-      }
-      function openContentPack(packPath) {
-        var meta, namespace;
-        if (_isZipPath(packPath)) {
-          try {
-            meta = readPackMeta(packPath);
-            if (meta === null) {
-              return { valid: false, meta: null, namespace: "", error: "ZIP \u4E2D meta.json \u8BFB\u53D6\u5931\u8D25\u6216\u4E0D\u5B58\u5728" };
-            }
-            if (!meta.id) {
-              return { valid: false, meta, namespace: "", error: "meta.id \u4E3A\u7A7A" };
-            }
-            namespace = resolveNamespace(meta.id);
-            if (!namespace) {
-              return { valid: false, meta, namespace: "", error: "\u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace" };
-            }
-            log2.info("openContentPack: ZIP \u5185\u5BB9\u5305\u9A8C\u8BC1\u901A\u8FC7", { path: packPath, namespace });
-            return { valid: true, meta, namespace, error: null };
-          } catch (e) {
-            log2.error("openContentPack: \u6253\u5F00 ZIP \u5931\u8D25 " + packPath, e);
-            return { valid: false, meta: null, namespace: "", error: e.message };
-          }
-        }
-        try {
-          meta = readPackMeta(packPath);
-          if (meta === null) {
-            log2.warn("openContentPack: meta.json \u8BFB\u53D6\u5931\u8D25\u6216\u4E0D\u5B58\u5728: " + packPath);
-            return { valid: false, meta: null, namespace: "", error: "meta.json \u8BFB\u53D6\u5931\u8D25\u6216\u4E0D\u5B58\u5728" };
-          }
-          if (!meta.id) {
-            log2.warn("openContentPack: meta.id \u4E3A\u7A7A\uFF0C\u8DEF\u5F84=" + packPath);
-            return { valid: false, meta, namespace: "", error: "meta.id \u4E3A\u7A7A" };
-          }
-          namespace = resolveNamespace(meta.id);
-          if (!namespace) {
-            log2.warn("openContentPack: \u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace: " + meta.id);
-            return { valid: false, meta, namespace: "", error: "\u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace" };
-          }
-          log2.debug("openContentPack: meta.id=" + meta.id + " -> namespace=" + namespace);
-          log2.info("openContentPack: \u5185\u5BB9\u5305\u9A8C\u8BC1\u901A\u8FC7", { path: packPath, namespace });
-          return { valid: true, meta, namespace, error: null };
-        } catch (e) {
-          log2.error("openContentPack: \u6253\u5F00\u5931\u8D25 " + packPath, e);
-          return { valid: false, meta: null, namespace: "", error: e.message };
-        }
-      }
-      function readAllDefs(packDir, namespace, type) {
-        var typeDir, files, result, i, raw;
-        if (_isZipPath(packDir)) {
-          return _readZipDefs(packDir, namespace, type);
-        }
-        typeDir = path.join(packDir, namespace, type);
-        log2.info("readAllDefs: \u5F00\u59CB\u8BFB\u53D6 " + type + " \u76EE\u5F55=" + typeDir + " (packDir=" + packDir + ", namespace=" + namespace + ")");
-        if (!fs.existsSync(typeDir)) {
-          log2.warn("readAllDefs: \u76EE\u5F55\u4E0D\u5B58\u5728 " + typeDir + " (\u7C7B\u578B=" + type + ")");
-          return {};
-        }
-        files = walkDefFiles(typeDir, ".json");
-        log2.info("readAllDefs: walkDefFiles \u627E\u5230 " + files.length + " \u4E2A " + type + " \u6587\u4EF6" + (files.length > 0 ? "\uFF0C\u5217\u8868=" + files.map(function(f) {
-          return f.id;
-        }).join(",") : ""));
-        result = {};
-        for (i = 0; i < files.length; i++) {
-          try {
-            raw = fs.readFileSync(files[i].filePath, "utf-8");
-            result[files[i].id] = JSON.parse(stripJsonComments(raw));
-            log2.debug("readAllDefs: \u5DF2\u8BFB\u53D6 id=" + files[i].id + " path=" + files[i].filePath);
-          } catch (e) {
-            log2.warn("readAllDefs: JSON \u89E3\u6790\u5931\u8D25\uFF0C\u8DF3\u8FC7 " + files[i].filePath, e);
-          }
-        }
-        log2.info("readAllDefs: \u5B8C\u6210", { type, dir: typeDir, count: Object.keys(result).length, ids: Object.keys(result) });
-        return result;
-      }
-      function listDefIds(packDir, namespace, type) {
-        var typeDir = path.join(packDir, namespace, type);
-        var files, ids, i;
-        if (!fs.existsSync(typeDir)) {
-          log2.debug("listDefIds: \u76EE\u5F55\u4E0D\u5B58\u5728 " + typeDir);
-          return [];
-        }
-        files = walkDefFiles(typeDir, ".json");
-        ids = [];
-        for (i = 0; i < files.length; i++) {
-          ids.push(files[i].id);
-        }
-        log2.debug("listDefIds: " + type + " \u5171\u6709 " + ids.length + " \u4E2A\u5B9A\u4E49");
-        return ids;
-      }
-      function defExists(packDir, namespace, type, defId) {
-        var filePath = path.join(packDir, namespace, type, defId + ".json");
-        return fileExists(filePath);
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          resolveNamespace,
-          readPackMeta,
-          writePackMeta,
-          createContentPack,
-          openContentPack,
-          readAllDefs,
-          listDefIds,
-          defExists
-        };
-      }
-    }
-  });
-
-  // src/mode/icons.js
-  var require_icons = __commonJS({
-    "src/mode/icons.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { getMarkerInfo, getMarkersForVariant } = require_element_markers();
-      var { getConfig } = require_persistence();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("Mode");
-      function getIconClassForType(type) {
-        const info = getMarkerInfo(type);
-        return info ? info.icon : "";
-      }
-      function refreshOutlinerIcons() {
-        if (!Project || Project === 0) {
-          log2.debug("refreshOutlinerIcons: \u9879\u76EE\u672A\u6253\u5F00\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        const config = getConfig();
-        if (!config) {
-          log2.debug("refreshOutlinerIcons: config \u4E3A\u7A7A\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        const activePartId = config._uiState?.activePartId;
-        const activeVariantName = config._uiState?.activeVariantName;
-        if (!activePartId || !activeVariantName) {
-          log2.debug("refreshOutlinerIcons: \u65E0\u6D3B\u8DC3\u96F6\u4EF6/\u53D8\u4F53\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        log2.debug("refreshOutlinerIcons: \u5237\u65B0\u56FE\u6807", { partId: activePartId, variant: activeVariantName });
-        const markers = getMarkersForVariant(config, activePartId, activeVariantName);
-        const allElements = [...Group.all, ...Locator.all];
-        for (const el of allElements) {
-          const marker = markers[el.uuid];
-          if (marker) {
-            const iconClass = getIconClassForType(marker.type);
-            if (iconClass) {
-              el.icon = iconClass;
-            }
-          } else {
-            delete el.icon;
-          }
-          if (typeof el.updateElement === "function") {
-            el.updateElement();
-          }
-        }
-      }
-      function resetOutlinerIcons() {
-        if (!Project || Project === 0) return;
-        const allElements = [...Group.all, ...Locator.all];
-        for (const el of allElements) {
-          delete el.icon;
-          if (typeof el.updateElement === "function") {
-            el.updateElement();
-          }
-        }
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          getIconClassForType,
-          refreshOutlinerIcons,
-          resetOutlinerIcons
-        };
-      }
-    }
-  });
-
-  // src/core/subsystem_types.js
-  var require_subsystem_types = __commonJS({
-    "src/core/subsystem_types.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var SUBSYSTEM_TYPES = [
-        // ===== power 分类 =====
-        {
-          id: "machine_max:engine",
-          displayName: "\u53D1\u52A8\u673A",
-          category: "power",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
-            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { engine_speed: ["global", "local"] } }
-          ]
-        },
-        {
-          id: "machine_max:motor",
-          displayName: "\u7535\u52A8\u673A",
-          category: "power",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
-            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { motor_speed: ["local", "global"] } }
-          ]
-        },
-        {
-          id: "machine_max:gearbox",
-          displayName: "\u53D8\u901F\u7BB1",
-          category: "power",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
-            { field: "gear_outputs", label: "\u6321\u4F4D\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { gear: ["local", "global"] } }
-          ]
-        },
-        {
-          id: "machine_max:transmission",
-          displayName: "\u5206\u52A8\u7BB1",
-          category: "power",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "power_outputs", label: "\u529F\u7387\u8F93\u51FA\u5206\u914D", editor: "power_outputs_map", required: true, defaultValue: {} }
-          ]
-        },
-        {
-          id: "machine_max:track_drive",
-          displayName: "\u5C65\u5E26\u9A71\u52A8",
-          category: "power",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
-            { field: "speed_outputs", label: "\u5C65\u5E26\u901F\u5EA6\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { track_speed: ["local", "global"] } },
-            { field: "force_outputs", label: "\u5C65\u5E26\u9A71\u52A8\u529B\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { track_force: ["local", "global"] } }
-          ]
-        },
-        // ===== control 分类 =====
-        {
-          id: "machine_max:car_controller",
-          displayName: "\u8F66\u8F86\u63A7\u5236\u5668",
-          category: "control",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { car_control: [] } },
-            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["local", "global"] } },
-            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["local", "global"] } },
-            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["local", "global"] } },
-            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["local", "global"] } },
-            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["local", "global"] } }
-          ]
-        },
-        {
-          id: "machine_max:motorbike_controller",
-          displayName: "\u6469\u6258\u8F66\u63A7\u5236\u5668",
-          category: "control",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { car_control: [] } },
-            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["local", "global"] } },
-            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["local", "global"] } },
-            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["local", "global"] } },
-            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["local", "global"] } },
-            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["local", "global"] } }
-          ]
-        },
-        {
-          id: "machine_max:track_controller",
-          displayName: "\u5C65\u5E26\u63A7\u5236\u5668",
-          category: "control",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { track_control: [] } },
-            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["local", "global"] } }
-          ]
-        },
-        // ===== utility 分类 =====
-        {
-          id: "machine_max:wheel_driver",
-          displayName: "\u8F6E\u80CE\u9A71\u52A8\u5668",
-          category: "utility",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
-            { field: "roll_speed_outputs", label: "\u6EDA\u52A8\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} },
-            { field: "steering_angle_outputs", label: "\u8F6C\u5411\u89D2\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
-          ]
-        },
-        {
-          id: "machine_max:seat",
-          displayName: "\u5EA7\u4F4D",
-          category: "utility",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
-            { field: "control_group_preset", label: "\u63A7\u5236\u7EC4\u9884\u8BBE", editor: "control_group_selector", required: false, defaultValue: "" },
-            { field: "passenger_num_outputs", label: "\u4E58\u5BA2\u6570\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { passenger_num: ["local", "global"] } },
-            { field: "camera_discovery_targets", label: "\u6444\u50CF\u673A\u53D1\u73B0\u63E1\u624B\u76EE\u6807", editor: "signal_targets", required: false, defaultValue: {} },
-            { field: "dismount_locators", label: "\u4E0B\u8F66\u5B9A\u4F4D\u5668\uFF08\u6309\u4F18\u5148\u7EA7\uFF09", editor: "locator_list", required: false, defaultValue: [] }
-          ]
-        },
-        {
-          id: "machine_max:lighting",
-          displayName: "\u706F\u5149",
-          category: "utility",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u5149\u6E90\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: "" }
-          ]
-        },
-        {
-          id: "machine_max:item_storage",
-          displayName: "\u7269\u54C1\u5B58\u50A8",
-          category: "utility",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
-          ]
-        },
-        {
-          id: "machine_max:basic",
-          displayName: "\u57FA\u7840\uFF08\u65E0\u989D\u5916\u9762\u677F\uFF09",
-          category: "utility",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
-          ]
-        },
-        // ===== experimental 分类 =====
-        {
-          id: "machine_max:camera",
-          displayName: "\u6444\u50CF\u673A",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u6444\u50CF\u673A\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: "" }
-          ]
-        },
-        {
-          id: "machine_max:turret_driver",
-          displayName: "\u70AE\u5854",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
-            { field: "rotation_outputs", label: "\u89D2\u5EA6\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
-          ]
-        },
-        {
-          id: "machine_max:weapon_controller",
-          displayName: "\u6B66\u5668\u63A7\u5236\u5668",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { weapon_control: [] } },
-            { field: "first_hud_layout", label: "\u7B2C\u4E00\u4EBA\u79F0 HUD \u5E03\u5C40", editor: "text_input", required: false, defaultValue: "machine_max:empty" },
-            { field: "third_hud_layout", label: "\u7B2C\u4E09\u4EBA\u79F0 HUD \u5E03\u5C40", editor: "text_input", required: false, defaultValue: "machine_max:empty" },
-            { field: "scope_hud_layout", label: "\u7784\u51C6\u955C HUD \u5E03\u5C40", editor: "text_input", required: false, defaultValue: "machine_max:empty" }
-          ]
-        },
-        {
-          id: "machine_max:launcher",
-          displayName: "\u53D1\u5C04\u5668",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u53D1\u5C04\u70B9\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
-            { field: "fire_animation", label: "\u5F00\u706B\u52A8\u753B\u540D", editor: "text_input", required: false, defaultValue: "fire" },
-            { field: "ammo_outputs", label: "\u5F39\u836F\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
-          ]
-        },
-        {
-          id: "machine_max:sight",
-          displayName: "\u7784\u51C6\u955C",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u7784\u51C6\u955C\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: "" }
-          ]
-        },
-        {
-          id: "machine_max:regen_loader",
-          displayName: "\u518D\u751F\u88C5\u5F39\u673A",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "projectile_types", label: "\u5F39\u94FE\u6784\u6210", editor: "projectile_belt_editor", required: true, defaultValue: {} },
-            { field: "belt_label", label: "\u5F39\u94FE\u6807\u7B7E", editor: "text_input", required: false, defaultValue: "" },
-            { field: "discovery_outputs", label: "\u5F39\u836F\u53D1\u73B0\u9891\u9053", editor: "signal_targets", required: false, defaultValue: {} }
-          ]
-        }
-      ];
-      var TYPE_MAP = {};
-      (function() {
-        for (var i = 0; i < SUBSYSTEM_TYPES.length; i++) {
-          TYPE_MAP[SUBSYSTEM_TYPES[i].id] = SUBSYSTEM_TYPES[i];
-        }
-      })();
-      function getTypeMeta(typeId) {
-        return TYPE_MAP[typeId] || null;
-      }
-      function getAllTypes() {
-        return SUBSYSTEM_TYPES.slice();
-      }
-      function getTypesByCategory(category) {
-        return SUBSYSTEM_TYPES.filter(function(t) {
-          return t.category === category;
-        });
-      }
-      function getTypesGroupedByCategory() {
-        var result = { power: [], control: [], utility: [], experimental: [] };
-        for (var i = 0; i < SUBSYSTEM_TYPES.length; i++) {
-          var t = SUBSYSTEM_TYPES[i];
-          if (result[t.category]) {
-            result[t.category].push(t);
-          }
-        }
-        return result;
-      }
-      function getDynamicFields(typeId) {
-        var meta = TYPE_MAP[typeId];
-        return meta ? meta.dynamicFields.slice() : [];
-      }
-      function getTypeDefaults(typeId) {
-        var fields = getDynamicFields(typeId);
-        var result = {};
-        for (var i = 0; i < fields.length; i++) {
-          var f = fields[i];
-          if (f.field === "definition") continue;
-          result[f.field] = JSON.parse(JSON.stringify(f.defaultValue));
-        }
-        return result;
-      }
-      function getTypeSpecificFields(typeId) {
-        var fields = getDynamicFields(typeId);
-        var names = [];
-        for (var i = 0; i < fields.length; i++) {
-          names.push(fields[i].field);
-        }
-        return names;
-      }
-      function needsLocator(typeId) {
-        var fields = getDynamicFields(typeId);
-        for (var i = 0; i < fields.length; i++) {
-          if (fields[i].editor === "locator_selector") return true;
-        }
-        return false;
-      }
-      function needsConnector(typeId) {
-        var fields = getDynamicFields(typeId);
-        for (var i = 0; i < fields.length; i++) {
-          if (fields[i].editor === "connector_selector") return true;
-        }
-        return false;
-      }
-      function getSignalOutputFieldNames(typeId) {
-        var fields = getDynamicFields(typeId);
-        var result = [];
-        for (var i = 0; i < fields.length; i++) {
-          var f = fields[i];
-          if (f.editor === "signal_targets" || f.editor === "power_target" || f.editor === "power_outputs_map") {
-            result.push(f.field);
-          }
-        }
-        return result;
-      }
-      var EDITOR_LABELS = {
-        definition_selector: "\u578B\u53F7\u5B9A\u4E49\u9009\u62E9\u5668",
-        locator_selector: "\u5B9A\u4F4D\u5668\u9009\u62E9\u5668",
-        locator_list: "\u5B9A\u4F4D\u5668\u5217\u8868\u7F16\u8F91\u5668",
-        connector_selector: "\u8FDE\u63A5\u70B9\u9009\u62E9\u5668",
-        power_target: "\u529F\u7387\u76EE\u6807\u9009\u62E9\u5668",
-        signal_targets: "\u4FE1\u53F7\u9891\u9053\u7F16\u8F91\u5668",
-        power_outputs_map: "\u529F\u7387\u8F93\u51FA\u6620\u5C04\u7F16\u8F91\u5668",
-        enum_selector: "\u679A\u4E3E\u4E0B\u62C9\u83DC\u5355",
-        text_input: "\u6587\u672C\u8F93\u5165\u6846",
-        json_textarea: "JSON \u7F16\u8F91\u6846"
-      };
-      function getEditorLabel(editorType) {
-        return EDITOR_LABELS[editorType] || editorType;
-      }
-      var CATEGORY_COLORS = {
-        power: "#e67e22",
-        control: "#3498db",
-        utility: "#2ecc71",
-        experimental: "#9b59b6"
-      };
-      function getTypeColor(typeId) {
-        var meta = TYPE_MAP[typeId];
-        if (!meta) return "#888";
-        return CATEGORY_COLORS[meta.category] || "#888";
-      }
-      var CATEGORY_LABELS = {
-        power: "\u52A8\u529B",
-        control: "\u63A7\u5236",
-        utility: "\u529F\u80FD",
-        experimental: "\u5B9E\u9A8C"
-      };
-      function getCategoryLabel(category) {
-        return CATEGORY_LABELS[category] || category;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          SUBSYSTEM_TYPES,
-          getTypeMeta,
-          getAllTypes,
-          getTypesByCategory,
-          getTypesGroupedByCategory,
-          getDynamicFields,
-          getTypeDefaults,
-          getTypeSpecificFields,
-          needsLocator,
-          needsConnector,
-          getSignalOutputFieldNames,
-          getEditorLabel,
-          getTypeColor,
-          getCategoryLabel
-        };
-      }
-    }
-  });
-
-  // src/core/builtin_pack.js
-  var require_builtin_pack = __commonJS({
-    "src/core/builtin_pack.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var { stripJsonComments } = require_file_writer();
-      var log2 = createLogger2("BuiltinPack");
-      function normalizeDefs(rawDefs) {
-        var result, keys, i, key, value, defId, lastSlash, stripped;
-        if (!rawDefs || typeof rawDefs !== "object") return {};
-        result = {};
-        keys = Object.keys(rawDefs);
-        for (i = 0; i < keys.length; i++) {
-          key = keys[i];
-          value = rawDefs[key];
-          defId = key;
-          if (typeof defId === "string" && defId.endsWith(".json")) {
-            defId = defId.slice(0, -5);
-          }
-          lastSlash = defId.lastIndexOf("/");
-          if (lastSlash >= 0) {
-            defId = defId.substring(lastSlash + 1);
-          }
-          if (typeof value === "string") {
-            try {
-              stripped = stripJsonComments(value);
-              value = JSON.parse(stripped);
-            } catch (e) {
-              log2.warn("normalizeDefs: JSON \u89E3\u6790\u5931\u8D25\uFF0C\u4FDD\u7559\u539F\u503C key=" + key, e);
-            }
-          }
-          result[defId] = value;
-        }
-        return result;
-      }
-      function readDefine(injectedValue, fallback) {
-        if (typeof injectedValue === "undefined") {
-          return fallback;
-        }
-        return injectedValue;
-      }
-      var builtinMeta = readDefine(
-        typeof define_BUILTIN_PACK_META_default !== "undefined" ? define_BUILTIN_PACK_META_default : void 0,
-        { id: "", version: "0.0" }
-      );
-      var builtinMaterials = normalizeDefs(
-        readDefine(
-          typeof define_BUILTIN_MATERIALS_default !== "undefined" ? define_BUILTIN_MATERIALS_default : void 0,
-          {}
-        )
-      );
-      var builtinConnectors = normalizeDefs(
-        readDefine(
-          typeof define_BUILTIN_CONNECTORS_default !== "undefined" ? define_BUILTIN_CONNECTORS_default : void 0,
-          {}
-        )
-      );
-      var builtinSubsystems = normalizeDefs(
-        readDefine(
-          typeof define_BUILTIN_SUBSYSTEMS_default !== "undefined" ? define_BUILTIN_SUBSYSTEMS_default : void 0,
-          {}
-        )
-      );
-      var builtinControlGroups = normalizeDefs(
-        readDefine(
-          typeof define_BUILTIN_CONTROL_GROUPS_default !== "undefined" ? define_BUILTIN_CONTROL_GROUPS_default : void 0,
-          {}
-        )
-      );
-      function extractNamespace(id) {
-        if (!id || typeof id !== "string") return "machine_max";
-        var colonIdx = id.indexOf(":");
-        return colonIdx >= 0 ? id.substring(0, colonIdx) : id;
-      }
-      function getBuiltinPack() {
-        var namespace = extractNamespace(builtinMeta.id);
-        var matCount, connCount, subCount, cgCount;
-        var result = {
-          meta: builtinMeta,
-          namespace,
-          materials: builtinMaterials,
-          connectors: builtinConnectors,
-          subsystems: builtinSubsystems,
-          control_groups: builtinControlGroups
-        };
-        Object.freeze(result);
-        matCount = Object.keys(builtinMaterials).length;
-        connCount = Object.keys(builtinConnectors).length;
-        subCount = Object.keys(builtinSubsystems).length;
-        cgCount = Object.keys(builtinControlGroups).length;
-        log2.info(
-          "getBuiltinPack: \u5185\u7F6E\u57FA\u7840\u5305\u52A0\u8F7D\u5B8C\u6210 \u2014 materials=" + matCount + " connectors=" + connCount + " subsystems=" + subCount + " controlGroups=" + cgCount + " namespace=" + namespace + " metaId=" + (builtinMeta.id || "\u65E0")
-        );
-        log2.debug("getBuiltinPack: \u8FDE\u63A5\u5668\u952E\u5217\u8868", Object.keys(builtinConnectors));
-        log2.debug("getBuiltinPack: \u6750\u6599\u952E\u5217\u8868", Object.keys(builtinMaterials));
-        log2.debug("getBuiltinPack: \u5B50\u7CFB\u7EDF\u952E\u5217\u8868", Object.keys(builtinSubsystems));
-        log2.debug("getBuiltinPack: \u63A7\u5236\u7EC4\u9884\u8BBE\u952E\u5217\u8868", Object.keys(builtinControlGroups));
-        return result;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          getBuiltinPack
-        };
-      }
-    }
-  });
-
-  // src/core/content_pack_manager.js
-  var require_content_pack_manager = __commonJS({
-    "src/core/content_pack_manager.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var content_pack = require_content_pack();
-      var builtin_pack = require_builtin_pack();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("ContentPackManager");
-      var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
-      var _cache = {
-        materials: null,
-        connectors: null,
-        subsystems: null,
-        control_groups: null,
-        projectiles: null
-      };
-      function loadMergedDefs(config, type) {
-        var emptyResult;
-        var defs;
-        var sources;
-        var builtin;
-        var builtinDefs;
-        var bKey;
-        var depPaths;
-        var i;
-        var depPath;
-        var openResult;
-        var depDefs;
-        var depKey;
-        var currentPath;
-        var curOpenResult;
-        var curDefs;
-        var curKey;
-        var result;
-        var defCount;
-        if (_cache[type]) {
-          log2.debug("loadMergedDefs: \u7F13\u5B58\u547D\u4E2D " + type);
-          return _cache[type];
-        }
-        if (!config) {
-          log2.warn("loadMergedDefs: config \u4E3A\u7A7A\uFF0C\u8FD4\u56DE\u7A7A\u7ED3\u679C");
-          emptyResult = { defs: {}, sources: {} };
-          _cache[type] = emptyResult;
-          return emptyResult;
-        }
-        defs = {};
-        sources = {};
-        log2.debug("loadMergedDefs: \u5F00\u59CB\u5408\u5E76 " + type, {
-          contentPackPath: config.contentPackPath,
-          dependencyPaths: config.dependencyPaths
-        });
-        try {
-          builtin = builtin_pack.getBuiltinPack();
-          builtinDefs = builtin[type] || {};
-          for (bKey in builtinDefs) {
-            if (hasOwn(builtinDefs, bKey)) {
-              var namespacedKey = builtin.namespace + ":" + bKey;
-              defs[namespacedKey] = builtinDefs[bKey];
-              sources[namespacedKey] = "builtin";
-              log2.debug("loadMergedDefs: \u5185\u7F6E\u5305\u6DFB\u52A0 " + namespacedKey + " (source=builtin)");
-            }
-          }
-          log2.info("loadMergedDefs: \u5185\u7F6E\u5305 " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(builtinDefs).length + " \u4E2A\u5B9A\u4E49\uFF0Cnamespace=" + builtin.namespace);
-        } catch (e) {
-          log2.warn("loadMergedDefs: \u5185\u7F6E\u5305\u8BFB\u53D6\u5931\u8D25\uFF0C\u4F5C\u4E3A\u7A7A\u5305\u5904\u7406", e);
-        }
-        depPaths = config.dependencyPaths;
-        if (depPaths && Array.isArray(depPaths) && depPaths.length > 0) {
-          for (i = 0; i < depPaths.length; i++) {
-            depPath = depPaths[i];
-            if (!depPath || typeof depPath !== "string" || depPath.trim() === "") {
-              log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u8DEF\u5F84\u4E3A\u7A7A\uFF0C\u8DF3\u8FC7 index=" + i);
-              continue;
-            }
-            try {
-              openResult = content_pack.openContentPack(depPath);
-              if (!openResult.valid) {
-                log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u65E0\u6548\uFF0C\u8DF3\u8FC7: " + depPath, openResult.error);
-                continue;
-              }
-              log2.info("loadMergedDefs: \u4F9D\u8D56\u5305\u6253\u5F00\u6210\u529F", {
-                path: depPath,
-                namespace: openResult.namespace,
-                metaId: openResult.meta ? openResult.meta.id : null
-              });
-              depDefs = content_pack.readAllDefs(depPath, openResult.namespace, type);
-              for (depKey in depDefs) {
-                if (hasOwn(depDefs, depKey)) {
-                  var namespacedDepKey = openResult.namespace + ":" + depKey;
-                  var prevSource = sources[namespacedDepKey];
-                  defs[namespacedDepKey] = depDefs[depKey];
-                  sources[namespacedDepKey] = "dependency:" + i;
-                  log2.info("loadMergedDefs: \u4F9D\u8D56\u5305\u6DFB\u52A0 " + namespacedDepKey + " (source=dependency:" + i + ", \u8986\u76D6\u524D=" + (prevSource || "\u65E0") + ")");
-                }
-              }
-              log2.info("loadMergedDefs: \u4F9D\u8D56\u5305 " + depPath + " " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(depDefs).length + " \u4E2A\u5B9A\u4E49");
-            } catch (e) {
-              log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u52A0\u8F7D\u5931\u8D25\uFF0C\u8DF3\u8FC7: " + depPath, e);
-            }
-          }
-        }
-        currentPath = config.contentPackPath;
-        if (currentPath && typeof currentPath === "string" && currentPath.trim() !== "") {
-          try {
-            curOpenResult = content_pack.openContentPack(currentPath);
-            if (!curOpenResult.valid) {
-              log2.error("loadMergedDefs: \u5F53\u524D\u5185\u5BB9\u5305\u65E0\u6548: " + currentPath, curOpenResult.error);
-              log2.debug("loadMergedDefs: openContentPack \u7ED3\u679C", {
-                namespace: curOpenResult.namespace,
-                meta: curOpenResult.meta,
-                error: curOpenResult.error
-              });
-            } else {
-              log2.info("loadMergedDefs: \u5F53\u524D\u5305\u6253\u5F00\u6210\u529F", {
-                path: currentPath,
-                namespace: curOpenResult.namespace,
-                metaId: curOpenResult.meta ? curOpenResult.meta.id : null
-              });
-              curDefs = content_pack.readAllDefs(currentPath, curOpenResult.namespace, type);
-              for (curKey in curDefs) {
-                if (hasOwn(curDefs, curKey)) {
-                  var namespacedCurKey = curOpenResult.namespace + ":" + curKey;
-                  var prevSource = sources[namespacedCurKey];
-                  defs[namespacedCurKey] = curDefs[curKey];
-                  sources[namespacedCurKey] = "current";
-                  log2.info("loadMergedDefs: \u5F53\u524D\u5305\u6DFB\u52A0 " + namespacedCurKey + " (source=current, \u8986\u76D6\u524D=" + (prevSource || "\u65E0") + ")");
-                }
-              }
-              log2.info("loadMergedDefs: \u5F53\u524D\u5305 " + currentPath + " " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(curDefs).length + " \u4E2A\u5B9A\u4E49");
-            }
-          } catch (e) {
-            log2.error("loadMergedDefs: \u5F53\u524D\u5185\u5BB9\u5305\u52A0\u8F7D\u5931\u8D25: " + currentPath, e);
-          }
-        }
-        result = { defs, sources };
-        _cache[type] = result;
-        defCount = Object.keys(defs).length;
-        log2.info("loadMergedDefs: " + type + " \u5408\u5E76\u5B8C\u6210\uFF0C\u5171 " + defCount + " \u4E2A\u5B9A\u4E49");
-        log2.debug("loadMergedDefs: \u6700\u7EC8 sources", sources);
-        return result;
-      }
-      function resolveDefSource(config, type, defId) {
-        var merged = loadMergedDefs(config, type);
-        var source = merged.sources[defId];
-        if (source === void 0) {
-          log2.debug("resolveDefSource: \u672A\u627E\u5230\u5B9A\u4E49 " + type + ":" + defId);
-          return null;
-        }
-        log2.debug("resolveDefSource: " + type + ":" + defId + " -> " + source);
-        return source;
-      }
-      function isDefEditable(config, type, defId) {
-        var source = resolveDefSource(config, type, defId);
-        return source === "current";
-      }
-      function getAvailableDefsForType(config, type) {
-        var merged = loadMergedDefs(config, type);
-        return merged.defs;
-      }
-      function getFirstDefId(config, type) {
-        var defs = getAvailableDefsForType(config, type);
-        var keys = Object.keys(defs);
-        if (keys.length === 0) {
-          log2.debug("getFirstDefId: " + type + " \u65E0\u53EF\u7528\u5B9A\u4E49");
-          return null;
-        }
-        return keys[0];
-      }
-      function invalidateCache() {
-        _cache.materials = null;
-        _cache.connectors = null;
-        _cache.subsystems = null;
-        _cache.control_groups = null;
-        _cache.projectiles = null;
-        log2.debug("invalidateCache: \u7F13\u5B58\u5DF2\u6E05\u9664");
-        try {
-          throw new Error("invalidateCache \u8C03\u7528\u6808");
-        } catch (e) {
-          log2.debug("invalidateCache: \u8C03\u7528\u8005", e.stack);
-        }
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          loadMergedDefs,
-          resolveDefSource,
-          isDefEditable,
-          getAvailableDefsForType,
-          getFirstDefId,
-          invalidateCache
-        };
-      }
-    }
-  });
-
-  // src/core/validation_types.js
-  var require_validation_types = __commonJS({
-    "src/core/validation_types.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var SEVERITY_ERROR = "error";
-      var SEVERITY_WARNING = "warning";
-      var CODES = {
-        SUBSYSTEM_REQUIRED_FIELD: "subsystem_required_field",
-        // 子系统 required 字段缺失（含 ''/null/undefined）
-        DEFINITION_REQUIRED: "definition_required",
-        // 子系统/连接点的 definition 未配置（空串）
-        DEFINITION_REF_MISSING: "definition_ref_missing",
-        // definition 引用的型号定义不存在（引用断裂）
-        ORPHAN_ELEMENT: "orphan_element",
-        // 连接点/碰撞箱/交互区游离（无归属 subpart）
-        GHOST_MARKER: "ghost_marker",
-        // 幽灵标记（UUID 对应元素已删除）
-        MISSING_REQUIRED: "missing_required",
-        // 其余零件/变体/子零件级必填项（占位）
-        DUPLICATE_NAME: "duplicate_name",
-        // 连接点/子系统/交互区名在单变体内重复（Part 级按名寻址歧义）
-        RESERVED_NAME: "reserved_name",
-        // 使用了信号保留地址（local/global 等）
-        DANGLING_SIGNAL_TARGET: "dangling_signal_target",
-        // 信号/功率目标指向不存在的节点（含 power_outputs 的 key）
-        MATERIAL_REQUIRED: "material_required",
-        // 碰撞箱 material 未配置（空串/null/undefined）
-        MATERIAL_REF_MISSING: "material_ref_missing"
-        // 碰撞箱 material 引用的材质不存在（machine_max:default 为内置兜底，不查表）
-      };
-      var SCOPE_ITEM_BUCKET = {
-        subsystem: "subsystems",
-        connector: "connectors",
-        hit_box: "hitBoxes",
-        interact_box: "interactBoxes"
-      };
-      function isMissingValue(val) {
-        return val === "" || val === null || val === void 0;
-      }
-      function aggregate(problems) {
-        var bySubPart = {};
-        var byItem = { subsystems: {}, connectors: {}, hitBoxes: {}, interactBoxes: {} };
-        var byPartVariant = [];
-        if (!Array.isArray(problems)) {
-          return { bySubPart, byItem, byPartVariant };
-        }
-        for (var i = 0; i < problems.length; i++) {
-          var p = problems[i];
-          var pi = p && p.path;
-          if (!pi) continue;
-          if (pi.subPartKey) {
-            if (!bySubPart[pi.subPartKey]) bySubPart[pi.subPartKey] = [];
-            bySubPart[pi.subPartKey].push(p);
-            if (pi.itemKey) {
-              var bucket = SCOPE_ITEM_BUCKET[pi.scope];
-              if (bucket && byItem[bucket]) {
-                if (!byItem[bucket][pi.itemKey]) byItem[bucket][pi.itemKey] = [];
-                byItem[bucket][pi.itemKey].push(p);
-              }
-            }
-          } else {
-            byPartVariant.push(p);
-          }
-        }
-        return { bySubPart, byItem, byPartVariant };
-      }
-      function matchesField(problem, field) {
-        if (!field) return false;
-        var f = problem && problem.path && problem.path.field;
-        if (typeof f !== "string" || f === "") return false;
-        return f === field || f.indexOf(field + ".") === 0;
-      }
-      function filterFieldIssues(problems, field) {
-        if (!Array.isArray(problems) || !field) return [];
-        var out = [];
-        for (var i = 0; i < problems.length; i++) {
-          if (matchesField(problems[i], field)) out.push(problems[i]);
-        }
-        return out;
-      }
-      function resolveIssueLevel(issues) {
-        if (!issues || !Array.isArray(issues) || issues.length === 0) return "none";
-        var hasError = false;
-        for (var i = 0; i < issues.length; i++) {
-          if (issues[i] && issues[i].severity === SEVERITY_ERROR) return SEVERITY_ERROR;
-          if (issues[i] && issues[i].severity === SEVERITY_WARNING) hasError = true;
-        }
-        return hasError ? SEVERITY_WARNING : "none";
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          SEVERITY_ERROR,
-          SEVERITY_WARNING,
-          CODES,
-          SCOPE_ITEM_BUCKET,
-          isMissingValue,
-          matchesField,
-          filterFieldIssues,
-          aggregate,
-          resolveIssueLevel
-        };
-      }
-    }
-  });
-
-  // src/doc/ports.js
-  var require_ports = __commonJS({
-    "src/doc/ports.js"(exports, module) {
-      "use strict";
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var STATE = null;
-      function groupList() {
-        return typeof Group !== "undefined" && Group && Group.all ? Group.all : [];
-      }
-      function locatorList() {
-        return typeof Locator !== "undefined" && Locator && Locator.all ? Locator.all : [];
-      }
-      function findIn(list, name) {
-        for (var i = 0; i < list.length; i++) {
-          if (list[i] && list[i].name === name) return list[i];
-        }
-        return null;
-      }
-      function findByUuidIn(list, uuid) {
-        for (var i = 0; i < list.length; i++) {
-          if (list[i] && list[i].uuid === uuid) return list[i];
-        }
-        return null;
-      }
-      function createDefaults() {
-        return {
-          bones: {
-            findByName: function(name) {
-              return findIn(groupList(), name) || findIn(locatorList(), name);
-            },
-            findByUuid: function(uuid) {
-              return findByUuidIn(groupList(), uuid) || findByUuidIn(locatorList(), uuid);
-            },
-            findNameByUuid: function(uuid) {
-              var el = findByUuidIn(groupList(), uuid) || findByUuidIn(locatorList(), uuid);
-              return el ? el.name : null;
-            },
-            listAll: function() {
-              return groupList().concat(locatorList());
-            }
-          },
-          markers: {
-            set: null,
-            clear: null,
-            clearScope: null,
-            recalc: null
-          },
-          validation: {
-            collectIssues: null
-          },
-          events: {
-            emit: function(name, payload) {
-              if (typeof Blockbench !== "undefined" && Blockbench && typeof Blockbench.dispatchEvent === "function") {
-                Blockbench.dispatchEvent(name, payload);
-              }
-            }
-          },
-          reactivity: {
-            set: function(obj, key, value) {
-              if (typeof Vue !== "undefined" && Vue && typeof Vue.set === "function") {
-                Vue.set(obj, key, value);
-              } else {
-                obj[key] = value;
-              }
-            },
-            del: function(obj, key) {
-              if (typeof Vue !== "undefined" && Vue && typeof Vue.delete === "function") {
-                Vue.delete(obj, key);
-              } else {
-                delete obj[key];
-              }
-            }
-          }
-        };
-      }
-      function get() {
-        if (!STATE) STATE = createDefaults();
-        return STATE;
-      }
-      function assignCategory(name, patch) {
-        if (!patch || typeof patch !== "object") return;
-        var current = get()[name];
-        Object.keys(patch).forEach(function(key) {
-          current[key] = patch[key];
-        });
-      }
-      function install(p) {
-        if (!p || typeof p !== "object") return get();
-        var current = get();
-        Object.keys(p).forEach(function(category) {
-          if (!current[category]) {
-            current[category] = {};
-          }
-          assignCategory(category, p[category]);
-        });
-        return current;
-      }
-      function reset() {
-        STATE = createDefaults();
-        return STATE;
-      }
-      module.exports = {
-        get,
-        install,
-        reset
-      };
-    }
-  });
-
-  // src/doc/refs.js
-  var require_refs = __commonJS({
-    "src/doc/refs.js"(exports, module) {
-      "use strict";
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var ports = require_ports();
-      var SENTINELS = ["local", "global"];
-      function own(obj, key) {
-        return Object.prototype.hasOwnProperty.call(obj, key);
-      }
-      function isObject(v) {
-        return v !== null && typeof v === "object" && !Array.isArray(v);
-      }
-      function eachVariant(config, fn) {
-        var parts = config && config.parts;
-        if (!isObject(parts)) return;
-        Object.keys(parts).forEach(function(partId) {
-          var part = parts[partId];
-          if (!isObject(part) || !isObject(part.variants)) return;
-          Object.keys(part.variants).forEach(function(variantName) {
-            var variant = part.variants[variantName];
-            if (isObject(variant)) fn(partId, variantName, part, variant);
-          });
-        });
-      }
-      function eachSubPart(config, fn) {
-        eachVariant(config, function(partId, variantName, part, variant) {
-          var subParts = variant.sub_parts;
-          if (!isObject(subParts)) return;
-          Object.keys(subParts).forEach(function(spKey) {
-            var sp = subParts[spKey];
-            if (isObject(sp)) fn(partId, variantName, spKey, sp, part, variant);
-          });
-        });
-      }
-      function eachMarker(config, fn) {
-        var parts = config && config.parts;
-        if (!isObject(parts)) return;
-        Object.keys(parts).forEach(function(partId) {
-          var part = parts[partId];
-          if (!isObject(part) || !isObject(part.element_markers)) return;
-          Object.keys(part.element_markers).forEach(function(variantName) {
-            var markers = part.element_markers[variantName];
-            if (!isObject(markers)) return;
-            Object.keys(markers).forEach(function(uuid) {
-              if (isObject(markers[uuid])) fn(partId, variantName, uuid, markers[uuid], markers);
-            });
-          });
-        });
-      }
-      function targetsOf(subPart) {
-        var targets = {
-          subsystem: {},
-          connector: {},
-          interact_box: {}
-        };
-        ["subsystems", "connectors", "interact_boxes"].forEach(function(map) {
-          var entries = subPart && subPart[map];
-          if (!isObject(entries)) return;
-          var kind = map === "subsystems" ? "subsystem" : map === "connectors" ? "connector" : "interact_box";
-          Object.keys(entries).forEach(function(key) {
-            targets[kind][key] = true;
-          });
-        });
-        return targets;
-      }
-      function targetExists(targets, target) {
-        if (SENTINELS.indexOf(target) >= 0) return true;
-        return !!(targets.subsystem[target] || targets.connector[target] || targets.interact_box[target]);
-      }
-      function isPlaceholder(value) {
-        return value === null || value === void 0 || value === "";
-      }
-      function isSignalMap(value) {
-        if (!isObject(value)) return false;
-        var entries = Object.keys(value);
-        for (var i = 0; i < entries.length; i++) {
-          if (!Array.isArray(value[entries[i]])) return false;
-        }
-        return true;
-      }
-      function eachSignalMap(node, fn) {
-        if (!isObject(node)) return;
-        Object.keys(node).forEach(function(field) {
-          if (field === "signal_translations") return;
-          if (isSignalMap(node[field])) fn(node[field], field);
-        });
-      }
-      function addSignalRefs(list, map, path, field) {
-        Object.keys(map).forEach(function(ch) {
-          var targets = map[ch];
-          if (!Array.isArray(targets)) return;
-          for (var i = 0; i < targets.length; i++) {
-            addRef(list, path.concat([field, ch, i]), targets[i], "signal_target");
-          }
-        });
-      }
-      function addRef(list, path, target, kind) {
-        if (isPlaceholder(target)) return;
-        list.push({ path, target, kind });
-      }
-      function collectRefs(subPart, basePath) {
-        var refs = [];
-        var base = basePath || [];
-        var subsystems = isObject(subPart.subsystems) ? subPart.subsystems : {};
-        Object.keys(subsystems).forEach(function(sk) {
-          var ss = subsystems[sk];
-          if (!isObject(ss)) return;
-          var p = base.concat(["subsystems", sk]);
-          addRef(refs, p.concat(["power_output"]), ss.power_output, "power_output");
-          addRef(refs, p.concat(["connector"]), ss.connector, "connector");
-          eachSignalMap(ss, function(map, field) {
-            addSignalRefs(refs, map, p, field);
-          });
-          if (isObject(ss.power_outputs)) {
-            Object.keys(ss.power_outputs).forEach(function(target) {
-              addRef(refs, p.concat(["power_outputs", target]), target, "power_output_key");
-            });
-          }
-        });
-        var connectors = isObject(subPart.connectors) ? subPart.connectors : {};
-        Object.keys(connectors).forEach(function(ck) {
-          var conn = connectors[ck];
-          if (!isObject(conn)) return;
-          var p = base.concat(["connectors", ck]);
-          addRef(refs, p.concat(["power_target"]), conn.power_target, "power_target");
-          eachSignalMap(conn, function(map, field) {
-            addSignalRefs(refs, map, p, field);
-          });
-        });
-        var interactBoxes = isObject(subPart.interact_boxes) ? subPart.interact_boxes : {};
-        Object.keys(interactBoxes).forEach(function(ik) {
-          var ib = interactBoxes[ik];
-          if (!isObject(ib)) return;
-          var p = base.concat(["interact_boxes", ik]);
-          eachSignalMap(ib, function(map, field) {
-            addSignalRefs(refs, map, p, field);
-          });
-        });
-        var hitBoxes = isObject(subPart.hit_boxes) ? subPart.hit_boxes : {};
-        Object.keys(hitBoxes).forEach(function(hk) {
-          var hb = hitBoxes[hk];
-          if (!isObject(hb)) return;
-          addRef(refs, base.concat(["hit_boxes", hk, "subsystem"]), hb.subsystem, "hit_box_subsystem");
-        });
-        return { targets: targetsOf(subPart), refs };
-      }
-      function resolveConfigRefs(config, scope) {
-        scope = scope || {};
-        var subPart = scope.subPart;
-        var basePath = scope.basePath;
-        if (!subPart) {
-          var part = config && config.parts && config.parts[scope.partId];
-          var variant = part && part.variants && part.variants[scope.variantName];
-          subPart = variant && variant.sub_parts && variant.sub_parts[scope.subPartKey];
-          basePath = [
-            "parts",
-            scope.partId,
-            "variants",
-            scope.variantName,
-            "sub_parts",
-            scope.subPartKey
-          ];
-        }
-        if (!isObject(subPart)) {
-          return {
-            ok: false,
-            resolved: [],
-            dangling: [],
-            errors: [{
-              path: basePath || [],
-              code: "not_found",
-              expected: "sub_part",
-              got: void 0,
-              hint: "\u5B50\u96F6\u4EF6\u4E0D\u5B58\u5728"
-            }]
-          };
-        }
-        var collected = collectRefs(subPart, basePath || []);
-        var resolved = [];
-        var dangling = [];
-        collected.refs.forEach(function(ref) {
-          if (targetExists(collected.targets, ref.target)) {
-            resolved.push(ref);
-          } else {
-            dangling.push(ref);
-          }
-        });
-        return { ok: dangling.length === 0, resolved, dangling, errors: [] };
-      }
-      function removeSignalTarget(list, target) {
-        var removed = 0;
-        for (var i = list.length - 1; i >= 0; i--) {
-          if (list[i] === target) {
-            list.splice(i, 1);
-            removed++;
-          }
-        }
-        return removed;
-      }
-      function cleanDangling(config, removed) {
-        removed = removed || {};
-        var target = removed.target || removed.key;
-        var cleaned = [];
-        if (!target) return { ok: true, cleaned_references: cleaned };
-        eachSubPart(config, function(partId, variantName, spKey, sp) {
-          var base = ["parts", partId, "variants", variantName, "sub_parts", spKey];
-          var subsystems = isObject(sp.subsystems) ? sp.subsystems : {};
-          Object.keys(subsystems).forEach(function(sk) {
-            var ss = subsystems[sk];
-            if (!isObject(ss)) return;
-            var p = base.concat(["subsystems", sk]);
-            if (ss.power_output === target) {
-              ss.power_output = "";
-              cleaned.push({ path: p.concat(["power_output"]), target, kind: "power_output" });
-            }
-            if (ss.connector === target) {
-              ss.connector = "";
-              cleaned.push({ path: p.concat(["connector"]), target, kind: "connector" });
-            }
-            eachSignalMap(ss, function(map, field) {
-              Object.keys(map).forEach(function(ch) {
-                if (Array.isArray(map[ch]) && removeSignalTarget(map[ch], target) > 0) {
-                  cleaned.push({
-                    path: p.concat([field, ch]),
-                    target,
-                    kind: "signal_target"
-                  });
-                }
-              });
-            });
-            if (isObject(ss.power_outputs) && own(ss.power_outputs, target)) {
-              delete ss.power_outputs[target];
-              cleaned.push({
-                path: p.concat(["power_outputs", target]),
-                target,
-                kind: "power_output_key"
-              });
-            }
-          });
-          var connectors = isObject(sp.connectors) ? sp.connectors : {};
-          Object.keys(connectors).forEach(function(ck) {
-            var conn = connectors[ck];
-            if (!isObject(conn)) return;
-            var p = base.concat(["connectors", ck]);
-            if (conn.power_target === target) {
-              conn.power_target = "";
-              cleaned.push({ path: p.concat(["power_target"]), target, kind: "power_target" });
-            }
-            eachSignalMap(conn, function(map, field) {
-              Object.keys(map).forEach(function(ch) {
-                if (Array.isArray(map[ch]) && removeSignalTarget(map[ch], target) > 0) {
-                  cleaned.push({
-                    path: p.concat([field, ch]),
-                    target,
-                    kind: "signal_target"
-                  });
-                }
-              });
-            });
-          });
-          var interactBoxes = isObject(sp.interact_boxes) ? sp.interact_boxes : {};
-          Object.keys(interactBoxes).forEach(function(ik) {
-            var ib = interactBoxes[ik];
-            if (!isObject(ib)) return;
-            var p = base.concat(["interact_boxes", ik]);
-            eachSignalMap(ib, function(map, field) {
-              Object.keys(map).forEach(function(ch) {
-                if (Array.isArray(map[ch]) && removeSignalTarget(map[ch], target) > 0) {
-                  cleaned.push({
-                    path: p.concat([field, ch]),
-                    target,
-                    kind: "signal_target"
-                  });
-                }
-              });
-            });
-          });
-          var hitBoxes = isObject(sp.hit_boxes) ? sp.hit_boxes : {};
-          Object.keys(hitBoxes).forEach(function(hk) {
-            var hb = hitBoxes[hk];
-            if (isObject(hb) && hb.subsystem === target) {
-              hb.subsystem = "";
-              cleaned.push({
-                path: base.concat(["hit_boxes", hk, "subsystem"]),
-                target,
-                kind: "hit_box_subsystem"
-              });
-            }
-          });
-        });
-        eachMarker(config, function(partId, variantName, uuid, marker, markers) {
-          if (marker.config_ref !== target) return;
-          var typeMatches = !removed.kind || marker.type === removed.kind || removed.kind === "sub_part" && (marker.type === "sub_part" || marker.type === "hit_box");
-          if (!typeMatches) return;
-          delete markers[uuid];
-          cleaned.push({
-            path: ["parts", partId, "element_markers", variantName, uuid],
-            target,
-            kind: "marker"
-          });
-        });
-        return { ok: true, cleaned_references: cleaned };
-      }
-      function renameSignalTargets(obj, oldKey, newKey, path, report, field) {
-        if (!isObject(obj)) return;
-        var name = field || "signal_targets";
-        Object.keys(obj).forEach(function(ch) {
-          var list = obj[ch];
-          if (!Array.isArray(list)) return;
-          for (var i = 0; i < list.length; i++) {
-            if (list[i] !== oldKey) continue;
-            if (list.indexOf(newKey) < 0) {
-              list[i] = newKey;
-            } else {
-              list.splice(i, 1);
-              i--;
-            }
-            report.push({
-              path: path.concat([name, ch]),
-              from: oldKey,
-              to: newKey,
-              kind: "signal_target"
-            });
-          }
-        });
-      }
-      function renameKey(obj, oldKey, newKey, path, report, kind) {
-        if (!isObject(obj) || !own(obj, oldKey) || oldKey === newKey) return;
-        var value = obj[oldKey];
-        delete obj[oldKey];
-        obj[newKey] = value;
-        report.push({ path, from: oldKey, to: newKey, kind: kind || "key" });
-      }
-      function renameRefs(config, opts) {
-        opts = opts || {};
-        var oldKey = opts.oldKey;
-        var newKey = opts.newKey;
-        var report = [];
-        if (!oldKey || !newKey || oldKey === newKey) {
-          return { ok: true, changed: 0, renamed: report };
-        }
-        eachMarker(config, function(partId, variantName, uuid, marker) {
-          var shouldRename = false;
-          if (marker.type === "sub_part" || marker.type === "hit_box") {
-            shouldRename = marker.config_ref === oldKey;
-          } else if (marker.type === "connector" || marker.type === "interact_box") {
-            shouldRename = marker.config_ref === oldKey;
-          }
-          if (!shouldRename) return;
-          marker.config_ref = newKey;
-          report.push({
-            path: ["parts", partId, "element_markers", variantName, uuid, "config_ref"],
-            from: oldKey,
-            to: newKey,
-            kind: "marker"
-          });
-        });
-        eachSubPart(config, function(partId, variantName, spKey, sp) {
-          var base = ["parts", partId, "variants", variantName, "sub_parts", spKey];
-          var subsystems = isObject(sp.subsystems) ? sp.subsystems : {};
-          Object.keys(subsystems).forEach(function(sk) {
-            var ss = subsystems[sk];
-            if (!isObject(ss)) return;
-            var p = base.concat(["subsystems", sk]);
-            if (ss.power_output === oldKey) {
-              ss.power_output = newKey;
-              report.push({ path: p.concat(["power_output"]), from: oldKey, to: newKey, kind: "power_output" });
-            }
-            if (ss.connector === oldKey) {
-              ss.connector = newKey;
-              report.push({ path: p.concat(["connector"]), from: oldKey, to: newKey, kind: "connector" });
-            }
-            eachSignalMap(ss, function(map, field) {
-              renameSignalTargets(map, oldKey, newKey, p, report, field);
-            });
-            renameKey(
-              ss.power_outputs,
-              oldKey,
-              newKey,
-              p.concat(["power_outputs"]),
-              report,
-              "power_output_key"
-            );
-          });
-          var connectors = isObject(sp.connectors) ? sp.connectors : {};
-          Object.keys(connectors).forEach(function(ck) {
-            var conn = connectors[ck];
-            if (!isObject(conn)) return;
-            var p = base.concat(["connectors", ck]);
-            if (conn.power_target === oldKey) {
-              conn.power_target = newKey;
-              report.push({ path: p.concat(["power_target"]), from: oldKey, to: newKey, kind: "power_target" });
-            }
-            eachSignalMap(conn, function(map, field) {
-              renameSignalTargets(map, oldKey, newKey, p, report, field);
-            });
-          });
-          var interactBoxes = isObject(sp.interact_boxes) ? sp.interact_boxes : {};
-          Object.keys(interactBoxes).forEach(function(ik) {
-            var ib = interactBoxes[ik];
-            if (!isObject(ib)) return;
-            var p = base.concat(["interact_boxes", ik]);
-            eachSignalMap(ib, function(map, field) {
-              renameSignalTargets(map, oldKey, newKey, p, report, field);
-            });
-          });
-          var hitBoxes = isObject(sp.hit_boxes) ? sp.hit_boxes : {};
-          Object.keys(hitBoxes).forEach(function(hk) {
-            var hb = hitBoxes[hk];
-            if (isObject(hb) && hb.subsystem === oldKey) {
-              hb.subsystem = newKey;
-              report.push({
-                path: base.concat(["hit_boxes", hk, "subsystem"]),
-                from: oldKey,
-                to: newKey,
-                kind: "hit_box_subsystem"
-              });
-            }
-          });
-        });
-        return { ok: true, changed: report.length, renamed: report };
-      }
-      function resolveBones(kind, node, portsObj) {
-        var p = portsObj || ports.get();
-        var bones = p.bones;
-        var resolved = [];
-        var unresolved = [];
-        function byName(name, field, extra) {
-          if (isPlaceholder(name)) return;
-          var el = bones.findByName(name);
-          var entry = { bone: name, field };
-          if (extra) Object.keys(extra).forEach(function(k) {
-            entry[k] = extra[k];
-          });
-          if (el) {
-            entry.uuid = el.uuid;
-            resolved.push(entry);
-          } else {
-            unresolved.push(entry);
-          }
-        }
-        if (kind === "sub_part") {
-          byName(node.start_bone, "start_bone");
-          if (Array.isArray(node.end_bones)) {
-            node.end_bones.forEach(function(b) {
-              byName(b, "end_bones");
-            });
-          }
-          byName(node.mass_center, "mass_center");
-          if (isObject(node.hit_boxes)) {
-            Object.keys(node.hit_boxes).forEach(function(key) {
-              if (isPlaceholder(key)) return;
-              var el = bones.findByUuid(key) || bones.findByName(key);
-              var entry = { bone: key, field: "hit_box_key" };
-              if (el) {
-                entry.uuid = el.uuid;
-                resolved.push(entry);
-              } else {
-                unresolved.push(entry);
-              }
-            });
-          }
-          if (isObject(node.interact_boxes)) {
-            Object.keys(node.interact_boxes).forEach(function(key) {
-              var ib = node.interact_boxes[key];
-              if (isObject(ib)) byName(ib.bone, "interact_box.bone", { key });
-            });
-          }
-          if (isObject(node.connectors)) {
-            Object.keys(node.connectors).forEach(function(key) {
-              var conn = node.connectors[key];
-              if (isObject(conn)) byName(conn.locator, "connector.locator", { key });
-            });
-          }
-          if (isObject(node.subsystems)) {
-            Object.keys(node.subsystems).forEach(function(key) {
-              var ss = node.subsystems[key];
-              if (!isObject(ss)) return;
-              byName(ss.locator, "subsystem.locator", { key });
-              if (Array.isArray(ss.dismount_locators)) {
-                ss.dismount_locators.forEach(function(loc) {
-                  byName(loc, "subsystem.dismount_locators", { key });
-                });
-              }
-            });
-          }
-        } else if (kind === "interact_box") {
-          byName(node.bone, "bone");
-        } else if (kind === "connector") {
-          byName(node.locator, "locator");
-        } else if (kind === "subsystem") {
-          byName(node.locator, "locator");
-          if (Array.isArray(node.dismount_locators)) {
-            node.dismount_locators.forEach(function(loc) {
-              byName(loc, "dismount_locators");
-            });
-          }
-        } else if (kind === "hit_box") {
-          byName(node.bone, "bone");
-        }
-        return { resolved, unresolved };
-      }
-      module.exports = {
-        SENTINELS,
-        collectRefs,
-        resolveConfigRefs,
-        cleanDangling,
-        renameRefs,
-        resolveBones
-      };
-    }
-  });
-
-  // src/services/validate.js
-  var require_validate = __commonJS({
-    "src/services/validate.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var { getMarkersForVariant, detectOwnerSubPart } = require_element_markers();
-      var ssTypes = require_subsystem_types();
-      var cp = require_content_pack_manager();
-      var { CODES, isMissingValue } = require_validation_types();
-      var docRefs = require_refs();
-      var log2 = createLogger2("Validation");
-      function _scopeForMarkerType(type) {
-        if (type === "sub_part") return "subpart";
-        return type;
-      }
-      function _makeProblem(severity, code, message, path) {
-        return { severity, code, message, path };
-      }
-      function _mkPath(scope, partId, variantName, subPartKey, itemKey, elementUuid, field) {
-        var path = { scope, partId, variantName, field: field || "" };
-        if (subPartKey) path.subPartKey = subPartKey;
-        if (itemKey) path.itemKey = itemKey;
-        if (elementUuid) path.elementUuid = elementUuid;
-        return path;
-      }
-      function _filterDefsByType(defs, typeId) {
-        var result = {};
-        if (!defs || !typeId) return result;
-        for (var id in defs) {
-          if (defs.hasOwnProperty(id) && defs[id] && defs[id].type === typeId) {
-            result[id] = defs[id];
-          }
-        }
-        return result;
-      }
-      function _collectMarkerIssues(config, partId, vName, problems) {
-        var validUUIDs = {};
-        var allGroups = typeof Group !== "undefined" && Group.all ? Group.all : [];
-        var allLocators = typeof Locator !== "undefined" && Locator.all ? Locator.all : [];
-        for (var gi = 0; gi < allGroups.length; gi++) validUUIDs[allGroups[gi].uuid] = true;
-        for (var li = 0; li < allLocators.length; li++) validUUIDs[allLocators[li].uuid] = true;
-        var markers = getMarkersForVariant(config, partId, vName);
-        for (var uuid in markers) {
-          var marker = markers[uuid];
-          if (!validUUIDs[uuid]) {
-            var typeLabel = marker.type === "sub_part" ? "\u5B50\u96F6\u4EF6" : marker.type === "hit_box" ? "\u78B0\u649E\u7BB1" : marker.type === "connector" ? "\u8FDE\u63A5\u70B9" : marker.type === "interact_box" ? "\u4EA4\u4E92\u533A" : marker.type;
-            problems.push(_makeProblem(
-              "error",
-              CODES.GHOST_MARKER,
-              '\u96F6\u4EF6 "' + partId + '"/' + vName + " \u4E2D\u5B58\u5728\u5E7D\u7075" + typeLabel + "\u6807\u8BB0\uFF08UUID: " + uuid + "\uFF09\uFF0C\u5BF9\u5E94\u7684\u6A21\u578B\u5143\u7D20\u5DF2\u88AB\u5220\u9664\u3002\u5EFA\u8BAE\u4FDD\u5B58\u540E\u91CD\u65B0\u6253\u5F00\u9879\u76EE\u4EE5\u81EA\u52A8\u6E05\u7406\u3002",
-              _mkPath(_scopeForMarkerType(marker.type), partId, vName, null, null, uuid)
-            ));
-            continue;
-          }
-          if (marker.type === "hit_box") {
-            var group = allGroups.find(function(g) {
-              return g.uuid === uuid;
-            });
-            if (group) {
-              var owner = detectOwnerSubPart(config, partId, vName, group);
-              if (!owner) {
-                problems.push(_makeProblem(
-                  "warning",
-                  CODES.ORPHAN_ELEMENT,
-                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u78B0\u649E\u7BB1 "' + group.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u4E0D\u4F1A\u88AB\u9632\u62A4\u8BA1\u7B97\u5904\u7406\uFF09',
-                  _mkPath("hit_box", partId, vName, null, null, uuid)
-                ));
-              }
-            }
-          } else if (marker.type === "connector") {
-            var loc = allLocators.find(function(l) {
-              return l.uuid === uuid;
-            });
-            if (loc) {
-              var owner = detectOwnerSubPart(config, partId, vName, loc);
-              if (!owner) {
-                problems.push(_makeProblem(
-                  "warning",
-                  CODES.ORPHAN_ELEMENT,
-                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u8FDE\u63A5\u70B9 "' + loc.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u5C06\u4E0D\u4F1A\u8BA1\u5165\u5BFC\u51FA\uFF09',
-                  _mkPath("connector", partId, vName, null, null, uuid)
-                ));
-              }
-            }
-          } else if (marker.type === "interact_box") {
-            var ibGroup = allGroups.find(function(g) {
-              return g.uuid === uuid;
-            });
-            if (ibGroup) {
-              var owner = detectOwnerSubPart(config, partId, vName, ibGroup);
-              if (!owner) {
-                problems.push(_makeProblem(
-                  "warning",
-                  CODES.ORPHAN_ELEMENT,
-                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u4EA4\u4E92\u533A "' + ibGroup.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u4E0D\u4F1A\u88AB\u4EA4\u4E92\u5904\u7406\uFF09',
-                  _mkPath("interact_box", partId, vName, null, null, uuid)
-                ));
-              }
-            }
-          }
-        }
-      }
-      var RESERVED_SIGNAL_NAMES = ["local", "global"];
-      function _collectNameConflicts(partId, vName, subParts, problems) {
-        var seen = {};
-        var scopes = [
-          { field: "connectors", scope: "connector" },
-          { field: "subsystems", scope: "subsystem" },
-          { field: "interact_boxes", scope: "interact_box" }
-        ];
-        Object.keys(subParts || {}).forEach(function(spKey) {
-          var sp = subParts[spKey] || {};
-          scopes.forEach(function(s) {
-            var map = sp[s.field] || {};
-            Object.keys(map).forEach(function(name) {
-              if (RESERVED_SIGNAL_NAMES.indexOf(name) >= 0) {
-                problems.push(_makeProblem(
-                  "error",
-                  CODES.RESERVED_NAME,
-                  s.scope + ' "' + name + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u4E3A\u4FE1\u53F7\u4FDD\u7559\u5730\u5740\uFF08local/global\uFF09\uFF0C\u4E0D\u5F97\u7528\u4F5C\u8FDE\u63A5\u70B9/\u5B50\u7CFB\u7EDF/\u4EA4\u4E92\u533A\u540D',
-                  _mkPath(s.scope, partId, vName, spKey, name)
-                ));
-              }
-              var prev = seen[name];
-              if (prev) {
-                problems.push(_makeProblem(
-                  "error",
-                  CODES.DUPLICATE_NAME,
-                  '\u540D\u79F0 "' + name + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + " \u5185\u91CD\u590D\uFF1A" + prev.scope + '\uFF08\u5B50\u96F6\u4EF6 "' + prev.subPartKey + '"\uFF09\u4E0E ' + s.scope + '\uFF08\u5B50\u96F6\u4EF6 "' + spKey + '"\uFF09\u51B2\u7A81',
-                  _mkPath(s.scope, partId, vName, spKey, name)
-                ));
-              } else {
-                seen[name] = { subPartKey: spKey, scope: s.scope };
-              }
-            });
-          });
-        });
-      }
-      function _collectDanglingRefs(config, partId, vName, spKey, problems) {
-        var result = docRefs.resolveConfigRefs(config, {
-          partId,
-          variantName: vName,
-          subPartKey: spKey
-        });
-        (result.dangling || []).forEach(function(ref) {
-          var p = ref.path || [];
-          var baseLen = 6;
-          var container = p[baseLen];
-          var itemKey = p[baseLen + 1];
-          var scope = "subpart";
-          if (container === "subsystems") scope = "subsystem";
-          else if (container === "connectors") scope = "connector";
-          else if (container === "interact_boxes") scope = "interact_box";
-          else if (container === "hit_boxes") scope = "hit_box";
-          var what = ref.kind === "power_output_key" ? "\u529F\u7387\u8F93\u51FA\u76EE\u6807\uFF08power_outputs \u7684 key\uFF09" : ref.kind === "hit_box_subsystem" ? "\u78B0\u649E\u7BB1\u5B50\u7CFB\u7EDF" : ref.kind === "power_target" ? "\u8FDE\u63A5\u70B9\u529F\u7387\u76EE\u6807" : ref.kind === "power_output" ? "\u5B50\u7CFB\u7EDF\u529F\u7387\u8F93\u51FA" : ref.kind === "connector" ? "\u5B50\u7CFB\u7EDF\u5173\u8054\u8FDE\u63A5\u70B9" : "\u4FE1\u53F7\u76EE\u6807";
-          var field = p[baseLen + 2] || "";
-          problems.push(_makeProblem(
-            "error",
-            CODES.DANGLING_SIGNAL_TARGET,
-            '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A' + what + ' "' + ref.target + '" \u6307\u5411\u4E0D\u5B58\u5728\u7684\u8282\u70B9\uFF08\u53EA\u5141\u8BB8\u540C\u5B50\u96F6\u4EF6\u6761\u76EE\u6216 local/global\uFF09',
-            _mkPath(scope, partId, vName, spKey, itemKey, null, field)
-          ));
-        });
-      }
-      function collectIssues(config) {
-        var problems = [];
-        var parts = config && config.parts || {};
-        var partIds = Object.keys(parts);
-        if (partIds.length === 0) {
-          problems.push(_makeProblem(
-            "error",
-            CODES.MISSING_REQUIRED,
-            "\u672A\u5B9A\u4E49\u4EFB\u4F55\u96F6\u4EF6\uFF0C\u65E0\u6CD5\u6821\u9A8C",
-            _mkPath("part", "", "")
-          ));
-          return problems;
-        }
-        var subsystemDefs = cp.loadMergedDefs(config, "subsystems").defs || {};
-        var connectorDefs = cp.loadMergedDefs(config, "connectors").defs || {};
-        var materialDefs = cp.loadMergedDefs(config, "materials").defs || {};
-        for (var i = 0; i < partIds.length; i++) {
-          var partId = partIds[i];
-          var part = parts[partId];
-          var variants = part.variants || {};
-          var variantNames = Object.keys(variants);
-          if (variantNames.length === 0) {
-            problems.push(_makeProblem(
-              "error",
-              CODES.MISSING_REQUIRED,
-              '\u96F6\u4EF6 "' + partId + '"\uFF1A\u6CA1\u6709\u5B9A\u4E49\u53D8\u4F53',
-              _mkPath("part", partId, "", null, null, null, "variants")
-            ));
-            continue;
-          }
-          for (var vi = 0; vi < variantNames.length; vi++) {
-            var vName = variantNames[vi];
-            var variant = variants[vName];
-            if (!variant.model) {
-              problems.push(_makeProblem(
-                "error",
-                CODES.MISSING_REQUIRED,
-                '\u96F6\u4EF6 "' + partId + '" \u53D8\u4F53 "' + vName + '"\uFF1A\u672A\u8BBE\u7F6E\u6A21\u578B\u5F15\u7528',
-                _mkPath("variant", partId, vName, null, null, null, "model")
-              ));
-            }
-            var subParts = variant.sub_parts || {};
-            var spKeys = Object.keys(subParts);
-            if (spKeys.length === 0) {
-              problems.push(_makeProblem(
-                "error",
-                CODES.MISSING_REQUIRED,
-                '\u96F6\u4EF6 "' + partId + '" \u53D8\u4F53 "' + vName + '"\uFF1A\u672A\u5B9A\u4E49\u5B50\u96F6\u4EF6',
-                _mkPath("variant", partId, vName, null, null, null, "sub_parts")
-              ));
-            }
-            for (var si = 0; si < spKeys.length; si++) {
-              var spKey = spKeys[si];
-              var sp = subParts[spKey];
-              if (Object.keys(sp.hit_boxes || {}).length === 0) {
-                problems.push(_makeProblem(
-                  "error",
-                  CODES.MISSING_REQUIRED,
-                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u78B0\u649E\u7BB1\u4E3A\u7A7A',
-                  _mkPath("subpart", partId, vName, spKey, null, null, "hit_boxes")
-                ));
-              }
-              if ((sp.mass || 0) <= 0) {
-                problems.push(_makeProblem(
-                  "error",
-                  CODES.MISSING_REQUIRED,
-                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u8D28\u91CF\u5FC5\u987B\u5927\u4E8E 0',
-                  _mkPath("subpart", partId, vName, spKey, null, null, "mass")
-                ));
-              }
-              var hitBoxes = sp.hit_boxes || {};
-              for (var hbKey in hitBoxes) {
-                var hb = hitBoxes[hbKey] || {};
-                if (isMissingValue(hb.material)) {
-                  problems.push(_makeProblem(
-                    "error",
-                    CODES.MATERIAL_REQUIRED,
-                    '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '" \u78B0\u649E\u7BB1 "' + hbKey + '"\uFF1A\u672A\u9009\u62E9\u6750\u8D28',
-                    _mkPath("hit_box", partId, vName, spKey, hbKey, hbKey, "material")
-                  ));
-                } else if (hb.material !== "machine_max:default" && !materialDefs[hb.material]) {
-                  problems.push(_makeProblem(
-                    "error",
-                    CODES.MATERIAL_REF_MISSING,
-                    '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '" \u78B0\u649E\u7BB1 "' + hbKey + '"\uFF1A\u6750\u8D28 "' + hb.material + '" \u4E0D\u5B58\u5728',
-                    _mkPath("hit_box", partId, vName, spKey, hbKey, hbKey, "material")
-                  ));
-                }
-              }
-              _collectDanglingRefs(config, partId, vName, spKey, problems);
-              var subsystems = sp.subsystems || {};
-              for (var ssName in subsystems) {
-                var ss = subsystems[ssName];
-                var meta = ssTypes.getTypeMeta(ss.type);
-                if (isMissingValue(ss.definition)) {
-                  problems.push(_makeProblem(
-                    "error",
-                    CODES.DEFINITION_REQUIRED,
-                    '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u672A\u6307\u5B9A\u578B\u53F7\u5B9A\u4E49\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u6761\u76EE\u7684\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
-                    _mkPath("subsystem", partId, vName, spKey, ssName, null, "definition")
-                  ));
-                } else {
-                  var availableDefs = meta ? _filterDefsByType(subsystemDefs, ss.type) : subsystemDefs;
-                  if (!availableDefs[ss.definition]) {
-                    problems.push(_makeProblem(
-                      "error",
-                      CODES.DEFINITION_REF_MISSING,
-                      '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u578B\u53F7\u5B9A\u4E49 "' + ss.definition + '" \u4E0D\u5B58\u5728\uFF08\u5F15\u7528\u65AD\u88C2\uFF09\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u6761\u76EE\u7684\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
-                      _mkPath("subsystem", partId, vName, spKey, ssName, null, "definition")
-                    ));
-                  }
-                }
-                if (meta && meta.dynamicFields) {
-                  var fields = meta.dynamicFields;
-                  for (var fi = 0; fi < fields.length; fi++) {
-                    var f = fields[fi];
-                    if (f.field === "definition") continue;
-                    if (f.required && isMissingValue(ss[f.field])) {
-                      problems.push(_makeProblem(
-                        "error",
-                        CODES.SUBSYSTEM_REQUIRED_FIELD,
-                        '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A' + f.label + "\uFF08" + f.field + "\uFF09\u4E3A\u5FC5\u586B\u5B57\u6BB5\u4F46\u672A\u914D\u7F6E",
-                        _mkPath("subsystem", partId, vName, spKey, ssName, null, f.field)
-                      ));
-                    }
-                  }
-                }
-              }
-              var conns = sp.connectors || {};
-              for (var connKey in conns) {
-                var conn = conns[connKey];
-                if (isMissingValue(conn.definition)) {
-                  problems.push(_makeProblem(
-                    "error",
-                    CODES.DEFINITION_REQUIRED,
-                    '\u8FDE\u63A5\u70B9 "' + connKey + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u672A\u6307\u5B9A\u578B\u53F7\u5B9A\u4E49\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u8FDE\u63A5\u70B9\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
-                    _mkPath("connector", partId, vName, spKey, connKey, null, "definition")
-                  ));
-                } else if (!connectorDefs[conn.definition]) {
-                  problems.push(_makeProblem(
-                    "error",
-                    CODES.DEFINITION_REF_MISSING,
-                    '\u8FDE\u63A5\u70B9 "' + connKey + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u578B\u53F7\u5B9A\u4E49 "' + conn.definition + '" \u4E0D\u5B58\u5728\uFF08\u5F15\u7528\u65AD\u88C2\uFF09\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u8FDE\u63A5\u70B9\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
-                    _mkPath("connector", partId, vName, spKey, connKey, null, "definition")
-                  ));
-                }
-              }
-            }
-            _collectNameConflicts(partId, vName, subParts, problems);
-            _collectMarkerIssues(config, partId, vName, problems);
-          }
-        }
-        return problems;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { collectIssues };
-      }
-    }
-  });
-
   // src/doc/field_specs.generated.js
   var require_field_specs_generated = __commonJS({
     "src/doc/field_specs.generated.js"(exports, module) {
@@ -16672,8 +13908,164 @@
     }
   });
 
+  // src/doc/shapes.js
+  var require_shapes = __commonJS({
+    "src/doc/shapes.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var Codec = require_Codec().Codec;
+      var HitBoxCodec = require_hit_box_codec().HitBoxCodec;
+      var InteractBoxCodec = require_interact_box_codec().InteractBoxCodec;
+      var ConnectorCodec = require_connector_codec().ConnectorCodec;
+      var HydroCodec = require_hydrodynamic_codec().HydroCodec;
+      var SubsystemDispatchCodec = require_subsystem_codec().SubsystemDispatchCodec;
+      var SubPartShape = Codec.record({
+        start_bone: Codec.STRING.default(""),
+        end_bones: Codec.STRING.list().default([]),
+        durability: Codec.FLOAT.default(20),
+        mass: Codec.FLOAT.default(25),
+        mass_center: Codec.STRING.default("mass_center"),
+        projected_area: Codec.FLOAT.list(3).default([-1, -1, -1]),
+        block_collision: Codec.ENUM(["true", "false", "ground"]).default("true"),
+        collision_height: Codec.FLOAT.default(-1),
+        climb_assist: Codec.BOOL.default(false),
+        hydro_priority: Codec.INT.default(0),
+        hit_boxes: Codec.map(Codec.STRING, HitBoxCodec).default({}),
+        interact_boxes: Codec.map(Codec.STRING, InteractBoxCodec).default({}),
+        connectors: Codec.map(Codec.STRING, ConnectorCodec).default({}),
+        subsystems: Codec.map(Codec.STRING, SubsystemDispatchCodec).default({}),
+        hydrodynamics: Codec.map(Codec.STRING, HydroCodec).default({})
+      });
+      var VariantShape = Codec.record({
+        model: Codec.STRING.field(),
+        textures: Codec.map(Codec.STRING, Codec.STRING).default({ default: "" }),
+        animations: Codec.STRING.default(""),
+        tags: Codec.STRING.list().default([]),
+        sub_parts: Codec.map(Codec.STRING, SubPartShape).default({})
+      });
+      var PartShape = Codec.record({
+        icon: Codec.STRING.default(""),
+        vehicle_durability_rate: Codec.FLOAT.default(0.8),
+        vehicle_damage_rate: Codec.FLOAT.default(1),
+        vehicle_damage_rate_destroyed: Codec.FLOAT.default(0.1),
+        functional_threshold: Codec.FLOAT.default(0.3),
+        share_durability: Codec.BOOL.default(true),
+        max_stack_size: Codec.INT.default(1),
+        variants: Codec.map(Codec.STRING, VariantShape).default({})
+      });
+      var SubsystemShape = SubsystemDispatchCodec;
+      var VariantExportShape = Codec.record({
+        model: Codec.STRING.field(),
+        textures: Codec.either(Codec.STRING, Codec.map(Codec.STRING, Codec.STRING)).default(""),
+        animations: Codec.STRING.default(""),
+        tags: Codec.STRING.list().default([]),
+        // sub_parts 永不折叠：schema 的单子零件简写没有 key，会丢 sub_part.<ns>.* 身份
+        sub_parts: Codec.map(Codec.STRING, SubPartShape).default({})
+      });
+      var PartExportShape = Codec.record({
+        icon: Codec.STRING.default(""),
+        vehicle_durability_rate: Codec.FLOAT.default(0.8),
+        vehicle_damage_rate: Codec.FLOAT.default(1),
+        vehicle_damage_rate_destroyed: Codec.FLOAT.default(0.1),
+        functional_threshold: Codec.FLOAT.default(0.3),
+        share_durability: Codec.BOOL.default(true),
+        max_stack_size: Codec.INT.default(1),
+        variants: Codec.either(
+          VariantExportShape,
+          Codec.map(Codec.STRING, VariantExportShape)
+        ).default({})
+      });
+      var SHAPES = {
+        part: PartShape,
+        variant: VariantShape,
+        sub_part: SubPartShape,
+        hit_box: HitBoxCodec,
+        interact_box: InteractBoxCodec,
+        connector: ConnectorCodec,
+        subsystem: SubsystemShape
+      };
+      var EXPORT_SHAPES = {
+        part: PartExportShape,
+        variant: VariantExportShape,
+        sub_part: SubPartShape,
+        hit_box: HitBoxCodec,
+        interact_box: InteractBoxCodec,
+        connector: ConnectorCodec,
+        subsystem: SubsystemShape
+      };
+      function getShape(kind) {
+        return SHAPES[kind] || null;
+      }
+      function getExportShape(kind) {
+        return EXPORT_SHAPES[kind] || null;
+      }
+      function classifyCodecError(message) {
+        if (/Unknown dispatch type/.test(message)) return "unknown_type";
+        if (/Missing required field/.test(message)) return "missing_required";
+        if (/Expected array of length/.test(message)) return "type_mismatch";
+        if (/Expected (string|number|integer|boolean|array|object)/.test(message)) return "type_mismatch";
+        if (/Invalid enum value/.test(message)) return "invalid_enum";
+        return "type_mismatch";
+      }
+      function decodeStrict(kind, raw, ctx) {
+        ctx = ctx || {};
+        var path = Array.isArray(ctx.path) ? ctx.path.slice() : [];
+        var shape = getShape(kind);
+        if (!shape) {
+          return {
+            ok: false,
+            errors: [{
+              path,
+              code: "unknown_type",
+              expected: "\u5DF2\u77E5 kind",
+              got: kind,
+              hint: "\u672A\u77E5\u7684\u914D\u7F6E\u8282\u70B9\u7C7B\u578B"
+            }]
+          };
+        }
+        try {
+          return { ok: true, node: shape.decode(raw), errors: [] };
+        } catch (e) {
+          var message = e && e.message ? e.message : String(e);
+          return {
+            ok: false,
+            errors: [{
+              path,
+              code: classifyCodecError(message),
+              expected: kind,
+              got: message,
+              hint: "\u914D\u7F6E\u7ED3\u6784\u65E0\u6CD5\u89E3\u7801"
+            }]
+          };
+        }
+      }
+      function encode(kind, node) {
+        var shape = getExportShape(kind);
+        if (!shape) throw new Error("Unknown export shape: " + kind);
+        return shape.encode(node);
+      }
+      module.exports = {
+        PartShape,
+        VariantShape,
+        SubPartShape,
+        SubsystemShape,
+        PartExportShape,
+        VariantExportShape,
+        getShape,
+        getExportShape,
+        decodeStrict,
+        encode
+      };
+    }
+  });
+
   // src/doc/validate.js
-  var require_validate2 = __commonJS({
+  var require_validate = __commonJS({
     "src/doc/validate.js"(exports, module) {
       "use strict";
       init_define_BUILTIN_CONNECTORS();
@@ -16975,6 +14367,3520 @@
         validateTree,
         isMissingValue
       };
+    }
+  });
+
+  // src/doc/ports.js
+  var require_ports = __commonJS({
+    "src/doc/ports.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var STATE = null;
+      function groupList() {
+        return typeof Group !== "undefined" && Group && Group.all ? Group.all : [];
+      }
+      function locatorList() {
+        return typeof Locator !== "undefined" && Locator && Locator.all ? Locator.all : [];
+      }
+      function findIn(list, name) {
+        for (var i = 0; i < list.length; i++) {
+          if (list[i] && list[i].name === name) return list[i];
+        }
+        return null;
+      }
+      function findByUuidIn(list, uuid) {
+        for (var i = 0; i < list.length; i++) {
+          if (list[i] && list[i].uuid === uuid) return list[i];
+        }
+        return null;
+      }
+      function createDefaults() {
+        return {
+          bones: {
+            findByName: function(name) {
+              return findIn(groupList(), name) || findIn(locatorList(), name);
+            },
+            findByUuid: function(uuid) {
+              return findByUuidIn(groupList(), uuid) || findByUuidIn(locatorList(), uuid);
+            },
+            findNameByUuid: function(uuid) {
+              var el = findByUuidIn(groupList(), uuid) || findByUuidIn(locatorList(), uuid);
+              return el ? el.name : null;
+            },
+            listAll: function() {
+              return groupList().concat(locatorList());
+            }
+          },
+          markers: {
+            set: null,
+            clear: null,
+            clearScope: null,
+            recalc: null
+          },
+          validation: {
+            collectIssues: null
+          },
+          events: {
+            emit: function(name, payload) {
+              if (typeof Blockbench !== "undefined" && Blockbench && typeof Blockbench.dispatchEvent === "function") {
+                Blockbench.dispatchEvent(name, payload);
+              }
+            }
+          },
+          reactivity: {
+            set: function(obj, key, value) {
+              if (typeof Vue !== "undefined" && Vue && typeof Vue.set === "function") {
+                Vue.set(obj, key, value);
+              } else {
+                obj[key] = value;
+              }
+            },
+            del: function(obj, key) {
+              if (typeof Vue !== "undefined" && Vue && typeof Vue.delete === "function") {
+                Vue.delete(obj, key);
+              } else {
+                delete obj[key];
+              }
+            }
+          }
+        };
+      }
+      function get() {
+        if (!STATE) STATE = createDefaults();
+        return STATE;
+      }
+      function assignCategory(name, patch) {
+        if (!patch || typeof patch !== "object") return;
+        var current = get()[name];
+        Object.keys(patch).forEach(function(key) {
+          current[key] = patch[key];
+        });
+      }
+      function install(p) {
+        if (!p || typeof p !== "object") return get();
+        var current = get();
+        Object.keys(p).forEach(function(category) {
+          if (!current[category]) {
+            current[category] = {};
+          }
+          assignCategory(category, p[category]);
+        });
+        return current;
+      }
+      function reset() {
+        STATE = createDefaults();
+        return STATE;
+      }
+      module.exports = {
+        get,
+        install,
+        reset
+      };
+    }
+  });
+
+  // src/doc/refs.js
+  var require_refs = __commonJS({
+    "src/doc/refs.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var ports = require_ports();
+      var SENTINELS = ["local", "global"];
+      function own(obj, key) {
+        return Object.prototype.hasOwnProperty.call(obj, key);
+      }
+      function isObject(v) {
+        return v !== null && typeof v === "object" && !Array.isArray(v);
+      }
+      function eachVariant(config, fn) {
+        var parts = config && config.parts;
+        if (!isObject(parts)) return;
+        Object.keys(parts).forEach(function(partId) {
+          var part = parts[partId];
+          if (!isObject(part) || !isObject(part.variants)) return;
+          Object.keys(part.variants).forEach(function(variantName) {
+            var variant = part.variants[variantName];
+            if (isObject(variant)) fn(partId, variantName, part, variant);
+          });
+        });
+      }
+      function eachSubPart(config, fn) {
+        eachVariant(config, function(partId, variantName, part, variant) {
+          var subParts = variant.sub_parts;
+          if (!isObject(subParts)) return;
+          Object.keys(subParts).forEach(function(spKey) {
+            var sp = subParts[spKey];
+            if (isObject(sp)) fn(partId, variantName, spKey, sp, part, variant);
+          });
+        });
+      }
+      function eachMarker(config, fn) {
+        var parts = config && config.parts;
+        if (!isObject(parts)) return;
+        Object.keys(parts).forEach(function(partId) {
+          var part = parts[partId];
+          if (!isObject(part) || !isObject(part.element_markers)) return;
+          Object.keys(part.element_markers).forEach(function(variantName) {
+            var markers = part.element_markers[variantName];
+            if (!isObject(markers)) return;
+            Object.keys(markers).forEach(function(uuid) {
+              if (isObject(markers[uuid])) fn(partId, variantName, uuid, markers[uuid], markers);
+            });
+          });
+        });
+      }
+      function targetsOf(subPart) {
+        var targets = {
+          subsystem: {},
+          connector: {},
+          interact_box: {}
+        };
+        ["subsystems", "connectors", "interact_boxes"].forEach(function(map) {
+          var entries = subPart && subPart[map];
+          if (!isObject(entries)) return;
+          var kind = map === "subsystems" ? "subsystem" : map === "connectors" ? "connector" : "interact_box";
+          Object.keys(entries).forEach(function(key) {
+            targets[kind][key] = true;
+          });
+        });
+        return targets;
+      }
+      function targetExists(targets, target) {
+        if (SENTINELS.indexOf(target) >= 0) return true;
+        return !!(targets.subsystem[target] || targets.connector[target] || targets.interact_box[target]);
+      }
+      function isPlaceholder(value) {
+        return value === null || value === void 0 || value === "";
+      }
+      function isSignalMap(value) {
+        if (!isObject(value)) return false;
+        var entries = Object.keys(value);
+        for (var i = 0; i < entries.length; i++) {
+          if (!Array.isArray(value[entries[i]])) return false;
+        }
+        return true;
+      }
+      function eachSignalMap(node, fn) {
+        if (!isObject(node)) return;
+        Object.keys(node).forEach(function(field) {
+          if (field === "signal_translations") return;
+          if (isSignalMap(node[field])) fn(node[field], field);
+        });
+      }
+      function addSignalRefs(list, map, path, field) {
+        Object.keys(map).forEach(function(ch) {
+          var targets = map[ch];
+          if (!Array.isArray(targets)) return;
+          for (var i = 0; i < targets.length; i++) {
+            addRef(list, path.concat([field, ch, i]), targets[i], "signal_target");
+          }
+        });
+      }
+      function addRef(list, path, target, kind) {
+        if (isPlaceholder(target)) return;
+        list.push({ path, target, kind });
+      }
+      function collectRefs(subPart, basePath) {
+        var refs = [];
+        var base = basePath || [];
+        var subsystems = isObject(subPart.subsystems) ? subPart.subsystems : {};
+        Object.keys(subsystems).forEach(function(sk) {
+          var ss = subsystems[sk];
+          if (!isObject(ss)) return;
+          var p = base.concat(["subsystems", sk]);
+          addRef(refs, p.concat(["power_output"]), ss.power_output, "power_output");
+          addRef(refs, p.concat(["connector"]), ss.connector, "connector");
+          eachSignalMap(ss, function(map, field) {
+            addSignalRefs(refs, map, p, field);
+          });
+          if (isObject(ss.power_outputs)) {
+            Object.keys(ss.power_outputs).forEach(function(target) {
+              addRef(refs, p.concat(["power_outputs", target]), target, "power_output_key");
+            });
+          }
+        });
+        var connectors = isObject(subPart.connectors) ? subPart.connectors : {};
+        Object.keys(connectors).forEach(function(ck) {
+          var conn = connectors[ck];
+          if (!isObject(conn)) return;
+          var p = base.concat(["connectors", ck]);
+          addRef(refs, p.concat(["power_target"]), conn.power_target, "power_target");
+          eachSignalMap(conn, function(map, field) {
+            addSignalRefs(refs, map, p, field);
+          });
+        });
+        var interactBoxes = isObject(subPart.interact_boxes) ? subPart.interact_boxes : {};
+        Object.keys(interactBoxes).forEach(function(ik) {
+          var ib = interactBoxes[ik];
+          if (!isObject(ib)) return;
+          var p = base.concat(["interact_boxes", ik]);
+          eachSignalMap(ib, function(map, field) {
+            addSignalRefs(refs, map, p, field);
+          });
+        });
+        var hitBoxes = isObject(subPart.hit_boxes) ? subPart.hit_boxes : {};
+        Object.keys(hitBoxes).forEach(function(hk) {
+          var hb = hitBoxes[hk];
+          if (!isObject(hb)) return;
+          addRef(refs, base.concat(["hit_boxes", hk, "subsystem"]), hb.subsystem, "hit_box_subsystem");
+        });
+        return { targets: targetsOf(subPart), refs };
+      }
+      function resolveConfigRefs(config, scope) {
+        scope = scope || {};
+        var subPart = scope.subPart;
+        var basePath = scope.basePath;
+        if (!subPart) {
+          var part = config && config.parts && config.parts[scope.partId];
+          var variant = part && part.variants && part.variants[scope.variantName];
+          subPart = variant && variant.sub_parts && variant.sub_parts[scope.subPartKey];
+          basePath = [
+            "parts",
+            scope.partId,
+            "variants",
+            scope.variantName,
+            "sub_parts",
+            scope.subPartKey
+          ];
+        }
+        if (!isObject(subPart)) {
+          return {
+            ok: false,
+            resolved: [],
+            dangling: [],
+            errors: [{
+              path: basePath || [],
+              code: "not_found",
+              expected: "sub_part",
+              got: void 0,
+              hint: "\u5B50\u96F6\u4EF6\u4E0D\u5B58\u5728"
+            }]
+          };
+        }
+        var collected = collectRefs(subPart, basePath || []);
+        var resolved = [];
+        var dangling = [];
+        collected.refs.forEach(function(ref) {
+          if (targetExists(collected.targets, ref.target)) {
+            resolved.push(ref);
+          } else {
+            dangling.push(ref);
+          }
+        });
+        return { ok: dangling.length === 0, resolved, dangling, errors: [] };
+      }
+      function removeSignalTarget(list, target) {
+        var removed = 0;
+        for (var i = list.length - 1; i >= 0; i--) {
+          if (list[i] === target) {
+            list.splice(i, 1);
+            removed++;
+          }
+        }
+        return removed;
+      }
+      function cleanDangling(config, removed) {
+        removed = removed || {};
+        var target = removed.target || removed.key;
+        var cleaned = [];
+        if (!target) return { ok: true, cleaned_references: cleaned };
+        eachSubPart(config, function(partId, variantName, spKey, sp) {
+          var base = ["parts", partId, "variants", variantName, "sub_parts", spKey];
+          var subsystems = isObject(sp.subsystems) ? sp.subsystems : {};
+          Object.keys(subsystems).forEach(function(sk) {
+            var ss = subsystems[sk];
+            if (!isObject(ss)) return;
+            var p = base.concat(["subsystems", sk]);
+            if (ss.power_output === target) {
+              ss.power_output = "";
+              cleaned.push({ path: p.concat(["power_output"]), target, kind: "power_output" });
+            }
+            if (ss.connector === target) {
+              ss.connector = "";
+              cleaned.push({ path: p.concat(["connector"]), target, kind: "connector" });
+            }
+            eachSignalMap(ss, function(map, field) {
+              Object.keys(map).forEach(function(ch) {
+                if (Array.isArray(map[ch]) && removeSignalTarget(map[ch], target) > 0) {
+                  cleaned.push({
+                    path: p.concat([field, ch]),
+                    target,
+                    kind: "signal_target"
+                  });
+                }
+              });
+            });
+            if (isObject(ss.power_outputs) && own(ss.power_outputs, target)) {
+              delete ss.power_outputs[target];
+              cleaned.push({
+                path: p.concat(["power_outputs", target]),
+                target,
+                kind: "power_output_key"
+              });
+            }
+          });
+          var connectors = isObject(sp.connectors) ? sp.connectors : {};
+          Object.keys(connectors).forEach(function(ck) {
+            var conn = connectors[ck];
+            if (!isObject(conn)) return;
+            var p = base.concat(["connectors", ck]);
+            if (conn.power_target === target) {
+              conn.power_target = "";
+              cleaned.push({ path: p.concat(["power_target"]), target, kind: "power_target" });
+            }
+            eachSignalMap(conn, function(map, field) {
+              Object.keys(map).forEach(function(ch) {
+                if (Array.isArray(map[ch]) && removeSignalTarget(map[ch], target) > 0) {
+                  cleaned.push({
+                    path: p.concat([field, ch]),
+                    target,
+                    kind: "signal_target"
+                  });
+                }
+              });
+            });
+          });
+          var interactBoxes = isObject(sp.interact_boxes) ? sp.interact_boxes : {};
+          Object.keys(interactBoxes).forEach(function(ik) {
+            var ib = interactBoxes[ik];
+            if (!isObject(ib)) return;
+            var p = base.concat(["interact_boxes", ik]);
+            eachSignalMap(ib, function(map, field) {
+              Object.keys(map).forEach(function(ch) {
+                if (Array.isArray(map[ch]) && removeSignalTarget(map[ch], target) > 0) {
+                  cleaned.push({
+                    path: p.concat([field, ch]),
+                    target,
+                    kind: "signal_target"
+                  });
+                }
+              });
+            });
+          });
+          var hitBoxes = isObject(sp.hit_boxes) ? sp.hit_boxes : {};
+          Object.keys(hitBoxes).forEach(function(hk) {
+            var hb = hitBoxes[hk];
+            if (isObject(hb) && hb.subsystem === target) {
+              hb.subsystem = "";
+              cleaned.push({
+                path: base.concat(["hit_boxes", hk, "subsystem"]),
+                target,
+                kind: "hit_box_subsystem"
+              });
+            }
+          });
+        });
+        eachMarker(config, function(partId, variantName, uuid, marker, markers) {
+          if (marker.config_ref !== target) return;
+          var typeMatches = !removed.kind || marker.type === removed.kind || removed.kind === "sub_part" && (marker.type === "sub_part" || marker.type === "hit_box");
+          if (!typeMatches) return;
+          delete markers[uuid];
+          cleaned.push({
+            path: ["parts", partId, "element_markers", variantName, uuid],
+            target,
+            kind: "marker"
+          });
+        });
+        return { ok: true, cleaned_references: cleaned };
+      }
+      function renameSignalTargets(obj, oldKey, newKey, path, report, field) {
+        if (!isObject(obj)) return;
+        var name = field || "signal_targets";
+        Object.keys(obj).forEach(function(ch) {
+          var list = obj[ch];
+          if (!Array.isArray(list)) return;
+          for (var i = 0; i < list.length; i++) {
+            if (list[i] !== oldKey) continue;
+            if (list.indexOf(newKey) < 0) {
+              list[i] = newKey;
+            } else {
+              list.splice(i, 1);
+              i--;
+            }
+            report.push({
+              path: path.concat([name, ch]),
+              from: oldKey,
+              to: newKey,
+              kind: "signal_target"
+            });
+          }
+        });
+      }
+      function renameKey(obj, oldKey, newKey, path, report, kind) {
+        if (!isObject(obj) || !own(obj, oldKey) || oldKey === newKey) return;
+        var value = obj[oldKey];
+        delete obj[oldKey];
+        obj[newKey] = value;
+        report.push({ path, from: oldKey, to: newKey, kind: kind || "key" });
+      }
+      function renameRefs(config, opts) {
+        opts = opts || {};
+        var oldKey = opts.oldKey;
+        var newKey = opts.newKey;
+        var report = [];
+        if (!oldKey || !newKey || oldKey === newKey) {
+          return { ok: true, changed: 0, renamed: report };
+        }
+        eachMarker(config, function(partId, variantName, uuid, marker) {
+          var shouldRename = false;
+          if (marker.type === "sub_part" || marker.type === "hit_box") {
+            shouldRename = marker.config_ref === oldKey;
+          } else if (marker.type === "connector" || marker.type === "interact_box") {
+            shouldRename = marker.config_ref === oldKey;
+          }
+          if (!shouldRename) return;
+          marker.config_ref = newKey;
+          report.push({
+            path: ["parts", partId, "element_markers", variantName, uuid, "config_ref"],
+            from: oldKey,
+            to: newKey,
+            kind: "marker"
+          });
+        });
+        eachSubPart(config, function(partId, variantName, spKey, sp) {
+          var base = ["parts", partId, "variants", variantName, "sub_parts", spKey];
+          var subsystems = isObject(sp.subsystems) ? sp.subsystems : {};
+          Object.keys(subsystems).forEach(function(sk) {
+            var ss = subsystems[sk];
+            if (!isObject(ss)) return;
+            var p = base.concat(["subsystems", sk]);
+            if (ss.power_output === oldKey) {
+              ss.power_output = newKey;
+              report.push({ path: p.concat(["power_output"]), from: oldKey, to: newKey, kind: "power_output" });
+            }
+            if (ss.connector === oldKey) {
+              ss.connector = newKey;
+              report.push({ path: p.concat(["connector"]), from: oldKey, to: newKey, kind: "connector" });
+            }
+            eachSignalMap(ss, function(map, field) {
+              renameSignalTargets(map, oldKey, newKey, p, report, field);
+            });
+            renameKey(
+              ss.power_outputs,
+              oldKey,
+              newKey,
+              p.concat(["power_outputs"]),
+              report,
+              "power_output_key"
+            );
+          });
+          var connectors = isObject(sp.connectors) ? sp.connectors : {};
+          Object.keys(connectors).forEach(function(ck) {
+            var conn = connectors[ck];
+            if (!isObject(conn)) return;
+            var p = base.concat(["connectors", ck]);
+            if (conn.power_target === oldKey) {
+              conn.power_target = newKey;
+              report.push({ path: p.concat(["power_target"]), from: oldKey, to: newKey, kind: "power_target" });
+            }
+            eachSignalMap(conn, function(map, field) {
+              renameSignalTargets(map, oldKey, newKey, p, report, field);
+            });
+          });
+          var interactBoxes = isObject(sp.interact_boxes) ? sp.interact_boxes : {};
+          Object.keys(interactBoxes).forEach(function(ik) {
+            var ib = interactBoxes[ik];
+            if (!isObject(ib)) return;
+            var p = base.concat(["interact_boxes", ik]);
+            eachSignalMap(ib, function(map, field) {
+              renameSignalTargets(map, oldKey, newKey, p, report, field);
+            });
+          });
+          var hitBoxes = isObject(sp.hit_boxes) ? sp.hit_boxes : {};
+          Object.keys(hitBoxes).forEach(function(hk) {
+            var hb = hitBoxes[hk];
+            if (isObject(hb) && hb.subsystem === oldKey) {
+              hb.subsystem = newKey;
+              report.push({
+                path: base.concat(["hit_boxes", hk, "subsystem"]),
+                from: oldKey,
+                to: newKey,
+                kind: "hit_box_subsystem"
+              });
+            }
+          });
+        });
+        return { ok: true, changed: report.length, renamed: report };
+      }
+      function resolveBones(kind, node, portsObj) {
+        var p = portsObj || ports.get();
+        var bones = p.bones;
+        var resolved = [];
+        var unresolved = [];
+        function byName(name, field, extra) {
+          if (isPlaceholder(name)) return;
+          var el = bones.findByName(name);
+          var entry = { bone: name, field };
+          if (extra) Object.keys(extra).forEach(function(k) {
+            entry[k] = extra[k];
+          });
+          if (el) {
+            entry.uuid = el.uuid;
+            resolved.push(entry);
+          } else {
+            unresolved.push(entry);
+          }
+        }
+        if (kind === "sub_part") {
+          byName(node.start_bone, "start_bone");
+          if (Array.isArray(node.end_bones)) {
+            node.end_bones.forEach(function(b) {
+              byName(b, "end_bones");
+            });
+          }
+          byName(node.mass_center, "mass_center");
+          if (isObject(node.hit_boxes)) {
+            Object.keys(node.hit_boxes).forEach(function(key) {
+              if (isPlaceholder(key)) return;
+              var el = bones.findByUuid(key) || bones.findByName(key);
+              var entry = { bone: key, field: "hit_box_key" };
+              if (el) {
+                entry.uuid = el.uuid;
+                resolved.push(entry);
+              } else {
+                unresolved.push(entry);
+              }
+            });
+          }
+          if (isObject(node.interact_boxes)) {
+            Object.keys(node.interact_boxes).forEach(function(key) {
+              var ib = node.interact_boxes[key];
+              if (isObject(ib)) byName(ib.bone, "interact_box.bone", { key });
+            });
+          }
+          if (isObject(node.connectors)) {
+            Object.keys(node.connectors).forEach(function(key) {
+              var conn = node.connectors[key];
+              if (isObject(conn)) byName(conn.locator, "connector.locator", { key });
+            });
+          }
+          if (isObject(node.subsystems)) {
+            Object.keys(node.subsystems).forEach(function(key) {
+              var ss = node.subsystems[key];
+              if (!isObject(ss)) return;
+              byName(ss.locator, "subsystem.locator", { key });
+              if (Array.isArray(ss.dismount_locators)) {
+                ss.dismount_locators.forEach(function(loc) {
+                  byName(loc, "subsystem.dismount_locators", { key });
+                });
+              }
+            });
+          }
+        } else if (kind === "interact_box") {
+          byName(node.bone, "bone");
+        } else if (kind === "connector") {
+          byName(node.locator, "locator");
+        } else if (kind === "subsystem") {
+          byName(node.locator, "locator");
+          if (Array.isArray(node.dismount_locators)) {
+            node.dismount_locators.forEach(function(loc) {
+              byName(loc, "dismount_locators");
+            });
+          }
+        } else if (kind === "hit_box") {
+          byName(node.bone, "bone");
+        }
+        return { resolved, unresolved };
+      }
+      module.exports = {
+        SENTINELS,
+        collectRefs,
+        resolveConfigRefs,
+        cleanDangling,
+        renameRefs,
+        resolveBones
+      };
+    }
+  });
+
+  // src/doc/projection.js
+  var require_projection = __commonJS({
+    "src/doc/projection.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var fieldSpecs = require_field_specs();
+      var keys = require_keys();
+      var shapes = require_shapes();
+      var validate = require_validate();
+      var refs = require_refs();
+      var ports = require_ports();
+      var PLACEHOLDER_PREFIX = "__new_p_";
+      function isObject(v) {
+        return v !== null && typeof v === "object" && !Array.isArray(v);
+      }
+      function own(obj, key) {
+        return Object.prototype.hasOwnProperty.call(obj, key);
+      }
+      function clone(v) {
+        if (v === null || typeof v !== "object") return v;
+        if (Array.isArray(v)) return v.map(clone);
+        var out = {};
+        Object.keys(v).forEach(function(k) {
+          out[k] = clone(v[k]);
+        });
+        return out;
+      }
+      function mergeErrors(base, errors) {
+        return (base || []).concat(errors || []);
+      }
+      function looksLikeSubPartShorthand(value) {
+        if (!isObject(value)) return false;
+        if (typeof value.start_bone === "string") return true;
+        if (typeof value.mass === "number") return true;
+        if (isObject(value.hit_boxes)) {
+          var keysList = Object.keys(value.hit_boxes);
+          for (var i = 0; i < keysList.length; i++) {
+            var hb = value.hit_boxes[keysList[i]];
+            if (isObject(hb) && typeof hb.type === "string") return true;
+          }
+        }
+        return false;
+      }
+      function normalizeShorthand(kind, definition, ctx) {
+        var node = clone(definition || {});
+        var ns = keys.isValidNamespace(ctx && ctx.namespace) ? ctx.namespace : "machine_max";
+        if (kind === "part") {
+          if (isObject(node.variants) && typeof node.variants.model === "string") {
+            node.variants = { default: node.variants };
+          }
+          if (isObject(node.variants)) {
+            Object.keys(node.variants).forEach(function(name) {
+              node.variants[name] = normalizeShorthand("variant", node.variants[name], {
+                namespace: ns
+              });
+            });
+          }
+        } else if (kind === "variant") {
+          if (typeof node.textures === "string") {
+            node.textures = { default: node.textures };
+          }
+          if (isObject(node.sub_parts) && looksLikeSubPartShorthand(node.sub_parts)) {
+            var wrapped = {};
+            wrapped["sub_part." + ns + ".main"] = node.sub_parts;
+            node.sub_parts = wrapped;
+          }
+          if (isObject(node.sub_parts)) {
+            Object.keys(node.sub_parts).forEach(function(key) {
+              node.sub_parts[key] = normalizeShorthand("sub_part", node.sub_parts[key], {
+                namespace: ns
+              });
+            });
+          }
+        }
+        return node;
+      }
+      function isRequiredMapSpec(spec) {
+        return !!(spec && spec.required && spec.type === "object" && spec.additionalProperties !== void 0);
+      }
+      function normalizeUnset(kind, definition) {
+        var node = clone(definition || {});
+        var spec = fieldSpecs.getSpec(kind, node.type);
+        if (spec) {
+          Object.keys(spec.fields).forEach(function(field) {
+            if (!own(node, field)) return;
+            var fieldSpec = spec.fields[field];
+            var value = node[field];
+            if (fieldSpec.required && fieldSpec.type === "string" && (value === null || value === "null")) {
+              node[field] = "";
+              return;
+            }
+            if (isRequiredMapSpec(fieldSpec) && (value === null || field === "projectile_types" && Array.isArray(value))) {
+              node[field] = {};
+              return;
+            }
+            if (value === null && !fieldSpec.nullable) {
+              delete node[field];
+            }
+          });
+        }
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!isObject(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            entries[key] = normalizeUnset(childKind, entries[key]);
+          });
+        });
+        return node;
+      }
+      function stripInternal(kind, definition) {
+        var node = clone(definition || {});
+        if (!isObject(node)) return node;
+        delete node._uiState;
+        fieldSpecs.getInternalFields(kind).forEach(function(field) {
+          delete node[field];
+        });
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!isObject(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            entries[key] = stripInternal(childKind, entries[key]);
+          });
+        });
+        if (kind === "subsystem" && isObject(node.projectile_types)) {
+          Object.keys(node.projectile_types).forEach(function(key) {
+            if (key.indexOf(PLACEHOLDER_PREFIX) === 0) delete node.projectile_types[key];
+          });
+        }
+        return node;
+      }
+      function resolveHitBoxKeys(kind, node, unresolved, basePath) {
+        if (kind === "sub_part" && isObject(node.hit_boxes)) {
+          var bones = ports.get().bones;
+          var next = {};
+          Object.keys(node.hit_boxes).forEach(function(key) {
+            if (bones.findByUuid(key)) {
+              next[key] = node.hit_boxes[key];
+              return;
+            }
+            var el = bones.findByName(key);
+            if (el && el.uuid) {
+              next[el.uuid] = node.hit_boxes[key];
+            } else {
+              next[key] = node.hit_boxes[key];
+              unresolved.push({
+                bone: key,
+                field: "hit_box_key",
+                subPartKey: null,
+                key,
+                path: (basePath || []).concat(["hit_boxes", key])
+              });
+            }
+          });
+          node.hit_boxes = next;
+        }
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!isObject(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            resolveHitBoxKeys(
+              childKind,
+              entries[key],
+              unresolved,
+              (basePath || []).concat([container, key])
+            );
+          });
+        });
+      }
+      function repairHitBoxKeys(config) {
+        var fixed = 0;
+        var unresolved = [];
+        var bones = ports.get().bones;
+        var parts = config && config.parts || {};
+        Object.keys(parts).forEach(function(partId) {
+          var variants = parts[partId] && parts[partId].variants || {};
+          Object.keys(variants).forEach(function(variantName) {
+            var subParts = variants[variantName] && variants[variantName].sub_parts || {};
+            Object.keys(subParts).forEach(function(spKey) {
+              var sp = subParts[spKey];
+              if (!isObject(sp) || !isObject(sp.hit_boxes)) return;
+              var next = {};
+              Object.keys(sp.hit_boxes).forEach(function(key) {
+                var uuid = bones.findByUuid(key) ? key : null;
+                if (!uuid) {
+                  var el = bones.findByName(key);
+                  if (el && el.uuid) uuid = el.uuid;
+                }
+                if (!uuid) {
+                  next[key] = sp.hit_boxes[key];
+                  unresolved.push({
+                    bone: key,
+                    field: "hit_box_key",
+                    path: [
+                      "parts",
+                      partId,
+                      "variants",
+                      variantName,
+                      "sub_parts",
+                      spKey,
+                      "hit_boxes",
+                      key
+                    ]
+                  });
+                  return;
+                }
+                if (uuid !== key) fixed += 1;
+                next[uuid] = sp.hit_boxes[key];
+              });
+              sp.hit_boxes = next;
+            });
+          });
+        });
+        return { repaired: fixed, unresolved };
+      }
+      function resolveElementRefs(kind, node, unresolved, basePath) {
+        var bones = ports.get().bones;
+        if (kind === "sub_part" && isObject(node.interact_boxes)) {
+          Object.keys(node.interact_boxes).forEach(function(key) {
+            var ib = node.interact_boxes[key];
+            if (!isObject(ib) || !ib.bone) return;
+            var el = bones.findByName(ib.bone);
+            if (el && el.uuid) {
+              ib._uuid = el.uuid;
+            } else {
+              unresolved.push({
+                bone: ib.bone,
+                field: "interact_box.bone",
+                subPartKey: null,
+                key,
+                path: (basePath || []).concat(["interact_boxes", key, "bone"])
+              });
+            }
+          });
+        }
+        if (kind === "sub_part" && isObject(node.connectors)) {
+          Object.keys(node.connectors).forEach(function(key) {
+            var conn = node.connectors[key];
+            if (!isObject(conn) || !conn.locator) return;
+            var el = bones.findByName(conn.locator);
+            if (el && el.uuid) {
+              conn._marker_uuid = el.uuid;
+            } else {
+              unresolved.push({
+                bone: conn.locator,
+                field: "connector.locator",
+                subPartKey: null,
+                key,
+                path: (basePath || []).concat(["connectors", key, "locator"])
+              });
+            }
+          });
+        }
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!isObject(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            resolveElementRefs(
+              childKind,
+              entries[key],
+              unresolved,
+              (basePath || []).concat([container, key])
+            );
+          });
+        });
+      }
+      var MARKER_PRECEDENCE = ["sub_part", "interact_box", "connector", "hit_box"];
+      function addMarker(plan, byKey, entry, warnings) {
+        var key = entry.variantName + "|" + entry.uuid;
+        if (byKey[key]) {
+          var current = byKey[key];
+          var currentRank = MARKER_PRECEDENCE.indexOf(current.type);
+          var nextRank = MARKER_PRECEDENCE.indexOf(entry.type);
+          if (nextRank < currentRank) {
+            warnings.push({
+              code: "marker_conflict",
+              path: ["parts", entry.partId, "variants", entry.variantName],
+              expected: current.type + " > " + entry.type,
+              got: entry.uuid,
+              hint: "\u540C\u4E00 UUID \u843D\u5728\u591A\u4E2A\u6807\u8BB0\u7C7B\u578B\uFF0C\u6309 sub_part > interact_box > connector > hit_box \u4FDD\u7559"
+            });
+            byKey[key] = entry;
+            plan[plan.indexOf(current)] = entry;
+          } else {
+            warnings.push({
+              code: "marker_conflict",
+              path: ["parts", entry.partId, "variants", entry.variantName],
+              expected: entry.type + " < " + current.type,
+              got: entry.uuid,
+              hint: "\u540C\u4E00 UUID \u843D\u5728\u591A\u4E2A\u6807\u8BB0\u7C7B\u578B\uFF0C\u5DF2\u4FDD\u7559\u4F18\u5148\u7EA7\u66F4\u9AD8\u7684\u4E00\u6761"
+            });
+          }
+          return;
+        }
+        byKey[key] = entry;
+        plan.push(entry);
+      }
+      function planForSubPart(partId, variantName, spKey, sp, plan, byKey, warnings) {
+        var bones = ports.get().bones;
+        if (!isObject(sp)) return;
+        var start = sp.start_bone ? bones.findByName(sp.start_bone) : null;
+        if (start && start.uuid) {
+          addMarker(plan, byKey, {
+            partId,
+            variantName,
+            type: "sub_part",
+            uuid: start.uuid,
+            config_ref: spKey
+          }, warnings);
+        }
+        if (isObject(sp.hit_boxes)) {
+          Object.keys(sp.hit_boxes).forEach(function(key) {
+            var el = bones.findByUuid(key) || bones.findByName(key);
+            if (el && el.uuid) {
+              addMarker(plan, byKey, {
+                partId,
+                variantName,
+                type: "hit_box",
+                uuid: el.uuid,
+                config_ref: spKey
+              }, warnings);
+            }
+          });
+        }
+        if (isObject(sp.interact_boxes)) {
+          Object.keys(sp.interact_boxes).forEach(function(key) {
+            var ib = sp.interact_boxes[key];
+            var el = ib && ib.bone ? bones.findByName(ib.bone) : null;
+            if (el && el.uuid) {
+              addMarker(plan, byKey, {
+                partId,
+                variantName,
+                type: "interact_box",
+                uuid: el.uuid,
+                config_ref: key
+              }, warnings);
+            }
+          });
+        }
+        if (isObject(sp.connectors)) {
+          Object.keys(sp.connectors).forEach(function(key) {
+            var conn = sp.connectors[key];
+            var el = conn && conn.locator ? bones.findByName(conn.locator) : null;
+            if (el && el.uuid) {
+              addMarker(plan, byKey, {
+                partId,
+                variantName,
+                type: "connector",
+                uuid: el.uuid,
+                config_ref: key
+              }, warnings);
+            }
+          });
+        }
+      }
+      function buildMarkerPlan(kind, node, ctx) {
+        var plan = [];
+        var byKey = {};
+        var warnings = [];
+        var partId = ctx.partId || "";
+        var variantName = ctx.variantName || "";
+        if (kind === "part" && isObject(node.variants)) {
+          Object.keys(node.variants).forEach(function(vName) {
+            var variant = node.variants[vName];
+            if (!isObject(variant) || !isObject(variant.sub_parts)) return;
+            Object.keys(variant.sub_parts).forEach(function(spKey) {
+              planForSubPart(
+                partId,
+                vName,
+                spKey,
+                variant.sub_parts[spKey],
+                plan,
+                byKey,
+                warnings
+              );
+            });
+          });
+        } else if (kind === "variant" && isObject(node.sub_parts)) {
+          Object.keys(node.sub_parts).forEach(function(spKey) {
+            planForSubPart(
+              partId,
+              variantName,
+              spKey,
+              node.sub_parts[spKey],
+              plan,
+              byKey,
+              warnings
+            );
+          });
+        } else if (kind === "sub_part") {
+          planForSubPart(
+            partId,
+            variantName,
+            ctx.subPartKey || ctx.key || "",
+            node,
+            plan,
+            byKey,
+            warnings
+          );
+        }
+        return { plan, warnings };
+      }
+      function buildMarkerCleanup(kind, ctx) {
+        if (!ctx || ctx.mode === "create") return null;
+        var existing = ctx.existing;
+        if (!existing) return null;
+        if (kind === "part") {
+          return { scope: "part", partId: ctx.oldKey || ctx.partId };
+        }
+        if (kind === "variant") {
+          return {
+            scope: "variant",
+            partId: ctx.partId,
+            variantName: ctx.oldKey || ctx.variantName
+          };
+        }
+        if (kind === "sub_part") {
+          var oldKey = ctx.oldKey || ctx.subPartKey || ctx.key;
+          var configRefs = [];
+          var uuids = [];
+          if (oldKey) configRefs.push(oldKey);
+          if (isObject(existing.interact_boxes)) {
+            Object.keys(existing.interact_boxes).forEach(function(key) {
+              configRefs.push(key);
+              var ib = existing.interact_boxes[key];
+              if (isObject(ib) && ib._uuid) uuids.push(ib._uuid);
+            });
+          }
+          if (isObject(existing.connectors)) {
+            Object.keys(existing.connectors).forEach(function(key) {
+              configRefs.push(key);
+              var conn = existing.connectors[key];
+              if (isObject(conn) && conn._marker_uuid) uuids.push(conn._marker_uuid);
+            });
+          }
+          if (isObject(existing.hit_boxes)) {
+            Object.keys(existing.hit_boxes).forEach(function(key) {
+              uuids.push(key);
+            });
+          }
+          return {
+            scope: "sub_part",
+            partId: ctx.partId,
+            variantName: ctx.variantName,
+            subPartKey: oldKey,
+            config_refs: configRefs,
+            uuids
+          };
+        }
+        return null;
+      }
+      function collectDanglingConfigRefs(kind, node, ctx, basePath) {
+        var dangling = [];
+        var prefix = basePath || [];
+        function checkSubPart(spKey, sp, path) {
+          if (!isObject(sp)) return;
+          var collected = refs.collectRefs(sp, path);
+          collected.refs.forEach(function(ref) {
+            if (!targetsHas(collected.targets, ref.target)) {
+              dangling.push(ref);
+            }
+          });
+        }
+        function targetsHas(targets, target) {
+          if (refs.SENTINELS.indexOf(target) >= 0) return true;
+          return !!(targets.subsystem[target] || targets.connector[target] || targets.interact_box[target]);
+        }
+        if (kind === "part" && isObject(node.variants)) {
+          Object.keys(node.variants).forEach(function(vName) {
+            var variant = node.variants[vName];
+            if (!isObject(variant) || !isObject(variant.sub_parts)) return;
+            Object.keys(variant.sub_parts).forEach(function(spKey) {
+              checkSubPart(
+                spKey,
+                variant.sub_parts[spKey],
+                prefix.concat(["variants", vName, "sub_parts", spKey])
+              );
+            });
+          });
+        } else if (kind === "variant" && isObject(node.sub_parts)) {
+          Object.keys(node.sub_parts).forEach(function(spKey) {
+            checkSubPart(
+              spKey,
+              node.sub_parts[spKey],
+              prefix.concat(["sub_parts", spKey])
+            );
+          });
+        } else if (kind === "sub_part") {
+          checkSubPart(ctx.subPartKey || ctx.key || "", node, prefix);
+        }
+        return dangling;
+      }
+      function resetFields(kind, existing, normalized) {
+        if (!existing || typeof existing !== "object") return [];
+        return Object.keys(existing).filter(function(key) {
+          if (fieldSpecs.isInternalField(kind, key)) return false;
+          return !own(normalized, key);
+        });
+      }
+      function projectIn(definition, ctx) {
+        ctx = ctx || {};
+        var kind = ctx.kind;
+        var parentPath = Array.isArray(ctx.parentPath) ? ctx.parentPath : [];
+        var errors = [];
+        var warnings = [];
+        if (!fieldSpecs.isKnownKind(kind)) {
+          return {
+            ok: false,
+            node: null,
+            reset_fields: [],
+            unresolved: { config_refs: [], bones: [] },
+            markerPlan: [],
+            markerCleanup: null,
+            errors: [{
+              path: parentPath,
+              code: "unknown_type",
+              expected: "\u5DF2\u77E5 kind",
+              got: kind,
+              hint: "\u672A\u77E5\u7684\u5BFC\u5165\u8282\u70B9\u7C7B\u578B"
+            }],
+            warnings: []
+          };
+        }
+        var normalized = normalizeShorthand(kind, definition, ctx);
+        var provided = clone(normalized);
+        normalized = normalizeUnset(kind, normalized);
+        var reset = resetFields(kind, ctx.existing, provided);
+        var stripped = stripInternal(kind, normalized);
+        var keyResult = keys.validateKeys(kind, stripped, {
+          namespace: ctx.namespace,
+          path: parentPath
+        });
+        errors = mergeErrors(errors, keyResult.errors);
+        warnings = mergeErrors(warnings, keyResult.warnings);
+        if (errors.length > 0) {
+          return {
+            ok: false,
+            node: null,
+            reset_fields: reset,
+            unresolved: { config_refs: [], bones: [] },
+            markerPlan: [],
+            markerCleanup: buildMarkerCleanup(kind, ctx),
+            errors,
+            warnings
+          };
+        }
+        var decoded = shapes.decodeStrict(kind, stripped, { path: parentPath });
+        if (!decoded.ok) {
+          errors = mergeErrors(errors, decoded.errors);
+          return {
+            ok: false,
+            node: null,
+            reset_fields: reset,
+            unresolved: { config_refs: [], bones: [] },
+            markerPlan: [],
+            markerCleanup: buildMarkerCleanup(kind, ctx),
+            errors,
+            warnings
+          };
+        }
+        var node = decoded.node;
+        var valueResult = validate.validateValues(node, {
+          kind,
+          typeId: kind === "subsystem" ? node.type : void 0,
+          path: parentPath,
+          completeness: false
+        });
+        errors = mergeErrors(errors, valueResult.errors);
+        if (errors.length > 0) {
+          return {
+            ok: false,
+            node: null,
+            reset_fields: reset,
+            unresolved: { config_refs: [], bones: [] },
+            markerPlan: [],
+            markerCleanup: buildMarkerCleanup(kind, ctx),
+            errors,
+            warnings
+          };
+        }
+        var unresolvedBones = [];
+        resolveHitBoxKeys(kind, node, unresolvedBones, parentPath);
+        resolveElementRefs(kind, node, unresolvedBones, parentPath);
+        var dangling = collectDanglingConfigRefs(kind, node, ctx, parentPath);
+        var unresolvedConfigRefs = dangling.map(function(ref) {
+          return {
+            target: ref.target,
+            kind: ref.kind,
+            path: ref.path
+          };
+        });
+        if (dangling.length > 0) {
+          errors = dangling.map(function(ref) {
+            return {
+              path: ref.path,
+              code: "unresolved_config_ref",
+              expected: "\u540C\u53D8\u4F53\u5185\u7684 subsystem / connector / interact_box key\uFF0C\u6216 local / global",
+              got: ref.target,
+              hint: "\u914D\u7F6E\u5F15\u7528\u65AD\u88C2\uFF0C\u6574\u4EF6\u5199\u5165\u5DF2\u62D2\u7EDD"
+            };
+          });
+        }
+        var marker = buildMarkerPlan(kind, node, ctx);
+        warnings = warnings.concat(marker.warnings);
+        if (errors.length > 0) {
+          return {
+            ok: false,
+            node: null,
+            reset_fields: reset,
+            unresolved: { config_refs: unresolvedConfigRefs, bones: unresolvedBones },
+            markerPlan: [],
+            markerCleanup: buildMarkerCleanup(kind, ctx),
+            errors,
+            warnings
+          };
+        }
+        return {
+          ok: true,
+          node,
+          reset_fields: reset,
+          unresolved: { config_refs: unresolvedConfigRefs, bones: unresolvedBones },
+          markerPlan: marker.plan,
+          markerCleanup: buildMarkerCleanup(kind, ctx),
+          errors: [],
+          warnings
+        };
+      }
+      function canonicalizeTextures(kind, node) {
+        if (kind === "variant" && typeof node.textures === "string") {
+          node.textures = { default: node.textures };
+        }
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!isObject(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            canonicalizeTextures(childKind, entries[key]);
+          });
+        });
+      }
+      function reverseHitBoxKeys(kind, node, unresolved, basePath) {
+        var bones = ports.get().bones;
+        if (kind === "sub_part" && isObject(node.hit_boxes)) {
+          var next = {};
+          Object.keys(node.hit_boxes).forEach(function(key) {
+            var name = bones.findNameByUuid(key);
+            if (name) {
+              next[name] = node.hit_boxes[key];
+            } else {
+              next[key] = node.hit_boxes[key];
+              unresolved.push({
+                bone: key,
+                field: "hit_box_key",
+                path: (basePath || []).concat(["hit_boxes", key])
+              });
+            }
+          });
+          node.hit_boxes = next;
+        }
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!isObject(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            reverseHitBoxKeys(
+              childKind,
+              entries[key],
+              unresolved,
+              (basePath || []).concat([container, key])
+            );
+          });
+        });
+      }
+      function projectOut(node, ctx, opts) {
+        ctx = ctx || {};
+        opts = opts || {};
+        var kind = ctx.kind || "part";
+        var mode = opts.for || "read";
+        var cloned = clone(node);
+        var stripped = stripInternal(kind, cloned);
+        canonicalizeTextures(kind, stripped);
+        var unresolved = [];
+        reverseHitBoxKeys(kind, stripped, unresolved, []);
+        if (mode === "export") {
+          try {
+            return { definition: shapes.encode(kind, stripped), unresolved };
+          } catch (e) {
+            return {
+              definition: null,
+              unresolved,
+              errors: [{
+                path: [],
+                code: "type_mismatch",
+                expected: kind,
+                got: e && e.message ? e.message : String(e),
+                hint: "\u5BFC\u51FA\u7F16\u7801\u5931\u8D25"
+              }]
+            };
+          }
+        }
+        return { definition: stripped, unresolved };
+      }
+      module.exports = {
+        normalizeShorthand,
+        normalizeUnset,
+        stripInternal,
+        resetFields,
+        buildMarkerPlan,
+        buildMarkerCleanup,
+        resolveHitBoxKeys,
+        repairHitBoxKeys,
+        resolveElementRefs,
+        projectIn,
+        projectOut,
+        // 兼容 docs/13 的命名
+        in: projectIn,
+        out: projectOut
+      };
+    }
+  });
+
+  // src/utils/persistence.js
+  var require_persistence = __commonJS({
+    "src/utils/persistence.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var PROPERTY_NAME = "machine_max_plugin";
+      var { CONFIG_VERSION } = require_constants();
+      var { migrateIfNeeded, createBlankConfig } = require_config();
+      var { cleanGhostMarkers, migrateConnectorMarkerRefs, repairMarkerConfigs } = require_element_markers();
+      var { createLogger: createLogger2 } = require_logger();
+      var docProjection = require_projection();
+      var log2 = createLogger2("Persistence");
+      function registerProperty2() {
+        if (ModelProject.properties[PROPERTY_NAME]) {
+          log2.debug("registerProperty: Property \u5DF2\u6CE8\u518C\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        var existingData = Project && Project !== 0 ? Project[PROPERTY_NAME] : null;
+        var hasExisting = existingData && typeof existingData === "object" && Object.keys(existingData).length > 0;
+        new Property(ModelProject, "object", PROPERTY_NAME, {
+          default: {},
+          exposed: false
+        });
+        if (hasExisting) {
+          Project[PROPERTY_NAME] = existingData;
+          log2.info("registerProperty: \u5DF2\u8FD8\u539F\u5DF2\u6709\u914D\u7F6E\uFF08" + Object.keys(existingData).length + " \u4E2A\u952E\uFF09");
+        } else {
+          log2.info("registerProperty: Property \u5DF2\u6CE8\u518C\uFF08\u65E0\u5DF2\u6709\u914D\u7F6E\uFF09");
+        }
+      }
+      function getBBModelPath() {
+        if (!Project || Project === 0 || !Project.file_path) {
+          log2.debug("getBBModelPath: \u65E0 .bbmodel \u8DEF\u5F84");
+          return null;
+        }
+        log2.debug("getBBModelPath: " + Project.file_path);
+        return Project.file_path;
+      }
+      function loadConfig() {
+        if (!Project || Project === 0) {
+          log2.warn("loadConfig: \u5C1A\u672A\u6253\u5F00\u9879\u76EE\uFF0C\u8FD4\u56DE\u7A7A\u767D\u914D\u7F6E");
+          return createBlankConfig();
+        }
+        const propData = Project[PROPERTY_NAME];
+        var result;
+        if (propData && propData.$schema_version) {
+          log2.info("\u4ECE Property \u52A0\u8F7D\u914D\u7F6E\uFF0C\u7248\u672C: " + propData.$schema_version);
+          var migrated = migrateIfNeeded(propData);
+          Project[PROPERTY_NAME] = migrated;
+          result = migrated;
+          log2.debug("loadConfig: \u4ECE Property \u52A0\u8F7D\u5B8C\u6210", {
+            packMetaType: typeof migrated.packMeta,
+            packMetaKeys: migrated.packMeta ? Object.keys(migrated.packMeta) : [],
+            name: migrated.packMeta ? migrated.packMeta.name : null,
+            author: migrated.packMeta ? migrated.packMeta.author : null,
+            description: migrated.packMeta ? migrated.packMeta.description : null
+          });
+        } else if (propData && typeof propData === "object" && Object.keys(propData).length > 0) {
+          log2.info("\u4ECE Property \u52A0\u8F7D\u914D\u7F6E\uFF08\u65E0\u7248\u672C\u53F7\uFF0C\u5C1D\u8BD5\u4FEE\u590D\uFF09\uFF0C\u952E: " + Object.keys(propData).join(","));
+          var repaired = migrateIfNeeded(propData);
+          Project[PROPERTY_NAME] = repaired;
+          result = repaired;
+        } else {
+          const bbmodelPath = getBBModelPath();
+          if (bbmodelPath) {
+            const standalonePath = bbmodelPath.replace(/\.bbmodel$/i, ".mm_project.json");
+            try {
+              const fs = __require("fs");
+              if (fs.existsSync(standalonePath)) {
+                const raw = JSON.parse(fs.readFileSync(standalonePath, "utf-8"));
+                const config = raw.config || raw;
+                log2.info("\u4ECE\u72EC\u7ACB\u6587\u4EF6\u52A0\u8F7D\u914D\u7F6E: " + standalonePath);
+                Project[PROPERTY_NAME] = migrateIfNeeded(config);
+                result = Project[PROPERTY_NAME];
+              }
+            } catch (e) {
+              log2.error("\u5907\u9009\u914D\u7F6E\u8BFB\u53D6\u5931\u8D25", e);
+            }
+          }
+          if (!result) {
+            log2.info("\u521B\u5EFA\u7A7A\u767D\u914D\u7F6E");
+            const blank = createBlankConfig();
+            Project[PROPERTY_NAME] = blank;
+            result = blank;
+          }
+        }
+        var hitBoxRepair = docProjection.repairHitBoxKeys(result);
+        if (hitBoxRepair.repaired > 0) {
+          log2.info("loadConfig: \u5DF2\u628A " + hitBoxRepair.repaired + " \u4E2A\u9AA8\u9ABC\u540D hit_boxes key \u5F52\u4E00\u5316\u4E3A UUID");
+          saveConfig();
+        }
+        if (hitBoxRepair.unresolved.length > 0) {
+          log2.warn("loadConfig: " + hitBoxRepair.unresolved.length + " \u4E2A hit_boxes key \u65E0\u6CD5\u89E3\u6790\u4E3A\u9AA8\u9ABC\uFF0C\u4FDD\u7559\u5F85\u6821\u9A8C");
+        }
+        var markerMigration = migrateConnectorMarkerRefs(result);
+        if (markerMigration.migrated > 0) {
+          log2.info("loadConfig: \u5DF2\u8FC1\u79FB " + markerMigration.migrated + " \u4E2A connector marker \u7684 config_ref");
+          saveConfig();
+        }
+        var markerRepair = repairMarkerConfigs(result);
+        if (markerRepair.repaired > 0) {
+          log2.info("loadConfig: \u5DF2\u8865\u5EFA " + markerRepair.repaired + " \u4E2A\u7F3A\u5931\u914D\u7F6E\u6761\u76EE", markerRepair.details);
+          saveConfig();
+        }
+        var ghostResult = cleanGhostMarkers(result);
+        if (ghostResult.cleanedCount > 0) {
+          log2.info("loadConfig: \u5DF2\u6E05\u7406 " + ghostResult.cleanedCount + " \u4E2A\u5E7D\u7075\u6807\u8BB0", ghostResult.details);
+          saveConfig();
+        }
+        return result;
+      }
+      var _saveTimer = null;
+      var SAVE_DEBOUNCE_MS = 300;
+      function scheduleSave(delay) {
+        if (typeof setTimeout !== "function") {
+          saveConfig();
+          return;
+        }
+        if (_saveTimer) clearTimeout(_saveTimer);
+        var wait = typeof delay === "number" ? delay : SAVE_DEBOUNCE_MS;
+        _saveTimer = setTimeout(function() {
+          _saveTimer = null;
+          saveConfig();
+        }, wait);
+      }
+      function flushSave() {
+        if (_saveTimer) {
+          clearTimeout(_saveTimer);
+          _saveTimer = null;
+        }
+        saveConfig();
+      }
+      function cancelScheduledSave() {
+        if (_saveTimer) {
+          clearTimeout(_saveTimer);
+          _saveTimer = null;
+        }
+      }
+      function saveConfig() {
+        if (!Project || Project === 0 || !Project[PROPERTY_NAME]) {
+          log2.debug("saveConfig: \u9879\u76EE\u6216\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8DF3\u8FC7\u4FDD\u5B58");
+          return;
+        }
+        const config = Project[PROPERTY_NAME];
+        const bbmodelPath = getBBModelPath();
+        if (!bbmodelPath) {
+          log2.warn("saveConfig: \u672A\u627E\u5230 .bbmodel \u8DEF\u5F84\uFF0C\u8DF3\u8FC7\u72EC\u7ACB\u5907\u4EFD");
+          return;
+        }
+        log2.debug("saveConfig: \u5373\u5C06\u4FDD\u5B58 packMeta", {
+          packMetaType: typeof config.packMeta,
+          packMetaExists: !!config.packMeta,
+          packMetaKeys: config.packMeta ? Object.keys(config.packMeta) : [],
+          name: config.packMeta ? config.packMeta.name : null,
+          nameType: config.packMeta ? typeof config.packMeta.name : "N/A",
+          author: config.packMeta ? config.packMeta.author : null,
+          authorType: config.packMeta ? typeof config.packMeta.author : "N/A",
+          description: config.packMeta ? config.packMeta.description : null,
+          descType: config.packMeta ? typeof config.packMeta.description : "N/A"
+        });
+        const standalonePath = bbmodelPath.replace(/\.bbmodel$/i, ".mm_project.json");
+        try {
+          const fs = __require("fs");
+          const path = __require("path");
+          fs.writeFileSync(
+            standalonePath,
+            JSON.stringify({
+              $schema_version: CONFIG_VERSION,
+              bbmodel: path.basename(bbmodelPath),
+              timestamp: Date.now(),
+              config: {
+                $schema_version: config.$schema_version,
+                parts: config.parts,
+                _uiState: config._uiState,
+                contentPackPath: config.contentPackPath,
+                dependencyPaths: config.dependencyPaths,
+                packMeta: config.packMeta,
+                namespace: config.namespace,
+                modelFile: config.modelFile
+              }
+            }, null, 2),
+            "utf-8"
+          );
+          log2.debug("saveConfig: \u72EC\u7ACB\u5907\u4EFD\u5DF2\u5199\u5165: " + standalonePath);
+        } catch (e) {
+          log2.error("saveConfig: \u5907\u9009\u914D\u7F6E\u5199\u5165\u5931\u8D25", e);
+        }
+        log2.info("\u914D\u7F6E\u5DF2\u4FDD\u5B58");
+      }
+      function setPackPath(config, packPath) {
+        config.contentPackPath = packPath;
+        return config;
+      }
+      function addDependencyPath(config, depPath) {
+        if (!config.dependencyPaths) config.dependencyPaths = [];
+        if (config.dependencyPaths.indexOf(depPath) === -1) {
+          config.dependencyPaths.push(depPath);
+        }
+        return config;
+      }
+      function removeDependencyPath(config, depPath) {
+        if (!config.dependencyPaths) return config;
+        var idx = config.dependencyPaths.indexOf(depPath);
+        if (idx !== -1) config.dependencyPaths.splice(idx, 1);
+        return config;
+      }
+      function getConfig() {
+        if (!Project || Project === 0) {
+          log2.debug("getConfig: \u9879\u76EE\u4E0D\u53EF\u7528");
+          return null;
+        }
+        var cfg = Project[PROPERTY_NAME] || null;
+        log2.debug("getConfig: " + (cfg ? "\u6709\u914D\u7F6E" : "\u65E0\u914D\u7F6E"));
+        return cfg;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          PROPERTY_NAME,
+          registerProperty: registerProperty2,
+          loadConfig,
+          saveConfig,
+          scheduleSave,
+          flushSave,
+          cancelScheduledSave,
+          getConfig,
+          setPackPath,
+          addDependencyPath,
+          removeDependencyPath
+        };
+      }
+    }
+  });
+
+  // src/utils/notify.js
+  var require_notify = __commonJS({
+    "src/utils/notify.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("Notify");
+      var TOAST_COLORS = {
+        positive: "#4CAF50",
+        error: "#F44336",
+        warning: "#FF9800",
+        info: "#2196F3"
+      };
+      function showToast2(text, type, expire) {
+        const color = TOAST_COLORS[type] || TOAST_COLORS.info;
+        try {
+          Blockbench.showToastNotification({
+            text: String(text),
+            color,
+            expire: expire || 3e3
+          });
+        } catch (e) {
+          log2.error("Toast \u901A\u77E5\u5931\u8D25", e);
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { showToast: showToast2, TOAST_COLORS };
+      }
+    }
+  });
+
+  // src/utils/file_writer.js
+  var require_file_writer = __commonJS({
+    "src/utils/file_writer.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var fs = __require("fs");
+      var path = __require("path");
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("FileWriter");
+      function stripJsonComments(content) {
+        if (content && content.charCodeAt(0) === 65279) {
+          content = content.slice(1);
+        }
+        var lines, result, i, line, inString, commentStart, j, ch, stripped;
+        lines = content.split("\n");
+        result = [];
+        for (i = 0; i < lines.length; i++) {
+          line = lines[i];
+          inString = false;
+          commentStart = -1;
+          for (j = 0; j < line.length; j++) {
+            ch = line[j];
+            if (ch === '"' && (j === 0 || line[j - 1] !== "\\")) {
+              inString = !inString;
+            } else if (ch === "/" && line[j + 1] === "/" && !inString) {
+              commentStart = j;
+              break;
+            }
+          }
+          if (commentStart >= 0) {
+            stripped = line.substring(0, commentStart);
+            if (stripped.trim().length > 0) {
+              result.push(stripped);
+            }
+          } else {
+            result.push(line);
+          }
+        }
+        return result.join("\n");
+      }
+      function ensureDir(dirPath) {
+        if (!fs.existsSync(dirPath)) {
+          fs.mkdirSync(dirPath, { recursive: true });
+          log2.debug("ensureDir: \u5DF2\u521B\u5EFA\u76EE\u5F55 " + dirPath);
+        }
+      }
+      function writeJSONFile(dir, filename, data) {
+        try {
+          ensureDir(dir);
+          const filePath = path.join(dir, filename);
+          fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+          log2.debug("writeJSONFile: \u5DF2\u5199\u5165 " + filePath);
+          return filePath;
+        } catch (e) {
+          log2.error("writeJSONFile: \u5199\u5165\u5931\u8D25 " + path.join(dir, filename), e);
+          throw e;
+        }
+      }
+      function writeTextFile(dir, filename, text) {
+        try {
+          ensureDir(dir);
+          const filePath = path.join(dir, filename);
+          fs.writeFileSync(filePath, text, "utf-8");
+          log2.debug("writeTextFile: \u5DF2\u5199\u5165 " + filePath);
+          return filePath;
+        } catch (e) {
+          log2.error("writeTextFile: \u5199\u5165\u5931\u8D25 " + path.join(dir, filename), e);
+          throw e;
+        }
+      }
+      function readJSONFile(filePath) {
+        if (!fs.existsSync(filePath)) {
+          log2.debug("readJSONFile: \u6587\u4EF6\u4E0D\u5B58\u5728 " + filePath);
+          return null;
+        }
+        try {
+          const raw = fs.readFileSync(filePath, "utf-8");
+          const data = JSON.parse(stripJsonComments(raw));
+          log2.debug("readJSONFile: \u5DF2\u8BFB\u53D6 " + filePath);
+          return data;
+        } catch (e) {
+          log2.error("readJSONFile: \u8BFB\u53D6\u5931\u8D25 " + filePath, e);
+          return null;
+        }
+      }
+      function fileExists(filePath) {
+        var exists = fs.existsSync(filePath);
+        log2.debug("fileExists: " + filePath + " \u2192 " + exists);
+        return exists;
+      }
+      function _deletePermanent(filePath) {
+        if (process.platform === "win32") {
+          try {
+            var cp = __require("child_process");
+            var psCmd = 'try { [System.IO.File]::Delete("' + filePath.replace(/\\/g, "\\\\") + '") } catch {}';
+            cp.spawnSync(
+              "powershell.exe",
+              [
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                psCmd
+              ],
+              { timeout: 1e4 }
+            );
+            log2.debug("_deletePermanent: File::Delete " + filePath);
+            return;
+          } catch (_e) {
+            log2.debug("_deletePermanent: child_process \u4E0D\u53EF\u7528\uFF0C\u964D\u7EA7\u5230 fs.unlinkSync: " + _e.message);
+          }
+        } else {
+          log2.debug("_deletePermanent: \u975E Windows \u5E73\u53F0\uFF0C\u4F7F\u7528 fs.unlinkSync");
+        }
+        fs.unlinkSync(filePath);
+        log2.debug("_deletePermanent: fs.unlinkSync \u5220\u9664 " + filePath);
+      }
+      function deleteFile(filePath) {
+        if (fs.existsSync(filePath)) {
+          _deletePermanent(filePath);
+          log2.debug("deleteFile: \u5DF2\u5220\u9664 " + filePath);
+        } else {
+          log2.debug("deleteFile: \u6587\u4EF6\u4E0D\u5B58\u5728\uFF0C\u8DF3\u8FC7 " + filePath);
+        }
+      }
+      function extractResourceLocation(id, defaultNs) {
+        var str = id || "";
+        var colonIdx = str.indexOf(":");
+        if (colonIdx >= 0) {
+          return {
+            ns: str.substring(0, colonIdx),
+            path: str.substring(colonIdx + 1)
+          };
+        }
+        return { ns: defaultNs || "", path: str };
+      }
+      function mergeJSONFile(dir, filename, newData) {
+        ensureDir(dir);
+        var filePath = path.join(dir, filename);
+        var existing = readJSONFile(filePath) || {};
+        for (var key in newData) {
+          if (newData.hasOwnProperty(key) && !(key in existing)) {
+            existing[key] = newData[key];
+          }
+        }
+        try {
+          fs.writeFileSync(filePath, JSON.stringify(existing, null, 2), "utf-8");
+          log2.debug("mergeJSONFile: \u5DF2\u5408\u5E76\u5199\u5165 " + filePath + "\uFF08\u65B0\u589E " + Object.keys(newData).length + " \u6761\uFF0C\u5DF2\u6709 " + Object.keys(existing).length + " \u6761\uFF09");
+          return filePath;
+        } catch (e) {
+          log2.error("mergeJSONFile: \u5199\u5165\u5931\u8D25 " + filePath, e);
+          throw e;
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { ensureDir, writeJSONFile, writeTextFile, readJSONFile, fileExists, deleteFile, extractResourceLocation, mergeJSONFile, stripJsonComments };
+      }
+    }
+  });
+
+  // src/core/zip_reader.js
+  var require_zip_reader = __commonJS({
+    "src/core/zip_reader.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var fs = __require("fs");
+      var zlib = __require("zlib");
+      var path = __require("path");
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("ZipReader");
+      var SIG_LOCAL_FILE = 67324752;
+      var SIG_CENTRAL_DIR = 33639248;
+      var SIG_EOCD = 101010256;
+      var LOCAL_HEADER_MIN = 30;
+      var CENTRAL_DIR_MIN = 46;
+      var EOCD_MIN = 22;
+      var EOCD_MAX_SEARCH = 65557;
+      var METHOD_STORED = 0;
+      var METHOD_DEFLATED = 8;
+      function readUInt32LE(buf, offset) {
+        return buf.readUInt32LE(offset);
+      }
+      function readUInt16LE(buf, offset) {
+        return buf.readUInt16LE(offset);
+      }
+      function findSignatureFromEnd(buf, signature) {
+        var i;
+        for (i = buf.length - 4; i >= 0; i--) {
+          if (readUInt32LE(buf, i) === signature) {
+            return i;
+          }
+        }
+        return -1;
+      }
+      function normalizeZipPath(p) {
+        if (!p) return "";
+        return p.replace(/\\/g, "/");
+      }
+      function _parseEOCD(fd, fileSize) {
+        var searchSize, searchBuf, eocdOffset, cdCount, cdSize, cdOffset;
+        if (fileSize < EOCD_MIN) {
+          log2.warn("_parseEOCD: \u6587\u4EF6\u592A\u5C0F\uFF0C\u4E0D\u662F\u6709\u6548 ZIP");
+          return null;
+        }
+        searchSize = Math.min(EOCD_MAX_SEARCH, fileSize);
+        searchBuf = Buffer.alloc(searchSize);
+        fs.readSync(fd, searchBuf, 0, searchSize, fileSize - searchSize);
+        eocdOffset = findSignatureFromEnd(searchBuf, SIG_EOCD);
+        if (eocdOffset < 0) {
+          log2.warn("_parseEOCD: \u672A\u627E\u5230 EOCD \u7B7E\u540D");
+          return null;
+        }
+        if (eocdOffset + EOCD_MIN > searchBuf.length) {
+          log2.warn("_parseEOCD: EOCD \u6570\u636E\u4E0D\u5B8C\u6574");
+          return null;
+        }
+        cdCount = readUInt16LE(searchBuf, eocdOffset + 10);
+        cdSize = readUInt32LE(searchBuf, eocdOffset + 12);
+        cdOffset = readUInt32LE(searchBuf, eocdOffset + 16);
+        log2.debug("_parseEOCD: \u4E2D\u592E\u76EE\u5F55\u504F\u79FB=" + cdOffset + " \u5927\u5C0F=" + cdSize + " \u6761\u76EE=" + cdCount);
+        return { cdOffset, cdSize, cdCount };
+      }
+      function _parseCentralDirectory(fd, cdOffset, cdSize) {
+        var cdBuf, pos, fileIndex, sig, method, compressedSize, uncompressedSize, localOffset;
+        var fileNameLen, extraLen, commentLen, fileName;
+        cdBuf = Buffer.alloc(cdSize);
+        fs.readSync(fd, cdBuf, 0, cdSize, cdOffset);
+        fileIndex = {};
+        pos = 0;
+        while (pos + CENTRAL_DIR_MIN <= cdBuf.length) {
+          sig = readUInt32LE(cdBuf, pos);
+          if (sig !== SIG_CENTRAL_DIR) {
+            break;
+          }
+          method = readUInt16LE(cdBuf, pos + 10);
+          compressedSize = readUInt32LE(cdBuf, pos + 20);
+          uncompressedSize = readUInt32LE(cdBuf, pos + 24);
+          fileNameLen = readUInt16LE(cdBuf, pos + 28);
+          extraLen = readUInt16LE(cdBuf, pos + 30);
+          commentLen = readUInt16LE(cdBuf, pos + 32);
+          localOffset = readUInt32LE(cdBuf, pos + 42);
+          if (pos + CENTRAL_DIR_MIN + fileNameLen > cdBuf.length) break;
+          fileName = normalizeZipPath(cdBuf.toString("utf-8", pos + CENTRAL_DIR_MIN, pos + CENTRAL_DIR_MIN + fileNameLen));
+          if (fileName.length > 0 && !fileName.endsWith("/")) {
+            fileIndex[fileName] = {
+              method,
+              compressedSize,
+              uncompressedSize,
+              localOffset
+            };
+          }
+          pos += CENTRAL_DIR_MIN + fileNameLen + extraLen + commentLen;
+        }
+        log2.debug("_parseCentralDirectory: \u5DF2\u7D22\u5F15 " + Object.keys(fileIndex).length + " \u4E2A\u6587\u4EF6");
+        return fileIndex;
+      }
+      function _readFileData(fd, entry) {
+        var headerBuf, fileNameLen, extraLen, dataStart, compressedBuf, result;
+        headerBuf = Buffer.alloc(LOCAL_HEADER_MIN);
+        fs.readSync(fd, headerBuf, 0, LOCAL_HEADER_MIN, entry.localOffset);
+        if (readUInt32LE(headerBuf, 0) !== SIG_LOCAL_FILE) {
+          log2.warn("_readFileData: \u672C\u5730\u6587\u4EF6\u5934\u7B7E\u540D\u65E0\u6548\uFF0C\u504F\u79FB=" + entry.localOffset);
+          return null;
+        }
+        fileNameLen = readUInt16LE(headerBuf, 26);
+        extraLen = readUInt16LE(headerBuf, 28);
+        dataStart = entry.localOffset + LOCAL_HEADER_MIN + fileNameLen + extraLen;
+        compressedBuf = Buffer.alloc(entry.compressedSize);
+        fs.readSync(fd, compressedBuf, 0, entry.compressedSize, dataStart);
+        switch (entry.method) {
+          case METHOD_STORED:
+            result = compressedBuf;
+            break;
+          case METHOD_DEFLATED:
+            try {
+              result = zlib.inflateRawSync(compressedBuf);
+            } catch (e) {
+              log2.warn("_readFileData: deflate \u89E3\u538B\u5931\u8D25", e);
+              return null;
+            }
+            break;
+          default:
+            log2.warn("_readFileData: \u4E0D\u652F\u6301\u7684\u538B\u7F29\u65B9\u6CD5 " + entry.method);
+            return null;
+        }
+        return result;
+      }
+      function openZip(zipPath) {
+        var stat, fd, eocd, fileIndex;
+        try {
+          stat = fs.statSync(zipPath);
+          if (!stat.isFile()) {
+            log2.warn("openZip: \u4E0D\u662F\u666E\u901A\u6587\u4EF6 " + zipPath);
+            return null;
+          }
+        } catch (e) {
+          log2.warn("openZip: \u6587\u4EF6\u4E0D\u5B58\u5728\u6216\u65E0\u6CD5\u8BBF\u95EE " + zipPath, e);
+          return null;
+        }
+        try {
+          fd = fs.openSync(zipPath, "r");
+        } catch (e) {
+          log2.warn("openZip: \u65E0\u6CD5\u6253\u5F00\u6587\u4EF6 " + zipPath, e);
+          return null;
+        }
+        try {
+          eocd = _parseEOCD(fd, stat.size);
+          if (!eocd) {
+            log2.warn("openZip: \u65E0\u6CD5\u89E3\u6790 EOCD\uFF0C\u53EF\u80FD\u4E0D\u662F\u6709\u6548 ZIP \u6587\u4EF6");
+            return null;
+          }
+          fileIndex = _parseCentralDirectory(fd, eocd.cdOffset, eocd.cdSize);
+          if (!fileIndex) {
+            log2.warn("openZip: \u65E0\u6CD5\u89E3\u6790\u4E2D\u592E\u76EE\u5F55");
+            return null;
+          }
+        } finally {
+          try {
+            fs.closeSync(fd);
+          } catch (e) {
+          }
+        }
+        function getContent(internalPath) {
+          var normalized, entry, fd2, data;
+          normalized = normalizeZipPath(internalPath);
+          entry = fileIndex[normalized];
+          if (!entry) {
+            log2.debug("getContent: \u6587\u4EF6\u4E0D\u5728 ZIP \u4E2D: " + normalized);
+            return null;
+          }
+          try {
+            fd2 = fs.openSync(zipPath, "r");
+          } catch (e) {
+            log2.warn("getContent: \u65E0\u6CD5\u6253\u5F00 ZIP \u6587\u4EF6\u8FDB\u884C\u8BFB\u53D6", e);
+            return null;
+          }
+          try {
+            data = _readFileData(fd2, entry);
+            return data;
+          } finally {
+            try {
+              fs.closeSync(fd2);
+            } catch (e) {
+            }
+          }
+        }
+        function listFiles2() {
+          return Object.keys(fileIndex).sort();
+        }
+        log2.info("openZip: \u6210\u529F\u6253\u5F00 ZIP\uFF0C\u5171 " + Object.keys(fileIndex).length + " \u4E2A\u6587\u4EF6");
+        return {
+          files: fileIndex,
+          getContent,
+          listFiles: listFiles2
+        };
+      }
+      function readFileContent(zipPath, internalPath) {
+        var handle, content;
+        handle = openZip(zipPath);
+        if (!handle) return null;
+        content = handle.getContent(internalPath);
+        return content;
+      }
+      function listFiles(zipPath) {
+        var handle;
+        handle = openZip(zipPath);
+        if (!handle) return [];
+        return handle.listFiles();
+      }
+      function fileExists(zipPath, internalPath) {
+        var handle, normalized;
+        handle = openZip(zipPath);
+        if (!handle) return false;
+        normalized = normalizeZipPath(internalPath);
+        return handle.files.hasOwnProperty(normalized);
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          openZip,
+          readFileContent,
+          listFiles,
+          fileExists
+        };
+      }
+    }
+  });
+
+  // src/core/content_pack.js
+  var require_content_pack = __commonJS({
+    "src/core/content_pack.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var fs = __require("fs");
+      var path = __require("path");
+      var { createLogger: createLogger2 } = require_logger();
+      var {
+        ensureDir,
+        writeJSONFile,
+        readJSONFile,
+        fileExists,
+        stripJsonComments
+      } = require_file_writer();
+      var zip_reader = require_zip_reader();
+      var log2 = createLogger2("ContentPack");
+      var ROOT = path.join(__dirname, "..", "..");
+      var SCHEMAS_DIR = path.join(ROOT, "schemas");
+      function walkDefFiles(dir, ext) {
+        var results, entries, i, j, entryName, fullPath, stat, subResults, defId;
+        results = [];
+        if (!fs.existsSync(dir)) {
+          log2.warn("walkDefFiles: \u76EE\u5F55\u4E0D\u5B58\u5728 " + dir);
+          return results;
+        }
+        try {
+          entries = fs.readdirSync(dir);
+          log2.info("walkDefFiles: \u626B\u63CF\u76EE\u5F55 " + dir + " \u627E\u5230 " + entries.length + " \u4E2A\u6761\u76EE");
+          for (i = 0; i < entries.length; i++) {
+            entryName = entries[i];
+            fullPath = path.join(dir, entryName);
+            stat = fs.statSync(fullPath);
+            if (stat.isDirectory()) {
+              subResults = walkDefFiles(fullPath, ext);
+              for (j = 0; j < subResults.length; j++) {
+                results.push(subResults[j]);
+              }
+            } else if (path.extname(entryName) === ext) {
+              defId = path.basename(entryName, ext);
+              results.push({ filePath: fullPath, id: defId });
+              log2.info("walkDefFiles: \u627E\u5230\u6587\u4EF6 id=" + defId + " path=" + fullPath);
+            }
+          }
+        } catch (e) {
+          log2.warn("walkDefFiles: \u904D\u5386\u76EE\u5F55\u5931\u8D25 " + dir, e);
+        }
+        return results;
+      }
+      function copyDirRecursive(srcDir, destDir) {
+        var entries, i, srcPath, destPath, stat;
+        if (!fs.existsSync(srcDir)) {
+          log2.warn("copyDirRecursive: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
+          return;
+        }
+        ensureDir(destDir);
+        entries = fs.readdirSync(srcDir);
+        for (i = 0; i < entries.length; i++) {
+          srcPath = path.join(srcDir, entries[i]);
+          destPath = path.join(destDir, entries[i]);
+          stat = fs.statSync(srcPath);
+          if (stat.isDirectory()) {
+            copyDirRecursive(srcPath, destPath);
+          } else {
+            try {
+              fs.writeFileSync(destPath, fs.readFileSync(srcPath));
+              log2.debug("copyDirRecursive: \u5DF2\u590D\u5236 " + srcPath + " \u2192 " + destPath);
+            } catch (e) {
+              log2.warn("copyDirRecursive: \u590D\u5236\u6587\u4EF6\u5931\u8D25 " + srcPath, e);
+            }
+          }
+        }
+      }
+      function _isZipPath(p) {
+        if (!p || typeof p !== "string") return false;
+        return p.toLowerCase().endsWith(".zip");
+      }
+      function _readZipDefs(zipPath, namespace, type) {
+        var handle, allFiles, prefix, i, filePath, contentStr, defId, parsed;
+        var result = {};
+        handle = zip_reader.openZip(zipPath);
+        if (!handle) {
+          log2.warn("_readZipDefs: \u65E0\u6CD5\u6253\u5F00 ZIP " + zipPath);
+          return result;
+        }
+        allFiles = handle.listFiles();
+        prefix = namespace + "/" + type + "/";
+        log2.info("_readZipDefs: \u5F00\u59CB\u8BFB\u53D6 " + type + " ZIP=" + zipPath + " \u524D\u7F00=" + prefix + " \u603B\u6587\u4EF6\u6570=" + allFiles.length);
+        for (i = 0; i < allFiles.length; i++) {
+          filePath = allFiles[i];
+          if (filePath.indexOf(prefix) !== 0) {
+            log2.debug("_readZipDefs: \u8DF3\u8FC7\uFF08\u524D\u7F00\u4E0D\u5339\u914D\uFF09 " + filePath);
+            continue;
+          }
+          if (!filePath.endsWith(".json")) {
+            log2.debug("_readZipDefs: \u8DF3\u8FC7\uFF08\u975E .json\uFF09 " + filePath);
+            continue;
+          }
+          defId = path.basename(filePath, ".json");
+          if (!defId) continue;
+          try {
+            contentStr = handle.getContent(filePath);
+            if (!contentStr) {
+              log2.warn("_readZipDefs: \u65E0\u6CD5\u8BFB\u53D6 " + filePath);
+              continue;
+            }
+            parsed = JSON.parse(stripJsonComments(contentStr.toString("utf-8")));
+            result[defId] = parsed;
+            log2.debug("_readZipDefs: \u5DF2\u8BFB\u53D6 id=" + defId + " path=" + filePath);
+          } catch (e) {
+            log2.warn("_readZipDefs: JSON \u89E3\u6790\u5931\u8D25\uFF0C\u8DF3\u8FC7 " + filePath, e);
+          }
+        }
+        log2.info("_readZipDefs: " + type + " \u4ECE ZIP \u8BFB\u53D6\u5B8C\u6210\uFF0C\u5171 " + Object.keys(result).length + " \u4E2A\u5B9A\u4E49");
+        log2.debug("_readZipDefs: " + type + " \u952E\u5217\u8868", Object.keys(result));
+        return result;
+      }
+      function resolveNamespace(packId) {
+        var str = packId || "";
+        var colonIdx = str.indexOf(":");
+        if (colonIdx >= 0) {
+          return str.substring(0, colonIdx);
+        }
+        return str;
+      }
+      function readPackMeta(packPath) {
+        var metaPath, meta, raw;
+        if (_isZipPath(packPath)) {
+          raw = zip_reader.readFileContent(packPath, "meta.json");
+          if (!raw) {
+            log2.warn("readPackMeta: ZIP \u4E2D\u672A\u627E\u5230 meta.json: " + packPath);
+            return null;
+          }
+          try {
+            meta = JSON.parse(stripJsonComments(raw.toString("utf-8")));
+            log2.debug("readPackMeta: \u5DF2\u4ECE ZIP \u8BFB\u53D6 meta.json: " + packPath);
+            return meta;
+          } catch (e) {
+            log2.warn("readPackMeta: ZIP \u4E2D meta.json \u89E3\u6790\u5931\u8D25: " + packPath, e);
+            return null;
+          }
+        }
+        metaPath = path.join(packPath, "meta.json");
+        meta = readJSONFile(metaPath);
+        if (meta === null) {
+          log2.warn("readPackMeta: \u8BFB\u53D6\u5931\u8D25\u6216\u6587\u4EF6\u4E0D\u5B58\u5728 " + metaPath);
+        } else {
+          log2.debug("readPackMeta: \u5DF2\u8BFB\u53D6 " + metaPath, {
+            rawType: typeof meta,
+            keys: Object.keys(meta),
+            idType: typeof meta.id,
+            authorType: typeof meta.author,
+            descType: typeof meta.description,
+            id: meta.id,
+            author: meta.author,
+            description: meta.description
+          });
+        }
+        return meta;
+      }
+      function writePackMeta(dirPath, meta) {
+        try {
+          writeJSONFile(dirPath, "meta.json", meta);
+          log2.debug("writePackMeta: meta.json \u5DF2\u5199\u5165 " + dirPath);
+        } catch (e) {
+          log2.error("writePackMeta: \u5199\u5165\u5931\u8D25 " + dirPath, e);
+          throw e;
+        }
+      }
+      function createContentPack(dirPath, meta) {
+        var metaPath, namespace, nsDir, docsDir;
+        try {
+          metaPath = path.join(dirPath, "meta.json");
+          if (fileExists(metaPath)) {
+            throw new Error("\u76EE\u5F55\u5DF2\u5305\u542B meta.json\uFF0C\u4E3A\u9632\u6B62\u8986\u76D6\u8BF7\u4F7F\u7528\u5176\u4ED6\u76EE\u5F55: " + dirPath);
+          }
+          namespace = resolveNamespace(meta.id || "");
+          if (!namespace) {
+            return { success: false, namespace: "", error: "meta.id \u4E3A\u7A7A\u6216\u65E0\u6CD5\u89E3\u6790 namespace" };
+          }
+          ensureDir(dirPath);
+          nsDir = path.join(dirPath, namespace);
+          ensureDir(path.join(nsDir, "materials"));
+          ensureDir(path.join(nsDir, "connectors"));
+          ensureDir(path.join(nsDir, "subsystems"));
+          writePackMeta(dirPath, meta);
+          docsDir = path.join(nsDir, "docs");
+          copyDirRecursive(SCHEMAS_DIR, docsDir);
+          log2.info("createContentPack: \u5DF2\u590D\u5236 schemas \u5230 " + docsDir);
+          log2.info("createContentPack: \u5185\u5BB9\u5305\u521B\u5EFA\u6210\u529F", { path: dirPath, namespace });
+          return { success: true, namespace, error: null };
+        } catch (e) {
+          log2.error("createContentPack: \u521B\u5EFA\u5931\u8D25", e);
+          return { success: false, namespace: "", error: e.message };
+        }
+      }
+      function openContentPack(packPath) {
+        var meta, namespace;
+        if (_isZipPath(packPath)) {
+          try {
+            meta = readPackMeta(packPath);
+            if (meta === null) {
+              return { valid: false, meta: null, namespace: "", error: "ZIP \u4E2D meta.json \u8BFB\u53D6\u5931\u8D25\u6216\u4E0D\u5B58\u5728" };
+            }
+            if (!meta.id) {
+              return { valid: false, meta, namespace: "", error: "meta.id \u4E3A\u7A7A" };
+            }
+            namespace = resolveNamespace(meta.id);
+            if (!namespace) {
+              return { valid: false, meta, namespace: "", error: "\u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace" };
+            }
+            log2.info("openContentPack: ZIP \u5185\u5BB9\u5305\u9A8C\u8BC1\u901A\u8FC7", { path: packPath, namespace });
+            return { valid: true, meta, namespace, error: null };
+          } catch (e) {
+            log2.error("openContentPack: \u6253\u5F00 ZIP \u5931\u8D25 " + packPath, e);
+            return { valid: false, meta: null, namespace: "", error: e.message };
+          }
+        }
+        try {
+          meta = readPackMeta(packPath);
+          if (meta === null) {
+            log2.warn("openContentPack: meta.json \u8BFB\u53D6\u5931\u8D25\u6216\u4E0D\u5B58\u5728: " + packPath);
+            return { valid: false, meta: null, namespace: "", error: "meta.json \u8BFB\u53D6\u5931\u8D25\u6216\u4E0D\u5B58\u5728" };
+          }
+          if (!meta.id) {
+            log2.warn("openContentPack: meta.id \u4E3A\u7A7A\uFF0C\u8DEF\u5F84=" + packPath);
+            return { valid: false, meta, namespace: "", error: "meta.id \u4E3A\u7A7A" };
+          }
+          namespace = resolveNamespace(meta.id);
+          if (!namespace) {
+            log2.warn("openContentPack: \u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace: " + meta.id);
+            return { valid: false, meta, namespace: "", error: "\u65E0\u6CD5\u4ECE meta.id \u89E3\u6790 namespace" };
+          }
+          log2.debug("openContentPack: meta.id=" + meta.id + " -> namespace=" + namespace);
+          log2.info("openContentPack: \u5185\u5BB9\u5305\u9A8C\u8BC1\u901A\u8FC7", { path: packPath, namespace });
+          return { valid: true, meta, namespace, error: null };
+        } catch (e) {
+          log2.error("openContentPack: \u6253\u5F00\u5931\u8D25 " + packPath, e);
+          return { valid: false, meta: null, namespace: "", error: e.message };
+        }
+      }
+      function readAllDefs(packDir, namespace, type) {
+        var typeDir, files, result, i, raw;
+        if (_isZipPath(packDir)) {
+          return _readZipDefs(packDir, namespace, type);
+        }
+        typeDir = path.join(packDir, namespace, type);
+        log2.info("readAllDefs: \u5F00\u59CB\u8BFB\u53D6 " + type + " \u76EE\u5F55=" + typeDir + " (packDir=" + packDir + ", namespace=" + namespace + ")");
+        if (!fs.existsSync(typeDir)) {
+          log2.warn("readAllDefs: \u76EE\u5F55\u4E0D\u5B58\u5728 " + typeDir + " (\u7C7B\u578B=" + type + ")");
+          return {};
+        }
+        files = walkDefFiles(typeDir, ".json");
+        log2.info("readAllDefs: walkDefFiles \u627E\u5230 " + files.length + " \u4E2A " + type + " \u6587\u4EF6" + (files.length > 0 ? "\uFF0C\u5217\u8868=" + files.map(function(f) {
+          return f.id;
+        }).join(",") : ""));
+        result = {};
+        for (i = 0; i < files.length; i++) {
+          try {
+            raw = fs.readFileSync(files[i].filePath, "utf-8");
+            result[files[i].id] = JSON.parse(stripJsonComments(raw));
+            log2.debug("readAllDefs: \u5DF2\u8BFB\u53D6 id=" + files[i].id + " path=" + files[i].filePath);
+          } catch (e) {
+            log2.warn("readAllDefs: JSON \u89E3\u6790\u5931\u8D25\uFF0C\u8DF3\u8FC7 " + files[i].filePath, e);
+          }
+        }
+        log2.info("readAllDefs: \u5B8C\u6210", { type, dir: typeDir, count: Object.keys(result).length, ids: Object.keys(result) });
+        return result;
+      }
+      function listDefIds(packDir, namespace, type) {
+        var typeDir = path.join(packDir, namespace, type);
+        var files, ids, i;
+        if (!fs.existsSync(typeDir)) {
+          log2.debug("listDefIds: \u76EE\u5F55\u4E0D\u5B58\u5728 " + typeDir);
+          return [];
+        }
+        files = walkDefFiles(typeDir, ".json");
+        ids = [];
+        for (i = 0; i < files.length; i++) {
+          ids.push(files[i].id);
+        }
+        log2.debug("listDefIds: " + type + " \u5171\u6709 " + ids.length + " \u4E2A\u5B9A\u4E49");
+        return ids;
+      }
+      function defExists(packDir, namespace, type, defId) {
+        var filePath = path.join(packDir, namespace, type, defId + ".json");
+        return fileExists(filePath);
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          resolveNamespace,
+          readPackMeta,
+          writePackMeta,
+          createContentPack,
+          openContentPack,
+          readAllDefs,
+          listDefIds,
+          defExists
+        };
+      }
+    }
+  });
+
+  // src/mode/icons.js
+  var require_icons = __commonJS({
+    "src/mode/icons.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { getMarkerInfo, getMarkersForVariant } = require_element_markers();
+      var { getConfig } = require_persistence();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("Mode");
+      function getIconClassForType(type) {
+        const info = getMarkerInfo(type);
+        return info ? info.icon : "";
+      }
+      function refreshOutlinerIcons() {
+        if (!Project || Project === 0) {
+          log2.debug("refreshOutlinerIcons: \u9879\u76EE\u672A\u6253\u5F00\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        const config = getConfig();
+        if (!config) {
+          log2.debug("refreshOutlinerIcons: config \u4E3A\u7A7A\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        const activePartId = config._uiState?.activePartId;
+        const activeVariantName = config._uiState?.activeVariantName;
+        if (!activePartId || !activeVariantName) {
+          log2.debug("refreshOutlinerIcons: \u65E0\u6D3B\u8DC3\u96F6\u4EF6/\u53D8\u4F53\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        log2.debug("refreshOutlinerIcons: \u5237\u65B0\u56FE\u6807", { partId: activePartId, variant: activeVariantName });
+        const markers = getMarkersForVariant(config, activePartId, activeVariantName);
+        const allElements = [...Group.all, ...Locator.all];
+        for (const el of allElements) {
+          const marker = markers[el.uuid];
+          if (marker) {
+            const iconClass = getIconClassForType(marker.type);
+            if (iconClass) {
+              el.icon = iconClass;
+            }
+          } else {
+            delete el.icon;
+          }
+          if (typeof el.updateElement === "function") {
+            el.updateElement();
+          }
+        }
+      }
+      function resetOutlinerIcons() {
+        if (!Project || Project === 0) return;
+        const allElements = [...Group.all, ...Locator.all];
+        for (const el of allElements) {
+          delete el.icon;
+          if (typeof el.updateElement === "function") {
+            el.updateElement();
+          }
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          getIconClassForType,
+          refreshOutlinerIcons,
+          resetOutlinerIcons
+        };
+      }
+    }
+  });
+
+  // src/core/subsystem_types.js
+  var require_subsystem_types = __commonJS({
+    "src/core/subsystem_types.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var SUBSYSTEM_TYPES = [
+        // ===== power 分类 =====
+        {
+          id: "machine_max:engine",
+          displayName: "\u53D1\u52A8\u673A",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
+            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { engine_speed: ["global", "local"] } }
+          ]
+        },
+        {
+          id: "machine_max:motor",
+          displayName: "\u7535\u52A8\u673A",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
+            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { motor_speed: ["local", "global"] } }
+          ]
+        },
+        {
+          id: "machine_max:gearbox",
+          displayName: "\u53D8\u901F\u7BB1",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
+            { field: "gear_outputs", label: "\u6321\u4F4D\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { gear: ["local", "global"] } }
+          ]
+        },
+        {
+          id: "machine_max:transmission",
+          displayName: "\u5206\u52A8\u7BB1",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "power_outputs", label: "\u529F\u7387\u8F93\u51FA\u5206\u914D", editor: "power_outputs_map", required: true, defaultValue: {} }
+          ]
+        },
+        {
+          id: "machine_max:track_drive",
+          displayName: "\u5C65\u5E26\u9A71\u52A8",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
+            { field: "speed_outputs", label: "\u5C65\u5E26\u901F\u5EA6\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { track_speed: ["local", "global"] } },
+            { field: "force_outputs", label: "\u5C65\u5E26\u9A71\u52A8\u529B\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { track_force: ["local", "global"] } }
+          ]
+        },
+        // ===== control 分类 =====
+        {
+          id: "machine_max:car_controller",
+          displayName: "\u8F66\u8F86\u63A7\u5236\u5668",
+          category: "control",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { car_control: [] } },
+            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["local", "global"] } },
+            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["local", "global"] } },
+            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["local", "global"] } },
+            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["local", "global"] } },
+            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["local", "global"] } }
+          ]
+        },
+        {
+          id: "machine_max:motorbike_controller",
+          displayName: "\u6469\u6258\u8F66\u63A7\u5236\u5668",
+          category: "control",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { car_control: [] } },
+            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["local", "global"] } },
+            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["local", "global"] } },
+            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["local", "global"] } },
+            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["local", "global"] } },
+            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["local", "global"] } }
+          ]
+        },
+        {
+          id: "machine_max:track_controller",
+          displayName: "\u5C65\u5E26\u63A7\u5236\u5668",
+          category: "control",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { track_control: [] } },
+            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["local", "global"] } }
+          ]
+        },
+        // ===== utility 分类 =====
+        {
+          id: "machine_max:wheel_driver",
+          displayName: "\u8F6E\u80CE\u9A71\u52A8\u5668",
+          category: "utility",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
+            { field: "roll_speed_outputs", label: "\u6EDA\u52A8\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} },
+            { field: "steering_angle_outputs", label: "\u8F6C\u5411\u89D2\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
+          ]
+        },
+        {
+          id: "machine_max:seat",
+          displayName: "\u5EA7\u4F4D",
+          category: "utility",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
+            { field: "control_group_preset", label: "\u63A7\u5236\u7EC4\u9884\u8BBE", editor: "control_group_selector", required: false, defaultValue: "" },
+            { field: "passenger_num_outputs", label: "\u4E58\u5BA2\u6570\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { passenger_num: ["local", "global"] } },
+            { field: "camera_discovery_targets", label: "\u6444\u50CF\u673A\u53D1\u73B0\u63E1\u624B\u76EE\u6807", editor: "signal_targets", required: false, defaultValue: {} },
+            { field: "dismount_locators", label: "\u4E0B\u8F66\u5B9A\u4F4D\u5668\uFF08\u6309\u4F18\u5148\u7EA7\uFF09", editor: "locator_list", required: false, defaultValue: [] }
+          ]
+        },
+        {
+          id: "machine_max:lighting",
+          displayName: "\u706F\u5149",
+          category: "utility",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u5149\u6E90\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: "" }
+          ]
+        },
+        {
+          id: "machine_max:item_storage",
+          displayName: "\u7269\u54C1\u5B58\u50A8",
+          category: "utility",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+          ]
+        },
+        {
+          id: "machine_max:basic",
+          displayName: "\u57FA\u7840\uFF08\u65E0\u989D\u5916\u9762\u677F\uFF09",
+          category: "utility",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+          ]
+        },
+        // ===== experimental 分类 =====
+        {
+          id: "machine_max:camera",
+          displayName: "\u6444\u50CF\u673A",
+          category: "experimental",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u6444\u50CF\u673A\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: "" }
+          ]
+        },
+        {
+          id: "machine_max:turret_driver",
+          displayName: "\u70AE\u5854",
+          category: "experimental",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
+            { field: "rotation_outputs", label: "\u89D2\u5EA6\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
+          ]
+        },
+        {
+          id: "machine_max:weapon_controller",
+          displayName: "\u6B66\u5668\u63A7\u5236\u5668",
+          category: "experimental",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { weapon_control: [] } },
+            { field: "first_hud_layout", label: "\u7B2C\u4E00\u4EBA\u79F0 HUD \u5E03\u5C40", editor: "text_input", required: false, defaultValue: "machine_max:empty" },
+            { field: "third_hud_layout", label: "\u7B2C\u4E09\u4EBA\u79F0 HUD \u5E03\u5C40", editor: "text_input", required: false, defaultValue: "machine_max:empty" },
+            { field: "scope_hud_layout", label: "\u7784\u51C6\u955C HUD \u5E03\u5C40", editor: "text_input", required: false, defaultValue: "machine_max:empty" }
+          ]
+        },
+        {
+          id: "machine_max:launcher",
+          displayName: "\u53D1\u5C04\u5668",
+          category: "experimental",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u53D1\u5C04\u70B9\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
+            { field: "fire_animation", label: "\u5F00\u706B\u52A8\u753B\u540D", editor: "text_input", required: false, defaultValue: "fire" },
+            { field: "ammo_outputs", label: "\u5F39\u836F\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
+          ]
+        },
+        {
+          id: "machine_max:sight",
+          displayName: "\u7784\u51C6\u955C",
+          category: "experimental",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "locator", label: "\u7784\u51C6\u955C\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: "" }
+          ]
+        },
+        {
+          id: "machine_max:regen_loader",
+          displayName: "\u518D\u751F\u88C5\u5F39\u673A",
+          category: "experimental",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "projectile_types", label: "\u5F39\u94FE\u6784\u6210", editor: "projectile_belt_editor", required: true, defaultValue: {} },
+            { field: "belt_label", label: "\u5F39\u94FE\u6807\u7B7E", editor: "text_input", required: false, defaultValue: "" },
+            { field: "discovery_outputs", label: "\u5F39\u836F\u53D1\u73B0\u9891\u9053", editor: "signal_targets", required: false, defaultValue: {} }
+          ]
+        }
+      ];
+      var TYPE_MAP = {};
+      (function() {
+        for (var i = 0; i < SUBSYSTEM_TYPES.length; i++) {
+          TYPE_MAP[SUBSYSTEM_TYPES[i].id] = SUBSYSTEM_TYPES[i];
+        }
+      })();
+      function getTypeMeta(typeId) {
+        return TYPE_MAP[typeId] || null;
+      }
+      function getAllTypes() {
+        return SUBSYSTEM_TYPES.slice();
+      }
+      function getTypesByCategory(category) {
+        return SUBSYSTEM_TYPES.filter(function(t) {
+          return t.category === category;
+        });
+      }
+      function getTypesGroupedByCategory() {
+        var result = { power: [], control: [], utility: [], experimental: [] };
+        for (var i = 0; i < SUBSYSTEM_TYPES.length; i++) {
+          var t = SUBSYSTEM_TYPES[i];
+          if (result[t.category]) {
+            result[t.category].push(t);
+          }
+        }
+        return result;
+      }
+      function getDynamicFields(typeId) {
+        var meta = TYPE_MAP[typeId];
+        return meta ? meta.dynamicFields.slice() : [];
+      }
+      function getTypeDefaults(typeId) {
+        var fields = getDynamicFields(typeId);
+        var result = {};
+        for (var i = 0; i < fields.length; i++) {
+          var f = fields[i];
+          if (f.field === "definition") continue;
+          result[f.field] = JSON.parse(JSON.stringify(f.defaultValue));
+        }
+        return result;
+      }
+      function getTypeSpecificFields(typeId) {
+        var fields = getDynamicFields(typeId);
+        var names = [];
+        for (var i = 0; i < fields.length; i++) {
+          names.push(fields[i].field);
+        }
+        return names;
+      }
+      function needsLocator(typeId) {
+        var fields = getDynamicFields(typeId);
+        for (var i = 0; i < fields.length; i++) {
+          if (fields[i].editor === "locator_selector") return true;
+        }
+        return false;
+      }
+      function needsConnector(typeId) {
+        var fields = getDynamicFields(typeId);
+        for (var i = 0; i < fields.length; i++) {
+          if (fields[i].editor === "connector_selector") return true;
+        }
+        return false;
+      }
+      function getSignalOutputFieldNames(typeId) {
+        var fields = getDynamicFields(typeId);
+        var result = [];
+        for (var i = 0; i < fields.length; i++) {
+          var f = fields[i];
+          if (f.editor === "signal_targets" || f.editor === "power_target" || f.editor === "power_outputs_map") {
+            result.push(f.field);
+          }
+        }
+        return result;
+      }
+      var EDITOR_LABELS = {
+        definition_selector: "\u578B\u53F7\u5B9A\u4E49\u9009\u62E9\u5668",
+        locator_selector: "\u5B9A\u4F4D\u5668\u9009\u62E9\u5668",
+        locator_list: "\u5B9A\u4F4D\u5668\u5217\u8868\u7F16\u8F91\u5668",
+        connector_selector: "\u8FDE\u63A5\u70B9\u9009\u62E9\u5668",
+        power_target: "\u529F\u7387\u76EE\u6807\u9009\u62E9\u5668",
+        signal_targets: "\u4FE1\u53F7\u9891\u9053\u7F16\u8F91\u5668",
+        power_outputs_map: "\u529F\u7387\u8F93\u51FA\u6620\u5C04\u7F16\u8F91\u5668",
+        enum_selector: "\u679A\u4E3E\u4E0B\u62C9\u83DC\u5355",
+        text_input: "\u6587\u672C\u8F93\u5165\u6846",
+        json_textarea: "JSON \u7F16\u8F91\u6846"
+      };
+      function getEditorLabel(editorType) {
+        return EDITOR_LABELS[editorType] || editorType;
+      }
+      var CATEGORY_COLORS = {
+        power: "#e67e22",
+        control: "#3498db",
+        utility: "#2ecc71",
+        experimental: "#9b59b6"
+      };
+      function getTypeColor(typeId) {
+        var meta = TYPE_MAP[typeId];
+        if (!meta) return "#888";
+        return CATEGORY_COLORS[meta.category] || "#888";
+      }
+      var CATEGORY_LABELS = {
+        power: "\u52A8\u529B",
+        control: "\u63A7\u5236",
+        utility: "\u529F\u80FD",
+        experimental: "\u5B9E\u9A8C"
+      };
+      function getCategoryLabel(category) {
+        return CATEGORY_LABELS[category] || category;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          SUBSYSTEM_TYPES,
+          getTypeMeta,
+          getAllTypes,
+          getTypesByCategory,
+          getTypesGroupedByCategory,
+          getDynamicFields,
+          getTypeDefaults,
+          getTypeSpecificFields,
+          needsLocator,
+          needsConnector,
+          getSignalOutputFieldNames,
+          getEditorLabel,
+          getTypeColor,
+          getCategoryLabel
+        };
+      }
+    }
+  });
+
+  // src/core/builtin_pack.js
+  var require_builtin_pack = __commonJS({
+    "src/core/builtin_pack.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var { stripJsonComments } = require_file_writer();
+      var log2 = createLogger2("BuiltinPack");
+      function normalizeDefs(rawDefs) {
+        var result, keys, i, key, value, defId, lastSlash, stripped;
+        if (!rawDefs || typeof rawDefs !== "object") return {};
+        result = {};
+        keys = Object.keys(rawDefs);
+        for (i = 0; i < keys.length; i++) {
+          key = keys[i];
+          value = rawDefs[key];
+          defId = key;
+          if (typeof defId === "string" && defId.endsWith(".json")) {
+            defId = defId.slice(0, -5);
+          }
+          lastSlash = defId.lastIndexOf("/");
+          if (lastSlash >= 0) {
+            defId = defId.substring(lastSlash + 1);
+          }
+          if (typeof value === "string") {
+            try {
+              stripped = stripJsonComments(value);
+              value = JSON.parse(stripped);
+            } catch (e) {
+              log2.warn("normalizeDefs: JSON \u89E3\u6790\u5931\u8D25\uFF0C\u4FDD\u7559\u539F\u503C key=" + key, e);
+            }
+          }
+          result[defId] = value;
+        }
+        return result;
+      }
+      function readDefine(injectedValue, fallback) {
+        if (typeof injectedValue === "undefined") {
+          return fallback;
+        }
+        return injectedValue;
+      }
+      var builtinMeta = readDefine(
+        typeof define_BUILTIN_PACK_META_default !== "undefined" ? define_BUILTIN_PACK_META_default : void 0,
+        { id: "", version: "0.0" }
+      );
+      var builtinMaterials = normalizeDefs(
+        readDefine(
+          typeof define_BUILTIN_MATERIALS_default !== "undefined" ? define_BUILTIN_MATERIALS_default : void 0,
+          {}
+        )
+      );
+      var builtinConnectors = normalizeDefs(
+        readDefine(
+          typeof define_BUILTIN_CONNECTORS_default !== "undefined" ? define_BUILTIN_CONNECTORS_default : void 0,
+          {}
+        )
+      );
+      var builtinSubsystems = normalizeDefs(
+        readDefine(
+          typeof define_BUILTIN_SUBSYSTEMS_default !== "undefined" ? define_BUILTIN_SUBSYSTEMS_default : void 0,
+          {}
+        )
+      );
+      var builtinControlGroups = normalizeDefs(
+        readDefine(
+          typeof define_BUILTIN_CONTROL_GROUPS_default !== "undefined" ? define_BUILTIN_CONTROL_GROUPS_default : void 0,
+          {}
+        )
+      );
+      function extractNamespace(id) {
+        if (!id || typeof id !== "string") return "machine_max";
+        var colonIdx = id.indexOf(":");
+        return colonIdx >= 0 ? id.substring(0, colonIdx) : id;
+      }
+      function getBuiltinPack() {
+        var namespace = extractNamespace(builtinMeta.id);
+        var matCount, connCount, subCount, cgCount;
+        var result = {
+          meta: builtinMeta,
+          namespace,
+          materials: builtinMaterials,
+          connectors: builtinConnectors,
+          subsystems: builtinSubsystems,
+          control_groups: builtinControlGroups
+        };
+        Object.freeze(result);
+        matCount = Object.keys(builtinMaterials).length;
+        connCount = Object.keys(builtinConnectors).length;
+        subCount = Object.keys(builtinSubsystems).length;
+        cgCount = Object.keys(builtinControlGroups).length;
+        log2.info(
+          "getBuiltinPack: \u5185\u7F6E\u57FA\u7840\u5305\u52A0\u8F7D\u5B8C\u6210 \u2014 materials=" + matCount + " connectors=" + connCount + " subsystems=" + subCount + " controlGroups=" + cgCount + " namespace=" + namespace + " metaId=" + (builtinMeta.id || "\u65E0")
+        );
+        log2.debug("getBuiltinPack: \u8FDE\u63A5\u5668\u952E\u5217\u8868", Object.keys(builtinConnectors));
+        log2.debug("getBuiltinPack: \u6750\u6599\u952E\u5217\u8868", Object.keys(builtinMaterials));
+        log2.debug("getBuiltinPack: \u5B50\u7CFB\u7EDF\u952E\u5217\u8868", Object.keys(builtinSubsystems));
+        log2.debug("getBuiltinPack: \u63A7\u5236\u7EC4\u9884\u8BBE\u952E\u5217\u8868", Object.keys(builtinControlGroups));
+        return result;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          getBuiltinPack
+        };
+      }
+    }
+  });
+
+  // src/core/content_pack_manager.js
+  var require_content_pack_manager = __commonJS({
+    "src/core/content_pack_manager.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var content_pack = require_content_pack();
+      var builtin_pack = require_builtin_pack();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("ContentPackManager");
+      var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
+      var _cache = {
+        materials: null,
+        connectors: null,
+        subsystems: null,
+        control_groups: null,
+        projectiles: null
+      };
+      function loadMergedDefs(config, type) {
+        var emptyResult;
+        var defs;
+        var sources;
+        var builtin;
+        var builtinDefs;
+        var bKey;
+        var depPaths;
+        var i;
+        var depPath;
+        var openResult;
+        var depDefs;
+        var depKey;
+        var currentPath;
+        var curOpenResult;
+        var curDefs;
+        var curKey;
+        var result;
+        var defCount;
+        if (_cache[type]) {
+          log2.debug("loadMergedDefs: \u7F13\u5B58\u547D\u4E2D " + type);
+          return _cache[type];
+        }
+        if (!config) {
+          log2.warn("loadMergedDefs: config \u4E3A\u7A7A\uFF0C\u8FD4\u56DE\u7A7A\u7ED3\u679C");
+          emptyResult = { defs: {}, sources: {} };
+          _cache[type] = emptyResult;
+          return emptyResult;
+        }
+        defs = {};
+        sources = {};
+        log2.debug("loadMergedDefs: \u5F00\u59CB\u5408\u5E76 " + type, {
+          contentPackPath: config.contentPackPath,
+          dependencyPaths: config.dependencyPaths
+        });
+        try {
+          builtin = builtin_pack.getBuiltinPack();
+          builtinDefs = builtin[type] || {};
+          for (bKey in builtinDefs) {
+            if (hasOwn(builtinDefs, bKey)) {
+              var namespacedKey = builtin.namespace + ":" + bKey;
+              defs[namespacedKey] = builtinDefs[bKey];
+              sources[namespacedKey] = "builtin";
+              log2.debug("loadMergedDefs: \u5185\u7F6E\u5305\u6DFB\u52A0 " + namespacedKey + " (source=builtin)");
+            }
+          }
+          log2.info("loadMergedDefs: \u5185\u7F6E\u5305 " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(builtinDefs).length + " \u4E2A\u5B9A\u4E49\uFF0Cnamespace=" + builtin.namespace);
+        } catch (e) {
+          log2.warn("loadMergedDefs: \u5185\u7F6E\u5305\u8BFB\u53D6\u5931\u8D25\uFF0C\u4F5C\u4E3A\u7A7A\u5305\u5904\u7406", e);
+        }
+        depPaths = config.dependencyPaths;
+        if (depPaths && Array.isArray(depPaths) && depPaths.length > 0) {
+          for (i = 0; i < depPaths.length; i++) {
+            depPath = depPaths[i];
+            if (!depPath || typeof depPath !== "string" || depPath.trim() === "") {
+              log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u8DEF\u5F84\u4E3A\u7A7A\uFF0C\u8DF3\u8FC7 index=" + i);
+              continue;
+            }
+            try {
+              openResult = content_pack.openContentPack(depPath);
+              if (!openResult.valid) {
+                log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u65E0\u6548\uFF0C\u8DF3\u8FC7: " + depPath, openResult.error);
+                continue;
+              }
+              log2.info("loadMergedDefs: \u4F9D\u8D56\u5305\u6253\u5F00\u6210\u529F", {
+                path: depPath,
+                namespace: openResult.namespace,
+                metaId: openResult.meta ? openResult.meta.id : null
+              });
+              depDefs = content_pack.readAllDefs(depPath, openResult.namespace, type);
+              for (depKey in depDefs) {
+                if (hasOwn(depDefs, depKey)) {
+                  var namespacedDepKey = openResult.namespace + ":" + depKey;
+                  var prevSource = sources[namespacedDepKey];
+                  defs[namespacedDepKey] = depDefs[depKey];
+                  sources[namespacedDepKey] = "dependency:" + i;
+                  log2.info("loadMergedDefs: \u4F9D\u8D56\u5305\u6DFB\u52A0 " + namespacedDepKey + " (source=dependency:" + i + ", \u8986\u76D6\u524D=" + (prevSource || "\u65E0") + ")");
+                }
+              }
+              log2.info("loadMergedDefs: \u4F9D\u8D56\u5305 " + depPath + " " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(depDefs).length + " \u4E2A\u5B9A\u4E49");
+            } catch (e) {
+              log2.warn("loadMergedDefs: \u4F9D\u8D56\u5305\u52A0\u8F7D\u5931\u8D25\uFF0C\u8DF3\u8FC7: " + depPath, e);
+            }
+          }
+        }
+        currentPath = config.contentPackPath;
+        if (currentPath && typeof currentPath === "string" && currentPath.trim() !== "") {
+          try {
+            curOpenResult = content_pack.openContentPack(currentPath);
+            if (!curOpenResult.valid) {
+              log2.error("loadMergedDefs: \u5F53\u524D\u5185\u5BB9\u5305\u65E0\u6548: " + currentPath, curOpenResult.error);
+              log2.debug("loadMergedDefs: openContentPack \u7ED3\u679C", {
+                namespace: curOpenResult.namespace,
+                meta: curOpenResult.meta,
+                error: curOpenResult.error
+              });
+            } else {
+              log2.info("loadMergedDefs: \u5F53\u524D\u5305\u6253\u5F00\u6210\u529F", {
+                path: currentPath,
+                namespace: curOpenResult.namespace,
+                metaId: curOpenResult.meta ? curOpenResult.meta.id : null
+              });
+              curDefs = content_pack.readAllDefs(currentPath, curOpenResult.namespace, type);
+              for (curKey in curDefs) {
+                if (hasOwn(curDefs, curKey)) {
+                  var namespacedCurKey = curOpenResult.namespace + ":" + curKey;
+                  var prevSource = sources[namespacedCurKey];
+                  defs[namespacedCurKey] = curDefs[curKey];
+                  sources[namespacedCurKey] = "current";
+                  log2.info("loadMergedDefs: \u5F53\u524D\u5305\u6DFB\u52A0 " + namespacedCurKey + " (source=current, \u8986\u76D6\u524D=" + (prevSource || "\u65E0") + ")");
+                }
+              }
+              log2.info("loadMergedDefs: \u5F53\u524D\u5305 " + currentPath + " " + type + " \u52A0\u8F7D\u5B8C\u6210\uFF0C\u5171 " + Object.keys(curDefs).length + " \u4E2A\u5B9A\u4E49");
+            }
+          } catch (e) {
+            log2.error("loadMergedDefs: \u5F53\u524D\u5185\u5BB9\u5305\u52A0\u8F7D\u5931\u8D25: " + currentPath, e);
+          }
+        }
+        result = { defs, sources };
+        _cache[type] = result;
+        defCount = Object.keys(defs).length;
+        log2.info("loadMergedDefs: " + type + " \u5408\u5E76\u5B8C\u6210\uFF0C\u5171 " + defCount + " \u4E2A\u5B9A\u4E49");
+        log2.debug("loadMergedDefs: \u6700\u7EC8 sources", sources);
+        return result;
+      }
+      function resolveDefSource(config, type, defId) {
+        var merged = loadMergedDefs(config, type);
+        var source = merged.sources[defId];
+        if (source === void 0) {
+          log2.debug("resolveDefSource: \u672A\u627E\u5230\u5B9A\u4E49 " + type + ":" + defId);
+          return null;
+        }
+        log2.debug("resolveDefSource: " + type + ":" + defId + " -> " + source);
+        return source;
+      }
+      function isDefEditable(config, type, defId) {
+        var source = resolveDefSource(config, type, defId);
+        return source === "current";
+      }
+      function getAvailableDefsForType(config, type) {
+        var merged = loadMergedDefs(config, type);
+        return merged.defs;
+      }
+      function getFirstDefId(config, type) {
+        var defs = getAvailableDefsForType(config, type);
+        var keys = Object.keys(defs);
+        if (keys.length === 0) {
+          log2.debug("getFirstDefId: " + type + " \u65E0\u53EF\u7528\u5B9A\u4E49");
+          return null;
+        }
+        return keys[0];
+      }
+      function invalidateCache() {
+        _cache.materials = null;
+        _cache.connectors = null;
+        _cache.subsystems = null;
+        _cache.control_groups = null;
+        _cache.projectiles = null;
+        log2.debug("invalidateCache: \u7F13\u5B58\u5DF2\u6E05\u9664");
+        try {
+          throw new Error("invalidateCache \u8C03\u7528\u6808");
+        } catch (e) {
+          log2.debug("invalidateCache: \u8C03\u7528\u8005", e.stack);
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          loadMergedDefs,
+          resolveDefSource,
+          isDefEditable,
+          getAvailableDefsForType,
+          getFirstDefId,
+          invalidateCache
+        };
+      }
+    }
+  });
+
+  // src/core/validation_types.js
+  var require_validation_types = __commonJS({
+    "src/core/validation_types.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var SEVERITY_ERROR = "error";
+      var SEVERITY_WARNING = "warning";
+      var CODES = {
+        SUBSYSTEM_REQUIRED_FIELD: "subsystem_required_field",
+        // 子系统 required 字段缺失（含 ''/null/undefined）
+        DEFINITION_REQUIRED: "definition_required",
+        // 子系统/连接点的 definition 未配置（空串）
+        DEFINITION_REF_MISSING: "definition_ref_missing",
+        // definition 引用的型号定义不存在（引用断裂）
+        ORPHAN_ELEMENT: "orphan_element",
+        // 连接点/碰撞箱/交互区游离（无归属 subpart）
+        GHOST_MARKER: "ghost_marker",
+        // 幽灵标记（UUID 对应元素已删除）
+        MISSING_REQUIRED: "missing_required",
+        // 其余零件/变体/子零件级必填项（占位）
+        DUPLICATE_NAME: "duplicate_name",
+        // 连接点/子系统/交互区名在单变体内重复（Part 级按名寻址歧义）
+        RESERVED_NAME: "reserved_name",
+        // 使用了信号保留地址（local/global 等）
+        DANGLING_SIGNAL_TARGET: "dangling_signal_target",
+        // 信号/功率目标指向不存在的节点（含 power_outputs 的 key）
+        MATERIAL_REQUIRED: "material_required",
+        // 碰撞箱 material 未配置（空串/null/undefined）
+        MATERIAL_REF_MISSING: "material_ref_missing",
+        // 碰撞箱 material 引用的材质不存在（machine_max:default 为内置兜底，不查表）
+        HIT_BOX_KEY_NOT_UUID: "hit_box_key_not_uuid"
+        // hit_boxes 的 key 不是骨骼 UUID（内部树只认 UUID）
+      };
+      var SCOPE_ITEM_BUCKET = {
+        subsystem: "subsystems",
+        connector: "connectors",
+        hit_box: "hitBoxes",
+        interact_box: "interactBoxes"
+      };
+      function isMissingValue(val) {
+        return val === "" || val === null || val === void 0;
+      }
+      function aggregate(problems) {
+        var bySubPart = {};
+        var byItem = { subsystems: {}, connectors: {}, hitBoxes: {}, interactBoxes: {} };
+        var byPartVariant = [];
+        if (!Array.isArray(problems)) {
+          return { bySubPart, byItem, byPartVariant };
+        }
+        for (var i = 0; i < problems.length; i++) {
+          var p = problems[i];
+          var pi = p && p.path;
+          if (!pi) continue;
+          if (pi.subPartKey) {
+            if (!bySubPart[pi.subPartKey]) bySubPart[pi.subPartKey] = [];
+            bySubPart[pi.subPartKey].push(p);
+            if (pi.itemKey) {
+              var bucket = SCOPE_ITEM_BUCKET[pi.scope];
+              if (bucket && byItem[bucket]) {
+                if (!byItem[bucket][pi.itemKey]) byItem[bucket][pi.itemKey] = [];
+                byItem[bucket][pi.itemKey].push(p);
+              }
+            }
+          } else {
+            byPartVariant.push(p);
+          }
+        }
+        return { bySubPart, byItem, byPartVariant };
+      }
+      function matchesField(problem, field) {
+        if (!field) return false;
+        var f = problem && problem.path && problem.path.field;
+        if (typeof f !== "string" || f === "") return false;
+        return f === field || f.indexOf(field + ".") === 0;
+      }
+      function filterFieldIssues(problems, field) {
+        if (!Array.isArray(problems) || !field) return [];
+        var out = [];
+        for (var i = 0; i < problems.length; i++) {
+          if (matchesField(problems[i], field)) out.push(problems[i]);
+        }
+        return out;
+      }
+      function resolveIssueLevel(issues) {
+        if (!issues || !Array.isArray(issues) || issues.length === 0) return "none";
+        var hasError = false;
+        for (var i = 0; i < issues.length; i++) {
+          if (issues[i] && issues[i].severity === SEVERITY_ERROR) return SEVERITY_ERROR;
+          if (issues[i] && issues[i].severity === SEVERITY_WARNING) hasError = true;
+        }
+        return hasError ? SEVERITY_WARNING : "none";
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          SEVERITY_ERROR,
+          SEVERITY_WARNING,
+          CODES,
+          SCOPE_ITEM_BUCKET,
+          isMissingValue,
+          matchesField,
+          filterFieldIssues,
+          aggregate,
+          resolveIssueLevel
+        };
+      }
+    }
+  });
+
+  // src/services/validate.js
+  var require_validate2 = __commonJS({
+    "src/services/validate.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var { getMarkersForVariant, detectOwnerSubPart } = require_element_markers();
+      var ssTypes = require_subsystem_types();
+      var cp = require_content_pack_manager();
+      var { CODES, isMissingValue } = require_validation_types();
+      var docRefs = require_refs();
+      var ports = require_ports();
+      var log2 = createLogger2("Validation");
+      function _scopeForMarkerType(type) {
+        if (type === "sub_part") return "subpart";
+        return type;
+      }
+      function _makeProblem(severity, code, message, path) {
+        return { severity, code, message, path };
+      }
+      function _mkPath(scope, partId, variantName, subPartKey, itemKey, elementUuid, field) {
+        var path = { scope, partId, variantName, field: field || "" };
+        if (subPartKey) path.subPartKey = subPartKey;
+        if (itemKey) path.itemKey = itemKey;
+        if (elementUuid) path.elementUuid = elementUuid;
+        return path;
+      }
+      function _filterDefsByType(defs, typeId) {
+        var result = {};
+        if (!defs || !typeId) return result;
+        for (var id in defs) {
+          if (defs.hasOwnProperty(id) && defs[id] && defs[id].type === typeId) {
+            result[id] = defs[id];
+          }
+        }
+        return result;
+      }
+      function _collectMarkerIssues(config, partId, vName, problems) {
+        var validUUIDs = {};
+        var allGroups = typeof Group !== "undefined" && Group.all ? Group.all : [];
+        var allLocators = typeof Locator !== "undefined" && Locator.all ? Locator.all : [];
+        for (var gi = 0; gi < allGroups.length; gi++) validUUIDs[allGroups[gi].uuid] = true;
+        for (var li = 0; li < allLocators.length; li++) validUUIDs[allLocators[li].uuid] = true;
+        var markers = getMarkersForVariant(config, partId, vName);
+        for (var uuid in markers) {
+          var marker = markers[uuid];
+          if (!validUUIDs[uuid]) {
+            var typeLabel = marker.type === "sub_part" ? "\u5B50\u96F6\u4EF6" : marker.type === "hit_box" ? "\u78B0\u649E\u7BB1" : marker.type === "connector" ? "\u8FDE\u63A5\u70B9" : marker.type === "interact_box" ? "\u4EA4\u4E92\u533A" : marker.type;
+            problems.push(_makeProblem(
+              "error",
+              CODES.GHOST_MARKER,
+              '\u96F6\u4EF6 "' + partId + '"/' + vName + " \u4E2D\u5B58\u5728\u5E7D\u7075" + typeLabel + "\u6807\u8BB0\uFF08UUID: " + uuid + "\uFF09\uFF0C\u5BF9\u5E94\u7684\u6A21\u578B\u5143\u7D20\u5DF2\u88AB\u5220\u9664\u3002\u5EFA\u8BAE\u4FDD\u5B58\u540E\u91CD\u65B0\u6253\u5F00\u9879\u76EE\u4EE5\u81EA\u52A8\u6E05\u7406\u3002",
+              _mkPath(_scopeForMarkerType(marker.type), partId, vName, null, null, uuid)
+            ));
+            continue;
+          }
+          if (marker.type === "hit_box") {
+            var group = allGroups.find(function(g) {
+              return g.uuid === uuid;
+            });
+            if (group) {
+              var owner = detectOwnerSubPart(config, partId, vName, group);
+              if (!owner) {
+                problems.push(_makeProblem(
+                  "warning",
+                  CODES.ORPHAN_ELEMENT,
+                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u78B0\u649E\u7BB1 "' + group.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u4E0D\u4F1A\u88AB\u9632\u62A4\u8BA1\u7B97\u5904\u7406\uFF09',
+                  _mkPath("hit_box", partId, vName, null, null, uuid)
+                ));
+              }
+            }
+          } else if (marker.type === "connector") {
+            var loc = allLocators.find(function(l) {
+              return l.uuid === uuid;
+            });
+            if (loc) {
+              var owner = detectOwnerSubPart(config, partId, vName, loc);
+              if (!owner) {
+                problems.push(_makeProblem(
+                  "warning",
+                  CODES.ORPHAN_ELEMENT,
+                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u8FDE\u63A5\u70B9 "' + loc.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u5C06\u4E0D\u4F1A\u8BA1\u5165\u5BFC\u51FA\uFF09',
+                  _mkPath("connector", partId, vName, null, null, uuid)
+                ));
+              }
+            }
+          } else if (marker.type === "interact_box") {
+            var ibGroup = allGroups.find(function(g) {
+              return g.uuid === uuid;
+            });
+            if (ibGroup) {
+              var owner = detectOwnerSubPart(config, partId, vName, ibGroup);
+              if (!owner) {
+                problems.push(_makeProblem(
+                  "warning",
+                  CODES.ORPHAN_ELEMENT,
+                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u4E2D\u4EA4\u4E92\u533A "' + ibGroup.name + '" \u4E3A\u6E38\u79BB\u72B6\u6001\uFF08\u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF0C\u4E0D\u4F1A\u88AB\u4EA4\u4E92\u5904\u7406\uFF09',
+                  _mkPath("interact_box", partId, vName, null, null, uuid)
+                ));
+              }
+            }
+          }
+        }
+      }
+      var RESERVED_SIGNAL_NAMES = ["local", "global"];
+      function _collectNameConflicts(partId, vName, subParts, problems) {
+        var seen = {};
+        var scopes = [
+          { field: "connectors", scope: "connector" },
+          { field: "subsystems", scope: "subsystem" },
+          { field: "interact_boxes", scope: "interact_box" }
+        ];
+        Object.keys(subParts || {}).forEach(function(spKey) {
+          var sp = subParts[spKey] || {};
+          scopes.forEach(function(s) {
+            var map = sp[s.field] || {};
+            Object.keys(map).forEach(function(name) {
+              if (RESERVED_SIGNAL_NAMES.indexOf(name) >= 0) {
+                problems.push(_makeProblem(
+                  "error",
+                  CODES.RESERVED_NAME,
+                  s.scope + ' "' + name + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u4E3A\u4FE1\u53F7\u4FDD\u7559\u5730\u5740\uFF08local/global\uFF09\uFF0C\u4E0D\u5F97\u7528\u4F5C\u8FDE\u63A5\u70B9/\u5B50\u7CFB\u7EDF/\u4EA4\u4E92\u533A\u540D',
+                  _mkPath(s.scope, partId, vName, spKey, name)
+                ));
+              }
+              var prev = seen[name];
+              if (prev) {
+                problems.push(_makeProblem(
+                  "error",
+                  CODES.DUPLICATE_NAME,
+                  '\u540D\u79F0 "' + name + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + " \u5185\u91CD\u590D\uFF1A" + prev.scope + '\uFF08\u5B50\u96F6\u4EF6 "' + prev.subPartKey + '"\uFF09\u4E0E ' + s.scope + '\uFF08\u5B50\u96F6\u4EF6 "' + spKey + '"\uFF09\u51B2\u7A81',
+                  _mkPath(s.scope, partId, vName, spKey, name)
+                ));
+              } else {
+                seen[name] = { subPartKey: spKey, scope: s.scope };
+              }
+            });
+          });
+        });
+      }
+      function _collectDanglingRefs(config, partId, vName, spKey, problems) {
+        var result = docRefs.resolveConfigRefs(config, {
+          partId,
+          variantName: vName,
+          subPartKey: spKey
+        });
+        (result.dangling || []).forEach(function(ref) {
+          var p = ref.path || [];
+          var baseLen = 6;
+          var container = p[baseLen];
+          var itemKey = p[baseLen + 1];
+          var scope = "subpart";
+          if (container === "subsystems") scope = "subsystem";
+          else if (container === "connectors") scope = "connector";
+          else if (container === "interact_boxes") scope = "interact_box";
+          else if (container === "hit_boxes") scope = "hit_box";
+          var what = ref.kind === "power_output_key" ? "\u529F\u7387\u8F93\u51FA\u76EE\u6807\uFF08power_outputs \u7684 key\uFF09" : ref.kind === "hit_box_subsystem" ? "\u78B0\u649E\u7BB1\u5B50\u7CFB\u7EDF" : ref.kind === "power_target" ? "\u8FDE\u63A5\u70B9\u529F\u7387\u76EE\u6807" : ref.kind === "power_output" ? "\u5B50\u7CFB\u7EDF\u529F\u7387\u8F93\u51FA" : ref.kind === "connector" ? "\u5B50\u7CFB\u7EDF\u5173\u8054\u8FDE\u63A5\u70B9" : "\u4FE1\u53F7\u76EE\u6807";
+          var field = p[baseLen + 2] || "";
+          problems.push(_makeProblem(
+            "error",
+            CODES.DANGLING_SIGNAL_TARGET,
+            '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A' + what + ' "' + ref.target + '" \u6307\u5411\u4E0D\u5B58\u5728\u7684\u8282\u70B9\uFF08\u53EA\u5141\u8BB8\u540C\u5B50\u96F6\u4EF6\u6761\u76EE\u6216 local/global\uFF09',
+            _mkPath(scope, partId, vName, spKey, itemKey, null, field)
+          ));
+        });
+      }
+      function collectIssues(config) {
+        var problems = [];
+        var parts = config && config.parts || {};
+        var partIds = Object.keys(parts);
+        if (partIds.length === 0) {
+          problems.push(_makeProblem(
+            "error",
+            CODES.MISSING_REQUIRED,
+            "\u672A\u5B9A\u4E49\u4EFB\u4F55\u96F6\u4EF6\uFF0C\u65E0\u6CD5\u6821\u9A8C",
+            _mkPath("part", "", "")
+          ));
+          return problems;
+        }
+        var subsystemDefs = cp.loadMergedDefs(config, "subsystems").defs || {};
+        var connectorDefs = cp.loadMergedDefs(config, "connectors").defs || {};
+        var materialDefs = cp.loadMergedDefs(config, "materials").defs || {};
+        var boneCount = ports.get().bones.listAll().length;
+        for (var i = 0; i < partIds.length; i++) {
+          var partId = partIds[i];
+          var part = parts[partId];
+          var variants = part.variants || {};
+          var variantNames = Object.keys(variants);
+          if (variantNames.length === 0) {
+            problems.push(_makeProblem(
+              "error",
+              CODES.MISSING_REQUIRED,
+              '\u96F6\u4EF6 "' + partId + '"\uFF1A\u6CA1\u6709\u5B9A\u4E49\u53D8\u4F53',
+              _mkPath("part", partId, "", null, null, null, "variants")
+            ));
+            continue;
+          }
+          for (var vi = 0; vi < variantNames.length; vi++) {
+            var vName = variantNames[vi];
+            var variant = variants[vName];
+            if (!variant.model) {
+              problems.push(_makeProblem(
+                "error",
+                CODES.MISSING_REQUIRED,
+                '\u96F6\u4EF6 "' + partId + '" \u53D8\u4F53 "' + vName + '"\uFF1A\u672A\u8BBE\u7F6E\u6A21\u578B\u5F15\u7528',
+                _mkPath("variant", partId, vName, null, null, null, "model")
+              ));
+            }
+            var subParts = variant.sub_parts || {};
+            var spKeys = Object.keys(subParts);
+            if (spKeys.length === 0) {
+              problems.push(_makeProblem(
+                "error",
+                CODES.MISSING_REQUIRED,
+                '\u96F6\u4EF6 "' + partId + '" \u53D8\u4F53 "' + vName + '"\uFF1A\u672A\u5B9A\u4E49\u5B50\u96F6\u4EF6',
+                _mkPath("variant", partId, vName, null, null, null, "sub_parts")
+              ));
+            }
+            for (var si = 0; si < spKeys.length; si++) {
+              var spKey = spKeys[si];
+              var sp = subParts[spKey];
+              if (Object.keys(sp.hit_boxes || {}).length === 0) {
+                problems.push(_makeProblem(
+                  "error",
+                  CODES.MISSING_REQUIRED,
+                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u78B0\u649E\u7BB1\u4E3A\u7A7A',
+                  _mkPath("subpart", partId, vName, spKey, null, null, "hit_boxes")
+                ));
+              }
+              if ((sp.mass || 0) <= 0) {
+                problems.push(_makeProblem(
+                  "error",
+                  CODES.MISSING_REQUIRED,
+                  '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u8D28\u91CF\u5FC5\u987B\u5927\u4E8E 0',
+                  _mkPath("subpart", partId, vName, spKey, null, null, "mass")
+                ));
+              }
+              var hitBoxes = sp.hit_boxes || {};
+              for (var hbKey in hitBoxes) {
+                var hb = hitBoxes[hbKey] || {};
+                if (boneCount > 0 && !ports.get().bones.findByUuid(hbKey)) {
+                  problems.push(_makeProblem(
+                    "error",
+                    CODES.HIT_BOX_KEY_NOT_UUID,
+                    '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '" \u78B0\u649E\u7BB1 key "' + hbKey + '" \u4E0D\u662F\u9AA8\u9ABC UUID\uFF1B\u5185\u90E8\u6811\u53EA\u8BA4 UUID\uFF0C\u8BFB/\u5BFC\u51FA\u65F6\u624D\u6295\u5F71\u6210\u9AA8\u9ABC\u540D',
+                    _mkPath("hit_box", partId, vName, spKey, hbKey, hbKey, "")
+                  ));
+                }
+                if (isMissingValue(hb.material)) {
+                  problems.push(_makeProblem(
+                    "error",
+                    CODES.MATERIAL_REQUIRED,
+                    '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '" \u78B0\u649E\u7BB1 "' + hbKey + '"\uFF1A\u672A\u9009\u62E9\u6750\u8D28',
+                    _mkPath("hit_box", partId, vName, spKey, hbKey, hbKey, "material")
+                  ));
+                } else if (hb.material !== "machine_max:default" && !materialDefs[hb.material]) {
+                  problems.push(_makeProblem(
+                    "error",
+                    CODES.MATERIAL_REF_MISSING,
+                    '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '" \u78B0\u649E\u7BB1 "' + hbKey + '"\uFF1A\u6750\u8D28 "' + hb.material + '" \u4E0D\u5B58\u5728',
+                    _mkPath("hit_box", partId, vName, spKey, hbKey, hbKey, "material")
+                  ));
+                }
+              }
+              _collectDanglingRefs(config, partId, vName, spKey, problems);
+              var subsystems = sp.subsystems || {};
+              for (var ssName in subsystems) {
+                var ss = subsystems[ssName];
+                var meta = ssTypes.getTypeMeta(ss.type);
+                if (isMissingValue(ss.definition)) {
+                  problems.push(_makeProblem(
+                    "error",
+                    CODES.DEFINITION_REQUIRED,
+                    '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u672A\u6307\u5B9A\u578B\u53F7\u5B9A\u4E49\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u6761\u76EE\u7684\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
+                    _mkPath("subsystem", partId, vName, spKey, ssName, null, "definition")
+                  ));
+                } else {
+                  var availableDefs = meta ? _filterDefsByType(subsystemDefs, ss.type) : subsystemDefs;
+                  if (!availableDefs[ss.definition]) {
+                    problems.push(_makeProblem(
+                      "error",
+                      CODES.DEFINITION_REF_MISSING,
+                      '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u578B\u53F7\u5B9A\u4E49 "' + ss.definition + '" \u4E0D\u5B58\u5728\uFF08\u5F15\u7528\u65AD\u88C2\uFF09\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u6761\u76EE\u7684\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
+                      _mkPath("subsystem", partId, vName, spKey, ssName, null, "definition")
+                    ));
+                  }
+                }
+                if (meta && meta.dynamicFields) {
+                  var fields = meta.dynamicFields;
+                  for (var fi = 0; fi < fields.length; fi++) {
+                    var f = fields[fi];
+                    if (f.field === "definition") continue;
+                    if (f.required && isMissingValue(ss[f.field])) {
+                      problems.push(_makeProblem(
+                        "error",
+                        CODES.SUBSYSTEM_REQUIRED_FIELD,
+                        '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A' + f.label + "\uFF08" + f.field + "\uFF09\u4E3A\u5FC5\u586B\u5B57\u6BB5\u4F46\u672A\u914D\u7F6E",
+                        _mkPath("subsystem", partId, vName, spKey, ssName, null, f.field)
+                      ));
+                    }
+                  }
+                }
+              }
+              var conns = sp.connectors || {};
+              for (var connKey in conns) {
+                var conn = conns[connKey];
+                if (isMissingValue(conn.definition)) {
+                  problems.push(_makeProblem(
+                    "error",
+                    CODES.DEFINITION_REQUIRED,
+                    '\u8FDE\u63A5\u70B9 "' + connKey + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u672A\u6307\u5B9A\u578B\u53F7\u5B9A\u4E49\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u8FDE\u63A5\u70B9\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
+                    _mkPath("connector", partId, vName, spKey, connKey, null, "definition")
+                  ));
+                } else if (!connectorDefs[conn.definition]) {
+                  problems.push(_makeProblem(
+                    "error",
+                    CODES.DEFINITION_REF_MISSING,
+                    '\u8FDE\u63A5\u70B9 "' + connKey + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u578B\u53F7\u5B9A\u4E49 "' + conn.definition + '" \u4E0D\u5B58\u5728\uFF08\u5F15\u7528\u65AD\u88C2\uFF09\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u8FDE\u63A5\u70B9\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
+                    _mkPath("connector", partId, vName, spKey, connKey, null, "definition")
+                  ));
+                }
+              }
+            }
+            _collectNameConflicts(partId, vName, subParts, problems);
+            _collectMarkerIssues(config, partId, vName, problems);
+          }
+        }
+        return problems;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { collectIssues };
+      }
     }
   });
 
@@ -17700,8 +18606,8 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var { collectIssues } = require_validate();
-      var { validateTree } = require_validate2();
+      var { collectIssues } = require_validate2();
+      var { validateTree } = require_validate();
       var keys = require_keys();
       var { assertSafePartIds } = require_safe_part_ids();
       var ITEM_CONTAINERS = {
@@ -18683,6 +19589,26 @@
         if (el && el.uuid) return el.uuid;
         return null;
       }
+      function normalizeHitBoxMap(value, basePath) {
+        var out = {};
+        var errors = [];
+        Object.keys(value).forEach(function(key) {
+          var uuid = resolveHitBoxWriteKey(key);
+          if (!uuid) {
+            errors.push(error(
+              (basePath || []).concat([key]),
+              "not_found",
+              "\u5DF2\u5B58\u5728\u7684\u9AA8\u9ABC UUID \u6216\u9AA8\u9ABC\u540D",
+              key,
+              "hit_boxes \u7684 key \u5FC5\u987B\u662F UUID\uFF1B\u53EF\u4F20\u9AA8\u9ABC\u540D\u7531\u5199\u5165\u5C42\u89E3\u6790\uFF0C\u672A\u77E5\u540D\u5B57\u8BF7\u5148\u521B\u5EFA\u9AA8\u9ABC"
+            ));
+            return;
+          }
+          out[uuid] = value[key];
+        });
+        if (errors.length > 0) return { ok: false, errors };
+        return { ok: true, value: out };
+      }
       function write(config, path, value, opts) {
         opts = opts || {};
         var parsed = parsePath(path);
@@ -18779,6 +19705,13 @@
             objectInfo.error.errors[0].path = segments;
             return objectInfo.error;
           }
+          if (key === "hit_boxes" && value && typeof value === "object" && !Array.isArray(value)) {
+            var hitBoxNorm = normalizeHitBoxMap(value, segments);
+            if (!hitBoxNorm.ok) {
+              return { ok: false, errors: hitBoxNorm.errors };
+            }
+            value = hitBoxNorm.value;
+          }
           if (!own(parent.node, key)) {
             if (!opts.allowMissingLeaf) {
               return fail(
@@ -18803,6 +19736,13 @@
           if (info.error) {
             info.error.errors[0].path = segments;
             return info.error;
+          }
+          if (key === "hit_boxes" && value && typeof value === "object" && !Array.isArray(value)) {
+            var hitBoxNorm = normalizeHitBoxMap(value, segments);
+            if (!hitBoxNorm.ok) {
+              return { ok: false, errors: hitBoxNorm.errors };
+            }
+            value = hitBoxNorm.value;
           }
           if (!own(parent.node, key)) {
             return fail(
@@ -18941,844 +19881,6 @@
     }
   });
 
-  // src/doc/shapes.js
-  var require_shapes = __commonJS({
-    "src/doc/shapes.js"(exports, module) {
-      "use strict";
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var Codec = require_Codec().Codec;
-      var HitBoxCodec = require_hit_box_codec().HitBoxCodec;
-      var InteractBoxCodec = require_interact_box_codec().InteractBoxCodec;
-      var ConnectorCodec = require_connector_codec().ConnectorCodec;
-      var HydroCodec = require_hydrodynamic_codec().HydroCodec;
-      var SubsystemDispatchCodec = require_subsystem_codec().SubsystemDispatchCodec;
-      var SubPartShape = Codec.record({
-        start_bone: Codec.STRING.default(""),
-        end_bones: Codec.STRING.list().default([]),
-        durability: Codec.FLOAT.default(20),
-        mass: Codec.FLOAT.default(25),
-        mass_center: Codec.STRING.default("mass_center"),
-        projected_area: Codec.FLOAT.list(3).default([-1, -1, -1]),
-        block_collision: Codec.ENUM(["true", "false", "ground"]).default("true"),
-        collision_height: Codec.FLOAT.default(-1),
-        climb_assist: Codec.BOOL.default(false),
-        hydro_priority: Codec.INT.default(0),
-        hit_boxes: Codec.map(Codec.STRING, HitBoxCodec).default({}),
-        interact_boxes: Codec.map(Codec.STRING, InteractBoxCodec).default({}),
-        connectors: Codec.map(Codec.STRING, ConnectorCodec).default({}),
-        subsystems: Codec.map(Codec.STRING, SubsystemDispatchCodec).default({}),
-        hydrodynamics: Codec.map(Codec.STRING, HydroCodec).default({})
-      });
-      var VariantShape = Codec.record({
-        model: Codec.STRING.field(),
-        textures: Codec.map(Codec.STRING, Codec.STRING).default({ default: "" }),
-        animations: Codec.STRING.default(""),
-        tags: Codec.STRING.list().default([]),
-        sub_parts: Codec.map(Codec.STRING, SubPartShape).default({})
-      });
-      var PartShape = Codec.record({
-        icon: Codec.STRING.default(""),
-        vehicle_durability_rate: Codec.FLOAT.default(0.8),
-        vehicle_damage_rate: Codec.FLOAT.default(1),
-        vehicle_damage_rate_destroyed: Codec.FLOAT.default(0.1),
-        functional_threshold: Codec.FLOAT.default(0.3),
-        share_durability: Codec.BOOL.default(true),
-        max_stack_size: Codec.INT.default(1),
-        variants: Codec.map(Codec.STRING, VariantShape).default({})
-      });
-      var SubsystemShape = SubsystemDispatchCodec;
-      var VariantExportShape = Codec.record({
-        model: Codec.STRING.field(),
-        textures: Codec.either(Codec.STRING, Codec.map(Codec.STRING, Codec.STRING)).default(""),
-        animations: Codec.STRING.default(""),
-        tags: Codec.STRING.list().default([]),
-        // sub_parts 永不折叠：schema 的单子零件简写没有 key，会丢 sub_part.<ns>.* 身份
-        sub_parts: Codec.map(Codec.STRING, SubPartShape).default({})
-      });
-      var PartExportShape = Codec.record({
-        icon: Codec.STRING.default(""),
-        vehicle_durability_rate: Codec.FLOAT.default(0.8),
-        vehicle_damage_rate: Codec.FLOAT.default(1),
-        vehicle_damage_rate_destroyed: Codec.FLOAT.default(0.1),
-        functional_threshold: Codec.FLOAT.default(0.3),
-        share_durability: Codec.BOOL.default(true),
-        max_stack_size: Codec.INT.default(1),
-        variants: Codec.either(
-          VariantExportShape,
-          Codec.map(Codec.STRING, VariantExportShape)
-        ).default({})
-      });
-      var SHAPES = {
-        part: PartShape,
-        variant: VariantShape,
-        sub_part: SubPartShape,
-        hit_box: HitBoxCodec,
-        interact_box: InteractBoxCodec,
-        connector: ConnectorCodec,
-        subsystem: SubsystemShape
-      };
-      var EXPORT_SHAPES = {
-        part: PartExportShape,
-        variant: VariantExportShape,
-        sub_part: SubPartShape,
-        hit_box: HitBoxCodec,
-        interact_box: InteractBoxCodec,
-        connector: ConnectorCodec,
-        subsystem: SubsystemShape
-      };
-      function getShape(kind) {
-        return SHAPES[kind] || null;
-      }
-      function getExportShape(kind) {
-        return EXPORT_SHAPES[kind] || null;
-      }
-      function classifyCodecError(message) {
-        if (/Unknown dispatch type/.test(message)) return "unknown_type";
-        if (/Missing required field/.test(message)) return "missing_required";
-        if (/Expected array of length/.test(message)) return "type_mismatch";
-        if (/Expected (string|number|integer|boolean|array|object)/.test(message)) return "type_mismatch";
-        if (/Invalid enum value/.test(message)) return "invalid_enum";
-        return "type_mismatch";
-      }
-      function decodeStrict(kind, raw, ctx) {
-        ctx = ctx || {};
-        var path = Array.isArray(ctx.path) ? ctx.path.slice() : [];
-        var shape = getShape(kind);
-        if (!shape) {
-          return {
-            ok: false,
-            errors: [{
-              path,
-              code: "unknown_type",
-              expected: "\u5DF2\u77E5 kind",
-              got: kind,
-              hint: "\u672A\u77E5\u7684\u914D\u7F6E\u8282\u70B9\u7C7B\u578B"
-            }]
-          };
-        }
-        try {
-          return { ok: true, node: shape.decode(raw), errors: [] };
-        } catch (e) {
-          var message = e && e.message ? e.message : String(e);
-          return {
-            ok: false,
-            errors: [{
-              path,
-              code: classifyCodecError(message),
-              expected: kind,
-              got: message,
-              hint: "\u914D\u7F6E\u7ED3\u6784\u65E0\u6CD5\u89E3\u7801"
-            }]
-          };
-        }
-      }
-      function encode(kind, node) {
-        var shape = getExportShape(kind);
-        if (!shape) throw new Error("Unknown export shape: " + kind);
-        return shape.encode(node);
-      }
-      module.exports = {
-        PartShape,
-        VariantShape,
-        SubPartShape,
-        SubsystemShape,
-        PartExportShape,
-        VariantExportShape,
-        getShape,
-        getExportShape,
-        decodeStrict,
-        encode
-      };
-    }
-  });
-
-  // src/doc/projection.js
-  var require_projection = __commonJS({
-    "src/doc/projection.js"(exports, module) {
-      "use strict";
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var fieldSpecs = require_field_specs();
-      var keys = require_keys();
-      var shapes = require_shapes();
-      var validate = require_validate2();
-      var refs = require_refs();
-      var ports = require_ports();
-      var PLACEHOLDER_PREFIX = "__new_p_";
-      function isObject(v) {
-        return v !== null && typeof v === "object" && !Array.isArray(v);
-      }
-      function own(obj, key) {
-        return Object.prototype.hasOwnProperty.call(obj, key);
-      }
-      function clone(v) {
-        if (v === null || typeof v !== "object") return v;
-        if (Array.isArray(v)) return v.map(clone);
-        var out = {};
-        Object.keys(v).forEach(function(k) {
-          out[k] = clone(v[k]);
-        });
-        return out;
-      }
-      function mergeErrors(base, errors) {
-        return (base || []).concat(errors || []);
-      }
-      function looksLikeSubPartShorthand(value) {
-        if (!isObject(value)) return false;
-        if (typeof value.start_bone === "string") return true;
-        if (typeof value.mass === "number") return true;
-        if (isObject(value.hit_boxes)) {
-          var keysList = Object.keys(value.hit_boxes);
-          for (var i = 0; i < keysList.length; i++) {
-            var hb = value.hit_boxes[keysList[i]];
-            if (isObject(hb) && typeof hb.type === "string") return true;
-          }
-        }
-        return false;
-      }
-      function normalizeShorthand(kind, definition, ctx) {
-        var node = clone(definition || {});
-        var ns = keys.isValidNamespace(ctx && ctx.namespace) ? ctx.namespace : "machine_max";
-        if (kind === "part") {
-          if (isObject(node.variants) && typeof node.variants.model === "string") {
-            node.variants = { default: node.variants };
-          }
-          if (isObject(node.variants)) {
-            Object.keys(node.variants).forEach(function(name) {
-              node.variants[name] = normalizeShorthand("variant", node.variants[name], {
-                namespace: ns
-              });
-            });
-          }
-        } else if (kind === "variant") {
-          if (typeof node.textures === "string") {
-            node.textures = { default: node.textures };
-          }
-          if (isObject(node.sub_parts) && looksLikeSubPartShorthand(node.sub_parts)) {
-            var wrapped = {};
-            wrapped["sub_part." + ns + ".main"] = node.sub_parts;
-            node.sub_parts = wrapped;
-          }
-          if (isObject(node.sub_parts)) {
-            Object.keys(node.sub_parts).forEach(function(key) {
-              node.sub_parts[key] = normalizeShorthand("sub_part", node.sub_parts[key], {
-                namespace: ns
-              });
-            });
-          }
-        }
-        return node;
-      }
-      function isRequiredMapSpec(spec) {
-        return !!(spec && spec.required && spec.type === "object" && spec.additionalProperties !== void 0);
-      }
-      function normalizeUnset(kind, definition) {
-        var node = clone(definition || {});
-        var spec = fieldSpecs.getSpec(kind, node.type);
-        if (spec) {
-          Object.keys(spec.fields).forEach(function(field) {
-            if (!own(node, field)) return;
-            var fieldSpec = spec.fields[field];
-            var value = node[field];
-            if (fieldSpec.required && fieldSpec.type === "string" && (value === null || value === "null")) {
-              node[field] = "";
-              return;
-            }
-            if (isRequiredMapSpec(fieldSpec) && (value === null || field === "projectile_types" && Array.isArray(value))) {
-              node[field] = {};
-              return;
-            }
-            if (value === null && !fieldSpec.nullable) {
-              delete node[field];
-            }
-          });
-        }
-        fieldSpecs.getContainers(kind).forEach(function(container) {
-          var childKind = fieldSpecs.getContainerChildKind(container);
-          var entries = node[container];
-          if (!isObject(entries)) return;
-          Object.keys(entries).forEach(function(key) {
-            entries[key] = normalizeUnset(childKind, entries[key]);
-          });
-        });
-        return node;
-      }
-      function stripInternal(kind, definition) {
-        var node = clone(definition || {});
-        if (!isObject(node)) return node;
-        delete node._uiState;
-        fieldSpecs.getInternalFields(kind).forEach(function(field) {
-          delete node[field];
-        });
-        fieldSpecs.getContainers(kind).forEach(function(container) {
-          var childKind = fieldSpecs.getContainerChildKind(container);
-          var entries = node[container];
-          if (!isObject(entries)) return;
-          Object.keys(entries).forEach(function(key) {
-            entries[key] = stripInternal(childKind, entries[key]);
-          });
-        });
-        if (kind === "subsystem" && isObject(node.projectile_types)) {
-          Object.keys(node.projectile_types).forEach(function(key) {
-            if (key.indexOf(PLACEHOLDER_PREFIX) === 0) delete node.projectile_types[key];
-          });
-        }
-        return node;
-      }
-      function resolveHitBoxKeys(kind, node, unresolved, basePath) {
-        if (kind === "sub_part" && isObject(node.hit_boxes)) {
-          var bones = ports.get().bones;
-          var next = {};
-          Object.keys(node.hit_boxes).forEach(function(key) {
-            if (bones.findByUuid(key)) {
-              next[key] = node.hit_boxes[key];
-              return;
-            }
-            var el = bones.findByName(key);
-            if (el && el.uuid) {
-              next[el.uuid] = node.hit_boxes[key];
-            } else {
-              next[key] = node.hit_boxes[key];
-              unresolved.push({
-                bone: key,
-                field: "hit_box_key",
-                subPartKey: null,
-                key,
-                path: (basePath || []).concat(["hit_boxes", key])
-              });
-            }
-          });
-          node.hit_boxes = next;
-        }
-        fieldSpecs.getContainers(kind).forEach(function(container) {
-          var childKind = fieldSpecs.getContainerChildKind(container);
-          var entries = node[container];
-          if (!isObject(entries)) return;
-          Object.keys(entries).forEach(function(key) {
-            resolveHitBoxKeys(
-              childKind,
-              entries[key],
-              unresolved,
-              (basePath || []).concat([container, key])
-            );
-          });
-        });
-      }
-      function resolveElementRefs(kind, node, unresolved, basePath) {
-        var bones = ports.get().bones;
-        if (kind === "sub_part" && isObject(node.interact_boxes)) {
-          Object.keys(node.interact_boxes).forEach(function(key) {
-            var ib = node.interact_boxes[key];
-            if (!isObject(ib) || !ib.bone) return;
-            var el = bones.findByName(ib.bone);
-            if (el && el.uuid) {
-              ib._uuid = el.uuid;
-            } else {
-              unresolved.push({
-                bone: ib.bone,
-                field: "interact_box.bone",
-                subPartKey: null,
-                key,
-                path: (basePath || []).concat(["interact_boxes", key, "bone"])
-              });
-            }
-          });
-        }
-        if (kind === "sub_part" && isObject(node.connectors)) {
-          Object.keys(node.connectors).forEach(function(key) {
-            var conn = node.connectors[key];
-            if (!isObject(conn) || !conn.locator) return;
-            var el = bones.findByName(conn.locator);
-            if (el && el.uuid) {
-              conn._marker_uuid = el.uuid;
-            } else {
-              unresolved.push({
-                bone: conn.locator,
-                field: "connector.locator",
-                subPartKey: null,
-                key,
-                path: (basePath || []).concat(["connectors", key, "locator"])
-              });
-            }
-          });
-        }
-        fieldSpecs.getContainers(kind).forEach(function(container) {
-          var childKind = fieldSpecs.getContainerChildKind(container);
-          var entries = node[container];
-          if (!isObject(entries)) return;
-          Object.keys(entries).forEach(function(key) {
-            resolveElementRefs(
-              childKind,
-              entries[key],
-              unresolved,
-              (basePath || []).concat([container, key])
-            );
-          });
-        });
-      }
-      var MARKER_PRECEDENCE = ["sub_part", "interact_box", "connector", "hit_box"];
-      function addMarker(plan, byKey, entry, warnings) {
-        var key = entry.variantName + "|" + entry.uuid;
-        if (byKey[key]) {
-          var current = byKey[key];
-          var currentRank = MARKER_PRECEDENCE.indexOf(current.type);
-          var nextRank = MARKER_PRECEDENCE.indexOf(entry.type);
-          if (nextRank < currentRank) {
-            warnings.push({
-              code: "marker_conflict",
-              path: ["parts", entry.partId, "variants", entry.variantName],
-              expected: current.type + " > " + entry.type,
-              got: entry.uuid,
-              hint: "\u540C\u4E00 UUID \u843D\u5728\u591A\u4E2A\u6807\u8BB0\u7C7B\u578B\uFF0C\u6309 sub_part > interact_box > connector > hit_box \u4FDD\u7559"
-            });
-            byKey[key] = entry;
-            plan[plan.indexOf(current)] = entry;
-          } else {
-            warnings.push({
-              code: "marker_conflict",
-              path: ["parts", entry.partId, "variants", entry.variantName],
-              expected: entry.type + " < " + current.type,
-              got: entry.uuid,
-              hint: "\u540C\u4E00 UUID \u843D\u5728\u591A\u4E2A\u6807\u8BB0\u7C7B\u578B\uFF0C\u5DF2\u4FDD\u7559\u4F18\u5148\u7EA7\u66F4\u9AD8\u7684\u4E00\u6761"
-            });
-          }
-          return;
-        }
-        byKey[key] = entry;
-        plan.push(entry);
-      }
-      function planForSubPart(partId, variantName, spKey, sp, plan, byKey, warnings) {
-        var bones = ports.get().bones;
-        if (!isObject(sp)) return;
-        var start = sp.start_bone ? bones.findByName(sp.start_bone) : null;
-        if (start && start.uuid) {
-          addMarker(plan, byKey, {
-            partId,
-            variantName,
-            type: "sub_part",
-            uuid: start.uuid,
-            config_ref: spKey
-          }, warnings);
-        }
-        if (isObject(sp.hit_boxes)) {
-          Object.keys(sp.hit_boxes).forEach(function(key) {
-            var el = bones.findByUuid(key) || bones.findByName(key);
-            if (el && el.uuid) {
-              addMarker(plan, byKey, {
-                partId,
-                variantName,
-                type: "hit_box",
-                uuid: el.uuid,
-                config_ref: spKey
-              }, warnings);
-            }
-          });
-        }
-        if (isObject(sp.interact_boxes)) {
-          Object.keys(sp.interact_boxes).forEach(function(key) {
-            var ib = sp.interact_boxes[key];
-            var el = ib && ib.bone ? bones.findByName(ib.bone) : null;
-            if (el && el.uuid) {
-              addMarker(plan, byKey, {
-                partId,
-                variantName,
-                type: "interact_box",
-                uuid: el.uuid,
-                config_ref: key
-              }, warnings);
-            }
-          });
-        }
-        if (isObject(sp.connectors)) {
-          Object.keys(sp.connectors).forEach(function(key) {
-            var conn = sp.connectors[key];
-            var el = conn && conn.locator ? bones.findByName(conn.locator) : null;
-            if (el && el.uuid) {
-              addMarker(plan, byKey, {
-                partId,
-                variantName,
-                type: "connector",
-                uuid: el.uuid,
-                config_ref: key
-              }, warnings);
-            }
-          });
-        }
-      }
-      function buildMarkerPlan(kind, node, ctx) {
-        var plan = [];
-        var byKey = {};
-        var warnings = [];
-        var partId = ctx.partId || "";
-        var variantName = ctx.variantName || "";
-        if (kind === "part" && isObject(node.variants)) {
-          Object.keys(node.variants).forEach(function(vName) {
-            var variant = node.variants[vName];
-            if (!isObject(variant) || !isObject(variant.sub_parts)) return;
-            Object.keys(variant.sub_parts).forEach(function(spKey) {
-              planForSubPart(
-                partId,
-                vName,
-                spKey,
-                variant.sub_parts[spKey],
-                plan,
-                byKey,
-                warnings
-              );
-            });
-          });
-        } else if (kind === "variant" && isObject(node.sub_parts)) {
-          Object.keys(node.sub_parts).forEach(function(spKey) {
-            planForSubPart(
-              partId,
-              variantName,
-              spKey,
-              node.sub_parts[spKey],
-              plan,
-              byKey,
-              warnings
-            );
-          });
-        } else if (kind === "sub_part") {
-          planForSubPart(
-            partId,
-            variantName,
-            ctx.subPartKey || ctx.key || "",
-            node,
-            plan,
-            byKey,
-            warnings
-          );
-        }
-        return { plan, warnings };
-      }
-      function buildMarkerCleanup(kind, ctx) {
-        if (!ctx || ctx.mode === "create") return null;
-        var existing = ctx.existing;
-        if (!existing) return null;
-        if (kind === "part") {
-          return { scope: "part", partId: ctx.oldKey || ctx.partId };
-        }
-        if (kind === "variant") {
-          return {
-            scope: "variant",
-            partId: ctx.partId,
-            variantName: ctx.oldKey || ctx.variantName
-          };
-        }
-        if (kind === "sub_part") {
-          var oldKey = ctx.oldKey || ctx.subPartKey || ctx.key;
-          var configRefs = [];
-          var uuids = [];
-          if (oldKey) configRefs.push(oldKey);
-          if (isObject(existing.interact_boxes)) {
-            Object.keys(existing.interact_boxes).forEach(function(key) {
-              configRefs.push(key);
-              var ib = existing.interact_boxes[key];
-              if (isObject(ib) && ib._uuid) uuids.push(ib._uuid);
-            });
-          }
-          if (isObject(existing.connectors)) {
-            Object.keys(existing.connectors).forEach(function(key) {
-              configRefs.push(key);
-              var conn = existing.connectors[key];
-              if (isObject(conn) && conn._marker_uuid) uuids.push(conn._marker_uuid);
-            });
-          }
-          if (isObject(existing.hit_boxes)) {
-            Object.keys(existing.hit_boxes).forEach(function(key) {
-              uuids.push(key);
-            });
-          }
-          return {
-            scope: "sub_part",
-            partId: ctx.partId,
-            variantName: ctx.variantName,
-            subPartKey: oldKey,
-            config_refs: configRefs,
-            uuids
-          };
-        }
-        return null;
-      }
-      function collectDanglingConfigRefs(kind, node, ctx, basePath) {
-        var dangling = [];
-        var prefix = basePath || [];
-        function checkSubPart(spKey, sp, path) {
-          if (!isObject(sp)) return;
-          var collected = refs.collectRefs(sp, path);
-          collected.refs.forEach(function(ref) {
-            if (!targetsHas(collected.targets, ref.target)) {
-              dangling.push(ref);
-            }
-          });
-        }
-        function targetsHas(targets, target) {
-          if (refs.SENTINELS.indexOf(target) >= 0) return true;
-          return !!(targets.subsystem[target] || targets.connector[target] || targets.interact_box[target]);
-        }
-        if (kind === "part" && isObject(node.variants)) {
-          Object.keys(node.variants).forEach(function(vName) {
-            var variant = node.variants[vName];
-            if (!isObject(variant) || !isObject(variant.sub_parts)) return;
-            Object.keys(variant.sub_parts).forEach(function(spKey) {
-              checkSubPart(
-                spKey,
-                variant.sub_parts[spKey],
-                prefix.concat(["variants", vName, "sub_parts", spKey])
-              );
-            });
-          });
-        } else if (kind === "variant" && isObject(node.sub_parts)) {
-          Object.keys(node.sub_parts).forEach(function(spKey) {
-            checkSubPart(
-              spKey,
-              node.sub_parts[spKey],
-              prefix.concat(["sub_parts", spKey])
-            );
-          });
-        } else if (kind === "sub_part") {
-          checkSubPart(ctx.subPartKey || ctx.key || "", node, prefix);
-        }
-        return dangling;
-      }
-      function resetFields(kind, existing, normalized) {
-        if (!existing || typeof existing !== "object") return [];
-        return Object.keys(existing).filter(function(key) {
-          if (fieldSpecs.isInternalField(kind, key)) return false;
-          return !own(normalized, key);
-        });
-      }
-      function projectIn(definition, ctx) {
-        ctx = ctx || {};
-        var kind = ctx.kind;
-        var parentPath = Array.isArray(ctx.parentPath) ? ctx.parentPath : [];
-        var errors = [];
-        var warnings = [];
-        if (!fieldSpecs.isKnownKind(kind)) {
-          return {
-            ok: false,
-            node: null,
-            reset_fields: [],
-            unresolved: { config_refs: [], bones: [] },
-            markerPlan: [],
-            markerCleanup: null,
-            errors: [{
-              path: parentPath,
-              code: "unknown_type",
-              expected: "\u5DF2\u77E5 kind",
-              got: kind,
-              hint: "\u672A\u77E5\u7684\u5BFC\u5165\u8282\u70B9\u7C7B\u578B"
-            }],
-            warnings: []
-          };
-        }
-        var normalized = normalizeShorthand(kind, definition, ctx);
-        var provided = clone(normalized);
-        normalized = normalizeUnset(kind, normalized);
-        var reset = resetFields(kind, ctx.existing, provided);
-        var stripped = stripInternal(kind, normalized);
-        var keyResult = keys.validateKeys(kind, stripped, {
-          namespace: ctx.namespace,
-          path: parentPath
-        });
-        errors = mergeErrors(errors, keyResult.errors);
-        warnings = mergeErrors(warnings, keyResult.warnings);
-        if (errors.length > 0) {
-          return {
-            ok: false,
-            node: null,
-            reset_fields: reset,
-            unresolved: { config_refs: [], bones: [] },
-            markerPlan: [],
-            markerCleanup: buildMarkerCleanup(kind, ctx),
-            errors,
-            warnings
-          };
-        }
-        var decoded = shapes.decodeStrict(kind, stripped, { path: parentPath });
-        if (!decoded.ok) {
-          errors = mergeErrors(errors, decoded.errors);
-          return {
-            ok: false,
-            node: null,
-            reset_fields: reset,
-            unresolved: { config_refs: [], bones: [] },
-            markerPlan: [],
-            markerCleanup: buildMarkerCleanup(kind, ctx),
-            errors,
-            warnings
-          };
-        }
-        var node = decoded.node;
-        var valueResult = validate.validateValues(node, {
-          kind,
-          typeId: kind === "subsystem" ? node.type : void 0,
-          path: parentPath,
-          completeness: false
-        });
-        errors = mergeErrors(errors, valueResult.errors);
-        if (errors.length > 0) {
-          return {
-            ok: false,
-            node: null,
-            reset_fields: reset,
-            unresolved: { config_refs: [], bones: [] },
-            markerPlan: [],
-            markerCleanup: buildMarkerCleanup(kind, ctx),
-            errors,
-            warnings
-          };
-        }
-        var unresolvedBones = [];
-        resolveHitBoxKeys(kind, node, unresolvedBones, parentPath);
-        resolveElementRefs(kind, node, unresolvedBones, parentPath);
-        var dangling = collectDanglingConfigRefs(kind, node, ctx, parentPath);
-        var unresolvedConfigRefs = dangling.map(function(ref) {
-          return {
-            target: ref.target,
-            kind: ref.kind,
-            path: ref.path
-          };
-        });
-        if (dangling.length > 0) {
-          errors = dangling.map(function(ref) {
-            return {
-              path: ref.path,
-              code: "unresolved_config_ref",
-              expected: "\u540C\u53D8\u4F53\u5185\u7684 subsystem / connector / interact_box key\uFF0C\u6216 local / global",
-              got: ref.target,
-              hint: "\u914D\u7F6E\u5F15\u7528\u65AD\u88C2\uFF0C\u6574\u4EF6\u5199\u5165\u5DF2\u62D2\u7EDD"
-            };
-          });
-        }
-        var marker = buildMarkerPlan(kind, node, ctx);
-        warnings = warnings.concat(marker.warnings);
-        if (errors.length > 0) {
-          return {
-            ok: false,
-            node: null,
-            reset_fields: reset,
-            unresolved: { config_refs: unresolvedConfigRefs, bones: unresolvedBones },
-            markerPlan: [],
-            markerCleanup: buildMarkerCleanup(kind, ctx),
-            errors,
-            warnings
-          };
-        }
-        return {
-          ok: true,
-          node,
-          reset_fields: reset,
-          unresolved: { config_refs: unresolvedConfigRefs, bones: unresolvedBones },
-          markerPlan: marker.plan,
-          markerCleanup: buildMarkerCleanup(kind, ctx),
-          errors: [],
-          warnings
-        };
-      }
-      function canonicalizeTextures(kind, node) {
-        if (kind === "variant" && typeof node.textures === "string") {
-          node.textures = { default: node.textures };
-        }
-        fieldSpecs.getContainers(kind).forEach(function(container) {
-          var childKind = fieldSpecs.getContainerChildKind(container);
-          var entries = node[container];
-          if (!isObject(entries)) return;
-          Object.keys(entries).forEach(function(key) {
-            canonicalizeTextures(childKind, entries[key]);
-          });
-        });
-      }
-      function reverseHitBoxKeys(kind, node, unresolved, basePath) {
-        var bones = ports.get().bones;
-        if (kind === "sub_part" && isObject(node.hit_boxes)) {
-          var next = {};
-          Object.keys(node.hit_boxes).forEach(function(key) {
-            var name = bones.findNameByUuid(key);
-            if (name) {
-              next[name] = node.hit_boxes[key];
-            } else {
-              next[key] = node.hit_boxes[key];
-              unresolved.push({
-                bone: key,
-                field: "hit_box_key",
-                path: (basePath || []).concat(["hit_boxes", key])
-              });
-            }
-          });
-          node.hit_boxes = next;
-        }
-        fieldSpecs.getContainers(kind).forEach(function(container) {
-          var childKind = fieldSpecs.getContainerChildKind(container);
-          var entries = node[container];
-          if (!isObject(entries)) return;
-          Object.keys(entries).forEach(function(key) {
-            reverseHitBoxKeys(
-              childKind,
-              entries[key],
-              unresolved,
-              (basePath || []).concat([container, key])
-            );
-          });
-        });
-      }
-      function projectOut(node, ctx, opts) {
-        ctx = ctx || {};
-        opts = opts || {};
-        var kind = ctx.kind || "part";
-        var mode = opts.for || "read";
-        var cloned = clone(node);
-        var stripped = stripInternal(kind, cloned);
-        canonicalizeTextures(kind, stripped);
-        var unresolved = [];
-        reverseHitBoxKeys(kind, stripped, unresolved, []);
-        if (mode === "export") {
-          try {
-            return { definition: shapes.encode(kind, stripped), unresolved };
-          } catch (e) {
-            return {
-              definition: null,
-              unresolved,
-              errors: [{
-                path: [],
-                code: "type_mismatch",
-                expected: kind,
-                got: e && e.message ? e.message : String(e),
-                hint: "\u5BFC\u51FA\u7F16\u7801\u5931\u8D25"
-              }]
-            };
-          }
-        }
-        return { definition: stripped, unresolved };
-      }
-      module.exports = {
-        normalizeShorthand,
-        normalizeUnset,
-        stripInternal,
-        resetFields,
-        buildMarkerPlan,
-        buildMarkerCleanup,
-        resolveHitBoxKeys,
-        resolveElementRefs,
-        projectIn,
-        projectOut,
-        // 兼容 docs/13 的命名
-        in: projectIn,
-        out: projectOut
-      };
-    }
-  });
-
   // src/doc/index.js
   var require_doc = __commonJS({
     "src/doc/index.js"(exports, module) {
@@ -19794,7 +19896,7 @@
       var keys = require_keys();
       var projection = require_projection();
       var refs = require_refs();
-      var validate = require_validate2();
+      var validate = require_validate();
       var ports = require_ports();
       var shapes = require_shapes();
       function pathSegments(path) {
@@ -24701,7 +24803,7 @@
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
       var { getConfig } = require_persistence();
-      var { collectIssues } = require_validate();
+      var { collectIssues } = require_validate2();
       var log2 = createLogger2("ValidationCheck");
       var CHECK_ID = "mm_validation";
       var _checkInstance = null;
@@ -27789,7 +27891,7 @@
       var content_pack_manager = require_content_pack_manager();
       var nameUtils = require_name_utils();
       var { buildSignalTargetOptions } = require_signal_target_options();
-      var { collectIssues } = require_validate();
+      var { collectIssues } = require_validate2();
       var { aggregate, resolveIssueLevel, filterFieldIssues } = require_validation_types();
       var { showAddTagDialog, _hashTagColor } = require_tag_dialog_helper();
       var undo = require_undo();
@@ -31437,7 +31539,7 @@
       var em = require_element_markers();
       var defs = require_content_pack_manager();
       var params = require_params();
-      var { collectIssues } = require_validate();
+      var { collectIssues } = require_validate2();
       var { canExport } = require_export();
       var result = require_result();
       var DEF_TYPE = params.DEF_TYPE;
@@ -32435,7 +32537,7 @@
         },
         validation: {
           collectIssues: function(config) {
-            return require_validate().collectIssues(config);
+            return require_validate2().collectIssues(config);
           }
         }
       });

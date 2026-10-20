@@ -205,10 +205,12 @@ condition: { project: true, modes: ['machine_max_part'] }
 
 | 工具 | 参数 | 行为 |
 |---|---|---|
-| `set_node` | `path`, `value` | 写标量/数组/对象。走 `ops.setField`：字段白名单、**严格类型（不做隐式转换）**、副作用（如 `start_bone` 迁移标记）、一条撤销记录。返回 `before`/`after` 与本次引入的问题 |
+| `set_node` | `path`, `value` | 写标量/数组/对象。走 `ops.setField`：字段白名单、**严格类型（不做隐式转换）**、副作用（如 `start_bone` 迁移标记）、一条撤销记录。整表写 `hit_boxes` 时骨骼名 key 会归一化为 UUID；未知名字返回 `not_found`。返回 `before`/`after` 与本次引入的问题 |
 | `remove_node` | `path`, `cascade?: bool` | 删除节点，清理指向它的引用：4 类 `element_markers[*][uuid].config_ref`、`signal_targets[*][]`（子系统/连接点/交互区三处，`local`/`global` 不动）、`connectors[*].power_target`、`subsystems[*].power_output`、**`subsystems[*].power_outputs` 的 key（transmission）**、`hit_boxes[*].subsystem`、`subsystems[*].connector / locator / dismount_locators[]`。**不清理** `signal_translations`（频道→频道，不是节点引用）、`projectile_types`（资源地址）与 `definition`（资源位置）。返回 `cleaned_references` |
 | `bind_marker` | `uuid`, `type`, `config_ref?` | 把元素绑成 `sub_part` / `hit_box` / `interact_box` / `connector`，内部走 `ops.bindMarker`（`setMarker` + `recalcAutoEndBones`）。`hit_box`/`interact_box`/`connector` 的 `config_ref` 由上下文推导 |
 | `set_active` | `part`, `variant?` | 切 active 上下文（等价于 UI 里点一下）。**不进撤销栈**：这是视图状态，不是工程内容 |
+
+`hit_boxes` 的 key 在内部树必须是骨骼 UUID；`read_node(as='definition')` 输出骨骼名，`set_node` / `add_instance` / `import_sub_part` 写入时接受骨骼名并解析。`set_node` 整表写 `hit_boxes` 也不会再把骨骼名原样写进内部树；已有脏数据在 `loadConfig` 时由 `repairHitBoxKeys` 修复，`validate` 对无法解析的 key 报 `hit_box_key_not_uuid`。
 
 ### 5.3 整件编辑（4，全部进撤销栈）
 

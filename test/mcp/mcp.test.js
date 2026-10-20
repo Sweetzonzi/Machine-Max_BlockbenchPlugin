@@ -237,6 +237,35 @@ describe('MCP 细粒度编辑', () => {
         expect(cfg.parts.hull.variants.default.sub_parts[spKey()].mass).toBe(25);
     });
 
+    test('set_node 整表写 hit_boxes 时把骨骼名 key 归一化为 UUID', () => {
+        const cfg = helpers.createConfig();
+        installGlobals(cfg);
+        const r = run('set_node', {
+            path: ['sub_parts', spKey(), 'hit_boxes'],
+            value: { turret: { type: 'box', material: 'machine_max:default' } },
+        });
+        expect(r.ok).toBe(true);
+
+        const hb = cfg.parts.hull.variants.default.sub_parts[spKey()].hit_boxes;
+        expect(hb['55555555-5555-5555-5555-555555555555']).toBeDefined();
+        expect(hb.turret).toBeUndefined();
+    });
+
+    test('set_node 整表写 hit_boxes 时未知骨骼名返回 not_found 且不写', () => {
+        const cfg = helpers.createConfig();
+        installGlobals(cfg);
+        const hb = cfg.parts.hull.variants.default.sub_parts[spKey()].hit_boxes;
+        const before = JSON.stringify(hb);
+
+        const r = run('set_node', {
+            path: ['sub_parts', spKey(), 'hit_boxes'],
+            value: { missing_bone: { type: 'box', material: 'machine_max:default' } },
+        });
+        expect(r.ok).toBe(false);
+        expect(r.errors[0].code).toBe('not_found');
+        expect(JSON.stringify(hb)).toBe(before);
+    });
+
     test('set_node 事件 persist=false（MCP 不落盘）', () => {
         const cfg = helpers.createConfig();
         installGlobals(cfg);

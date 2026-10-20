@@ -33,6 +33,8 @@ src/ops/
   ops 不 toast、不落盘、不刷新，UI 订阅一次做刷新 + `scheduleSave()`。
 - `markSubPart` 在 ops 内创建缺失的 `sub_parts` 条目并绑定 `start_bone`；`markConnector` /
   `markInteractBox` 支持显式 `key`，供面板「创建配置」按钮复用。
+- `setField` 整表写 `hit_boxes` 时，骨骼名 key 由 `doc.write` 归一化为 UUID；无法解析的名字返回
+  `not_found`，不写半截。存量脏 key 由 `loadConfig` 的 `repairHitBoxKeys` 修复。
 - 整件通道（`importPart` / `importVariant` / `importSubPart`）固定顺序：
   `clearScope(markerCleanup)` → 替换节点 → `set(markerPlan)` → `recalc auto_end_bones`。
 - marker 能力通过 `doc/ports` 注入；测试可换 fake，生产在 `plugin.js onload` 安装。
