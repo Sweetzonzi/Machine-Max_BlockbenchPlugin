@@ -85,7 +85,7 @@ describe('doc/validate', () => {
         const bad = {
             id: 'part',
             type: 'box',
-            overwrite: { friction: [1, 2] },
+            overwrite: { physics: { friction: [1, 2] } },
         };
         const badResult = validate.validateValues(bad, {
             kind: 'hit_box',

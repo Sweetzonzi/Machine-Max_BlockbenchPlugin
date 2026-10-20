@@ -48,7 +48,11 @@ describe('field_specs.generated.js', () => {
     });
 
     test('overwrite 结构与 nullable 按 schema / 上游 Optional', () => {
-        expect(Object.keys(generated.SPECS.hit_box.fields.overwrite.properties)).toHaveLength(16);
+        expect(Object.keys(generated.SPECS.hit_box.fields.overwrite.properties)).toEqual([
+            'physics', 'armor', 'sounds',
+        ]);
+        expect(Object.keys(generated.SPECS.hit_box.fields.overwrite.properties.armor.properties))
+            .toContain('impact_modifiers');
         expect(Object.keys(generated.SPECS.connector.fields.overwrite.properties)).toHaveLength(12);
         expect(generated.SPECS.connector.fields.overwrite.properties)
             .toHaveProperty('impact_absorption_destroyed');
@@ -95,7 +99,7 @@ describe('field_specs.generated.js', () => {
     });
 
     test('provenance 记录 67 个 schema 与源 hash', () => {
-        expect(generated.PROVENANCE.source_revision).toBe('d8d1df8b');
+        expect(generated.PROVENANCE.source_revision).toBe('d8d1df8b+worktree');
         expect(generated.PROVENANCE.source_files).toBe(67);
         expect(generated.PROVENANCE.source_sha256).toMatch(/^[0-9a-f]{64}$/);
         expect(generated.PROVENANCE.source_root)

@@ -27,15 +27,14 @@ module.exports = {
     ],
 
     // 3) 字段集合缺口：Codec 缺字段（D12 修完后都应为空）
-    //    hit_box 的 5 个顶层字段是 d8d1df8b 快照暴露的真实缺口，P1 只登记，不改运行时。
+    //    上游把 hit_box 的 physics / armor / sounds 移入 overwrite，顶层新增 module。
     missing_fields: [
-        { kind: 'hit_box', field: 'angle_effect', owner: 'D12' },
-        { kind: 'hit_box', field: 'impact_modifiers', owner: 'D12' },
-        { kind: 'hit_box', field: 'penetration_modifiers', owner: 'D12' },
-        { kind: 'hit_box', field: 'damage_modifiers', owner: 'D12' },
-        { kind: 'hit_box', field: 'unpen_power', owner: 'D12' },
+        { kind: 'hit_box', field: 'module', owner: 'D12' },
         { kind: 'subsystem', type: 'machine_max:launcher', field: 'fire_animation', owner: 'D12' },
         { kind: 'subsystem', type: 'machine_max:regen_loader', field: 'belt_label', owner: 'D12' },
+        { kind: 'subsystem', type: 'machine_max:weapon_controller', field: 'first_hud_layout', owner: 'D12' },
+        { kind: 'subsystem', type: 'machine_max:weapon_controller', field: 'third_hud_layout', owner: 'D12' },
+        { kind: 'subsystem', type: 'machine_max:weapon_controller', field: 'scope_hud_layout', owner: 'D12' },
     ],
 
     // 4) 字段集合多余：Codec 有、schema 没有的运行时字段（容器除外）
@@ -44,7 +43,8 @@ module.exports = {
     // 5) 同一字段的约束差异：字段存在，但类型/required/enum/结构不同
     constraint_diffs: [
         { kind: 'hit_box', field: 'type', schema: 'enum', codec: 'string', enforcedBy: 'field_specs.enum' },
-        { kind: 'hit_box', field: 'overwrite', schema: 'object(16)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
+        { kind: 'hit_box', field: 'id', schema: "default('')", codec: 'field()', enforcedBy: 'D12' },
+        { kind: 'hit_box', field: 'overwrite', schema: 'object(physics/armor/sounds)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
         { kind: 'connector', field: 'overwrite', schema: 'object(12)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
         { kind: 'interact_box', field: 'condition', schema: 'enum', codec: 'string', enforcedBy: 'field_specs.enum' },
         { kind: 'interact_box', field: 'signal_targets', schema: 'required', codec: 'default({}) + emitEmpty', enforcedBy: 'codec.emitEmpty' },

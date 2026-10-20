@@ -3,7 +3,7 @@
 /**
  * 本文件由 scripts/gen-field-specs.js 自动生成，不要手工编辑。
  * 数据源：src/builtin/builtin/machine_max/docs/en_us/schemas
- * 上游快照：Machine-Max@d8d1df8b
+ * 上游快照：Machine-Max@d8d1df8b+worktree
  * 重新生成：node scripts/gen-field-specs.js
  * 漂移检查：node scripts/gen-field-specs.js --check
  */
@@ -12,9 +12,9 @@ const PROVENANCE = {
     "generator_version": 1,
     "source_locale": "en_us",
     "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
-    "source_revision": "d8d1df8b",
+    "source_revision": "d8d1df8b+worktree",
     "source_files": 67,
-    "source_sha256": "fe8a4b415ea6aac3af35e2d79e236b6eff941229fb93542fe66ac2989d79e2ce",
+    "source_sha256": "184e3be388c85381ebdfb7e7244b71c2b9d89d291ecc0ce20807808900c0282f",
     "generated_from": "machine_max builtin JSON Schema"
 };
 
@@ -305,322 +305,252 @@ const SPECS = {
                 "type": "string",
                 "references": "subsystem"
             },
+            "module": {
+                "type": "string"
+            },
             "material": {
                 "type": "string",
                 "references": "resource"
-            },
-            "angle_effect": {
-                "type": "boolean"
             },
             "thickness": {
                 "type": "number",
                 "integer": false,
                 "minimum": 0
             },
+            "condition": {
+                "type": "string"
+            },
             "overwrite": {
                 "type": "object",
                 "properties": {
-                    "friction": {
-                        "type": "tuple",
-                        "tuple": [
-                            {
-                                "type": "number"
-                            },
-                            {
-                                "type": "number"
-                            },
-                            {
-                                "type": "number"
-                            }
-                        ],
-                        "minItems": 3,
-                        "maxItems": 3
-                    },
-                    "slip_adaptation": {
-                        "type": "number",
-                        "integer": false,
-                        "minimum": 0
-                    },
-                    "slip_curve": {
+                    "physics": {
                         "type": "object",
                         "properties": {
-                            "longitudinal": {
+                            "friction": {
+                                "type": "tuple",
+                                "tuple": [
+                                    {
+                                        "type": "number"
+                                    },
+                                    {
+                                        "type": "number"
+                                    },
+                                    {
+                                        "type": "number"
+                                    }
+                                ],
+                                "minItems": 3,
+                                "maxItems": 3
+                            },
+                            "slip_adaptation": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0,
+                                "maximum": 1
+                            },
+                            "slip_curve": {
                                 "type": "object",
                                 "properties": {
-                                    "peak_slip_ratio": {
-                                        "type": "number",
-                                        "integer": false,
-                                        "minimum": 0
+                                    "longitudinal": {
+                                        "type": "object",
+                                        "properties": {
+                                            "peak_slip_ratio": {
+                                                "type": "number",
+                                                "integer": false,
+                                                "minimum": 0
+                                            },
+                                            "base_scale": {
+                                                "type": "number",
+                                                "integer": false
+                                            },
+                                            "peak_scale": {
+                                                "type": "number",
+                                                "integer": false
+                                            },
+                                            "kinetic_scale": {
+                                                "type": "number",
+                                                "integer": false
+                                            }
+                                        },
+                                        "additionalProperties": false
                                     },
-                                    "base_scale": {
-                                        "type": "number",
-                                        "integer": false
-                                    },
-                                    "peak_scale": {
-                                        "type": "number",
-                                        "integer": false
-                                    },
-                                    "kinetic_scale": {
-                                        "type": "number",
-                                        "integer": false
+                                    "lateral": {
+                                        "type": "object",
+                                        "properties": {
+                                            "peak_angle_deg": {
+                                                "type": "number",
+                                                "integer": false,
+                                                "minimum": 0
+                                            },
+                                            "kinetic_angle_deg": {
+                                                "type": "number",
+                                                "integer": false,
+                                                "minimum": 0
+                                            },
+                                            "base_scale": {
+                                                "type": "number",
+                                                "integer": false
+                                            },
+                                            "peak_scale": {
+                                                "type": "number",
+                                                "integer": false
+                                            },
+                                            "kinetic_scale": {
+                                                "type": "number",
+                                                "integer": false
+                                            }
+                                        },
+                                        "additionalProperties": false
                                     }
                                 },
                                 "additionalProperties": false
                             },
-                            "lateral": {
-                                "type": "object",
-                                "properties": {
-                                    "peak_angle_deg": {
-                                        "type": "number",
-                                        "integer": false,
-                                        "minimum": 0
-                                    },
-                                    "kinetic_angle_deg": {
-                                        "type": "number",
-                                        "integer": false,
-                                        "minimum": 0
-                                    },
-                                    "base_scale": {
-                                        "type": "number",
-                                        "integer": false
-                                    },
-                                    "peak_scale": {
-                                        "type": "number",
-                                        "integer": false
-                                    },
-                                    "kinetic_scale": {
-                                        "type": "number",
-                                        "integer": false
-                                    }
-                                },
-                                "additionalProperties": false
+                            "rolling_friction": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0
+                            },
+                            "spinning_friction": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0
+                            },
+                            "restitution": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0,
+                                "maximum": 1
+                            },
+                            "block_damage_factor": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0
                             }
                         },
                         "additionalProperties": false
                     },
-                    "rolling_friction": {
-                        "type": "number",
-                        "integer": false,
-                        "minimum": 0
-                    },
-                    "spinning_friction": {
-                        "type": "number",
-                        "integer": false,
-                        "minimum": 0
-                    },
-                    "restitution": {
-                        "type": "number",
-                        "integer": false,
-                        "minimum": 0,
-                        "maximum": 1
-                    },
-                    "block_damage_factor": {
-                        "type": "number",
-                        "integer": false,
-                        "minimum": 0
-                    },
-                    "rha": {
-                        "type": "number",
-                        "integer": false,
-                        "minimum": 0
-                    },
-                    "angle_effect": {
-                        "type": "boolean"
-                    },
-                    "impact_modifiers": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "operation": {
-                                    "type": "string",
-                                    "enum": [
-                                        "add",
-                                        "multiply"
-                                    ],
-                                    "required": true
-                                },
-                                "value": {
-                                    "type": "number",
-                                    "integer": false,
-                                    "required": true
-                                },
-                                "condition": {
-                                    "oneOf": [
-                                        {
+                    "armor": {
+                        "type": "object",
+                        "properties": {
+                            "rha": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0
+                            },
+                            "angle_effect": {
+                                "type": "boolean"
+                            },
+                            "dmg_resist": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0
+                            },
+                            "dmg_mult": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0,
+                                "maximum": 1
+                            },
+                            "decay_rha": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0
+                            },
+                            "decay_dmg_resist": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0
+                            },
+                            "decay_dmg_mult": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0,
+                                "maximum": 1
+                            },
+                            "decay_power": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0
+                            },
+                            "unpen_power": {
+                                "type": "number",
+                                "integer": false,
+                                "minimum": 0
+                            },
+                            "impact_modifiers": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "operation": {
                                             "type": "any",
-                                            "recursive": true
+                                            "recursive": true,
+                                            "required": true
                                         },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
+                                        "value": {
+                                            "type": "number",
+                                            "integer": false,
+                                            "required": true
                                         },
-                                        {
+                                        "condition": {
                                             "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
+                                            "recursive": true,
+                                            "required": true
                                         }
-                                    ],
-                                    "type": "any",
-                                    "required": true
+                                    },
+                                    "additionalProperties": false
                                 }
                             },
-                            "additionalProperties": false
-                        }
-                    },
-                    "piercing_modifiers": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "operation": {
-                                    "type": "string",
-                                    "enum": [
-                                        "add",
-                                        "multiply"
-                                    ],
-                                    "required": true
-                                },
-                                "value": {
-                                    "type": "number",
-                                    "integer": false,
-                                    "required": true
-                                },
-                                "condition": {
-                                    "oneOf": [
-                                        {
+                            "penetration_modifiers": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "operation": {
                                             "type": "any",
-                                            "recursive": true
+                                            "recursive": true,
+                                            "required": true
                                         },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
+                                        "value": {
+                                            "type": "number",
+                                            "integer": false,
+                                            "required": true
                                         },
-                                        {
+                                        "condition": {
                                             "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
+                                            "recursive": true,
+                                            "required": true
                                         }
-                                    ],
-                                    "type": "any",
-                                    "required": true
+                                    },
+                                    "additionalProperties": false
                                 }
                             },
-                            "additionalProperties": false
-                        }
-                    },
-                    "damage_modifiers": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "operation": {
-                                    "type": "string",
-                                    "enum": [
-                                        "add",
-                                        "multiply"
-                                    ],
-                                    "required": true
-                                },
-                                "value": {
-                                    "type": "number",
-                                    "integer": false,
-                                    "required": true
-                                },
-                                "condition": {
-                                    "oneOf": [
-                                        {
+                            "damage_modifiers": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "operation": {
                                             "type": "any",
-                                            "recursive": true
+                                            "recursive": true,
+                                            "required": true
                                         },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
+                                        "value": {
+                                            "type": "number",
+                                            "integer": false,
+                                            "required": true
                                         },
-                                        {
+                                        "condition": {
                                             "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
-                                        },
-                                        {
-                                            "type": "any",
-                                            "recursive": true
+                                            "recursive": true,
+                                            "required": true
                                         }
-                                    ],
-                                    "type": "any",
-                                    "required": true
+                                    },
+                                    "additionalProperties": false
                                 }
-                            },
-                            "additionalProperties": false
-                        }
-                    },
-                    "decay_rha": {
-                        "type": "number",
-                        "integer": false,
-                        "minimum": 0
-                    },
-                    "decay_power": {
-                        "type": "number",
-                        "integer": false,
-                        "minimum": 0
-                    },
-                    "unpen_power": {
-                        "type": "number",
-                        "integer": false,
-                        "minimum": 0
+                            }
+                        },
+                        "additionalProperties": false
                     },
                     "sounds": {
                         "type": "object",
@@ -662,194 +592,6 @@ const SPECS = {
                 "additionalProperties": false,
                 "sideEffect": "ensure_object",
                 "nullable": true
-            },
-            "impact_modifiers": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "operation": {
-                            "type": "string",
-                            "enum": [
-                                "add",
-                                "multiply"
-                            ],
-                            "required": true
-                        },
-                        "value": {
-                            "type": "number",
-                            "integer": false,
-                            "required": true
-                        },
-                        "condition": {
-                            "oneOf": [
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                }
-                            ],
-                            "type": "any",
-                            "required": true
-                        }
-                    },
-                    "additionalProperties": false
-                }
-            },
-            "penetration_modifiers": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "operation": {
-                            "type": "string",
-                            "enum": [
-                                "add",
-                                "multiply"
-                            ],
-                            "required": true
-                        },
-                        "value": {
-                            "type": "number",
-                            "integer": false,
-                            "required": true
-                        },
-                        "condition": {
-                            "oneOf": [
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                }
-                            ],
-                            "type": "any",
-                            "required": true
-                        }
-                    },
-                    "additionalProperties": false
-                }
-            },
-            "damage_modifiers": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "operation": {
-                            "type": "string",
-                            "enum": [
-                                "add",
-                                "multiply"
-                            ],
-                            "required": true
-                        },
-                        "value": {
-                            "type": "number",
-                            "integer": false,
-                            "required": true
-                        },
-                        "condition": {
-                            "oneOf": [
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                },
-                                {
-                                    "type": "any",
-                                    "recursive": true
-                                }
-                            ],
-                            "type": "any",
-                            "required": true
-                        }
-                    },
-                    "additionalProperties": false
-                }
-            },
-            "unpen_power": {
-                "type": "number",
-                "integer": false,
-                "minimum": 0
-            },
-            "condition": {
-                "type": "string"
             }
         },
         "required": [
@@ -1635,6 +1377,18 @@ const SPECS = {
                             "type": "string"
                         }
                     }
+                },
+                "first_hud_layout": {
+                    "type": "string",
+                    "references": "resource"
+                },
+                "third_hud_layout": {
+                    "type": "string",
+                    "references": "resource"
+                },
+                "scope_hud_layout": {
+                    "type": "string",
+                    "references": "resource"
                 }
             },
             "required": [
