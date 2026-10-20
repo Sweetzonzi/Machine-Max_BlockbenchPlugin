@@ -167,7 +167,7 @@ src/doc/field_specs.generated.js（含 provenance）
 
 ### 3.2 快照状态与类型真值
 
-**当前状态（P0 已完成）**：vendored 快照 153 个文件，与 `Machine-Max@9450a0f4` 逐文件 SHA256 一致，`node scripts/sync-schemas.js --check` 零漂移。
+**当前状态（P0 已完成）**：vendored 快照 153 个文件，与 `Machine-Max@d8d1df8b` 逐文件 SHA256 一致，`node scripts/sync-schemas.js --check` 零漂移。
 
 > 历史数字：同步**前**插件 67 个文件、上游 60 个（同 35 / 异 25 / 缺 7），已由全量替换解决；不要再把 60/67 当现状。
 
@@ -188,7 +188,7 @@ src/doc/field_specs.generated.js（含 provenance）
 
 顺带修掉的上游缺陷（`Machine-Max@9450a0f4`，已同步）：`motor_controller` 是 `motorbike_controller` 的错写——枚举中两种拼写并存，而 `if/then` 分支只用了错写那个且 `$ref` 指向 `motorbike_controller_*_attr.schema.json`，导致**正确的 `motorbike_controller` 匹配不到任何分支**（字段完全不校验）；此外 `subsystem_static_attr` 的枚举整体漏了 `motorbike_controller`。修复后 dynamic 与 static 枚举一致为 19 种。
 
-> vendored 快照的溯源 commit 为 **`9450a0f4`**（在 `26ae8841` 基础上含上述修复）；`sync-schemas.js --check` 当前零漂移。
+> vendored 快照的溯源 commit 为 **`d8d1df8b`**（在 `9450a0f4` 的基础上含 `variant.required` 的 `models→model` 修正与 `connector.overwrite` 补全）；`sync-schemas.js --check` 当前零漂移。
 
 **key 不是 schema 约束**：`variant_attr.schema.json` 的 `sub_parts` 只写了 `additionalProperties`，没有 `patternProperties`；它自己的 examples 还用短 key（`"turret_base"`）。因此「`sub_part.<ns>.<name>`」是**插件侧约定**（翻译键 + 面板/导出/l10n 共用），不是上游要求。严格的理由是可逆性（read → import 无损），不是合规性；迁移只是把插件自己的历史写法收敛到这套约定（§15）。
 
@@ -202,7 +202,7 @@ src/doc/field_specs.generated.js（含 provenance）
 | `hit_box.overwrite` | 结构化 **16** 字段、`additionalProperties:false` | `Codec.ANY.nullable()`（上游 `optionalFieldOf` 无默认 → Java `null`） | **constraint_diff**；`field_specs.nullable:true`（可选对象），`validateValues` 允许 `null`，导出省略；结构由 object 规格校验（§5.2） |
 | `interact_box.condition` | `enum: [AND,OR,NAND,NOR,XOR,XNOR]` | `STRING` 默认 `NOR` | **constraint_diff**；同上，由 `field_specs.enum` 拦，不改成 `Codec.ENUM`（避免存量非法值在 load 阶段失败） |
 | `interact_box.signal_targets` | `required` | `.default({})`，空 map 被省略 | 修 Codec：required map + `emitEmpty`，`{}` 也输出；decode 缺失仍补 `{}`（§3.4） |
-| `connector.definition` | `required` | `.default('')` | 由 `collectIssues` 负责（已判 error） |
+| `connector.definition` | `required` + `resource_location` pattern | `.default('')` | 由 `collectIssues` / `field_specs.references='resource'` 负责（空串已判 error） |
 | `subsystem.definition` | `required`（`ResourceLocation.fieldOf`） | `.field()`（`createSubsystem` 写 `null`） | **不改 Codec**：`createSubsystem` 改写 `''`；`loadConfig` / `projection.in` 把 `null`/`"null"` 归一化为 `''`；导出闸门阻断空串 |
 | `subsystem.power_output` / `.connector` / `.locator` | required（engine/motor/gearbox、wheel_driver/turret_driver、launcher/joint）或 optional（seat/camera/lighting/sight） | required 为 `.field()`；optional 为 `.default('')`（seat 当前 `.field()`、camera 当前 `.default()`）；`subsystem_types.js` 的 `defaultValue` 是 `null` | **不改 Codec 为 nullable**：required 保持 `.field()`，registry 默认值 `null → ''`；optional 统一 `.default('')`；`locator` 缺失/`null` 归一化为缺省或 `''`（§3.4） |
 | `sub_part.hydrodynamics` | 默认 `{"":{}}`；允许空字符串 key | 默认 `{}`（空 map 跳过） | **constraint_diff / decode_tolerance**；导出省略 `{}` 依赖模组默认值；若内部有 `""` 条目则原样输出（§5.1.3） |
@@ -529,10 +529,10 @@ v2 只有 `type: 'number'` + `items/minItems/maxItems`，表达不了 `textures`
 
 | 字段 | 规格 |
 |---|---|
-| `variant.textures` | `oneOf: [{type:'string', references:'resource'}, {type:'object', additionalProperties:{type:'string', references:'resource'}}]` |
+| `variant.textures` | `oneOf: [{type:'string', references:'resource'}, {type:'object', minProperties:1, additionalProperties:{type:'string', references:'resource'}}]` |
 | `variant.model` / `animations` | `type:'string', references:'resource'`（schema 的 `$ref` 是 `resource_location` = 纯 string；它自己的 example 写成 map，属 examples bug，Codec 也只接受 string） |
 | `hit_box.overwrite` | `type:'object', properties: {16 个}, additionalProperties: false` |
-| `connector.overwrite` | `type:'object', properties: {11 个}, additionalProperties: false` |
+| `connector.overwrite` | `type:'object', properties: {12 个}, additionalProperties: false` |
 | `sub_part.projected_area` | `type:'tuple', tuple:[number,number,number], minItems:3, maxItems:3` |
 | `sub_part.end_bones` | `type:'array', items:{type:'string', references:'bone'}` |
 | `subsystem.seat.dismount_locators` | `type:'array', items:{type:'string', references:'locator'}` |
@@ -542,7 +542,7 @@ v2 只有 `type: 'number'` + `items/minItems/maxItems`，表达不了 `textures`
 
 `setField` 的值校验顺序：`nullable` 短路 → `oneOf` 逐个尝试 → `type` 基础校验 → `enum` / `minimum` / `maximum` → `tuple` 长度 → `items` 递归 → `properties` / `additionalProperties` 递归。任一失败返回 `errors[]`（可多条），不写入。
 
-> **`connector.overwrite` 是 11 个而不是 12 个**：`connector_attr.schema.json` 的 `properties.overwrite` 只列了 11 项；Java `ConnectorAttr.OverwriteAttr` 额外有 `impact_absorption_destroyed` 与 `power_target`，但 schema 未收录。P0 按 schema 生成 11 项，P1 的 `field_specs` 会拒绝这两个 schema 外字段；若上游补 schema，重新运行 codegen 即可，不在 allowlist 里手工放宽。
+> **本轮上游把 `connector.overwrite` 从 11 项补到 12 项**：新增 `impact_absorption_destroyed`，并给 `impact_absorption` 加 `maximum: 1`；`power_target` 仍只在 connector 顶层，不在 overwrite 规格里。P1 按 schema 的 12 项校验；Java `OverwriteAttr` 的 `power_target` 是已知 schema 外字段，不在 `field_specs` 里放宽。
 
 #### 5.2.1.1 生成物接口（P0 已落地）
 
@@ -553,7 +553,7 @@ const { PROVENANCE, SPECS, CONTAINERS, SIDE_EFFECTS } = require('./field_specs.g
 
 PROVENANCE = {
   generator, generator_version, source_locale, source_root,
-  source_revision: '9450a0f4',
+  source_revision: 'd8d1df8b',
   source_files: 67, source_sha256, generated_from,
 };
 
@@ -577,7 +577,7 @@ SIDE_EFFECTS = { 'sub_part.start_bone': 'migrate_sub_part_marker', ... };
 约定：
 
 - `SPECS.<kind>.fields` 只含标量 / map / 数组字段；`CONTAINERS` 里的容器不生成规格，由 `doc/address` 处理。
-- 每个字段的 `required: true` 与 `SPECS.<kind>.required` 同时存在；后者已按真实字段过滤（`variant` 的 `model` 会把上游 en_us 的 `required:["models"]` 拼写归一化为 `model`，与 zh_cn 及实际 property 一致）。
+- 每个字段的 `required: true` 与 `SPECS.<kind>.required` 同时存在；后者只保留真实字段（容器字段由 `CONTAINERS` 表示）。上游本轮已把 `variant.required` 的 `models` 修正为 `model`，生成器不再需要别名归一化。
 - `SPECS.subsystem` 的 key 是完整 type id（`machine_max:engine`），不是短名；生成器从 `subsystem_dynamic_attr.schema.json` 的 `type.enum` + `if/then` 展开，并显式补齐无分支的 `machine_max:basic`。
 - `PROVENANCE.source_sha256` 是 67 个 en_us schema JSON 的路径 + 内容 hash；`--check` 同时比较生成文本，重复运行逐字节一致（不含时间戳）。
 - 改 schema 或生成器后运行 `node scripts/gen-field-specs.js`；CI 用 `node scripts/gen-field-specs.js --check`。
@@ -611,7 +611,7 @@ module.exports = {
   constraint_diffs: [
     { kind: 'hit_box', field: 'type', schema: 'enum', codec: 'string', enforcedBy: 'field_specs.enum' },
     { kind: 'hit_box', field: 'overwrite', schema: 'object(16)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
-    { kind: 'connector', field: 'overwrite', schema: 'object(11)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
+    { kind: 'connector', field: 'overwrite', schema: 'object(12)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
     { kind: 'interact_box', field: 'condition', schema: 'enum', codec: 'string', enforcedBy: 'field_specs.enum' },
     { kind: 'interact_box', field: 'signal_targets', schema: 'required', codec: 'default({}) + emitEmpty', enforcedBy: 'codec.emitEmpty' },
     { kind: 'connector', field: 'definition', schema: 'required', codec: "default('')", enforcedBy: 'collectIssues' },
@@ -1053,7 +1053,8 @@ src/services/
 ### P0 — 上游对齐（已完成）
 
 - ✅ `scripts/sync-schemas.js`（`--check` / `--apply` / `--source`，不 spawn 子进程，尽力读上游 commit 作溯源）
-- ✅ vendored 快照全量替换：`src/builtin/builtin/machine_max/docs` 由 139 → 153 文件，与 `Machine-Max@9450a0f4` 逐文件 SHA256 一致；`--check` 零漂移
+- ✅ vendored 快照全量替换：`src/builtin/builtin/machine_max/docs` 由 139 → 153 文件，与 `Machine-Max@d8d1df8b` 逐文件 SHA256 一致；`--check` 零漂移
+- ✅ 本轮 schema 更新：`variant.required` 的 `models` → `model`、`connector.overwrite` 补 `impact_absorption_destroyed`（11→12）、`variant.textures` 对象分支补 `minProperties:1`、`part_definition_schema` 的 examples 同步
 - ✅ 7 个缺失 schema 到位（`track_controller` / `track_drive` 的 static+dynamic、`launcher` / `regen_loader` dynamic、`part_fabricating_recipe`）
 - ✅ `scripts/gen-field-specs.js`（codegen；按 §5.2 的类型模型生成 19 种，含 provenance；`--check` 可做漂移检查）
 - ✅ `scripts/audit-stats.js`（数字审计；47 项基线，输出与 §2 一致）
