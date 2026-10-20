@@ -98,24 +98,46 @@ function importSubsystem(config, options) {
 
     var sp = shared.subPartOf(config, partId, variantName, spKey);
     if (!sp) return shared.fail('子零件 "' + spKey + '" 不存在');
+    if (!sp.subsystems) shared.setProp(sp, 'subsystems', {});
     var existing = sp.subsystems && sp.subsystems[instanceName];
+    var oldKey = String(options.oldKey || '').trim();
+    var oldExisting = oldKey ? (sp.subsystems && sp.subsystems[oldKey]) : undefined;
+    var modeResult = shared.resolveImportMode(options, {
+        existing: existing,
+        oldExisting: oldExisting,
+        oldKey: oldKey,
+        newKey: instanceName,
+        path: ['parts', partId, 'variants', variantName, 'sub_parts', spKey,
+            'subsystems', instanceName],
+    });
+    if (!modeResult.ok) return modeResult;
+
+    var effectiveExisting = modeResult.mode === 'rename' ? oldExisting : existing;
     var ctx = {
         kind: 'subsystem',
-        mode: options.mode || (existing ? 'replace' : 'create'),
-        oldKey: options.oldKey,
+        mode: modeResult.mode,
+        oldKey: oldKey || undefined,
         namespace: shared.namespaceOf(config),
         partId: partId,
         variantName: variantName,
         subPartKey: spKey,
         parentPath: ['parts', partId, 'variants', variantName, 'sub_parts', spKey,
             'subsystems', instanceName],
-        existing: existing,
+        existing: effectiveExisting,
     };
 
-    return shared.applyProjection(config, ctx.parentPath, options.definition || {}, ctx, {
+    var result = shared.applyProjection(config, ctx.parentPath, options.definition || {}, ctx, {
         label: '导入子系统 ' + instanceName,
         data: { partId: partId, variantName: variantName, subPartKey: spKey, instanceName: instanceName },
+        source: options.source || 'import',
+        persist: options.persist,
+        strict: options.strict,
     });
+    if (result.ok) {
+        result.action = modeResult.mode === 'rename' ? 'renamed'
+            : (effectiveExisting === undefined ? 'created' : 'replaced');
+    }
+    return result;
 }
 
 function renameSubsystem(config, options) {

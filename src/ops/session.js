@@ -6,6 +6,7 @@
 
 'use strict';
 
+var ports = require('../doc/ports.js');
 var shared = require('./shared.js');
 
 function setActive(config, options) {
@@ -27,7 +28,29 @@ function setActive(config, options) {
         if (!variant) return shared.fail('变体 "' + patch.activeVariantName + '" 不存在');
     }
 
+    // 等价于 UI 里点选零件：只给 part 时落到该零件的第一个变体
+    if (patch.activePartId && !patch.activeVariantName) {
+        var part = shared.partOf(config, patch.activePartId);
+        var variants = Object.keys((part && part.variants) || {});
+        patch.activeVariantName = variants.length > 0 ? variants[0] : '';
+    }
+
     shared.setUiState(config, patch);
+
+    // 视图状态不进撤销栈，但要让面板同步 activity（不落盘）
+    try {
+        ports.get().events.emit('mm_config_changed', {
+            source: options.source || 'ui',
+            label: '切换活动上下文',
+            kinds: [],
+            paths: [],
+            persist: false,
+            uiState: config._uiState,
+        });
+    } catch (e) {
+        // 事件端口在 Node 测试下可能为空，忽略
+    }
+
     return shared.ok({ changed: true, data: { _uiState: config._uiState } });
 }
 

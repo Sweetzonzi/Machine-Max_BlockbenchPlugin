@@ -81,28 +81,48 @@ function importVariant(config, options) {
     var part = shared.partOf(config, partId);
     if (!part) return shared.fail('当前零件不存在');
     if (!variantName) return shared.fail('缺少变体名');
+    if (!part.variants) shared.setProp(part, 'variants', {});
     var keyError = shared.validateKey('variants', variantName, config,
         ['parts', partId, 'variants', variantName]);
     if (keyError) return shared.fail(keyError.hint, [keyError]);
 
     var existing = part.variants && part.variants[variantName];
+    var oldKey = String(options.oldKey || '').trim();
+    var oldExisting = oldKey ? (part.variants && part.variants[oldKey]) : undefined;
+    var modeResult = shared.resolveImportMode(options, {
+        existing: existing,
+        oldExisting: oldExisting,
+        oldKey: oldKey,
+        newKey: variantName,
+        path: ['parts', partId, 'variants', variantName],
+    });
+    if (!modeResult.ok) return modeResult;
+
+    var effectiveExisting = modeResult.mode === 'rename' ? oldExisting : existing;
     var ctx = {
         kind: 'variant',
-        mode: options.mode || (existing ? 'replace' : 'create'),
-        oldKey: options.oldKey,
+        mode: modeResult.mode,
+        oldKey: oldKey || undefined,
         namespace: shared.namespaceOf(config),
         partId: partId,
         variantName: variantName,
         parentPath: ['parts', partId, 'variants', variantName],
-        existing: existing,
+        existing: effectiveExisting,
     };
 
     var result = shared.applyProjection(config,
         ['parts', partId, 'variants', variantName], options.definition || {}, ctx, {
             label: '导入变体 ' + variantName,
             data: { partId: partId, variantName: variantName },
+            source: options.source || 'import',
+            persist: options.persist,
+            strict: options.strict,
         });
-    if (result.ok) shared.setUiState(config, { activeVariantName: variantName });
+    if (result.ok) {
+        shared.setUiState(config, { activeVariantName: variantName });
+        result.action = modeResult.mode === 'rename' ? 'renamed'
+            : (effectiveExisting === undefined ? 'created' : 'replaced');
+    }
     return result;
 }
 

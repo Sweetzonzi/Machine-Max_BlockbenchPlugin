@@ -18037,6 +18037,7 @@
       function _runUnrecorded(opts, label, mutate, reason) {
         if (opts && opts.strict) {
           var err = new Error("\u201C" + label + "\u201D\u65E0\u6CD5\u8FDB\u5165\u64A4\u9500\u6808\uFF1A" + reason);
+          err.code = reason.indexOf("\u672A\u5B8C\u6210\u7684\u7F16\u8F91") >= 0 ? "edit_in_progress" : "snapshot_too_large";
           log2.warn("runConfigEdit: " + err.message);
           throw err;
         }
@@ -20025,16 +20026,85 @@
           warnings: projected.warnings || []
         }, projected.before !== void 0 ? { before: projected.before, after: projected.after } : {}));
       }
+      function resolveImportMode(options, info) {
+        options = options || {};
+        info = info || {};
+        var mode = options.mode;
+        if (!mode || mode === "reject") {
+          mode = info.existing === void 0 ? "create" : "replace";
+        }
+        if (mode === "create") {
+          if (info.existing !== void 0) {
+            return fail('"' + info.newKey + '" \u5DF2\u5B58\u5728', [makeError(
+              info.path,
+              "duplicate_name",
+              "\u4E0D\u91CD\u590D\u7684 key",
+              info.newKey,
+              '\u6539\u7528 mode:"replace" \u8986\u76D6\uFF0C\u6216 mode:"rename" \u6539 key'
+            )]);
+          }
+          return { ok: true, mode };
+        }
+        if (mode === "rename") {
+          if (!info.oldKey) {
+            return fail('mode:"rename" \u9700\u8981 old_key', [makeError(
+              info.path,
+              "missing_required",
+              "old_key",
+              "",
+              "\u4F20\u5DF2\u5B58\u5728\u7684\u65E7 key"
+            )]);
+          }
+          if (info.oldExisting === void 0) {
+            return fail('\u65E7 key "' + info.oldKey + '" \u4E0D\u5B58\u5728', [makeError(
+              info.path,
+              "not_found",
+              "\u5DF2\u5B58\u5728\u7684\u65E7 key",
+              info.oldKey
+            )]);
+          }
+          if (info.oldKey !== info.newKey && info.existing !== void 0) {
+            return fail('"' + info.newKey + '" \u5DF2\u5B58\u5728', [makeError(
+              info.path,
+              "duplicate_name",
+              "\u672A\u88AB\u5360\u7528\u7684\u65B0 key",
+              info.newKey,
+              "\u5148\u5220\u9664\u6216\u6539\u7528 replace"
+            )]);
+          }
+          return { ok: true, mode };
+        }
+        return { ok: true, mode: "replace" };
+      }
       function applyProjection(config, path, definition, ctx, options) {
         options = options || {};
         var projected = doc.projection.projectIn(definition, ctx);
         if (!projected.ok) return finishProjection(projected, options.data);
         var result;
+        var renamedRefs = [];
         try {
           result = runConfigEdit(options.label || "\u5BFC\u5165\u914D\u7F6E", function() {
             var mp = markersPort();
             if (projected.markerCleanup && mp.clearScope) {
               mp.clearScope(config, projected.markerCleanup);
+            }
+            var newKey = path[path.length - 1];
+            if (ctx.mode === "rename" && ctx.oldKey && ctx.oldKey !== newKey) {
+              if (ctx.kind === "sub_part" || ctx.kind === "subsystem") {
+                var renamed = doc.refs.renameRefs(config, {
+                  kind: ctx.kind,
+                  oldKey: ctx.oldKey,
+                  newKey
+                });
+                renamedRefs = renamed.renamed || [];
+              }
+              var oldPath = path.slice(0, -1).concat(ctx.oldKey);
+              var removedOld = doc.address.remove(config, oldPath, {});
+              if (!removedOld.ok) {
+                var re = new Error("rename failed");
+                re._opResult = fromDoc(removedOld, "\u5220\u9664\u65E7 key \u5931\u8D25");
+                throw re;
+              }
             }
             var written2 = doc.write(config, path, projected.node, { allowMissingLeaf: true });
             if (!written2.ok) {
@@ -20065,10 +20135,20 @@
           }, {
             strict: !!options.strict,
             coalesce: false,
-            source: options.source || "import"
+            source: options.source || "import",
+            persist: options.persist !== false
           });
         } catch (e) {
           if (e && e._opResult) return e._opResult;
+          if (e && e.code) {
+            return fail(e.message, [makeError(
+              path,
+              e.code,
+              "\u53EF\u8FDB\u5165\u64A4\u9500\u6808\u7684\u7F16\u8F91",
+              "",
+              e.message
+            )]);
+          }
           log2.error("applyProjection: \u5199\u5165\u5931\u8D25", e);
           return fail(e && e.message ? e.message : "\u5199\u5165\u914D\u7F6E\u5931\u8D25", []);
         }
@@ -20078,6 +20158,7 @@
           data: options.data || {},
           changed: true,
           reset_fields: projected.reset_fields || [],
+          cleaned_references: renamedRefs,
           unresolved: projected.unresolved,
           unresolved_bones: projected.unresolved && projected.unresolved.bones || [],
           warnings: projected.warnings || [],
@@ -20143,7 +20224,19 @@
       }
       function validateWrite(config, segments, value) {
         var located = locateRecord(config, segments);
-        if (!located.node || typeof located.node !== "object") return [];
+        if (!located.node) {
+          if (located.rest.length === 0 && doc.fieldSpecs.isKnownKind(located.kind) && value && typeof value === "object" && !Array.isArray(value)) {
+            var fresh = doc.validate.validateValues(value, {
+              kind: located.kind,
+              typeId: located.kind === "subsystem" ? value.type : void 0,
+              path: segments,
+              completeness: false
+            });
+            return fresh.ok ? [] : fresh.errors || [];
+          }
+          return [];
+        }
+        if (typeof located.node !== "object") return [];
         var candidate = clone(located.node);
         var rest = located.rest;
         if (rest.length === 0) return [];
@@ -20195,6 +20288,7 @@
         bonesPort,
         applyProjection,
         finishProjection,
+        resolveImportMode,
         locateRecord,
         validateWrite,
         ensureParentObjects
@@ -20280,27 +20374,45 @@
         if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
         var partId = String(options.partId || "").trim();
         if (!partId) return shared.fail("\u7F3A\u5C11 partId");
+        if (!config.parts) config.parts = {};
         var keyError = shared.validateKey("parts", partId, config, ["parts", partId]);
         if (keyError) return shared.fail(keyError.hint, [keyError]);
         var existing = config.parts && config.parts[partId];
+        var oldKey = String(options.oldKey || "").trim();
+        var oldExisting = oldKey ? config.parts && config.parts[oldKey] : void 0;
+        var modeResult = shared.resolveImportMode(options, {
+          existing,
+          oldExisting,
+          oldKey,
+          newKey: partId,
+          path: ["parts", partId]
+        });
+        if (!modeResult.ok) return modeResult;
+        var effectiveExisting = modeResult.mode === "rename" ? oldExisting : existing;
         var definition = options.definition || {};
         if (definition && typeof definition !== "object") {
           return shared.fail("definition \u5FC5\u987B\u662F\u5BF9\u8C61");
         }
         var ctx = {
           kind: "part",
-          mode: options.mode || (existing ? "replace" : "create"),
-          oldKey: options.oldKey,
+          mode: modeResult.mode,
+          oldKey: oldKey || void 0,
           namespace: shared.namespaceOf(config),
           partId,
           parentPath: ["parts", partId],
-          existing
+          existing: effectiveExisting
         };
         var result = shared.applyProjection(config, ["parts", partId], definition, ctx, {
           label: "\u5BFC\u5165\u96F6\u4EF6 " + partId,
-          data: { partId }
+          data: { partId },
+          source: options.source || "import",
+          persist: options.persist,
+          strict: options.strict
         });
-        if (result.ok) shared.setUiState(config, { activePartId: partId });
+        if (result.ok) {
+          shared.setUiState(config, { activePartId: partId });
+          result.action = modeResult.mode === "rename" ? "renamed" : effectiveExisting === void 0 ? "created" : "replaced";
+        }
         return result;
       }
       module.exports = {
@@ -20398,14 +20510,20 @@
         if (kind === "subsystem" && field === "type") {
           var defaults = ssTypes.getTypeDefaults(newValue) || {};
           var allowed = ssTypes.getTypeSpecificFields(newValue) || [];
+          var dropped = [];
           Object.keys(node).forEach(function(key) {
             if (key === "type" || key === "definition") return;
-            if (allowed.indexOf(key) < 0) delete node[key];
+            if (allowed.indexOf(key) < 0) {
+              dropped.push(key);
+              delete node[key];
+            }
           });
           Object.keys(defaults).forEach(function(key) {
             if (!(key in node)) node[key] = shared.clone(defaults[key]);
           });
+          return { dropped_fields: dropped };
         }
+        return null;
       }
       function ensureParentObjects(config, segments) {
         return shared.ensureParentObjects(config, segments);
@@ -20442,30 +20560,43 @@
         try {
           result = runConfigEdit(label, function() {
             ensureParentObjects(config, segments);
-            var written = doc.write(config, options.path, after, { allowMissingLeaf: true });
-            if (!written.ok) {
+            var written2 = doc.write(config, options.path, after, { allowMissingLeaf: true });
+            if (!written2.ok) {
               var e = new Error("write failed");
-              e._opResult = shared.fromDoc(written, "\u5199\u5165\u5B57\u6BB5\u5931\u8D25");
+              e._opResult = shared.fromDoc(written2, "\u5199\u5165\u5B57\u6BB5\u5931\u8D25");
               throw e;
             }
-            applySideEffect(config, written.path || segments, before, after);
-            return written;
+            var side2 = applySideEffect(config, written2.path || segments, before, after);
+            return { written: written2, side: side2 };
           }, {
             strict: !!options.strict,
             coalesce: options.coalesce === true,
             mergeKey: options.mergeKey || pointerOf(segments),
-            source: options.source || "ui"
+            source: options.source || "ui",
+            persist: options.persist !== false
           });
         } catch (e) {
           if (e && e._opResult) return e._opResult;
+          if (e && e.code) {
+            return shared.fail(e.message, [shared.makeError(
+              segments,
+              e.code,
+              "\u53EF\u8FDB\u5165\u64A4\u9500\u6808\u7684\u7F16\u8F91",
+              "",
+              e.message
+            )]);
+          }
           return shared.fail(e && e.message ? e.message : "\u5199\u5165\u5B57\u6BB5\u5931\u8D25", []);
         }
+        var written = result && result.written;
+        var side = result && result.side;
         return shared.ok({
-          path: result.path || segments,
+          path: written ? written.path : segments,
           changed: true,
-          before: result.before,
-          after: result.after,
-          data: { sideEffect: result.sideEffect || null }
+          before: written ? written.before : before,
+          after: written ? written.after : after,
+          dropped_fields: side && side.dropped_fields || [],
+          data: { sideEffect: side || null }
         });
       }
       module.exports = { setField, _internals: { applySideEffect } };
@@ -20551,6 +20682,7 @@
         var part = shared.partOf(config, partId);
         if (!part) return shared.fail("\u5F53\u524D\u96F6\u4EF6\u4E0D\u5B58\u5728");
         if (!variantName) return shared.fail("\u7F3A\u5C11\u53D8\u4F53\u540D");
+        if (!part.variants) shared.setProp(part, "variants", {});
         var keyError = shared.validateKey(
           "variants",
           variantName,
@@ -20559,15 +20691,26 @@
         );
         if (keyError) return shared.fail(keyError.hint, [keyError]);
         var existing = part.variants && part.variants[variantName];
+        var oldKey = String(options.oldKey || "").trim();
+        var oldExisting = oldKey ? part.variants && part.variants[oldKey] : void 0;
+        var modeResult = shared.resolveImportMode(options, {
+          existing,
+          oldExisting,
+          oldKey,
+          newKey: variantName,
+          path: ["parts", partId, "variants", variantName]
+        });
+        if (!modeResult.ok) return modeResult;
+        var effectiveExisting = modeResult.mode === "rename" ? oldExisting : existing;
         var ctx = {
           kind: "variant",
-          mode: options.mode || (existing ? "replace" : "create"),
-          oldKey: options.oldKey,
+          mode: modeResult.mode,
+          oldKey: oldKey || void 0,
           namespace: shared.namespaceOf(config),
           partId,
           variantName,
           parentPath: ["parts", partId, "variants", variantName],
-          existing
+          existing: effectiveExisting
         };
         var result = shared.applyProjection(
           config,
@@ -20576,10 +20719,16 @@
           ctx,
           {
             label: "\u5BFC\u5165\u53D8\u4F53 " + variantName,
-            data: { partId, variantName }
+            data: { partId, variantName },
+            source: options.source || "import",
+            persist: options.persist,
+            strict: options.strict
           }
         );
-        if (result.ok) shared.setUiState(config, { activeVariantName: variantName });
+        if (result.ok) {
+          shared.setUiState(config, { activeVariantName: variantName });
+          result.action = modeResult.mode === "rename" ? "renamed" : effectiveExisting === void 0 ? "created" : "replaced";
+        }
         return result;
       }
       function setVariantTags(config, options) {
@@ -20675,6 +20824,7 @@
         var variant = shared.variantOf(config, partId, variantName);
         if (!variant) return shared.fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
         if (!spKey) return shared.fail("\u7F3A\u5C11\u5B50\u96F6\u4EF6 key");
+        if (!variant.sub_parts) shared.setProp(variant, "sub_parts", {});
         var keyError = shared.validateKey(
           "sub_parts",
           spKey,
@@ -20683,27 +20833,45 @@
         );
         if (keyError) return shared.fail(keyError.hint, [keyError]);
         var existing = variant.sub_parts && variant.sub_parts[spKey];
+        var oldKey = String(options.oldKey || "").trim();
+        var oldExisting = oldKey ? variant.sub_parts && variant.sub_parts[oldKey] : void 0;
+        var modeResult = shared.resolveImportMode(options, {
+          existing,
+          oldExisting,
+          oldKey,
+          newKey: spKey,
+          path: ["parts", partId, "variants", variantName, "sub_parts", spKey]
+        });
+        if (!modeResult.ok) return modeResult;
+        var effectiveExisting = modeResult.mode === "rename" ? oldExisting : existing;
         var ctx = {
           kind: "sub_part",
-          mode: options.mode || (existing ? "replace" : "create"),
-          oldKey: options.oldKey,
+          mode: modeResult.mode,
+          oldKey: oldKey || void 0,
           namespace: shared.namespaceOf(config),
           partId,
           variantName,
           subPartKey: spKey,
           parentPath: ["parts", partId, "variants", variantName, "sub_parts", spKey],
-          existing
+          existing: effectiveExisting
         };
-        return shared.applyProjection(
+        var result = shared.applyProjection(
           config,
           ["parts", partId, "variants", variantName, "sub_parts", spKey],
           options.definition || {},
           ctx,
           {
             label: "\u5BFC\u5165\u5B50\u96F6\u4EF6 " + spKey,
-            data: { partId, variantName, subPartKey: spKey }
+            data: { partId, variantName, subPartKey: spKey },
+            source: options.source || "import",
+            persist: options.persist,
+            strict: options.strict
           }
         );
+        if (result.ok) {
+          result.action = modeResult.mode === "rename" ? "renamed" : effectiveExisting === void 0 ? "created" : "replaced";
+        }
+        return result;
       }
       function renameSubPart(config, options) {
         options = options || {};
@@ -20861,11 +21029,32 @@
         if (keyError) return shared.fail(keyError.hint, [keyError]);
         var sp = shared.subPartOf(config, partId, variantName, spKey);
         if (!sp) return shared.fail('\u5B50\u96F6\u4EF6 "' + spKey + '" \u4E0D\u5B58\u5728');
+        if (!sp.subsystems) shared.setProp(sp, "subsystems", {});
         var existing = sp.subsystems && sp.subsystems[instanceName];
+        var oldKey = String(options.oldKey || "").trim();
+        var oldExisting = oldKey ? sp.subsystems && sp.subsystems[oldKey] : void 0;
+        var modeResult = shared.resolveImportMode(options, {
+          existing,
+          oldExisting,
+          oldKey,
+          newKey: instanceName,
+          path: [
+            "parts",
+            partId,
+            "variants",
+            variantName,
+            "sub_parts",
+            spKey,
+            "subsystems",
+            instanceName
+          ]
+        });
+        if (!modeResult.ok) return modeResult;
+        var effectiveExisting = modeResult.mode === "rename" ? oldExisting : existing;
         var ctx = {
           kind: "subsystem",
-          mode: options.mode || (existing ? "replace" : "create"),
-          oldKey: options.oldKey,
+          mode: modeResult.mode,
+          oldKey: oldKey || void 0,
           namespace: shared.namespaceOf(config),
           partId,
           variantName,
@@ -20880,12 +21069,19 @@
             "subsystems",
             instanceName
           ],
-          existing
+          existing: effectiveExisting
         };
-        return shared.applyProjection(config, ctx.parentPath, options.definition || {}, ctx, {
+        var result = shared.applyProjection(config, ctx.parentPath, options.definition || {}, ctx, {
           label: "\u5BFC\u5165\u5B50\u7CFB\u7EDF " + instanceName,
-          data: { partId, variantName, subPartKey: spKey, instanceName }
+          data: { partId, variantName, subPartKey: spKey, instanceName },
+          source: options.source || "import",
+          persist: options.persist,
+          strict: options.strict
         });
+        if (result.ok) {
+          result.action = modeResult.mode === "rename" ? "renamed" : effectiveExisting === void 0 ? "created" : "replaced";
+        }
+        return result;
       }
       function renameSubsystem(config, options) {
         options = options || {};
@@ -21186,7 +21382,12 @@
         runConfigEdit("\u7ED1\u5B9A\u6807\u8BB0", function() {
           mp.set(config, options.partId, options.variantName, options.uuid, type, configRef);
           if (mp.recalc) mp.recalc(config, options.partId, options.variantName);
-        }, { coalesce: false });
+        }, {
+          coalesce: false,
+          strict: !!options.strict,
+          source: options.source || "ui",
+          persist: options.persist !== false
+        });
         return shared.ok({ changed: true });
       }
       function removeNode(config, options) {
@@ -21212,34 +21413,50 @@
         var key = segments[segments.length - 1];
         var removed = null;
         var mp = shared.markersPort();
-        runConfigEdit("\u5220\u9664 " + kind, function() {
-          if (kind === "part") {
-            if (mp.clearScope) mp.clearScope(config, { scope: "part", partId: key });
-          } else if (kind === "variant") {
-            if (mp.clearScope) {
-              mp.clearScope(config, {
-                scope: "variant",
-                partId: segments[1],
-                variantName: key
-              });
+        try {
+          runConfigEdit("\u5220\u9664 " + kind, function() {
+            if (kind === "part") {
+              if (mp.clearScope) mp.clearScope(config, { scope: "part", partId: key });
+            } else if (kind === "variant") {
+              if (mp.clearScope) {
+                mp.clearScope(config, {
+                  scope: "variant",
+                  partId: segments[1],
+                  variantName: key
+                });
+              }
+            } else if (kind === "hit_box") {
             }
-          } else if (kind === "hit_box") {
-            if (mp.clear) mp.clear(config, segments[1], segments[3], key);
-          }
-          removed = doc.remove(config, segments, {});
-          if (!removed.ok) {
-            var e = new Error("remove failed");
-            e._opResult = shared.fromDoc(removed, "\u5220\u9664\u8282\u70B9\u5931\u8D25");
-            throw e;
-          }
-        }, { coalesce: false });
+            removed = options.cascade === false ? doc.address.remove(config, segments, {}) : doc.remove(config, segments, {});
+            if (!removed.ok) {
+              var e = new Error("remove failed");
+              e._opResult = shared.fromDoc(removed, "\u5220\u9664\u8282\u70B9\u5931\u8D25");
+              throw e;
+            }
+            if (kind === "hit_box" && mp.clear && options.cascade !== false) {
+              var hbMarker = em.getMarker(config, segments[1], segments[3], key);
+              if (hbMarker && hbMarker.type === "hit_box") {
+                mp.clear(config, segments[1], segments[3], key);
+              }
+            }
+          }, {
+            coalesce: false,
+            strict: !!options.strict,
+            source: options.source || "ui",
+            persist: options.persist !== false
+          });
+        } catch (e) {
+          if (e && e._opResult) return e._opResult;
+          throw e;
+        }
         return shared.ok({
           changed: true,
           cleaned_references: removed ? removed.cleaned_references || [] : [],
           data: { kind, key }
         });
       }
-      function addInstance(config, parentPath, kind, key, definition) {
+      function addInstance(config, parentPath, kind, key, definition, options) {
+        options = options || {};
         config = shared.configOrNull(config);
         if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528");
         var parsed = doc.address.parsePath(parentPath);
@@ -21274,76 +21491,88 @@
         if (!projected.ok) return shared.finishProjection(projected);
         var mp = shared.markersPort();
         var resultKey = key;
-        runConfigEdit("\u6DFB\u52A0 " + kind, function() {
-          var sp = ensureSubPart(variant, spKey);
-          var container = kind === "connector" ? "connectors" : kind === "interact_box" ? "interact_boxes" : "hit_boxes";
-          if (!sp[container]) shared.setProp(sp, container, {});
-          if (kind === "hit_box") {
-            var bones = shared.bonesPort();
-            var el = key ? bones.findByUuid(key) || bones.findByName(key) : null;
-            if (!el) {
-              var e = new Error("element not found");
-              e._opResult = shared.fail('\u672A\u627E\u5230\u9AA8\u9ABC "' + key + '"', [shared.makeError(
-                parent,
-                "not_found",
-                "\u5DF2\u5B58\u5728\u7684\u9AA8\u9ABC",
-                key,
-                "\u8BF7\u5148\u5EFA\u6A21\u578B\u5143\u7D20\u6216\u6539\u7528 bind_marker"
-              )]);
-              throw e;
-            }
-            resultKey = el.uuid;
-            shared.setProp(sp.hit_boxes, el.uuid, projected.node);
-            mp.set(config, partId, variantName, el.uuid, "hit_box", spKey);
-          } else {
-            var name = key;
-            if (!name) {
-              var ns = shared.namespaceOf(config);
-              var boneName = projected.node.bone || projected.node.locator || kind;
-              var baseName = generateDefaultName(kind, {
-                namespace: ns,
-                boneName
-              });
-              name = ensureUniqueName(kind, variant, spKey, baseName);
-            }
-            var mapName = container === "connectors" ? "connectors" : "interact_boxes";
-            var keyError = shared.validateKey(
-              mapName,
-              name,
-              config,
-              parent.concat([container, name])
-            );
-            if (keyError) {
-              var ke = new Error("invalid key");
-              ke._opResult = shared.fail(keyError.hint, [keyError]);
-              throw ke;
-            }
-            if (kind === "interact_box") {
-              var el2 = shared.bonesPort().findByName(key || projected.node.bone);
-              if (!el2) {
-                var e2 = new Error("element not found");
-                e2._opResult = shared.fail('\u672A\u627E\u5230\u9AA8\u9ABC "' + (key || projected.node.bone) + '"', []);
-                throw e2;
+        try {
+          runConfigEdit("\u6DFB\u52A0 " + kind, function() {
+            var sp = ensureSubPart(variant, spKey);
+            var container = kind === "connector" ? "connectors" : kind === "interact_box" ? "interact_boxes" : "hit_boxes";
+            if (!sp[container]) shared.setProp(sp, container, {});
+            if (kind === "hit_box") {
+              var bones = shared.bonesPort();
+              var el = key ? bones.findByUuid(key) || bones.findByName(key) : null;
+              if (!el) {
+                var e = new Error("element not found");
+                e._opResult = shared.fail('\u672A\u627E\u5230\u9AA8\u9ABC "' + key + '"', [shared.makeError(
+                  parent,
+                  "not_found",
+                  "\u5DF2\u5B58\u5728\u7684\u9AA8\u9ABC",
+                  key,
+                  "\u8BF7\u5148\u5EFA\u6A21\u578B\u5143\u7D20\u6216\u6539\u7528 bind_marker"
+                )]);
+                throw e;
               }
-              projected.node.bone = el2.name;
-              projected.node._uuid = el2.uuid;
-              mp.set(config, partId, variantName, el2.uuid, "interact_box", name);
+              resultKey = el.uuid;
+              shared.setProp(sp.hit_boxes, el.uuid, projected.node);
+              mp.set(config, partId, variantName, el.uuid, "hit_box", spKey);
             } else {
-              var loc = shared.bonesPort().findByName(key || projected.node.locator);
-              if (!loc) {
-                var e3 = new Error("element not found");
-                e3._opResult = shared.fail('\u672A\u627E\u5230 Locator "' + (key || projected.node.locator) + '"', []);
-                throw e3;
+              var name = key;
+              if (!name) {
+                var ns = shared.namespaceOf(config);
+                var boneName = projected.node.bone || projected.node.locator || kind;
+                var baseName = generateDefaultName(kind, {
+                  namespace: ns,
+                  boneName
+                });
+                name = ensureUniqueName(kind, variant, spKey, baseName);
               }
-              projected.node.locator = loc.name;
-              projected.node._marker_uuid = loc.uuid;
-              mp.set(config, partId, variantName, loc.uuid, "connector", name);
+              var mapName = container === "connectors" ? "connectors" : "interact_boxes";
+              var keyError = shared.validateKey(
+                mapName,
+                name,
+                config,
+                parent.concat([container, name])
+              );
+              if (keyError) {
+                var ke = new Error("invalid key");
+                ke._opResult = shared.fail(keyError.hint, [keyError]);
+                throw ke;
+              }
+              if (kind === "interact_box") {
+                var ibBone = projected.node.bone || "";
+                var el2 = shared.bonesPort().findByName(ibBone);
+                if (!el2) {
+                  var e2 = new Error("element not found");
+                  e2._opResult = shared.fail('\u672A\u627E\u5230\u9AA8\u9ABC "' + ibBone + '"', []);
+                  throw e2;
+                }
+                projected.node.bone = el2.name;
+                projected.node._uuid = el2.uuid;
+                mp.set(config, partId, variantName, el2.uuid, "interact_box", name);
+              } else {
+                var connLocator = projected.node.locator || "";
+                var loc = shared.bonesPort().findByName(connLocator);
+                if (!loc) {
+                  var e3 = new Error("element not found");
+                  e3._opResult = shared.fail('\u672A\u627E\u5230 Locator "' + connLocator + '"', []);
+                  throw e3;
+                }
+                projected.node.locator = loc.name;
+                projected.node._marker_uuid = loc.uuid;
+                mp.set(config, partId, variantName, loc.uuid, "connector", name);
+              }
+              resultKey = name;
+              shared.setProp(sp[container], name, projected.node);
             }
-            resultKey = name;
-            shared.setProp(sp[container], name, projected.node);
-          }
-          if (mp.recalc) mp.recalc(config, partId, variantName);
-        }, { coalesce: false });
+            if (mp.recalc) mp.recalc(config, partId, variantName);
+          }, {
+            coalesce: false,
+            strict: !!options.strict,
+            source: options.source || "ui",
+            persist: options.persist !== false
+          });
+        } catch (e) {
+          if (e && e._opResult) return e._opResult;
+          throw e;
+        }
         return shared.ok({
           key: resultKey,
           changed: true,
@@ -21479,6 +21708,7 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
+      var ports = require_ports();
       var shared = require_shared();
       function setActive(config, options) {
         options = options || {};
@@ -21495,7 +21725,23 @@
           var variant = shared.variantOf(config, patch.activePartId, patch.activeVariantName);
           if (!variant) return shared.fail('\u53D8\u4F53 "' + patch.activeVariantName + '" \u4E0D\u5B58\u5728');
         }
+        if (patch.activePartId && !patch.activeVariantName) {
+          var part = shared.partOf(config, patch.activePartId);
+          var variants = Object.keys(part && part.variants || {});
+          patch.activeVariantName = variants.length > 0 ? variants[0] : "";
+        }
         shared.setUiState(config, patch);
+        try {
+          ports.get().events.emit("mm_config_changed", {
+            source: options.source || "ui",
+            label: "\u5207\u6362\u6D3B\u52A8\u4E0A\u4E0B\u6587",
+            kinds: [],
+            paths: [],
+            persist: false,
+            uiState: config._uiState
+          });
+        } catch (e) {
+        }
         return shared.ok({ changed: true, data: { _uiState: config._uiState } });
       }
       module.exports = { setActive };
@@ -29530,6 +29776,17 @@
           this._configChangedHandler = Blockbench.on("mm_config_changed", function(event) {
             refreshOutlinerIcons();
             self.markerVersion.v++;
+            var cfg = getConfig();
+            if (cfg && cfg._uiState) {
+              if (cfg._uiState.activePartId && cfg._uiState.activePartId !== self.activePartId) {
+                self.activePartId = cfg._uiState.activePartId;
+                self.selectedElement = null;
+              }
+              if (cfg._uiState.activeVariantName && cfg._uiState.activeVariantName !== self.activeVariantName) {
+                self.activeVariantName = cfg._uiState.activeVariantName;
+                self.selectedElement = null;
+              }
+            }
             if (!event || event.persist !== false) scheduleSave();
           });
           this._restoredHandler = Blockbench.on(undo.RESTORED_EVENT, function() {
@@ -30964,6 +31221,940 @@
     }
   });
 
+  // src/mcp/result.js
+  var require_result = __commonJS({
+    "src/mcp/result.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var PASS_FIELDS = [
+        "path",
+        "data",
+        "changed",
+        "before",
+        "after",
+        "reset_fields",
+        "dropped_fields",
+        "cleaned_references",
+        "unresolved_bones",
+        "warnings",
+        "action",
+        "key",
+        "part_id",
+        "variant",
+        "parent_part",
+        "parent_variant",
+        "parent_sub_part",
+        "introduced_issues"
+      ];
+      function copyDefined(target, source, fields) {
+        fields.forEach(function(key) {
+          if (source && source[key] !== void 0) target[key] = source[key];
+        });
+        return target;
+      }
+      function error(message, errors, extra) {
+        return Object.assign({
+          ok: false,
+          error: message || "\u64CD\u4F5C\u5931\u8D25",
+          errors: errors || []
+        }, extra || {});
+      }
+      function from(r, extra) {
+        if (!r || typeof r !== "object") return error("\u64CD\u4F5C\u6CA1\u6709\u8FD4\u56DE\u7ED3\u679C");
+        if (!r.ok) {
+          return copyDefined(Object.assign({
+            ok: false,
+            error: r.error || "\u64CD\u4F5C\u5931\u8D25",
+            errors: r.errors || []
+          }, extra || {}), r, PASS_FIELDS);
+        }
+        var out = { ok: true };
+        copyDefined(out, r, PASS_FIELDS);
+        if (r.changed === false) out.changed = false;
+        return Object.assign(out, extra || {});
+      }
+      function wrap(mcp, payload) {
+        if (mcp && typeof mcp.createJsonResult === "function") {
+          return mcp.createJsonResult(payload);
+        }
+        return payload;
+      }
+      module.exports = {
+        error,
+        from,
+        wrap
+      };
+    }
+  });
+
+  // src/mcp/tools.js
+  var require_tools = __commonJS({
+    "src/mcp/tools.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var persistence = require_persistence();
+      var ops = require_ops();
+      var doc = require_doc();
+      var ports = require_ports();
+      var em = require_element_markers();
+      var { collectIssues } = require_validate();
+      var { canExport } = require_export();
+      var result = require_result();
+      var ROOT_FIELDS = {
+        parts: true,
+        namespace: true,
+        modelFile: true,
+        contentPackPath: true,
+        dependencyPaths: true,
+        packMeta: true,
+        $schema_version: true,
+        _uiState: true
+      };
+      var CONTAINER_KIND = {
+        parts: "part",
+        variants: "variant",
+        sub_parts: "sub_part",
+        hit_boxes: "hit_box",
+        interact_boxes: "interact_box",
+        connectors: "connector",
+        subsystems: "subsystem"
+      };
+      var lastIssues = [];
+      function resetState() {
+        lastIssues = [];
+      }
+      function isObject(v) {
+        return v !== null && typeof v === "object" && !Array.isArray(v);
+      }
+      function configOrError() {
+        var config = persistence.getConfig();
+        if (!config) {
+          return { error: result.error("\u6CA1\u6709\u6253\u5F00\u7684\u5DE5\u7A0B\u6216\u914D\u7F6E\u4E0D\u53EF\u7528", [{
+            path: [],
+            code: "no_project",
+            expected: "\u5DF2\u6253\u5F00\u7684 Project",
+            got: null,
+            hint: "\u5148\u5728 Blockbench \u6253\u5F00\u5DE5\u7A0B\u5E76\u8FDB\u5165\u300C\u96F6\u4EF6\u5B9A\u4E49\u300D\u6A21\u5F0F"
+          }]) };
+        }
+        return { config };
+      }
+      function activeOf(config) {
+        var ui = config && config._uiState || {};
+        return {
+          part: ui.activePartId || "",
+          variant: ui.activeVariantName || ""
+        };
+      }
+      function resolvePath(config, input) {
+        var parsed = doc.address.parsePath(input);
+        if (!parsed.ok) return parsed;
+        var segments = parsed.segments;
+        if (segments.length === 0) return { ok: true, segments };
+        if (ROOT_FIELDS[segments[0]]) return { ok: true, segments };
+        var active = activeOf(config);
+        if (!active.part || !active.variant) {
+          return {
+            ok: false,
+            errors: [{
+              path: segments,
+              code: "no_project",
+              expected: "active part/variant",
+              got: active.part + "/" + active.variant,
+              hint: "\u76F8\u5BF9\u8DEF\u5F84\u9700\u8981 _uiState \u91CC\u6709\u6D3B\u52A8\u96F6\u4EF6\u4E0E\u53D8\u4F53\uFF1B\u53EF\u5148\u8C03\u7528 set_active"
+            }]
+          };
+        }
+        return {
+          ok: true,
+          segments: ["parts", active.part, "variants", active.variant].concat(segments)
+        };
+      }
+      function pointerOf(segments) {
+        return "/" + segments.map(function(s) {
+          return String(s).replace(/~/g, "~0").replace(/\//g, "~1");
+        }).join("/");
+      }
+      function issueKey(p) {
+        return JSON.stringify([
+          p && p.severity,
+          p && p.code,
+          p && p.message,
+          p && p.path ? [
+            p.path.scope,
+            p.path.partId,
+            p.path.variantName,
+            p.path.subPartKey,
+            p.path.itemKey,
+            p.path.field
+          ] : null
+        ]);
+      }
+      function diffIssues(after, before) {
+        var seen = {};
+        (before || []).forEach(function(p) {
+          seen[issueKey(p)] = true;
+        });
+        return (after || []).filter(function(p) {
+          return !seen[issueKey(p)];
+        });
+      }
+      function safeIssues(config) {
+        try {
+          return collectIssues(config) || [];
+        } catch (e) {
+          return [];
+        }
+      }
+      function mapIssue(p) {
+        return {
+          severity: p.severity,
+          code: p.code,
+          message: p.message,
+          path: p.path
+        };
+      }
+      function beginEdit(config) {
+        return safeIssues(config);
+      }
+      function finishEdit(config, opResult, beforeIssues) {
+        var after = safeIssues(config);
+        lastIssues = after;
+        if (opResult && opResult.ok) {
+          opResult.introduced_issues = diffIssues(after, beforeIssues);
+        }
+        return opResult;
+      }
+      function kindAt(segments) {
+        var n = segments.length;
+        if (n === 0) return null;
+        if (n >= 2 && CONTAINER_KIND[segments[n - 2]]) return CONTAINER_KIND[segments[n - 2]];
+        if (CONTAINER_KIND[segments[n - 1]]) return CONTAINER_KIND[segments[n - 1]];
+        return null;
+      }
+      function isContainer(segments) {
+        var n = segments.length;
+        return n > 0 && !!CONTAINER_KIND[segments[n - 1]];
+      }
+      function projectNode(node, kind) {
+        if (!kind || !isObject(node)) return { value: node, unresolved: [] };
+        var out = doc.projection.projectOut(node, { kind }, { for: "read" });
+        return {
+          value: out && out.definition !== void 0 ? out.definition : node,
+          unresolved: out && out.unresolved || []
+        };
+      }
+      function projectValue(value, segments) {
+        var kind = kindAt(segments);
+        if (!kind) return { value, unresolved: [] };
+        if (isContainer(segments) && isObject(value)) {
+          var mapped = {};
+          var unresolved = [];
+          Object.keys(value).forEach(function(key) {
+            var projected = projectNode(value[key], kind);
+            mapped[key] = projected.value;
+            unresolved = unresolved.concat(projected.unresolved);
+          });
+          return { value: mapped, unresolved };
+        }
+        return projectNode(value, kind);
+      }
+      function getContext() {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var active = activeOf(config);
+        var part = config.parts && config.parts[active.part];
+        var variants = part && part.variants ? Object.keys(part.variants) : [];
+        var selected = [];
+        if (typeof Outliner !== "undefined" && Outliner && Array.isArray(Outliner.selected)) {
+          selected = Outliner.selected;
+        }
+        var selection = selected.map(function(el) {
+          var marker = null;
+          try {
+            marker = em.getMarker(config, active.part, active.variant, el.uuid);
+          } catch (e) {
+            marker = null;
+          }
+          return { uuid: el.uuid, name: el.name, marker };
+        });
+        return {
+          ok: true,
+          project: true,
+          active,
+          parts: Object.keys(config.parts || {}),
+          variants,
+          selection
+        };
+      }
+      function readNode(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var path = resolvePath(config, args.path);
+        if (!path.ok) return result.error("\u8DEF\u5F84\u65E0\u6548", path.errors || []);
+        var read = doc.read(config, path.segments);
+        if (!read.ok) return result.error("\u8BFB\u53D6\u5931\u8D25", read.errors || []);
+        var value = read.value;
+        var unresolved = [];
+        if (args.as === "definition") {
+          var projected = projectValue(value, path.segments);
+          value = projected.value;
+          unresolved = projected.unresolved;
+        }
+        return {
+          ok: true,
+          path: path.segments,
+          kind: read.kind,
+          value,
+          unresolved_bones: unresolved
+        };
+      }
+      function validate(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var can;
+        try {
+          can = canExport(config);
+        } catch (e) {
+          return result.error("\u6821\u9A8C\u5931\u8D25: " + (e && e.message ? e.message : e));
+        }
+        var all2 = can.issues || [];
+        var out = args.only_introduced ? diffIssues(all2, lastIssues) : all2;
+        lastIssues = all2;
+        return {
+          ok: true,
+          count: out.length,
+          issues: out.map(mapIssue),
+          export_ok: !!can.ok,
+          errors: (can.errors || []).length,
+          warnings: (can.warnings || []).length
+        };
+      }
+      function setNode(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var path = resolvePath(config, args.path);
+        if (!path.ok) return result.error("\u8DEF\u5F84\u65E0\u6548", path.errors || []);
+        var before = beginEdit(config);
+        var r = ops.setField(config, {
+          path: path.segments,
+          value: args.value,
+          source: "mcp",
+          persist: false,
+          strict: true,
+          coalesce: false,
+          label: "MCP \u4FEE\u6539 " + pointerOf(path.segments)
+        });
+        finishEdit(config, r, before);
+        return result.from(r, { path: r && r.path || path.segments });
+      }
+      function removeNode(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var path = resolvePath(config, args.path);
+        if (!path.ok) return result.error("\u8DEF\u5F84\u65E0\u6548", path.errors || []);
+        var segments = path.segments.slice();
+        if (segments.length >= 2 && segments[segments.length - 2] === "hit_boxes") {
+          var key = segments[segments.length - 1];
+          var bone = ports.get().bones.findByName(key);
+          if (bone && bone.uuid) segments[segments.length - 1] = bone.uuid;
+        }
+        var before = beginEdit(config);
+        var r = ops.removeNode(config, {
+          path: segments,
+          cascade: args.cascade,
+          source: "mcp",
+          persist: false,
+          strict: true
+        });
+        finishEdit(config, r, before);
+        return result.from(r, { path: segments });
+      }
+      function findHitBoxSubPart(variant, uuid) {
+        if (!variant || !isObject(variant.sub_parts)) return null;
+        var keys = Object.keys(variant.sub_parts);
+        for (var i = 0; i < keys.length; i++) {
+          var sp = variant.sub_parts[keys[i]];
+          if (sp && isObject(sp.hit_boxes) && sp.hit_boxes[uuid]) return keys[i];
+        }
+        return null;
+      }
+      function findInteractBoxKey(variant, uuid, elementName) {
+        if (!variant || !isObject(variant.sub_parts)) return null;
+        var spKeys = Object.keys(variant.sub_parts);
+        for (var i = 0; i < spKeys.length; i++) {
+          var sp = variant.sub_parts[spKeys[i]];
+          if (!sp || !isObject(sp.interact_boxes)) continue;
+          var keys = Object.keys(sp.interact_boxes);
+          for (var j = 0; j < keys.length; j++) {
+            var ib = sp.interact_boxes[keys[j]];
+            if (ib && (ib._uuid === uuid || !ib._uuid && ib.bone === elementName)) return keys[j];
+          }
+        }
+        return null;
+      }
+      function findConnectorKey(variant, uuid, elementName) {
+        if (!variant || !isObject(variant.sub_parts)) return null;
+        var spKeys = Object.keys(variant.sub_parts);
+        for (var i = 0; i < spKeys.length; i++) {
+          var sp = variant.sub_parts[spKeys[i]];
+          if (!sp || !isObject(sp.connectors)) continue;
+          var keys = Object.keys(sp.connectors);
+          for (var j = 0; j < keys.length; j++) {
+            var conn = sp.connectors[keys[j]];
+            if (conn && (conn._marker_uuid === uuid || !conn._marker_uuid && conn.locator === elementName)) return keys[j];
+          }
+        }
+        return null;
+      }
+      function bindMarker(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var active = activeOf(config);
+        var variant = config.parts && config.parts[active.part] && config.parts[active.part].variants && config.parts[active.part].variants[active.variant];
+        if (!variant) return result.error("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728\uFF0C\u8BF7\u5148 set_active");
+        var element = ports.get().bones.findByUuid(args.uuid);
+        if (!element) {
+          return result.error('\u6A21\u578B\u5143\u7D20 "' + args.uuid + '" \u4E0D\u5B58\u5728', [{
+            path: [],
+            code: "not_found",
+            expected: "Group / Locator UUID",
+            got: args.uuid,
+            hint: "\u5148\u521B\u5EFA\u6A21\u578B\u5143\u7D20\uFF0C\u6216\u4F20\u6B63\u786E\u7684 uuid"
+          }]);
+        }
+        var configRef = args.config_ref;
+        if (!configRef) {
+          if (args.type === "hit_box") configRef = findHitBoxSubPart(variant, args.uuid);
+          else if (args.type === "interact_box") configRef = findInteractBoxKey(variant, args.uuid, element.name);
+          else if (args.type === "connector") configRef = findConnectorKey(variant, args.uuid, element.name);
+        }
+        if (!configRef) {
+          var hint = args.type === "sub_part" ? "sub_part \u5FC5\u987B\u4F20 config_ref\uFF08\u5B50\u96F6\u4EF6 key\uFF09" : "\u5148 add_instance \u521B\u5EFA\u914D\u7F6E\u6761\u76EE\uFF0C\u518D bind_marker";
+          return result.error("\u65E0\u6CD5\u63A8\u5BFC config_ref", [{
+            path: [],
+            code: "not_found",
+            expected: args.type + " \u914D\u7F6E\u6761\u76EE",
+            got: args.uuid,
+            hint
+          }]);
+        }
+        var before = beginEdit(config);
+        var r = ops.bindMarker(config, {
+          partId: active.part,
+          variantName: active.variant,
+          uuid: args.uuid,
+          type: args.type,
+          configRef,
+          source: "mcp",
+          persist: false,
+          strict: true
+        });
+        finishEdit(config, r, before);
+        return result.from(r, { uuid: args.uuid, type: args.type, config_ref: configRef });
+      }
+      function setActive(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var r = ops.setActive(config, {
+          partId: args.part,
+          variantName: args.variant,
+          source: "mcp"
+        });
+        return result.from(r, { active: activeOf(config) });
+      }
+      function importPart(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var definition = args.definition === void 0 ? {} : args.definition;
+        if (!isObject(definition)) {
+          return result.error("definition \u5FC5\u987B\u662F\u5BF9\u8C61", [{
+            path: ["parts", args.part_id],
+            code: "type_mismatch",
+            expected: "object",
+            got: typeof definition
+          }]);
+        }
+        var before = beginEdit(config);
+        var r = ops.importPart(config, {
+          partId: args.part_id,
+          definition,
+          mode: args.mode,
+          oldKey: args.old_key,
+          source: "mcp",
+          persist: false,
+          strict: true
+        });
+        finishEdit(config, r, before);
+        return result.from(r, { part_id: args.part_id, action: r && r.action });
+      }
+      function importVariant(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var active = activeOf(config);
+        var partId = args.parent_part || active.part;
+        if (!partId) return result.error("\u7F3A\u5C11 parent_part\uFF0C\u4E14\u5F53\u524D\u6CA1\u6709\u6D3B\u52A8\u96F6\u4EF6");
+        var before = beginEdit(config);
+        var r = ops.importVariant(config, {
+          partId,
+          variantName: args.variant,
+          definition: args.definition,
+          mode: args.mode,
+          oldKey: args.old_key,
+          source: "mcp",
+          persist: false,
+          strict: true
+        });
+        finishEdit(config, r, before);
+        return result.from(r, {
+          parent_part: partId,
+          variant: args.variant,
+          action: r && r.action
+        });
+      }
+      function importSubPart(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var active = activeOf(config);
+        if (!active.part) return result.error("\u5F53\u524D\u6CA1\u6709\u6D3B\u52A8\u96F6\u4EF6\uFF0C\u8BF7\u5148 set_active");
+        var variantName = args.parent_variant || active.variant;
+        var before = beginEdit(config);
+        var r = ops.importSubPart(config, {
+          partId: active.part,
+          variantName,
+          spKey: args.key,
+          definition: args.definition === void 0 ? {} : args.definition,
+          mode: args.mode,
+          oldKey: args.old_key,
+          source: "mcp",
+          persist: false,
+          strict: true
+        });
+        finishEdit(config, r, before);
+        return result.from(r, {
+          key: args.key,
+          parent_variant: variantName,
+          action: r && r.action
+        });
+      }
+      function importSubsystem(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var active = activeOf(config);
+        if (!active.part) return result.error("\u5F53\u524D\u6CA1\u6709\u6D3B\u52A8\u96F6\u4EF6\uFF0C\u8BF7\u5148 set_active");
+        var before = beginEdit(config);
+        var r = ops.importSubsystem(config, {
+          partId: active.part,
+          variantName: active.variant,
+          spKey: args.parent_sub_part,
+          instanceName: args.key,
+          definition: args.definition,
+          mode: args.mode,
+          oldKey: args.old_key,
+          source: "mcp",
+          persist: false,
+          strict: true
+        });
+        finishEdit(config, r, before);
+        return result.from(r, {
+          key: args.key,
+          parent_sub_part: args.parent_sub_part,
+          action: r && r.action
+        });
+      }
+      function addInstance(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var parent = resolvePath(config, args.parent_path);
+        if (!parent.ok) return result.error("\u7236\u8DEF\u5F84\u65E0\u6548", parent.errors || []);
+        var definition = args.definition === void 0 ? {} : args.definition;
+        if (!isObject(definition)) {
+          return result.error("definition \u5FC5\u987B\u662F\u5BF9\u8C61", [{
+            path: parent.segments,
+            code: "type_mismatch",
+            expected: "object",
+            got: typeof definition
+          }]);
+        }
+        if (args.kind === "hit_box" && !args.key) {
+          return result.error("hit_box \u5FC5\u987B\u7ED9 key\uFF08\u9AA8\u9ABC\u540D\uFF09", [{
+            path: parent.segments,
+            code: "missing_required",
+            expected: "key",
+            got: "",
+            hint: "key \u662F\u6A21\u578B\u91CC\u7684\u9AA8\u9ABC\u540D"
+          }]);
+        }
+        if (args.kind === "interact_box" && !definition.bone) {
+          return result.error("interact_box \u7684 definition \u5FC5\u987B\u7ED9 bone", [{
+            path: parent.segments,
+            code: "missing_required",
+            expected: "definition.bone",
+            got: ""
+          }]);
+        }
+        if (args.kind === "connector" && !definition.locator) {
+          return result.error("connector \u7684 definition \u5FC5\u987B\u7ED9 locator", [{
+            path: parent.segments,
+            code: "missing_required",
+            expected: "definition.locator",
+            got: ""
+          }]);
+        }
+        var before = beginEdit(config);
+        var r = ops.addInstance(config, parent.segments, args.kind, args.key, definition, {
+          source: "mcp",
+          persist: false,
+          strict: true
+        });
+        finishEdit(config, r, before);
+        return result.from(r, {
+          path: r && r.path || parent.segments.concat([args.key || ""]),
+          key: r && r.key
+        });
+      }
+      var TOOLS = [
+        {
+          name: "get_context",
+          description: "Read the MachineMax project context: active part/variant, part ids, variants, and selection.",
+          run: getContext
+        },
+        {
+          name: "read_node",
+          description: 'Read a config node by segment array or JSON Pointer. Relative paths are resolved against the active part/variant. as="definition" projects UUIDs to bone names and strips internal fields; it keeps sub_parts as a map.',
+          run: readNode
+        },
+        {
+          name: "validate",
+          description: "Run the export gate (business validation + schema required/enum/range) and return structured issues. only_introduced=true diffs against the previous tool result.",
+          run: validate
+        },
+        {
+          name: "set_node",
+          description: "Write one field or map entry through ops.setField. Strict types (no implicit coercion), path addressing, side effects, and native undo. Does not save the project.",
+          run: setNode
+        },
+        {
+          name: "remove_node",
+          description: "Delete a config node and clean references that point to it (markers, signal targets, power links). cascade=false keeps references.",
+          run: removeNode
+        },
+        {
+          name: "bind_marker",
+          description: "Bind a model element (Group/Locator) to sub_part / hit_box / interact_box / connector. hit_box/interact_box/connector config_ref is derived from context when omitted.",
+          run: bindMarker
+        },
+        {
+          name: "set_active",
+          description: "Switch the active part/variant context. This is view state, not an undoable project edit.",
+          run: setActive
+        },
+        {
+          name: "import_part",
+          description: 'Replace a whole part definition (mode=create/replace/rename). Omitted fields reset to defaults; read_node(as="definition") first for a lossless edit.',
+          run: importPart
+        },
+        {
+          name: "import_variant",
+          description: "Replace a whole variant definition. Omitted fields reset to defaults; replaces its whole sub_parts subtree.",
+          run: importVariant
+        },
+        {
+          name: "import_sub_part",
+          description: "Replace a whole sub_part definition. The key must be canonical: sub_part.<namespace>.<name>. Omitted fields reset to defaults.",
+          run: importSubPart
+        },
+        {
+          name: "import_subsystem",
+          description: "Replace a whole subsystem definition under parent_sub_part. The key must be the full translation key; type must be machine_max:<type>.",
+          run: importSubsystem
+        },
+        {
+          name: "add_instance",
+          description: "Create one small instance (hit_box / interact_box / connector) under a sub_part. Requires an existing Group/Locator; config_ref is bound automatically.",
+          run: addInstance
+        }
+      ];
+      var BY_NAME = {};
+      TOOLS.forEach(function(tool) {
+        BY_NAME[tool.name] = tool;
+      });
+      function all() {
+        return TOOLS.slice();
+      }
+      function get(name) {
+        return BY_NAME[name] || null;
+      }
+      function execute(name, args, mcp) {
+        var tool = get(name);
+        if (!tool) {
+          return result.wrap(mcp, result.error("\u672A\u77E5\u5DE5\u5177: " + name, [{
+            path: [],
+            code: "not_found",
+            expected: "\u5DF2\u6CE8\u518C\u7684\u5DE5\u5177",
+            got: name
+          }]));
+        }
+        try {
+          var payload = tool.run(args || {}, mcp);
+          return result.wrap(mcp, payload);
+        } catch (e) {
+          if (e && e.code) {
+            return result.wrap(mcp, result.error(e.message, [{
+              path: [],
+              code: e.code,
+              expected: "\u53EF\u6267\u884C\u7684\u7F16\u8F91",
+              got: "",
+              hint: e.message
+            }]));
+          }
+          return result.wrap(mcp, result.error("\u5DE5\u5177\u6267\u884C\u5931\u8D25: " + (e && e.message ? e.message : e)));
+        }
+      }
+      module.exports = {
+        all,
+        get,
+        execute,
+        resetState,
+        _internals: {
+          resolvePath,
+          projectValue,
+          diffIssues
+        }
+      };
+    }
+  });
+
+  // src/mcp/params.js
+  var require_params = __commonJS({
+    "src/mcp/params.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      function pathSchema(z) {
+        return z.union([
+          z.array(z.union([z.string(), z.number()])),
+          z.string()
+        ]);
+      }
+      var MODE = ["create", "replace", "rename", "reject"];
+      var SMALL_KIND = ["hit_box", "interact_box", "connector"];
+      var MARKER_TYPE = ["sub_part", "hit_box", "interact_box", "connector"];
+      function build(z) {
+        return {
+          get_context: z.object({}),
+          read_node: z.object({
+            path: pathSchema(z),
+            as: z.enum(["raw", "definition"]).optional()
+          }),
+          validate: z.object({
+            only_introduced: z.boolean().optional()
+          }),
+          set_node: z.object({
+            path: pathSchema(z),
+            value: z.any()
+          }),
+          remove_node: z.object({
+            path: pathSchema(z),
+            cascade: z.boolean().optional()
+          }),
+          bind_marker: z.object({
+            uuid: z.string(),
+            type: z.enum(MARKER_TYPE),
+            config_ref: z.string().optional()
+          }),
+          set_active: z.object({
+            part: z.string(),
+            variant: z.string().optional()
+          }),
+          import_part: z.object({
+            part_id: z.string(),
+            definition: z.any().optional(),
+            mode: z.enum(MODE).optional(),
+            old_key: z.string().optional()
+          }),
+          import_variant: z.object({
+            variant: z.string(),
+            definition: z.any(),
+            parent_part: z.string().optional(),
+            mode: z.enum(MODE).optional(),
+            old_key: z.string().optional()
+          }),
+          import_sub_part: z.object({
+            key: z.string(),
+            definition: z.any().optional(),
+            parent_variant: z.string().optional(),
+            mode: z.enum(MODE).optional(),
+            old_key: z.string().optional()
+          }),
+          import_subsystem: z.object({
+            key: z.string(),
+            definition: z.any(),
+            parent_sub_part: z.string(),
+            mode: z.enum(MODE).optional(),
+            old_key: z.string().optional()
+          }),
+          add_instance: z.object({
+            parent_path: pathSchema(z),
+            kind: z.enum(SMALL_KIND),
+            key: z.string().optional(),
+            definition: z.any().optional()
+          })
+        };
+      }
+      module.exports = {
+        build,
+        MODE,
+        SMALL_KIND,
+        MARKER_TYPE
+      };
+    }
+  });
+
+  // src/mcp/index.js
+  var require_mcp = __commonJS({
+    "src/mcp/index.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var tools = require_tools();
+      var params = require_params();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("MCP");
+      var PREFIX = "machine_max_bb_plugin_";
+      var CONDITION = { project: true, modes: ["machine_max_part"] };
+      var queueEntry = null;
+      var disposers = [];
+      var activeMcp = null;
+      function toolName(name) {
+        return PREFIX + name;
+      }
+      function registerMcpTools() {
+        if (queueEntry) return true;
+        if (typeof globalThis === "undefined") {
+          log2.warn("registerMcpTools: \u5F53\u524D\u73AF\u5883\u6CA1\u6709 globalThis");
+          return false;
+        }
+        if (!Array.isArray(globalThis.MCP_QUEUE)) {
+          globalThis.MCP_QUEUE = [];
+        }
+        queueEntry = {
+          plugin: "machine_max_bb_plugin",
+          setup: function(mcp) {
+            setupTools(mcp);
+          }
+        };
+        globalThis.MCP_QUEUE.push(queueEntry);
+        log2.info("registerMcpTools: \u5DF2\u52A0\u5165 MCP_QUEUE\uFF08" + tools.all().length + " \u4E2A\u5DE5\u5177\uFF09");
+        return true;
+      }
+      function setupTools(mcp) {
+        if (!mcp || typeof mcp.registerTool !== "function") {
+          log2.warn("setupTools: MCP.registerTool \u4E0D\u53EF\u7528\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        if (!mcp.z || typeof mcp.z.object !== "function") {
+          log2.warn("setupTools: MCP.z \u4E0D\u53EF\u7528\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        activeMcp = mcp;
+        disposers = [];
+        var schemas = params.build(mcp.z);
+        tools.all().forEach(function(tool) {
+          var name = toolName(tool.name);
+          if (typeof mcp.unregisterTool === "function") {
+            try {
+              mcp.unregisterTool(name);
+            } catch (e) {
+              log2.debug("setupTools: \u6CE8\u9500\u65E7\u5DE5\u5177\u5931\u8D25\uFF08\u5FFD\u7565\uFF09: " + name);
+            }
+          }
+          var dispose = mcp.registerTool({
+            name,
+            description: tool.description,
+            params: schemas[tool.name],
+            condition: CONDITION,
+            execute: function(args) {
+              return tools.execute(tool.name, args, mcp);
+            }
+          });
+          if (typeof dispose === "function") {
+            disposers.push(dispose);
+          } else if (dispose && typeof dispose.dispose === "function") {
+            disposers.push(function() {
+              dispose.dispose();
+            });
+          }
+        });
+        log2.info("setupTools: \u5DF2\u6CE8\u518C " + tools.all().length + " \u4E2A MCP \u5DE5\u5177");
+      }
+      function unregisterMcpTools() {
+        if (activeMcp && typeof activeMcp.unregisterTool === "function") {
+          tools.all().forEach(function(tool) {
+            try {
+              activeMcp.unregisterTool(toolName(tool.name));
+            } catch (e) {
+              log2.debug("unregisterMcpTools: \u6CE8\u9500\u5931\u8D25\uFF08\u5FFD\u7565\uFF09: " + toolName(tool.name));
+            }
+          });
+        }
+        disposers.forEach(function(dispose) {
+          try {
+            if (typeof dispose === "function") dispose();
+          } catch (e) {
+            log2.warn("unregisterMcpTools: disposer \u5931\u8D25: " + (e && e.message));
+          }
+        });
+        disposers = [];
+        activeMcp = null;
+        if (queueEntry && typeof globalThis !== "undefined" && Array.isArray(globalThis.MCP_QUEUE)) {
+          var index = globalThis.MCP_QUEUE.indexOf(queueEntry);
+          if (index >= 0) globalThis.MCP_QUEUE.splice(index, 1);
+        }
+        queueEntry = null;
+        tools.resetState();
+        log2.info("unregisterMcpTools: \u5DF2\u6CE8\u9500 MCP \u5DE5\u5177");
+      }
+      module.exports = {
+        registerMcpTools,
+        unregisterMcpTools,
+        PREFIX,
+        CONDITION,
+        _internals: { setupTools }
+      };
+    }
+  });
+
   // src/plugin.js
   init_define_BUILTIN_CONNECTORS();
   init_define_BUILTIN_CONTROL_GROUPS();
@@ -31029,6 +32220,12 @@
       console.log("[MM][Plugin] \u9636\u6BB53: registerDragImport (\u8C03\u7528\u540E)");
       console.log("[MM][Plugin] \u9636\u6BB54: registerMachineMaxMenu");
       registerMachineMaxMenu();
+      console.log("[MM][Plugin] \u9636\u6BB54a: registerMcpTools");
+      try {
+        require_mcp().registerMcpTools();
+      } catch (e) {
+        log.warn("MCP \u5DE5\u5177\u6CE8\u518C\u5931\u8D25\uFF08\u4E0D\u5F71\u54CD\u63D2\u4EF6\u5176\u5B83\u529F\u80FD\uFF09", e && e.message);
+      }
       console.log("[MM][Plugin] \u9636\u6BB55: showToast");
       showToast('MachineMax \u63D2\u4EF6\u5DF2\u52A0\u8F7D\uFF0C\u5728\u6A21\u5F0F\u680F\u4E2D\u9009\u62E9 "\u96F6\u4EF6\u5B9A\u4E49" \u5F00\u59CB\u4F7F\u7528', "positive");
       log.info("\u63D2\u4EF6\u521D\u59CB\u5316\u5B8C\u6210");
@@ -31036,6 +32233,11 @@
     },
     onunload() {
       log.info("\u5378\u8F7D MachineMax Blockbench \u63D2\u4EF6");
+      try {
+        require_mcp().unregisterMcpTools();
+      } catch (e) {
+        log.warn("MCP \u5DE5\u5177\u6CE8\u9500\u5931\u8D25\uFF08\u5FFD\u7565\uFF09", e && e.message);
+      }
       unregisterUndoBridge();
       unregisterActions();
       unregisterValidation();

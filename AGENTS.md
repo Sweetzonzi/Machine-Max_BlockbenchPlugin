@@ -38,6 +38,11 @@ plugin.js                      # 插件入口（103行）
   │     ├── import.js            # 文件读取 + 带注释 JSON 解析
   │     ├── pack.js              # 内容包创建/打开 + 依赖链解析
   │     └── validate.js          # collectIssues（P4 从 mode/ 下沉）
+  ├── mcp/                       # MCP 工具层（P5；docs/12）
+  │     ├── index.js             # MCP_QUEUE 注册/注销 + 生命周期
+  │     ├── tools.js             # 12 个工具实现（只读/细粒度/整件/validate）
+  │     ├── params.js            # MCP.z 参数形状
+  │     └── result.js            # OpResult → MCP 返回信封
   ├── mode.js                    # 模式生命周期 + 注册（344行）
   │     ├── core/element_markers.js  # 标记类型系统 + 缺失配置修复（约990行）
   │     ├── core/content_pack.js
@@ -47,7 +52,7 @@ plugin.js                      # 插件入口（103行）
   │     ├── mode/patches.js      # 原型猴子补丁 + 右键菜单（623行）
   │     ├── mode/validation_check.js # Problems → 原生清单适配
   │     ├── mode/toolbar.js      # 工具栏 Action 注册（185行）
-  │     └── ui/App.vue.js        # Vue 属性面板（懒加载，1836行；计算属性只读）
+  │     └── ui/App.vue.js        # Vue 属性面板（懒加载，约1844行；计算属性只读）
   │           ├── ui/SubPartPanel.vue.js
   │           ├── ui/HitBoxPanel.vue.js
   │           ├── ui/SignalFlowPanel.vue.js  # 信号流图面板（579行）
@@ -113,8 +118,8 @@ if (typeof module !== 'undefined' && module.exports) {
   结构性动作与 MCP 调用一律 `coalesce:false`（docs/13 §6.4）
 - 新增变更入口后自测：改一次 → `Ctrl+Z` 能回退、`Ctrl+Y` 能重做
 - 设计文档：[docs/11-接入Blockbench原生撤销.md](./docs/11-接入Blockbench原生撤销.md)
-- 分层约定（已落地 P1–P4）：[docs/13-业务逻辑层与配置文档API.md](./docs/13-业务逻辑层与配置文档API.md)
-- MCP 工具设计（P5，依赖 docs/13）：[docs/12-MCP工具接入.md](./docs/12-MCP工具接入.md)
+- 分层约定（P1–P5 已落地）：[docs/13-业务逻辑层与配置文档API.md](./docs/13-业务逻辑层与配置文档API.md)
+- MCP 工具（P5 已实现）：[docs/12-MCP工具接入.md](./docs/12-MCP工具接入.md)
 
 ### 测试
 - 测试文件位于 `test/`，模式 `test/**/*.test.js`
@@ -128,3 +133,4 @@ if (typeof module !== 'undefined' && module.exports) {
 - [src/mode/AGENTS.md](./src/mode/AGENTS.md) — 模式层
 - [src/codec/AGENTS.md](./src/codec/AGENTS.md) — 序列化/反序列化层
 - [src/services/AGENTS.md](./src/services/AGENTS.md) — 服务层（导出闸门）
+- [src/mcp/AGENTS.md](./src/mcp/AGENTS.md) — MCP 工具层（协议适配）

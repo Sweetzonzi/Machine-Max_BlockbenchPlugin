@@ -1,8 +1,14 @@
 # MCP 工具接入（Blockbench MCP Tools）
 
-> 状态：**设计稿（待实现）** · 日期：2026-10-21 · 范围：`src/mcp/`（新增）+ `src/plugin.js`（两行接入）
-> 目标版本：v0.5.0 · 前置依赖：[docs/13-业务逻辑层与配置文档API.md](./13-业务逻辑层与配置文档API.md) **v3.2**（P1–P4 必须先落地）
+> 状态：**已实现（2026-10-21）** · 范围：`src/mcp/`（新增）+ `src/plugin.js`（接入）· 目标版本：v0.5.0
+> 前置依赖：[docs/13-业务逻辑层与配置文档API.md](./13-业务逻辑层与配置文档API.md) **v3.2**（P1–P4 已落地）
 > 参照：[docs/11-接入Blockbench原生撤销.md](./11-接入Blockbench原生撤销.md) / [docs/08-序列化反序列化-Codec体系重构.md](./08-序列化反序列化-Codec体系重构.md) / [docs/10-校验与错误提示重构实现计划.md](./10-校验与错误提示重构实现计划.md)
+>
+> **实现备注（与设计稿的差异）**
+> - `src/mcp/` 四文件与工具矩阵按本文落地；`bun test` 覆盖只读、`set_node`、`remove_node`、`bind_marker`、`set_active`、四个 `import_*`、`add_instance`、`validate`、注册/注销，共 34 例（`test/mcp/mcp.test.js`）。
+> - 为满足 §5.3，本轮补齐了 ops：`persist:false` / `strict:true` 透传、`import_*` 的 `duplicate_name` 与 `mode:'rename'`、`add_instance` 的 key（配置键）与元素名（`definition.bone` / `definition.locator`）分离。
+> - `introduced_issues` 在 MCP 工具层用 `collectIssues` 前后 diff（正文 §7.2 的“同一撤销记录内”表述按实现收敛；不改变撤销粒度）。
+> - MCP 插件未安装时 `registerMcpTools()` 只创建一个空的 `MCP_QUEUE` 条目，插件其它功能不受影响。
 
 ---
 
@@ -254,8 +260,8 @@ condition: { project: true, modes: ['machine_max_part'] }
 |---|---|
 | `parent_path` | 子零件路径：完整段数组（如 `["parts","hull","variants","default","sub_parts","sub_part.machine_max.chassis"]`）、等价 Pointer，或相对段 `["sub_parts","<sp>"]` |
 | `kind` | `hit_box` \| `interact_box` \| `connector` |
-| `key` | 可选：`hit_box` 为骨骼名（必填），`interact_box`/`connector` 省略则自动命名 |
-| `definition` | 该 kind 的必填字段（`hit_box` 需 `type`，`interact_box` 需 `bone`，`connector` 需 `locator`） |
+| `key` | 可选：`hit_box` 为骨骼名（必填）；`interact_box`/`connector` 是**配置键**，省略则自动命名 |
+| `definition` | 该 kind 的必填字段（`hit_box` 需 `type`，`interact_box` 需 `bone`，`connector` 需 `locator`）。元素名取自 `definition.bone` / `definition.locator`，不再与配置键复用 |
 
 `part` / `variant` / `sub_part` / `subsystem` 的新建走各自的 `import_*` + `mode:'create'`，不再有 `add_instance` 分支。
 
@@ -327,10 +333,12 @@ async execute({ path, value }) {
 
 ### 7.2 编辑后自检
 
-每次编辑在**同一个撤销记录内**完成后，立即跑两件事：
+每次编辑完成后（撤销记录已提交），立即跑两件事：
 
 1. 用 `collectIssues(config)` 重新收集问题；
 2. 与编辑前的问题集合 diff，只回本次**新引入**的问题（按键 `severity|code|path|message` 判等）。
+
+实现位置是 `src/mcp/tools.js` 的 `beginEdit` / `finishEdit`：工具层在调用 ops 前后各收集一次，结果写入 `introduced_issues`；不改变撤销粒度，也不把校验写进 op。
 
 这样「改完发现引用悬空」「sub_part 没有起始骨骼」能在工具返回里直接看到，而不必等导出才暴露。`validate({only_introduced: true})` 是同一实现的独立入口。
 

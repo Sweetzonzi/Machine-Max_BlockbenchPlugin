@@ -75,14 +75,20 @@ function applySideEffect(config, segments, oldValue, newValue) {
     if (kind === 'subsystem' && field === 'type') {
         var defaults = ssTypes.getTypeDefaults(newValue) || {};
         var allowed = ssTypes.getTypeSpecificFields(newValue) || [];
+        var dropped = [];
         Object.keys(node).forEach(function (key) {
             if (key === 'type' || key === 'definition') return;
-            if (allowed.indexOf(key) < 0) delete node[key];
+            if (allowed.indexOf(key) < 0) {
+                dropped.push(key);
+                delete node[key];
+            }
         });
         Object.keys(defaults).forEach(function (key) {
             if (!(key in node)) node[key] = shared.clone(defaults[key]);
         });
+        return { dropped_fields: dropped };
     }
+    return null;
 }
 
 function ensureParentObjects(config, segments) {
@@ -133,25 +139,33 @@ function setField(config, options) {
                 e._opResult = shared.fromDoc(written, '写入字段失败');
                 throw e;
             }
-            applySideEffect(config, written.path || segments, before, after);
-            return written;
+            var side = applySideEffect(config, written.path || segments, before, after);
+            return { written: written, side: side };
         }, {
             strict: !!options.strict,
             coalesce: options.coalesce === true,
             mergeKey: options.mergeKey || pointerOf(segments),
             source: options.source || 'ui',
+            persist: options.persist !== false,
         });
     } catch (e) {
         if (e && e._opResult) return e._opResult;
+        if (e && e.code) {
+            return shared.fail(e.message, [shared.makeError(segments, e.code,
+                '可进入撤销栈的编辑', '', e.message)]);
+        }
         return shared.fail(e && e.message ? e.message : '写入字段失败', []);
     }
 
+    var written = result && result.written;
+    var side = result && result.side;
     return shared.ok({
-        path: result.path || segments,
+        path: written ? written.path : segments,
         changed: true,
-        before: result.before,
-        after: result.after,
-        data: { sideEffect: result.sideEffect || null },
+        before: written ? written.before : before,
+        after: written ? written.after : after,
+        dropped_fields: (side && side.dropped_fields) || [],
+        data: { sideEffect: side || null },
     });
 }
 

@@ -245,7 +245,12 @@ function bindMarker(config, options) {
     runConfigEdit('绑定标记', function () {
         mp.set(config, options.partId, options.variantName, options.uuid, type, configRef);
         if (mp.recalc) mp.recalc(config, options.partId, options.variantName);
-    }, { coalesce: false });
+    }, {
+        coalesce: false,
+        strict: !!options.strict,
+        source: options.source || 'ui',
+        persist: options.persist !== false,
+    });
 
     return shared.ok({ changed: true });
 }
@@ -275,7 +280,8 @@ function removeNode(config, options) {
 
     var removed = null;
     var mp = shared.markersPort();
-    runConfigEdit('删除 ' + kind, function () {
+    try {
+        runConfigEdit('删除 ' + kind, function () {
         if (kind === 'part') {
             if (mp.clearScope) mp.clearScope(config, { scope: 'part', partId: key });
         } else if (kind === 'variant') {
@@ -287,15 +293,35 @@ function removeNode(config, options) {
                 });
             }
         } else if (kind === 'hit_box') {
-            if (mp.clear) mp.clear(config, segments[1], segments[3], key);
+            // 先删配置条目再清 marker：clearMarker 会连带删除 hit_boxes 条目，
+            // 反过来做会让 doc.remove 找不到目标。
         }
-        removed = doc.remove(config, segments, {});
+        // cascade:false 只删节点，不清理指向它的引用（docs/12 remove_node）
+        removed = options.cascade === false
+            ? doc.address.remove(config, segments, {})
+            : doc.remove(config, segments, {});
         if (!removed.ok) {
             var e = new Error('remove failed');
             e._opResult = shared.fromDoc(removed, '删除节点失败');
             throw e;
         }
-    }, { coalesce: false });
+        if (kind === 'hit_box' && mp.clear && options.cascade !== false) {
+            // 同一骨骼可能同时是 sub_part 起点；只有 hit_box 标记才随碰撞箱条目移除
+            var hbMarker = em.getMarker(config, segments[1], segments[3], key);
+            if (hbMarker && hbMarker.type === 'hit_box') {
+                mp.clear(config, segments[1], segments[3], key);
+            }
+        }
+    }, {
+        coalesce: false,
+        strict: !!options.strict,
+        source: options.source || 'ui',
+        persist: options.persist !== false,
+    });
+    } catch (e) {
+        if (e && e._opResult) return e._opResult;
+        throw e;
+    }
 
     return shared.ok({
         changed: true,
@@ -304,7 +330,8 @@ function removeNode(config, options) {
     });
 }
 
-function addInstance(config, parentPath, kind, key, definition) {
+function addInstance(config, parentPath, kind, key, definition, options) {
+    options = options || {};
     config = shared.configOrNull(config);
     if (!config) return shared.fail('配置不可用');
     var parsed = doc.address.parsePath(parentPath);
@@ -343,7 +370,8 @@ function addInstance(config, parentPath, kind, key, definition) {
 
     var mp = shared.markersPort();
     var resultKey = key;
-    runConfigEdit('添加 ' + kind, function () {
+    try {
+        runConfigEdit('添加 ' + kind, function () {
         var sp = ensureSubPart(variant, spKey);
         var container = kind === 'connector' ? 'connectors'
             : (kind === 'interact_box' ? 'interact_boxes' : 'hit_boxes');
@@ -381,20 +409,22 @@ function addInstance(config, parentPath, kind, key, definition) {
                 throw ke;
             }
             if (kind === 'interact_box') {
-                var el2 = shared.bonesPort().findByName(key || projected.node.bone);
+                var ibBone = projected.node.bone || '';
+                var el2 = shared.bonesPort().findByName(ibBone);
                 if (!el2) {
                     var e2 = new Error('element not found');
-                    e2._opResult = shared.fail('未找到骨骼 "' + (key || projected.node.bone) + '"', []);
+                    e2._opResult = shared.fail('未找到骨骼 "' + ibBone + '"', []);
                     throw e2;
                 }
                 projected.node.bone = el2.name;
                 projected.node._uuid = el2.uuid;
                 mp.set(config, partId, variantName, el2.uuid, 'interact_box', name);
             } else {
-                var loc = shared.bonesPort().findByName(key || projected.node.locator);
+                var connLocator = projected.node.locator || '';
+                var loc = shared.bonesPort().findByName(connLocator);
                 if (!loc) {
                     var e3 = new Error('element not found');
-                    e3._opResult = shared.fail('未找到 Locator "' + (key || projected.node.locator) + '"', []);
+                    e3._opResult = shared.fail('未找到 Locator "' + connLocator + '"', []);
                     throw e3;
                 }
                 projected.node.locator = loc.name;
@@ -405,7 +435,16 @@ function addInstance(config, parentPath, kind, key, definition) {
             shared.setProp(sp[container], name, projected.node);
         }
         if (mp.recalc) mp.recalc(config, partId, variantName);
-    }, { coalesce: false });
+    }, {
+        coalesce: false,
+        strict: !!options.strict,
+        source: options.source || 'ui',
+        persist: options.persist !== false,
+    });
+    } catch (e) {
+        if (e && e._opResult) return e._opResult;
+        throw e;
+    }
 
     return shared.ok({
         key: resultKey,

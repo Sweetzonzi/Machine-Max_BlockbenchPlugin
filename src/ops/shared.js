@@ -141,6 +141,52 @@ function finishProjection(projected, data) {
     }, projected.before !== undefined ? { before: projected.before, after: projected.after } : {}));
 }
 
+/**
+ * 解析 import_* 的 mode（docs/12 §5.3）。
+ *
+ * `auto` / 省略：目标已存在 → replace，否则 create。
+ * `reject` 与 create 同义（目标已存在即 duplicate_name）。
+ * `rename` 需要 oldKey 命中旧节点，且新 key 未被占用。
+ *
+ * @returns {{ok:boolean, mode?:string, error?:string, errors?:Array}}
+ */
+function resolveImportMode(options, info) {
+    options = options || {};
+    info = info || {};
+    var mode = options.mode;
+    if (!mode || mode === 'reject') {
+        mode = info.existing === undefined ? 'create' : 'replace';
+    }
+
+    if (mode === 'create') {
+        if (info.existing !== undefined) {
+            return fail('"' + info.newKey + '" 已存在', [makeError(
+                info.path, 'duplicate_name', '不重复的 key', info.newKey,
+                '改用 mode:"replace" 覆盖，或 mode:"rename" 改 key')]);
+        }
+        return { ok: true, mode: mode };
+    }
+
+    if (mode === 'rename') {
+        if (!info.oldKey) {
+            return fail('mode:"rename" 需要 old_key', [makeError(
+                info.path, 'missing_required', 'old_key', '', '传已存在的旧 key')]);
+        }
+        if (info.oldExisting === undefined) {
+            return fail('旧 key "' + info.oldKey + '" 不存在', [makeError(
+                info.path, 'not_found', '已存在的旧 key', info.oldKey)]);
+        }
+        if (info.oldKey !== info.newKey && info.existing !== undefined) {
+            return fail('"' + info.newKey + '" 已存在', [makeError(
+                info.path, 'duplicate_name', '未被占用的新 key', info.newKey,
+                '先删除或改用 replace')]);
+        }
+        return { ok: true, mode: mode };
+    }
+
+    return { ok: true, mode: 'replace' };
+}
+
 /** 把 projection.in 的结果落到配置树（整件通道）。 */
 function applyProjection(config, path, definition, ctx, options) {
     options = options || {};
@@ -148,11 +194,33 @@ function applyProjection(config, path, definition, ctx, options) {
     if (!projected.ok) return finishProjection(projected, options.data);
 
     var result;
+    var renamedRefs = [];
     try {
         result = runConfigEdit(options.label || '导入配置', function () {
             var mp = markersPort();
             if (projected.markerCleanup && mp.clearScope) {
                 mp.clearScope(config, projected.markerCleanup);
+            }
+
+            // mode:'rename'：先改写旧 key 的引用，再删旧节点，最后写新节点。
+            // 不能走 doc.remove（它会清理引用，把重命名变成断链）。
+            var newKey = path[path.length - 1];
+            if (ctx.mode === 'rename' && ctx.oldKey && ctx.oldKey !== newKey) {
+                if (ctx.kind === 'sub_part' || ctx.kind === 'subsystem') {
+                    var renamed = doc.refs.renameRefs(config, {
+                        kind: ctx.kind,
+                        oldKey: ctx.oldKey,
+                        newKey: newKey,
+                    });
+                    renamedRefs = renamed.renamed || [];
+                }
+                var oldPath = path.slice(0, -1).concat(ctx.oldKey);
+                var removedOld = doc.address.remove(config, oldPath, {});
+                if (!removedOld.ok) {
+                    var re = new Error('rename failed');
+                    re._opResult = fromDoc(removedOld, '删除旧 key 失败');
+                    throw re;
+                }
             }
 
             var written = doc.write(config, path, projected.node, { allowMissingLeaf: true });
@@ -182,9 +250,14 @@ function applyProjection(config, path, definition, ctx, options) {
             strict: !!options.strict,
             coalesce: false,
             source: options.source || 'import',
+            persist: options.persist !== false,
         });
     } catch (e) {
         if (e && e._opResult) return e._opResult;
+        if (e && e.code) {
+            return fail(e.message, [makeError(path, e.code,
+                '可进入撤销栈的编辑', '', e.message)]);
+        }
         log.error('applyProjection: 写入失败', e);
         return fail(e && e.message ? e.message : '写入配置失败', []);
     }
@@ -195,6 +268,7 @@ function applyProjection(config, path, definition, ctx, options) {
         data: options.data || {},
         changed: true,
         reset_fields: projected.reset_fields || [],
+        cleaned_references: renamedRefs,
         unresolved: projected.unresolved,
         unresolved_bones: (projected.unresolved && projected.unresolved.bones) || [],
         warnings: projected.warnings || [],
@@ -273,7 +347,22 @@ function ensureParentObjects(config, segments) {
 /** 校验写路径所在记录的值；只返回写路径前缀下的错误。 */
 function validateWrite(config, segments, value) {
     var located = locateRecord(config, segments);
-    if (!located.node || typeof located.node !== 'object') return [];
+    if (!located.node) {
+        // set_node 新建 map 条目（如 subsystems.<new>）时，节点还不存在；
+        // 仍按目标 kind 校验值，避免绕过 enum / range / 结构检查。
+        if (located.rest.length === 0 && doc.fieldSpecs.isKnownKind(located.kind)
+            && value && typeof value === 'object' && !Array.isArray(value)) {
+            var fresh = doc.validate.validateValues(value, {
+                kind: located.kind,
+                typeId: located.kind === 'subsystem' ? value.type : undefined,
+                path: segments,
+                completeness: false,
+            });
+            return fresh.ok ? [] : (fresh.errors || []);
+        }
+        return [];
+    }
+    if (typeof located.node !== 'object') return [];
     var candidate = clone(located.node);
     var rest = located.rest;
     if (rest.length === 0) return [];
@@ -328,6 +417,7 @@ module.exports = {
     bonesPort: bonesPort,
     applyProjection: applyProjection,
     finishProjection: finishProjection,
+    resolveImportMode: resolveImportMode,
     locateRecord: locateRecord,
     validateWrite: validateWrite,
     ensureParentObjects: ensureParentObjects,

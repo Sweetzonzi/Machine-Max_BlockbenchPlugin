@@ -79,10 +79,23 @@ function importPart(config, options) {
 
     var partId = String(options.partId || '').trim();
     if (!partId) return shared.fail('缺少 partId');
+    if (!config.parts) config.parts = {};
     var keyError = shared.validateKey('parts', partId, config, ['parts', partId]);
     if (keyError) return shared.fail(keyError.hint, [keyError]);
 
     var existing = config.parts && config.parts[partId];
+    var oldKey = String(options.oldKey || '').trim();
+    var oldExisting = oldKey ? (config.parts && config.parts[oldKey]) : undefined;
+    var modeResult = shared.resolveImportMode(options, {
+        existing: existing,
+        oldExisting: oldExisting,
+        oldKey: oldKey,
+        newKey: partId,
+        path: ['parts', partId],
+    });
+    if (!modeResult.ok) return modeResult;
+
+    var effectiveExisting = modeResult.mode === 'rename' ? oldExisting : existing;
     var definition = options.definition || {};
     if (definition && typeof definition !== 'object') {
         return shared.fail('definition 必须是对象');
@@ -90,19 +103,26 @@ function importPart(config, options) {
 
     var ctx = {
         kind: 'part',
-        mode: options.mode || (existing ? 'replace' : 'create'),
-        oldKey: options.oldKey,
+        mode: modeResult.mode,
+        oldKey: oldKey || undefined,
         namespace: shared.namespaceOf(config),
         partId: partId,
         parentPath: ['parts', partId],
-        existing: existing,
+        existing: effectiveExisting,
     };
 
     var result = shared.applyProjection(config, ['parts', partId], definition, ctx, {
         label: '导入零件 ' + partId,
         data: { partId: partId },
+        source: options.source || 'import',
+        persist: options.persist,
+        strict: options.strict,
     });
-    if (result.ok) shared.setUiState(config, { activePartId: partId });
+    if (result.ok) {
+        shared.setUiState(config, { activePartId: partId });
+        result.action = modeResult.mode === 'rename' ? 'renamed'
+            : (effectiveExisting === undefined ? 'created' : 'replaced');
+    }
     return result;
 }
 

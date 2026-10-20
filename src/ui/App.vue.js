@@ -1780,6 +1780,18 @@ const MM_MAIN_PANEL_OPTIONS = {
         this._configChangedHandler = Blockbench.on('mm_config_changed', function (event) {
             refreshOutlinerIcons();
             self.markerVersion.v++;
+            // MCP set_active / import_* 会改 _uiState；面板的 active 字段是 data，不是 computed
+            var cfg = getConfig();
+            if (cfg && cfg._uiState) {
+                if (cfg._uiState.activePartId && cfg._uiState.activePartId !== self.activePartId) {
+                    self.activePartId = cfg._uiState.activePartId;
+                    self.selectedElement = null;
+                }
+                if (cfg._uiState.activeVariantName && cfg._uiState.activeVariantName !== self.activeVariantName) {
+                    self.activeVariantName = cfg._uiState.activeVariantName;
+                    self.selectedElement = null;
+                }
+            }
             if (!event || event.persist !== false) scheduleSave();
         });
 

@@ -86,6 +86,14 @@ Plugin.register('machine_max_bb_plugin', {
         console.log('[MM][Plugin] 阶段4: registerMachineMaxMenu');
         registerMachineMaxMenu();
 
+        console.log('[MM][Plugin] 阶段4a: registerMcpTools');
+        // MCP 工具通过 globalThis.MCP_QUEUE 挂载（docs/12）；MCP 插件未装时为空操作
+        try {
+            require('./mcp/index.js').registerMcpTools();
+        } catch (e) {
+            log.warn('MCP 工具注册失败（不影响插件其它功能）', e && e.message);
+        }
+
         console.log('[MM][Plugin] 阶段5: showToast');
         showToast('MachineMax 插件已加载，在模式栏中选择 "零件定义" 开始使用', 'positive');
         log.info('插件初始化完成');
@@ -93,6 +101,11 @@ Plugin.register('machine_max_bb_plugin', {
     },
     onunload() {
         log.info('卸载 MachineMax Blockbench 插件');
+        try {
+            require('./mcp/index.js').unregisterMcpTools();
+        } catch (e) {
+            log.warn('MCP 工具注销失败（忽略）', e && e.message);
+        }
         unregisterUndoBridge();
         unregisterActions();
         unregisterValidation();

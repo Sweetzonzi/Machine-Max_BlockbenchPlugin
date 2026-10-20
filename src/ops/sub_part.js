@@ -69,30 +69,51 @@ function importSubPart(config, options) {
     var variant = shared.variantOf(config, partId, variantName);
     if (!variant) return shared.fail('当前变体不存在');
     if (!spKey) return shared.fail('缺少子零件 key');
+    if (!variant.sub_parts) shared.setProp(variant, 'sub_parts', {});
 
     var keyError = shared.validateKey('sub_parts', spKey, config,
         ['parts', partId, 'variants', variantName, 'sub_parts', spKey]);
     if (keyError) return shared.fail(keyError.hint, [keyError]);
 
     var existing = variant.sub_parts && variant.sub_parts[spKey];
+    var oldKey = String(options.oldKey || '').trim();
+    var oldExisting = oldKey ? (variant.sub_parts && variant.sub_parts[oldKey]) : undefined;
+    var modeResult = shared.resolveImportMode(options, {
+        existing: existing,
+        oldExisting: oldExisting,
+        oldKey: oldKey,
+        newKey: spKey,
+        path: ['parts', partId, 'variants', variantName, 'sub_parts', spKey],
+    });
+    if (!modeResult.ok) return modeResult;
+
+    var effectiveExisting = modeResult.mode === 'rename' ? oldExisting : existing;
     var ctx = {
         kind: 'sub_part',
-        mode: options.mode || (existing ? 'replace' : 'create'),
-        oldKey: options.oldKey,
+        mode: modeResult.mode,
+        oldKey: oldKey || undefined,
         namespace: shared.namespaceOf(config),
         partId: partId,
         variantName: variantName,
         subPartKey: spKey,
         parentPath: ['parts', partId, 'variants', variantName, 'sub_parts', spKey],
-        existing: existing,
+        existing: effectiveExisting,
     };
 
-    return shared.applyProjection(config,
+    var result = shared.applyProjection(config,
         ['parts', partId, 'variants', variantName, 'sub_parts', spKey],
         options.definition || {}, ctx, {
             label: '导入子零件 ' + spKey,
             data: { partId: partId, variantName: variantName, subPartKey: spKey },
+            source: options.source || 'import',
+            persist: options.persist,
+            strict: options.strict,
         });
+    if (result.ok) {
+        result.action = modeResult.mode === 'rename' ? 'renamed'
+            : (effectiveExisting === undefined ? 'created' : 'replaced');
+    }
+    return result;
 }
 
 function renameSubPart(config, options) {

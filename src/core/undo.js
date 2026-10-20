@@ -361,6 +361,8 @@ function unregisterUndoBridge() {
 function _runUnrecorded(opts, label, mutate, reason) {
     if (opts && opts.strict) {
         var err = new Error('“' + label + '”无法进入撤销栈：' + reason);
+        // MCP 依赖结构化错误码区分「编辑器忙」与「快照超限」
+        err.code = reason.indexOf('未完成的编辑') >= 0 ? 'edit_in_progress' : 'snapshot_too_large';
         log.warn('runConfigEdit: ' + err.message);
         throw err;
     }

@@ -1,7 +1,7 @@
 # 业务逻辑层与配置文档 API（v3.2）
 
-> 状态：**P0–P4 已完成；P5（MCP）按用户 2026-10-21 确认不在本轮范围** · 日期：2026-10-21 · v3.2 依据：第四轮审阅（replace 旧 marker、connector 迁移算法、partId 路径安全、闸门去重）逐条核对代码后收口
-> P3（事件总线 + 导出闸门 + 计算属性收口）见 §10；P4（`services/` 抽离）见 §10；P5 见 [docs/12](./12-MCP工具接入.md)
+> 状态：**P0–P5 已完成** · 日期：2026-10-21 · v3.2 依据：第四轮审阅（replace 旧 marker、connector 迁移算法、partId 路径安全、闸门去重）逐条核对代码后收口
+> P3（事件总线 + 导出闸门 + 计算属性收口）见 §10；P4（`services/` 抽离）见 §10；P5（MCP）见 [docs/12](./12-MCP工具接入.md)
 > v3 的第二轮收口见 §0；第三轮收口见 §0.2；本轮新增/修正见 §0.3
 > 范围：`src/doc/`（新增）+ `src/ops/`（由 `src/core/operations.js` 拆出）+ `src/services/`（新增）+ `src/ui/`、`src/mode/`（改薄）
 > 目标版本：v0.5.0（当前 0.4.0） · 前置：[docs/11](./11-接入Blockbench原生撤销.md) · 下游：[docs/12](./12-MCP工具接入.md)
@@ -85,7 +85,7 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 >
 > **P3 已收口**：`App.vue.js` 的 5 个计算属性 / 9 处写入全部删除，渲染期不再改配置；缺失条目由 `loadConfig` 一次性补建、面板「创建配置」按钮走 `ops.mark*`。`runConfigEdit` 成为变更事件单一出口（`mm_config_changed`），UI 统一刷新 + 300ms 防抖落盘。`canExport`（`collectIssues` + `validateTree(completeness:true)` + 字段级去重）已接入导出对话框，`definition:''` / 空碰撞箱 / 空 `projectile_types` / 存量枚举脏值 / 不安全 `partId` 均在写盘前阻断。
 >
-> **P4 已收口**：`export_pipeline` / `drag_import` 的 IO / pack 对话框 fs / `collectIssues` 全部迁入 `src/services/`；`collectIssues` 落 `services/validate.js`（不落 `core`，避免 core→doc 反转）。P5（MCP）按用户确认不在本轮范围。
+> **P4 已收口**：`export_pipeline` / `drag_import` 的 IO / pack 对话框 fs / `collectIssues` 全部迁入 `src/services/`；`collectIssues` 落 `services/validate.js`（不落 `core`，避免 core→doc 反转）。P5（MCP）已在 `src/mcp/` 落地，见 §10 与 [docs/12](./12-MCP工具接入.md)。
 
 这套结构对「人点面板」够用，对下面三件事不够：MCP 需要可序列化的操作描述（AI 没有 `this`、选中元素、`_uiState`）；维护上同一模式重复数十次、副作用散落；测试上仓库有 `bunfig.toml` 但无 `test/`。
 
@@ -99,12 +99,13 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 
 | 目录 | 文件 | 行数 |
 |---|---|---|
-| `src/ui/` | 27 JS + 7 模板 | 6,434 + 1,147 |
+| `src/ui/` | 27 JS + 7 模板 | 6,446 + 1,147 |
 | `src/mode/` | 5 | 1,155 |
-| `src/core/` | 12 | 4,427 |
+| `src/core/` | 12 | 4,429 |
 | `src/codec/` | 10 JS（11 含 AGENTS.md） | 1,271 |
 | `src/ops/` | 10（含 `shared.js` / `AGENTS.md`） | — |
 | `src/services/` | 6（export / export_pipeline / safe_part_ids / import / pack / validate） | 1,062 |
+| `src/mcp/` | 4（index / tools / params / result） | — |
 | `src/managers/` · `src/generators/` · `src/import/` | 5 · 6 · 3 | 330 · 440 · 859 |
 
 ### 2.2 写入入口
@@ -1169,9 +1170,9 @@ bun test test/schema/field_specs.test.js
 
 验收：同一工程导出产物逐字节一致（纯搬移，无逻辑改动）；`bun test` 144 pass / 554 expect；`audit-stats` 47/47；`gen-field-specs --check` 与 `sync-schemas --check` 通过；`npm run build` 成功。
 
-### P5 — MCP（见 docs/12）
+### P5 — MCP（已完成）
 
-**本轮不做**（用户 2026-10-21 确认“做到 P4 为止”）；docs/13 只保留 P5 的入口说明，具体工具矩阵与验收在 [docs/12](./12-MCP工具接入.md)。
+`src/mcp/` 已按 [docs/12](./12-MCP工具接入.md) 落地：12 个工具、MCP_QUEUE 注册/注销、`persist:false` + `strict:true` 调用、`introduced_issues` 前后 diff。为满足 docs/12 §5.3，本轮同时补齐了 ops 的 `import_*` 重名拒绝与 `mode:'rename'`、`add_instance` 的 key/元素名分离、`set_active` 的视图同步事件。具体工具矩阵与验收见 [docs/12](./12-MCP工具接入.md)。
 
 ---
 
@@ -1244,7 +1245,7 @@ test/
 
 **`path` 用规范化后的段数组**回传，工具层直接透传，不再从 `data` 里猜。`collectIssues` / `canExport` 的 `Problem.path` 是对象（`{scope, partId, variantName, subPartKey?, itemKey?, field?}`），与 `OpResult.path` 的段数组是两种口径：前者供面板定位和去重，后者供工具调用方使用，不要混用。
 
-**产生者**：`before/after` ← `doc` 原语；`reset_fields` ← `projection.in`；`dropped_fields` ← `setField` 的 `sideEffect`；`cleaned_references` ← `refs`；`introduced_issues` ← `ops` 通过 `ports.validation.collectIssues` 在**同一撤销记录内**做前后 diff（不直接 `require` `services/validate`，保持分层）。
+**产生者**：`before/after` ← `doc` 原语；`reset_fields` ← `projection.in`；`dropped_fields` ← `setField` 的 `sideEffect`；`cleaned_references` ← `refs`；`introduced_issues` ← MCP 工具层在调用前后用 `services/validate.collectIssues` 做 diff（op 本身不直接 `require` `services/validate`，保持分层；UI 原生清单仍由 `canExport` 统一产出）。
 
 错误码：`no_project` / `not_found` / `missing_required` / `type_mismatch` / `invalid_enum` / `invalid_format` / `out_of_range` / `duplicate_name` / `unknown_field` / `unknown_type` / `unresolved_config_ref` / `key_reserved` / `edit_in_progress` / `snapshot_too_large` / `io_error`。warning code：`non_canonical_key`（前缀不规范，不阻断）、`unresolved_bone`、`orphan_element`、`key_reserved`（存量非法 key，导出期转 error）。
 

@@ -8,7 +8,7 @@ Vue 2 属性面板 + BarMenu + 导出对话框。重构前 `App.vue.js` 为 1035
 
 ```
 src/ui/
-├── App.vue.js              # 主 Vue 2 面板（约 1836 行，mm-main-panel；字段编辑统一走 ops.setField，计算属性只读）
+├── App.vue.js              # 主 Vue 2 面板（约1844行，mm-main-panel；字段编辑统一走 ops.setField，计算属性只读）
 ├── SubPartPanel.vue.js     # 子零件属性子组件（289行）
 ├── HitBoxPanel.vue.js      # 碰撞箱属性子组件（118行）
 ├── SignalFlowPanel.vue.js  # 信号流图可视化面板（579行）
@@ -72,14 +72,14 @@ src/ui/
 - **对话框模式**: 所有交互使用 `new Dialog({id, title, form, onConfirm}).show()` — 需要 `.show()` 链式调用。
 - **对话框不做业务逻辑（撤销）**: `onConfirm` 里只收集输入、调用 `src/ops/` 的操作函数、处理 `{ok,error}` 与提示；
   **不要**在对话框回调里直接改配置，也不要在这里包 `runConfigEdit`——撤销边界在操作函数内部，
-  这样同一个动作从工具栏/面板/右键菜单/将来的 MCP 触发都自带撤销。
+  这样同一个动作从工具栏/面板/右键菜单/MCP 触发都自带撤销。
 - **标签调色板**: `_hashTagColor()` 通过哈希将标签映射到 8 种 CSS 颜色之一——可能存在碰撞。
 - **配置访问**: 始终通过 `getConfig()` 从 `utils/persistence.js` 获取，不要直接读取 `Project.machine_max_plugin`。
 - **字段提交点（撤销）**: 模板不要用 `v-model` 直接绑配置字段（`v-model` 绕过 methods，撤销快照会拿到改完之后的值）。
   改用 `:value` / `:checked` + `@change`，调用 `ops.setField(config, { path, value, coalesce? })`；输入框优先 `@change`（失焦/回车提交）。
 - **面板不直写配置**: `SubsystemPanel` / `ConnectorPanel` 的列表/字典编辑只构造新值并 emit `field-change`，由 App 统一写；不要 `$set(this.config, …)`。
 - **计算属性只读**: computed 里不得 `$set` / `$delete` 配置；缺失条目由 `loadConfig.repairMarkerConfigs` 补建，运行时用「创建配置」按钮走 `ops.mark*`。
-- **变更事件订阅一次**: `App.vue.js` mounted 订阅 `mm_config_changed` → `refreshOutlinerIcons()` + `markerVersion.v++` + `scheduleSave()`；`beforeDestroy` 里清理。
+- **变更事件订阅一次**: `App.vue.js` mounted 订阅 `mm_config_changed` → 同步 `_uiState.activePartId/activeVariantName` + `refreshOutlinerIcons()` + `markerVersion.v++` + `scheduleSave()`（`persist:false` 时跳过落盘）；`beforeDestroy` 里清理。
 - **落盘**: 字段/结构动作不直接 `saveConfig()`；由事件触发 300ms 防抖。只有 `Blockbench.on('save')`（Ctrl+S）与导出完成保留同步 `saveConfig()`。
 - **不再新用 `wrapMethodMap`**: 字段/结构动作都由 ops 内部开撤销；旧手工包装仅作为过渡保留。
 - **撤销记录标签**: `ops.setField` 默认按路径生成；需要更可读时传 `label`。
