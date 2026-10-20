@@ -1172,7 +1172,7 @@ bun test test/schema/field_specs.test.js
 
 ### P5 — MCP（已完成）
 
-`src/mcp/` 已按 [docs/12](./12-MCP工具接入.md) 落地：12 个工具、MCP_QUEUE 注册/注销、`persist:false` + `strict:true` 调用、`introduced_issues` 前后 diff。为满足 docs/12 §5.3，本轮同时补齐了 ops 的 `import_*` 重名拒绝与 `mode:'rename'`、`add_instance` 的 key/元素名分离、`set_active` 的视图同步事件。具体工具矩阵与验收见 [docs/12](./12-MCP工具接入.md)。
+`src/mcp/` 已按 [docs/12](./12-MCP工具接入.md) 落地：14 个工具（含 `list_defs` / `read_def`）、MCP_QUEUE 注册/注销、`persist:false` + `strict:true` 调用、`introduced_issues` 前后 diff。为满足 docs/12 §5.3，本轮同时补齐了 ops 的 `import_*` 重名拒绝与 `mode:'rename'`、`add_instance` 的 key/元素名分离、`set_active` 的视图同步事件。具体工具矩阵与验收见 [docs/12](./12-MCP工具接入.md)。
 
 ---
 

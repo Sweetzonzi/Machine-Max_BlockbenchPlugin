@@ -8,6 +8,7 @@ const em = require('../../src/core/element_markers.js');
 const undo = require('../../src/core/undo.js');
 const helpers = require('../helpers.js');
 const doc = require('../../src/doc/index.js');
+const defManager = require('../../src/core/content_pack_manager.js');
 const mcpIndex = require('../../src/mcp/index.js');
 const mcpTools = require('../../src/mcp/tools.js');
 
@@ -579,9 +580,118 @@ describe('MCP 编辑后自检', () => {
     });
 });
 
+describe('MCP 定义目录工具', () => {
+    var originalLoad;
+
+    function installDefs() {
+        originalLoad = defManager.loadMergedDefs;
+        defManager.loadMergedDefs = function (config, type) {
+            if (type === 'materials') {
+                return {
+                    defs: {
+                        'machine_max:structural_steel': {
+                            physics: { friction: [0.45, 0.45, 0.5], rolling_friction: 0.22, restitution: 0.12 },
+                            armor: { rha: 0.85, dmg_resist: 1.0, dmg_mult: 0.95, angle_effect: true },
+                        },
+                        'machine_max:glass': {
+                            physics: { friction: [0.6, 0.6, 0.6] },
+                            armor: { rha: 0.1 },
+                        },
+                    },
+                    sources: {
+                        'machine_max:structural_steel': 'builtin',
+                        'machine_max:glass': 'current',
+                    },
+                };
+            }
+            if (type === 'subsystems') {
+                return {
+                    defs: {
+                        'machine_max:light_car_engine': {
+                            type: 'machine_max:engine',
+                            basic_durability: 80,
+                            max_power: 80000,
+                            max_torque: 175,
+                        },
+                    },
+                    sources: { 'machine_max:light_car_engine': 'dependency:0' },
+                };
+            }
+            return { defs: {}, sources: {} };
+        };
+    }
+
+    beforeEach(function () {
+        installDefs();
+        installGlobals(helpers.createConfig());
+    });
+
+    afterEach(function () {
+        if (originalLoad) defManager.loadMergedDefs = originalLoad;
+        originalLoad = null;
+    });
+
+    test('list_defs 返回 id / source / editable / 摘要', () => {
+        const r = run('list_defs', { type: 'materials' });
+        expect(r.ok).toBe(true);
+        expect(r.total).toBe(2);
+        expect(r.defs.map(function (d) { return d.id; })).toEqual([
+            'machine_max:glass',
+            'machine_max:structural_steel',
+        ]);
+        const steel = r.defs.filter(function (d) { return d.id === 'machine_max:structural_steel'; })[0];
+        expect(steel.source).toBe('builtin');
+        expect(steel.editable).toBe(false);
+        expect(steel.summary.armor.rha).toBe(0.85);
+        expect(steel.summary.physics.rolling_friction).toBe(0.22);
+        const glass = r.defs.filter(function (d) { return d.id === 'machine_max:glass'; })[0];
+        expect(glass.editable).toBe(true);
+    });
+
+    test('list_defs 支持 search / source / limit', () => {
+        expect(run('list_defs', { type: 'materials', search: 'steel' }).total).toBe(1);
+        expect(run('list_defs', { type: 'materials', source: 'current' }).total).toBe(1);
+        const limited = run('list_defs', { type: 'materials', limit: 1 });
+        expect(limited.count).toBe(1);
+        expect(limited.truncated).toBe(true);
+    });
+
+    test('list_defs 的 subsystem 摘要带型号字段', () => {
+        const r = run('list_defs', { type: 'subsystems' });
+        expect(r.defs[0].id).toBe('machine_max:light_car_engine');
+        expect(r.defs[0].summary.type).toBe('machine_max:engine');
+        expect(r.defs[0].summary.max_power).toBe(80000);
+        expect(r.defs[0].source).toBe('dependency:0');
+    });
+
+    test('read_def 返回完整定义并支持裸 id', () => {
+        const r = run('read_def', { type: 'materials', id: 'structural_steel' });
+        expect(r.ok).toBe(true);
+        expect(r.id).toBe('machine_max:structural_steel');
+        expect(r.source).toBe('builtin');
+        expect(r.definition.physics.friction[0]).toBe(0.45);
+        expect(r.definition.armor.rha).toBe(0.85);
+    });
+
+    test('read_def 缺失返回 not_found', () => {
+        const r = run('read_def', { type: 'materials', id: 'machine_max:missing' });
+        expect(r.ok).toBe(false);
+        expect(r.errors[0].code).toBe('not_found');
+    });
+
+    test('list_defs 未知类型返回 invalid_format', () => {
+        const r = run('list_defs', { type: 'unknown' });
+        expect(r.ok).toBe(false);
+        expect(r.errors[0].code).toBe('invalid_format');
+    });
+});
+
 describe('MCP 注册生命周期', () => {
     function schema() {
         var s = { optional: function () { return s; } };
+        s.int = function () { return s; };
+        s.min = function () { return s; };
+        s.max = function () { return s; };
         return {
             object: function () { return s; },
             union: function () { return s; },
@@ -591,10 +701,13 @@ describe('MCP 注册生命周期', () => {
             boolean: function () { return s; },
             any: function () { return s; },
             enum: function () { return s; },
+            int: function () { return s; },
+            min: function () { return s; },
+            max: function () { return s; },
         };
     }
 
-    test('setup 注册 12 个带前缀工具，condition 限定模式', () => {
+    test('setup 注册 14 个带前缀工具，condition 限定模式', () => {
         globalThis.MCP_QUEUE = [];
         const registered = [];
         const unregistered = [];
@@ -610,7 +723,7 @@ describe('MCP 注册生命周期', () => {
         expect(globalThis.MCP_QUEUE).toHaveLength(1);
         globalThis.MCP_QUEUE[0].setup(mcp);
 
-        expect(registered).toHaveLength(12);
+        expect(registered).toHaveLength(14);
         expect(registered[0].name).toBe('machine_max_bb_plugin_get_context');
         expect(registered[0].parameters).toBeTruthy();
         expect(registered[0].params).toBeUndefined();
@@ -621,8 +734,8 @@ describe('MCP 注册生命周期', () => {
 
         mcpIndex.unregisterMcpTools();
         expect(globalThis.MCP_QUEUE).toHaveLength(0);
-        // setup 前先按名字注销同名工具（12），unregister 再注销一次（12）
-        expect(unregistered.length).toBe(24);
+        // setup 前先按名字注销同名工具（14），unregister 再注销一次（14）
+        expect(unregistered.length).toBe(28);
     });
 
     test('重复 register 不重复入队', () => {
@@ -644,13 +757,13 @@ describe('MCP 注册生命周期', () => {
         };
 
         mcpIndex.registerMcpTools();
-        expect(registered).toHaveLength(12);
+        expect(registered).toHaveLength(14);
         expect(registered[0].name).toBe('machine_max_bb_plugin_get_context');
 
         // 队列条目仍在；MCP 后续 drain 时会幂等重注册
         expect(globalThis.MCP_QUEUE).toHaveLength(1);
         globalThis.MCP_QUEUE[0].setup(globalThis.MCP);
-        expect(registered).toHaveLength(24);
+        expect(registered).toHaveLength(28);
         mcpIndex.unregisterMcpTools();
     });
 
@@ -677,7 +790,7 @@ describe('MCP 注册生命周期', () => {
             createJsonResult: function (obj) { return obj; },
         };
         loadedHandler({ plugin: { id: 'mcp' } });
-        expect(registered).toHaveLength(12);
+        expect(registered).toHaveLength(14);
         mcpIndex.unregisterMcpTools();
     });
 });

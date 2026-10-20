@@ -31245,6 +31245,110 @@
     }
   });
 
+  // src/mcp/params.js
+  var require_params = __commonJS({
+    "src/mcp/params.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      function pathSchema(z) {
+        return z.union([
+          z.array(z.union([z.string(), z.number()])),
+          z.string()
+        ]);
+      }
+      var MODE = ["create", "replace", "rename", "reject"];
+      var SMALL_KIND = ["hit_box", "interact_box", "connector"];
+      var MARKER_TYPE = ["sub_part", "hit_box", "interact_box", "connector"];
+      var DEF_TYPE = ["materials", "connectors", "subsystems", "control_groups", "projectiles"];
+      var DEF_SOURCE = ["builtin", "dependency", "current"];
+      function build(z) {
+        return {
+          get_context: z.object({}),
+          read_node: z.object({
+            path: pathSchema(z),
+            as: z.enum(["raw", "definition"]).optional()
+          }),
+          validate: z.object({
+            only_introduced: z.boolean().optional()
+          }),
+          set_node: z.object({
+            path: pathSchema(z),
+            value: z.any()
+          }),
+          remove_node: z.object({
+            path: pathSchema(z),
+            cascade: z.boolean().optional()
+          }),
+          bind_marker: z.object({
+            uuid: z.string(),
+            type: z.enum(MARKER_TYPE),
+            config_ref: z.string().optional()
+          }),
+          set_active: z.object({
+            part: z.string(),
+            variant: z.string().optional()
+          }),
+          import_part: z.object({
+            part_id: z.string(),
+            definition: z.any().optional(),
+            mode: z.enum(MODE).optional(),
+            old_key: z.string().optional()
+          }),
+          import_variant: z.object({
+            variant: z.string(),
+            definition: z.any(),
+            parent_part: z.string().optional(),
+            mode: z.enum(MODE).optional(),
+            old_key: z.string().optional()
+          }),
+          import_sub_part: z.object({
+            key: z.string(),
+            definition: z.any().optional(),
+            parent_variant: z.string().optional(),
+            mode: z.enum(MODE).optional(),
+            old_key: z.string().optional()
+          }),
+          import_subsystem: z.object({
+            key: z.string(),
+            definition: z.any(),
+            parent_sub_part: z.string(),
+            mode: z.enum(MODE).optional(),
+            old_key: z.string().optional()
+          }),
+          add_instance: z.object({
+            parent_path: pathSchema(z),
+            kind: z.enum(SMALL_KIND),
+            key: z.string().optional(),
+            definition: z.any().optional()
+          }),
+          list_defs: z.object({
+            type: z.enum(DEF_TYPE),
+            search: z.string().optional(),
+            source: z.enum(DEF_SOURCE).optional(),
+            limit: z.number().int().min(1).max(500).optional()
+          }),
+          read_def: z.object({
+            type: z.enum(DEF_TYPE),
+            id: z.string()
+          })
+        };
+      }
+      module.exports = {
+        build,
+        MODE,
+        SMALL_KIND,
+        MARKER_TYPE,
+        DEF_TYPE,
+        DEF_SOURCE
+      };
+    }
+  });
+
   // src/mcp/result.js
   var require_result = __commonJS({
     "src/mcp/result.js"(exports, module) {
@@ -31331,9 +31435,12 @@
       var doc = require_doc();
       var ports = require_ports();
       var em = require_element_markers();
+      var defs = require_content_pack_manager();
+      var params = require_params();
       var { collectIssues } = require_validate();
       var { canExport } = require_export();
       var result = require_result();
+      var DEF_TYPE = params.DEF_TYPE;
       var ROOT_FIELDS = {
         parts: true,
         namespace: true,
@@ -31859,6 +31966,155 @@
           key: r && r.key
         });
       }
+      function summarizeDef(type, def) {
+        var out = {};
+        if (!isObject(def)) return out;
+        Object.keys(def).forEach(function(key) {
+          if (key === "$schema") return;
+          var value = def[key];
+          if (value === null || typeof value === "object") return;
+          out[key] = value;
+        });
+        if (type === "materials") {
+          if (isObject(def.armor)) {
+            out.armor = {
+              rha: def.armor.rha,
+              dmg_resist: def.armor.dmg_resist,
+              dmg_mult: def.armor.dmg_mult,
+              angle_effect: def.armor.angle_effect
+            };
+          }
+          if (isObject(def.physics)) {
+            out.physics = {
+              friction: def.physics.friction,
+              rolling_friction: def.physics.rolling_friction,
+              restitution: def.physics.restitution
+            };
+          }
+        }
+        if (type === "control_groups" && isObject(def.base_group)) {
+          out.name = def.base_group.name;
+          out.control_mode = def.base_group.control_mode;
+        }
+        out.field_count = Object.keys(def).filter(function(key) {
+          return key !== "$schema";
+        }).length;
+        return out;
+      }
+      function sourceMatches(source, filter) {
+        if (!filter) return true;
+        if (filter === "dependency") return String(source).indexOf("dependency:") === 0;
+        return source === filter;
+      }
+      function listDefs(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var type = args && args.type;
+        if (DEF_TYPE.indexOf(type) === -1) {
+          return result.error("\u672A\u77E5\u5B9A\u4E49\u7C7B\u578B: " + type, [{
+            path: [],
+            code: "invalid_format",
+            expected: DEF_TYPE.join(" / "),
+            got: type,
+            hint: "type \u5FC5\u987B\u662F materials / connectors / subsystems / control_groups / projectiles"
+          }]);
+        }
+        var merged;
+        try {
+          merged = defs.loadMergedDefs(config, type);
+        } catch (e) {
+          return result.error("\u8BFB\u53D6\u5B9A\u4E49\u76EE\u5F55\u5931\u8D25: " + (e && e.message ? e.message : e));
+        }
+        var all2 = merged && merged.defs ? merged.defs : {};
+        var sources = merged && merged.sources || {};
+        var needle = args && typeof args.search === "string" ? args.search.trim().toLowerCase() : "";
+        var filter = args && args.source;
+        var limit = args && args.limit ? args.limit : 100;
+        if (limit > 500) limit = 500;
+        var rows = Object.keys(all2).sort(function(a, b) {
+          return a.localeCompare(b);
+        }).map(function(id) {
+          var def = all2[id];
+          var source = sources[id] || "unknown";
+          var summary = summarizeDef(type, def);
+          return {
+            id,
+            source,
+            editable: source === "current",
+            name: isObject(def) && (def.name || def.id) || id,
+            summary
+          };
+        }).filter(function(row) {
+          if (!sourceMatches(row.source, filter)) return false;
+          if (!needle) return true;
+          return (row.id + " " + row.name + " " + (row.summary.type || "")).toLowerCase().indexOf(needle) !== -1;
+        });
+        var total = rows.length;
+        var page = rows.slice(0, limit);
+        return {
+          ok: true,
+          type,
+          total,
+          count: page.length,
+          truncated: total > page.length,
+          defs: page
+        };
+      }
+      function readDef(args) {
+        var got = configOrError();
+        if (got.error) return got.error;
+        var config = got.config;
+        var type = args && args.type;
+        var id = args && args.id;
+        if (DEF_TYPE.indexOf(type) === -1) {
+          return result.error("\u672A\u77E5\u5B9A\u4E49\u7C7B\u578B: " + type, [{
+            path: [],
+            code: "invalid_format",
+            expected: DEF_TYPE.join(" / "),
+            got: type,
+            hint: "type \u5FC5\u987B\u662F materials / connectors / subsystems / control_groups / projectiles"
+          }]);
+        }
+        if (!id || typeof id !== "string") {
+          return result.error("\u7F3A\u5C11\u5B9A\u4E49 id", [{
+            path: [],
+            code: "missing_required",
+            expected: "\u673A\u5668\u53EF\u8BFB\u7684\u5B8C\u6574 id",
+            got: id,
+            hint: "\u5148\u7528 list_defs \u67E5\u770B\u53EF\u7528 id\uFF0C\u4F8B\u5982 machine_max:structural_steel"
+          }]);
+        }
+        var merged;
+        try {
+          merged = defs.loadMergedDefs(config, type);
+        } catch (e) {
+          return result.error("\u8BFB\u53D6\u5B9A\u4E49\u5931\u8D25: " + (e && e.message ? e.message : e));
+        }
+        var all2 = merged && merged.defs ? merged.defs : {};
+        var key = id;
+        if (!Object.prototype.hasOwnProperty.call(all2, key) && config.namespace && Object.prototype.hasOwnProperty.call(all2, config.namespace + ":" + key)) {
+          key = config.namespace + ":" + key;
+        }
+        if (!Object.prototype.hasOwnProperty.call(all2, key)) {
+          return result.error("\u5B9A\u4E49\u4E0D\u5B58\u5728: " + type + ":" + id, [{
+            path: [],
+            code: "not_found",
+            expected: "\u5DF2\u5408\u5E76\u7684\u5185\u7F6E / \u4F9D\u8D56 / \u5F53\u524D\u5305\u5B9A\u4E49",
+            got: id,
+            hint: '\u5148\u8C03\u7528 list_defs(type="' + type + '") \u67E5\u770B\u53EF\u7528 id'
+          }]);
+        }
+        var source = merged.sources && merged.sources[key] || "unknown";
+        return {
+          ok: true,
+          type,
+          id: key,
+          source,
+          editable: source === "current",
+          definition: all2[key]
+        };
+      }
       var TOOLS = [
         {
           name: "get_context",
@@ -31869,6 +32125,16 @@
           name: "read_node",
           description: 'Read a config node by segment array or JSON Pointer. Relative paths are resolved against the active part/variant. as="definition" projects UUIDs to bone names and strips internal fields; it keeps sub_parts as a map.',
           run: readNode
+        },
+        {
+          name: "list_defs",
+          description: "List available content-pack definitions (materials / connectors / subsystems / control_groups / projectiles) merged from builtin, dependency, and current packs. Returns id, source, editable, and a compact summary; use read_def for full JSON.",
+          run: listDefs
+        },
+        {
+          name: "read_def",
+          description: "Read one merged content-pack definition by namespaced id (e.g. machine_max:structural_steel). Returns source, editable, and the full definition JSON. Use list_defs first to discover ids.",
+          run: readDef
         },
         {
           name: "validate",
@@ -31967,96 +32233,6 @@
           projectValue,
           diffIssues
         }
-      };
-    }
-  });
-
-  // src/mcp/params.js
-  var require_params = __commonJS({
-    "src/mcp/params.js"(exports, module) {
-      "use strict";
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      function pathSchema(z) {
-        return z.union([
-          z.array(z.union([z.string(), z.number()])),
-          z.string()
-        ]);
-      }
-      var MODE = ["create", "replace", "rename", "reject"];
-      var SMALL_KIND = ["hit_box", "interact_box", "connector"];
-      var MARKER_TYPE = ["sub_part", "hit_box", "interact_box", "connector"];
-      function build(z) {
-        return {
-          get_context: z.object({}),
-          read_node: z.object({
-            path: pathSchema(z),
-            as: z.enum(["raw", "definition"]).optional()
-          }),
-          validate: z.object({
-            only_introduced: z.boolean().optional()
-          }),
-          set_node: z.object({
-            path: pathSchema(z),
-            value: z.any()
-          }),
-          remove_node: z.object({
-            path: pathSchema(z),
-            cascade: z.boolean().optional()
-          }),
-          bind_marker: z.object({
-            uuid: z.string(),
-            type: z.enum(MARKER_TYPE),
-            config_ref: z.string().optional()
-          }),
-          set_active: z.object({
-            part: z.string(),
-            variant: z.string().optional()
-          }),
-          import_part: z.object({
-            part_id: z.string(),
-            definition: z.any().optional(),
-            mode: z.enum(MODE).optional(),
-            old_key: z.string().optional()
-          }),
-          import_variant: z.object({
-            variant: z.string(),
-            definition: z.any(),
-            parent_part: z.string().optional(),
-            mode: z.enum(MODE).optional(),
-            old_key: z.string().optional()
-          }),
-          import_sub_part: z.object({
-            key: z.string(),
-            definition: z.any().optional(),
-            parent_variant: z.string().optional(),
-            mode: z.enum(MODE).optional(),
-            old_key: z.string().optional()
-          }),
-          import_subsystem: z.object({
-            key: z.string(),
-            definition: z.any(),
-            parent_sub_part: z.string(),
-            mode: z.enum(MODE).optional(),
-            old_key: z.string().optional()
-          }),
-          add_instance: z.object({
-            parent_path: pathSchema(z),
-            kind: z.enum(SMALL_KIND),
-            key: z.string().optional(),
-            definition: z.any().optional()
-          })
-        };
-      }
-      module.exports = {
-        build,
-        MODE,
-        SMALL_KIND,
-        MARKER_TYPE
       };
     }
   });

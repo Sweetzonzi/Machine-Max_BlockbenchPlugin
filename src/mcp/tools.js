@@ -12,9 +12,13 @@ var ops = require('../ops/index.js');
 var doc = require('../doc/index.js');
 var ports = require('../doc/ports.js');
 var em = require('../core/element_markers.js');
+var defs = require('../core/content_pack_manager.js');
+var params = require('./params.js');
 var { collectIssues } = require('../services/validate.js');
 var { canExport } = require('../services/export.js');
 var result = require('./result.js');
+
+var DEF_TYPE = params.DEF_TYPE;
 
 var ROOT_FIELDS = {
     parts: true,
@@ -579,6 +583,161 @@ function addInstance(args) {
     });
 }
 
+// ── 内容包定义目录 ──────────────────────────────────────────────
+
+function summarizeDef(type, def) {
+    var out = {};
+    if (!isObject(def)) return out;
+
+    Object.keys(def).forEach(function (key) {
+        if (key === '$schema') return;
+        var value = def[key];
+        if (value === null || typeof value === 'object') return;
+        out[key] = value;
+    });
+
+    if (type === 'materials') {
+        if (isObject(def.armor)) {
+            out.armor = {
+                rha: def.armor.rha,
+                dmg_resist: def.armor.dmg_resist,
+                dmg_mult: def.armor.dmg_mult,
+                angle_effect: def.armor.angle_effect,
+            };
+        }
+        if (isObject(def.physics)) {
+            out.physics = {
+                friction: def.physics.friction,
+                rolling_friction: def.physics.rolling_friction,
+                restitution: def.physics.restitution,
+            };
+        }
+    }
+    if (type === 'control_groups' && isObject(def.base_group)) {
+        out.name = def.base_group.name;
+        out.control_mode = def.base_group.control_mode;
+    }
+
+    out.field_count = Object.keys(def).filter(function (key) {
+        return key !== '$schema';
+    }).length;
+    return out;
+}
+
+function sourceMatches(source, filter) {
+    if (!filter) return true;
+    if (filter === 'dependency') return String(source).indexOf('dependency:') === 0;
+    return source === filter;
+}
+
+function listDefs(args) {
+    var got = configOrError();
+    if (got.error) return got.error;
+    var config = got.config;
+    var type = args && args.type;
+    if (DEF_TYPE.indexOf(type) === -1) {
+        return result.error('未知定义类型: ' + type, [{
+            path: [], code: 'invalid_format', expected: DEF_TYPE.join(' / '),
+            got: type, hint: 'type 必须是 materials / connectors / subsystems / control_groups / projectiles',
+        }]);
+    }
+
+    var merged;
+    try {
+        merged = defs.loadMergedDefs(config, type);
+    } catch (e) {
+        return result.error('读取定义目录失败: ' + (e && e.message ? e.message : e));
+    }
+
+    var all = merged && merged.defs ? merged.defs : {};
+    var sources = (merged && merged.sources) || {};
+    var needle = args && typeof args.search === 'string' ? args.search.trim().toLowerCase() : '';
+    var filter = args && args.source;
+    var limit = args && args.limit ? args.limit : 100;
+    if (limit > 500) limit = 500;
+
+    var rows = Object.keys(all).sort(function (a, b) {
+        return a.localeCompare(b);
+    }).map(function (id) {
+        var def = all[id];
+        var source = sources[id] || 'unknown';
+        var summary = summarizeDef(type, def);
+        return {
+            id: id,
+            source: source,
+            editable: source === 'current',
+            name: (isObject(def) && (def.name || def.id)) || id,
+            summary: summary,
+        };
+    }).filter(function (row) {
+        if (!sourceMatches(row.source, filter)) return false;
+        if (!needle) return true;
+        return (row.id + ' ' + row.name + ' ' + (row.summary.type || '')).toLowerCase().indexOf(needle) !== -1;
+    });
+
+    var total = rows.length;
+    var page = rows.slice(0, limit);
+    return {
+        ok: true,
+        type: type,
+        total: total,
+        count: page.length,
+        truncated: total > page.length,
+        defs: page,
+    };
+}
+
+function readDef(args) {
+    var got = configOrError();
+    if (got.error) return got.error;
+    var config = got.config;
+    var type = args && args.type;
+    var id = args && args.id;
+    if (DEF_TYPE.indexOf(type) === -1) {
+        return result.error('未知定义类型: ' + type, [{
+            path: [], code: 'invalid_format', expected: DEF_TYPE.join(' / '),
+            got: type, hint: 'type 必须是 materials / connectors / subsystems / control_groups / projectiles',
+        }]);
+    }
+    if (!id || typeof id !== 'string') {
+        return result.error('缺少定义 id', [{
+            path: [], code: 'missing_required', expected: '机器可读的完整 id',
+            got: id, hint: '先用 list_defs 查看可用 id，例如 machine_max:structural_steel',
+        }]);
+    }
+
+    var merged;
+    try {
+        merged = defs.loadMergedDefs(config, type);
+    } catch (e) {
+        return result.error('读取定义失败: ' + (e && e.message ? e.message : e));
+    }
+
+    var all = merged && merged.defs ? merged.defs : {};
+    var key = id;
+    if (!Object.prototype.hasOwnProperty.call(all, key)
+        && config.namespace
+        && Object.prototype.hasOwnProperty.call(all, config.namespace + ':' + key)) {
+        key = config.namespace + ':' + key;
+    }
+    if (!Object.prototype.hasOwnProperty.call(all, key)) {
+        return result.error('定义不存在: ' + type + ':' + id, [{
+            path: [], code: 'not_found', expected: '已合并的内置 / 依赖 / 当前包定义',
+            got: id, hint: '先调用 list_defs(type="' + type + '") 查看可用 id',
+        }]);
+    }
+
+    var source = (merged.sources && merged.sources[key]) || 'unknown';
+    return {
+        ok: true,
+        type: type,
+        id: key,
+        source: source,
+        editable: source === 'current',
+        definition: all[key],
+    };
+}
+
 var TOOLS = [
     {
         name: 'get_context',
@@ -589,6 +748,16 @@ var TOOLS = [
         name: 'read_node',
         description: 'Read a config node by segment array or JSON Pointer. Relative paths are resolved against the active part/variant. as="definition" projects UUIDs to bone names and strips internal fields; it keeps sub_parts as a map.',
         run: readNode,
+    },
+    {
+        name: 'list_defs',
+        description: 'List available content-pack definitions (materials / connectors / subsystems / control_groups / projectiles) merged from builtin, dependency, and current packs. Returns id, source, editable, and a compact summary; use read_def for full JSON.',
+        run: listDefs,
+    },
+    {
+        name: 'read_def',
+        description: 'Read one merged content-pack definition by namespaced id (e.g. machine_max:structural_steel). Returns source, editable, and the full definition JSON. Use list_defs first to discover ids.',
+        run: readDef,
     },
     {
         name: 'validate',

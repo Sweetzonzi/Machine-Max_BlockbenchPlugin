@@ -11,8 +11,8 @@
 ```
 src/mcp/
 ├── index.js   # registerMcpTools / unregisterMcpTools；MCP_QUEUE + 同名注销
-├── tools.js   # 12 个工具：get_context / read_node / validate /
-│              #   set_node / remove_node / bind_marker / set_active /
+├── tools.js   # 14 个工具：get_context / read_node / list_defs / read_def /
+│              #   validate / set_node / remove_node / bind_marker / set_active /
 │              #   import_part / import_variant / import_sub_part /
 │              #   import_subsystem / add_instance
 ├── params.js  # build(z)，用 MCP.z 构造参数形状；注册时字段名是 parameters
@@ -31,6 +31,8 @@ src/mcp/
 - `read_node(as='definition')` 用 `doc.projection.out(..., {for:'read'})`；`sub_parts` / `variants`
   保持 map，不折叠。
 - `validate` 复用 `services/export.canExport`（= `collectIssues` + `validateTree(completeness:true)` + 去重）。
+- `list_defs` / `read_def` 复用 `core/content_pack_manager.loadMergedDefs`（内置 → 依赖 → 当前包）；
+  `source` 与 `editable` 直接来自合并层，不在工具里重复实现优先级。
 - 工具不落盘、不导出、不建内容包、不碰 `fs`。
 
 ## 参数与路径
@@ -51,7 +53,7 @@ src/mcp/
 3. MCP 插件 drain 队列并调 `setup(mcp)`；`setup` 先按名字 `unregisterTool` 再 `registerTool`。
 4. `plugin.js onunload` 调 `unregisterMcpTools()`；同时清理 disposer 与队列条目。
 
-MCP 插件未安装时只创建一个空队列，插件其它功能不受影响。修改 `onload` 后请重启 Blockbench（Reload Plugins 会复用旧 Plugin 对象的 `onload`）。
+MCP 插件未安装时只创建一个空队列，插件其它功能不受影响。Reload Plugins 会重新读取 `dist` 并执行新 `onload`；若工具不出现，先查 `onload` 是否被更早的阶段（如菜单注册）中断。
 
 ## 反模式
 

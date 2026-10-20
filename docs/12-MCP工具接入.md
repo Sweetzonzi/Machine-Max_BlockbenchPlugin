@@ -5,7 +5,7 @@
 > 参照：[docs/11-接入Blockbench原生撤销.md](./11-接入Blockbench原生撤销.md) / [docs/08-序列化反序列化-Codec体系重构.md](./08-序列化反序列化-Codec体系重构.md) / [docs/10-校验与错误提示重构实现计划.md](./10-校验与错误提示重构实现计划.md)
 >
 > **实现备注（与设计稿的差异）**
-> - `src/mcp/` 四文件与工具矩阵按本文落地；`bun test` 覆盖只读、`set_node`、`remove_node`、`bind_marker`、`set_active`、四个 `import_*`、`add_instance`、`validate`、注册/注销，共 36 例（`test/mcp/mcp.test.js`）。
+> - `src/mcp/` 四文件与工具矩阵按本文落地；`bun test` 覆盖只读、`list_defs` / `read_def`、`set_node`、`remove_node`、`bind_marker`、`set_active`、四个 `import_*`、`add_instance`、`validate`、注册/注销，共 42 例（`test/mcp/mcp.test.js`）。
 > - MCP 插件可能先于本插件加载。`registerMcpTools()` 除了推进 `MCP_QUEUE`，在 `globalThis.MCP` 已存在时会立即 `setup` 一次；若 MCP 后加载，则监听 `loaded_plugin` 事件补注册。队列条目保留，后续 drain 会幂等重注册。
 > - 为满足 §5.3，本轮补齐了 ops：`persist:false` / `strict:true` 透传、`import_*` 的 `duplicate_name` 与 `mode:'rename'`、`add_instance` 的 key（配置键）与元素名（`definition.bone` / `definition.locator`）分离。
 > - `introduced_issues` 在 MCP 工具层用 `collectIssues` 前后 diff（正文 §7.2 的“同一撤销记录内”表述按实现收敛；不改变撤销粒度）。
@@ -179,7 +179,7 @@ config
 
 ## 5. 工具清单
 
-全部 12 个工具共用同一个可用性条件：
+全部 14 个工具共用同一个可用性条件：
 
 ```js
 condition: { project: true, modes: ['machine_max_part'] }
@@ -187,15 +187,19 @@ condition: { project: true, modes: ['machine_max_part'] }
 
 工具名统一以插件 id 前缀开头（`machine_max_bb_plugin_`），避开 94 个内置工具的名字空间（重名会在注册时抛错）。下表省略前缀。
 
-### 5.1 只读（3）
+### 5.1 只读（5）
 
 | 工具 | 参数 | 返回 |
 |---|---|---|
 | `get_context` | — | `{ project, active: { part, variant }, parts: [...], variants: [...], selection: [{ uuid, name, marker }] }` |
 | `read_node` | `path`, `as?: 'raw'\|'definition'` | `{ ok, path, kind, value }`；`as='definition'` 时走 `projection.out(..., {for:'read'})`：UUID→骨骼名、剥瞬态、保留默认值、**不折叠 `sub_parts`** |
 | `validate` | `only_introduced?: bool` | `{ ok, count, issues: [{ severity, code, message, path }] }` |
+| `list_defs` | `type`, `search?`, `source?`, `limit?` | `{ ok, type, total, count, truncated, defs: [{ id, source, editable, name, summary }] }`；合并内置 / 依赖 / 当前包 |
+| `read_def` | `type`, `id` | `{ ok, type, id, source, editable, definition }`；`id` 支持裸 key（按 `config.namespace` 补前缀） |
 
 `validate` 复用 `collectIssues(config)`（[src/mode/validation.js:180](../src/mode/validation.js)）并合并 `validateTree(config, {completeness:true})`（枚举 / 范围 / key / required），与原生问题清单、导出闸门同源。`only_introduced` 与上一次工具调用的结果做 diff（§7.2）。
+
+`list_defs` / `read_def` 走 `core/content_pack_manager.loadMergedDefs()`：按「内置包 → 依赖包 → 当前包」优先级合并，`source` 为 `builtin` / `dependency:N` / `current`，只有 `current` 的 `editable` 为 `true`。`list_defs` 的 `summary` 是紧凑视图（材料带 `armor.rha` / `physics.friction`，连接点带 `type` / `direction`，子系统带型号字段）；要看完整属性用 `read_def` 取原样 JSON。`type` 取值：`materials` / `connectors` / `subsystems` / `control_groups` / `projectiles`。
 
 ### 5.2 细粒度编辑（4，全部进撤销栈）
 
@@ -462,7 +466,7 @@ Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 | 17 | 连续 3 次 `set_node` 同一字段 → `Ctrl+Z` ×3 | **三条记录**逐条回退（MCP 强制 `coalesce:false`），面板同步 |
 | 18 | AI 编辑后不保存 → 关闭工程 | 弹出未保存提示（`Project.saved === false`） |
 | 19 | 拖拽元素过程中调用编辑工具 | `ok:false`，提示「有未完成的编辑」 |
-| 20 | 重载插件两次 | 工具仍只有 12 个，无重复注册报错 |
+| 20 | 重载插件两次 | 工具仍只有 14 个，无重复注册报错 |
 | 21 | `read_node(as='definition')` 读出的定义整件回传给 `import_*` | 结构等价（round-trip 无损），`reset_fields` 为空；覆盖含 `hit_boxes`、单变体、未解析骨骼、`definition:''`、`power_output:''`、`connector:''`、`locator:''`、`signal_targets:{}`、`power_outputs:{}`、`projectile_types:{}` 的输入；旧数据里的 `null`/`"null"` 由 `normalizeUnset` 归一化为 `''`/`{}` |
 | 22 | `import_sub_part` 建一个没有 hit_boxes 的子零件 | `ok:true`（合法中间态），`introduced_issues` 含「碰撞箱为空」；此时**导出被拦** |
 | 23 | 子系统未选型号就导出 | 导出被阻断，对话框列出该问题并可点击定位 |
@@ -532,12 +536,13 @@ validate   { only_introduced: true }
 
 ## 13. 后续扩展
 
+原计划中的 `list_defs` 已扩展为 `list_defs` + `read_def` 并落地（§5.1），剩余项如下。
+
 | 项 | 价值 | 前提 |
 |---|---|---|
 | `export_preview` | 只读返回「现在导出会写出什么」，与 `spark_modules` 里的定义做 diff | 复用 `generateAllParts`（[src/generators/part_generator.js:88](../src/generators/part_generator.js)） |
 | `apply_patch` | 一次调用改多个节点、一条撤销记录（跨节点批量） | `docs/13` 的投影 + 事务嵌套；先有 §11.3 的稳定性 |
 | `signal_graph` | 导出信号拓扑（nodes/edges），审查 SignalChannel 路由 | 复用 `extractSignalGraph`（[src/lib/signal_graph.js:23](../src/lib/signal_graph.js)） |
-| `list_defs` | 列出可用的 subsystems/connectors/materials/control_groups/projectiles 及其来源（builtin/dependency/current） | 复用 `getAvailableDefsForType` / `resolveDefSource`（[src/core/content_pack_manager.js:56](../src/core/content_pack_manager.js)） |
 | `hit_box`/`interact_box`/`connector` 整件通道 | 三小件也能整件替换 | 先解决 key↔UUID 投影的易用性（决策 D9 的回访点） |
 | `track_controller` / `track_drive` 支持 | 与上游 builtin 对齐（19 种） | **已完成（D13）**：Codec、`subsystem_types.js` 与面板动态字段已补齐；D18 删除 5 个 WIP 后 Codec 17，补完 `track_*` 回到 19 |
 | 修改前快照对比 | 编辑前后整树 diff，供 AI 自查 | 复用 `doc/projection` + diff |

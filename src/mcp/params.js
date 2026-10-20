@@ -17,6 +17,8 @@ function pathSchema(z) {
 var MODE = ['create', 'replace', 'rename', 'reject'];
 var SMALL_KIND = ['hit_box', 'interact_box', 'connector'];
 var MARKER_TYPE = ['sub_part', 'hit_box', 'interact_box', 'connector'];
+var DEF_TYPE = ['materials', 'connectors', 'subsystems', 'control_groups', 'projectiles'];
+var DEF_SOURCE = ['builtin', 'dependency', 'current'];
 
 function build(z) {
     return {
@@ -89,6 +91,18 @@ function build(z) {
             key: z.string().optional(),
             definition: z.any().optional(),
         }),
+
+        list_defs: z.object({
+            type: z.enum(DEF_TYPE),
+            search: z.string().optional(),
+            source: z.enum(DEF_SOURCE).optional(),
+            limit: z.number().int().min(1).max(500).optional(),
+        }),
+
+        read_def: z.object({
+            type: z.enum(DEF_TYPE),
+            id: z.string(),
+        }),
     };
 }
 
@@ -97,4 +111,6 @@ module.exports = {
     MODE: MODE,
     SMALL_KIND: SMALL_KIND,
     MARKER_TYPE: MARKER_TYPE,
+    DEF_TYPE: DEF_TYPE,
+    DEF_SOURCE: DEF_SOURCE,
 };
