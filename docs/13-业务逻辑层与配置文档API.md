@@ -599,10 +599,11 @@ SIDE_EFFECTS = { 'sub_part.start_bone': 'migrate_sub_part_marker', ... };
 约定：
 
 - `SPECS.<kind>.fields` 只含标量 / map / 数组字段；`CONTAINERS` 里的容器不生成规格，由 `doc/address` 处理。
-- 每个字段的 `required: true` 与 `SPECS.<kind>.required` 同时存在；后者只保留真实字段（容器字段由 `CONTAINERS` 表示）。上游本轮已把 `variant.required` 的 `models` 修正为 `model`，生成器不再需要别名归一化。
+- 每个字段的 `required: true` 与 `SPECS.<kind>.required` 同时存在；后者只保留真实字段（容器字段由 `CONTAINERS` 表示）。上游本轮已把 `variant.required` 的 `models` 修正为 `model`，生成器不再需要别名归一化。顶层字段的 `description` 原样保留，供 `describeNode` / MCP `describe_node` 解释字段含义；嵌套对象不递归展开描述。
 - `SPECS.subsystem` 的 key 是完整 type id（`machine_max:engine`），不是短名；生成器从 `subsystem_dynamic_attr.schema.json` 的 `type.enum` + `if/then` 展开，并显式补齐无分支的 `machine_max:basic`。
 - `PROVENANCE.source_sha256` 是 67 个 en_us schema JSON 的路径 + 内容 hash；`--check` 同时比较生成文本，重复运行逐字节一致（不含时间戳）。
 - 改 schema 或生成器后运行 `node scripts/gen-field-specs.js`；CI 用 `node scripts/gen-field-specs.js --check`。
+- `field_specs.describeNode(kind, typeId)` 把字段规格、`required`、`CONTAINERS` 与内部字段拼成只读字段目录；MCP 的 `describe_node` 只负责补 `present` / `found`，不复制白名单逻辑。
 
 #### 5.2.2 类型清单与 `schema_codec_allowlist` 的职责
 
@@ -1174,7 +1175,7 @@ bun test test/schema/field_specs.test.js
 
 ### P5 — MCP（已完成）
 
-`src/mcp/` 已按 [docs/12](./12-MCP工具接入.md) 落地：14 个工具（含 `list_defs` / `read_def`）、MCP_QUEUE 注册/注销、`persist:false` + `strict:true` 调用、`introduced_issues` 前后 diff。为满足 docs/12 §5.3，本轮同时补齐了 ops 的 `import_*` 重名拒绝与 `mode:'rename'`、`add_instance` 的 key/元素名分离、`set_active` 的视图同步事件。具体工具矩阵与验收见 [docs/12](./12-MCP工具接入.md)。
+`src/mcp/` 已按 [docs/12](./12-MCP工具接入.md) 落地：15 个工具（含 `describe_node` / `list_defs` / `read_def`）、MCP_QUEUE 注册/注销、`persist:false` + `strict:true` 调用、`introduced_issues` 前后 diff。为满足 docs/12 §5.3，本轮同时补齐了 ops 的 `import_*` 重名拒绝与 `mode:'rename'`、`add_instance` 的 key/元素名分离、`set_active` 的视图同步事件。具体工具矩阵与验收见 [docs/12](./12-MCP工具接入.md)。
 
 ---
 

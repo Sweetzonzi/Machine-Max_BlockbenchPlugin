@@ -29,6 +29,11 @@ function build(z) {
             as: z.enum(['raw', 'definition']).optional(),
         }),
 
+        describe_node: z.object({
+            path: pathSchema(z),
+            type: z.string().optional(),
+        }),
+
         validate: z.object({
             only_introduced: z.boolean().optional(),
         }),
