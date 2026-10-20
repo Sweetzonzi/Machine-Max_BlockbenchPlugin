@@ -9,6 +9,8 @@
 
 var { showToast } = require('../utils/notify.js');
 var { createLogger } = require('../utils/logger.js');
+var { getConfig } = require('../utils/persistence.js');
+var ops = require('../core/operations.js');
 
 /** 模块日志 */
 var log = createLogger('TagDialog');
@@ -209,8 +211,16 @@ function showAddTagDialog(vm, variant) {
                 return false;
             }
 
-            // 更新到 variant.tags
-            vm.$set(variant, 'tags', newTagList);
+            // 更新到 variant.tags（撤销边界在 ops.setVariantTags 内部）
+            var result = ops.setVariantTags(vm.config || getConfig(), {
+                partId: vm.activePartId,
+                variantName: vm.activeVariantName,
+                tags: newTagList,
+            });
+            if (!result.ok) {
+                showToast(result.error, 'error');
+                return false;
+            }
             log.info('标签添加: 已更新', { tags: newTagList });
             this.hide();
         },

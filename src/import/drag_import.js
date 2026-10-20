@@ -21,6 +21,7 @@ const { getConfig, saveConfig } = require('../utils/persistence.js');
 const { PartCodec } = require('../codec/codecs/part_codec.js');
 const { resolveBoneReferences } = require('./bone_resolver.js');
 const { showConflictDialog } = require('./conflict_dialog.js');
+const undo = require('../core/undo.js');
 
 /** 模块日志 */
 var log = createLogger('DragImport');
@@ -197,10 +198,12 @@ function _applyImport(partId, partConfig, config, action, fileName) {
     }
 
     // 5. 先写入配置（bone_resolver 中的 setMarker 需要通过 config.parts[partId] 查找零件）
-    config.parts[partId] = partConfig;
-
     // 6. 骨骼名反查 → 建立 element_markers + 未解析列表（传入完整 config 而非单独的 partConfig）
-    resolveBoneReferences(config, partId);
+    // 两步合并为一条撤销记录：一次 Ctrl+Z 回退整次导入（含批量标记）
+    undo.runConfigEdit('导入零件 ' + partId, function () {
+        config.parts[partId] = partConfig;
+        resolveBoneReferences(config, partId);
+    });
 
     // 7. 持久化
     try {
@@ -409,7 +412,11 @@ function registerDragImport() {
                 if (jsonFiles.length === 1) {
                     importSingleFile(jsonFiles[0].path, jsonFiles[0].name, jsonFiles[0].content, null);
                 } else {
-                    importMultipleFiles(jsonFiles);
+                    // 批量导入：外层开一次编辑，内层 _applyImport 的编辑作为嵌套并入，
+                    // 因此一次 Ctrl+Z 回退整批导入
+                    undo.runConfigEdit('批量导入零件', function () {
+                        importMultipleFiles(jsonFiles);
+                    });
                 }
             }
         );
@@ -483,7 +490,10 @@ function registerDragImport() {
         if (jsonFiles.length === 1) {
             importSingleFile(jsonFiles[0].path, jsonFiles[0].name, jsonFiles[0].content, null);
         } else {
-            importMultipleFiles(jsonFiles);
+            // 同上：批量导入合并为一条撤销记录
+            undo.runConfigEdit('批量导入零件', function () {
+                importMultipleFiles(jsonFiles);
+            });
         }
     };
 

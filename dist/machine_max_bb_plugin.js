@@ -1372,6 +1372,12 @@
       "$ref": "../base/signal_targets.json",\r
       "default": {},\r
       "description": "Camera discovery handshake configuration. Subsystems on these channels will receive handshake signals to discover available cameras on this vehicle. e.g. {\\"gunner_optics\\": [\\"gunner_primary_sight\\"]}"\r
+    },\r
+    "dismount_locators": {\r
+      "type": "array",\r
+      "items": { "type": "string" },\r
+      "default": [],\r
+      "description": "Ordered list of dismount locator names; the list order is the priority for dismount attempts. Every name must exist in the model locators; an empty list means this seat declares no dismount point."\r
     }\r
   },\r
   "required": ["type", "definition"],\r
@@ -4908,6 +4914,12 @@
       "$ref": "../base/signal_targets.json",\r
       "default": {},\r
       "description": "\u6444\u50CF\u673A\u53D1\u73B0\u63E1\u624B\u914D\u7F6E\u3002\u5728\u8FD9\u4E9B\u9891\u9053\u4E0A\u53D1\u9001\u63E1\u624B\u4FE1\u53F7\u5373\u53EF\u53D1\u73B0\u672C\u8F7D\u5177\u4E0A\u53EF\u7528\u7684\u6444\u50CF\u673A\u3002\u4F8B\u5982 {\\"gunner_optics\\": [\\"gunner_primary_sight\\"]}"\r
+    },\r
+    "dismount_locators": {\r
+      "type": "array",\r
+      "items": { "type": "string" },\r
+      "default": [],\r
+      "description": "\u4E0B\u8F66\u70B9\u5B9A\u4F4D\u5668\u540D\u79F0\u5217\u8868\uFF0C\u5217\u8868\u987A\u5E8F\u5373\u4E0B\u8F66\u5C1D\u8BD5\u7684\u4F18\u5148\u7EA7\u3002\u6BCF\u4E2A\u540D\u79F0\u90FD\u5FC5\u987B\u5728\u6A21\u578B locators \u4E2D\u5B58\u5728\uFF1B\u7559\u7A7A\u8868\u793A\u8BE5\u5EA7\u4F4D\u4E0D\u58F0\u660E\u4E0B\u8F66\u70B9\u3002"\r
     }\r
   },\r
   "required": ["type", "definition"],\r
@@ -8165,7 +8177,8 @@
         locator: Codec.STRING.field(),
         control_group_preset: Codec.STRING.default(""),
         passenger_num_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
-        camera_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+        camera_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        dismount_locators: Codec.STRING.list().default([])
       });
       var GearboxCodec = Codec.record({
         definition: Codec.STRING.field(),
@@ -10216,6 +10229,77 @@
     }
   });
 
+  // src/mode/icons.js
+  var require_icons = __commonJS({
+    "src/mode/icons.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { getMarkerInfo, getMarkersForVariant } = require_element_markers();
+      var { getConfig } = require_persistence();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("Mode");
+      function getIconClassForType(type) {
+        const info = getMarkerInfo(type);
+        return info ? info.icon : "";
+      }
+      function refreshOutlinerIcons() {
+        if (!Project || Project === 0) {
+          log2.debug("refreshOutlinerIcons: \u9879\u76EE\u672A\u6253\u5F00\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        const config = getConfig();
+        if (!config) {
+          log2.debug("refreshOutlinerIcons: config \u4E3A\u7A7A\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        const activePartId = config._uiState?.activePartId;
+        const activeVariantName = config._uiState?.activeVariantName;
+        if (!activePartId || !activeVariantName) {
+          log2.debug("refreshOutlinerIcons: \u65E0\u6D3B\u8DC3\u96F6\u4EF6/\u53D8\u4F53\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        log2.debug("refreshOutlinerIcons: \u5237\u65B0\u56FE\u6807", { partId: activePartId, variant: activeVariantName });
+        const markers = getMarkersForVariant(config, activePartId, activeVariantName);
+        const allElements = [...Group.all, ...Locator.all];
+        for (const el of allElements) {
+          const marker = markers[el.uuid];
+          if (marker) {
+            const iconClass = getIconClassForType(marker.type);
+            if (iconClass) {
+              el.icon = iconClass;
+            }
+          } else {
+            delete el.icon;
+          }
+          if (typeof el.updateElement === "function") {
+            el.updateElement();
+          }
+        }
+      }
+      function resetOutlinerIcons() {
+        if (!Project || Project === 0) return;
+        const allElements = [...Group.all, ...Locator.all];
+        for (const el of allElements) {
+          delete el.icon;
+          if (typeof el.updateElement === "function") {
+            el.updateElement();
+          }
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          getIconClassForType,
+          refreshOutlinerIcons,
+          resetOutlinerIcons
+        };
+      }
+    }
+  });
+
   // src/core/subsystem_types.js
   var require_subsystem_types = __commonJS({
     "src/core/subsystem_types.js"(exports, module) {
@@ -10332,7 +10416,8 @@
             { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: null },
             { field: "control_group_preset", label: "\u63A7\u5236\u7EC4\u9884\u8BBE", editor: "control_group_selector", required: false, defaultValue: "" },
             { field: "passenger_num_outputs", label: "\u4E58\u5BA2\u6570\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { passenger_num: ["subpart", "vehicle"] } },
-            { field: "camera_discovery_targets", label: "\u6444\u50CF\u673A\u53D1\u73B0\u63E1\u624B\u76EE\u6807", editor: "signal_targets", required: false, defaultValue: {} }
+            { field: "camera_discovery_targets", label: "\u6444\u50CF\u673A\u53D1\u73B0\u63E1\u624B\u76EE\u6807", editor: "signal_targets", required: false, defaultValue: {} },
+            { field: "dismount_locators", label: "\u4E0B\u8F66\u5B9A\u4F4D\u5668\uFF08\u6309\u4F18\u5148\u7EA7\uFF09", editor: "locator_list", required: false, defaultValue: [] }
           ]
         },
         {
@@ -10532,6 +10617,7 @@
       var EDITOR_LABELS = {
         definition_selector: "\u578B\u53F7\u5B9A\u4E49\u9009\u62E9\u5668",
         locator_selector: "\u5B9A\u4F4D\u5668\u9009\u62E9\u5668",
+        locator_list: "\u5B9A\u4F4D\u5668\u5217\u8868\u7F16\u8F91\u5668",
         connector_selector: "\u8FDE\u63A5\u70B9\u9009\u62E9\u5668",
         power_target: "\u529F\u7387\u76EE\u6807\u9009\u62E9\u5668",
         signal_targets: "\u4FE1\u53F7\u9891\u9053\u7F16\u8F91\u5668",
@@ -10917,8 +11003,12 @@
         // 连接点/碰撞箱/交互区游离（无归属 subpart）
         GHOST_MARKER: "ghost_marker",
         // 幽灵标记（UUID 对应元素已删除）
-        MISSING_REQUIRED: "missing_required"
+        MISSING_REQUIRED: "missing_required",
         // 其余零件/变体/子零件级必填项（占位）
+        DUPLICATE_NAME: "duplicate_name",
+        // 连接点/子系统/交互区名在单变体内重复（Part 级按名寻址歧义）
+        RESERVED_NAME: "reserved_name"
+        // 使用了信号保留地址（local/global 等）
       };
       var SCOPE_ITEM_BUCKET = {
         subsystem: "subsystems",
@@ -11085,6 +11175,42 @@
           }
         }
       }
+      var RESERVED_SIGNAL_NAMES = ["local", "global", "subpart", "vehicle"];
+      function _collectNameConflicts(partId, vName, subParts, problems) {
+        var seen = {};
+        var scopes = [
+          { field: "connectors", scope: "connector" },
+          { field: "subsystems", scope: "subsystem" },
+          { field: "interact_boxes", scope: "interact_box" }
+        ];
+        Object.keys(subParts || {}).forEach(function(spKey) {
+          var sp = subParts[spKey] || {};
+          scopes.forEach(function(s) {
+            var map = sp[s.field] || {};
+            Object.keys(map).forEach(function(name) {
+              if (RESERVED_SIGNAL_NAMES.indexOf(name) >= 0) {
+                problems.push(_makeProblem(
+                  "error",
+                  CODES.RESERVED_NAME,
+                  s.scope + ' "' + name + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u4E3A\u4FE1\u53F7\u4FDD\u7559\u5730\u5740\uFF08local/global\uFF09\uFF0C\u4E0D\u5F97\u7528\u4F5C\u8FDE\u63A5\u70B9/\u5B50\u7CFB\u7EDF/\u4EA4\u4E92\u533A\u540D',
+                  _mkPath(s.scope, partId, vName, spKey, name)
+                ));
+              }
+              var prev = seen[name];
+              if (prev) {
+                problems.push(_makeProblem(
+                  "error",
+                  CODES.DUPLICATE_NAME,
+                  '\u540D\u79F0 "' + name + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + " \u5185\u91CD\u590D\uFF1A" + prev.scope + '\uFF08\u5B50\u96F6\u4EF6 "' + prev.subPartKey + '"\uFF09\u4E0E ' + s.scope + '\uFF08\u5B50\u96F6\u4EF6 "' + spKey + '"\uFF09\u51B2\u7A81',
+                  _mkPath(s.scope, partId, vName, spKey, name)
+                ));
+              } else {
+                seen[name] = { subPartKey: spKey, scope: s.scope };
+              }
+            });
+          });
+        });
+      }
       function collectIssues(config) {
         var problems = [];
         var parts = config && config.parts || {};
@@ -11212,6 +11338,7 @@
                 }
               }
             }
+            _collectNameConflicts(partId, vName, subParts, problems);
             _collectMarkerIssues(config, partId, vName, problems);
           }
         }
@@ -11903,6 +12030,949 @@
     }
   });
 
+  // src/core/undo.js
+  var require_undo = __commonJS({
+    "src/core/undo.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("Undo");
+      var PROPERTY_NAME = "machine_max_plugin";
+      var ASPECT_FLAG = "machine_max";
+      var SNAPSHOT_KEY = "machine_max_plugin_snapshot";
+      var RESTORED_EVENT = "mm_config_restored";
+      var MAX_SNAPSHOT_BYTES = 2 * 1024 * 1024;
+      var COALESCE_WINDOW_MS = 800;
+      var _listeners = [];
+      var _depth = 0;
+      var _restoring = false;
+      var _lastBlockedNoticeAt = 0;
+      var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
+      function getUndo() {
+        try {
+          if (typeof Undo !== "undefined" && Undo) return Undo;
+          if (typeof Blockbench !== "undefined" && Blockbench && Blockbench.Undo) return Blockbench.Undo;
+        } catch (e) {
+          log2.debug("getUndo: Undo \u4E0D\u53EF\u7528", e && e.message);
+        }
+        return null;
+      }
+      function getProjectConfig() {
+        if (typeof Project === "undefined" || !Project || Project === 0) return null;
+        return Project[PROPERTY_NAME] || null;
+      }
+      function deepClone(value) {
+        if (value === null || typeof value !== "object") return value;
+        if (typeof structuredClone === "function") {
+          try {
+            return structuredClone(value);
+          } catch (e) {
+            log2.debug("deepClone: structuredClone \u5931\u8D25\uFF0C\u964D\u7EA7 JSON", e && e.message);
+          }
+        }
+        return JSON.parse(JSON.stringify(value));
+      }
+      function estimateSize(value) {
+        try {
+          return JSON.stringify(value === void 0 ? null : value).length;
+        } catch (e) {
+          return MAX_SNAPSHOT_BYTES + 1;
+        }
+      }
+      function createSnapshot() {
+        var cfg = getProjectConfig();
+        if (!cfg || typeof cfg !== "object") return null;
+        var copy;
+        try {
+          copy = deepClone(cfg);
+        } catch (e) {
+          log2.error("createSnapshot: \u6DF1\u62F7\u8D1D\u5931\u8D25\uFF0C\u672C\u6761\u8BB0\u5F55\u4E0D\u542B\u914D\u7F6E\u5FEB\u7167", e);
+          return null;
+        }
+        if (copy && typeof copy === "object") {
+          delete copy._uiState;
+        }
+        var uuid = typeof Project !== "undefined" && Project && Project.uuid ? Project.uuid : "";
+        return { project_uuid: uuid, config: copy };
+      }
+      function reconcileUiState(config, uiState) {
+        var next = uiState && typeof uiState === "object" ? uiState : {};
+        var parts = config && config.parts && typeof config.parts === "object" ? config.parts : {};
+        var partIds = Object.keys(parts);
+        var activePartId = next.activePartId;
+        if (!activePartId || !hasOwn(parts, activePartId)) {
+          activePartId = partIds.length > 0 ? partIds[0] : "";
+          next.activeVariantName = "";
+        }
+        var variants = {};
+        if (activePartId && parts[activePartId] && parts[activePartId].variants) {
+          variants = parts[activePartId].variants;
+        }
+        var variantNames = Object.keys(variants);
+        var activeVariantName = next.activeVariantName;
+        if (!activeVariantName || variantNames.indexOf(activeVariantName) === -1) {
+          activeVariantName = variantNames.length > 0 ? variantNames[0] : activePartId ? "default" : "";
+        }
+        next.activePartId = activePartId;
+        next.activeVariantName = activeVariantName;
+        if (!next.activeMode) next.activeMode = "machine_max_part";
+        if (next._pendingSubsystemNav === void 0) next._pendingSubsystemNav = null;
+        return next;
+      }
+      function refreshAfterRestore() {
+        try {
+          require_icons().refreshOutlinerIcons();
+        } catch (e) {
+          log2.warn("refreshAfterRestore: \u5237\u65B0 Outliner \u56FE\u6807\u5931\u8D25", e && e.message);
+        }
+        try {
+          require_content_pack_manager().invalidateCache();
+        } catch (e) {
+          log2.warn("refreshAfterRestore: \u6E05\u7406\u5185\u5BB9\u5305\u7F13\u5B58\u5931\u8D25", e && e.message);
+        }
+        if (typeof Blockbench === "undefined" || typeof Blockbench.dispatchEvent !== "function") return;
+        try {
+          Blockbench.dispatchEvent(RESTORED_EVENT, {});
+        } catch (e) {
+          log2.warn("refreshAfterRestore: \u6D3E\u53D1 " + RESTORED_EVENT + " \u5931\u8D25", e && e.message);
+        }
+        try {
+          Blockbench.dispatchEvent("update_selection");
+        } catch (e) {
+          log2.warn("refreshAfterRestore: \u6D3E\u53D1 update_selection \u5931\u8D25", e && e.message);
+        }
+      }
+      function onCreateUndoSave(data) {
+        if (!data || !data.aspects || !data.aspects[ASPECT_FLAG]) return;
+        if (!data.save) return;
+        var snapshot = createSnapshot();
+        if (!snapshot) return;
+        data.save[SNAPSHOT_KEY] = snapshot;
+        log2.debug("create_undo_save: \u5DF2\u6302\u914D\u7F6E\u5FEB\u7167", {
+          parts: snapshot.config && snapshot.config.parts ? Object.keys(snapshot.config.parts).length : 0,
+          size: estimateSize(snapshot.config)
+        });
+      }
+      function applySnapshot(live, next) {
+        if (typeof Project === "undefined" || !Project || Project === 0) return;
+        if (!live || typeof live !== "object") {
+          Project[PROPERTY_NAME] = next;
+          return;
+        }
+        var key;
+        for (key in next) {
+          if (hasOwn(next, key)) live[key] = next[key];
+        }
+        for (key in live) {
+          if (hasOwn(live, key) && !hasOwn(next, key)) delete live[key];
+        }
+        Project[PROPERTY_NAME] = live;
+      }
+      function onLoadUndoSave(data) {
+        if (!data || !data.save) return;
+        var snapshot = data.save[SNAPSHOT_KEY];
+        if (!snapshot || !snapshot.config) return;
+        if (typeof Project === "undefined" || !Project || Project === 0) return;
+        var currentUuid = Project.uuid || "";
+        if (snapshot.project_uuid && currentUuid && snapshot.project_uuid !== currentUuid) {
+          log2.warn("load_undo_save: \u5FEB\u7167\u5C5E\u4E8E\u5176\u4ED6\u5DE5\u7A0B\uFF0C\u8DF3\u8FC7", {
+            snapshot: snapshot.project_uuid,
+            current: currentUuid
+          });
+          return;
+        }
+        _restoring = true;
+        try {
+          var live = Project[PROPERTY_NAME];
+          var uiState = live && live._uiState && typeof live._uiState === "object" ? deepClone(live._uiState) : null;
+          var next = deepClone(snapshot.config) || {};
+          next._uiState = reconcileUiState(next, uiState);
+          applySnapshot(live, next);
+          log2.debug("load_undo_save: \u914D\u7F6E\u5DF2\u6062\u590D", {
+            parts: Project[PROPERTY_NAME] && Project[PROPERTY_NAME].parts ? Object.keys(Project[PROPERTY_NAME].parts).length : 0,
+            activePartId: next._uiState.activePartId,
+            activeVariantName: next._uiState.activeVariantName
+          });
+          refreshAfterRestore();
+        } catch (e) {
+          log2.error("load_undo_save: \u6062\u590D\u914D\u7F6E\u5931\u8D25", e);
+        } finally {
+          _restoring = false;
+        }
+      }
+      function registerUndoBridge2() {
+        if (_listeners.length > 0) {
+          log2.debug("registerUndoBridge: \u5DF2\u6CE8\u518C\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        if (typeof Blockbench === "undefined" || typeof Blockbench.on !== "function") {
+          log2.warn("registerUndoBridge: Blockbench.on \u4E0D\u53EF\u7528\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        _listeners.push(Blockbench.on("create_undo_save", onCreateUndoSave));
+        _listeners.push(Blockbench.on("load_undo_save", onLoadUndoSave));
+        log2.info("registerUndoBridge: \u5DF2\u63A5\u5165 Blockbench \u539F\u751F\u64A4\u9500\uFF08aspect=" + ASPECT_FLAG + "\uFF09");
+      }
+      function unregisterUndoBridge2() {
+        for (var i = 0; i < _listeners.length; i++) {
+          try {
+            if (typeof _listeners[i] === "function") _listeners[i]();
+          } catch (e) {
+            log2.warn("unregisterUndoBridge: \u6E05\u7406\u76D1\u542C\u5931\u8D25", e && e.message);
+          }
+        }
+        _listeners.length = 0;
+        _depth = 0;
+        log2.info("unregisterUndoBridge: \u5DF2\u79FB\u9664\u64A4\u9500\u6865\u76D1\u542C");
+      }
+      function _runUnrecorded(opts, label, mutate, reason) {
+        if (opts && opts.strict) {
+          var err = new Error("\u201C" + label + "\u201D\u65E0\u6CD5\u8FDB\u5165\u64A4\u9500\u6808\uFF1A" + reason);
+          log2.warn("runConfigEdit: " + err.message);
+          throw err;
+        }
+        log2.warn("runConfigEdit: \u672A\u8BB0\u5F55\u64A4\u9500\uFF08" + reason + "\uFF09\uFF1A" + label);
+        var now = Date.now();
+        if (now - _lastBlockedNoticeAt > 5e3) {
+          _lastBlockedNoticeAt = now;
+          try {
+            require_notify().showToast("\u8BE5\u64CD\u4F5C\u5DF2\u6267\u884C\uFF0C\u4F46\u672A\u80FD\u8FDB\u5165\u64A4\u9500\u6808\uFF1A" + reason, "warning");
+          } catch (e) {
+            log2.debug("runConfigEdit: \u63D0\u793A\u4E0D\u53EF\u7528", e && e.message);
+          }
+        }
+        return mutate();
+      }
+      function _coalesceWithPrevious(undo, label) {
+        try {
+          var history = undo.history;
+          if (!Array.isArray(history) || history.length < 2) return;
+          var current = history[history.length - 1];
+          var previous = history[history.length - 2];
+          if (!current || !previous) return;
+          if (previous.type !== "edit" || current.type !== "edit") return;
+          if (previous.action !== label) return;
+          if (!(Date.now() - (previous.time || 0) < COALESCE_WINDOW_MS)) return;
+          var prevPost = previous.post && previous.post[SNAPSHOT_KEY];
+          var curBefore = current.before && current.before[SNAPSHOT_KEY];
+          if (!prevPost || !curBefore) return;
+          if (estimateSize(prevPost.config) !== estimateSize(curBefore.config)) return;
+          if (JSON.stringify(prevPost.config) !== JSON.stringify(curBefore.config)) return;
+          previous.post = current.post;
+          previous.time = current.time;
+          history.pop();
+          undo.index = history.length;
+          log2.debug('_coalesceWithPrevious: \u5DF2\u5408\u5E76\u8FDE\u7EED\u7F16\u8F91 "' + label + '"');
+        } catch (e) {
+          log2.warn("_coalesceWithPrevious: \u5408\u5E76\u5931\u8D25\uFF08\u5FFD\u7565\uFF09", e && e.message);
+        }
+      }
+      function _discardEmptyEntry(undo, wasSaved) {
+        try {
+          var history = undo.history;
+          if (!Array.isArray(history) || history.length === 0) return false;
+          var entry = history[history.length - 1];
+          if (!entry || entry.type !== "edit") return false;
+          var beforeSnap = entry.before && entry.before[SNAPSHOT_KEY];
+          var postSnap = entry.post && entry.post[SNAPSHOT_KEY];
+          if (!beforeSnap || !postSnap) return false;
+          if (JSON.stringify(beforeSnap.config) !== JSON.stringify(postSnap.config)) return false;
+          history.pop();
+          undo.index = history.length;
+          if (typeof Project !== "undefined" && Project) Project.saved = wasSaved;
+          log2.debug('_discardEmptyEntry: \u5DF2\u4E22\u5F03\u7A7A\u8BB0\u5F55 "' + (entry.action || "") + '"');
+          return true;
+        } catch (e) {
+          log2.warn("_discardEmptyEntry: \u5224\u65AD\u5931\u8D25\uFF08\u5FFD\u7565\uFF09", e && e.message);
+          return false;
+        }
+      }
+      function runConfigEdit(label, mutate, options) {
+        if (typeof mutate !== "function") {
+          throw new TypeError("runConfigEdit: mutate \u5FC5\u987B\u662F\u51FD\u6570");
+        }
+        var opts = options || {};
+        var text = typeof label === "string" && label ? label : "MachineMax \u7F16\u8F91";
+        if (_depth > 0) {
+          _depth++;
+          try {
+            return mutate();
+          } finally {
+            _depth--;
+          }
+        }
+        var undo = getUndo();
+        if (_restoring || !undo || typeof undo.initEdit !== "function" || !getProjectConfig()) {
+          return mutate();
+        }
+        if (undo.current_save) {
+          return _runUnrecorded(opts, text, mutate, "\u7F16\u8F91\u5668\u6709\u672A\u5B8C\u6210\u7684\u7F16\u8F91\uFF08\u62D6\u62FD / \u7ED8\u5236 / \u8F93\u5165\u63D0\u4EA4\u4E2D\uFF09\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
+        }
+        var before = createSnapshot();
+        if (before && estimateSize(before.config) > MAX_SNAPSHOT_BYTES) {
+          return _runUnrecorded(opts, text, mutate, "\u914D\u7F6E\u5FEB\u7167\u8D85\u8FC7 2 MB");
+        }
+        var aspects = {};
+        aspects[ASPECT_FLAG] = true;
+        var wasSaved = typeof Project !== "undefined" && Project ? Project.saved : true;
+        try {
+          undo.initEdit(aspects);
+        } catch (e) {
+          log2.error("runConfigEdit: initEdit \u5931\u8D25\uFF0C\u9000\u5316\u4E3A\u4E0D\u8BB0\u5F55\u6267\u884C", e);
+          return mutate();
+        }
+        _depth = 1;
+        var result;
+        try {
+          result = mutate();
+        } catch (e) {
+          _depth = 0;
+          try {
+            undo.cancelEdit(true);
+          } catch (rollbackError) {
+            log2.error("runConfigEdit: \u53D8\u66F4\u5931\u8D25\u4E14\u56DE\u6EDA\u5931\u8D25", rollbackError);
+          }
+          throw e;
+        }
+        _depth = 0;
+        var discarded = false;
+        try {
+          undo.finishEdit(text, aspects);
+          discarded = _discardEmptyEntry(undo, wasSaved);
+          if (!discarded) _coalesceWithPrevious(undo, text);
+        } catch (e) {
+          log2.error("runConfigEdit: finishEdit \u5931\u8D25", e);
+        }
+        if (!discarded && typeof Blockbench !== "undefined" && typeof Blockbench.dispatchEvent === "function") {
+          try {
+            Blockbench.dispatchEvent("update_selection");
+          } catch (e) {
+            log2.debug("runConfigEdit: \u6D3E\u53D1 update_selection \u5931\u8D25", e && e.message);
+          }
+        }
+        return result;
+      }
+      function withUndoEdit(label, fn) {
+        if (typeof fn !== "function") return fn;
+        return function() {
+          var self = this;
+          var args = arguments;
+          var text = typeof label === "function" ? label.apply(self, args) : label;
+          return runConfigEdit(text, function() {
+            return fn.apply(self, args);
+          });
+        };
+      }
+      function wrapMethodMap(methods, labels) {
+        if (!methods || !labels) return methods;
+        for (var name in labels) {
+          if (!hasOwn(labels, name)) continue;
+          var original = methods[name];
+          if (typeof original !== "function") {
+            log2.warn("wrapMethodMap: \u65B9\u6CD5\u4E0D\u5B58\u5728\u6216\u4E0D\u662F\u51FD\u6570\uFF0C\u8DF3\u8FC7: " + name);
+            continue;
+          }
+          methods[name] = withUndoEdit(labels[name], original);
+        }
+        return methods;
+      }
+      function isEditInProgress() {
+        var undo = getUndo();
+        return !!(undo && undo.current_save);
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          PROPERTY_NAME,
+          ASPECT_FLAG,
+          SNAPSHOT_KEY,
+          RESTORED_EVENT,
+          registerUndoBridge: registerUndoBridge2,
+          unregisterUndoBridge: unregisterUndoBridge2,
+          runConfigEdit,
+          withUndoEdit,
+          wrapMethodMap,
+          refreshAfterRestore,
+          isEditInProgress,
+          getUndo,
+          // 供测试使用
+          _internals: {
+            createSnapshot,
+            deepClone,
+            reconcileUiState,
+            estimateSize,
+            onCreateUndoSave,
+            onLoadUndoSave
+          }
+        };
+      }
+    }
+  });
+
+  // src/core/naming.js
+  var require_naming = __commonJS({
+    "src/core/naming.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("Naming");
+      function toSnakeCase(str) {
+        if (!str) return "";
+        return str.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
+      }
+      function generateDefaultName(entityType, context) {
+        var ns = context.namespace || "machine_max";
+        switch (entityType) {
+          case "sub_part":
+            return "sub_part.machine_max.main";
+          case "connector":
+            var locName = context.boneName || "connector";
+            return "connector." + ns + "." + toSnakeCase(locName);
+          case "interact_box":
+            var boneName = context.boneName || "interact";
+            return "interact." + ns + "." + toSnakeCase(boneName);
+          case "subsystem":
+            var shortName = context.typeShortName || "subsystem";
+            return "subsystem." + ns + "." + shortName;
+          default:
+            return "";
+        }
+      }
+      var RESERVED_SIGNAL_NAMES = ["local", "global", "subpart", "vehicle"];
+      function validateNameUniqueness(variant, scope, subPartKey, name, excludeKey) {
+        if (!variant || !name) return { valid: false, message: "\u540D\u79F0\u4E3A\u7A7A" };
+        if (scope !== "sub_part" && RESERVED_SIGNAL_NAMES.indexOf(name) >= 0) {
+          return { valid: false, message: '"' + name + '" \u4E3A\u4FE1\u53F7\u4FDD\u7559\u5730\u5740\uFF08local/global\uFF09\uFF0C\u8BF7\u6362\u4E00\u4E2A\u540D\u79F0' };
+        }
+        var existingKeys = [];
+        switch (scope) {
+          case "sub_part":
+            existingKeys = Object.keys(variant.sub_parts || {});
+            break;
+          case "connector":
+          case "interact_box":
+          case "subsystem":
+            var field = scope === "connector" ? "connectors" : scope === "interact_box" ? "interact_boxes" : "subsystems";
+            var subParts = variant.sub_parts || {};
+            Object.keys(subParts).forEach(function(key) {
+              var map = subParts[key] && subParts[key][field] || {};
+              Object.keys(map).forEach(function(k) {
+                if (key === subPartKey && k === excludeKey) return;
+                existingKeys.push(k);
+              });
+            });
+            break;
+          default:
+            return { valid: false, message: "\u672A\u77E5\u4F5C\u7528\u57DF" };
+        }
+        for (var i = 0; i < existingKeys.length; i++) {
+          if (existingKeys[i] === name) {
+            return { valid: false, message: '"' + name + '" \u5DF2\u5B58\u5728\uFF0C\u8BF7\u6362\u4E00\u4E2A\u540D\u79F0' };
+          }
+        }
+        return { valid: true, message: "" };
+      }
+      function ensureUniqueName(scope, variant, subPartKey, baseName) {
+        var result = validateNameUniqueness(variant, scope, subPartKey, baseName);
+        if (result.valid) return baseName;
+        var suffix = 2;
+        while (!result.valid && suffix <= 999) {
+          var candidate = baseName + "_" + suffix;
+          result = validateNameUniqueness(variant, scope, subPartKey, candidate);
+          if (result.valid) return candidate;
+          suffix++;
+        }
+        return baseName + "_" + Date.now();
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          toSnakeCase,
+          generateDefaultName,
+          validateNameUniqueness,
+          ensureUniqueName
+        };
+      }
+    }
+  });
+
+  // src/core/operations.js
+  var require_operations = __commonJS({
+    "src/core/operations.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { runConfigEdit } = require_undo();
+      var {
+        createPartConfig,
+        createVariantConfig,
+        createSubPartConfig,
+        createHitBoxConfig,
+        createInteractBoxConfig,
+        createConnectorInstanceConfig
+      } = require_config();
+      var { setMarker, clearMarker, clearAllMarkers, getMarker, detectOwnerSubPart } = require_element_markers();
+      var { generateDefaultName, ensureUniqueName } = require_naming();
+      var ssTypes = require_subsystem_types();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("Operations");
+      function vueSet(obj, key, value) {
+        if (typeof Vue !== "undefined" && Vue && typeof Vue.set === "function") {
+          return Vue.set(obj, key, value);
+        }
+        obj[key] = value;
+        return value;
+      }
+      function vueDelete(obj, key) {
+        if (typeof Vue !== "undefined" && Vue && typeof Vue.delete === "function") {
+          return Vue.delete(obj, key);
+        }
+        delete obj[key];
+      }
+      function ok(extra) {
+        var result = { ok: true };
+        if (extra) {
+          for (var k in extra) {
+            if (Object.prototype.hasOwnProperty.call(extra, k)) result[k] = extra[k];
+          }
+        }
+        return result;
+      }
+      function fail(message) {
+        log2.warn("\u64CD\u4F5C\u5931\u8D25\uFF1A" + message);
+        return { ok: false, error: message };
+      }
+      function _configOrNull(config) {
+        if (!config || typeof config !== "object") return null;
+        return config;
+      }
+      function _part(config, partId) {
+        if (!config || !config.parts || !partId) return null;
+        return config.parts[partId] || null;
+      }
+      function _variant(config, partId, variantName) {
+        var part = _part(config, partId);
+        if (!part || !part.variants || !variantName) return null;
+        return part.variants[variantName] || null;
+      }
+      function _setUiState(config, patch) {
+        if (!config._uiState || typeof config._uiState !== "object") {
+          config._uiState = { activeMode: "part", activePartId: "", activeVariantName: "" };
+        }
+        for (var key in patch) {
+          if (Object.prototype.hasOwnProperty.call(patch, key)) {
+            config._uiState[key] = patch[key];
+          }
+        }
+        return config._uiState;
+      }
+      function createPart(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var partId = String(options.partId || "").trim();
+        var variantName = String(options.variantName || "").trim() || "default";
+        var model = options.model || "";
+        if (!partId) return fail("\u96F6\u4EF6 ID \u4E0D\u80FD\u4E3A\u7A7A");
+        if (!config.parts) config.parts = {};
+        if (config.parts[partId]) return fail('\u96F6\u4EF6 "' + partId + '" \u5DF2\u5B58\u5728');
+        runConfigEdit("\u65B0\u5EFA\u96F6\u4EF6", function() {
+          vueSet(config.parts, partId, createPartConfig(partId, variantName));
+          if (model) {
+            vueSet(config.parts[partId].variants[variantName], "model", model);
+          }
+          _setUiState(config, { activePartId: partId, activeVariantName: variantName });
+        });
+        log2.info("createPart: \u5DF2\u521B\u5EFA", { partId, variant: variantName });
+        return ok({ partId, variantName });
+      }
+      function deletePart(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        if (!config || !config.parts) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528");
+        var partId = options.partId;
+        if (!partId || !config.parts[partId]) return fail('\u96F6\u4EF6 "' + partId + '" \u4E0D\u5B58\u5728');
+        var remaining = [];
+        var state = null;
+        runConfigEdit("\u5220\u9664\u96F6\u4EF6", function() {
+          vueDelete(config.parts, partId);
+          remaining = Object.keys(config.parts);
+          if (remaining.length > 0) {
+            var firstPart = config.parts[remaining[0]];
+            var variants = Object.keys(firstPart && firstPart.variants || {});
+            state = _setUiState(config, {
+              activePartId: remaining[0],
+              activeVariantName: variants.length > 0 ? variants[0] : "default"
+            });
+          } else {
+            state = _setUiState(config, { activePartId: "", activeVariantName: "" });
+          }
+        });
+        log2.info("deletePart: \u5DF2\u5220\u9664", { partId, remaining });
+        return ok({
+          remaining,
+          activePartId: state.activePartId,
+          activeVariantName: state.activeVariantName
+        });
+      }
+      function createVariant(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var partId = options.partId;
+        var variantName = String(options.variantName || "").trim();
+        var model = options.model || "";
+        var part = _part(config, partId);
+        if (!part) return fail("\u5F53\u524D\u96F6\u4EF6\u4E0D\u5B58\u5728");
+        if (!variantName) return fail("\u53D8\u4F53\u540D\u4E0D\u80FD\u4E3A\u7A7A");
+        if (!part.variants) part.variants = {};
+        if (part.variants[variantName]) return fail('\u53D8\u4F53 "' + variantName + '" \u5DF2\u5B58\u5728');
+        var defaultTexture = options.texture !== void 0 ? options.texture : "machine_max:textures/part/" + partId + "/" + partId + ".png";
+        runConfigEdit("\u65B0\u5EFA\u53D8\u4F53", function() {
+          var variant = createVariantConfig();
+          vueSet(part.variants, variantName, variant);
+          if (model) variant.model = model;
+          if (defaultTexture) variant.textures = { "default": defaultTexture };
+          _setUiState(config, { activeVariantName: variantName });
+        });
+        log2.info("createVariant: \u5DF2\u521B\u5EFA", { partId, variant: variantName });
+        return ok({ variantName });
+      }
+      function deleteVariant(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        var partId = options.partId;
+        var variantName = options.variantName;
+        var part = _part(config, partId);
+        if (!part) return fail("\u5F53\u524D\u96F6\u4EF6\u4E0D\u5B58\u5728");
+        if (!variantName || !part.variants || !part.variants[variantName]) {
+          return fail('\u53D8\u4F53 "' + variantName + '" \u4E0D\u5B58\u5728');
+        }
+        var remaining = [];
+        var active = "";
+        runConfigEdit("\u5220\u9664\u53D8\u4F53", function() {
+          clearAllMarkers(config, partId, variantName);
+          vueDelete(part.variants, variantName);
+          remaining = Object.keys(part.variants);
+          active = remaining.length > 0 ? remaining[0] : "";
+          _setUiState(config, { activeVariantName: active });
+        });
+        log2.info("deleteVariant: \u5DF2\u5220\u9664", { partId, variant: variantName, remaining });
+        return ok({ remaining, activeVariantName: active });
+      }
+      function createSubsystem(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var partId = options.partId;
+        var variantName = options.variantName;
+        var spKey = options.spKey;
+        var typeId = options.typeId;
+        var instanceName = String(options.instanceName || "").trim();
+        var variant = _variant(config, partId, variantName);
+        if (!variant) return fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!spKey) return fail("\u7F3A\u5C11\u5B50\u96F6\u4EF6");
+        if (!typeId) return fail("\u8BF7\u9009\u62E9\u5B50\u7CFB\u7EDF\u7C7B\u578B");
+        if (!instanceName) return fail("\u5B50\u7CFB\u7EDF\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A");
+        var meta = ssTypes.getTypeMeta(typeId);
+        if (!meta) return fail("\u65E0\u6548\u7684\u5B50\u7CFB\u7EDF\u7C7B\u578B: " + typeId);
+        var sp = variant.sub_parts && variant.sub_parts[spKey];
+        if (sp && sp.subsystems && sp.subsystems[instanceName]) {
+          return fail('\u5B50\u7CFB\u7EDF "' + instanceName + '" \u5DF2\u5B58\u5728');
+        }
+        var defaults = ssTypes.getTypeDefaults(typeId) || {};
+        runConfigEdit("\u6DFB\u52A0\u5B50\u7CFB\u7EDF", function() {
+          if (!variant.sub_parts) vueSet(variant, "sub_parts", {});
+          if (!variant.sub_parts[spKey]) {
+            var spConfig = createSubPartConfig();
+            spConfig.start_bone = spKey;
+            vueSet(variant.sub_parts, spKey, spConfig);
+          }
+          var target = variant.sub_parts[spKey];
+          if (!target.subsystems) vueSet(target, "subsystems", {});
+          var ssConfig = { type: typeId, definition: null };
+          for (var key in defaults) {
+            if (Object.prototype.hasOwnProperty.call(defaults, key)) {
+              ssConfig[key] = defaults[key];
+            }
+          }
+          vueSet(target.subsystems, instanceName, ssConfig);
+        });
+        log2.info("createSubsystem: \u5DF2\u521B\u5EFA", { partId, spKey, instanceName, typeId });
+        return ok({ instanceName });
+      }
+      function deleteSubsystem(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        var variant = _variant(config, options.partId, options.variantName);
+        var sp = variant && variant.sub_parts ? variant.sub_parts[options.spKey] : null;
+        if (!sp || !sp.subsystems || !options.ssKey || !sp.subsystems[options.ssKey]) {
+          return fail('\u5B50\u7CFB\u7EDF "' + options.ssKey + '" \u4E0D\u5B58\u5728');
+        }
+        runConfigEdit("\u5220\u9664\u5B50\u7CFB\u7EDF", function() {
+          vueDelete(sp.subsystems, options.ssKey);
+        });
+        log2.info("deleteSubsystem: \u5DF2\u5220\u9664", { spKey: options.spKey, ssKey: options.ssKey });
+        return ok();
+      }
+      function setVariantTags(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        var variant = _variant(config, options.partId, options.variantName);
+        if (!variant) return fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        var tags = Array.isArray(options.tags) ? options.tags.slice() : [];
+        runConfigEdit("\u7F16\u8F91\u53D8\u4F53\u6807\u7B7E", function() {
+          vueSet(variant, "tags", tags);
+        });
+        log2.info("setVariantTags: \u5DF2\u66F4\u65B0", { partId: options.partId, variant: options.variantName, count: tags.length });
+        return ok({ tags });
+      }
+      function markSubPart(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        var element = options.element;
+        var variant = _variant(config, options.partId, options.variantName);
+        if (!variant) return fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!element || !element.uuid) return fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
+        var ns = config.namespace || "machine_max";
+        var baseName = generateDefaultName("sub_part", { namespace: ns });
+        var spKey = ensureUniqueName("sub_part", variant, null, baseName);
+        runConfigEdit("\u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6", function() {
+          setMarker(config, options.partId, options.variantName, element.uuid, "sub_part", spKey);
+        });
+        log2.info("markSubPart: \u5DF2\u6807\u8BB0", { spKey, uuid: element.uuid });
+        return ok({ spKey });
+      }
+      function markHitBox(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        var element = options.element;
+        var variant = _variant(config, options.partId, options.variantName);
+        if (!variant) return fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!element || !element.uuid) return fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
+        var marker = getMarker(config, options.partId, options.variantName, element.uuid);
+        var searchEl = marker && marker.type === "sub_part" ? element.parent || null : element;
+        var owner = detectOwnerSubPart(config, options.partId, options.variantName, searchEl);
+        var spKey = owner ? owner.spKey : null;
+        runConfigEdit("\u6807\u8BB0\u4E3A\u78B0\u649E\u7BB1", function() {
+          if (spKey) {
+            if (!variant.sub_parts) variant.sub_parts = {};
+            if (!variant.sub_parts[spKey]) {
+              vueSet(variant.sub_parts, spKey, createSubPartConfig());
+            }
+            var sp = variant.sub_parts[spKey];
+            if (!sp.hit_boxes) vueSet(sp, "hit_boxes", {});
+            if (!sp.hit_boxes[element.uuid]) {
+              vueSet(sp.hit_boxes, element.uuid, createHitBoxConfig());
+            }
+          }
+          setMarker(config, options.partId, options.variantName, element.uuid, "hit_box", spKey);
+        });
+        log2.info("markHitBox: \u5DF2\u6807\u8BB0", { spKey, uuid: element.uuid });
+        return ok({
+          spKey,
+          warning: spKey ? null : '\u78B0\u649E\u7BB1 "' + (element.name || "") + '" \u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF08\u4E0D\u53D7\u9632\u62A4\u8BA1\u7B97\u5F71\u54CD\uFF09'
+        });
+      }
+      function markInteractBox(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        var element = options.element;
+        var variant = _variant(config, options.partId, options.variantName);
+        if (!variant) return fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!element || !element.uuid) return fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
+        var marker = getMarker(config, options.partId, options.variantName, element.uuid);
+        var searchEl = marker && marker.type === "sub_part" ? element.parent || null : element;
+        var owner = detectOwnerSubPart(config, options.partId, options.variantName, searchEl);
+        var spKey = owner ? owner.spKey : null;
+        var ns = config.namespace || "machine_max";
+        var baseName = generateDefaultName("interact_box", { namespace: ns, boneName: element.name });
+        var ibName = ensureUniqueName("interact_box", variant, spKey, baseName);
+        runConfigEdit("\u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A", function() {
+          if (spKey) {
+            if (!variant.sub_parts) variant.sub_parts = {};
+            if (!variant.sub_parts[spKey]) {
+              vueSet(variant.sub_parts, spKey, createSubPartConfig());
+            }
+            var sp = variant.sub_parts[spKey];
+            if (!sp.interact_boxes) vueSet(sp, "interact_boxes", {});
+            if (!sp.interact_boxes[ibName]) {
+              var ibConfig = createInteractBoxConfig();
+              ibConfig.bone = element.name;
+              ibConfig._uuid = element.uuid;
+              vueSet(sp.interact_boxes, ibName, ibConfig);
+            }
+          }
+          setMarker(config, options.partId, options.variantName, element.uuid, "interact_box", spKey);
+        });
+        log2.info("markInteractBox: \u5DF2\u6807\u8BB0", { spKey, name: ibName, uuid: element.uuid });
+        return ok({
+          spKey,
+          name: ibName,
+          warning: spKey ? null : '\u4EA4\u4E92\u533A "' + (element.name || "") + '" \u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6'
+        });
+      }
+      function markConnector(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        var element = options.element;
+        var variant = _variant(config, options.partId, options.variantName);
+        if (!variant) return fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!element || !element.uuid) return fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
+        var owner = detectOwnerSubPart(config, options.partId, options.variantName, element);
+        var spKey = owner ? owner.spKey : null;
+        var locName = element.name || "";
+        var ns = config.namespace || "machine_max";
+        var baseName = generateDefaultName("connector", { namespace: ns, boneName: locName });
+        var connName = ensureUniqueName("connector", variant, spKey, baseName);
+        runConfigEdit("\u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9", function() {
+          if (spKey) {
+            if (!variant.sub_parts) variant.sub_parts = {};
+            if (!variant.sub_parts[spKey]) {
+              vueSet(variant.sub_parts, spKey, createSubPartConfig());
+            }
+            var sp = variant.sub_parts[spKey];
+            if (!sp.connectors) vueSet(sp, "connectors", {});
+            if (!sp.connectors[connName]) {
+              var connConfig = createConnectorInstanceConfig();
+              connConfig.locator = locName;
+              connConfig._marker_uuid = element.uuid;
+              vueSet(sp.connectors, connName, connConfig);
+            }
+          }
+          setMarker(config, options.partId, options.variantName, element.uuid, "connector", null);
+        });
+        log2.info("markConnector: \u5DF2\u6807\u8BB0", { spKey, name: connName, locator: locName });
+        return ok({
+          spKey,
+          name: connName,
+          warning: spKey ? null : '\u8FDE\u63A5\u70B9 "' + (element.name || "") + '" \u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6'
+        });
+      }
+      function clearElementMarker(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        if (!config || !config.parts) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528");
+        if (!options.uuid) return fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
+        runConfigEdit("\u6E05\u9664 MachineMax \u6807\u8BB0", function() {
+          clearMarker(config, options.partId, options.variantName, options.uuid);
+        });
+        log2.info("clearElementMarker: \u5DF2\u6E05\u9664", { partId: options.partId, uuid: options.uuid });
+        return ok();
+      }
+      function setContentPack(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var path = options.path || "";
+        var namespace = options.namespace || "";
+        var meta = options.meta || {};
+        var label = options.label || "\u5207\u6362\u5185\u5BB9\u5305";
+        runConfigEdit(label, function() {
+          config.contentPackPath = path;
+          config.namespace = namespace;
+          config.packMeta = meta;
+        });
+        log2.info("setContentPack: \u5DF2\u5207\u6362", { path, namespace, hasMeta: !!meta });
+        return ok();
+      }
+      function setContentPackPath(config, path) {
+        config = _configOrNull(config);
+        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        runConfigEdit("\u4FEE\u6539\u5185\u5BB9\u5305\u8DEF\u5F84", function() {
+          config.contentPackPath = path || "";
+        });
+        log2.info("setContentPackPath: \u5DF2\u66F4\u65B0", { path });
+        return ok();
+      }
+      function updatePackMeta(config, patch) {
+        config = _configOrNull(config);
+        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        patch = patch || {};
+        runConfigEdit("\u4FEE\u6539\u5185\u5BB9\u5305\u4FE1\u606F", function() {
+          if (!config.packMeta || typeof config.packMeta !== "object") {
+            config.packMeta = {};
+          }
+          for (var key in patch) {
+            if (Object.prototype.hasOwnProperty.call(patch, key)) {
+              vueSet(config.packMeta, key, patch[key]);
+            }
+          }
+        });
+        log2.info("updatePackMeta: \u5DF2\u66F4\u65B0", { keys: Object.keys(patch) });
+        return ok();
+      }
+      function updateDependencyPaths(config, options) {
+        options = options || {};
+        config = _configOrNull(config);
+        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var add = options.add || [];
+        var remove = options.remove || [];
+        var replace = options.replace;
+        var changed = false;
+        var paths = [];
+        runConfigEdit("\u7F16\u8F91\u4F9D\u8D56\u5305", function() {
+          if (Array.isArray(replace)) {
+            config.dependencyPaths = replace.slice();
+            changed = true;
+          } else {
+            if (!Array.isArray(config.dependencyPaths)) config.dependencyPaths = [];
+            var i;
+            for (i = 0; i < remove.length; i++) {
+              var idx = config.dependencyPaths.indexOf(remove[i]);
+              if (idx !== -1) {
+                config.dependencyPaths.splice(idx, 1);
+                changed = true;
+              }
+            }
+            for (i = 0; i < add.length; i++) {
+              if (add[i] && config.dependencyPaths.indexOf(add[i]) === -1) {
+                config.dependencyPaths.push(add[i]);
+                changed = true;
+              }
+            }
+          }
+          paths = config.dependencyPaths.slice();
+        });
+        if (!changed) {
+          log2.debug("updateDependencyPaths: \u65E0\u53D8\u66F4");
+        }
+        return ok({ changed, dependencyPaths: paths });
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          createPart,
+          deletePart,
+          createVariant,
+          deleteVariant,
+          createSubsystem,
+          deleteSubsystem,
+          setVariantTags,
+          markSubPart,
+          markHitBox,
+          markInteractBox,
+          markConnector,
+          clearElementMarker,
+          setContentPack,
+          setContentPackPath,
+          updatePackMeta,
+          updateDependencyPaths,
+          _internals: { vueSet, vueDelete, _setUiState }
+        };
+      }
+    }
+  });
+
   // src/ui/dialogs/pack_common.js
   var require_pack_common = __commonJS({
     "src/ui/dialogs/pack_common.js"(exports, module) {
@@ -11953,6 +13023,7 @@
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
       var { DEP_TYPE_LABELS } = require_pack_common();
+      var ops = require_operations();
       var log2 = createLogger2("DependencyEditor");
       function _findPackInSiblings(parentDir, packId) {
         if (!packId || !parentDir || !fs.existsSync(parentDir)) return null;
@@ -12209,28 +13280,33 @@
             },
             onConfirm: function(formData) {
               var changed = false;
-              var removePath, addPath, oldLen;
+              var removePath, addPath, res;
               if (formData.depPathToRemove && formData.depPathToRemove.trim()) {
                 removePath = formData.depPathToRemove.trim();
-                oldLen = (config.dependencyPaths || []).length;
-                persistence.removeDependencyPath(config, removePath);
-                if ((config.dependencyPaths || []).length < oldLen) {
-                  changed = true;
-                  log2.info("\u5DF2\u79FB\u9664\u4F9D\u8D56\u5305: " + removePath);
-                } else {
+                res = ops.updateDependencyPaths(config, { remove: [removePath] });
+                if (!res.ok) {
+                  showToast2(res.error, "error");
+                  return false;
+                }
+                if (!res.changed) {
                   showToast2("\u672A\u627E\u5230\u5339\u914D\u7684\u4F9D\u8D56\u8DEF\u5F84: " + removePath, "warning");
                   return false;
                 }
+                changed = true;
+                log2.info("\u5DF2\u79FB\u9664\u4F9D\u8D56\u5305: " + removePath);
               }
               if (formData.newDepPath && formData.newDepPath.trim()) {
                 addPath = formData.newDepPath.trim();
-                oldLen = (config.dependencyPaths || []).length;
-                persistence.addDependencyPath(config, addPath);
-                if ((config.dependencyPaths || []).length > oldLen) {
+                res = ops.updateDependencyPaths(config, { add: [addPath] });
+                if (!res.ok) {
+                  showToast2(res.error, "error");
+                  return false;
+                }
+                if (!res.changed) {
+                  showToast2("\u4F9D\u8D56\u8DEF\u5F84\u5DF2\u5B58\u5728: " + addPath, "info");
+                } else {
                   changed = true;
                   log2.info("\u5DF2\u6DFB\u52A0\u4F9D\u8D56\u5305: " + addPath);
-                } else {
-                  showToast2("\u4F9D\u8D56\u8DEF\u5F84\u5DF2\u5B58\u5728: " + addPath, "info");
                 }
               }
               if (changed) {
@@ -12275,6 +13351,7 @@
       var { createLogger: createLogger2 } = require_logger();
       var { isConfigValid, sanitizeFolderName } = require_pack_common();
       var { showDependencyPathEditor } = require_dependency_editor();
+      var ops = require_operations();
       var log2 = createLogger2("PackCreate");
       function showCreatePackDialog(config, onSave) {
         if (!isConfigValid(config)) {
@@ -12355,9 +13432,16 @@
                 showToast2("\u521B\u5EFA\u5931\u8D25: " + (result.error || "\u672A\u77E5\u9519\u8BEF"), "error");
                 return false;
               }
-              persistence.setPackPath(config, packDirPath);
-              config.namespace = result.namespace || "";
-              config.packMeta = meta;
+              var opResult = ops.setContentPack(config, {
+                path: packDirPath,
+                namespace: result.namespace || "",
+                meta,
+                label: "\u521B\u5EFA\u5E76\u5207\u6362\u5185\u5BB9\u5305"
+              });
+              if (!opResult.ok) {
+                showToast2(opResult.error, "error");
+                return false;
+              }
               persistence.saveConfig();
               var namespace = result.namespace || "";
               var displayName = folderName || packId.split(":").pop() || packId;
@@ -12366,12 +13450,10 @@
               showDependencyPathEditor([], parentDir, { defaultKeepAdding: false }, function(resolved) {
                 var directDeps = resolved.direct || [];
                 var indirectDeps = resolved.indirect || [];
-                for (var d = 0; d < directDeps.length; d++) {
-                  persistence.addDependencyPath(config, directDeps[d].path);
-                }
-                for (var k = 0; k < indirectDeps.length; k++) {
-                  persistence.addDependencyPath(config, indirectDeps[k].path);
-                }
+                var allPaths = [];
+                for (var d = 0; d < directDeps.length; d++) allPaths.push(directDeps[d].path);
+                for (var k = 0; k < indirectDeps.length; k++) allPaths.push(indirectDeps[k].path);
+                ops.updateDependencyPaths(config, { add: allPaths });
                 persistence.saveConfig();
                 var msg = "\u5185\u5BB9\u5305 " + displayName + " \u521B\u5EFA\u6210\u529F";
                 if (directDeps.length > 0) {
@@ -12413,6 +13495,7 @@
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
       var { isConfigValid } = require_pack_common();
+      var ops = require_operations();
       var log2 = createLogger2("PackOpen");
       function showOpenPackDialog(config, onSave) {
         if (!isConfigValid(config)) {
@@ -12457,9 +13540,15 @@
                 metaJSON: JSON.stringify(meta).substring(0, 500),
                 namespace: result.namespace
               });
-              persistence.setPackPath(config, dirPath);
-              config.namespace = result.namespace || "";
-              config.packMeta = meta;
+              var opResult = ops.setContentPack(config, {
+                path: dirPath,
+                namespace: result.namespace || "",
+                meta
+              });
+              if (!opResult.ok) {
+                showToast2(opResult.error, "error");
+                return false;
+              }
               log2.debug("showOpenPackDialog: packMeta \u5DF2\u8BBE\u7F6E", {
                 packMetaType: typeof config.packMeta,
                 packMetaKeys: Object.keys(config.packMeta),
@@ -12590,10 +13679,11 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
-      var { getConfig, saveConfig, addDependencyPath } = require_persistence();
+      var { getConfig, saveConfig } = require_persistence();
       var { showToast: showToast2 } = require_notify();
       var { collectIssues } = require_validation();
       var { executeExport } = require_export_pipeline();
+      var ops = require_operations();
       var path = __require("path");
       var log2 = createLogger2("ExportDialog");
       function _getDefaultExportDir(pm) {
@@ -12695,16 +13785,22 @@
               }
             },
             onConfirm: function(formData) {
-              if (!config.packMeta) config.packMeta = {};
+              var metaPatch = {
+                id: formData.packId || defaultPackId,
+                version: formData.packVersion || "1.0",
+                name: formData.packName || "",
+                author: formData.packAuthor || "",
+                description: formData.packDescription || "",
+                exportDir: formData.exportDir || defaultExportDir,
+                enable_auto_pack: !!formData.enableAutoPack,
+                flat_export: !!formData.flatExport
+              };
+              var opResult = ops.updatePackMeta(config, metaPatch);
+              if (!opResult.ok) {
+                showToast2(opResult.error, "error");
+                return false;
+              }
               var packMeta = config.packMeta;
-              packMeta.id = formData.packId || defaultPackId;
-              packMeta.version = formData.packVersion || "1.0";
-              packMeta.name = formData.packName || "";
-              packMeta.author = formData.packAuthor || "";
-              packMeta.description = formData.packDescription || "";
-              packMeta.exportDir = formData.exportDir || defaultExportDir;
-              packMeta.enable_auto_pack = !!formData.enableAutoPack;
-              packMeta.flat_export = !!formData.flatExport;
               saveConfig();
               this.hide();
               if (formData.manageDeps) {
@@ -12714,15 +13810,12 @@
                 var pdir = config.contentPackPath ? __require("path").dirname(config.contentPackPath) : "";
                 var pd = require_pack_setup_dialog();
                 pd.showDependencyPathEditor(existing, pdir, function(resolved) {
-                  config.dependencyPaths = [];
                   var directDeps = resolved.direct || [];
                   var indirectDeps = resolved.indirect || [];
-                  for (var d = 0; d < directDeps.length; d++) {
-                    addDependencyPath(config, directDeps[d].path);
-                  }
-                  for (var k = 0; k < indirectDeps.length; k++) {
-                    addDependencyPath(config, indirectDeps[k].path);
-                  }
+                  var allPaths = [];
+                  for (var d = 0; d < directDeps.length; d++) allPaths.push(directDeps[d].path);
+                  for (var k = 0; k < indirectDeps.length; k++) allPaths.push(indirectDeps[k].path);
+                  ops.updateDependencyPaths(config, { replace: allPaths });
                   saveConfig();
                   showToast2("\u5185\u5BB9\u5305\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\uFF0C\u4F9D\u8D56\u5DF2\u66F4\u65B0", "positive");
                 });
@@ -12918,8 +14011,7 @@
                 dependencies: _parseDependencyText(formData.dependencies || ""),
                 flat_export: !!formData.flatExport
               };
-              if (!config.packMeta) config.packMeta = {};
-              Object.assign(config.packMeta, overriddenMeta);
+              ops.updatePackMeta(config, overriddenMeta);
               try {
                 var stats = executeExport(config, overriddenMeta, exportDir, packFolderName);
                 saveConfig();
@@ -13214,77 +14306,6 @@
     }
   });
 
-  // src/mode/icons.js
-  var require_icons = __commonJS({
-    "src/mode/icons.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { getMarkerInfo, getMarkersForVariant } = require_element_markers();
-      var { getConfig } = require_persistence();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("Mode");
-      function getIconClassForType(type) {
-        const info = getMarkerInfo(type);
-        return info ? info.icon : "";
-      }
-      function refreshOutlinerIcons2() {
-        if (!Project || Project === 0) {
-          log2.debug("refreshOutlinerIcons: \u9879\u76EE\u672A\u6253\u5F00\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        const config = getConfig();
-        if (!config) {
-          log2.debug("refreshOutlinerIcons: config \u4E3A\u7A7A\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        const activePartId = config._uiState?.activePartId;
-        const activeVariantName = config._uiState?.activeVariantName;
-        if (!activePartId || !activeVariantName) {
-          log2.debug("refreshOutlinerIcons: \u65E0\u6D3B\u8DC3\u96F6\u4EF6/\u53D8\u4F53\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        log2.debug("refreshOutlinerIcons: \u5237\u65B0\u56FE\u6807", { partId: activePartId, variant: activeVariantName });
-        const markers = getMarkersForVariant(config, activePartId, activeVariantName);
-        const allElements = [...Group.all, ...Locator.all];
-        for (const el of allElements) {
-          const marker = markers[el.uuid];
-          if (marker) {
-            const iconClass = getIconClassForType(marker.type);
-            if (iconClass) {
-              el.icon = iconClass;
-            }
-          } else {
-            delete el.icon;
-          }
-          if (typeof el.updateElement === "function") {
-            el.updateElement();
-          }
-        }
-      }
-      function resetOutlinerIcons() {
-        if (!Project || Project === 0) return;
-        const allElements = [...Group.all, ...Locator.all];
-        for (const el of allElements) {
-          delete el.icon;
-          if (typeof el.updateElement === "function") {
-            el.updateElement();
-          }
-        }
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          getIconClassForType,
-          refreshOutlinerIcons: refreshOutlinerIcons2,
-          resetOutlinerIcons
-        };
-      }
-    }
-  });
-
   // src/import/drag_import.js
   var require_drag_import = __commonJS({
     "src/import/drag_import.js"(exports, module) {
@@ -13303,6 +14324,7 @@
       var { PartCodec } = require_part_codec();
       var { resolveBoneReferences } = require_bone_resolver();
       var { showConflictDialog } = require_conflict_dialog();
+      var undo = require_undo();
       var log2 = createLogger2("DragImport");
       var MODE_ID = "machine_max_part";
       var _dragoverHandler = null;
@@ -13412,8 +14434,10 @@
           log2.info("_applyImport: \u91CD\u547D\u540D", { from: partId, to: newId });
           partId = newId;
         }
-        config.parts[partId] = partConfig;
-        resolveBoneReferences(config, partId);
+        undo.runConfigEdit("\u5BFC\u5165\u96F6\u4EF6 " + partId, function() {
+          config.parts[partId] = partConfig;
+          resolveBoneReferences(config, partId);
+        });
         try {
           saveConfig();
         } catch (e) {
@@ -13567,7 +14591,9 @@
               if (jsonFiles.length === 1) {
                 importSingleFile(jsonFiles[0].path, jsonFiles[0].name, jsonFiles[0].content, null);
               } else {
-                importMultipleFiles(jsonFiles);
+                undo.runConfigEdit("\u6279\u91CF\u5BFC\u5165\u96F6\u4EF6", function() {
+                  importMultipleFiles(jsonFiles);
+                });
               }
             }
           );
@@ -13632,7 +14658,9 @@
           if (jsonFiles.length === 1) {
             importSingleFile(jsonFiles[0].path, jsonFiles[0].name, jsonFiles[0].content, null);
           } else {
-            importMultipleFiles(jsonFiles);
+            undo.runConfigEdit("\u6279\u91CF\u5BFC\u5165\u96F6\u4EF6", function() {
+              importMultipleFiles(jsonFiles);
+            });
           }
         };
         document.addEventListener("dragover", _dragoverHandler);
@@ -14514,6 +15542,100 @@
     }
   });
 
+  // src/ui/dialogs/part_dialogs.js
+  var require_part_dialogs = __commonJS({
+    "src/ui/dialogs/part_dialogs.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var ops = require_operations();
+      var { showToast: showToast2 } = require_notify();
+      var { saveConfig } = require_persistence();
+      var { createLogger: createLogger2 } = require_logger();
+      var { refreshOutlinerIcons } = require_icons();
+      var log2 = createLogger2("PartDialogs");
+      function showNewPartDialog(config, onCreated) {
+        try {
+          new Dialog({
+            title: "\u65B0\u5EFA\u96F6\u4EF6",
+            form: {
+              partId: { type: "text", label: "\u96F6\u4EF6 ID", hint: "\u5982 wine_fox_hull" },
+              variantName: { type: "text", label: "\u521D\u59CB\u53D8\u4F53\u540D", value: "default" },
+              model: { type: "text", label: "\u6A21\u578B\u5F15\u7528", value: "machine_max:" }
+            },
+            onConfirm: function(formData) {
+              var result = ops.createPart(config, formData);
+              if (!result.ok) {
+                showToast2(result.error, "error");
+                return false;
+              }
+              log2.info("\u65B0\u5EFA\u96F6\u4EF6\u6210\u529F", { partId: result.partId, variant: result.variantName });
+              refreshOutlinerIcons();
+              Blockbench.dispatchEvent("update_selection");
+              showToast2('\u96F6\u4EF6 "' + result.partId + '" \u5DF2\u521B\u5EFA', "positive");
+              if (typeof onCreated === "function") onCreated(result.partId, result.variantName);
+              this.hide();
+            }
+          }).show();
+          log2.debug("showNewPartDialog: Dialog \u5DF2\u663E\u793A");
+        } catch (e) {
+          log2.error("showNewPartDialog: Dialog \u5F02\u5E38", e);
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u65B0\u5EFA\u96F6\u4EF6\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
+        }
+      }
+      function showProjectSettingsDialog(config, onSaved) {
+        var partCount = Object.keys(config.parts || {}).length;
+        try {
+          new Dialog({
+            title: "MachineMax \u9879\u76EE\u7BA1\u7406",
+            form: {
+              contentPackPath: {
+                type: "text",
+                label: "\u5185\u5BB9\u5305\u8DEF\u5F84",
+                value: config.contentPackPath || "",
+                description: "MachineMax \u5185\u5BB9\u5305\u7684\u6839\u76EE\u5F55\u8DEF\u5F84"
+              },
+              info: {
+                type: "display",
+                label: "\u7EDF\u8BA1",
+                lines: [
+                  "\u6A21\u578B: " + (Project && Project.name || "\u672A\u547D\u540D"),
+                  "\u5185\u5BB9\u5305\u8DEF\u5F84: " + (config.contentPackPath || "\u672A\u8BBE\u7F6E"),
+                  "\u96F6\u4EF6\u6570: " + partCount
+                ]
+              }
+            },
+            onConfirm: function(formData) {
+              var result = ops.setContentPackPath(config, formData.contentPackPath);
+              if (!result.ok) {
+                showToast2(result.error, "error");
+                return false;
+              }
+              log2.info("\u9879\u76EE\u7BA1\u7406: \u5185\u5BB9\u5305\u8DEF\u5F84\u5DF2\u66F4\u65B0", { contentPackPath: formData.contentPackPath });
+              saveConfig();
+              showToast2("\u5185\u5BB9\u5305\u8DEF\u5F84\u5DF2\u66F4\u65B0", "positive");
+              if (typeof onSaved === "function") onSaved(config);
+              this.hide();
+            }
+          }).show();
+          log2.debug("showProjectSettingsDialog: Dialog \u5DF2\u663E\u793A");
+        } catch (e) {
+          log2.error("showProjectSettingsDialog: Dialog \u5F02\u5E38", e);
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u9879\u76EE\u7BA1\u7406\u5BF9\u8BDD\u6846: " + (e.message || e), "error");
+        }
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          showNewPartDialog,
+          showProjectSettingsDialog
+        };
+      }
+    }
+  });
+
   // src/mode/toolbar.js
   var require_toolbar = __commonJS({
     "src/mode/toolbar.js"(exports, module) {
@@ -14526,6 +15648,7 @@
       var { getConfig, saveConfig } = require_persistence();
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
+      var { refreshOutlinerIcons } = require_icons();
       var log2 = createLogger2("Mode");
       var _mmActionIds = ["mm_validate", "mm_export", "mm_new_part", "mm_project_settings"];
       var _mmActionInstances = [];
@@ -14593,43 +15716,9 @@
               log2.warn("\u5DE5\u5177\u680F\u65B0\u5EFA\u96F6\u4EF6: config \u4E3A\u7A7A");
               return;
             }
-            log2.debug("\u5DE5\u5177\u680F\u65B0\u5EFA\u96F6\u4EF6: \u5F53\u524D\u96F6\u4EF6\u5217\u8868", { parts: Object.keys(cfg.parts || {}) });
-            try {
-              new Dialog({
-                title: "\u65B0\u5EFA\u96F6\u4EF6",
-                form: {
-                  partId: { type: "text", label: "\u96F6\u4EF6 ID", hint: "\u5982 wine_fox_hull" },
-                  variantName: { type: "text", label: "\u521D\u59CB\u53D8\u4F53\u540D", value: "default" },
-                  model: { type: "text", label: "\u6A21\u578B\u5F15\u7528", value: "machine_max:" }
-                },
-                onConfirm: function(formData) {
-                  var partId = formData.partId;
-                  var variantName = formData.variantName;
-                  var model = formData.model;
-                  if (!partId) {
-                    showToast2("\u96F6\u4EF6 ID \u4E0D\u80FD\u4E3A\u7A7A", "error");
-                    return false;
-                  }
-                  if (cfg.parts[partId]) {
-                    showToast2('\u96F6\u4EF6 "' + partId + '" \u5DF2\u5B58\u5728', "error");
-                    return false;
-                  }
-                  var cfgMod = require_config();
-                  cfg.parts[partId] = cfgMod.createPartConfig(partId, variantName);
-                  if (model) cfg.parts[partId].variants[variantName].model = model;
-                  cfg._uiState.activePartId = partId;
-                  cfg._uiState.activeVariantName = variantName;
-                  log2.info("\u5DE5\u5177\u680F\u65B0\u5EFA\u96F6\u4EF6\u6210\u529F", { partId, variant: variantName });
-                  refreshOutlinerIcons();
-                  Blockbench.dispatchEvent("update_selection");
-                  showToast2('\u96F6\u4EF6 "' + partId + '" \u5DF2\u521B\u5EFA', "positive");
-                  this.hide();
-                }
-              }).show();
-              log2.debug("\u5DE5\u5177\u680F\u65B0\u5EFA\u96F6\u4EF6: Dialog \u5DF2\u521B\u5EFA");
-            } catch (e) {
-              log2.error("\u5DE5\u5177\u680F\u65B0\u5EFA\u96F6\u4EF6 Dialog \u5F02\u5E38", e);
-            }
+            require_part_dialogs().showNewPartDialog(cfg, function() {
+              refreshOutlinerIcons();
+            });
           }
         }));
         _mmActionInstances.push(new Action("mm_project_settings", {
@@ -14643,37 +15732,9 @@
               log2.warn("\u9879\u76EE\u7BA1\u7406: config \u4E3A\u7A7A");
               return;
             }
-            const partCount = Object.keys(config.parts).length;
-            const partList = Object.entries(config.parts).map(function(entry) {
-              var id = entry[0];
-              var part = entry[1];
-              var vCount = Object.keys(part.variants || {}).length;
-              var markerCount = part.element_markers ? Object.values(part.element_markers).reduce(function(sum, m) {
-                return sum + Object.keys(m).length;
-              }, 0) : 0;
-              return "  " + id + "  |  \u53D8\u4F53: " + vCount + "  |  \u6807\u8BB0: " + markerCount;
-            }).join("\n");
-            log2.debug("\u9879\u76EE\u7BA1\u7406: \u5F53\u524D\u7EDF\u8BA1", {
-              parts: partCount
+            require_part_dialogs().showProjectSettingsDialog(config, function() {
+              saveConfig();
             });
-            new Dialog({
-              title: "MachineMax \u9879\u76EE\u7BA1\u7406",
-              form: {
-                contentPackPath: { type: "text", label: "\u5185\u5BB9\u5305\u8DEF\u5F84", value: config.contentPackPath || "", description: "MachineMax \u5185\u5BB9\u5305\u7684\u6839\u76EE\u5F55\u8DEF\u5F84" },
-                info: { type: "display", label: "\u7EDF\u8BA1", lines: [
-                  "\u6A21\u578B: " + (Project && Project.name || "\u672A\u547D\u540D"),
-                  "\u5185\u5BB9\u5305\u8DEF\u5F84: " + (config.contentPackPath || "\u672A\u8BBE\u7F6E"),
-                  "\u96F6\u4EF6\u6570: " + partCount,
-                  partCount > 0 ? "\n\u96F6\u4EF6\u5217\u8868:\n" + partList : "\uFF08\u6682\u65E0\u96F6\u4EF6\uFF09"
-                ] }
-              },
-              onConfirm: function(formData) {
-                config.contentPackPath = formData.contentPackPath || "";
-                log2.info("\u9879\u76EE\u7BA1\u7406: \u5185\u5BB9\u5305\u8DEF\u5F84\u5DF2\u66F4\u65B0", { contentPackPath: formData.contentPackPath });
-                saveConfig();
-                this.hide();
-              }
-            }).show();
           }
         }));
         log2.info("registerToolbarActions: \u5B8C\u6210\uFF0C\u6CE8\u518C\u4E86 " + _mmActionInstances.length + " \u4E2A Action");
@@ -14778,91 +15839,6 @@
     }
   });
 
-  // src/core/naming.js
-  var require_naming = __commonJS({
-    "src/core/naming.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("Naming");
-      function toSnakeCase(str) {
-        if (!str) return "";
-        return str.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
-      }
-      function generateDefaultName(entityType, context) {
-        var ns = context.namespace || "machine_max";
-        switch (entityType) {
-          case "sub_part":
-            return "sub_part.machine_max.main";
-          case "connector":
-            var locName = context.boneName || "connector";
-            return "connector." + ns + "." + toSnakeCase(locName);
-          case "interact_box":
-            var boneName = context.boneName || "interact";
-            return "interact." + ns + "." + toSnakeCase(boneName);
-          case "subsystem":
-            var shortName = context.typeShortName || "subsystem";
-            return "subsystem." + ns + "." + shortName;
-          default:
-            return "";
-        }
-      }
-      function validateNameUniqueness(variant, scope, subPartKey, name, excludeKey) {
-        if (!variant || !name) return { valid: false, message: "\u540D\u79F0\u4E3A\u7A7A" };
-        var existingKeys = [];
-        switch (scope) {
-          case "sub_part":
-            existingKeys = Object.keys(variant.sub_parts || {});
-            break;
-          case "connector":
-            var spConns = variant.sub_parts && variant.sub_parts[subPartKey] && variant.sub_parts[subPartKey].connectors || {};
-            existingKeys = Object.keys(spConns);
-            break;
-          case "interact_box":
-            var spIbs = variant.sub_parts && variant.sub_parts[subPartKey] && variant.sub_parts[subPartKey].interact_boxes || {};
-            existingKeys = Object.keys(spIbs);
-            break;
-          case "subsystem":
-            var spSubs = variant.sub_parts && variant.sub_parts[subPartKey] && variant.sub_parts[subPartKey].subsystems || {};
-            existingKeys = Object.keys(spSubs);
-            break;
-          default:
-            return { valid: false, message: "\u672A\u77E5\u4F5C\u7528\u57DF" };
-        }
-        for (var i = 0; i < existingKeys.length; i++) {
-          if (existingKeys[i] === name && name !== excludeKey) {
-            return { valid: false, message: '"' + name + '" \u5DF2\u5B58\u5728\uFF0C\u8BF7\u6362\u4E00\u4E2A\u540D\u79F0' };
-          }
-        }
-        return { valid: true, message: "" };
-      }
-      function ensureUniqueName(scope, variant, subPartKey, baseName) {
-        var result = validateNameUniqueness(variant, scope, subPartKey, baseName);
-        if (result.valid) return baseName;
-        var suffix = 2;
-        while (!result.valid && suffix <= 999) {
-          var candidate = baseName + "_" + suffix;
-          result = validateNameUniqueness(variant, scope, subPartKey, candidate);
-          if (result.valid) return candidate;
-          suffix++;
-        }
-        return baseName + "_" + Date.now();
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          toSnakeCase,
-          generateDefaultName,
-          validateNameUniqueness,
-          ensureUniqueName
-        };
-      }
-    }
-  });
-
   // src/ui/add_subsystem_dialog.js
   var require_add_subsystem_dialog = __commonJS({
     "src/ui/add_subsystem_dialog.js"(exports, module) {
@@ -14874,24 +15850,21 @@
       init_define_SCHEMAS();
       var _lastSelectedType = "machine_max:engine";
       function showAddSubsystemDialog(options) {
+        options = options || {};
         var config = options.config;
         var variant = options.variant;
         var spKey = options.spKey;
         var preSelectedType = options.preSelectedType || "";
         var onCreated = options.onCreated || function() {
         };
-        var beforeSet = options.beforeSet || function(sp2, instanceName, ssConfig) {
-          var subs = sp2.subsystems || {};
-          subs[instanceName] = ssConfig;
-          sp2.subsystems = Object.assign({}, subs);
-        };
-        if (!variant || !variant.sub_parts || !variant.sub_parts[spKey]) return;
-        var sp = variant.sub_parts[spKey];
-        if (!sp.subsystems) sp.subsystems = {};
+        var partId = options.partId || (config && config._uiState ? config._uiState.activePartId : "");
+        var variantName = options.variantName || (config && config._uiState ? config._uiState.activeVariantName : "");
+        if (!config || !variant || !spKey) return;
         var ssTypes = require_subsystem_types();
         var groupedTypes = ssTypes.getTypesGroupedByCategory();
         var { showToast: showToast2 } = require_notify();
         var { saveConfig } = require_persistence();
+        var ops = require_operations();
         var allTypeOpts = {};
         var catOrder = ["power", "control", "utility", "experimental"];
         for (var ci = 0; ci < catOrder.length; ci++) {
@@ -14913,8 +15886,7 @@
           onConfirm: function(formData) {
             var typeId = formData.subsystemType;
             var instanceName = formData.instanceName;
-            var meta = ssTypes.getTypeMeta(typeId);
-            if (!meta) {
+            if (!ssTypes.getTypeMeta(typeId)) {
               showToast2("\u65E0\u6548\u7684\u5B50\u7CFB\u7EDF\u7C7B\u578B", "error");
               return false;
             }
@@ -14926,22 +15898,21 @@
               instanceName = ensureUniqueName("subsystem", variant, spKey, baseName);
             } else {
               instanceName = instanceName.trim();
-              if (sp.subsystems[instanceName]) {
-                showToast2('\u5B50\u7CFB\u7EDF "' + instanceName + '" \u5DF2\u5B58\u5728', "error");
-                return false;
-              }
             }
-            var defaultFields = ssTypes.getTypeDefaults(typeId);
-            var ssConfig = { type: typeId, definition: null };
-            for (var key in defaultFields) {
-              if (defaultFields.hasOwnProperty(key)) {
-                ssConfig[key] = defaultFields[key];
-              }
+            var result = ops.createSubsystem(config, {
+              partId,
+              variantName,
+              spKey,
+              typeId,
+              instanceName
+            });
+            if (!result.ok) {
+              showToast2(result.error, "error");
+              return false;
             }
-            beforeSet(sp, instanceName, ssConfig);
-            onCreated(spKey, instanceName);
+            onCreated(spKey, result.instanceName);
             saveConfig();
-            showToast2('\u5B50\u7CFB\u7EDF "' + instanceName + '" \u5DF2\u521B\u5EFA', "positive");
+            showToast2('\u5B50\u7CFB\u7EDF "' + result.instanceName + '" \u5DF2\u521B\u5EFA', "positive");
             this.hide();
             Blockbench.dispatchEvent("update_selection");
           }
@@ -14962,16 +15933,39 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var { getMarkersForVariant, setMarker, clearMarker, getMarker, detectOwnerSubPart, recalcAutoEndBones } = require_element_markers();
-      var { getConfig, saveConfig } = require_persistence();
+      var { getMarker } = require_element_markers();
+      var { getConfig } = require_persistence();
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
-      var { generateDefaultName, ensureUniqueName } = require_naming();
       var ssTypes = require_subsystem_types();
+      var ops = require_operations();
       var log2 = createLogger2("Mode");
       var _originalShowContextMenus = {};
       var _PATCH_TARGETS = ["OutlinerNode", "Group", "OutlinerElement"];
       var _originalOutlinerElementSelect = null;
+      function _refreshIcons() {
+        try {
+          require_mode().refreshOutlinerIcons();
+        } catch (e) {
+          log2.debug("_refreshIcons: \u4E0D\u53EF\u7528", e && e.message);
+        }
+      }
+      function _applyResult(result, successMessage) {
+        if (!result || !result.ok) {
+          showToast2(result && result.error || "\u64CD\u4F5C\u5931\u8D25", "error");
+          return false;
+        }
+        _refreshIcons();
+        if (typeof Blockbench !== "undefined" && typeof Blockbench.dispatchEvent === "function") {
+          Blockbench.dispatchEvent("update_selection");
+        }
+        if (result.warning) {
+          showToast2(result.warning, "warning");
+        } else if (successMessage) {
+          showToast2(successMessage, "positive");
+        }
+        return true;
+      }
       function buildMMMenuItems(el) {
         log2.debug("buildMMMenuItems \u88AB\u8C03\u7528", {
           name: el && el.name,
@@ -14984,10 +15978,6 @@
           log2.warn("buildMMMenuItems: getConfig() \u8FD4\u56DE\u7A7A");
           return [];
         }
-        log2.debug("buildMMMenuItems: \u5F53\u524D UI \u72B6\u6001", {
-          _uiState: config._uiState,
-          parts: Object.keys(config.parts || {})
-        });
         var activePartId = config._uiState?.activePartId;
         var activeVariantName = config._uiState?.activeVariantName;
         if ((!activePartId || !activeVariantName) && config.parts && Object.keys(config.parts).length > 0) {
@@ -15001,85 +15991,9 @@
           log2.debug("buildMMMenuItems: \u81EA\u52A8\u9009\u62E9\u7B2C\u4E00\u4E2A\u96F6\u4EF6", { partId: autoId, variant: autoVariant });
         }
         if (!activePartId || !activeVariantName) {
-          log2.debug("buildMMMenuItems: \u65E0\u6D3B\u8DC3\u96F6\u4EF6/\u53D8\u4F53\uFF0C\u663E\u793A\u63D0\u793A\u83DC\u5355");
-          var hintItems = [];
-          hintItems.push(new MenuSeparator("mm_separator", "MachineMax"));
-          hintItems.push({ name: "\u8BF7\u5148\u65B0\u5EFA\u96F6\u4EF6", icon: "add", click: function() {
-            log2.debug('\u53F3\u952E\u83DC\u5355: \u70B9\u51FB\u4E86"\u65B0\u5EFA\u96F6\u4EF6"');
-            var cfg = getConfig();
-            if (!cfg) {
-              log2.warn("\u53F3\u952E\u83DC\u5355\u65B0\u5EFA\u96F6\u4EF6: getConfig() \u8FD4\u56DE null");
-              return;
-            }
-            try {
-              new Dialog({
-                title: "\u65B0\u5EFA\u96F6\u4EF6",
-                form: {
-                  partId: { type: "text", label: "\u96F6\u4EF6 ID", hint: "\u5982 wine_fox_hull" },
-                  variantName: { type: "text", label: "\u521D\u59CB\u53D8\u4F53\u540D", value: "default" },
-                  model: { type: "text", label: "\u6A21\u578B\u5F15\u7528", value: "machine_max:" }
-                },
-                onConfirm: function(formData) {
-                  var partId = formData.partId;
-                  var variantName = formData.variantName;
-                  var model = formData.model;
-                  if (!partId) {
-                    showToast2("\u96F6\u4EF6 ID \u4E0D\u80FD\u4E3A\u7A7A", "error");
-                    return false;
-                  }
-                  if (cfg.parts[partId]) {
-                    showToast2('\u96F6\u4EF6 "' + partId + '" \u5DF2\u5B58\u5728', "error");
-                    return false;
-                  }
-                  var cfgMod = require_config();
-                  cfg.parts[partId] = cfgMod.createPartConfig(partId, variantName);
-                  if (model) cfg.parts[partId].variants[variantName].model = model;
-                  cfg._uiState.activePartId = partId;
-                  cfg._uiState.activeVariantName = variantName;
-                  log2.info("\u53F3\u952E\u83DC\u5355\u65B0\u5EFA\u96F6\u4EF6\u6210\u529F", { partId, variant: variantName });
-                  var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_mode();
-                  refreshOutlinerIcons2();
-                  Blockbench.dispatchEvent("update_selection");
-                  showToast2('\u96F6\u4EF6 "' + partId + '" \u5DF2\u521B\u5EFA', "positive");
-                  this.hide();
-                }
-              }).show();
-              log2.debug("\u53F3\u952E\u83DC\u5355\u65B0\u5EFA\u96F6\u4EF6: Dialog \u5DF2\u663E\u793A");
-            } catch (e) {
-              log2.error("\u53F3\u952E\u83DC\u5355\u65B0\u5EFA\u96F6\u4EF6 Dialog \u5F02\u5E38", e);
-            }
-          } });
-          hintItems.push({ name: "\u9879\u76EE\u7BA1\u7406", icon: "settings", click: function() {
-            log2.debug('\u53F3\u952E\u83DC\u5355: \u70B9\u51FB\u4E86"\u9879\u76EE\u7BA1\u7406"');
-            var cfg = getConfig();
-            if (!cfg) return;
-            var partCount = Object.keys(cfg.parts || {}).length;
-            try {
-              new Dialog({
-                title: "MachineMax \u9879\u76EE\u7BA1\u7406",
-                form: {
-                  contentPackPath: { type: "text", label: "\u5185\u5BB9\u5305\u8DEF\u5F84", value: cfg.contentPackPath || "", description: "MachineMax \u5185\u5BB9\u5305\u7684\u6839\u76EE\u5F55\u8DEF\u5F84" },
-                  info: { type: "display", label: "\u7EDF\u8BA1", lines: [
-                    "\u6A21\u578B: " + (Project && Project.name || "\u672A\u547D\u540D"),
-                    "\u5185\u5BB9\u5305\u8DEF\u5F84: " + (cfg.contentPackPath || "\u672A\u8BBE\u7F6E"),
-                    "\u96F6\u4EF6\u6570: " + partCount
-                  ] }
-                },
-                onConfirm: function(formData) {
-                  cfg.contentPackPath = formData.contentPackPath || "";
-                  log2.info("\u9879\u76EE\u7BA1\u7406: \u5185\u5BB9\u5305\u8DEF\u5F84\u5DF2\u66F4\u65B0", { contentPackPath: formData.contentPackPath });
-                  saveConfig();
-                  this.hide();
-                }
-              }).show();
-              log2.debug("\u53F3\u952E\u83DC\u5355\u9879\u76EE\u7BA1\u7406: Dialog \u5DF2\u663E\u793A");
-            } catch (e) {
-              log2.error("\u53F3\u952E\u83DC\u5355\u9879\u76EE\u7BA1\u7406 Dialog \u5F02\u5E38", e);
-            }
-          } });
-          return hintItems;
+          return _buildEmptyStateItems(config);
         }
-        const marker = getMarker(config, activePartId, activeVariantName, el.uuid);
+        var marker = getMarker(config, activePartId, activeVariantName, el.uuid);
         log2.debug("buildMMMenuItems: \u5F53\u524D\u5143\u7D20\u6807\u8BB0", {
           uuid: el.uuid,
           marker: marker ? marker.type : "\u65E0"
@@ -15088,255 +16002,140 @@
         items.push(new MenuSeparator("mm_separator", "MachineMax \u6807\u8BB0"));
         if (el instanceof Group) {
           if (!marker || marker.type !== "sub_part") {
-            items.push({ name: "\u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6", icon: "inventory_2", click: function() {
-              log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6", { uuid: el.uuid, name: el.name });
-              var variant = config.parts[activePartId].variants[activeVariantName];
-              var ns = config.namespace || "machine_max";
-              var baseName = generateDefaultName("sub_part", { namespace: ns });
-              var spName = ensureUniqueName("sub_part", variant, null, baseName);
-              setMarker(config, activePartId, activeVariantName, el.uuid, "sub_part", spName);
-              var postVariant = config.parts[activePartId] && config.parts[activePartId].variants[activeVariantName];
-              log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6 \u2014 setMarker \u540E sub_parts", {
-                spName,
-                subPartKeys: postVariant && postVariant.sub_parts ? Object.keys(postVariant.sub_parts) : [],
-                subPartsExist: !!(postVariant && postVariant.sub_parts),
-                activePartId,
-                variantName: activeVariantName
-              });
-              var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_mode();
-              refreshOutlinerIcons2();
-              Blockbench.dispatchEvent("update_selection");
-              log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6 \u2014 \u5DF2\u89E6\u53D1 update_selection");
-            } });
+            items.push({
+              name: "\u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6",
+              icon: "inventory_2",
+              click: function() {
+                var result = ops.markSubPart(config, {
+                  partId: activePartId,
+                  variantName: activeVariantName,
+                  element: el
+                });
+                _applyResult(result, result.ok ? '\u5DF2\u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6 "' + result.spKey + '"' : null);
+              }
+            });
           }
           if (!marker || marker.type !== "hit_box") {
-            items.push({ name: "\u6807\u8BB0\u4E3A\u78B0\u649E\u7BB1", icon: "select_all", click: function() {
-              log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u78B0\u649E\u7BB1", { uuid: el.uuid, name: el.name });
-              var searchEl = marker && marker.type === "sub_part" ? el.parent || null : el;
-              var owner = detectOwnerSubPart(config, activePartId, activeVariantName, searchEl);
-              var spKey = owner ? owner.spKey : null;
-              if (spKey) {
-                var variant = config.parts[activePartId].variants[activeVariantName];
-                if (!variant.sub_parts) variant.sub_parts = {};
-                if (!variant.sub_parts[spKey]) {
-                  var cfgMod = require_config();
-                  variant.sub_parts[spKey] = cfgMod.createSubPartConfig();
-                }
-                if (!variant.sub_parts[spKey].hit_boxes) {
-                  variant.sub_parts[spKey].hit_boxes = {};
-                }
-                var hbUuid = el.uuid;
-                if (!variant.sub_parts[spKey].hit_boxes[hbUuid]) {
-                  var cfgMod2 = require_config();
-                  variant.sub_parts[spKey].hit_boxes[hbUuid] = cfgMod2.createHitBoxConfig();
-                  log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u78B0\u649E\u7BB1 \u2014 \u5728 sub_parts \u4E2D\u521B\u5EFA\u6761\u76EE", {
-                    spKey,
-                    hbUuid,
-                    elementName: el.name
-                  });
-                }
+            items.push({
+              name: "\u6807\u8BB0\u4E3A\u78B0\u649E\u7BB1",
+              icon: "select_all",
+              click: function() {
+                var result = ops.markHitBox(config, {
+                  partId: activePartId,
+                  variantName: activeVariantName,
+                  element: el
+                });
+                _applyResult(result);
               }
-              setMarker(config, activePartId, activeVariantName, el.uuid, "hit_box", spKey);
-              var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_mode();
-              refreshOutlinerIcons2();
-              Blockbench.dispatchEvent("update_selection");
-              if (!spKey) {
-                showToast2('\u78B0\u649E\u7BB1 "' + el.name + '" \u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF08\u4E0D\u53D7\u9632\u62A4\u8BA1\u7B97\u5F71\u54CD\uFF09', "warning");
-              }
-            } });
+            });
           }
           if (!marker || marker.type !== "interact_box") {
-            items.push({ name: "\u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A", icon: "pan_tool", click: function() {
-              log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A", { uuid: el.uuid, name: el.name });
-              var searchEl = marker && marker.type === "sub_part" ? el.parent || null : el;
-              var owner = detectOwnerSubPart(config, activePartId, activeVariantName, searchEl);
-              var spKey = owner ? owner.spKey : null;
-              if (spKey) {
-                var variant = config.parts[activePartId].variants[activeVariantName];
-                if (!variant.sub_parts) variant.sub_parts = {};
-                if (!variant.sub_parts[spKey]) {
-                  var cfgMod = require_config();
-                  variant.sub_parts[spKey] = cfgMod.createSubPartConfig();
-                }
-                if (!variant.sub_parts[spKey].interact_boxes) {
-                  variant.sub_parts[spKey].interact_boxes = {};
-                }
-                var ns = config.namespace || "machine_max";
-                var baseName = generateDefaultName("interact_box", { namespace: ns, boneName: el.name });
-                var ibName = ensureUniqueName("interact_box", variant, spKey, baseName);
-                if (!variant.sub_parts[spKey].interact_boxes[ibName]) {
-                  var cfgMod2 = require_config();
-                  variant.sub_parts[spKey].interact_boxes[ibName] = cfgMod2.createInteractBoxConfig();
-                  variant.sub_parts[spKey].interact_boxes[ibName].bone = el.name;
-                  variant.sub_parts[spKey].interact_boxes[ibName]._uuid = el.uuid;
-                  log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A \u2014 \u5728 sub_parts \u4E2D\u521B\u5EFA\u6761\u76EE", {
-                    spKey,
-                    ibName,
-                    boneName: el.name
-                  });
-                }
+            items.push({
+              name: "\u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A",
+              icon: "pan_tool",
+              click: function() {
+                var result = ops.markInteractBox(config, {
+                  partId: activePartId,
+                  variantName: activeVariantName,
+                  element: el
+                });
+                _applyResult(result);
               }
-              setMarker(config, activePartId, activeVariantName, el.uuid, "interact_box", spKey);
-              var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_mode();
-              refreshOutlinerIcons2();
-              Blockbench.dispatchEvent("update_selection");
-              if (!spKey) {
-                showToast2('\u4EA4\u4E92\u533A "' + el.name + '" \u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6', "warning");
-              }
-            } });
+            });
           }
           if (marker && marker.type === "sub_part") {
-            var buildSubsystemSubmenu = function(spKey) {
-              var logSubSys = function(typeId, displayName) {
-                log2.debug("\u53F3\u952E\u83DC\u5355: \u6DFB\u52A0 " + typeId + " \u5B50\u7CFB\u7EDF", { spKey });
-              };
-              var catOrder = ["power", "control", "utility", "experimental"];
-              var catItems = [];
-              for (var ci = 0; ci < catOrder.length; ci++) {
-                var cat = catOrder[ci];
-                var types = ssTypes.getTypesByCategory(cat);
-                if (!types || types.length === 0) continue;
-                var catLabel = ssTypes.getCategoryLabel(cat);
-                var typeItems = [];
-                for (var ti = 0; ti < types.length; ti++) {
-                  var t2 = types[ti];
-                  (function(capturedTypeId, capturedDisplayName) {
-                    typeItems.push({
-                      name: capturedDisplayName,
-                      click: function() {
-                        logSubSys(capturedTypeId, capturedDisplayName);
-                        var variant = config.parts[activePartId].variants[activeVariantName];
-                        if (!variant.sub_parts) variant.sub_parts = {};
-                        if (!variant.sub_parts[spKey]) {
-                          var cfgMod = require_config();
-                          variant.sub_parts[spKey] = cfgMod.createSubPartConfig();
-                        }
-                        var { showAddSubsystemDialog } = require_add_subsystem_dialog();
-                        showAddSubsystemDialog({
-                          config,
-                          variant,
-                          spKey,
-                          preSelectedType: capturedTypeId
-                        });
-                      }
-                    });
-                  })(t2.id, t2.displayName);
-                }
-                catItems.push({ name: "[" + catLabel + "]", children: typeItems });
-              }
-              return catItems;
-            };
             items.push({
               name: "\u6DFB\u52A0\u5B50\u7CFB\u7EDF",
               icon: "add",
-              children: buildSubsystemSubmenu(marker.config_ref || el.name)
+              children: _buildSubsystemSubmenu(config, activePartId, activeVariantName, marker.config_ref || el.name)
             });
           }
         } else if (el instanceof Locator) {
-          var locatorTypes = ["connector"];
-          var labels = {
-            connector: "\u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9"
-          };
-          var icons = {
-            connector: "link"
-          };
-          for (var t = 0; t < locatorTypes.length; t++) {
-            var type = locatorTypes[t];
-            if (!marker || marker.type !== type) {
-              items.push({ name: labels[type], icon: icons[type], click: /* @__PURE__ */ (function(capturedType) {
-                return function() {
-                  log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A" + capturedType, { uuid: el.uuid, name: el.name });
-                  if (capturedType === "connector") {
-                    var owner = detectOwnerSubPart(config, activePartId, activeVariantName, el);
-                    var spKey = owner ? owner.spKey : null;
-                    if (spKey) {
-                      var variant = config.parts[activePartId].variants[activeVariantName];
-                      if (!variant.sub_parts) variant.sub_parts = {};
-                      if (!variant.sub_parts[spKey]) {
-                        var cfgMod2 = require_config();
-                        variant.sub_parts[spKey] = cfgMod2.createSubPartConfig();
-                      }
-                      if (!variant.sub_parts[spKey].connectors) {
-                        variant.sub_parts[spKey].connectors = {};
-                      }
-                      var locName = el.name;
-                      var ns = config.namespace || "machine_max";
-                      var baseName = generateDefaultName("connector", { namespace: ns, boneName: locName });
-                      var connName = ensureUniqueName("connector", variant, spKey, baseName);
-                      if (!variant.sub_parts[spKey].connectors[connName]) {
-                        var CONNECTOR_INSTANCE_DEFAULTS = {
-                          locator: "",
-                          definition: "",
-                          power_target: "",
-                          signal_translations: {},
-                          signal_targets: {},
-                          internal: false,
-                          overwrite: {}
-                        };
-                        variant.sub_parts[spKey].connectors[connName] = Object.assign({}, CONNECTOR_INSTANCE_DEFAULTS, {
-                          locator: locName,
-                          _marker_uuid: el.uuid
-                        });
-                        log2.debug("\u53F3\u952E\u83DC\u5355: \u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9 \u2014 \u5728 sub_parts \u4E2D\u521B\u5EFA\u6761\u76EE", {
-                          spKey,
-                          connKey: connName,
-                          locatorName: locName
-                        });
-                      }
-                    }
-                  }
-                  setMarker(config, activePartId, activeVariantName, el.uuid, capturedType, null);
-                  var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_mode();
-                  refreshOutlinerIcons2();
-                  Blockbench.dispatchEvent("update_selection");
-                };
-              })(type) });
-            }
+          if (!marker || marker.type !== "connector") {
+            items.push({
+              name: "\u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9",
+              icon: "link",
+              click: function() {
+                var result = ops.markConnector(config, {
+                  partId: activePartId,
+                  variantName: activeVariantName,
+                  element: el
+                });
+                _applyResult(result);
+              }
+            });
           }
         }
         if (marker) {
-          items.push({ name: "\u6E05\u9664 MachineMax \u6807\u8BB0", icon: "delete", click: function() {
-            log2.debug("\u53F3\u952E\u83DC\u5355: \u6E05\u9664\u6807\u8BB0 \u2014 \u5F00\u59CB", {
-              type: marker.type,
-              uuid: el.uuid,
-              name: el.name,
-              configRef: marker.config_ref,
-              activePartId,
-              variantName: activeVariantName
-            });
-            var oldVariant = config.parts[activePartId] && config.parts[activePartId].variants[activeVariantName];
-            var oldSubPartsSnapshot = {};
-            if (oldVariant && oldVariant.sub_parts) {
-              for (var spk in oldVariant.sub_parts) {
-                oldSubPartsSnapshot[spk] = {
-                  hitBoxKeys: oldVariant.sub_parts[spk].hit_boxes ? Object.keys(oldVariant.sub_parts[spk].hit_boxes) : [],
-                  interactBoxKeys: oldVariant.sub_parts[spk].interact_boxes ? Object.keys(oldVariant.sub_parts[spk].interact_boxes) : [],
-                  connectorKeys: oldVariant.sub_parts[spk].connectors ? Object.keys(oldVariant.sub_parts[spk].connectors) : []
-                };
-              }
+          items.push({
+            name: "\u6E05\u9664 MachineMax \u6807\u8BB0",
+            icon: "delete",
+            click: function() {
+              log2.debug("\u53F3\u952E\u83DC\u5355: \u6E05\u9664\u6807\u8BB0", { type: marker.type, uuid: el.uuid });
+              var result = ops.clearElementMarker(config, {
+                partId: activePartId,
+                variantName: activeVariantName,
+                uuid: el.uuid
+              });
+              _applyResult(result, "\u5DF2\u6E05\u9664 MachineMax \u6807\u8BB0");
             }
-            log2.debug("\u53F3\u952E\u83DC\u5355: \u6E05\u9664\u6807\u8BB0 \u2014 \u6E05\u9664\u524D sub_parts \u5FEB\u7167", { subParts: oldSubPartsSnapshot });
-            clearMarker(config, activePartId, activeVariantName, el.uuid);
-            var newVariant = config.parts[activePartId] && config.parts[activePartId].variants[activeVariantName];
-            var newSubPartsSnapshot = {};
-            if (newVariant && newVariant.sub_parts) {
-              for (var spk2 in newVariant.sub_parts) {
-                newSubPartsSnapshot[spk2] = {
-                  hitBoxKeys: newVariant.sub_parts[spk2].hit_boxes ? Object.keys(newVariant.sub_parts[spk2].hit_boxes) : [],
-                  interactBoxKeys: newVariant.sub_parts[spk2].interact_boxes ? Object.keys(newVariant.sub_parts[spk2].interact_boxes) : [],
-                  connectorKeys: newVariant.sub_parts[spk2].connectors ? Object.keys(newVariant.sub_parts[spk2].connectors) : []
-                };
-              }
-            }
-            log2.debug("\u53F3\u952E\u83DC\u5355: \u6E05\u9664\u6807\u8BB0 \u2014 \u6E05\u9664\u540E sub_parts \u5FEB\u7167", { subParts: newSubPartsSnapshot });
-            var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_mode();
-            refreshOutlinerIcons2();
-            Blockbench.dispatchEvent("update_selection");
-            log2.debug("\u53F3\u952E\u83DC\u5355: \u6E05\u9664\u6807\u8BB0 \u2014 \u5B8C\u6210\uFF08\u5DF2\u89E6\u53D1 update_selection\uFF09");
-          } });
+          });
         }
         log2.debug("buildMMMenuItems: \u6784\u5EFA\u4E86 " + items.length + " \u4E2A\u83DC\u5355\u6761\u76EE");
         return items;
+      }
+      function _buildEmptyStateItems(config) {
+        log2.debug("buildMMMenuItems: \u65E0\u6D3B\u8DC3\u96F6\u4EF6/\u53D8\u4F53\uFF0C\u663E\u793A\u63D0\u793A\u83DC\u5355");
+        var items = [];
+        items.push(new MenuSeparator("mm_separator", "MachineMax"));
+        items.push({
+          name: "\u65B0\u5EFA\u96F6\u4EF6",
+          icon: "add",
+          click: function() {
+            require_part_dialogs().showNewPartDialog(config);
+          }
+        });
+        items.push({
+          name: "\u9879\u76EE\u7BA1\u7406",
+          icon: "settings",
+          click: function() {
+            require_part_dialogs().showProjectSettingsDialog(config);
+          }
+        });
+        return items;
+      }
+      function _buildSubsystemSubmenu(config, partId, variantName, spKey) {
+        var catOrder = ["power", "control", "utility", "experimental"];
+        var catItems = [];
+        var variant = config.parts[partId] && config.parts[partId].variants ? config.parts[partId].variants[variantName] : null;
+        if (!variant) return catItems;
+        for (var ci = 0; ci < catOrder.length; ci++) {
+          var cat = catOrder[ci];
+          var types = ssTypes.getTypesByCategory(cat);
+          if (!types || types.length === 0) continue;
+          var catLabel = ssTypes.getCategoryLabel(cat);
+          var typeItems = [];
+          for (var ti = 0; ti < types.length; ti++) {
+            (function(capturedTypeId, capturedDisplayName) {
+              typeItems.push({
+                name: capturedDisplayName,
+                click: function() {
+                  var { showAddSubsystemDialog } = require_add_subsystem_dialog();
+                  showAddSubsystemDialog({
+                    config,
+                    variant,
+                    partId,
+                    variantName,
+                    spKey,
+                    preSelectedType: capturedTypeId
+                  });
+                }
+              });
+            })(types[ti].id, types[ti].displayName);
+          }
+          catItems.push({ name: "[" + catLabel + "]", children: typeItems });
+        }
+        return catItems;
       }
       function injectMMItemsToStructure(el, menu) {
         if (!menu || !menu.structure) {
@@ -15545,6 +16344,8 @@
       init_define_SCHEMAS();
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
+      var { getConfig } = require_persistence();
+      var ops = require_operations();
       var log2 = createLogger2("TagDialog");
       var TAG_PALETTE = [
         "#3a6a9a",
@@ -15708,7 +16509,15 @@
               showToast2("\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u6807\u7B7E", "error");
               return false;
             }
-            vm.$set(variant, "tags", newTagList);
+            var result = ops.setVariantTags(vm.config || getConfig(), {
+              partId: vm.activePartId,
+              variantName: vm.activeVariantName,
+              tags: newTagList
+            });
+            if (!result.ok) {
+              showToast2(result.error, "error");
+              return false;
+            }
             log2.info("\u6807\u7B7E\u6DFB\u52A0: \u5DF2\u66F4\u65B0", { tags: newTagList });
             this.hide();
           }
@@ -15756,7 +16565,7 @@
             <label title="\u5B50\u90E8\u4EF6\u7684\u8D77\u59CB\u9AA8\u9ABC\u540D\u79F0\uFF0C\u8F93\u5165\u5173\u952E\u5B57\u641C\u7D22\u5E76\u9009\u62E9">\u7ED1\u5B9A\u9AA8\u9ABC</label>
             <input type="text" class="mm-input"
                 v-model="editingStartBone"
-                @input="onStartBoneInput($event.target.value)"
+                @change="onStartBoneInput($event.target.value)"
                 :list="boneListId"
                 placeholder="\u641C\u7D22\u5E76\u9009\u62E9\u9AA8\u9ABC\u2026" />
             <datalist :id="boneListId">
@@ -15794,17 +16603,17 @@
         <h4 class="mm-section-title">\u7269\u7406\u5C5E\u6027</h4>
         <div class="mm-field">
             <label title="\u5B50\u90E8\u4EF6\u57FA\u7840\u751F\u547D\u503C\uFF0C\u964D\u81F30\u65F6\u8BE5\u5B50\u90E8\u4EF6\u7684\u6240\u6709\u5B50\u7CFB\u7EDF\u4F1A\u762B\u75EA">\u8010\u4E45\u5EA6</label>
-            <input type="number" class="mm-input" v-model.number="config.durability" @input="onFieldChange('durability', config.durability || 0)" step="1" min="0" />
+            <input type="number" class="mm-input" :value="config.durability" @change="onFieldChange('durability', parseFloat($event.target.value) || 0)" step="1" min="0" />
         </div>
         <div class="mm-field">
             <label title="\u5B50\u90E8\u4EF6\u8D28\u91CF(kg)\uFF0C\u5FC5\u987B\u5927\u4E8E0\uFF0C\u7528\u4E8E\u7269\u7406\u8BA1\u7B97">\u8D28\u91CF (kg)</label>
-            <input type="number" class="mm-input" v-model.number="config.mass" @input="onFieldChange('mass', config.mass || 0)" step="0.5" min="0" />
+            <input type="number" class="mm-input" :value="config.mass" @change="onFieldChange('mass', parseFloat($event.target.value) || 0)" step="0.5" min="0" />
         </div>
         <div class="mm-field">
             <label title="\u8D28\u5FC3\u5B9A\u4F4D\u5668\u540D\u79F0\uFF0C\u8F93\u5165\u5173\u952E\u5B57\u641C\u7D22\u5E76\u9009\u62E9">\u8D28\u5FC3</label>
             <input type="text" class="mm-input"
                 v-model="editingMassCenter"
-                @input="onFieldChange('mass_center', $event.target.value)"
+                @change="onFieldChange('mass_center', $event.target.value)"
                 :list="locatorListId"
                 placeholder="mass_center" />
             <datalist :id="locatorListId">
@@ -15819,15 +16628,15 @@
             <div style="display:flex;gap:6px">
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">X</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[0]" step="0.1" />
+                    <input type="number" class="mm-input" style="width:100%" :value="config.projected_area[0]" @change="onProjectedAreaChange(0, parseFloat($event.target.value) || 0)" step="0.1" />
                 </div>
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">Y</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[1]" step="0.1" />
+                    <input type="number" class="mm-input" style="width:100%" :value="config.projected_area[1]" @change="onProjectedAreaChange(1, parseFloat($event.target.value) || 0)" step="0.1" />
                 </div>
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">Z</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[2]" step="0.1" />
+                    <input type="number" class="mm-input" style="width:100%" :value="config.projected_area[2]" @change="onProjectedAreaChange(2, parseFloat($event.target.value) || 0)" step="0.1" />
                 </div>
             </div>
             <span class="mm-element-info" style="font-size:10px;color:#888">\u8BBE \u2264 0 \u5219\u6839\u636E\u78B0\u649E\u7BB1 AABB \u81EA\u52A8\u8BA1\u7B97</span>
@@ -15846,7 +16655,7 @@
         </div>
         <div class="mm-field">
             <label title="\u78B0\u649E\u68C0\u6D4B\u9AD8\u5EA6(m)\uFF0C\u969C\u788D\u5C0F\u4E8E\u6B64\u9AD8\u5EA6\u65F6\u4E0D\u53D1\u751F\u78B0\u649E\uFF08\u4EC5ground\u6A21\u5F0F\u6709\u6548\uFF09\u3002\u9ED8\u8BA4-1.0\u8868\u793A\u6240\u6709\u969C\u788D\u5747\u78B0\u649E">\u78B0\u649E\u9AD8\u5EA6 (m)</label>
-            <input type="number" class="mm-input" v-model.number="config.collision_height" @input="onFieldChange('collision_height', config.collision_height || -1)" step="0.5" />
+            <input type="number" class="mm-input" :value="config.collision_height" @change="onFieldChange('collision_height', parseFloat($event.target.value) || -1)" step="0.5" />
         </div>
         <div class="mm-field mm-field-row">
             <label title="\u662F\u5426\u542F\u7528\u6500\u722C\u8F85\u52A9\u529F\u80FD">\u6500\u722C\u8F85\u52A9</label>
@@ -15858,7 +16667,7 @@
         <h4 class="mm-section-title">\u6D41\u4F53\u52A8\u529B\u4F18\u5148\u7EA7</h4>
         <div class="mm-field">
             <label title="\u7A7A\u6C14\u963B\u529B\u8BA1\u7B97\u4F18\u5148\u7EA7\uFF0C\u503C\u8D8A\u5927\u4F18\u5148\u7EA7\u8D8A\u9AD8\u3002\u4F18\u5148\u7EA7\u9AD8\u6216\u76F8\u7B49\u7684\u90E8\u4EF6\u4F1A\u906E\u6321\u4F18\u5148\u7EA7\u4F4E\u6216\u76F8\u7B49\u7684\u90E8\u4EF6">hydro_priority</label>
-            <input type="number" class="mm-input" v-model.number="config.hydro_priority" @input="onFieldChange('hydro_priority', config.hydro_priority || 0)" step="1" min="0" />
+            <input type="number" class="mm-input" :value="config.hydro_priority" @change="onFieldChange('hydro_priority', parseFloat($event.target.value) || 0)" step="1" min="0" />
         </div>
     </div>
 
@@ -16056,6 +16865,20 @@
           },
           onFieldChange: function(field, value) {
             this.$emit("field-change", field, value);
+          },
+          /**
+           * 提交三轴投影面积中的某一轴。
+           * 模板已改为 :value + @change，这里复制整数组后整字段提交，
+           * 让父组件的 updateSubPartField 能拿到"提交前"的完整配置做撤销快照。
+           * @param {number} index - 0/1/2 (X/Y/Z)
+           * @param {number} value - 新值
+           */
+          onProjectedAreaChange: function(index, value) {
+            var current = this.config.projected_area;
+            var next = Array.isArray(current) ? current.slice() : [];
+            while (next.length < 3) next.push(0);
+            next[index] = value;
+            this.$emit("field-change", "projected_area", next);
           },
           onNameChange: function(value) {
             var oldKey = this.spName;
@@ -16256,7 +17079,7 @@
         <h4 class="mm-section-title">\u78B0\u649E\u4F53\u5C5E\u6027</h4>
         <div class="mm-field">
             <label title="\u78B0\u649E\u5F62\u72B6ID\uFF0C\u540CID\u7684\u78B0\u649E\u4F53\u79EF\u4E0D\u4F1A\u88AB\u540C\u4E00\u6B21\u653B\u51FB\u91CD\u590D\u547D\u4E2D">\u78B0\u649E\u5F62\u72B6ID</label>
-            <input type="text" class="mm-input" :value="config.id" @input="onFieldChange('id', $event.target.value)" placeholder="part" />
+            <input type="text" class="mm-input" :value="config.id" @change="onFieldChange('id', $event.target.value)" placeholder="part" />
         </div>
         <div class="mm-field">
             <label title="\u78B0\u649E\u5F62\u72B6\u7C7B\u578B">\u7C7B\u578B</label>
@@ -16278,7 +17101,7 @@
         </div>
         <div class="mm-field">
             <label title="\u62A4\u7532\u539A\u5EA6(mm)\uFF0C\u51CF\u514D\u4F24\u5BB3\u5E76\u63A7\u5236\u78B0\u649E\u65F6\u7684\u80FD\u91CF\u5206\u914D">\u539A\u5EA6 (mm)</label>
-            <input type="number" class="mm-input" :value="config.thickness" @input="onFieldChange('thickness', parseFloat($event.target.value) || 1)" step="1" min="0" />
+            <input type="number" class="mm-input" :value="config.thickness" @change="onFieldChange('thickness', parseFloat($event.target.value) || 1)" step="1" min="0" />
         </div>
         <div class="mm-field">
             <label title="\u5173\u8054\u5B50\u7CFB\u7EDF\u540D\u79F0\uFF0C\u78B0\u649E\u7BB1\u53D7\u4F24\u65F6\u8BE5\u5B50\u7CFB\u7EDF\u540C\u6B65\u53D7\u4F24">\u5173\u8054\u5B50\u7CFB\u7EDF</label>
@@ -16288,7 +17111,7 @@
         </div>
         <div class="mm-field">
             <label title="Molang\u6761\u4EF6\u8868\u8FBE\u5F0F\uFF0C\u4E3A\u7A7A\u5219\u59CB\u7EC8\u751F\u6548">\u6761\u4EF6\u8868\u8FBE\u5F0F</label>
-            <input type="text" class="mm-input" :value="config.condition" @input="onFieldChange('condition', $event.target.value)" placeholder="true" />
+            <input type="text" class="mm-input" :value="config.condition" @change="onFieldChange('condition', $event.target.value)" placeholder="true" />
         </div>
     </div>
 
@@ -16300,11 +17123,11 @@
         <div v-if="overwriteExpanded" class="mm-foldable-body">
             <div class="mm-field">
                 <label title="RHA\u7B49\u6548\u6297\u7A7F\u7CFB\u6570\u8986\u5199">RHA\u7CFB\u6570</label>
-                <input type="number" class="mm-input" :value="overwriteVal('rha')" @input="onOverwriteChange('rha', parseFloat($event.target.value) || 1)" step="0.1" min="0" />
+                <input type="number" class="mm-input" :value="overwriteVal('rha')" @change="onOverwriteChange('rha', parseFloat($event.target.value) || 1)" step="0.1" min="0" />
             </div>
             <div class="mm-field">
                 <label title="\u65B9\u5757\u4F24\u5BB3\u7CFB\u6570\u8986\u5199">\u65B9\u5757\u4F24\u5BB3\u7CFB\u6570</label>
-                <input type="number" class="mm-input" :value="overwriteVal('block_damage_factor')" @input="onOverwriteChange('block_damage_factor', parseFloat($event.target.value) || 1)" step="0.1" min="0" />
+                <input type="number" class="mm-input" :value="overwriteVal('block_damage_factor')" @change="onOverwriteChange('block_damage_factor', parseFloat($event.target.value) || 1)" step="0.1" min="0" />
             </div>
             <div class="mm-field mm-field-row">
                 <label title="\u7B49\u6548\u62A4\u7532\u539A\u5EA6\u662F\u5426\u53D7\u5165\u5C04\u89D2\u5EA6\u5F71\u54CD\u8986\u5199">\u89D2\u5EA6\u6548\u5E94</label>
@@ -16312,15 +17135,15 @@
             </div>
             <div class="mm-field">
                 <label title="\u672A\u7A7F\u900F\u4F24\u5BB3\u6307\u6570\u8986\u5199\u3002\u516C\u5F0F\u4E3A: \u653B\u51FB\u4F24\u5BB3 * (\u7A7F\u6DF1/\u7B49\u6548\u62A4\u7532) ^ unpen_power\u30020\u4E3A\u65E0\u4F24\u5BB3">\u672A\u7A7F\u900F\u6307\u6570</label>
-                <input type="number" class="mm-input" :value="overwriteVal('unpen_power')" @input="onOverwriteChange('unpen_power', parseFloat($event.target.value) || 0)" step="0.1" min="0" />
+                <input type="number" class="mm-input" :value="overwriteVal('unpen_power')" @change="onOverwriteChange('unpen_power', parseFloat($event.target.value) || 0)" step="0.1" min="0" />
             </div>
             <div class="mm-field">
                 <label title="\u8010\u4E45\u5F52\u96F6\u65F6\u7684RHA\u7CFB\u6570\u8986\u5199\u3002\u6EE1\u8010\u4E45\u4E3A1.0\uFF0C\u8010\u4E45\u8017\u5C3D\u4E0B\u964D\u81F3\u6B64\u503C">\u8010\u4E45\u5F52\u96F6RHA</label>
-                <input type="number" class="mm-input" :value="overwriteVal('decay_rha')" @input="onOverwriteChange('decay_rha', parseFloat($event.target.value) || 0.3)" step="0.1" min="0" max="1" />
+                <input type="number" class="mm-input" :value="overwriteVal('decay_rha')" @change="onOverwriteChange('decay_rha', parseFloat($event.target.value) || 0.3)" step="0.1" min="0" max="1" />
             </div>
             <div class="mm-field">
                 <label title="\u88C5\u7532\u9000\u5316\u66F2\u7EBF\u6307\u6570\u8986\u5199\u3002>1\u5148\u786C\u540E\u8106\uFF0C<1\u76F8\u53CD">\u9000\u5316\u6307\u6570</label>
-                <input type="number" class="mm-input" :value="overwriteVal('decay_power')" @input="onOverwriteChange('decay_power', parseFloat($event.target.value) || 1.5)" step="0.1" />
+                <input type="number" class="mm-input" :value="overwriteVal('decay_power')" @change="onOverwriteChange('decay_power', parseFloat($event.target.value) || 1.5)" step="0.1" />
             </div>
         </div>
     </div>
@@ -16656,7 +17479,8 @@
       init_define_SCHEMAS();
       var nameUtils = require_name_utils();
       var { SIGNAL_CHANNEL_HINTS } = require_constants();
-      Vue.component("mm-connector-panel", {
+      var undo = require_undo();
+      var MM_CONNECTOR_PANEL_OPTIONS = {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
         <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
@@ -17021,7 +17845,19 @@
             this.$emit("field-change", "overwrite", JSON.parse(JSON.stringify(entries)));
           }
         }
+      };
+      undo.wrapMethodMap(MM_CONNECTOR_PANEL_OPTIONS.methods, {
+        onSignalTargetsChange: "\u4FEE\u6539\u8FDE\u63A5\u70B9\u4FE1\u53F7\u76EE\u6807",
+        addTranslation: "\u6DFB\u52A0\u4FE1\u53F7\u8F6C\u8BD1",
+        removeTranslation: "\u5220\u9664\u4FE1\u53F7\u8F6C\u8BD1",
+        onTranslationSourceChange: "\u91CD\u547D\u540D\u4FE1\u53F7\u8F6C\u8BD1\u6E90\u9891\u9053",
+        onTranslationTargetChange: "\u4FEE\u6539\u4FE1\u53F7\u8F6C\u8BD1\u76EE\u6807\u9891\u9053",
+        addOverwriteField: "\u6DFB\u52A0\u5C5E\u6027\u8986\u5199",
+        removeOverwriteField: "\u5220\u9664\u5C5E\u6027\u8986\u5199",
+        onOverwriteFieldChange: "\u91CD\u547D\u540D\u5C5E\u6027\u8986\u5199\u5B57\u6BB5",
+        onOverwriteValueChange: "\u4FEE\u6539\u5C5E\u6027\u8986\u5199\u503C"
       });
+      Vue.component("mm-connector-panel", MM_CONNECTOR_PANEL_OPTIONS);
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {};
       }
@@ -17041,10 +17877,11 @@
       var nameUtils = require_name_utils();
       var { SIGNAL_CHANNEL_HINTS } = require_constants();
       var { createLogger: createLogger2 } = require_logger();
+      var undo = require_undo();
       var log2 = createLogger2("SubsystemPanel");
       var PLACEHOLDER_PREFIX = "__new_p_";
       var MAX_PLACEHOLDER_ITERATIONS = 1e3;
-      Vue.component("mm-subsystem-panel", {
+      var MM_SUBSYSTEM_PANEL_OPTIONS = {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
         <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
@@ -17102,6 +17939,24 @@
                 :options="ownedLocatorNames"
                 :value="config[field.field] || ''"
                 @change="onFieldChange(field.field, $event)" />
+
+            <!-- \u5B9A\u4F4D\u5668\u5217\u8868\u7F16\u8F91\u5668\uFF08locator_list\uFF0Cstring[]\uFF0C\u884C\u5E8F\u5373\u4F18\u5148\u7EA7\uFF09 -->
+            <div v-else-if="field.editor === 'locator_list'" class="mm-locator-list-editor">
+                <div v-for="(name, li) in getLocatorListEntries(field.field)" :key="li"
+                    style="display:flex;gap:4px;align-items:flex-start;margin-bottom:4px">
+                    <span style="font-size:10px;color:#888;width:14px;padding-top:6px">{{ li + 1 }}</span>
+                    <locator-picker style="flex:1"
+                        :options="ownedLocatorNames"
+                        :value="name"
+                        @change="onLocatorListChange(field.field, li, $event)" />
+                    <button class="mm-btn mm-btn-sm mm-btn-danger-light"
+                        @click="removeLocatorListEntry(field.field, li)" title="\u5220\u9664\u8BE5\u9879">\xD7</button>
+                </div>
+                <button class="mm-btn" style="font-size:11px" @click="addLocatorListEntry(field.field)">+ \u6DFB\u52A0\u4E0B\u8F66\u5B9A\u4F4D\u5668</button>
+                <span class="mm-element-info" style="font-size:10px;color:#888">
+                    \u5217\u8868\u987A\u5E8F\u5373\u4E0B\u8F66\u5C1D\u8BD5\u7684\u4F18\u5148\u7EA7
+                </span>
+            </div>
 
             <!-- \u8FDE\u63A5\u70B9\u9009\u62E9\u5668 -->
             <select v-else-if="field.editor === 'connector_selector'" class="mm-select"
@@ -17351,6 +18206,59 @@
           navigateToSubPart: function() {
             this.$emit("navigate-to-sub-part", this.parentSubPartKey);
           },
+          // ─── 下车定位器列表编辑器（locator_list，string[]） ─────────────────
+          /**
+           * 读取指定字段的定位器列表（容错：非数组一律视为空列表）
+           * @param {string} field - 字段名（如 dismount_locators）
+           * @returns {string[]}
+           */
+          getLocatorListEntries: function(field) {
+            var val = this.config[field];
+            return Array.isArray(val) ? val : [];
+          },
+          /**
+           * 追加一项：取第一个尚未被本列表使用的候选定位器作为初值。
+           * 新项直接带名称而非空串——空名在下车流程里是非法声明，会在加载期抛异常。
+           * 候选定位器已被本列表用尽时不新增条目。
+           * @param {string} field - 字段名
+           */
+          addLocatorListEntry: function(field) {
+            var next = this.getLocatorListEntries(field).slice();
+            var used = {};
+            var i;
+            for (i = 0; i < next.length; i++) used[next[i]] = true;
+            for (i = 0; i < this.ownedLocatorNames.length; i++) {
+              var candidate = this.ownedLocatorNames[i];
+              if (!used[candidate]) {
+                next.push(candidate);
+                this.$set(this.config, field, next);
+                return;
+              }
+            }
+            log2.debug("[addLocatorListEntry] \u6CA1\u6709\u53EF\u7528\u7684\u5019\u9009\u5B9A\u4F4D\u5668\uFF0C\u672A\u65B0\u589E\u6761\u76EE\uFF0Cfield=" + field);
+          },
+          /**
+           * 删除列表中的第 index 项
+           * @param {string} field - 字段名
+           * @param {number} index - 行下标
+           */
+          removeLocatorListEntry: function(field, index) {
+            var next = this.getLocatorListEntries(field).slice();
+            next.splice(index, 1);
+            this.$set(this.config, field, next);
+          },
+          /**
+           * 改写列表中的第 index 项；改成空名视为删除该行
+           * @param {string} field - 字段名
+           * @param {number} index - 行下标
+           * @param {string} value - 新的定位器名
+           */
+          onLocatorListChange: function(field, index, value) {
+            var next = this.getLocatorListEntries(field).slice();
+            if (!value) next.splice(index, 1);
+            else next[index] = value;
+            this.$set(this.config, field, next);
+          },
           // ─── 信号频道编辑器（signal_targets） ─────────────────────────────
           getSignalEntries: function(sigField) {
             var val = this.config[sigField];
@@ -17569,7 +18477,24 @@
             }
           }
         }
+      };
+      undo.wrapMethodMap(MM_SUBSYSTEM_PANEL_OPTIONS.methods, {
+        addLocatorListEntry: "\u6DFB\u52A0\u5B9A\u4F4D\u5668\u6761\u76EE",
+        removeLocatorListEntry: "\u5220\u9664\u5B9A\u4F4D\u5668\u6761\u76EE",
+        onLocatorListChange: "\u4FEE\u6539\u5B9A\u4F4D\u5668\u6761\u76EE",
+        onSignalTargetsChange: function(sigField) {
+          return "\u4FEE\u6539\u4FE1\u53F7\u76EE\u6807 " + sigField;
+        },
+        addPowerOutput: "\u6DFB\u52A0\u529F\u7387\u8F93\u51FA",
+        removePowerOutput: "\u5220\u9664\u529F\u7387\u8F93\u51FA",
+        onPowerOutputTargetChange: "\u91CD\u547D\u540D\u529F\u7387\u8F93\u51FA\u76EE\u6807",
+        onPowerOutputRatioChange: "\u4FEE\u6539\u529F\u7387\u8F93\u51FA\u500D\u7387",
+        addProjectileEntry: "\u6DFB\u52A0\u5F39\u94FE\u6761\u76EE",
+        removeProjectileEntry: "\u5220\u9664\u5F39\u94FE\u6761\u76EE",
+        onProjectileIdChange: "\u4FEE\u6539\u5F39\u94FE\u5F39\u79CD",
+        onProjectileCountChange: "\u4FEE\u6539\u5F39\u94FE\u6570\u91CF"
       });
+      Vue.component("mm-subsystem-panel", MM_SUBSYSTEM_PANEL_OPTIONS);
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {};
       }
@@ -17849,10 +18774,11 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { getConfig, loadConfig, saveConfig } = require_persistence();
-      var { getMarkerInfo, clearAllMarkers, detectOwnerSubPart, clearMarker } = require_element_markers();
-      var { createVariantConfig, createPartConfig, createSubPartConfig } = require_config();
+      var { getMarkerInfo, detectOwnerSubPart } = require_element_markers();
+      var { createSubPartConfig } = require_config();
+      var ops = require_operations();
       var { createLogger: createLogger2 } = require_logger();
-      var { refreshOutlinerIcons: refreshOutlinerIcons2 } = require_icons();
+      var { refreshOutlinerIcons } = require_icons();
       var { showToast: showToast2 } = require_notify();
       var content_pack_manager = require_content_pack_manager();
       var nameUtils = require_name_utils();
@@ -17860,6 +18786,7 @@
       var { collectIssues } = require_validation();
       var { aggregate, resolveIssueLevel } = require_validation_types();
       var { showAddTagDialog, _hashTagColor } = require_tag_dialog_helper();
+      var undo = require_undo();
       var log2 = createLogger2("UI");
       require_SubPartPanel_vue();
       require_HitBoxPanel_vue();
@@ -17869,7 +18796,7 @@
       require_KeyValueEditor_vue();
       require_SignalTargetEditor_vue();
       require_LocatorPicker_vue();
-      var MMMainPanel = Vue.component("mm-main-panel", {
+      var MM_MAIN_PANEL_OPTIONS = {
         template: `<div class="mm-panel capture_tab_key" v-if="config">
     <div class="mm-panel-header">
         <div class="mm-nav-row">
@@ -17920,31 +18847,31 @@
             </h3>
             <div class="mm-field">
                 <label title="\u96F6\u4EF6\u5728\u7269\u54C1\u680F\u548C UI \u4E2D\u663E\u793A\u7684\u56FE\u6807\uFF0C\u683C\u5F0F\u4E3A namespace:path">\u56FE\u6807</label>
-                <input type="text" v-model="currentPart.icon" class="mm-input" placeholder="machine_max:textures/icon/..." title="\u96F6\u4EF6\u5728\u7269\u54C1\u680F\u548C UI \u4E2D\u663E\u793A\u7684\u56FE\u6807\u8DEF\u5F84\uFF0C\u5982 machine_max:textures/icon/my_part.png" />
+                <input type="text" :value="currentPart.icon" @change="updatePartField('icon', $event.target.value)" class="mm-input" placeholder="machine_max:textures/icon/..." title="\u96F6\u4EF6\u5728\u7269\u54C1\u680F\u548C UI \u4E2D\u663E\u793A\u7684\u56FE\u6807\u8DEF\u5F84\uFF0C\u5982 machine_max:textures/icon/my_part.png" />
             </div>
             <div class="mm-field">
                 <label title="\u96F6\u4EF6\u8010\u4E45\u5EA6\u6309\u6B64\u6BD4\u4F8B\u7D2F\u52A0\u5230\u8F7D\u5177\u603B\u8010\u4E45\u5EA6\u3002\u8BBE\u4E3A 1.0 \u8868\u793A\u5168\u90E8\u8D21\u732E\u7ED9\u8F7D\u5177">\u8010\u4E45\u8D21\u732E</label>
-                <input type="number" v-model.number="currentPart.vehicle_durability_rate" class="mm-input" step="0.1" min="0" max="1" title="\u96F6\u4EF6\u8010\u4E45\u5EA6\u6309\u6B64\u6BD4\u4F8B\u7D2F\u52A0\u5230\u8F7D\u5177\u603B\u8010\u4E45\u5EA6\u30021.0 = \u5168\u90E8\u8D21\u732E" />
+                <input type="number" :value="currentPart.vehicle_durability_rate" @change="updatePartField('vehicle_durability_rate', parseFloat($event.target.value) || 0)" class="mm-input" step="0.1" min="0" max="1" title="\u96F6\u4EF6\u8010\u4E45\u5EA6\u6309\u6B64\u6BD4\u4F8B\u7D2F\u52A0\u5230\u8F7D\u5177\u603B\u8010\u4E45\u5EA6\u30021.0 = \u5168\u90E8\u8D21\u732E" />
             </div>
             <div class="mm-field">
                 <label title="\u96F6\u4EF6\u53D7\u5230\u4F24\u5BB3\u65F6\u6309\u6B64\u6BD4\u4F8B\u4F20\u5BFC\u7ED9\u8F7D\u5177\u672C\u4F53\u30020.5 \u8868\u793A\u4EC5\u4F20\u9012 50% \u7684\u4F24\u5BB3">\u4F24\u5BB3\u4F20\u5BFC</label>
-                <input type="number" v-model.number="currentPart.vehicle_damage_rate" class="mm-input" step="0.1" min="0" title="\u96F6\u4EF6\u53D7\u5230\u4F24\u5BB3\u65F6\u6309\u6B64\u6BD4\u4F8B\u4F20\u5BFC\u7ED9\u8F7D\u5177\u672C\u4F53\u30020.5 = \u4F20\u5BFC 50%" />
+                <input type="number" :value="currentPart.vehicle_damage_rate" @change="updatePartField('vehicle_damage_rate', parseFloat($event.target.value) || 0)" class="mm-input" step="0.1" min="0" title="\u96F6\u4EF6\u53D7\u5230\u4F24\u5BB3\u65F6\u6309\u6B64\u6BD4\u4F8B\u4F20\u5BFC\u7ED9\u8F7D\u5177\u672C\u4F53\u30020.5 = \u4F20\u5BFC 50%" />
             </div>
             <div class="mm-field">
                 <label title="\u96F6\u4EF6\u88AB\u6467\u6BC1\u540E\u7684\u4F24\u5BB3\u4F20\u5BFC\u7CFB\u6570\u3002\u901A\u5E38\u8BBE\u4E3A\u8F83\u4F4E\u503C\uFF0C\u907F\u514D\u6467\u6BC1\u540E\u7EE7\u7EED\u627F\u53D7\u9AD8\u989D\u4F24\u5BB3">\u6467\u6BC1\u4F24\u5BB3</label>
-                <input type="number" v-model.number="currentPart.vehicle_damage_rate_destroyed" class="mm-input" step="0.1" min="0" title="\u96F6\u4EF6\u88AB\u6467\u6BC1\u540E\u5411\u8F7D\u5177\u4F20\u5BFC\u4F24\u5BB3\u7684\u6BD4\u4F8B\uFF0C\u901A\u5E38\u8BBE\u4F4E\u503C\u907F\u514D\u6467\u6BC1\u540E\u7EE7\u7EED\u53D7\u9AD8\u989D\u4F24\u5BB3" />
+                <input type="number" :value="currentPart.vehicle_damage_rate_destroyed" @change="updatePartField('vehicle_damage_rate_destroyed', parseFloat($event.target.value) || 0)" class="mm-input" step="0.1" min="0" title="\u96F6\u4EF6\u88AB\u6467\u6BC1\u540E\u5411\u8F7D\u5177\u4F20\u5BFC\u4F24\u5BB3\u7684\u6BD4\u4F8B\uFF0C\u901A\u5E38\u8BBE\u4F4E\u503C\u907F\u514D\u6467\u6BC1\u540E\u7EE7\u7EED\u53D7\u9AD8\u989D\u4F24\u5BB3" />
             </div>
             <div class="mm-field">
                 <label title="\u529F\u80FD\u9608\u503C\uFF080~1\uFF09\u3002\u96F6\u4EF6\u7EC4\u88C5\u8FDB\u5EA6\u8FBE\u5230\u8BE5\u503C\u540E\u5B50\u7CFB\u7EDF\u53EF\u6B63\u5E38\u5DE5\u4F5C">\u529F\u80FD\u9608\u503C</label>
-                <input type="number" v-model.number="currentPart.functional_threshold" class="mm-input" step="0.1" min="0" max="1" title="\u529F\u80FD\u9608\u503C\uFF080~1\uFF09\u3002\u7EC4\u88C5\u8FDB\u5EA6\u8FBE\u5230\u6B64\u503C\u540E\u5B50\u7CFB\u7EDF\u5373\u53EF\u6B63\u5E38\u5DE5\u4F5C" />
+                <input type="number" :value="currentPart.functional_threshold" @change="updatePartField('functional_threshold', parseFloat($event.target.value) || 0)" class="mm-input" step="0.1" min="0" max="1" title="\u529F\u80FD\u9608\u503C\uFF080~1\uFF09\u3002\u7EC4\u88C5\u8FDB\u5EA6\u8FBE\u5230\u6B64\u503C\u540E\u5B50\u7CFB\u7EDF\u5373\u53EF\u6B63\u5E38\u5DE5\u4F5C" />
             </div>
             <div class="mm-field mm-field-row">
                 <label title="\u662F\u5426\u5171\u4EAB\u8010\u4E45\u5EA6\u3002true \u65F6\u6240\u6709\u5B50\u96F6\u4EF6\u5171\u4EAB\u540C\u4E00\u8010\u4E45\u5EA6\u6C60\uFF1Bfalse \u65F6\u6BCF\u4E2A\u5B50\u96F6\u4EF6\u6709\u72EC\u7ACB\u8010\u4E45\u5EA6">\u5171\u4EAB\u8010\u4E45</label>
-                <input type="checkbox" v-model="currentPart.share_durability" title="\u542F\u7528\u540E\u6240\u6709\u5B50\u96F6\u4EF6\u5171\u4EAB\u540C\u4E00\u8010\u4E45\u5EA6\u6C60\uFF0C\u7981\u7528\u5219\u5404\u81EA\u72EC\u7ACB" />
+                <input type="checkbox" :checked="currentPart.share_durability" @change="updatePartField('share_durability', $event.target.checked)" title="\u542F\u7528\u540E\u6240\u6709\u5B50\u96F6\u4EF6\u5171\u4EAB\u540C\u4E00\u8010\u4E45\u5EA6\u6C60\uFF0C\u7981\u7528\u5219\u5404\u81EA\u72EC\u7ACB" />
             </div>
             <div class="mm-field">
                 <label title="\u96F6\u4EF6\u7269\u54C1\u7684\u6700\u5927\u5806\u53E0\u6570\u91CF\uFF081~64\uFF09\u3002\u8C03\u5927\u6B64\u503C\u53EF\u4F7F\u96F6\u4EF6\u5728\u7269\u54C1\u680F\u4E2D\u53EF\u5806\u53E0">\u6700\u5927\u5806\u53E0</label>
-                <input type="number" v-model.number="currentPart.max_stack_size" class="mm-input" min="1" max="64" title="\u96F6\u4EF6\u5728\u7269\u54C1\u680F\u4E2D\u7684\u6700\u5927\u5806\u53E0\u6570\uFF081~64\uFF09" />
+                <input type="number" :value="currentPart.max_stack_size" @change="updatePartField('max_stack_size', parseFloat($event.target.value) || 0)" class="mm-input" min="1" max="64" title="\u96F6\u4EF6\u5728\u7269\u54C1\u680F\u4E2D\u7684\u6700\u5927\u5806\u53E0\u6570\uFF081~64\uFF09" />
             </div>
         </div>
 
@@ -17955,11 +18882,11 @@
             </h3>
             <div class="mm-field">
                 <label title="\u57FA\u5CA9\u7248\u51E0\u4F55\u6A21\u578B\u8DEF\u5F84\uFF0C\u683C\u5F0F\u4E3A namespace:name.geo\u3002\u5982 machine_max:my_part.geo">\u6A21\u578B</label>
-                <input type="text" v-model="currentVariant.model" class="mm-input" placeholder="machine_max:..." title="\u51E0\u4F55\u6A21\u578B\u8DEF\u5F84\uFF0C\u683C\u5F0F namespace:name.geo\uFF0C\u5982 machine_max:wine_fox.geo" />
+                <input type="text" :value="currentVariant.model" @change="updateVariantField('model', $event.target.value)" class="mm-input" placeholder="machine_max:..." title="\u51E0\u4F55\u6A21\u578B\u8DEF\u5F84\uFF0C\u683C\u5F0F namespace:name.geo\uFF0C\u5982 machine_max:wine_fox.geo" />
             </div>
             <div class="mm-field">
                 <label title="\u52A8\u753B\u8DEF\u5F84\u3002\u5982 machine_max:my_anim\u3002\u7559\u7A7A\u5219\u4E0D\u64AD\u653E\u52A8\u753B">\u52A8\u753B</label>
-                <input type="text" v-model="currentVariant.animations" class="mm-input" placeholder="machine_max:..." title="\u52A8\u753B\u8DEF\u5F84\uFF0C\u5982 machine_max:wine_fox_anim\u3002\u7559\u7A7A\u5219\u4E0D\u64AD\u52A8\u753B" />
+                <input type="text" :value="currentVariant.animations" @change="updateVariantField('animations', $event.target.value)" class="mm-input" placeholder="machine_max:..." title="\u52A8\u753B\u8DEF\u5F84\uFF0C\u5982 machine_max:wine_fox_anim\u3002\u7559\u7A7A\u5219\u4E0D\u64AD\u52A8\u753B" />
             </div>
             <div class="mm-field">
                 <label title="\u4E3A\u6BCF\u4E2A\u6D82\u88C5\u540D\u6307\u5B9A\u8D34\u56FE\u8DEF\u5F84\u3002default \u4E3A\u9ED8\u8BA4\u6D82\u88C5">\u8D34\u56FE</label>
@@ -18726,7 +19653,7 @@
               config._uiState.activeVariantName = this.activeVariantName;
               log2.debug("onPartChange: \u53D8\u4F53\u5DF2\u5207\u6362\u4E3A", { variant: this.activeVariantName });
             }
-            refreshOutlinerIcons2();
+            refreshOutlinerIcons();
             this.selectedElement = null;
             Blockbench.dispatchEvent("update_selection");
           },
@@ -18738,7 +19665,7 @@
               return;
             }
             config._uiState.activeVariantName = this.activeVariantName;
-            refreshOutlinerIcons2();
+            refreshOutlinerIcons();
             this.selectedElement = null;
             Blockbench.dispatchEvent("update_selection");
           },
@@ -18786,28 +19713,21 @@
               form: {
                 info: {
                   type: "info",
-                  text: '\u786E\u8BA4\u5220\u9664\u96F6\u4EF6 "' + partId + '" \uFF1F<br><br>\u6B64\u64CD\u4F5C\u5C06\u6C38\u4E45\u5220\u9664\uFF1A<br>\u2022 \u96F6\u4EF6 ' + partId + " \u7684\u5168\u90E8\u914D\u7F6E<br>\u2022 \u8BE5\u96F6\u4EF6\u4E0B\u7684 " + variantCount + " \u4E2A\u53D8\u4F53<br>\u2022 \u6240\u6709\u53D8\u4F53\u5173\u8054\u7684 " + markerCount + " \u4E2A\u5143\u7D20\u6807\u8BB0<br><br>\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\uFF01"
+                  text: '\u786E\u8BA4\u5220\u9664\u96F6\u4EF6 "' + partId + '" \uFF1F<br><br>\u6B64\u64CD\u4F5C\u5C06\u6C38\u4E45\u5220\u9664\uFF1A<br>\u2022 \u96F6\u4EF6 ' + partId + " \u7684\u5168\u90E8\u914D\u7F6E<br>\u2022 \u8BE5\u96F6\u4EF6\u4E0B\u7684 " + variantCount + " \u4E2A\u53D8\u4F53<br>\u2022 \u6240\u6709\u53D8\u4F53\u5173\u8054\u7684 " + markerCount + " \u4E2A\u5143\u7D20\u6807\u8BB0<br><br>\u53EF\u7528 Ctrl+Z \u64A4\u9500\u3002"
                 }
               },
               onConfirm: function() {
                 log2.info("showDeletePartDialog: \u7528\u6237\u786E\u8BA4\u5220\u9664\u96F6\u4EF6", { partId });
-                self.$delete(config.parts, partId);
-                var remaining = Object.keys(config.parts);
-                if (remaining.length > 0) {
-                  config._uiState.activePartId = remaining[0];
-                  var firstPart = config.parts[remaining[0]];
-                  var firstVariants = Object.keys(firstPart.variants || {});
-                  config._uiState.activeVariantName = firstVariants.length > 0 ? firstVariants[0] : "default";
-                } else {
-                  config._uiState.activePartId = "";
-                  config._uiState.activeVariantName = "";
+                var result = ops.deletePart(config, { partId });
+                if (!result.ok) {
+                  showToast2(result.error, "error");
+                  return false;
                 }
-                refreshOutlinerIcons2();
+                refreshOutlinerIcons();
                 self.selectedElement = null;
                 self.loadConfigData();
-                Blockbench.dispatchEvent("update_selection");
                 showToast2('\u96F6\u4EF6 "' + partId + '" \u5DF2\u5220\u9664', "warning");
-                log2.debug("showDeletePartDialog: \u5220\u9664\u5B8C\u6210, \u5269\u4F59\u96F6\u4EF6", { remaining });
+                log2.debug("showDeletePartDialog: \u5220\u9664\u5B8C\u6210, \u5269\u4F59\u96F6\u4EF6", { remaining: result.remaining });
                 this.hide();
               }
             }).show();
@@ -18834,17 +19754,21 @@
               form: {
                 info: {
                   type: "info",
-                  text: '\u786E\u8BA4\u5220\u9664\u53D8\u4F53 "' + variantName + '" \uFF1F<br><br>\u6B64\u64CD\u4F5C\u5C06\u6C38\u4E45\u5220\u9664\uFF1A<br>\u2022 \u53D8\u4F53 "' + variantName + '" \u7684\u5168\u90E8\u914D\u7F6E\uFF08\u6A21\u578B\u3001\u8D34\u56FE\u3001\u6807\u7B7E\u7B49\uFF09<br>\u2022 \u8BE5\u53D8\u4F53\u5173\u8054\u7684 ' + markerCount + " \u4E2A\u5143\u7D20\u6807\u8BB0<br><br>\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\uFF01"
+                  text: '\u786E\u8BA4\u5220\u9664\u53D8\u4F53 "' + variantName + '" \uFF1F<br><br>\u6B64\u64CD\u4F5C\u5C06\u6C38\u4E45\u5220\u9664\uFF1A<br>\u2022 \u53D8\u4F53 "' + variantName + '" \u7684\u5168\u90E8\u914D\u7F6E\uFF08\u6A21\u578B\u3001\u8D34\u56FE\u3001\u6807\u7B7E\u7B49\uFF09<br>\u2022 \u8BE5\u53D8\u4F53\u5173\u8054\u7684 ' + markerCount + " \u4E2A\u5143\u7D20\u6807\u8BB0<br><br>\u53EF\u7528 Ctrl+Z \u64A4\u9500\u3002"
                 }
               },
               onConfirm: function() {
                 log2.info("showDeleteVariantDialog: \u7528\u6237\u786E\u8BA4\u5220\u9664\u53D8\u4F53", { variant: variantName });
-                clearAllMarkers(config, self.activePartId, variantName);
-                self.$delete(part.variants, variantName);
-                var remaining = Object.keys(part.variants);
-                self.activeVariantName = remaining.length > 0 ? remaining[0] : "";
-                config._uiState.activeVariantName = self.activeVariantName;
-                log2.debug("showDeleteVariantDialog: \u5269\u4F59\u53D8\u4F53", { remaining });
+                var result = ops.deleteVariant(config, {
+                  partId: self.activePartId,
+                  variantName
+                });
+                if (!result.ok) {
+                  showToast2(result.error, "error");
+                  return false;
+                }
+                self.activeVariantName = result.activeVariantName;
+                log2.debug("showDeleteVariantDialog: \u5269\u4F59\u53D8\u4F53", { remaining: result.remaining });
                 self.onVariantChange();
                 showToast2('\u53D8\u4F53 "' + variantName + '" \u5DF2\u5220\u9664', "warning");
                 this.hide();
@@ -18859,45 +19783,9 @@
               return;
             }
             var self = this;
-            try {
-              new Dialog({
-                title: "\u65B0\u5EFA\u96F6\u4EF6",
-                form: {
-                  partId: { type: "text", label: "\u96F6\u4EF6 ID", hint: "\u5982 wine_fox_hull" },
-                  variantName: { type: "text", label: "\u521D\u59CB\u53D8\u4F53\u540D", value: "default" },
-                  model: { type: "text", label: "\u6A21\u578B\u5F15\u7528", value: "machine_max:" }
-                },
-                onConfirm: function(formData) {
-                  var partId = formData.partId;
-                  var variantName = formData.variantName;
-                  var model = formData.model;
-                  if (!partId) {
-                    showToast2("\u96F6\u4EF6 ID \u4E0D\u80FD\u4E3A\u7A7A", "error");
-                    return false;
-                  }
-                  if (config.parts[partId]) {
-                    showToast2('\u96F6\u4EF6 "' + partId + '" \u5DF2\u5B58\u5728', "error");
-                    return false;
-                  }
-                  var cfg = require_config();
-                  self.$set(config.parts, partId, cfg.createPartConfig(partId, variantName));
-                  if (model) {
-                    config.parts[partId].variants[variantName].model = model;
-                  }
-                  config._uiState.activePartId = partId;
-                  config._uiState.activeVariantName = variantName;
-                  log2.info("UI\u65B0\u5EFA\u96F6\u4EF6\u6210\u529F", { partId, variant: variantName });
-                  require_icons().refreshOutlinerIcons();
-                  Blockbench.dispatchEvent("update_selection");
-                  showToast2('\u96F6\u4EF6 "' + partId + '" \u5DF2\u521B\u5EFA', "positive");
-                  self.loadConfigData();
-                  this.hide();
-                }
-              }).show();
-              log2.debug("showNewPartDialog: Dialog \u5DF2\u663E\u793A");
-            } catch (e) {
-              log2.error("showNewPartDialog: \u521B\u5EFA Dialog \u5F02\u5E38", e);
-            }
+            require_part_dialogs().showNewPartDialog(config, function() {
+              self.loadConfigData();
+            });
           },
           showNewVariantDialog: function() {
             log2.debug('showNewVariantDialog: \u70B9\u51FB"\u65B0\u5EFA\u53D8\u4F53"\u6309\u94AE');
@@ -18909,27 +19797,17 @@
                 model: { type: "text", label: "\u6A21\u578B\u5F15\u7528", value: "machine_max:" }
               },
               onConfirm: function(formData) {
-                var variantName = formData.variantName;
-                var model = formData.model;
-                if (!variantName) {
-                  showToast2("\u53D8\u4F53\u540D\u4E0D\u80FD\u4E3A\u7A7A", "error");
+                var result = ops.createVariant(self.config, {
+                  partId: self.activePartId,
+                  variantName: formData.variantName,
+                  model: formData.model
+                });
+                if (!result.ok) {
+                  showToast2(result.error, "error");
                   return false;
                 }
-                const part = self.currentPart;
-                if (!part) {
-                  log2.warn("showNewVariantDialog: currentPart \u4E3A\u7A7A");
-                  return false;
-                }
-                if (part.variants[variantName]) {
-                  showToast2('\u53D8\u4F53 "' + variantName + '" \u5DF2\u5B58\u5728', "error");
-                  return false;
-                }
-                self.$set(part.variants, variantName, createVariantConfig());
-                if (model) part.variants[variantName].model = model;
-                var defaultTexPath = "machine_max:textures/part/" + self.activePartId + "/" + self.activePartId + ".png";
-                part.variants[variantName].textures = { "default": defaultTexPath };
-                self.activeVariantName = variantName;
-                log2.info("UI\u65B0\u5EFA\u53D8\u4F53\u6210\u529F", { variant: variantName, partId: self.activePartId });
+                self.activeVariantName = result.variantName;
+                log2.info("UI\u65B0\u5EFA\u53D8\u4F53\u6210\u529F", { variant: result.variantName, partId: self.activePartId });
                 self.onVariantChange();
                 this.hide();
               }
@@ -19103,7 +19981,7 @@
                 key: payload.key
               });
               saveConfig();
-              refreshOutlinerIcons2();
+              refreshOutlinerIcons();
               showToast2("\u5DF2\u81EA\u52A8\u6E05\u7406\u5E7D\u7075" + typeLabel + ' "' + payload.key + '"\uFF08\u5BF9\u5E94\u6A21\u578B\u5143\u7D20\u5DF2\u4E0D\u5B58\u5728\uFF09', "warning");
             } else {
               log2.debug("handleCleanGhostEntry: \u6761\u76EE\u5DF2\u4E0D\u5B58\u5728\uFF08\u53EF\u80FD\u5DF2\u88AB\u6E05\u7406\uFF09", payload);
@@ -19180,7 +20058,7 @@
               }
               this.activePartId = cfg._uiState.activePartId;
               this.activeVariantName = cfg._uiState.activeVariantName;
-              refreshOutlinerIcons2();
+              refreshOutlinerIcons();
             }
             var uuid = pi.elementUuid;
             switch (pi.scope) {
@@ -19244,6 +20122,31 @@
             }
           },
           /**
+           * 更新零件级字段（图标、耐久贡献、伤害传导等）
+           * 模板改为 :value + @change 绑定，提交时才写入配置，从而每次提交产生一条撤销记录
+           */
+          updatePartField: function(field, value) {
+            var part = this.currentPart;
+            if (!part) {
+              log2.warn("updatePartField: currentPart \u4E3A\u7A7A", { field });
+              return;
+            }
+            this.$set(part, field, value);
+            log2.debug("updatePartField: \u5DF2\u66F4\u65B0", { field, value });
+          },
+          /**
+           * 更新变体级字段（模型、动画路径等）
+           */
+          updateVariantField: function(field, value) {
+            var variant = this.currentVariant;
+            if (!variant) {
+              log2.warn("updateVariantField: currentVariant \u4E3A\u7A7A", { field });
+              return;
+            }
+            this.$set(variant, field, value);
+            log2.debug("updateVariantField: \u5DF2\u66F4\u65B0", { field, value });
+          },
+          /**
            * 更新子零件配置中的单个字段。
            * start_bone 变动时需连带迁移子零件标记。
            */
@@ -19297,7 +20200,7 @@
             if (cfg) {
               em.recalcAutoEndBones(cfg, this.activePartId, variantName);
             }
-            refreshOutlinerIcons2();
+            refreshOutlinerIcons();
             Blockbench.dispatchEvent("update_selection");
             showToast2('\u5B50\u96F6\u4EF6\u5DF2\u91CD\u547D\u540D\u4E3A "' + newKey + '"', "positive");
             log2.info("renameSubPart: \u5B8C\u6210");
@@ -19332,7 +20235,7 @@
                 log2.debug("migrateSubPartStartBone: \u6807\u8BB0\u5DF2\u8FC1\u79FB", { from: oldGroup.uuid, to: newGroup.uuid });
               }
             }
-            refreshOutlinerIcons2();
+            refreshOutlinerIcons();
             var em = require_element_markers();
             var cfg = getConfig();
             if (cfg) {
@@ -19382,7 +20285,7 @@
                 log2.debug("migrateConnectorLocator: \u6807\u8BB0\u5DF2\u8FC1\u79FB", { from: oldLoc.uuid, to: newLoc.uuid });
               }
             }
-            refreshOutlinerIcons2();
+            refreshOutlinerIcons();
             Blockbench.dispatchEvent("update_selection");
             log2.info("migrateConnectorLocator: \u5B8C\u6210");
           },
@@ -19513,20 +20416,16 @@
               spKey = marker.config_ref;
             }
             var variant = this.currentVariant;
-            if (!variant || !variant.sub_parts || !variant.sub_parts[spKey]) return;
+            if (!variant) return;
             var self = this;
             var { showAddSubsystemDialog } = require_add_subsystem_dialog();
             showAddSubsystemDialog({
               config: this.config,
               variant,
+              partId: this.activePartId,
+              variantName: this.activeVariantName,
               spKey,
               preSelectedType,
-              beforeSet: function(sp, instanceName, ssConfig) {
-                if (!sp.subsystems) {
-                  self.$set(sp, "subsystems", {});
-                }
-                self.$set(sp.subsystems, instanceName, ssConfig);
-              },
               onCreated: function(createdSpKey, instanceName) {
                 self.subsystemSelection = { spKey: createdSpKey, subsystemKey: instanceName };
                 self.markerVersion.v++;
@@ -19535,7 +20434,7 @@
             });
           },
           /**
-           * 删除子系统：确认后从 sub_parts 中移除
+           * 删除子系统：确认后从 sub_parts 中移除（撤销边界在 ops.deleteSubsystem 内部）
            */
           deleteSubsystem: function(spKey, ssKey) {
             if (!spKey || !ssKey) return;
@@ -19549,11 +20448,20 @@
               form: {
                 info: {
                   type: "info",
-                  text: '\u786E\u8BA4\u5220\u9664\u5B50\u7CFB\u7EDF "' + ssKey + '" \uFF1F<br><br>\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\uFF01'
+                  text: '\u786E\u8BA4\u5220\u9664\u5B50\u7CFB\u7EDF "' + ssKey + '" \uFF1F\uFF08\u53EF\u7528 Ctrl+Z \u64A4\u9500\uFF09'
                 }
               },
               onConfirm: function() {
-                self.$delete(sp.subsystems, ssKey);
+                var result = ops.deleteSubsystem(self.config, {
+                  partId: self.activePartId,
+                  variantName: self.activeVariantName,
+                  spKey,
+                  ssKey
+                });
+                if (!result.ok) {
+                  showToast2(result.error, "error");
+                  return false;
+                }
                 self.subsystemSelection = { spKey: "", subsystemKey: "" };
                 self.markerVersion.v++;
                 log2.info("deleteSubsystem: \u5DF2\u5220\u9664\u5B50\u7CFB\u7EDF", { spKey, subsystemKey: ssKey });
@@ -19637,7 +20545,7 @@
             log2.info("renameConnector: \u91CD\u547D\u540D", { from: oldKey, to: newKey });
             this.$set(sp.connectors, newKey, sp.connectors[oldKey]);
             this.$delete(sp.connectors, oldKey);
-            refreshOutlinerIcons2();
+            refreshOutlinerIcons();
             Blockbench.dispatchEvent("update_selection");
             showToast2('\u8FDE\u63A5\u70B9\u5DF2\u91CD\u547D\u540D\u4E3A "' + newKey + '"', "positive");
             log2.info("renameConnector: \u5B8C\u6210");
@@ -19665,7 +20573,7 @@
             log2.info("renameInteractBox: \u91CD\u547D\u540D", { from: oldKey, to: newKey });
             this.$set(sp.interact_boxes, newKey, sp.interact_boxes[oldKey]);
             this.$delete(sp.interact_boxes, oldKey);
-            refreshOutlinerIcons2();
+            refreshOutlinerIcons();
             Blockbench.dispatchEvent("update_selection");
             showToast2('\u4EA4\u4E92\u533A\u5DF2\u91CD\u547D\u540D\u4E3A "' + newKey + '"', "positive");
             log2.info("renameInteractBox: \u5B8C\u6210");
@@ -19711,7 +20619,7 @@
               newGroup.showInOutliner();
             }
             this.markerVersion.v++;
-            refreshOutlinerIcons2();
+            refreshOutlinerIcons();
             Blockbench.dispatchEvent("update_selection");
             log2.info("migrateInteractBoxBone: \u9AA8\u9ABC\u8FC1\u79FB\u5B8C\u6210", { from: oldBoneName, to: newBoneName });
           },
@@ -19791,6 +20699,12 @@
             log2.debug("\u4E8B\u4EF6: save \u2014 \u4FDD\u5B58\u914D\u7F6E");
             saveConfig();
           });
+          this._restoredHandler = Blockbench.on(undo.RESTORED_EVENT, function() {
+            log2.debug("\u4E8B\u4EF6: " + undo.RESTORED_EVENT + " \u2014 \u91CD\u65B0\u8BFB\u53D6\u914D\u7F6E");
+            self.loadConfigData();
+            self.markerVersion.v++;
+            self.onSelectionChange();
+          });
           this._mmNavigatorObj = { selectByIssue: function(p) {
             self.selectByIssue(p);
           } };
@@ -19815,12 +20729,59 @@
             this._saveHandler();
             log2.debug("\u5DF2\u79FB\u9664 save \u76D1\u542C");
           }
+          if (this._restoredHandler) {
+            this._restoredHandler();
+            log2.debug("\u5DF2\u79FB\u9664\u914D\u7F6E\u6062\u590D\u76D1\u542C");
+          }
           if (window.__mmNavigator === this._mmNavigatorObj) {
             delete window.__mmNavigator;
             log2.debug("\u5DF2\u6E05\u7406\u5168\u5C40\u5BFC\u822A\u5355\u4F8B __mmNavigator");
           }
         }
-      });
+      };
+      var MM_UNDO_LABELS = {
+        updatePartField: function(field) {
+          return "\u4FEE\u6539\u96F6\u4EF6\u5B57\u6BB5 " + field;
+        },
+        updateVariantField: function(field) {
+          return "\u4FEE\u6539\u53D8\u4F53\u5B57\u6BB5 " + field;
+        },
+        updateSubPartField: function(field) {
+          return "\u4FEE\u6539\u5B50\u96F6\u4EF6\u5B57\u6BB5 " + field;
+        },
+        updateHitBoxField: function(field) {
+          return "\u4FEE\u6539\u78B0\u649E\u7BB1\u5B57\u6BB5 " + field;
+        },
+        updateHitBoxOverwrite: function(field) {
+          return "\u4FEE\u6539\u78B0\u649E\u7BB1\u8986\u5199 " + field;
+        },
+        updateInteractBoxField: function(field) {
+          return "\u4FEE\u6539\u4EA4\u4E92\u533A\u5B57\u6BB5 " + field;
+        },
+        updateConnectorField: function(field) {
+          return "\u4FEE\u6539\u8FDE\u63A5\u70B9\u5B57\u6BB5 " + field;
+        },
+        updateSubsystemField: function(ssKey, field) {
+          return "\u4FEE\u6539\u5B50\u7CFB\u7EDF\u5B57\u6BB5 " + field;
+        },
+        addEndBone: "\u6DFB\u52A0\u6392\u9664\u9AA8\u9ABC",
+        removeEndBone: "\u79FB\u9664\u6392\u9664\u9AA8\u9ABC",
+        removeTag: "\u5220\u9664\u6807\u7B7E",
+        handleTexturesKvAdd: "\u6DFB\u52A0\u8D34\u56FE\u6D82\u88C5",
+        handleTexturesKvRemove: "\u5220\u9664\u8D34\u56FE\u6D82\u88C5",
+        handleTexturesKvUpdateKey: "\u91CD\u547D\u540D\u8D34\u56FE\u6D82\u88C5",
+        handleTexturesKvUpdateValue: "\u4FEE\u6539\u8D34\u56FE\u8DEF\u5F84",
+        renameSubPart: "\u91CD\u547D\u540D\u5B50\u96F6\u4EF6",
+        renameConnector: "\u91CD\u547D\u540D\u8FDE\u63A5\u70B9",
+        renameInteractBox: "\u91CD\u547D\u540D\u4EA4\u4E92\u533A",
+        renameSubsystem: "\u91CD\u547D\u540D\u5B50\u7CFB\u7EDF",
+        migrateSubPartStartBone: "\u8FC1\u79FB\u5B50\u96F6\u4EF6\u8D77\u59CB\u9AA8\u9ABC",
+        migrateConnectorLocator: "\u8FC1\u79FB\u8FDE\u63A5\u70B9\u5B9A\u4F4D\u5668",
+        migrateInteractBoxBone: "\u8FC1\u79FB\u4EA4\u4E92\u533A\u9AA8\u9ABC",
+        handleCleanGhostEntry: "\u6E05\u7406\u5E7D\u7075\u6761\u76EE"
+      };
+      undo.wrapMethodMap(MM_MAIN_PANEL_OPTIONS.methods, MM_UNDO_LABELS);
+      var MMMainPanel = Vue.component("mm-main-panel", MM_MAIN_PANEL_OPTIONS);
       if (typeof module !== "undefined" && module.exports) {
         module.exports = MMMainPanel;
       }
@@ -20909,7 +21870,7 @@
       var { registerToolbarActions, _mmActionInstances } = require_toolbar();
       var { registerValidation, unregisterValidation: unregisterValidation2 } = require_validation_check();
       var { buildMMMenuItems, patchShowContextMenu, restoreShowContextMenu, patchElementSelect, restoreElementSelect } = require_patches();
-      var { getIconClassForType, refreshOutlinerIcons: refreshOutlinerIcons2, resetOutlinerIcons } = require_icons();
+      var { getIconClassForType, refreshOutlinerIcons, resetOutlinerIcons } = require_icons();
       var _mmVueComponent = null;
       var _mmSignalFlowComponent = null;
       var _mmCssInserted = false;
@@ -21102,7 +22063,7 @@
                 variant: config._uiState.activeVariantName
               });
             }
-            refreshOutlinerIcons2();
+            refreshOutlinerIcons();
             log2.debug("onSelect: \u8C03\u7528 patchShowContextMenu...");
             patchShowContextMenu();
             log2.debug("onSelect: \u8C03\u7528 patchElementSelect...");
@@ -21173,7 +22134,7 @@
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
           registerMode: registerMode2,
-          refreshOutlinerIcons: refreshOutlinerIcons2,
+          refreshOutlinerIcons,
           resetOutlinerIcons,
           unregisterValidation: unregisterValidation2,
           /** 卸载插件时，通过 Action.delete() 正确清理所有注册的 Action（而非仅删除 BarItems 条目） */
@@ -21215,6 +22176,7 @@
   var { registerMode, unregisterActions, unregisterValidation } = require_mode();
   var { registerMachineMaxMenu, unregisterMachineMaxMenu } = require_menu();
   var { registerDragImport, unregisterDragImport } = require_drag_import();
+  var { registerUndoBridge, unregisterUndoBridge } = require_undo();
   var { showToast } = require_notify();
   var PLUGIN_VERSION = "0.4.0";
   var log = createLogger("Plugin");
@@ -21235,6 +22197,8 @@
       });
       console.log("[MM][Plugin] \u9636\u6BB51: registerProperty");
       registerProperty();
+      console.log("[MM][Plugin] \u9636\u6BB51b: registerUndoBridge");
+      registerUndoBridge();
       console.log("[MM][Plugin] \u9636\u6BB52: registerMode");
       registerMode();
       console.log("[MM][Plugin] \u9636\u6BB53: registerDragImport (\u8C03\u7528\u524D)");
@@ -21249,6 +22213,7 @@
     },
     onunload() {
       log.info("\u5378\u8F7D MachineMax Blockbench \u63D2\u4EF6");
+      unregisterUndoBridge();
       unregisterActions();
       unregisterValidation();
       unregisterDragImport();

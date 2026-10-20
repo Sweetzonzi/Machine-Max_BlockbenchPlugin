@@ -14,6 +14,7 @@ const persistence = require('../../utils/persistence.js');
 const { showToast } = require('../../utils/notify.js');
 const { createLogger } = require('../../utils/logger.js');
 const { DEP_TYPE_LABELS } = require('./pack_common.js');
+const ops = require('../../core/operations.js');
 
 /** 模块日志 */
 var log = createLogger('DependencyEditor');
@@ -367,32 +368,37 @@ function showManageDependenciesDialog(config, onSave) {
             },
             onConfirm: function (formData) {
                 var changed = false;
-                var removePath, addPath, oldLen;
+                var removePath, addPath, res;
 
-                // ---- 处理移除 ----
+                // ---- 处理移除（撤销边界在 ops.updateDependencyPaths 内部） ----
                 if (formData.depPathToRemove && formData.depPathToRemove.trim()) {
                     removePath = formData.depPathToRemove.trim();
-                    oldLen = (config.dependencyPaths || []).length;
-                    persistence.removeDependencyPath(config, removePath);
-                    if ((config.dependencyPaths || []).length < oldLen) {
-                        changed = true;
-                        log.info('已移除依赖包: ' + removePath);
-                    } else {
+                    res = ops.updateDependencyPaths(config, { remove: [removePath] });
+                    if (!res.ok) {
+                        showToast(res.error, 'error');
+                        return false;
+                    }
+                    if (!res.changed) {
                         showToast('未找到匹配的依赖路径: ' + removePath, 'warning');
                         return false;
                     }
+                    changed = true;
+                    log.info('已移除依赖包: ' + removePath);
                 }
 
                 // ---- 处理添加 ----
                 if (formData.newDepPath && formData.newDepPath.trim()) {
                     addPath = formData.newDepPath.trim();
-                    oldLen = (config.dependencyPaths || []).length;
-                    persistence.addDependencyPath(config, addPath);
-                    if ((config.dependencyPaths || []).length > oldLen) {
+                    res = ops.updateDependencyPaths(config, { add: [addPath] });
+                    if (!res.ok) {
+                        showToast(res.error, 'error');
+                        return false;
+                    }
+                    if (!res.changed) {
+                        showToast('依赖路径已存在: ' + addPath, 'info');
+                    } else {
                         changed = true;
                         log.info('已添加依赖包: ' + addPath);
-                    } else {
-                        showToast('依赖路径已存在: ' + addPath, 'info');
                     }
                 }
 

@@ -122,6 +122,20 @@ Vue.component('mm-sub-part-panel', {
         onFieldChange: function (field, value) {
             this.$emit('field-change', field, value);
         },
+        /**
+         * 提交三轴投影面积中的某一轴。
+         * 模板已改为 :value + @change，这里复制整数组后整字段提交，
+         * 让父组件的 updateSubPartField 能拿到"提交前"的完整配置做撤销快照。
+         * @param {number} index - 0/1/2 (X/Y/Z)
+         * @param {number} value - 新值
+         */
+        onProjectedAreaChange: function (index, value) {
+            var current = this.config.projected_area;
+            var next = Array.isArray(current) ? current.slice() : [];
+            while (next.length < 3) next.push(0);
+            next[index] = value;
+            this.$emit('field-change', 'projected_area', next);
+        },
         onNameChange: function (value) {
             var oldKey = this.spName;
             var newKey = nameUtils.buildFullKey('sub_part', value, this.namespace);

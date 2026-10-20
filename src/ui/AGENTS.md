@@ -27,6 +27,7 @@ src/ui/
 │   ├── pack_create_dialog.js   # 创建新内容包
 │   ├── pack_open_dialog.js     # 打开已有内容包
 │   ├── dependency_editor.js    # 依赖路径编辑 + 链式解析 + 管理对话框
+│   ├── part_dialogs.js         # 新建零件 / 项目管理（工具栏·面板·右键菜单共用）
 │   ├── pack_common.js          # 内容包对话框公共工具
 │   ├── subsystem_dialog.js     # 子系统型号查看对话框（只读）
 │   ├── connector_dialog.js     # 连接点定义查看对话框（只读）
@@ -55,6 +56,7 @@ src/ui/
 | 接线导出 | `export/export_pipeline.js` → `executeExport()` | 串联 6 个生成器 + codec 编码 → 通过 `file_writer.js` 写入 |
 | 添加设置字段 | `export/export_dialog.js` → `showPackSettingsDialog()` | 8 字段 Dialog；在 `onConfirm` 前添加表单字段 |
 | 内容包对话框 | `dialogs/pack_setup_dialog.js` | 向导主入口，转发 create/open/dependency 三个拆分模块 |
+| 新建零件 / 项目管理对话框 | `dialogs/part_dialogs.js` | 工具栏·面板·右键菜单共用；只调 `ops.createPart` / `ops.setContentPackPath` |
 | 定义查看对话框 | `components/definition_viewer.js` | `showDefinitionViewer()` — 5 个"查看定义"入口共用；列表 + 来源徽标 + 只读标记 + 统计条 |
 | 信号目标编辑器 | `components/SignalTargetEditor.vue.js` | SubsystemPanel / ConnectorPanel / InteractBoxPanel 复用；频道增删改、目标过滤去重 |
 | 定位器选择 | `components/LocatorPicker.vue.js` | 输入框 + datalist 提示 + 自由文本；不存在的值标红/黄但不拦截输入 |
@@ -67,8 +69,16 @@ src/ui/
 - **事件生命周期**: `Blockbench.on()` 返回清理函数——保存返回值并在 `beforeDestroy()` 中调用。
 - **模板常量**: `TEMPLATE_PART_PANEL`、`TEMPLATE_SUB_PART_PANEL`、`TEMPLATE_HIT_BOX_PANEL` 是 esbuild `define` 全局变量——永远不要 `require()` 它们。修改后需 `npm run build`。
 - **对话框模式**: 所有交互使用 `new Dialog({id, title, form, onConfirm}).show()` — 需要 `.show()` 链式调用。
+- **对话框不做业务逻辑（撤销）**: `onConfirm` 里只收集输入、调用 `core/operations.js` 的操作函数、处理 `{ok,error}` 与提示；
+  **不要**在对话框回调里直接改配置，也不要在这里包 `runConfigEdit`——撤销边界在操作函数内部，
+  这样同一个动作从工具栏/面板/右键菜单/将来的 MCP 触发都自带撤销。
 - **标签调色板**: `_hashTagColor()` 通过哈希将标签映射到 8 种 CSS 颜色之一——可能存在碰撞。
 - **配置访问**: 始终通过 `getConfig()` 从 `utils/persistence.js` 获取，不要直接读取 `Project.machine_max_plugin`。
+- **字段提交点（撤销）**: 模板不要用 `v-model` 直接绑配置字段（`v-model` 绕过 methods，撤销快照会拿到改完之后的值）。
+  改用 `:value` / `:checked` + `@change`，把值交给 wrapped method；输入框优先 `@change`（失焦/回车提交）。
+- **方法包装顺序（撤销）**: 组件先写成普通 options 对象 → `undo.wrapMethodMap(options.methods, labels)` → 最后 `Vue.component()`。
+  `Vue.extend` 会复制方法表，注册之后再包不生效。
+- **撤销记录标签**: 用函数形式（`function (field) { return '修改字段 ' + field; }`），撤销历史里能直接看出改了什么。
 
 ## 反模式
 

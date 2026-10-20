@@ -8,6 +8,7 @@ const persistence = require('../../utils/persistence.js');
 const { showToast } = require('../../utils/notify.js');
 const { createLogger } = require('../../utils/logger.js');
 const { isConfigValid } = require('./pack_common.js');
+const ops = require('../../core/operations.js');
 
 /** 模块日志 */
 var log = createLogger('PackOpen');
@@ -74,10 +75,16 @@ function showOpenPackDialog(config, onSave) {
                     namespace: result.namespace,
                 });
 
-                // ---- 更新配置 ----
-                persistence.setPackPath(config, dirPath);
-                config.namespace = result.namespace || '';
-                config.packMeta = meta;
+                // ---- 更新配置（撤销边界在 ops.setContentPack 内部） ----
+                var opResult = ops.setContentPack(config, {
+                    path: dirPath,
+                    namespace: result.namespace || '',
+                    meta: meta,
+                });
+                if (!opResult.ok) {
+                    showToast(opResult.error, 'error');
+                    return false;
+                }
 
                 log.debug('showOpenPackDialog: packMeta 已设置', {
                     packMetaType: typeof config.packMeta,

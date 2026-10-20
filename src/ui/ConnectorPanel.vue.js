@@ -10,8 +10,14 @@
  */
 var nameUtils = require('../utils/name_utils.js');
 var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
+var undo = require('../core/undo.js');
 
-Vue.component('mm-connector-panel', {
+/**
+ * 组件选项。methods 定义完后先包撤销（wrapMethodMap），再注册到 Vue。
+ * 注意：本组件的信号转译 / 属性覆写方法直接改 config 上的字典，
+ * 因此必须在组件层包（父组件的 updateConnectorField 拿到的是改完之后的状态）。
+ */
+var MM_CONNECTOR_PANEL_OPTIONS = {
     template: typeof TEMPLATE_CONNECTOR_PANEL !== 'undefined' ? TEMPLATE_CONNECTOR_PANEL : '<p>连接点面板加载中...</p>',
     props: {
         config: { type: Object, required: true },
@@ -239,7 +245,22 @@ Vue.component('mm-connector-panel', {
             this.$emit('field-change', 'overwrite', JSON.parse(JSON.stringify(entries)));
         },
     },
+};
+
+// 撤销接入：这些方法直接改 this.config 的 signal_translations / overwrite 字典
+undo.wrapMethodMap(MM_CONNECTOR_PANEL_OPTIONS.methods, {
+    onSignalTargetsChange: '修改连接点信号目标',
+    addTranslation: '添加信号转译',
+    removeTranslation: '删除信号转译',
+    onTranslationSourceChange: '重命名信号转译源频道',
+    onTranslationTargetChange: '修改信号转译目标频道',
+    addOverwriteField: '添加属性覆写',
+    removeOverwriteField: '删除属性覆写',
+    onOverwriteFieldChange: '重命名属性覆写字段',
+    onOverwriteValueChange: '修改属性覆写值',
 });
+
+Vue.component('mm-connector-panel', MM_CONNECTOR_PANEL_OPTIONS);
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {};

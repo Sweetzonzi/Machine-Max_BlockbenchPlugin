@@ -26,7 +26,7 @@
         <h4 class="mm-section-title">碰撞体属性</h4>
         <div class="mm-field">
             <label title="碰撞形状ID，同ID的碰撞体积不会被同一次攻击重复命中">碰撞形状ID</label>
-            <input type="text" class="mm-input" :value="config.id" @input="onFieldChange('id', $event.target.value)" placeholder="part" />
+            <input type="text" class="mm-input" :value="config.id" @change="onFieldChange('id', $event.target.value)" placeholder="part" />
         </div>
         <div class="mm-field">
             <label title="碰撞形状类型">类型</label>
@@ -48,7 +48,7 @@
         </div>
         <div class="mm-field">
             <label title="护甲厚度(mm)，减免伤害并控制碰撞时的能量分配">厚度 (mm)</label>
-            <input type="number" class="mm-input" :value="config.thickness" @input="onFieldChange('thickness', parseFloat($event.target.value) || 1)" step="1" min="0" />
+            <input type="number" class="mm-input" :value="config.thickness" @change="onFieldChange('thickness', parseFloat($event.target.value) || 1)" step="1" min="0" />
         </div>
         <div class="mm-field">
             <label title="关联子系统名称，碰撞箱受伤时该子系统同步受伤">关联子系统</label>
@@ -58,7 +58,7 @@
         </div>
         <div class="mm-field">
             <label title="Molang条件表达式，为空则始终生效">条件表达式</label>
-            <input type="text" class="mm-input" :value="config.condition" @input="onFieldChange('condition', $event.target.value)" placeholder="true" />
+            <input type="text" class="mm-input" :value="config.condition" @change="onFieldChange('condition', $event.target.value)" placeholder="true" />
         </div>
     </div>
 
@@ -70,11 +70,11 @@
         <div v-if="overwriteExpanded" class="mm-foldable-body">
             <div class="mm-field">
                 <label title="RHA等效抗穿系数覆写">RHA系数</label>
-                <input type="number" class="mm-input" :value="overwriteVal('rha')" @input="onOverwriteChange('rha', parseFloat($event.target.value) || 1)" step="0.1" min="0" />
+                <input type="number" class="mm-input" :value="overwriteVal('rha')" @change="onOverwriteChange('rha', parseFloat($event.target.value) || 1)" step="0.1" min="0" />
             </div>
             <div class="mm-field">
                 <label title="方块伤害系数覆写">方块伤害系数</label>
-                <input type="number" class="mm-input" :value="overwriteVal('block_damage_factor')" @input="onOverwriteChange('block_damage_factor', parseFloat($event.target.value) || 1)" step="0.1" min="0" />
+                <input type="number" class="mm-input" :value="overwriteVal('block_damage_factor')" @change="onOverwriteChange('block_damage_factor', parseFloat($event.target.value) || 1)" step="0.1" min="0" />
             </div>
             <div class="mm-field mm-field-row">
                 <label title="等效护甲厚度是否受入射角度影响覆写">角度效应</label>
@@ -82,15 +82,15 @@
             </div>
             <div class="mm-field">
                 <label title="未穿透伤害指数覆写。公式为: 攻击伤害 * (穿深/等效护甲) ^ unpen_power。0为无伤害">未穿透指数</label>
-                <input type="number" class="mm-input" :value="overwriteVal('unpen_power')" @input="onOverwriteChange('unpen_power', parseFloat($event.target.value) || 0)" step="0.1" min="0" />
+                <input type="number" class="mm-input" :value="overwriteVal('unpen_power')" @change="onOverwriteChange('unpen_power', parseFloat($event.target.value) || 0)" step="0.1" min="0" />
             </div>
             <div class="mm-field">
                 <label title="耐久归零时的RHA系数覆写。满耐久为1.0，耐久耗尽下降至此值">耐久归零RHA</label>
-                <input type="number" class="mm-input" :value="overwriteVal('decay_rha')" @input="onOverwriteChange('decay_rha', parseFloat($event.target.value) || 0.3)" step="0.1" min="0" max="1" />
+                <input type="number" class="mm-input" :value="overwriteVal('decay_rha')" @change="onOverwriteChange('decay_rha', parseFloat($event.target.value) || 0.3)" step="0.1" min="0" max="1" />
             </div>
             <div class="mm-field">
                 <label title="装甲退化曲线指数覆写。>1先硬后脆，<1相反">退化指数</label>
-                <input type="number" class="mm-input" :value="overwriteVal('decay_power')" @input="onOverwriteChange('decay_power', parseFloat($event.target.value) || 1.5)" step="0.1" />
+                <input type="number" class="mm-input" :value="overwriteVal('decay_power')" @change="onOverwriteChange('decay_power', parseFloat($event.target.value) || 1.5)" step="0.1" />
             </div>
         </div>
     </div>

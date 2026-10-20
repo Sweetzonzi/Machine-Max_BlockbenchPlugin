@@ -14,6 +14,7 @@ var ssTypes = require('../core/subsystem_types.js');
 var nameUtils = require('../utils/name_utils.js');
 var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
 var { createLogger } = require('../utils/logger.js');
+var undo = require('../core/undo.js');
 
 var log = createLogger('SubsystemPanel');
 
@@ -22,7 +23,11 @@ var PLACEHOLDER_PREFIX = '__new_p_';
 /** 弹链编辑器 do-while 最大迭代次数，防止无限循环卡死 */
 var MAX_PLACEHOLDER_ITERATIONS = 1000;
 
-Vue.component('mm-subsystem-panel', {
+/**
+ * 组件选项。methods 定义完后先包撤销（wrapMethodMap），再注册到 Vue：
+ * Vue.extend 会复制方法表，注册之后再包不会生效。
+ */
+var MM_SUBSYSTEM_PANEL_OPTIONS = {
     template: typeof TEMPLATE_SUBSYSTEM_PANEL !== 'undefined' ? TEMPLATE_SUBSYSTEM_PANEL : '<p>子系统面板加载中...</p>',
     props: {
         config: { type: Object, required: true },
@@ -433,7 +438,26 @@ Vue.component('mm-subsystem-panel', {
             }
         },
     },
+};
+
+// 撤销接入：这些方法直接改 this.config（子系统实例配置），每次提交一条撤销记录。
+// 字段值频繁变化的输入框由 undo.js 的"同类连续编辑合并"收敛为一条。
+undo.wrapMethodMap(MM_SUBSYSTEM_PANEL_OPTIONS.methods, {
+    addLocatorListEntry: '添加定位器条目',
+    removeLocatorListEntry: '删除定位器条目',
+    onLocatorListChange: '修改定位器条目',
+    onSignalTargetsChange: function (sigField) { return '修改信号目标 ' + sigField; },
+    addPowerOutput: '添加功率输出',
+    removePowerOutput: '删除功率输出',
+    onPowerOutputTargetChange: '重命名功率输出目标',
+    onPowerOutputRatioChange: '修改功率输出倍率',
+    addProjectileEntry: '添加弹链条目',
+    removeProjectileEntry: '删除弹链条目',
+    onProjectileIdChange: '修改弹链弹种',
+    onProjectileCountChange: '修改弹链数量',
 });
+
+Vue.component('mm-subsystem-panel', MM_SUBSYSTEM_PANEL_OPTIONS);
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {};

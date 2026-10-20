@@ -3,6 +3,7 @@ const { registerProperty } = require('./utils/persistence.js');
 const { registerMode, unregisterActions, unregisterValidation } = require('./mode.js');
 const { registerMachineMaxMenu, unregisterMachineMaxMenu } = require('./ui/menu.js');
 const { registerDragImport, unregisterDragImport } = require('./import/drag_import.js');
+const { registerUndoBridge, unregisterUndoBridge } = require('./core/undo.js');
 const { showToast } = require('./utils/notify.js');
 
 /** 插件版本号（构建时由 esbuild 从 package.json 注入） */
@@ -40,6 +41,10 @@ Plugin.register('machine_max_bb_plugin', {
         console.log('[MM][Plugin] 阶段1: registerProperty');
         registerProperty();
 
+        console.log('[MM][Plugin] 阶段1b: registerUndoBridge');
+        // 接入 Blockbench 原生撤销：让配置变更进入 Undo.history（docs/11）
+        registerUndoBridge();
+
         console.log('[MM][Plugin] 阶段2: registerMode');
         registerMode();
 
@@ -59,6 +64,7 @@ Plugin.register('machine_max_bb_plugin', {
     },
     onunload() {
         log.info('卸载 MachineMax Blockbench 插件');
+        unregisterUndoBridge();
         unregisterActions();
         unregisterValidation();
         unregisterDragImport();

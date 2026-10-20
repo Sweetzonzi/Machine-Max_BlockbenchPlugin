@@ -1,43 +1,39 @@
 /**
- * 添加子系统对话框（通用模块，App.vue.js 和 patches.js 共用）
+ * add_subsystem_dialog.js — 添加子系统对话框（通用模块，App.vue.js 和 patches.js 共用）
  *
- * 弹出类型选择对话框，用户选择类型并输入名称后，
- * 在指定子零件的 subsystems 中创建子系统实例。
- * 创建成功后自动显示 Toast 并通知 UI 刷新。
+ * 只负责“选类型 + 起名”，落库与撤销边界都在
+ * `core/operations.js` 的 `createSubsystem()` 里——同一动作换入口也自带撤销记录。
  *
  * @param {Object} options
  * @param {Object} options.config - 完整项目配置（MMProjectConfig）
- * @param {Object} options.variant - 当前变体配置
+ * @param {Object} options.variant - 当前变体配置（用于名称去重）
+ * @param {string} [options.partId] - 零件 ID；缺省取 config._uiState.activePartId
+ * @param {string} [options.variantName] - 变体名；缺省取 config._uiState.activeVariantName
  * @param {string} options.spKey - 目标子零件 key
  * @param {string} [options.preSelectedType] - 预选的子系统类型 ID
  * @param {Function} [options.onCreated] - 创建成功回调 (spKey, instanceName)，用于 caller 特定逻辑
- * @param {Function} [options.beforeSet] - 设置前回调 (sp, instanceName, ssConfig)，用于 Vue 2 $set
  */
+
 /** 模块级缓存：上次选择的子系统类型 ID，本次会话内跨对话框保持 */
 var _lastSelectedType = 'machine_max:engine';
 
 function showAddSubsystemDialog(options) {
+    options = options || {};
     var config = options.config;
     var variant = options.variant;
     var spKey = options.spKey;
     var preSelectedType = options.preSelectedType || '';
     var onCreated = options.onCreated || function () {};
-    var beforeSet = options.beforeSet || function (sp, instanceName, ssConfig) {
-        // 通过新建对象重新赋值 subsystems，触发 Vue 2 响应式更新
-        // 直接 sp.subsystems[instanceName] = ssConfig 在 Vue 2 中无法检测
-        var subs = sp.subsystems || {};
-        subs[instanceName] = ssConfig;
-        sp.subsystems = Object.assign({}, subs);
-    };
+    var partId = options.partId || (config && config._uiState ? config._uiState.activePartId : '');
+    var variantName = options.variantName || (config && config._uiState ? config._uiState.activeVariantName : '');
 
-    if (!variant || !variant.sub_parts || !variant.sub_parts[spKey]) return;
-    var sp = variant.sub_parts[spKey];
-    if (!sp.subsystems) sp.subsystems = {};
+    if (!config || !variant || !spKey) return;
 
     var ssTypes = require('../core/subsystem_types.js');
     var groupedTypes = ssTypes.getTypesGroupedByCategory();
     var { showToast } = require('../utils/notify.js');
     var { saveConfig } = require('../utils/persistence.js');
+    var ops = require('../core/operations.js');
 
     // 构建平铺所有子系统类型的下拉选项（分类前缀标注）
     var allTypeOpts = {};
@@ -62,15 +58,14 @@ function showAddSubsystemDialog(options) {
         onConfirm: function (formData) {
             var typeId = formData.subsystemType;
             var instanceName = formData.instanceName;
-            var meta = ssTypes.getTypeMeta(typeId);
-            if (!meta) {
+            if (!ssTypes.getTypeMeta(typeId)) {
                 showToast('无效的子系统类型', 'error');
                 return false;
             }
             // 记忆本次选择的类型，下次对话框默认选中
             _lastSelectedType = typeId;
 
-            // 自动生成名称
+            // 自动生成名称（生成规则属于 UI 便利功能，去重仍需在这里做）
             if (!instanceName || instanceName.trim() === '') {
                 var { generateDefaultName, ensureUniqueName } = require('../core/naming.js');
                 var ns = (config && config.namespace) || 'machine_max';
@@ -78,30 +73,27 @@ function showAddSubsystemDialog(options) {
                 instanceName = ensureUniqueName('subsystem', variant, spKey, baseName);
             } else {
                 instanceName = instanceName.trim();
-                // 检查唯一性
-                if (sp.subsystems[instanceName]) {
-                    showToast('子系统 "' + instanceName + '" 已存在', 'error');
-                    return false;
-                }
             }
-            // 创建子系统实例（从 subsystem_types.js 读取动态字段默认值手动构造）
-            // 注意：不使用 SubsystemDispatchCodec.decode()，因为 codec 中所有 .field() 字段在
-            // 导出时承担必填校验职责，不应为创建实例而降低校验严格度。
-            var defaultFields = ssTypes.getTypeDefaults(typeId);
-            var ssConfig = { type: typeId, definition: null };
-            for (var key in defaultFields) {
-                if (defaultFields.hasOwnProperty(key)) {
-                    ssConfig[key] = defaultFields[key];
-                }
+
+            // 落库 + 撤销：由领域操作统一负责（内部会补建缺失的 sub_parts 条目、合并类型默认值）
+            var result = ops.createSubsystem(config, {
+                partId: partId,
+                variantName: variantName,
+                spKey: spKey,
+                typeId: typeId,
+                instanceName: instanceName,
+            });
+            if (!result.ok) {
+                showToast(result.error, 'error');
+                return false;
             }
-            beforeSet(sp, instanceName, ssConfig);
-            onCreated(spKey, instanceName);
-            // 持久化并触发 UI 刷新
+
+            onCreated(spKey, result.instanceName);
             saveConfig();
-            showToast('子系统 "' + instanceName + '" 已创建', 'positive');
+            showToast('子系统 "' + result.instanceName + '" 已创建', 'positive');
             this.hide();
             Blockbench.dispatchEvent('update_selection');
-        }
+        },
     }).show();
 }
 

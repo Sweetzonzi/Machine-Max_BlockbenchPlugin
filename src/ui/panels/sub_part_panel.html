@@ -20,7 +20,7 @@
             <label title="子部件的起始骨骼名称，输入关键字搜索并选择">绑定骨骼</label>
             <input type="text" class="mm-input"
                 v-model="editingStartBone"
-                @input="onStartBoneInput($event.target.value)"
+                @change="onStartBoneInput($event.target.value)"
                 :list="boneListId"
                 placeholder="搜索并选择骨骼…" />
             <datalist :id="boneListId">
@@ -58,17 +58,17 @@
         <h4 class="mm-section-title">物理属性</h4>
         <div class="mm-field">
             <label title="子部件基础生命值，降至0时该子部件的所有子系统会瘫痪">耐久度</label>
-            <input type="number" class="mm-input" v-model.number="config.durability" @input="onFieldChange('durability', config.durability || 0)" step="1" min="0" />
+            <input type="number" class="mm-input" :value="config.durability" @change="onFieldChange('durability', parseFloat($event.target.value) || 0)" step="1" min="0" />
         </div>
         <div class="mm-field">
             <label title="子部件质量(kg)，必须大于0，用于物理计算">质量 (kg)</label>
-            <input type="number" class="mm-input" v-model.number="config.mass" @input="onFieldChange('mass', config.mass || 0)" step="0.5" min="0" />
+            <input type="number" class="mm-input" :value="config.mass" @change="onFieldChange('mass', parseFloat($event.target.value) || 0)" step="0.5" min="0" />
         </div>
         <div class="mm-field">
             <label title="质心定位器名称，输入关键字搜索并选择">质心</label>
             <input type="text" class="mm-input"
                 v-model="editingMassCenter"
-                @input="onFieldChange('mass_center', $event.target.value)"
+                @change="onFieldChange('mass_center', $event.target.value)"
                 :list="locatorListId"
                 placeholder="mass_center" />
             <datalist :id="locatorListId">
@@ -83,15 +83,15 @@
             <div style="display:flex;gap:6px">
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">X</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[0]" step="0.1" />
+                    <input type="number" class="mm-input" style="width:100%" :value="config.projected_area[0]" @change="onProjectedAreaChange(0, parseFloat($event.target.value) || 0)" step="0.1" />
                 </div>
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">Y</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[1]" step="0.1" />
+                    <input type="number" class="mm-input" style="width:100%" :value="config.projected_area[1]" @change="onProjectedAreaChange(1, parseFloat($event.target.value) || 0)" step="0.1" />
                 </div>
                 <div style="flex:1">
                     <span style="font-size:10px;color:#888">Z</span>
-                    <input type="number" class="mm-input" style="width:100%" v-model.number="config.projected_area[2]" step="0.1" />
+                    <input type="number" class="mm-input" style="width:100%" :value="config.projected_area[2]" @change="onProjectedAreaChange(2, parseFloat($event.target.value) || 0)" step="0.1" />
                 </div>
             </div>
             <span class="mm-element-info" style="font-size:10px;color:#888">设 ≤ 0 则根据碰撞箱 AABB 自动计算</span>
@@ -110,7 +110,7 @@
         </div>
         <div class="mm-field">
             <label title="碰撞检测高度(m)，障碍小于此高度时不发生碰撞（仅ground模式有效）。默认-1.0表示所有障碍均碰撞">碰撞高度 (m)</label>
-            <input type="number" class="mm-input" v-model.number="config.collision_height" @input="onFieldChange('collision_height', config.collision_height || -1)" step="0.5" />
+            <input type="number" class="mm-input" :value="config.collision_height" @change="onFieldChange('collision_height', parseFloat($event.target.value) || -1)" step="0.5" />
         </div>
         <div class="mm-field mm-field-row">
             <label title="是否启用攀爬辅助功能">攀爬辅助</label>
@@ -122,7 +122,7 @@
         <h4 class="mm-section-title">流体动力优先级</h4>
         <div class="mm-field">
             <label title="空气阻力计算优先级，值越大优先级越高。优先级高或相等的部件会遮挡优先级低或相等的部件">hydro_priority</label>
-            <input type="number" class="mm-input" v-model.number="config.hydro_priority" @input="onFieldChange('hydro_priority', config.hydro_priority || 0)" step="1" min="0" />
+            <input type="number" class="mm-input" :value="config.hydro_priority" @change="onFieldChange('hydro_priority', parseFloat($event.target.value) || 0)" step="1" min="0" />
         </div>
     </div>
 

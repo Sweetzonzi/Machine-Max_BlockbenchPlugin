@@ -10,8 +10,11 @@
 src/core/
 ├── config.js              # 工厂函数 + 迁移引擎（273行）
 ├── config_defaults.js     # 所有默认值、CONFIG_VERSION、预设（410行，纯数据）
-├── content_pack.js        # 内容包目录 I/O：meta.json + 定义文件 CRUD（548行）
-└── element_markers.js     # 标记类型系统（sub_part, hit_box, connector 等）（301行）
+├── content_pack.js        # 内容包目录 I/O：meta.json + 定义文件读取（548行）
+├── content_pack_manager.js # 内置包 + 依赖包 + 当前包的合并视图（只读）
+├── element_markers.js     # 标记类型系统（sub_part, hit_box, connector 等）（301行）
+├── operations.js          # 领域操作层：业务动作 + 撤销边界（约 700 行）
+└── undo.js                # 接入 Blockbench 原生撤销：撤销桥 + runConfigEdit（约 600 行）
 ```
 
 ## 查找指引
@@ -26,6 +29,9 @@ src/core/
 | 读取内容包定义 | `content_pack.js` | `readAllDefs()`, `listDefIds()`, `defExists()` — 按类目分别处理 parts/subsystems/connectors/materials；定义文件由作者直接编辑 JSON（writeDef/deleteDef 已随只读化重构删除） |
 | 管理内容包 meta.json | `content_pack.js` | `openContentPack()`, `createContentPack()`, `readPackMeta()`, `writePackMeta()` |
 | 内容包合并视图 | `content_pack_manager.js` | 合并内置包 + 依赖包 + 当前包的定义列表，标注可编辑性 |
+| **新增一个业务动作（带撤销）** | `operations.js` | 写 `createXxx/deleteXxx/markXxx`：校验前置 → `runConfigEdit(label, ...)` → 返回 `{ok, error}`；UI 只调用它 |
+| 让字段编辑可撤销 | `undo.js` | 组件 methods + `wrapMethodMap(methods, labels)`（注册 Vue 组件之前调用） |
+| 排查撤销不生效 | `operations.js` / `undo.js` | 确认动作走的是操作函数而不是裸 `$set`；确认 `registerUndoBridge()` 已调用、`Undo` 是 `Blockbench.Project?.undo` |
 
 ## 约定
 

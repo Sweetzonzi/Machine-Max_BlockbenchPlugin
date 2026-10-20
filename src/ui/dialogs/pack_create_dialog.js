@@ -9,6 +9,7 @@ const { showToast } = require('../../utils/notify.js');
 const { createLogger } = require('../../utils/logger.js');
 const { isConfigValid, sanitizeFolderName } = require('./pack_common.js');
 const { showDependencyPathEditor } = require('./dependency_editor.js');
+const ops = require('../../core/operations.js');
 
 /** 模块日志 */
 var log = createLogger('PackCreate');
@@ -121,9 +122,17 @@ function showCreatePackDialog(config, onSave) {
                 }
 
                 // ---- 更新配置（初步） ----
-                persistence.setPackPath(config, packDirPath);
-                config.namespace = result.namespace || '';
-                config.packMeta = meta;
+                // 目录创建是文件系统副作用，不进撤销栈；这里只让配置变更可撤销
+                var opResult = ops.setContentPack(config, {
+                    path: packDirPath,
+                    namespace: result.namespace || '',
+                    meta: meta,
+                    label: '创建并切换内容包',
+                });
+                if (!opResult.ok) {
+                    showToast(opResult.error, 'error');
+                    return false;
+                }
                 persistence.saveConfig();
 
                 var namespace = result.namespace || '';
@@ -136,16 +145,12 @@ function showCreatePackDialog(config, onSave) {
                 showDependencyPathEditor([], parentDir, { defaultKeepAdding: false }, function (resolved) {
                     var directDeps = resolved.direct || [];
                     var indirectDeps = resolved.indirect || [];
+                    var allPaths = [];
 
-                    // 直接依赖：加入 dependencyPaths
-                    for (var d = 0; d < directDeps.length; d++) {
-                        persistence.addDependencyPath(config, directDeps[d].path);
-                    }
-
-                    // 间接依赖：仅加入 dependencyPaths（不加入 packMeta.dependencies）
-                    for (var k = 0; k < indirectDeps.length; k++) {
-                        persistence.addDependencyPath(config, indirectDeps[k].path);
-                    }
+                    // 直接依赖 + 间接依赖都写入 dependencyPaths（间接依赖不写入 packMeta.dependencies）
+                    for (var d = 0; d < directDeps.length; d++) allPaths.push(directDeps[d].path);
+                    for (var k = 0; k < indirectDeps.length; k++) allPaths.push(indirectDeps[k].path);
+                    ops.updateDependencyPaths(config, { add: allPaths });
 
                     persistence.saveConfig();
 

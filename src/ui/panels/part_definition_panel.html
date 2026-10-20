@@ -48,31 +48,31 @@
             </h3>
             <div class="mm-field">
                 <label title="零件在物品栏和 UI 中显示的图标，格式为 namespace:path">图标</label>
-                <input type="text" v-model="currentPart.icon" class="mm-input" placeholder="machine_max:textures/icon/..." title="零件在物品栏和 UI 中显示的图标路径，如 machine_max:textures/icon/my_part.png" />
+                <input type="text" :value="currentPart.icon" @change="updatePartField('icon', $event.target.value)" class="mm-input" placeholder="machine_max:textures/icon/..." title="零件在物品栏和 UI 中显示的图标路径，如 machine_max:textures/icon/my_part.png" />
             </div>
             <div class="mm-field">
                 <label title="零件耐久度按此比例累加到载具总耐久度。设为 1.0 表示全部贡献给载具">耐久贡献</label>
-                <input type="number" v-model.number="currentPart.vehicle_durability_rate" class="mm-input" step="0.1" min="0" max="1" title="零件耐久度按此比例累加到载具总耐久度。1.0 = 全部贡献" />
+                <input type="number" :value="currentPart.vehicle_durability_rate" @change="updatePartField('vehicle_durability_rate', parseFloat($event.target.value) || 0)" class="mm-input" step="0.1" min="0" max="1" title="零件耐久度按此比例累加到载具总耐久度。1.0 = 全部贡献" />
             </div>
             <div class="mm-field">
                 <label title="零件受到伤害时按此比例传导给载具本体。0.5 表示仅传递 50% 的伤害">伤害传导</label>
-                <input type="number" v-model.number="currentPart.vehicle_damage_rate" class="mm-input" step="0.1" min="0" title="零件受到伤害时按此比例传导给载具本体。0.5 = 传导 50%" />
+                <input type="number" :value="currentPart.vehicle_damage_rate" @change="updatePartField('vehicle_damage_rate', parseFloat($event.target.value) || 0)" class="mm-input" step="0.1" min="0" title="零件受到伤害时按此比例传导给载具本体。0.5 = 传导 50%" />
             </div>
             <div class="mm-field">
                 <label title="零件被摧毁后的伤害传导系数。通常设为较低值，避免摧毁后继续承受高额伤害">摧毁伤害</label>
-                <input type="number" v-model.number="currentPart.vehicle_damage_rate_destroyed" class="mm-input" step="0.1" min="0" title="零件被摧毁后向载具传导伤害的比例，通常设低值避免摧毁后继续受高额伤害" />
+                <input type="number" :value="currentPart.vehicle_damage_rate_destroyed" @change="updatePartField('vehicle_damage_rate_destroyed', parseFloat($event.target.value) || 0)" class="mm-input" step="0.1" min="0" title="零件被摧毁后向载具传导伤害的比例，通常设低值避免摧毁后继续受高额伤害" />
             </div>
             <div class="mm-field">
                 <label title="功能阈值（0~1）。零件组装进度达到该值后子系统可正常工作">功能阈值</label>
-                <input type="number" v-model.number="currentPart.functional_threshold" class="mm-input" step="0.1" min="0" max="1" title="功能阈值（0~1）。组装进度达到此值后子系统即可正常工作" />
+                <input type="number" :value="currentPart.functional_threshold" @change="updatePartField('functional_threshold', parseFloat($event.target.value) || 0)" class="mm-input" step="0.1" min="0" max="1" title="功能阈值（0~1）。组装进度达到此值后子系统即可正常工作" />
             </div>
             <div class="mm-field mm-field-row">
                 <label title="是否共享耐久度。true 时所有子零件共享同一耐久度池；false 时每个子零件有独立耐久度">共享耐久</label>
-                <input type="checkbox" v-model="currentPart.share_durability" title="启用后所有子零件共享同一耐久度池，禁用则各自独立" />
+                <input type="checkbox" :checked="currentPart.share_durability" @change="updatePartField('share_durability', $event.target.checked)" title="启用后所有子零件共享同一耐久度池，禁用则各自独立" />
             </div>
             <div class="mm-field">
                 <label title="零件物品的最大堆叠数量（1~64）。调大此值可使零件在物品栏中可堆叠">最大堆叠</label>
-                <input type="number" v-model.number="currentPart.max_stack_size" class="mm-input" min="1" max="64" title="零件在物品栏中的最大堆叠数（1~64）" />
+                <input type="number" :value="currentPart.max_stack_size" @change="updatePartField('max_stack_size', parseFloat($event.target.value) || 0)" class="mm-input" min="1" max="64" title="零件在物品栏中的最大堆叠数（1~64）" />
             </div>
         </div>
 
@@ -83,11 +83,11 @@
             </h3>
             <div class="mm-field">
                 <label title="基岩版几何模型路径，格式为 namespace:name.geo。如 machine_max:my_part.geo">模型</label>
-                <input type="text" v-model="currentVariant.model" class="mm-input" placeholder="machine_max:..." title="几何模型路径，格式 namespace:name.geo，如 machine_max:wine_fox.geo" />
+                <input type="text" :value="currentVariant.model" @change="updateVariantField('model', $event.target.value)" class="mm-input" placeholder="machine_max:..." title="几何模型路径，格式 namespace:name.geo，如 machine_max:wine_fox.geo" />
             </div>
             <div class="mm-field">
                 <label title="动画路径。如 machine_max:my_anim。留空则不播放动画">动画</label>
-                <input type="text" v-model="currentVariant.animations" class="mm-input" placeholder="machine_max:..." title="动画路径，如 machine_max:wine_fox_anim。留空则不播动画" />
+                <input type="text" :value="currentVariant.animations" @change="updateVariantField('animations', $event.target.value)" class="mm-input" placeholder="machine_max:..." title="动画路径，如 machine_max:wine_fox_anim。留空则不播动画" />
             </div>
             <div class="mm-field">
                 <label title="为每个涂装名指定贴图路径。default 为默认涂装">贴图</label>

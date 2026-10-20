@@ -10,10 +10,11 @@
  */
 
 const { createLogger } = require('../../utils/logger.js');
-const { getConfig, saveConfig, addDependencyPath } = require('../../utils/persistence.js');
+const { getConfig, saveConfig } = require('../../utils/persistence.js');
 const { showToast } = require('../../utils/notify.js');
 const { collectIssues } = require('../../mode/validation.js');
 const { executeExport } = require('./export_pipeline.js');
+const ops = require('../../core/operations.js');
 const path = require('path');
 
 /** 模块日志 */
@@ -135,16 +136,23 @@ function showPackSettingsDialog() {
                 },
             },
             onConfirm: function (formData) {
-                if (!config.packMeta) config.packMeta = {};
+                var metaPatch = {
+                    id: formData.packId || defaultPackId,
+                    version: formData.packVersion || '1.0',
+                    name: formData.packName || '',
+                    author: formData.packAuthor || '',
+                    description: formData.packDescription || '',
+                    exportDir: formData.exportDir || defaultExportDir,
+                    enable_auto_pack: !!formData.enableAutoPack,
+                    flat_export: !!formData.flatExport,
+                };
+                // 撤销边界在 ops.updatePackMeta 内部
+                var opResult = ops.updatePackMeta(config, metaPatch);
+                if (!opResult.ok) {
+                    showToast(opResult.error, 'error');
+                    return false;
+                }
                 var packMeta = config.packMeta;
-                packMeta.id = formData.packId || defaultPackId;
-                packMeta.version = formData.packVersion || '1.0';
-                packMeta.name = formData.packName || '';
-                packMeta.author = formData.packAuthor || '';
-                packMeta.description = formData.packDescription || '';
-                packMeta.exportDir = formData.exportDir || defaultExportDir;
-                packMeta.enable_auto_pack = !!formData.enableAutoPack;
-                packMeta.flat_export = !!formData.flatExport;
 
                 saveConfig();
                 this.hide();
@@ -157,16 +165,12 @@ function showPackSettingsDialog() {
                     var pdir = config.contentPackPath ? require('path').dirname(config.contentPackPath) : '';
                     var pd = require('../dialogs/pack_setup_dialog.js');
                     pd.showDependencyPathEditor(existing, pdir, function (resolved) {
-                        // 完全重建 dependencyPaths
-                        config.dependencyPaths = [];
                         var directDeps = resolved.direct || [];
                         var indirectDeps = resolved.indirect || [];
-                        for (var d = 0; d < directDeps.length; d++) {
-                            addDependencyPath(config, directDeps[d].path);
-                        }
-                        for (var k = 0; k < indirectDeps.length; k++) {
-                            addDependencyPath(config, indirectDeps[k].path);
-                        }
+                        var allPaths = [];
+                        for (var d = 0; d < directDeps.length; d++) allPaths.push(directDeps[d].path);
+                        for (var k = 0; k < indirectDeps.length; k++) allPaths.push(indirectDeps[k].path);
+                        ops.updateDependencyPaths(config, { replace: allPaths });
                         saveConfig();
                         showToast('内容包设置已保存，依赖已更新', 'positive');
                     });
@@ -404,8 +408,8 @@ function showExportDialog() {
                     flat_export: !!formData.flatExport,
                 };
 
-                if (!config.packMeta) config.packMeta = {};
-                Object.assign(config.packMeta, overriddenMeta);
+                // 导出本身是写盘副作用（不进撤销栈），这里只让 packMeta 的变更可撤销
+                ops.updatePackMeta(config, overriddenMeta);
 
                 try {
                     var stats = executeExport(config, overriddenMeta, exportDir, packFolderName);

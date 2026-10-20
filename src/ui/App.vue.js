@@ -10,8 +10,9 @@
  *   - 选中子系统 Locator → 子系统属性页
  */
 const { getConfig, loadConfig, saveConfig } = require('../utils/persistence.js');
-const { getMarkerInfo, clearAllMarkers, detectOwnerSubPart, clearMarker } = require('../core/element_markers.js');
-const { createVariantConfig, createPartConfig, createSubPartConfig } = require('../core/config.js');
+const { getMarkerInfo, detectOwnerSubPart } = require('../core/element_markers.js');
+const { createSubPartConfig } = require('../core/config.js');
+const ops = require('../core/operations.js');
 const { createLogger } = require('../utils/logger.js');
 const { refreshOutlinerIcons } = require('../mode/icons.js');
 const { showToast } = require('../utils/notify.js');
@@ -21,6 +22,7 @@ const { buildSignalTargetOptions } = require('../utils/signal_target_options.js'
 const { collectIssues } = require('../mode/validation.js');
 const { aggregate, resolveIssueLevel } = require('../core/validation_types.js');
 var { showAddTagDialog, _hashTagColor } = require('./tag_dialog_helper.js');
+var undo = require('../core/undo.js');
 
 /** 模块日志 */
 var log = createLogger('UI');
@@ -41,7 +43,14 @@ require('./components/SignalTargetEditor.vue.js');
 
 require('./components/LocatorPicker.vue.js');
 
-const MMMainPanel = Vue.component('mm-main-panel', {
+/**
+ * 主面板组件选项。
+ *
+ * 注意：这里先声明成普通对象，等 methods 全部定义完之后用
+ * `undo.wrapMethodMap()` 把会修改配置的方法统一包成撤销记录，最后才
+ * `Vue.component()` 注册——Vue.extend 会复制方法表，注册后再包就不生效了。
+ */
+const MM_MAIN_PANEL_OPTIONS = {
     template: TEMPLATE_PART_PANEL,
     data: function () {
         return {
@@ -744,31 +753,23 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                               '• 零件 ' + partId + ' 的全部配置<br>' +
                               '• 该零件下的 ' + variantCount + ' 个变体<br>' +
                               '• 所有变体关联的 ' + markerCount + ' 个元素标记<br><br>' +
-                              '此操作不可撤销！',
+                              '可用 Ctrl+Z 撤销。',
                     },
                 },
                 onConfirm: function () {
                     log.info('showDeletePartDialog: 用户确认删除零件', { partId: partId });
 
-                    self.$delete(config.parts, partId);
-
-                    var remaining = Object.keys(config.parts);
-                    if (remaining.length > 0) {
-                        config._uiState.activePartId = remaining[0];
-                        var firstPart = config.parts[remaining[0]];
-                        var firstVariants = Object.keys(firstPart.variants || {});
-                        config._uiState.activeVariantName = firstVariants.length > 0 ? firstVariants[0] : 'default';
-                    } else {
-                        config._uiState.activePartId = '';
-                        config._uiState.activeVariantName = '';
+                    var result = ops.deletePart(config, { partId: partId });
+                    if (!result.ok) {
+                        showToast(result.error, 'error');
+                        return false;
                     }
 
                     refreshOutlinerIcons();
                     self.selectedElement = null;
                     self.loadConfigData();
-                    Blockbench.dispatchEvent('update_selection');
                     showToast('零件 "' + partId + '" 已删除', 'warning');
-                    log.debug('showDeletePartDialog: 删除完成, 剩余零件', { remaining: remaining });
+                    log.debug('showDeletePartDialog: 删除完成, 剩余零件', { remaining: result.remaining });
                     this.hide();
                 },
             }).show();
@@ -801,20 +802,23 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                               '此操作将永久删除：<br>' +
                               '• 变体 "' + variantName + '" 的全部配置（模型、贴图、标签等）<br>' +
                               '• 该变体关联的 ' + markerCount + ' 个元素标记<br><br>' +
-                              '此操作不可撤销！',
+                              '可用 Ctrl+Z 撤销。',
                     },
                 },
                 onConfirm: function () {
                     log.info('showDeleteVariantDialog: 用户确认删除变体', { variant: variantName });
 
-                    clearAllMarkers(config, self.activePartId, variantName);
-                    self.$delete(part.variants, variantName);
+                    var result = ops.deleteVariant(config, {
+                        partId: self.activePartId,
+                        variantName: variantName,
+                    });
+                    if (!result.ok) {
+                        showToast(result.error, 'error');
+                        return false;
+                    }
 
-                    var remaining = Object.keys(part.variants);
-                    self.activeVariantName = remaining.length > 0 ? remaining[0] : '';
-                    config._uiState.activeVariantName = self.activeVariantName;
-
-                    log.debug('showDeleteVariantDialog: 剩余变体', { remaining: remaining });
+                    self.activeVariantName = result.activeVariantName;
+                    log.debug('showDeleteVariantDialog: 剩余变体', { remaining: result.remaining });
                     self.onVariantChange();
                     showToast('变体 "' + variantName + '" 已删除', 'warning');
                     this.hide();
@@ -829,45 +833,10 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 return;
             }
             var self = this;
-            try {
-                new Dialog({
-                    title: '新建零件',
-                    form: {
-                        partId: { type: 'text', label: '零件 ID', hint: '如 wine_fox_hull' },
-                        variantName: { type: 'text', label: '初始变体名', value: 'default' },
-                        model: { type: 'text', label: '模型引用', value: 'machine_max:' },
-                    },
-                    onConfirm: function (formData) {
-                        var partId = formData.partId;
-                        var variantName = formData.variantName;
-                        var model = formData.model;
-                        if (!partId) {
-                            showToast('零件 ID 不能为空', 'error');
-                            return false;
-                        }
-                        if (config.parts[partId]) {
-                            showToast('零件 "' + partId + '" 已存在', 'error');
-                            return false;
-                        }
-                        var cfg = require('../core/config.js');
-                        self.$set(config.parts, partId, cfg.createPartConfig(partId, variantName));
-                        if (model) {
-                            config.parts[partId].variants[variantName].model = model;
-                        }
-                        config._uiState.activePartId = partId;
-                        config._uiState.activeVariantName = variantName;
-                        log.info('UI新建零件成功', { partId: partId, variant: variantName });
-                        require('../mode/icons.js').refreshOutlinerIcons();
-                        Blockbench.dispatchEvent('update_selection');
-                        showToast('零件 "' + partId + '" 已创建', 'positive');
-                        self.loadConfigData();
-                        this.hide();
-                    }
-                }).show();
-                log.debug('showNewPartDialog: Dialog 已显示');
-            } catch (e) {
-                log.error('showNewPartDialog: 创建 Dialog 异常', e);
-            }
+            // 对话框与撤销边界都在共享实现里（ui/dialogs/part_dialogs.js → core/operations.js）
+            require('./dialogs/part_dialogs.js').showNewPartDialog(config, function () {
+                self.loadConfigData();
+            });
         },
         showNewVariantDialog: function () {
             log.debug('showNewVariantDialog: 点击"新建变体"按钮');
@@ -879,32 +848,20 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                     model: { type: 'text', label: '模型引用', value: 'machine_max:' },
                 },
                 onConfirm: function (formData) {
-                    var variantName = formData.variantName;
-                    var model = formData.model;
-                    if (!variantName) {
-                        showToast('变体名不能为空', 'error');
+                    var result = ops.createVariant(self.config, {
+                        partId: self.activePartId,
+                        variantName: formData.variantName,
+                        model: formData.model,
+                    });
+                    if (!result.ok) {
+                        showToast(result.error, 'error');
                         return false;
                     }
-                    const part = self.currentPart;
-                    if (!part) {
-                        log.warn('showNewVariantDialog: currentPart 为空');
-                        return false;
-                    }
-                    if (part.variants[variantName]) {
-                        showToast('变体 "' + variantName + '" 已存在', 'error');
-                        return false;
-                    }
-
-                    self.$set(part.variants, variantName, createVariantConfig());
-                    if (model) part.variants[variantName].model = model;
-                    // 初始化贴图为键值对对象，默认填充 default 涂装
-                    var defaultTexPath = 'machine_max:textures/part/' + self.activePartId + '/' + self.activePartId + '.png';
-                    part.variants[variantName].textures = { 'default': defaultTexPath };
-                    self.activeVariantName = variantName;
-                    log.info('UI新建变体成功', { variant: variantName, partId: self.activePartId });
+                    self.activeVariantName = result.variantName;
+                    log.info('UI新建变体成功', { variant: result.variantName, partId: self.activePartId });
                     self.onVariantChange();
                     this.hide();
-                }
+                },
             }).show();
             log.debug('showNewVariantDialog: Dialog 已显示');
         },
@@ -1221,6 +1178,31 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             }
         },
         /**
+         * 更新零件级字段（图标、耐久贡献、伤害传导等）
+         * 模板改为 :value + @change 绑定，提交时才写入配置，从而每次提交产生一条撤销记录
+         */
+        updatePartField: function (field, value) {
+            var part = this.currentPart;
+            if (!part) {
+                log.warn('updatePartField: currentPart 为空', { field: field });
+                return;
+            }
+            this.$set(part, field, value);
+            log.debug('updatePartField: 已更新', { field: field, value: value });
+        },
+        /**
+         * 更新变体级字段（模型、动画路径等）
+         */
+        updateVariantField: function (field, value) {
+            var variant = this.currentVariant;
+            if (!variant) {
+                log.warn('updateVariantField: currentVariant 为空', { field: field });
+                return;
+            }
+            this.$set(variant, field, value);
+            log.debug('updateVariantField: 已更新', { field: field, value: value });
+        },
+        /**
          * 更新子零件配置中的单个字段。
          * start_bone 变动时需连带迁移子零件标记。
          */
@@ -1511,20 +1493,18 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 spKey = marker.config_ref;
             }
             var variant = this.currentVariant;
-            if (!variant || !variant.sub_parts || !variant.sub_parts[spKey]) return;
+            if (!variant) return;
             var self = this;
             var { showAddSubsystemDialog } = require('./add_subsystem_dialog.js');
+            // 落库与撤销在 ops.createSubsystem 内部；这里只传上下文与创建后回调。
+            // 子零件条目缺失时由操作在确认时补建，取消对话框不会留下空条目。
             showAddSubsystemDialog({
                 config: this.config,
                 variant: variant,
+                partId: this.activePartId,
+                variantName: this.activeVariantName,
                 spKey: spKey,
                 preSelectedType: preSelectedType,
-                beforeSet: function (sp, instanceName, ssConfig) {
-                    if (!sp.subsystems) {
-                        self.$set(sp, 'subsystems', {});
-                    }
-                    self.$set(sp.subsystems, instanceName, ssConfig);
-                },
                 onCreated: function (createdSpKey, instanceName) {
                     self.subsystemSelection = { spKey: createdSpKey, subsystemKey: instanceName };
                     self.markerVersion.v++;
@@ -1533,7 +1513,7 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             });
         },
         /**
-         * 删除子系统：确认后从 sub_parts 中移除
+         * 删除子系统：确认后从 sub_parts 中移除（撤销边界在 ops.deleteSubsystem 内部）
          */
         deleteSubsystem: function (spKey, ssKey) {
             if (!spKey || !ssKey) return;
@@ -1547,11 +1527,20 @@ const MMMainPanel = Vue.component('mm-main-panel', {
                 form: {
                     info: {
                         type: 'info',
-                        text: '确认删除子系统 "' + ssKey + '" ？<br><br>此操作不可撤销！',
+                        text: '确认删除子系统 "' + ssKey + '" ？（可用 Ctrl+Z 撤销）',
                     },
                 },
                 onConfirm: function () {
-                    self.$delete(sp.subsystems, ssKey);
+                    var result = ops.deleteSubsystem(self.config, {
+                        partId: self.activePartId,
+                        variantName: self.activeVariantName,
+                        spKey: spKey,
+                        ssKey: ssKey,
+                    });
+                    if (!result.ok) {
+                        showToast(result.error, 'error');
+                        return false;
+                    }
                     self.subsystemSelection = { spKey: '', subsystemKey: '' };
                     self.markerVersion.v++;
                     log.info('deleteSubsystem: 已删除子系统', { spKey: spKey, subsystemKey: ssKey });
@@ -1821,6 +1810,15 @@ const MMMainPanel = Vue.component('mm-main-panel', {
             saveConfig();
         });
 
+        // 撤销 / 重做把配置整块换掉之后，面板必须重新读取配置对象引用
+        // （_uiState 之外的字段是直接赋值，Vue 2 观测不到）
+        this._restoredHandler = Blockbench.on(undo.RESTORED_EVENT, function () {
+            log.debug('事件: ' + undo.RESTORED_EVENT + ' — 重新读取配置');
+            self.loadConfigData();
+            self.markerVersion.v++;
+            self.onSelectionChange();
+        });
+
         // 注册全局导航单例：供原生清单"定位"按钮与插件自身共用
         this._mmNavigatorObj = { selectByIssue: function (p) { self.selectByIssue(p); } };
         window.__mmNavigator = this._mmNavigatorObj;
@@ -1833,12 +1831,52 @@ const MMMainPanel = Vue.component('mm-main-panel', {
         if (this._selectionHandler) { this._selectionHandler(); log.debug('已移除 update_selection 监听'); }
         if (this._modeHandler) { this._modeHandler(); log.debug('已移除 select_mode 监听'); }
         if (this._saveHandler) { this._saveHandler(); log.debug('已移除 save 监听'); }
+        if (this._restoredHandler) { this._restoredHandler(); log.debug('已移除配置恢复监听'); }
         if (window.__mmNavigator === this._mmNavigatorObj) {
             delete window.__mmNavigator;
             log.debug('已清理全局导航单例 __mmNavigator');
         }
     },
-});
+};
+
+// =============================================================================
+// 撤销接入：把"会改配置"的方法统一包成 Blockbench 原生撤销记录
+// =============================================================================
+//
+// 只包真正写配置的方法。以下方法只改 _uiState / Vue 本地状态，不进撤销栈：
+//   onPartChange / onVariantChange / selectSubsystem / selectByIssue /
+//   navigateTo* / _select* / showNew*Dialog（写配置在对话框 onConfirm 里单独包）
+//
+// 标签用函数形式时按入参生成，撤销历史里能直接看出改了哪个字段。
+var MM_UNDO_LABELS = {
+    updatePartField: function (field) { return '修改零件字段 ' + field; },
+    updateVariantField: function (field) { return '修改变体字段 ' + field; },
+    updateSubPartField: function (field) { return '修改子零件字段 ' + field; },
+    updateHitBoxField: function (field) { return '修改碰撞箱字段 ' + field; },
+    updateHitBoxOverwrite: function (field) { return '修改碰撞箱覆写 ' + field; },
+    updateInteractBoxField: function (field) { return '修改交互区字段 ' + field; },
+    updateConnectorField: function (field) { return '修改连接点字段 ' + field; },
+    updateSubsystemField: function (ssKey, field) { return '修改子系统字段 ' + field; },
+    addEndBone: '添加排除骨骼',
+    removeEndBone: '移除排除骨骼',
+    removeTag: '删除标签',
+    handleTexturesKvAdd: '添加贴图涂装',
+    handleTexturesKvRemove: '删除贴图涂装',
+    handleTexturesKvUpdateKey: '重命名贴图涂装',
+    handleTexturesKvUpdateValue: '修改贴图路径',
+    renameSubPart: '重命名子零件',
+    renameConnector: '重命名连接点',
+    renameInteractBox: '重命名交互区',
+    renameSubsystem: '重命名子系统',
+    migrateSubPartStartBone: '迁移子零件起始骨骼',
+    migrateConnectorLocator: '迁移连接点定位器',
+    migrateInteractBoxBone: '迁移交互区骨骼',
+    handleCleanGhostEntry: '清理幽灵条目',
+};
+
+undo.wrapMethodMap(MM_MAIN_PANEL_OPTIONS.methods, MM_UNDO_LABELS);
+
+const MMMainPanel = Vue.component('mm-main-panel', MM_MAIN_PANEL_OPTIONS);
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = MMMainPanel;
