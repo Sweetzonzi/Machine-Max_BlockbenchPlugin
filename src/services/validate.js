@@ -234,9 +234,10 @@ function collectIssues(config) {
         return problems;
     }
 
-    // 预加载合并后的定义（供 definition 引用存在性校验）
+    // 预加载合并后的定义（供 definition / material 引用存在性校验）
     var subsystemDefs = cp.loadMergedDefs(config, 'subsystems').defs || {};
     var connectorDefs = cp.loadMergedDefs(config, 'connectors').defs || {};
+    var materialDefs = cp.loadMergedDefs(config, 'materials').defs || {};
 
     for (var i = 0; i < partIds.length; i++) {
         var partId = partIds[i];
@@ -289,6 +290,25 @@ function collectIssues(config) {
                         '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：质量必须大于 0',
                         _mkPath('subpart', partId, vName, spKey, null, null, 'mass')
                     ));
+                }
+
+                // 碰撞箱材质：空值必须拦；machine_max:default 是模组内置兜底，不查表
+                var hitBoxes = sp.hit_boxes || {};
+                for (var hbKey in hitBoxes) {
+                    var hb = hitBoxes[hbKey] || {};
+                    if (isMissingValue(hb.material)) {
+                        problems.push(_makeProblem(
+                            'error', CODES.MATERIAL_REQUIRED,
+                            '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '" 碰撞箱 "' + hbKey + '"：未选择材质',
+                            _mkPath('hit_box', partId, vName, spKey, hbKey, hbKey, 'material')
+                        ));
+                    } else if (hb.material !== 'machine_max:default' && !materialDefs[hb.material]) {
+                        problems.push(_makeProblem(
+                            'error', CODES.MATERIAL_REF_MISSING,
+                            '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '" 碰撞箱 "' + hbKey + '"：材质 "' + hb.material + '" 不存在',
+                            _mkPath('hit_box', partId, vName, spKey, hbKey, hbKey, 'material')
+                        ));
+                    }
                 }
 
                 // 信号 / 功率引用完整性（DANGLING_SIGNAL_TARGET）

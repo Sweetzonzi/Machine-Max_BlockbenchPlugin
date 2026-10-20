@@ -40,11 +40,15 @@
         </div>
         <div class="mm-field">
             <label title="材料注册ID，控制摩擦、减伤、音效等">材质</label>
-            <select class="mm-select" :value="config.material" @change="onFieldChange('material', $event.target.value)">
+            <select class="mm-select" :class="{ 'mm-locator-invalid': materialWarning }"
+                    :value="config.material" @change="onFieldChange('material', $event.target.value)">
+                <option value="">（未选择）</option>
+                <option v-if="!materialDefs['machine_max:default']" value="machine_max:default">默认材质（machine_max:default）</option>
                 <option v-for="(mat, matKey) in materialDefs" :key="matKey" :value="matKey">
                     {{ matKey }}
                 </option>
             </select>
+            <p v-if="materialWarning" class="mm-panel-hint" style="color:#e74c3c">{{ materialWarning }}</p>
         </div>
         <div class="mm-field">
             <label title="护甲厚度(mm)，减免伤害并控制碰撞时的能量分配">厚度 (mm)</label>

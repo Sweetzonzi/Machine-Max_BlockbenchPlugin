@@ -5,6 +5,13 @@
 const { describe, test, expect } = require('bun:test');
 const helpers = require('../helpers.js');
 const { canExport, assertSafePartIds, dedupeIssues, toProblem } = require('../../src/services/export.js');
+const { collectIssues } = require('../../src/services/validate.js');
+
+const HB_UUID = '11111111-1111-1111-1111-111111111111';
+
+function hitBox(cfg) {
+    return cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'].hit_boxes[HB_UUID];
+}
 
 function baseConfig() {
     return helpers.createConfig({ parts: { hull: helpers.createPart({ element_markers: {} }) } });
@@ -119,6 +126,35 @@ describe('services/export.canExport', () => {
         const gate = canExport(cfg);
         expect(gate.ok).toBe(false);
         expect(gate.errors.some(function (p) { return p.code === 'unsafe_part_id'; })).toBe(true);
+    });
+
+    test('碰撞箱材质为空/不存在时被拦，machine_max:default 放行', () => {
+        const empty = baseConfig();
+        hitBox(empty).material = '';
+        const emptyIssues = collectIssues(empty).filter(function (p) {
+            return p.code === 'material_required';
+        });
+        expect(emptyIssues).toHaveLength(1);
+        expect(emptyIssues[0].path.scope).toBe('hit_box');
+        expect(emptyIssues[0].path.itemKey).toBe(HB_UUID);
+        expect(emptyIssues[0].path.field).toBe('material');
+        expect(canExport(empty).ok).toBe(false);
+
+        const unknown = baseConfig();
+        hitBox(unknown).material = 'machine_max:not_a_material';
+        const unknownIssues = collectIssues(unknown).filter(function (p) {
+            return p.code === 'material_ref_missing';
+        });
+        expect(unknownIssues).toHaveLength(1);
+        expect(unknownIssues[0].path.field).toBe('material');
+        expect(canExport(unknown).ok).toBe(false);
+
+        const fallback = baseConfig();
+        hitBox(fallback).material = 'machine_max:default';
+        const materialIssues = collectIssues(fallback).filter(function (p) {
+            return p.code === 'material_required' || p.code === 'material_ref_missing';
+        });
+        expect(materialIssues).toHaveLength(0);
     });
 });
 

@@ -43,6 +43,18 @@ Vue.component('mm-hit-box-panel', {
             }
             return options;
         },
+        /**
+         * 材质缺失 / 引用了不存在的材质时给出行内提示。
+         * `machine_max:default` 是模组内置兜底，不在内容包列表里也算合法。
+         */
+        materialWarning: function () {
+            var material = this.config && this.config.material;
+            if (!material) return '未选择材质；导出会被校验拦截。';
+            if (material !== 'machine_max:default' && !this.materialDefs[material]) {
+                return '材质 "' + material + '" 不在可用材质列表中。';
+            }
+            return '';
+        },
         cubeCount: function () {
             if (!this._parentGroup || !this._parentGroup.children) return 0;
             return this._parentGroup.children.filter(function(c) { return c instanceof Cube; }).length;

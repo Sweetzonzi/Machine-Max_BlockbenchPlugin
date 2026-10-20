@@ -13402,8 +13402,12 @@
         // 连接点/子系统/交互区名在单变体内重复（Part 级按名寻址歧义）
         RESERVED_NAME: "reserved_name",
         // 使用了信号保留地址（local/global 等）
-        DANGLING_SIGNAL_TARGET: "dangling_signal_target"
+        DANGLING_SIGNAL_TARGET: "dangling_signal_target",
         // 信号/功率目标指向不存在的节点（含 power_outputs 的 key）
+        MATERIAL_REQUIRED: "material_required",
+        // 碰撞箱 material 未配置（空串/null/undefined）
+        MATERIAL_REF_MISSING: "material_ref_missing"
+        // 碰撞箱 material 引用的材质不存在（machine_max:default 为内置兜底，不查表）
       };
       var SCOPE_ITEM_BUCKET = {
         subsystem: "subsystems",
@@ -14281,6 +14285,7 @@
         }
         var subsystemDefs = cp.loadMergedDefs(config, "subsystems").defs || {};
         var connectorDefs = cp.loadMergedDefs(config, "connectors").defs || {};
+        var materialDefs = cp.loadMergedDefs(config, "materials").defs || {};
         for (var i = 0; i < partIds.length; i++) {
           var partId = partIds[i];
           var part = parts[partId];
@@ -14334,6 +14339,25 @@
                   '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u8D28\u91CF\u5FC5\u987B\u5927\u4E8E 0',
                   _mkPath("subpart", partId, vName, spKey, null, null, "mass")
                 ));
+              }
+              var hitBoxes = sp.hit_boxes || {};
+              for (var hbKey in hitBoxes) {
+                var hb = hitBoxes[hbKey] || {};
+                if (isMissingValue(hb.material)) {
+                  problems.push(_makeProblem(
+                    "error",
+                    CODES.MATERIAL_REQUIRED,
+                    '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '" \u78B0\u649E\u7BB1 "' + hbKey + '"\uFF1A\u672A\u9009\u62E9\u6750\u8D28',
+                    _mkPath("hit_box", partId, vName, spKey, hbKey, hbKey, "material")
+                  ));
+                } else if (hb.material !== "machine_max:default" && !materialDefs[hb.material]) {
+                  problems.push(_makeProblem(
+                    "error",
+                    CODES.MATERIAL_REF_MISSING,
+                    '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '" \u78B0\u649E\u7BB1 "' + hbKey + '"\uFF1A\u6750\u8D28 "' + hb.material + '" \u4E0D\u5B58\u5728',
+                    _mkPath("hit_box", partId, vName, spKey, hbKey, hbKey, "material")
+                  ));
+                }
               }
               _collectDanglingRefs(config, partId, vName, spKey, problems);
               var subsystems = sp.subsystems || {};
@@ -25735,11 +25759,15 @@
         </div>
         <div class="mm-field">
             <label title="\u6750\u6599\u6CE8\u518CID\uFF0C\u63A7\u5236\u6469\u64E6\u3001\u51CF\u4F24\u3001\u97F3\u6548\u7B49">\u6750\u8D28</label>
-            <select class="mm-select" :value="config.material" @change="onFieldChange('material', $event.target.value)">
+            <select class="mm-select" :class="{ 'mm-locator-invalid': materialWarning }"
+                    :value="config.material" @change="onFieldChange('material', $event.target.value)">
+                <option value="">\uFF08\u672A\u9009\u62E9\uFF09</option>
+                <option v-if="!materialDefs['machine_max:default']" value="machine_max:default">\u9ED8\u8BA4\u6750\u8D28\uFF08machine_max:default\uFF09</option>
                 <option v-for="(mat, matKey) in materialDefs" :key="matKey" :value="matKey">
                     {{ matKey }}
                 </option>
             </select>
+            <p v-if="materialWarning" class="mm-panel-hint" style="color:#e74c3c">{{ materialWarning }}</p>
         </div>
         <div class="mm-field">
             <label title="\u62A4\u7532\u539A\u5EA6(mm)\uFF0C\u51CF\u514D\u4F24\u5BB3\u5E76\u63A7\u5236\u78B0\u649E\u65F6\u7684\u80FD\u91CF\u5206\u914D">\u539A\u5EA6 (mm)</label>
@@ -25836,6 +25864,18 @@
               }
             }
             return options;
+          },
+          /**
+           * 材质缺失 / 引用了不存在的材质时给出行内提示。
+           * `machine_max:default` 是模组内置兜底，不在内容包列表里也算合法。
+           */
+          materialWarning: function() {
+            var material = this.config && this.config.material;
+            if (!material) return "\u672A\u9009\u62E9\u6750\u8D28\uFF1B\u5BFC\u51FA\u4F1A\u88AB\u6821\u9A8C\u62E6\u622A\u3002";
+            if (material !== "machine_max:default" && !this.materialDefs[material]) {
+              return '\u6750\u8D28 "' + material + '" \u4E0D\u5728\u53EF\u7528\u6750\u8D28\u5217\u8868\u4E2D\u3002';
+            }
+            return "";
           },
           cubeCount: function() {
             if (!this._parentGroup || !this._parentGroup.children) return 0;

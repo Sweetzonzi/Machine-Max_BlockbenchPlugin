@@ -99,9 +99,9 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 
 | 目录 | 文件 | 行数 |
 |---|---|---|
-| `src/ui/` | 26 JS + 7 模板 | 6,309 + 1,138 |
+| `src/ui/` | 26 JS + 7 模板 | 6,321 + 1,142 |
 | `src/mode/` | 5 | 1,155 |
-| `src/core/` | 12 | 4,390 |
+| `src/core/` | 12 | 4,392 |
 | `src/codec/` | 10 JS（11 含 AGENTS.md） | 1,271 |
 | `src/ops/` | 10（含 `shared.js` / `AGENTS.md`） | — |
 | `src/services/` | 6（export / export_pipeline / safe_part_ids / import / pack / validate） | 1,062 |
@@ -136,13 +136,14 @@ P2 之后两个面板不再直接写配置；P3 之后计算属性也不写配�
 
 ### 2.4 校验现状
 
-`services/validate.js → collectIssues(config)` 是唯一实现（`mode/validation_check.js` 调的也是它）：**15 个 error 产生点 / 3 个 warning 产生点**（P2 新增 `dangling_signal_target`，P3 为字段级问题补 `path.field`，P4 从 `mode/validation.js` 下沉到 `services/validate.js`），但 warning **只有 1 个 code**：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
+`services/validate.js → collectIssues(config)` 是唯一实现（`mode/validation_check.js` 调的也是它）：**17 个 error 产生点 / 3 个 warning 产生点**（P2 新增 `dangling_signal_target`，P3 为字段级问题补 `path.field`，P4 从 `mode/validation.js` 下沉到 `services/validate.js`，随后补 `material_required` / `material_ref_missing`），但 warning **只有 1 个 code**：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
 
 重复的只有名称唯一性两套：`naming.validateNameUniqueness`（UI rename 调用）与 `services/validate._collectNameConflicts`；ops 的 key/存在性检查已收口到 `doc/keys` 与各动作前置校验。
 
 ### 2.5 已确认的其它债务
 
 - **默认值双源已清（P3）**：`createHitBoxConfig()` 改为 `HitBoxCodec.decode({ id:'part', type:'box' })`，删除 `config.js` 内联 `HIT_BOX_DEFAULTS`；新建碰撞箱 `material` 与导入默认值统一为 `machine_max:default`。`config_defaults.js` 仍标记 `@deprecated` 且无人引用。
+- **碰撞箱材质补校验**：`machine_max:default` 是 Java `MaterialAttr.DEFAULT` 的兜底 id，不在内容包材质表里，**不能按“不存在”处理**；但 `''` 不是合法 ResourceLocation，`material_ref_missing` 只对“非 default 且不在材质表”的 id 报。面板下拉补「（未选择）」与「默认材质」两项，空值/未知值在面板内红框提示，`collectIssues` 与导出闸门同步拦截。
 - **子系统类型数**：上游 builtin schema **19** 种（权威）；插件 Codec **19** 种（D13 已补 `track_controller` / `track_drive`，5 个 WIP 已按 D18 删除）；Java 枚举 24 种（19 + 5 个 WIP，不作依据）。见 §3.2。
 - **信号默认值已切换**：`subsystem_types.js` 的 `speed_outputs` / `gear_outputs` / 履带 `force_outputs` 等默认目标已改为 `['local','global']`（D19）；新建子系统不再产生 `subpart` / `vehicle` 无效目标。
 - **单子零件简写的落点错误**：`VariantCodec.sub_parts` 用 `Codec.either`，单对象会包成 `{ default: sp }`，而 schema 规定单子零件应落到 `sub_part.<ns>.main`；导出时 `default` 又满足 unwrap 条件，形成「内存 key 非法、文件形态却正确」的隐性错误（§5.3）。P2 未改 `either` 的 sub_parts 分支（P1 的 `projection.in` 已显式包 `sub_part.<ns>.main`）。
@@ -207,6 +208,7 @@ src/doc/field_specs.generated.js（含 provenance）
 |---|---|---|---|
 | `sub_part.hit_boxes` | `required` + `minProperties: 1` | 无约束 | 由 `collectIssues` 负责（已实现，§4） |
 | `hit_box.id` | 有默认 `""`，非必填（`required` 只有 `type`） | `.default('')` | ✅ 已修：Codec `.default('')`，空 id 编码时省略（D12 结构性修复） |
+| `hit_box.material` | 有默认 `"machine_max:default"`，非必填；该 id **不是内容包材质定义**，而是 Java `MaterialAttr.DEFAULT` 的内置兜底 | `.default('machine_max:default')` | **语义必填**：`collectIssues` 对 `''`/`null`/`undefined` 报 `material_required`；非 `machine_max:default` 且不在可用材质表中报 `material_ref_missing`；`machine_max:default` 始终放行（§2.5、§4.3） |
 | `hit_box.module` | 可选，默认 `""` | **缺字段** | ✅ 已补：Codec `.default('')` + 碰撞箱面板「模块名」输入（D12 字段补齐） |
 | `hit_box.type` | `enum: [box,sphere,cylinder,capsule,wheel]` | `STRING` | **constraint_diff**；写入、导入、导出三侧都由 `field_specs.enum` 报 `invalid_enum`（§4.3、§5.3.1） |
 | `hit_box.overwrite` | 结构化 **3 组**（`physics` / `armor` / `sounds`）、`additionalProperties:false` | `Codec.ANY.nullable()`（上游 `optionalFieldOf` 无默认 → Java `null`） | **constraint_diff**；`field_specs.nullable:true`（可选对象），`validateValues` 允许 `null`，导出省略；结构由 object 规格校验（§5.2） |
@@ -280,6 +282,7 @@ src/doc/field_specs.generated.js（含 provenance）
 | 完整性 | required / minProperties / 名称唯一 / 保留名 / 型号存在 | `services/validate.collectIssues`（业务规则）+ `validateTree(completeness:true)`（schema required/minProperties） | 编辑期：仅提示；导出期：**阻断** |
 | 导出值扫描 | 枚举 / 数值范围 / 对象结构 / key 格式 / required | `doc.validate.validateTree(config, {completeness:true})` | 编辑期：不跑；导出期：**阻断** |
 | 信号目标完整性 | `signal_targets[*][]` / `power_output` / `power_target` / `power_outputs` 的 key 指向同变体节点或 `local`/`global` | `collectIssues`（`DANGLING_SIGNAL_TARGET`，P2 新增一条规则） | 编辑期：提示；导出期：**阻断** |
+| 碰撞箱材质 | `hit_box.material` 非空；非 `machine_max:default` 时必须存在于可用材质表 | `services/validate.collectIssues`（`material_required` / `material_ref_missing`） | 编辑期：提示；导出期：**阻断** |
 
 > D19 之后 `part` / `subpart` / `vehicle` 没有特殊处理：它们和任意未知目标一样走「信号目标完整性」，不再有单独的告警或迁移。
 
@@ -299,7 +302,7 @@ function canExport(config) {
 
 - `export_dialog.onConfirm`：`canExport` 失败 → `showToast` + 列出问题（复用现有 `buildValidationInfo` 的按 path 分组渲染，改为接收 `canExport` 返回的合并数组，每条挂 `__mmNavigator.selectByIssue` 定位按钮），`return false` 不关对话框。
 - **P3 已实现**：`src/services/export.js` 提供 `canExport` / `dedupeIssues` / `toProblem` / `assertSafePartIds`；`export_dialog` 打开时与 `onConfirm` 时各跑一次闸门，失败时对话框保持打开。`services/export_pipeline.executeExport` 在**任何 mkdir/writeFile 之前**调用 `assertSafePartIds`。
-- `collectIssues` 的 15 个 error 产生点逐条确认可定位（都带 `path`，字段级问题带 `path.field`）；`orphan_element` 放行；`validateTree` 的每条错误也带同样的 `path` 口径。
+- `collectIssues` 的 17 个 error 产生点逐条确认可定位（都带 `path`，字段级问题带 `path.field`）；`orphan_element` 放行；`validateTree` 的每条错误也带同样的 `path` 口径。
 - **两条闸门缺一不可**：`collectIssues` 负责业务完整性（型号是否存在、名称冲突、信号目标断裂），`validateTree` 负责 schema 值与 key。第三轮审阅的 `"banana"` / `condition:"WHATEVER"` 属于后者；`projectile_types:{}` 的 `minProperties` 也由后者报。
 - **去重按字段，不按 code**：同一路径可能同时被两层报（例如 `definition:''`：`collectIssues` 报 `definition_required`，`validateTree` 报 `missing_required`）。输出前统一 `Problem.path` 为对象并补 `field`，去重键为 `scope|partId|variantName|subPartKey|itemKey|field`；`collectIssues` 优先，`validateTree` 只补空缺。同一字段只留一条；不同字段（如 `definition` 与 `locator`）各自保留，不能因为路径相同就合并。
 - `Problem.path.field` 是本次新增的可选字段；不带字段的条目（名称冲突、孤立元素等）用空串作 key，仍参与去重。`collectIssues` 的字段级问题必须补上 `field`（`definition` / `locator` / `hit_boxes` / `mass` 等），entry 级问题留空；`validateTree` 的段数组在 `toProblem` 里按 `parts / variants / sub_parts / subsystems|connectors|interact_boxes|hit_boxes` 固定层级转成同一对象，不靠猜 key。
@@ -1098,7 +1101,7 @@ bun test test/schema/field_specs.test.js
 - ✅ `require` 全部 `doc` 模块；P1 无调用方，未重建 `dist`。
 - ✅ 零运行时行为变更：`Codec.record` / `Codec.dispatch` 只新增只读元数据 `schema` / `codecs`，不参与 encode/decode。
 
-验收命令：`bun test`（137 pass / 527 expect，含 P0 的 8 个 schema 测试、P2 的 Codec 契约、旧占位归一化、D18/D19、ops 层与 DANGLING 测试、P3 的导出闸门与事件测试、P4 的导入解析测试）。
+验收命令：`bun test`（138 pass / 536 expect，含 P0 的 8 个 schema 测试、P2 的 Codec 契约、旧占位归一化、D18/D19、ops 层与 DANGLING 测试、P3 的导出闸门与事件测试、P4 的导入解析与碰撞箱材质测试）。
 
 ### P2 — 操作层（已完成）
 
@@ -1144,7 +1147,7 @@ bun test test/schema/field_specs.test.js
 - **`partId` 出口断言**：`assertSafePartIds` 在 `executeExport` 任何 `mkdir` / `writeFile` 之前执行；`canExport` 同时把不安全 `partId` 报为 `unsafe_part_id`。
 - **默认值双源清理**：`createHitBoxConfig()` 改用 `HitBoxCodec.decode({ id:'part', type:'box' })`，删除内联 `HIT_BOX_DEFAULTS`；新建碰撞箱 `material` 与导入默认一致（`machine_max:default`）。
 
-验收：`Ctrl+S` 内容不变；未选中元素时渲染不改配置；空碰撞箱的子零件**可正常编辑**但**导出被拦**；新建碰撞箱 `material` 与导入默认一致；**存量 `hit_box.type:"banana"` / `interact_box.condition:"WHATEVER"` 不阻断打开，但导出被 `invalid_enum` 拦截**；`projectile_types:{}` 的 `minProperties` 被拦；`definition:''` 只出一条 required 错误（§11 #21）；不安全 `partId` 在导出管线 `path.join` 前被拦，不写任何文件（§11 #20）。测试见 `test/services/export.test.js`（7 个用例）与 `test/ops/ops.test.js` 新增的事件 / markSubPart 用例。
+验收：`Ctrl+S` 内容不变；未选中元素时渲染不改配置；空碰撞箱的子零件**可正常编辑**但**导出被拦**；新建碰撞箱 `material` 与导入默认一致；**存量 `hit_box.type:"banana"` / `interact_box.condition:"WHATEVER"` 不阻断打开，但导出被 `invalid_enum` 拦截**；`projectile_types:{}` 的 `minProperties` 被拦；`definition:''` 只出一条 required 错误（§11 #21）；不安全 `partId` 在导出管线 `path.join` 前被拦，不写任何文件（§11 #20）。测试见 `test/services/export.test.js`（8 个用例）与 `test/ops/ops.test.js` 新增的事件 / markSubPart 用例。
 
 ### P4 — `services/` 抽离（1 会话）
 
@@ -1158,8 +1161,9 @@ bun test test/schema/field_specs.test.js
 - pack 三件套的 fs 部分 → `services/pack.js`：创建/打开/读取 meta 的薄包装 + `findPackInSiblings` / `resolveChainDependencies`；`dependency_editor` 不再 `require('fs')`。
 - `collectIssues` 从 `mode/validation.js` **移动**到 `services/validate.js`；`mode/validation.js` 删除，`mode/validation_check.js` 只做原生清单适配。**没有**下沉到 `core/validation.js`，因为那会让 core 反向依赖 `doc/refs.js`（用户 2026-10-21 确认改放 services）。
 - 所有 require 更新：`App.vue.js`、`plugin.js`、`services/export.js`、`mode/validation_check.js`、`test/ops/ops.test.js`。
+- P4 后补（用户实测）：碰撞箱 `material` 原为语义必填但无人校验，`''` 会直接进入导出。`collectIssues` 新增 `material_required` / `material_ref_missing`，`machine_max:default`（Java `MaterialAttr.DEFAULT` 兜底）放行；碰撞箱面板下拉补「（未选择）」/「默认材质」并显示红框提示。
 
-验收：同一工程导出产物逐字节一致（纯搬移，无逻辑改动）；`bun test` 137 pass / 527 expect；`audit-stats` 47/47；`gen-field-specs --check` 与 `sync-schemas --check` 通过；`npm run build` 成功。
+验收：同一工程导出产物逐字节一致（纯搬移，无逻辑改动）；`bun test` 138 pass / 536 expect；`audit-stats` 47/47；`gen-field-specs --check` 与 `sync-schemas --check` 通过；`npm run build` 成功。
 
 ### P5 — MCP（见 docs/12）
 
@@ -1206,6 +1210,7 @@ test/
 23. **事件单一出口**：一次 `ops.setField` 只派发一条 `mm_config_changed`（嵌套编辑不重复），payload 带 `source/label/persist`；空记录不派发；`scheduleSave` 连续调用只落盘一次。
 24. **计算属性只读**：选中缺失配置的 sub_part / hit_box / interact_box / connector 时，渲染不新增 `$set` / `delete`；「创建配置」按钮走 `ops.mark*` 并产生一条撤销记录；`loadConfig` 的 `repairMarkerConfigs` 补建四类条目且幂等。
 25. **碰撞箱默认值单源**：`createHitBoxConfig().material === 'machine_max:default'`，与 `HitBoxCodec.decode({type:'box'})` 一致；内联 `HIT_BOX_DEFAULTS` 已删除。
+26. **碰撞箱材质**：`material:''` 报 `material_required`，`machine_max:not_a_material` 报 `material_ref_missing`，两者都进 `canExport.errors` 并阻断；`machine_max:default` 放行（Java 兜底，不查内容包表）；面板下拉同时展示「（未选择）」与「默认材质」，空值/未知值显示红框与提示。
 
 ---
 
