@@ -1,7 +1,8 @@
 # MCP 工具接入（Blockbench MCP Tools）
 
 > 状态：**设计稿（待实现）** · 日期：2026-10-20 · 范围：`src/mcp/`（新增）+ `src/plugin.js`（两行接入）
-> 目标版本：v0.5.0 · 参照：[docs/11-接入Blockbench原生撤销.md](./11-接入Blockbench原生撤销.md) / [docs/08-序列化反序列化-Codec体系重构.md](./08-序列化反序列化-Codec体系重构.md) / [docs/10-校验与错误提示重构实现计划.md](./10-校验与错误提示重构实现计划.md)
+> 目标版本：v0.5.0 · 前置依赖：[docs/13-业务逻辑层与配置文档API.md](./13-业务逻辑层与配置文档API.md)（P1–P4 必须先落地）
+> 参照：[docs/11-接入Blockbench原生撤销.md](./11-接入Blockbench原生撤销.md) / [docs/08-序列化反序列化-Codec体系重构.md](./08-序列化反序列化-Codec体系重构.md) / [docs/10-校验与错误提示重构实现计划.md](./10-校验与错误提示重构实现计划.md)
 
 ---
 
@@ -11,12 +12,14 @@
 
 目标：通过 **Blockbench MCP 插件**的 `MCP_QUEUE` 扩展点，把"读配置、改配置、校验"暴露为 MCP 工具，让 AI 客户端在编辑器内直接编辑零件定义——与人在面板上操作等价，同样进原生撤销栈（见 [docs/11](./11-接入Blockbench原生撤销.md)），同样由人在确认后保存。
 
+**本文件只负责"协议适配"这一层**：参数形状、工具的注册与生命周期、返回信封、安全边界。所有业务语义（寻址、字段规格、投影、引用解析、撤销边界）由 [docs/13](./13-业务逻辑层与配置文档API.md) 交付的 `src/doc/` 与 `src/ops/` 提供。工具层**不自己实现**撤销包装、路径解析或字段校验——docs/13 的 P1–P4 未落地前，本文件任一工具都无法实现。
+
 范围边界：
 
 | 做 | 不做 |
 |---|---|
 | 读配置树、读上下文、读校验结果 | 写磁盘、建内容包、删文件 |
-| 改配置字段、增删实例、绑定标记（可撤销） | 导出、导入、批量生成内容包 |
+| 改配置字段、导入整件定义、增删实例、绑定标记（可撤销） | 导出、按路径导入文件、批量生成内容包 |
 | 校验并返回结构化问题 | 调用 `risky_eval`、执行任意脚本 |
 
 写盘类操作留给制作者在 UI 上完成：工具改完内存态后，`Project.saved` 变脏，人按 `Ctrl+S` 落盘、按"导出内容包"写内容包。这既是安全边界，也让 AI 的每次编辑都可被人眼复核后再落地。
@@ -50,25 +53,38 @@ version, z, registerTool, exposeAction, unregisterTool, listTools, runUndoableEd
 
 `execute` 的第二个参数是执行上下文（含 `reportProgress`），长任务可上报进度。协议细节以官方 `docs/plugin.md` 为准。
 
+> 本插件**不使用** `MCP.runUndoableEdit`：撤销边界在 `ops` 层的 `runConfigEdit` 内部（docs/11），
+> 由工具层再包一层会产生嵌套记录。
+
 ---
 
 ## 3. 架构与文件布局
 
 ```
-src/core/
-└── undo.js           # 已实现：撤销桥 + runConfigEdit / withUndoEdit / wrapMethodMap（见 docs/11）
+src/doc/                 # docs/13 交付：寻址 / 字段规格 / 投影 / 引用 / 原语
+src/ops/                 # docs/13 交付：28 个业务操作（含 4 个整件通道）
+src/core/undo.js         # 已实现：撤销桥 + runConfigEdit / withUndoEdit / wrapMethodMap（docs/11）
 
 src/mcp/
-├── index.js          # 注册入口：registerMcpTools()，从 MCP_QUEUE 挂载
-├── paths.js          # 路径解析/读写：点分路径、`*` 通配、相对 active 上下文
-├── schema.js         # kind → Codec 映射、字段白名单、值校验与归一化
-├── diff.js           # collectIssues 前后对比，算出"本次编辑引入的问题"
-└── tools.js          # 8 个工具的注册实现
+├── index.js             # registerMcpTools() / unregisterMcpTools()：从 MCP_QUEUE 挂载
+├── tools.js             # 工具注册表：{name, description, params, condition, execute}
+├── params.js            # zod 参数形状（每个工具一段），与 tools.js 一一对应
+└── result.js            # 统一返回信封：ops 结果 → MCP.createJsonResult
 ```
 
-> 撤销桥已随 docs/11 落地在 `src/core/undo.js`，不再需要 `src/mcp/undo_bridge.js` /
-> `src/mcp/run.js`：工具直接 `require('../core/undo.js').runConfigEdit(label, mutate, { strict: true })`
-> ——`strict` 让"编辑器有未完成编辑""快照超限"这类情况抛错给 AI 客户端，而不是静默降级。
+工具层的一行实现（例如 `set_node`）大致是：
+
+```js
+function setNode(config, args) {
+    var r = ops.setField(config, {
+        path: args.path,
+        value: args.value,
+        source: 'mcp',
+        persist: false,
+    });
+    return result.from(r, { path: args.path });
+}
+```
 
 `src/plugin.js` 的 `onload` 追加一行，位置在 `registerMode()` 之后、`showToast(...)` 之前：
 
@@ -76,8 +92,7 @@ src/mcp/
 require('./mcp/index.js').registerMcpTools();
 ```
 
-撤销桥的 `registerUndoBridge()` / `unregisterUndoBridge()` 已由 `plugin.js` 直接调用（docs/11），
-MCP 侧不再重复注册。`onunload` 里只需调 `unregisterMcpTools()`（注销本插件注册的全部工具）。
+撤销桥的 `registerUndoBridge()` / `unregisterUndoBridge()` 由 `plugin.js` 直接调用（docs/11），MCP 侧不重复注册。`onunload` 里追加 `unregisterMcpTools()`。
 
 ---
 
@@ -85,31 +100,30 @@ MCP 侧不再重复注册。`onunload` 里只需调 `unregisterMcpTools()`（注
 
 ### 4.1 配置树
 
-`Project.machine_max_plugin` 的形态由 Codec 定义（[src/codec/codecs/](../src/codec/codecs/)）：
+形态由 Codec 定义（[src/codec/codecs/](../src/codec/codecs/)）：
 
 ```
 config
 ├─ $schema_version, modelFile, contentPackPath, dependencyPaths[], packMeta
-├─ _uiState { activeMode, activePartId, activeVariantName }
+├─ _uiState { activePartId, activeVariantName }        ← 不可寻址写（用 set_active）
 └─ parts { <partId> → PartConfig
-     ├─ icon, vehicle_durability_rate, vehicle_damage_rate,
-     │  vehicle_damage_rate_destroyed, functional_threshold,
-     │  share_durability, max_stack_size
-     ├─ element_markers { <variant> → { <uuid> → { type, config_ref } } }
+     ├─ icon, vehicle_durability_rate, …, max_stack_size
+     ├─ element_markers { <variant> → { <uuid> → { type, config_ref } } }   ← 编辑器内部，不可寻址
      └─ variants { <variant> → VariantConfig
           ├─ model, textures, animations, tags[]
-          └─ sub_parts { <sp> → SubPartConfig
+          └─ sub_parts { <spKey> → SubPartConfig
                ├─ start_bone, end_bones[], durability, mass, mass_center,
-               │  projected_area[3], block_collision('true'|'false'|'ground'),
-               │  collision_height, climb_assist, hydro_priority
-               ├─ hit_boxes { <name> → HitBoxConfig }
+               │  projected_area[3], block_collision, collision_height,
+               │  climb_assist, hydro_priority
+               ├─ hit_boxes { <uuid> → HitBoxConfig }
                ├─ interact_boxes { <name> → InteractBoxConfig }
                ├─ connectors { <name> → ConnectorConfig }
-               ├─ subsystems { <name> → SubsystemConfig }
-               └─ hydrodynamics { <name> → HydroCodec }
+               └─ subsystems { <name> → SubsystemConfig }
 ```
 
 ### 4.2 路径语法
+
+实现见 docs/13 §5.1，这里只列协议契约：
 
 | 形式 | 示例 | 说明 |
 |---|---|---|
@@ -120,78 +134,131 @@ config
 
 相对路径是默认形态：AI 与人在同一上下文里工作，改的永远是面板上正在编辑的那个变体，不需要每次背完整路径。
 
-### 4.3 kind 与 Codec 对应
+**两处协议级约束**：
 
-| kind | Codec | 工厂 |
-|---|---|---|
-| `part` | `PartCodec` | `createPartConfig` |
-| `variant` | `VariantCodec` | `createVariantConfig` |
-| `sub_part` | `SubPartCodec` | `createSubPartConfig` |
-| `hit_box` | `HitBoxCodec` | `createHitBoxConfig` |
-| `interact_box` | `InteractBoxCodec` | `createInteractBoxConfig` |
-| `connector` | `ConnectorCodec` | `createConnectorInstanceConfig` |
-| `subsystem` | `SubsystemDispatchCodec` | `createSubsystemConfig` + `getTypeDefaults(type)` |
+- `_uiState` 与 `element_markers` 不可寻址写 → 返回 `unknown_field`；切上下文用 `set_active`。
+- `hit_boxes` 的 key 在对外格式里是**骨骼名**、内存里是 **UUID**：`read_node` / `set_node` 两种写法都接受，内部归一化为 UUID 并回写为骨骼名。
+
+### 4.3 kind 与工具映射
+
+| kind | Codec | 读取 | 创建/整件写入 | 删除 |
+|---|---|---|---|---|
+| `part` | `PartCodec` | `read_node` | `import_part` | `remove_node` |
+| `variant` | `VariantCodec` | `read_node` | `import_variant` | `remove_node` |
+| `sub_part` | `SubPartCodec` | `read_node` | `import_sub_part` | `remove_node` |
+| `subsystem` | `SubsystemDispatchCodec`（22 种类型，`type` 形如 `machine_max:engine`） | `read_node` | `import_subsystem` / `add_instance` | `remove_node` |
+| `hit_box` | `HitBoxCodec` | `read_node` | `add_instance` | `remove_node` |
+| `interact_box` | `InteractBoxCodec` | `read_node` | `add_instance` | `remove_node` |
+| `connector` | `ConnectorCodec` | `read_node` | `add_instance` | `remove_node` |
+
+`hit_box` / `interact_box` / `connector` **没有整件通道**（决策 D9）：字段少（4–7 个）、key 与骨骼 UUID 纠缠，整件替换收益低于风险，用 `add_instance` + `set_node` 组合即可。
 
 ---
 
 ## 5. 工具清单
 
-全部 8 个工具共用同一个可用性条件：
+全部 12 个工具共用同一个可用性条件：
 
 ```js
 condition: { project: true, modes: ['machine_max_part'] }
 ```
 
-工具名统一以插件 id 前缀开头，避开 94 个内置工具的名字空间（重名会在注册时抛错）。
+工具名统一以插件 id 前缀开头（`machine_max_bb_plugin_`），避开 94 个内置工具的名字空间（重名会在注册时抛错）。下表省略前缀。
 
 ### 5.1 只读（3）
 
-| 工具 | 参数 | 返回 | 说明 |
-|---|---|---|---|
-| `machine_max_bb_plugin_get_context` | — | `{ project, active: { part, variant }, parts: [...], variants: [...], selection: [{ uuid, name, marker }] }` | 我"现在在哪"。`selection` 取自 Blockbench 当前选中元素并附上 marker 归属（`detectOwnerSubPart`） |
-| `machine_max_bb_plugin_read_node` | `path` | `{ ok, path, value }` | 按 §4.2 读子树；`*` 通配返回映射 |
-| `machine_max_bb_plugin_validate` | `only_introduced?: bool` | `{ ok, count, issues: [{ severity, code, message, path }] }` | 复用 `collectIssues(config)`（[src/mode/validation.js:180](../src/mode/validation.js)），与原生问题清单同源 |
+| 工具 | 参数 | 返回 |
+|---|---|---|
+| `get_context` | — | `{ project, active: { part, variant }, parts: [...], variants: [...], selection: [{ uuid, name, marker }] }` |
+| `read_node` | `path`, `as?: 'raw'\|'definition'` | `{ ok, path, kind, value }`；`as='definition'` 时走投影（UUID→骨骼名、单元素简写、剥瞬态） |
+| `validate` | `only_introduced?: bool` | `{ ok, count, issues: [{ severity, code, message, path }] }` |
 
-### 5.2 编辑（5，全部进撤销栈）
+`validate` 复用 `collectIssues(config)`（[src/mode/validation.js:180](../src/mode/validation.js)），与原生问题清单同源。`only_introduced` 与上一次工具调用的结果做 diff（§7.2）。
+
+### 5.2 细粒度编辑（4，全部进撤销栈）
 
 | 工具 | 参数 | 行为 |
 |---|---|---|
-| `machine_max_bb_plugin_set_node` | `path`, `value` | 写标量/数组/对象。写前用对应 Codec 归一化与校验，写后返回 `before`/`after` 与本次引入的问题 |
-| `machine_max_bb_plugin_add_instance` | `parent_path?`, `kind`, `name?`, `type?`, `definition?` | 用工厂造默认值（`subsystem` 额外合并 `getTypeDefaults(type)`），名字走 `ensureUniqueName` 去重；返回最终名字 |
-| `machine_max_bb_plugin_remove_node` | `path`, `cascade?: bool` | 删节点，并清理指向它的引用：`element_markers[*][uuid].config_ref`、`connectors[*].signal_targets`、`subsystems[*].signal_targets`、`connectors[*].signal_translations` |
-| `machine_max_bb_plugin_bind_marker` | `uuid`, `type`, `config_ref` | 把元素绑成 `sub_part` / `connector` / `hit_box` / `interact_box`，内部走 `setMarker` 并 `recalcAutoEndBones` |
-| `machine_max_bb_plugin_set_active` | `part`, `variant?` | 切 active 上下文（等价于 UI 里点一下）。**不进撤销栈**：这是视图状态，不是工程内容 |
+| `set_node` | `path`, `value` | 写标量/数组/对象。走 `ops.setField`：字段白名单、类型归一化、副作用（如 `start_bone` 迁移标记）、一条撤销记录。返回 `before`/`after` 与本次引入的问题 |
+| `remove_node` | `path`, `cascade?: bool` | 删除节点，清理指向它的引用（`element_markers[*][uuid].config_ref`、`signal_targets`、`signal_translations`、`connectors[*].locator`），返回 `cleaned_references` |
+| `bind_marker` | `uuid`, `type`, `config_ref?` | 把元素绑成 `sub_part` / `hit_box` / `interact_box` / `connector`，内部走 `ops.bindMarker`（`setMarker` + `recalcAutoEndBones`）。`hit_box`/`interact_box`/`connector` 的 `config_ref` 由上下文推导 |
+| `set_active` | `part`, `variant?` | 切 active 上下文（等价于 UI 里点一下）。**不进撤销栈**：这是视图状态，不是工程内容 |
 
-### 5.3 返回信封
+### 5.3 整件编辑（4，全部进撤销栈）
 
-统一结构，便于客户端判别：
+四个工具同构：一次调用替换一个节点子树，**省略的字段被重置为默认值**（对应 `Codec.decode` 的补默认行为）。
+
+| 工具 | 参数 | 挂载点 |
+|---|---|---|
+| `import_part` | `part_id`, `definition?`, `mode` | `parts.<part_id>` |
+| `import_variant` | `variant`, `definition`, `parent_part?`, `mode` | `<part>.variants.<variant>` |
+| `import_sub_part` | `key`, `definition?`, `parent_variant?`, `mode` | `<variant>.sub_parts.<key>` |
+| `import_subsystem` | `key`, `definition`, `parent_sub_part`, `mode` | `<sub_part>.subsystems.<key>` |
+
+`mode` 取值：
+
+| mode | 已存在时 | 形态 |
+|---|---|---|
+| `create` | `ok:false, code:duplicate_name` | `key` 可省略 → 自动命名（`ensureUniqueName`） |
+| `replace` | 整体替换，返回 `reset_fields` | 必须给 `key` |
+| `rename` | 替换并改用 `key`（旧节点的引用同步改写） | 必须给 `key` 与已存在的旧 key |
+| `reject` | 与 `create` 同义（默认值） | — |
+
+`import_*` 返回：
 
 ```json
-{ "ok": true,  "path": "subsystems.engine.mass", "before": 25, "after": 40,
+{ "ok": true, "kind": "sub_part", "key": "sub_part.machine_max.chassis", "action": "created",
+  "reset_fields": [], 
+  "unresolved_references": [{ "bone": "suspension_rear", "field": "start_bone" }],
+  "introduced_issues": [] }
+```
+
+`reset_fields` 列出"替换前存在、本次未提供、被重置为默认值"的字段——这是整件语义唯一的安全网，AI 与人都能看出漏了什么。
+
+### 5.4 剩余创建通道（1）
+
+`add_instance` 只服务三个小件（决策 D9 的落地）：
+
+| 参数 | 取值 |
+|---|---|
+| `parent_path` | 子零件路径，如 `sub_parts.chassis` |
+| `kind` | `hit_box` \| `interact_box` \| `connector` |
+| `key` | 可选：`hit_box` 为骨骼名（必填），`interact_box`/`connector` 省略则自动命名 |
+| `definition` | 该 kind 的必填字段（`hit_box` 需 `id`+`type`，`interact_box` 需 `bone`，`connector` 需 `locator`） |
+
+`part` / `variant` / `sub_part` / `subsystem` 的新建走各自的 `import_*` + `mode:'create'`，不再有 `add_instance` 分支。
+
+`add_instance` 内部 = `ops.markXxx`（建配置条目 + 建标记）→ `ops.setField`（写入 `definition`），两步作为嵌套编辑并入**同一条**撤销记录。因此它要求目标元素已存在于模型里（`hit_box` 用骨骼名定位，`interact_box` 用骨骼、`connector` 用 Locator）；若元素不存在，返回 `code:unresolved_reference`，提示先建模型元素或改用 `bind_marker`。
+
+### 5.5 返回信封
+
+统一结构，便于客户端判别（实现见 docs/13 §5.5）：
+
+```json
+{ "ok": true, "path": "subsystems.engine.mass", "before": 25, "after": 40,
   "introduced_issues": [] }
 ```
 
 ```json
-{ "ok": false, "errors": [
-    { "path": "subsystems.engine.definition", "expected": "non-empty resource location",
-      "got": "", "hint": "先 list_defs(type='subsystems') 选一个 definition" } ] }
+{ "ok": false,
+  "error": "mass 期望 number，收到 string",
+  "errors": [{ "path": "subsystems.engine.mass", "code": "type_mismatch",
+               "expected": "number", "got": "\"abc\"", "hint": "去掉引号" }] }
 ```
 
-失败一律 `ok: false` 且**不抛异常**（工具层捕获后转成结构化错误），避免 MCP 客户端把一次参数错误渲染成协议失败。
+失败一律 `ok: false` 且**不抛异常**（工具层捕获后转成结构化错误），避免 MCP 客户端把一次参数错误渲染成协议失败。错误码全集见 docs/13 §5.5。
 
 ---
 
 ## 6. 参数校验
 
-三层，顺序固定：
+三层，顺序固定（全部下沉到 doc 层，工具层只做第一层）：
 
-1. **形状**：`mcp.z.object({...})` 声明参数类型与必填项，MCP 插件在调用 `execute` 前完成解析（含默认值）。
-2. **路径**：`paths.resolve()` 校验每一段存在（`set_node` 允许最后一段不存在，表示新增字段）、`*` 只在末尾、数组下标不越界。
-3. **值**：`schema.js` 用目标 Codec 做一次 `decode` 归一化，再做白名单与类型比对。
+1. **形状**（工具层）：`MCP.z.object({...})` 声明参数类型与必填项，MCP 插件在调用 `execute` 前完成解析（含默认值）。
+2. **路径**（`doc/address`）：逐段校验存在性（`set_node` 允许最后一段不存在，表示新增字段）、`*` 只在末尾、数组下标不越界、`_uiState`/`element_markers` 拒写。
+3. **值**（`doc/field_specs` + `Codec.decode`）：白名单来源是 `field_specs.keys(kind)`——由各 kind 的最小样例 `Codec.decode(SKELETON)` 派生（docs/13 §5.2），再叠加手写的枚举/资源位置/副作用列。枚举值例如 `block_collision ∈ {'true','false','ground'}`（[src/codec/codecs/sub_part_codec.js:67](../src/codec/codecs/sub_part_codec.js)）。
 
-白名单来源：`Object.keys(TheCodec.decode({}))`——Codec 的 decode 契约是"空对象返回全默认值"，因此返回键集合就是 schema 键集合，不需要给 `Codec.record` 新增访问器。嵌套的 map 字段（`subsystems` 等）按 value 的 Codec 递归校验。
-
-枚举值直接取自 Codec 定义，例如 `block_collision ∈ {'true','false','ground'}`（[src/codec/codecs/sub_part_codec.js:67](../src/codec/codecs/sub_part_codec.js)）。未知字段按 Codec 的宽松语义保留并原样回传，避免把手工写的扩展字段吃掉。
+未知字段按 Codec 的宽松语义保留并原样回传，避免把手工写的扩展字段吃掉；但**整件通道会先剥内部字段**（`element_markers` / `_uuid` / `_marker_uuid` / `_unresolved_bones` / `auto_end_bones`），这是 docs/13 §5.3 坑 2 的落地点。
 
 ---
 
@@ -203,28 +270,20 @@ condition: { project: true, modes: ['machine_max_part'] }
 
 ```js
 async execute({ path, value }) {
-    const resolved = paths.resolve(path);
-    const normalized = schema.normalize(resolved.kind, value);   // 可能抛参数错误
-    let before, after;
-    // 同步入口 + strict：占用 / 快照超限时抛错，交给 MCP 客户端处理
-    runConfigEdit('MM: 设置 ' + path, function () {
-        const config = getConfig();
-        before = paths.read(config, resolved);
-        paths.write(config, resolved, normalized);
-        after = paths.read(config, resolved);
-    }, { strict: true });
-    return MCP.createJsonResult({
-        ok: true, path, before, after,
-        introduced_issues: diff.introduced(beforeIssues, diff.collectIssues()),
+    const r = ops.setField(getConfig(), {
+        path: path,
+        value: value,
+        source: 'mcp',
+        persist: false,     // 不落盘：由 UI 订阅者决定（docs/13 §7.1）
+        strict: true,       // 占用 / 快照超限 → 抛错给客户端，而不是静默降级
     });
+    return MCP.createJsonResult(result.from(r, { path: path }));
 }
 ```
 
-`runConfigEdit` 来自 [src/core/undo.js](../src/core/undo.js)（设计见 [docs/11](./11-接入Blockbench原生撤销.md)）：
-`Undo.current_save` 占用检查、失败回滚、快照上限、嵌套合并；`{ strict: true }` 时上述失败直接抛错。
-撤销栈是 Blockbench 原生的，人按 `Ctrl+Z` 就能退回 AI 的每一次修改。
-注意入口是**同步**的：`execute` 可以是 async，但不要把 `runConfigEdit` 包进 Promise 队列，
-否则 `onConfirm` / UI 调用链里的同步语义会丢。
+`runConfigEdit` 来自 [src/core/undo.js](../src/core/undo.js)（设计见 [docs/11](./11-接入Blockbench原生撤销.md)）：`Undo.current_save` 占用检查、失败回滚、快照上限、嵌套合并、空记录丢弃。撤销栈是 Blockbench 原生的，人按 `Ctrl+Z` 就能退回 AI 的每一次修改。
+
+注意入口是**同步**的：`execute` 可以是 async，但不要把 `runConfigEdit` 包进 Promise 队列，否则 `onConfirm` / UI 调用链里的同步语义会丢。
 
 ### 7.2 编辑后自检
 
@@ -233,9 +292,20 @@ async execute({ path, value }) {
 1. 用 `collectIssues(config)` 重新收集问题；
 2. 与编辑前的问题集合 diff，只回本次**新引入**的问题（按键 `severity|code|path|message` 判等）。
 
-这样"改完发现引用悬空""sub_part 没有起始骨骼"能在工具返回里直接看到，而不必等导出才暴露。`mm_validate({only_introduced: true})` 是同一实现的独立入口。
+这样"改完发现引用悬空""sub_part 没有起始骨骼"能在工具返回里直接看到，而不必等导出才暴露。`validate({only_introduced: true})` 是同一实现的独立入口。
 
-### 7.3 不写盘
+### 7.3 整件语义
+
+`import_*` 是**整体替换**，不是"合并"：
+
+- 省略的字段 → 重置为该 kind 的 Codec 默认值（`reset_fields` 会列出来）；
+- 被替换节点的子树整体丢弃（例如替换一个 variant 会丢掉它下面所有 sub_parts）；
+- 替换后重新解析骨骼引用，未解析的写进 `unresolved_references`，**不清空、不阻塞**；
+- 一条撤销记录退掉整次替换。
+
+AI 的正确用法是"`read_node(as='definition')` 拿全量 → 改 → 整件回传"，而不是"只给要改的部分"。工具描述里必须写清这条，否则它会用整件通道做局部修改，把字段重置成默认值。
+
+### 7.4 不写盘
 
 工具不调用 `saveConfig()`、不碰 `fs`、不调 `executeExport`。理由：
 
@@ -243,7 +313,7 @@ async execute({ path, value }) {
 - `.mm_project.json` 侧载文件由 `saveConfig()` 在保存时自动维护，工具插手会造成两份状态；
 - 人按 `Ctrl+S` 保存前可以先目视检查，AI 的改动始终处于"可复核"状态。
 
-`Project.saved` 由 `Undo.finishEdit` 置为 `false`，标题栏出现未保存标记，这是给制作者的信号。
+`Project.saved` 由 `Undo.finishEdit` 置为 `false`，标题栏出现未保存标记，这是给制作者的信号。技术上由 `ops` 的 `persist: false` 保证（docs/13 §7.1）——UI 的订阅者看到 `persist !== false` 才落盘。
 
 ---
 
@@ -252,13 +322,17 @@ async execute({ path, value }) {
 | 不做 | 原因 | 替代 |
 |---|---|---|
 | `export_pack` / `export_model` 类写盘工具 | 不可撤销、会覆盖内容包 | 人在"导出内容包"对话框操作 |
-| `import_part`（按路径导入） | 读任意路径 + 批量写结构 | 人拖拽导入；或先 `add_instance` 手工建 |
+| **按路径**导入（`import_part_from_path`） | 读任意路径 + 批量写结构，属于 fs 副作用 | 用 `import_part` 传内联定义；或人拖拽导入 |
 | `save_config` | 落盘归人 | `Ctrl+S` |
 | `risky_eval` 代理 | 等价于把任意 JS 交给客户端 | 不提供 |
 | 建/删内容包目录 | 文件系统副作用 | 人在 UI 操作 |
+| `hit_box`/`interact_box`/`connector` 的整件通道 | 字段少、key 与 UUID 纠缠（决策 D9） | `add_instance` + `set_node` |
 | 改 `_uiState` 之外的视图状态（相机、模式） | 与工程内容无关 | 用内置的 `set_mode` / `set_camera_angle` |
+| 内容包定义 JSON 的读写 | 定义文件由作者直接编辑；写盘不可撤销（决策 Q1） | 人在编辑器外改；工具只读合并视图 |
 
-`export_preview`（只读：返回"如果现在导出会写出什么 JSON"，不落盘）留作后续扩展，见 §12。
+> 与旧版差异：`import_part` 由"不做"改为"做"，但边界从"按文件路径"收紧为"内联 JSON"——不触达 fs，仍落在原来的安全模型内。
+
+`export_preview`（只读：返回"如果现在导出会写出什么 JSON"，不落盘）留作后续扩展，见 §13。
 
 ---
 
@@ -270,6 +344,7 @@ async execute({ path, value }) {
 - **无鉴权**：任何能连上端口的本机进程都能调用全部工具，包括内置的 `risky_eval`。工具侧不能假设调用方可信，因此所有参数都在服务端（Blockbench 进程内）重新校验，路径与值的白名单不依赖客户端。
 - **`risky_eval`**：MCP 插件默认把它暴露给客户端。若不需要，在 Settings → General 清除 Enable risky_eval，客户端会看不到该工具。本插件的工具不依赖它。
 - **范围限制**：`condition` 限定在 `machine_max_part` 模式且必须有打开的项目，模式外调用不会被路由到执行体。
+- **写盘边界**：工具层与 `ops` 层都不含 fs 调用；`services/` 的写盘能力不注册为工具（docs/13 §8）。
 
 ---
 
@@ -315,15 +390,23 @@ Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 | 1 | 非 `machine_max_part` 模式下列工具 | 工具不可见（`tools/list` 不含） |
 | 2 | 无打开项目时调用 | 工具不可见 |
 | 3 | `read_node` 读 `subsystems` 全量 | 返回完整映射，键为实例名 |
-| 4 | `set_node` 把 `mass` 设为 `"abc"` | `ok:false`，`expected: number`，配置未变 |
-| 5 | `set_node` 把 `block_collision` 设为 `ground` | `ok:true`，`before/after` 正确，`Ctrl+Z` 可退 |
-| 6 | `add_instance` 建 subsystem，`definition` 留空 | `ok:true` 且 `introduced_issues` 含"未选型号"一类问题 |
-| 7 | `remove_node` 删一个被 marker 引用的 sub_part | `ok:true`，`cleaned_references` 列出被清掉的引用 |
-| 8 | `bind_marker` 绑一个不存在的 `config_ref` | `ok:false`，不写配置 |
-| 9 | 连续 3 次编辑 → `Ctrl+Z` ×3 | 逐条回退，面板同步 |
-| 10 | AI 编辑后不保存 → 关闭工程 | 弹出未保存提示（`Project.saved === false`） |
-| 11 | 拖拽元素过程中调用编辑工具 | `ok:false`，提示"有未完成的编辑" |
-| 12 | 重载插件两次 | 工具仍只有 8 个，无重复注册报错 |
+| 4 | `read_node` 读 `sub_parts.<sp>.hit_boxes`（`as='definition'`） | 键为骨骼名，无 `_uuid` |
+| 5 | `set_node` 把 `mass` 设为 `"abc"` | `ok:false`，`errors[0].expected === 'number'`，配置未变 |
+| 6 | `set_node` 把 `block_collision` 设为 `ground` | `ok:true`，`before/after` 正确，`Ctrl+Z` 可退 |
+| 7 | `set_node` 改 `start_bone` | 返回 `ok:true`，sub_part 标记随之迁移，Outliner 图标更新 |
+| 8 | `set_node` 写 `_uiState.activePartId` | `ok:false`，`code:unknown_field` |
+| 9 | `import_part` 传一个完整定义 | `ok:true`，`reset_fields` 为空，一次 `Ctrl+Z` 退回整个零件 |
+| 10 | `import_sub_part` 的 key 不含点号（`"chassis"`） | `ok:false`，`code:invalid_format`（`either` 启发式拦截） |
+| 11 | `import_part` 的定义里塞入 `element_markers` | `ok:true` 且 marker 未被写入（投影剥离），`read_node` 看不到该字段 |
+| 12 | `import_part` 省略若干已知字段 | `ok:true`，`reset_fields` 列出被重置的字段 |
+| 13 | `import_subsystem` 的 `type` 写 `engine`（缺前缀） | `ok:false`，`code:unknown_type`，`hint` 提示 `machine_max:engine` |
+| 14 | `add_instance` 建 subsystem | 工具不存在该 kind（只服务三个小件）→ 参数校验失败 |
+| 15 | `remove_node` 删一个被 marker 引用的 sub_part | `ok:true`，`cleaned_references` 列出被清掉的引用 |
+| 16 | `bind_marker` 绑一个不存在的 `config_ref` | `ok:false`，不写配置 |
+| 17 | 连续 3 次编辑 → `Ctrl+Z` ×3 | 逐条回退，面板同步 |
+| 18 | AI 编辑后不保存 → 关闭工程 | 弹出未保存提示（`Project.saved === false`） |
+| 19 | 拖拽元素过程中调用编辑工具 | `ok:false`，提示"有未完成的编辑" |
+| 20 | 重载插件两次 | 工具仍只有 12 个，无重复注册报错 |
 
 ---
 
@@ -333,28 +416,43 @@ Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 
 ```
 machine_max_bb_plugin_get_context                   → selection: [cube_12, cube_13, cube_14], active: {hull, default}
-machine_max_bb_plugin_add_instance                  → kind: sub_part, name: chassis
-machine_max_bb_plugin_bind_marker  ×3               → uuid: cube_1x, type: sub_part, config_ref: chassis
+machine_max_bb_plugin_import_sub_part               → key: sub_part.machine_max.chassis, mode: create
+machine_max_bb_plugin_bind_marker  ×3               → uuid: cube_1x, type: sub_part, config_ref: sub_part.machine_max.chassis
 machine_max_bb_plugin_validate                      → introduced_issues: []
 ```
 
-**例 2：给底盘加一个电机子系统并引用既有定义**
+**例 2：重做整个底盘（三轴结构）**
 
 ```
-machine_max_bb_plugin_add_instance  { parent_path: "sub_parts.chassis", kind: "subsystem",
-                                      type: "motor", definition: "machine_max:medium_motor" }
+machine_max_bb_plugin_read_node   { path: "sub_parts", as: "definition" }      → 拿到全量定义
+   …AI 改 JSON：新增两根挂载骨骼、调整投影面积…
+machine_max_bb_plugin_import_sub_part { key: "sub_part.machine_max.chassis",
+                                        definition: {…}, mode: "replace" }
+   → { ok:true, reset_fields: ["mass_center"], unresolved_references: [...] }
+machine_max_bb_plugin_validate    { only_introduced: true }
+```
+
+**例 3：给底盘加一个电机子系统并引用既有定义**
+
+```
+machine_max_bb_plugin_import_subsystem { key: "subsystem.machine_max.motor_main",
+                                         parent_sub_part: "sub_part.machine_max.chassis",
+                                         definition: { type: "machine_max:motor",
+                                                       definition: "machine_max:medium_motor",
+                                                       power_output: "power" },
+                                         mode: "create" }
 machine_max_bb_plugin_validate
 ```
 
-**例 3：批量把三个子零件的质量砍半**
+**例 4：批量把三个子零件的质量砍半**
 
 ```
-machine_max_bb_plugin_read_node  { path: "sub_parts.*.mass" }
-machine_max_bb_plugin_set_node   { path: "sub_parts.chassis.mass", value: 12.5 }   ×3
-machine_max_bb_plugin_validate   { only_introduced: true }
+read_node  { path: "sub_parts.*.mass" }                    → { chassis: 25, track: 40, turret: 30 }
+set_node   { path: "sub_parts.chassis.mass", value: 12.5 }   ×3
+validate   { only_introduced: true }
 ```
 
-三个 `set_node` 落在三条撤销记录上，人按三次 `Ctrl+Z` 可以逐条退；要一次退干净，就先读完、再合并成一次 `add_instance` 式的复合编辑（后续扩展项）。
+三个 `set_node` 落在三条撤销记录上，人按三次 `Ctrl+Z` 可以逐条退；要一次退干净，用 `import_*` 做整件替换（后续可加 `apply_patch` 复合通道）。
 
 ---
 
@@ -363,17 +461,20 @@ machine_max_bb_plugin_validate   { only_introduced: true }
 | 项 | 价值 | 前提 |
 |---|---|---|
 | `export_preview` | 只读返回"现在导出会写出什么"，与 `spark_modules` 里的定义做 diff | 复用 `generateAllParts`（[src/generators/part_generator.js:88](../src/generators/part_generator.js)） |
+| `apply_patch` | 一次调用改多个节点、一条撤销记录（跨节点批量） | `docs/13` 的投影 + 事务嵌套；先有 §11.3 的稳定性 |
 | `signal_graph` | 导出信号拓扑（nodes/edges），审查 SignalChannel 路由 | 复用 `extractSignalGraph`（[src/lib/signal_graph.js:23](../src/lib/signal_graph.js)） |
 | `list_defs` | 列出可用的 subsystems/connectors/materials/control_groups/projectiles 及其来源（builtin/dependency/current） | 复用 `getAvailableDefsForType` / `resolveDefSource`（[src/core/content_pack_manager.js:56](../src/core/content_pack_manager.js)） |
-| 复合编辑 | 一次撤销回退"批量改多个字段" | `runConfigEdit` 的 `mutate` 内做多处变更 |
-| 修改前快照对比 | 编辑前后整树 diff，供 AI 自查 | 复用 `diff.js` |
+| `hit_box`/`interact_box`/`connector` 整件通道 | 三小件也能整件替换 | 先解决 key↔UUID 投影的易用性（决策 D9 的回访点） |
+| 修改前快照对比 | 编辑前后整树 diff，供 AI 自查 | 复用 `doc/projection` + diff |
 
 ---
 
 ## 14. 参考资料
 
+- 业务逻辑层与配置文档 API（**前置依赖**）：[docs/13-业务逻辑层与配置文档API.md](./13-业务逻辑层与配置文档API.md)
 - MCP 插件仓库：[jasonjgardner/blockbench-mcp-plugin](https://github.com/jasonjgardner/blockbench-mcp-plugin)（含 `docs/plugin.md` 与 `blockbench-mcp-api.d.ts`）
 - 插件发布地址：`https://jasonjgardner.github.io/blockbench-mcp-plugin/mcp.js`（Blockbench 里 File → Plugins → Load Plugin from URL）
 - 撤销接入：[docs/11-接入Blockbench原生撤销.md](./11-接入Blockbench原生撤销.md)
 - 校验实现：[src/mode/validation.js](../src/mode/validation.js)（`collectIssues`）与 [docs/10-校验与错误提示重构实现计划.md](./10-校验与错误提示重构实现计划.md)
 - Codec 体系：[docs/08-序列化反序列化-Codec体系重构.md](./08-序列化反序列化-Codec体系重构.md)
+- 现有整件通道：[src/import/drag_import.js](../src/import/drag_import.js) + [src/import/bone_resolver.js](../src/import/bone_resolver.js)

@@ -90,6 +90,9 @@ if (typeof module !== 'undefined' && module.exports) {
 - 只改 `_uiState` / 本地状态的逻辑不要包装（`_uiState` 不进快照）
 - 新增变更入口后自测：改一次 → `Ctrl+Z` 能回退、`Ctrl+Y` 能重做
 - 设计文档：[docs/11-接入Blockbench原生撤销.md](./docs/11-接入Blockbench原生撤销.md)
+- 分层重构设计（**待实现**，落地后本节的"字段编辑走组件 methods"将被 `ops.setField` 取代）：
+  [docs/13-业务逻辑层与配置文档API.md](./docs/13-业务逻辑层与配置文档API.md)
+- MCP 工具设计（**待实现**，依赖 docs/13）：[docs/12-MCP工具接入.md](./docs/12-MCP工具接入.md)
 
 ### 测试
 - 测试文件位于 `test/`，模式 `test/**/*.test.js`
