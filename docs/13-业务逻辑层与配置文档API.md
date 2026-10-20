@@ -1,6 +1,7 @@
 # 业务逻辑层与配置文档 API（v3.2）
 
-> 状态：**设计稿（待实现）** · 日期：2026-10-21 · v3.2 依据：第四轮审阅（replace 旧 marker、connector 迁移算法、partId 路径安全、闸门去重）逐条核对代码后收口
+> 状态：**P0–P3 已完成；P4/P5 待实现** · 日期：2026-10-21 · v3.2 依据：第四轮审阅（replace 旧 marker、connector 迁移算法、partId 路径安全、闸门去重）逐条核对代码后收口
+> P3（事件总线 + 导出闸门 + 计算属性收口）交付见 §10；P4（`services/` 抽离）与 P5（MCP）仍按 §10 推进
 > v3 的第二轮收口见 §0；第三轮收口见 §0.2；本轮新增/修正见 §0.3
 > 范围：`src/doc/`（新增）+ `src/ops/`（由 `src/core/operations.js` 拆出）+ `src/services/`（新增）+ `src/ui/`、`src/mode/`（改薄）
 > 目标版本：v0.5.0（当前 0.4.0） · 前置：[docs/11](./11-接入Blockbench原生撤销.md) · 下游：[docs/12](./12-MCP工具接入.md)
@@ -81,6 +82,8 @@
 docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数内部」，但当时只覆盖结构性动作（`src/core/operations.js` 的 16 个函数）。字段编辑仍散在 UI：`App.vue.js` 23 个方法靠 `wrapMethodMap` 人工包装、`SubsystemPanel` 18 处 / `ConnectorPanel` 6 处直接 `$set`、5 个计算属性里有 9 处写入（含一处渲染时 `delete`）。
 
 > **P2 已收口**：业务函数迁到 `src/ops/`（29 个），`core/operations.js` 删除；App 字段编辑统一走 `ops.setField`，两个面板只 emit `field-change`；`MM_UNDO_LABELS` 仅保留 2 个尚未改薄的旧入口。计算属性写入按计划留给 P3。
+>
+> **P3 已收口**：`App.vue.js` 的 5 个计算属性 / 9 处写入全部删除，渲染期不再改配置；缺失条目由 `loadConfig` 一次性补建、面板「创建配置」按钮走 `ops.mark*`。`runConfigEdit` 成为变更事件单一出口（`mm_config_changed`），UI 统一刷新 + 300ms 防抖落盘。`canExport`（`collectIssues` + `validateTree(completeness:true)` + 字段级去重）已接入导出对话框，`definition:''` / 空碰撞箱 / 空 `projectile_types` / 存量枚举脏值 / 不安全 `partId` 均在写盘前阻断。
 
 这套结构对「人点面板」够用，对下面三件事不够：MCP 需要可序列化的操作描述（AI 没有 `this`、选中元素、`_uiState`）；维护上同一模式重复数十次、副作用散落；测试上仓库有 `bunfig.toml` 但无 `test/`。
 
@@ -94,11 +97,12 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 
 | 目录 | 文件 | 行数 |
 |---|---|---|
-| `src/ui/` | 27 JS + 7 模板 | 6,656 + 1,122 |
-| `src/mode/` | 6 | 1,526 |
-| `src/core/` | 12 | 4,271 |
+| `src/ui/` | 27 JS + 7 模板 | 6,700 + 1,138 |
+| `src/mode/` | 6 | 1,527 |
+| `src/core/` | 12 | 4,390 |
 | `src/codec/` | 10 JS（11 含 AGENTS.md） | 1,271 |
 | `src/ops/` | 10（含 `shared.js` / `AGENTS.md`） | — |
+| `src/services/` | 1（`export.js`；P4 再补 import/pack/validate） | — |
 | `src/managers/` · `src/generators/` · `src/import/` | 5 · 6 · 3 | 330 · 440 · 895 |
 
 ### 2.2 写入入口
@@ -109,18 +113,20 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 | 字段/集合/重命名方法 | `App.vue.js` | `MM_UNDO_LABELS` 仅剩 **2**（P2 后字段/重命名/迁移都走 ops） |
 | 子系统面板直写 | `SubsystemPanel.vue.js` | **0 处 `$set` + 0 处 `$delete`**（只 emit `field-change`） |
 | 连接点面板直写 | `ConnectorPanel.vue.js` | **0 处 `$set` + 0 处 `$delete`**（只 emit `field-change`） |
-| 计算属性内写入 | `App.vue.js` | **5 个属性 / 9 处**（P3 处理）：`selectedSubPartConfig` 287/298/302、`selectedHitBoxConfig` 486、`selectedInteractBoxConfig` 559、`selectedConnectorConfig` 601/611/615 的 `$set` + `subPartEntries` 202 的 `delete` |
+| 计算属性内写入 | `App.vue.js` | **0 个属性 / 0 处**（P3 已删除 5 个属性 / 9 处：`selectedSubPartConfig`、`selectedHitBoxConfig`、`selectedInteractBoxConfig`、`selectedConnectorConfig` 的 `$set` 与 `subPartEntries` 的 `delete`） |
+| 变更事件出口 | `core/undo.js` → `mm_config_changed` | **1 处**（`runConfigEdit` 提交后派发；UI 订阅刷新 + 防抖落盘） |
 
-P2 之后两个面板不再直接写配置；模板仍用 `:value` + `@change`，提交统一经 `ops.setField`。
+P2 之后两个面板不再直接写配置；P3 之后计算属性也不写配置。模板仍用 `:value` + `@change`，提交统一经 `ops.setField`；缺失条目在 `loadConfig` 修复，运行时由面板「创建配置」按钮走 `ops.mark*`。
 
 ### 2.3 副作用（口径：`src/**/*.js`，排除函数定义、注释、import 解构）
 
 | 副作用 | 调用点 | 文件 | 备注 |
 |---|---|---|---|
-| `saveConfig()` | 20 | 12 | 含 `persistence.loadConfig` 内部 1 处 |
-| `refreshOutlinerIcons()` | 17 | 7 | 排除 `undo.js` 后 16/6 |
+| `saveConfig()` | 11 | 4 | P3 后只剩：`loadConfig` 迁移修复 2、`scheduleSave`/`flushSave` 内部 2、导出完成 3、`Ctrl+S` 1、拖拽导入 1、`saveConfig` 定义自身不计 |
+| `scheduleSave()` | 所有 ops 变更 | — | UI 订阅 `mm_config_changed` 后 300ms 防抖；显式 Ctrl+S / 导出仍同步 `saveConfig()` |
+| `refreshOutlinerIcons()` | 18 | 7 | 排除 `undo.js` 后 17/6；P3 新增事件订阅 1 处 |
 | `dispatchEvent('update_selection')` | 16 | 7 | 排除 `undo.js` 后 14/6；`runConfigEdit` 统一派发 |
-| `showToast(...)` | 122 | 21 | 排除 `undo.js` 后 121/20 |
+| `showToast(...)` | 127 | 21 | 排除 `undo.js` 后 126/20；P3 新增导出拦截与创建配置提示 |
 | `require('fs'/'path')` | — | **13** | `content_pack`、`zip_reader`、3 个 generator、`drag_import`、`dependency_editor`、4 个对话框、`export_pipeline`、`file_writer`、`persistence` |
 | `fs.writeFileSync` | **8** | **4** | `persistence` 1、`file_writer` 3、`export_pipeline` 3、`content_pack` 1 |
 
@@ -128,13 +134,13 @@ P2 之后两个面板不再直接写配置；模板仍用 `:value` + `@change`�
 
 ### 2.4 校验现状
 
-`mode/validation.js → collectIssues(config)` 是唯一实现（`validation_check.js` 调的也是它）：**15 个 error 产生点 / 3 个 warning 产生点**（P2 新增 `dangling_signal_target`），但 warning **只有 1 个 code**：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
+`mode/validation.js → collectIssues(config)` 是唯一实现（`validation_check.js` 调的也是它）：**15 个 error 产生点 / 3 个 warning 产生点**（P2 新增 `dangling_signal_target`，P3 为字段级问题补 `path.field`），但 warning **只有 1 个 code**：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
 
 重复的只有名称唯一性两套：`naming.validateNameUniqueness`（UI rename 调用）与 `validation._collectNameConflicts`；ops 的 key/存在性检查已收口到 `doc/keys` 与各动作前置校验。
 
 ### 2.5 已确认的其它债务
 
-- **默认值双源**：`config.js` 内联 `HIT_BOX_DEFAULTS`（`material: ''`）vs `HitBoxCodec`（`machine_max:default`）；`config_defaults.js` 已 `@deprecated` 且无人引用。
+- **默认值双源已清（P3）**：`createHitBoxConfig()` 改为 `HitBoxCodec.decode({ id:'part', type:'box' })`，删除 `config.js` 内联 `HIT_BOX_DEFAULTS`；新建碰撞箱 `material` 与导入默认值统一为 `machine_max:default`。`config_defaults.js` 仍标记 `@deprecated` 且无人引用。
 - **子系统类型数**：上游 builtin schema **19** 种（权威）；插件 Codec **19** 种（D13 已补 `track_controller` / `track_drive`，5 个 WIP 已按 D18 删除）；Java 枚举 24 种（19 + 5 个 WIP，不作依据）。见 §3.2。
 - **信号默认值已切换**：`subsystem_types.js` 的 `speed_outputs` / `gear_outputs` / 履带 `force_outputs` 等默认目标已改为 `['local','global']`（D19）；新建子系统不再产生 `subpart` / `vehicle` 无效目标。
 - **单子零件简写的落点错误**：`VariantCodec.sub_parts` 用 `Codec.either`，单对象会包成 `{ default: sp }`，而 schema 规定单子零件应落到 `sub_part.<ns>.main`；导出时 `default` 又满足 unwrap 条件，形成「内存 key 非法、文件形态却正确」的隐性错误（§5.3）。P2 未改 `either` 的 sub_parts 分支（P1 的 `projection.in` 已显式包 `sub_part.<ns>.main`）。
@@ -290,8 +296,8 @@ function canExport(config) {
 ```
 
 - `export_dialog.onConfirm`：`canExport` 失败 → `showToast` + 列出问题（复用现有 `buildValidationInfo` 的按 path 分组渲染，改为接收 `canExport` 返回的合并数组，每条挂 `__mmNavigator.selectByIssue` 定位按钮），`return false` 不关对话框。
-- 现状是「仅提示不拦截」（[export_dialog.js:307](../src/ui/export/export_dialog.js)），本期改为阻断。
-- `collectIssues` 的 14 个 error 产生点逐条确认可定位（都带 `path`）；`orphan_element` 放行；`validateTree` 的每条错误也带同样的 `path` 口径。
+- **P3 已实现**：`src/services/export.js` 提供 `canExport` / `dedupeIssues` / `toProblem` / `assertSafePartIds`；`export_dialog` 打开时与 `onConfirm` 时各跑一次闸门，失败时对话框保持打开。`export_pipeline.executeExport` 在**任何 mkdir/writeFile 之前**调用 `assertSafePartIds`。
+- `collectIssues` 的 15 个 error 产生点逐条确认可定位（都带 `path`，字段级问题带 `path.field`）；`orphan_element` 放行；`validateTree` 的每条错误也带同样的 `path` 口径。
 - **两条闸门缺一不可**：`collectIssues` 负责业务完整性（型号是否存在、名称冲突、信号目标断裂），`validateTree` 负责 schema 值与 key。第三轮审阅的 `"banana"` / `condition:"WHATEVER"` 属于后者；`projectile_types:{}` 的 `minProperties` 也由后者报。
 - **去重按字段，不按 code**：同一路径可能同时被两层报（例如 `definition:''`：`collectIssues` 报 `definition_required`，`validateTree` 报 `missing_required`）。输出前统一 `Problem.path` 为对象并补 `field`，去重键为 `scope|partId|variantName|subPartKey|itemKey|field`；`collectIssues` 优先，`validateTree` 只补空缺。同一字段只留一条；不同字段（如 `definition` 与 `locator`）各自保留，不能因为路径相同就合并。
 - `Problem.path.field` 是本次新增的可选字段；不带字段的条目（名称冲突、孤立元素等）用空串作 key，仍参与去重。`collectIssues` 的字段级问题必须补上 `field`（`definition` / `locator` / `hit_boxes` / `mass` 等），entry 级问题留空；`validateTree` 的段数组在 `toProblem` 里按 `parts / variants / sub_parts / subsystems|connectors|interact_boxes|hit_boxes` 固定层级转成同一对象，不靠猜 key。
@@ -324,7 +330,7 @@ Codec.STRING.encode(null) = String(null) = "null"       Codec.js:74-77 / 254-256
 2. ✅ **required map**：`signal_targets` / `control_outputs` / `power_outputs` / `projectile_types` 用 `Codec.map(..., {emitEmpty:true})`，`{}` 也输出；decode 缺失仍补 `{}`（解码宽容，不是 nullable）。
 3. ✅ `Codec.STRING.encode` 对非 string 抛错，去掉 `String(v)` 隐式强制；`STRING.decode` 已有类型断言。
 4. ✅ `projectile_types` 的 registry 默认值 `[]` → `{}`；`fire_animation` / `belt_label` / `weapon_controller` 的 3 个 HUD layout 已补（§3.3 #13）。
-5. 导出闸门（§4.3）兜底：`collectIssues` 把 `definition` / required 字段的 `''` 判 error，`validateTree(completeness:true)` 把空 `projectile_types` 判 error（P3）。
+5. ✅ 导出闸门（§4.3）兜底：`collectIssues` 把 `definition` / required 字段的 `''` 判 error，`validateTree(completeness:true)` 把空 `projectile_types` 判 error（P3 已实现）。
 
 > **为什么不用 nullable**：上游 required 字段是 `fieldOf`，`null` 不是合法值；`.nullable()` 虽然能让插件 round-trip，却会让“未配置”在导出时变成**缺键**，与 required 契约相反。`''`/`{}` 至少保持键存在，同时让校验器能定位“值为空”。只有 `overwrite` 这种上游 `Optional` 字段才使用 `null`。
 >
@@ -984,13 +990,13 @@ function install(p) { /* 逐项覆盖 */ }
 ### 7.2 变更事件
 
 ```js
-// ops 内部（经 ports.events）
+// core/undo.js 的 runConfigEdit 提交后（单一出口）
 emit('mm_config_changed', {
     source: 'ui' | 'mcp' | 'import',
     label:  '修改 sub_parts.<sp>.mass',
-    kinds:  ['sub_part'],
-    paths:  [...],
-    persist: true,      // 是否允许订阅方落盘
+    kinds:  ['sub_part'],          // 可选；调用方可经 runConfigEdit options 提供
+    paths:  [...],                 // 可选；同上
+    persist: true,                 // 是否允许订阅方落盘
 });
 ```
 
@@ -1005,12 +1011,14 @@ Blockbench.on('mm_config_changed', function (e) {
 });
 ```
 
-**避免双发**：`runConfigEdit` 现在会在 `finishEdit` 后 `dispatchEvent('update_selection')`（[undo.js:537](../src/core/undo.js)）。统一为：`runConfigEdit(label, fn, { dispatch: false })` 时由事件总线负责；默认保持现状（`dispatch: true`），P3 切换为单一出口后再改默认。
+**P3 实现**：`runConfigEdit` 在 `finishEdit` 后派发 `update_selection`，再派发一次 `mm_config_changed`；嵌套编辑只在最外层派发，空记录（`discarded`）不派发。`undo.js` 不 `require` doc/Vue，直接使用 Blockbench 全局；Node 测试无 `Blockbench` 时静默跳过。UI 订阅见上，`scheduleSave` 为 300ms 防抖。
+
+**避免双发**：`update_selection` 仍由 `runConfigEdit` 统一派发，事件订阅只做刷新/落盘，不重复派发。
 
 ### 7.3 不集中化的部分
 
-- **toast**：112 处保持原位（文案与上下文强相关，集中化需要 i18n）。约定：ops 不 toast，调用方按 `OpResult` 决定。
-- **`saveConfig`**：`Blockbench.on('save')` 与 `loadConfig` 内部的幽灵清理保持直接调用，其余 17 处收敛为 `scheduleSave()`（19 总数 − 保留 2）。
+- **toast**：127 处保持原位（文案与上下文强相关，集中化需要 i18n）。约定：ops 不 toast，调用方按 `OpResult` 决定。
+- **`saveConfig`**：`Blockbench.on('save')`、导出完成、`loadConfig` 迁移修复、`scheduleSave`/`flushSave` 内部保持同步调用；其余 UI/对话框入口不再直接落盘，统一由 `mm_config_changed` 订阅触发 300ms 防抖。当前直接 `saveConfig()` 调用 11 处 / 4 文件（P3 前 20 处 / 12 文件）。
 
 ---
 
@@ -1018,10 +1026,10 @@ Blockbench.on('mm_config_changed', function (e) {
 
 ```
 src/services/
-├── export.js     # executeExport（从 ui/export/export_pipeline.js 迁入）+ canExport 闸门
-├── import.js     # 文件读取 + 批量编排（drag_import 的 IO 部分）
-├── pack.js       # 创建/打开/校验内容包、依赖链解析（三个 pack 对话框的 fs 部分）
-└── validate.js   # collectIssues + validateTree 包装 + diff（本次引入的问题）
+├── export.js     # P3：canExport / dedupeIssues / toProblem / assertSafePartIds；P4 再迁入 executeExport
+├── import.js     # 文件读取 + 批量编排（drag_import 的 IO 部分，P4）
+├── pack.js       # 创建/打开/校验内容包、依赖链解析（三个 pack 对话框的 fs 部分，P4）
+└── validate.js   # collectIssues + validateTree 包装 + diff（P4；当前 collectIssues 仍在 mode/）
 ```
 
 依赖顺序固定：`core → doc → ops → services → ui/mcp`。
@@ -1042,7 +1050,7 @@ src/services/
 | `App.migrate*`（3 个） | 3 个迁移方法 | `setField` 的 `sideEffect` |
 | `App.handleCleanGhostEntry` | 手写 delete + 落盘 | `ops.removeNode` |
 | `SubsystemPanel` 18 / `ConnectorPanel` 6 | 直接 `$set(this.config, …)` | `ops.setField` |
-| 计算属性 9 处写入（含 `subPartEntries` 的 `delete`） | 渲染期改配置 | 删除；缺条目由 `mark*` 建，面板显示「创建配置」按钮，`loadConfig` 一次性 repair |
+| 计算属性 9 处写入（含 `subPartEntries` 的 `delete`） | 渲染期改配置 | **P3 已删除**；缺条目由 `mark*` 建，面板显示「创建配置」按钮，`loadConfig` 一次性 repair |
 | `drag_import` | fs + 对话框 + 落盘 | `services/import.js` + `ops.importPart` |
 | `bone_resolver` | 仅导入时用 | `doc/refs.js`（导入/删除/重命名共用，§5.3） |
 | 19 处 `saveConfig` / 17 处 refresh / 22 处 update_selection | 就地调用 | 事件订阅 + `scheduleSave` |
@@ -1086,7 +1094,7 @@ bun test test/schema/field_specs.test.js
 - ✅ `require` 全部 `doc` 模块；P1 无调用方，未重建 `dist`。
 - ✅ 零运行时行为变更：`Codec.record` / `Codec.dispatch` 只新增只读元数据 `schema` / `codecs`，不参与 encode/decode。
 
-验收命令：`bun test`（123 pass / 478 expect，含 P0 的 8 个 schema 测试、P2 的 Codec 契约、旧占位归一化、D18/D19、ops 层与 DANGLING 测试）。
+验收命令：`bun test`（135 pass / 524 expect，含 P0 的 8 个 schema 测试、P2 的 Codec 契约、旧占位归一化、D18/D19、ops 层与 DANGLING 测试、P3 的导出闸门与事件测试）。
 
 ### P2 — 操作层（已完成）
 
@@ -1118,13 +1126,21 @@ bun test test/schema/field_specs.test.js
 - 完整 `PartCodec.decode` 启用（`ensureDefaults` 不再临时移走 `variants`）；`Codec.either` 单变体判定改为 `model` 字符串；
 - 重新拉取上游 builtin（`7629416b`）：16 materials / 20 connectors / 53 subsystems / 4 control_groups，schema 153 文件零漂移。
 
-验收：每字段改一次 = 一条撤销记录；四个 `import*` 可用且返回 `reset_fields`；拖拽导入回归；`coalesce:false` 下三次 `set_node` = 三条；子零件改名后碰撞箱标记归属正确；非规范 key 的 import 返回 `invalid_format`；整件替换后旧 marker 不残留、同形替换不重复、Ctrl+Z 同时恢复配置与 marker；connector marker 迁移按 §11 #19 通过；`partId` 路径安全按 §11 #20 通过；`reset_fields` 顶层语义按 §11 #22 通过；新建 basic / transmission / interact_box / regen_loader 的 round-trip 通过；`import_sub_part` 传 `hit_box.type:"banana"` 返回 `invalid_enum`。测试见 `test/ops/ops.test.js`（15 个用例）与 `test/codec/codec_contract.test.js`、`test/core/{config,naming}.test.js`、`test/utils/signal_target_options.test.js`、`test/lib/signal_graph.test.js`。
+验收：每字段改一次 = 一条撤销记录；四个 `import*` 可用且返回 `reset_fields`；拖拽导入回归；`coalesce:false` 下三次 `set_node` = 三条；子零件改名后碰撞箱标记归属正确；非规范 key 的 import 返回 `invalid_format`；整件替换后旧 marker 不残留、同形替换不重复、Ctrl+Z 同时恢复配置与 marker；connector marker 迁移按 §11 #19 通过；`partId` 路径安全按 §11 #20 通过；`reset_fields` 顶层语义按 §11 #22 通过；新建 basic / transmission / interact_box / regen_loader 的 round-trip 通过；`import_sub_part` 传 `hit_box.type:"banana"` 返回 `invalid_enum`。测试见 `test/ops/ops.test.js`（19 个用例）与 `test/codec/codec_contract.test.js`、`test/core/{config,naming}.test.js`、`test/utils/signal_target_options.test.js`、`test/lib/signal_graph.test.js`。
 
-### P3 — 事件总线 + 导出闸门（1 会话）
+### P3 — 事件总线 + 导出闸门（已完成）
 
-端口接线（`plugin.js`）、17 处落盘收敛、9 处计算属性写入删除、`collectIssues` 的 `Problem.path` 补 `field`、`canExport` 阻断（`collectIssues` + `validateTree(completeness:true)` + `dedupeIssues`）、`services/export.js` 的 `isSafePartId` 出口断言、默认值双源清理。
+**交付（2026-10-21）**：
 
-验收：`Ctrl+S` 内容不变；未选中元素时渲染不改配置；空碰撞箱的子零件**可正常编辑**但**导出被拦**；新建碰撞箱 `material` 与导入默认一致；**存量 `hit_box.type:"banana"` / `interact_box.condition:"WHATEVER"` 不阻断打开，但导出被 `invalid_enum` 拦截**；`projectile_types:{}` 的 `minProperties` 被拦；`definition:''` 只出一条 required 错误（§11 #21）；不安全 `partId` 在导出管线 `path.join` 前被拦，不写任何文件（§11 #20）。
+- **事件单一出口**：`runConfigEdit` 提交后派发 `mm_config_changed`（`source/label/kinds/paths/persist`）；嵌套编辑只发一次，空记录不发。UI 在 `App.vue.js` mounted 订阅：`refreshOutlinerIcons()` + `markerVersion.v++` + `scheduleSave()`（300ms 防抖）。
+- **落盘收敛**：`persistence.js` 新增 `scheduleSave` / `flushSave` / `cancelScheduledSave`；直接 `saveConfig()` 从 20 处 / 12 文件降到 **11 处 / 4 文件**（保留 `Ctrl+S`、导出完成、`loadConfig` 迁移、防抖内部）。
+- **计算属性只读**：删除 `App.vue.js` 5 个计算属性里的 9 处写入（4 个 `$set` 补 map、自动建 sub_part、自动补 `auto_end_bones`、`subPartEntries` 的 `delete`）。`markSubPart` 改为在 ops 内创建 `sub_parts` 条目并绑定 `start_bone`；`loadConfig` 新增 `repairMarkerConfigs` 一次性补建四类缺失条目；面板在条目缺失时显示「创建配置」按钮，走 `ops.mark*`。
+- **`Problem.path.field`**：`collectIssues` 的字段级问题全部带 `field`（`model` / `sub_parts` / `hit_boxes` / `mass` / `definition` / 动态 required 字段 / dangling 的 `signal_targets` / `power_outputs` / `power_target` / `power_output` / `connector` / `subsystem`）；entry 级问题保持 `field:''`。
+- **导出闸门**：新增 `src/services/export.js`：`canExport = collectIssues + validateTree(completeness:true)`，`toProblem` 把段数组规范化为同一 `Problem.path`，`dedupeIssues` 按 `scope|partId|variantName|subPartKey|itemKey|field` 去重（`collectIssues` 优先）。`export_dialog` 打开与 `onConfirm` 各跑一次；失败时 toast + 保持对话框打开，信息区列出错误/警告并附「定位」按钮。
+- **`partId` 出口断言**：`assertSafePartIds` 在 `executeExport` 任何 `mkdir` / `writeFile` 之前执行；`canExport` 同时把不安全 `partId` 报为 `unsafe_part_id`。
+- **默认值双源清理**：`createHitBoxConfig()` 改用 `HitBoxCodec.decode({ id:'part', type:'box' })`，删除内联 `HIT_BOX_DEFAULTS`；新建碰撞箱 `material` 与导入默认一致（`machine_max:default`）。
+
+验收：`Ctrl+S` 内容不变；未选中元素时渲染不改配置；空碰撞箱的子零件**可正常编辑**但**导出被拦**；新建碰撞箱 `material` 与导入默认一致；**存量 `hit_box.type:"banana"` / `interact_box.condition:"WHATEVER"` 不阻断打开，但导出被 `invalid_enum` 拦截**；`projectile_types:{}` 的 `minProperties` 被拦；`definition:''` 只出一条 required 错误（§11 #21）；不安全 `partId` 在导出管线 `path.join` 前被拦，不写任何文件（§11 #20）。测试见 `test/services/export.test.js`（7 个用例）与 `test/ops/ops.test.js` 新增的事件 / markSubPart 用例。
 
 ### P4 — `services/` 抽离（1 会话）
 
@@ -1172,6 +1188,9 @@ test/
 20. **`partId` 路径安全**：`createPart` / `import_part` / 拖拽导入对 `.`、`..`、`.hull`、`hull.`、`con`、`con.1`、`lpt9`、`.._hull`、`a._b` 返回 `invalid_format`；`a.b.c` 仍合法；绕过 `canExport` 直接调导出管线也在 `path.join` 前失败且不写文件；存量非法 `partId` 由 `loadConfig` 记 `key_reserved`，不自动改名。
 21. **闸门去重**：`subsystems.<key>.definition:''` 只产生一条 required 错误（`collectIssues` 优先），`definition` 与 `locator` 同时为空时仍是两条（不同 `path.field`）；`validateTree` 的段数组与 `collectIssues` 的对象路径能对齐到同一 `scope/partId/variantName/subPartKey/itemKey`。
 22. **`reset_fields` 顶层语义**：`import_part` 省略 `variants.default.tags` / `sub_part.hit_boxes` 时，`reset_fields` 不包含嵌套路径；`read_node` 显示默认值，AI 必须靠“先读全量再改”而不是靠 `reset_fields` 发现嵌套丢失。
+23. **事件单一出口**：一次 `ops.setField` 只派发一条 `mm_config_changed`（嵌套编辑不重复），payload 带 `source/label/persist`；空记录不派发；`scheduleSave` 连续调用只落盘一次。
+24. **计算属性只读**：选中缺失配置的 sub_part / hit_box / interact_box / connector 时，渲染不新增 `$set` / `delete`；「创建配置」按钮走 `ops.mark*` 并产生一条撤销记录；`loadConfig` 的 `repairMarkerConfigs` 补建四类条目且幂等。
+25. **碰撞箱默认值单源**：`createHitBoxConfig().material === 'machine_max:default'`，与 `HitBoxCodec.decode({type:'box'})` 一致；内联 `HIT_BOX_DEFAULTS` 已删除。
 
 ---
 
@@ -1240,6 +1259,9 @@ test/
 | D24 | connector marker 迁移 | 定序匹配 `config_ref` 已是 key → `_marker_uuid` → Locator 名全局唯一 → 祖先子零件内唯一；`definition` 不参与匹配；失败保留 `legacy_config_ref`、`config_ref:null`、warning，不猜 | **第四轮审阅**（§15.2.1） |
 | D25 | `partId` 路径安全 | 字符集之外拒绝 `.` / `..` / 首尾点 / Windows 设备名，完整值与 `split('_')[0]` 目录段都查；写入口 `invalid_format`，导出管线二次断言，存量记 `key_reserved` | **第四轮审阅**（§5.1.3） |
 | D26 | 闸门问题去重 | 统一 `Problem.path.field`，按 `scope/partId/variantName/subPartKey/itemKey/field` 去重；`collectIssues` 优先，`validateTree` 补空缺；不同字段不合并 | **第四轮审阅**（§4.3） |
+| D27 | 计算属性只读 | 渲染期不写配置；缺失条目由 `loadConfig.repairMarkerConfigs` 一次性补建，运行时由面板「创建配置」按钮走 `ops.mark*`；`markSubPart` 在 ops 内建条目 | **P3 实施**（§9） |
+| D28 | 变更事件单一出口 | `runConfigEdit` 提交后派发 `mm_config_changed`；UI 只订阅一次做刷新 + `scheduleSave`；嵌套编辑/空记录不重复派发 | **P3 实施**（§7.2） |
+| D29 | 导出闸门实现 | `services/export.canExport` 双层校验 + 字段级去重；`export_dialog` 打开与确认各跑一次；`assertSafePartIds` 在写盘前二次断言 | **P3 实施**（§4.3 / §8） |
 | Q1 | 内容包定义 JSON | 只读，不纳入业务层 | 用户 |
 | Q2 | 交付形态 | 拆两串 commit | 用户 |
 
@@ -1350,7 +1372,8 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 | `connector` marker 的 `config_ref` 存着 definition | 统一为连接点 key；按 §15.2.1 的定序匹配，匹配不到保留 `legacy_config_ref` + `config_ref:null` 并记 warning，不猜测 |
 | `_uuid` / `_marker_uuid` 缺失或失效 | 按骨骼名 / Locator 名重建 |
 | 悬空 marker | `cleanGhostMarkers`（已有） |
-| 孤儿子零件（无标记） | **不再在渲染期删除**；改为 `loadConfig` 报告 + 面板「创建配置」按钮 |
+| 孤儿子零件（配置存在、标记已不存在） | **不再在渲染期删除**；`subPartEntries` 记录 warning，列表保留，用户手动清理（P3 只保证渲染只读；自动清理留待后续） |
+| 标记存在、配置条目缺失（sub_part / hit_box / interact_box / connector） | `loadConfig.repairMarkerConfigs` 一次性补建；运行时仍缺时面板显示「创建配置」按钮，走 `ops.mark*` |
 | 5 个 WIP 子系统实例（`battery`/`signal_convert`/`joint`/`javascript`/`ammo_loader`） | **不迁移、不剔除**；D18 删除类型后导出按 `unknown_type` 拒绝，用户手动删除对应条目 |
 | 连接点/子系统/交互区的非 ASCII key | 不改名，记 `key_reserved`（导出期 error），由用户手动重建/重命名；子零件之外不做自动迁移 |
 | 零件 / 变体 / 纹理 / 频道名 / `projectile_types` 的非 ASCII key，或非小写 `partId` | **不自动改名**（`partId` 会牵动文件名、resource location 与存档），记 `key_reserved`（导出期 error），由用户手动重建 |

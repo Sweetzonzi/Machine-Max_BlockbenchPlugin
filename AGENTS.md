@@ -12,14 +12,14 @@
 ### 导入图
 
 ```
-plugin.js                      # 插件入口（52行）
+plugin.js                      # 插件入口（103行）
   ├── utils/logger.js           # 统一日志
-  ├── utils/persistence.js      # 配置保存/加载（Project Property）
-  │     ├── core/config.js      # 工厂函数 + 版本迁移引擎（273行）
-  │     │     └── core/config_defaults.js  # 默认值 + 预设（410行，纯数据）
+  ├── utils/persistence.js      # 配置保存/加载（Project Property；scheduleSave 300ms）
+  │     ├── core/config.js      # 工厂函数 + 版本迁移引擎（433行）
+  │     │     └── core/config_defaults.js  # 已废弃的默认值快照（88行，无人引用）
   │     └── core/content_pack.js  # 内容包目录 I/O（548行）
   │           └── utils/file_writer.js  # 文件写入封装
-  ├── core/undo.js              # 原生撤销桥 + runConfigEdit/withUndoEdit（约620行）
+  ├── core/undo.js              # 原生撤销桥 + runConfigEdit/withUndoEdit + mm_config_changed（约640行）
   ├── ops/                      # 业务操作层：29 个动作 + 撤销边界
   │     ├── index.js            # 聚合导出（ops.createPart / ops.setField …）
   │     ├── field.js            # setField + 字段级副作用
@@ -31,16 +31,16 @@ plugin.js                      # 插件入口（52行）
   │           ├── doc/                # 路径 / 投影 / 引用 / 值校验
   │           └── core/undo.js        # 每个操作内部 runConfigEdit
   ├── utils/notify.js            # 用户通知（Toast）
-  ├── mode.js                    # 模式生命周期 + 注册（341行）
-  │     ├── core/element_markers.js  # 标记类型系统（301行）
+  ├── mode.js                    # 模式生命周期 + 注册（344行）
+  │     ├── core/element_markers.js  # 标记类型系统 + 缺失配置修复（约990行）
   │     ├── core/content_pack.js
   │     ├── utils/persistence.js
   │     ├── utils/notify.js
   │     ├── mode/icons.js        # Outliner 图标刷新（82行）
   │     ├── mode/patches.js      # 原型猴子补丁 + 右键菜单（623行）
-  │     ├── mode/validation.js   # 配置校验（48行）
+  │     ├── mode/validation.js   # 配置校验 collectIssues（371行）
   │     ├── mode/toolbar.js      # 工具栏 Action 注册（185行）
-  │     └── ui/App.vue.js        # Vue 属性面板（懒加载，1465行）
+  │     └── ui/App.vue.js        # Vue 属性面板（懒加载，1779行；计算属性只读）
   │           ├── ui/SubPartPanel.vue.js
   │           ├── ui/HitBoxPanel.vue.js
   │           ├── ui/SignalFlowPanel.vue.js  # 信号流图面板（579行）
@@ -50,8 +50,9 @@ plugin.js                      # 插件入口（52行）
   │                 ├── pack_setup_dialog.js    (805行)
   │                 ├── subsystem_dialog.js     (600行)
   │                 └── connector_dialog.js     (506行)
-  └── ui/menu.js                 # BarMenu + 导出管线（868行）
-        ├── utils/persistence.js
+  └── ui/menu.js                 # BarMenu + 导出管线（319行）
+        ├── utils/persistence.js  # saveConfig / scheduleSave（300ms 防抖）
+        ├── services/export.js    # canExport 闸门 + partId 出口断言（P3）
         ├── utils/file_writer.js
         ├── core/content_pack.js
         ├── mode.js (runValidation)
@@ -93,6 +94,10 @@ if (typeof module !== 'undefined' && module.exports) {
 - **字段编辑**统一走 `ops.setField`；不再新增 `wrapMethodMap` 包装（旧入口若仍保留包装，
   必须保证内部只调用一次 `runConfigEdit`，避免双记录）。
 - **批量动作**（如批量导入）在外层用一次 `runConfigEdit`，内层操作作为嵌套编辑并入。
+- **变更事件单一出口**：`runConfigEdit` 提交后派发 `mm_config_changed`；UI 只订阅一次做
+  `refreshOutlinerIcons()` + `markerVersion.v++` + `scheduleSave()`。不要在 op 里 toast/落盘/刷新。
+- **计算属性只读**：`App.vue.js` 的 computed 不得 `$set` / `delete` 配置；缺失条目由
+  `loadConfig.repairMarkerConfigs` 一次性补建，运行时用面板「创建配置」按钮走 `ops.mark*`。
 - 面板模板不要用 `v-model` 直接绑配置字段：改用 `:value` / `:checked` + `@change`，
   否则快照拿到的是"改完之后"的值，撤销记录变成空记录
 - 只改 `_uiState` / 本地状态的逻辑不要包装（`_uiState` 不进快照）
@@ -100,7 +105,7 @@ if (typeof module !== 'undefined' && module.exports) {
   结构性动作与 MCP 调用一律 `coalesce:false`（docs/13 §6.4）
 - 新增变更入口后自测：改一次 → `Ctrl+Z` 能回退、`Ctrl+Y` 能重做
 - 设计文档：[docs/11-接入Blockbench原生撤销.md](./docs/11-接入Blockbench原生撤销.md)
-- 分层约定（已落地 P1/P2）：[docs/13-业务逻辑层与配置文档API.md](./docs/13-业务逻辑层与配置文档API.md)
+- 分层约定（已落地 P1–P3）：[docs/13-业务逻辑层与配置文档API.md](./docs/13-业务逻辑层与配置文档API.md)
 - MCP 工具设计（P5，依赖 docs/13）：[docs/12-MCP工具接入.md](./docs/12-MCP工具接入.md)
 
 ### 测试
@@ -114,3 +119,4 @@ if (typeof module !== 'undefined' && module.exports) {
 - [src/ui/AGENTS.md](./src/ui/AGENTS.md) — 用户界面层
 - [src/mode/AGENTS.md](./src/mode/AGENTS.md) — 模式层
 - [src/codec/AGENTS.md](./src/codec/AGENTS.md) — 序列化/反序列化层
+- [src/services/AGENTS.md](./src/services/AGENTS.md) — 服务层（导出闸门）

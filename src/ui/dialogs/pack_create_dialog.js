@@ -133,7 +133,7 @@ function showCreatePackDialog(config, onSave) {
                     showToast(opResult.error, 'error');
                     return false;
                 }
-                persistence.saveConfig();
+                persistence.scheduleSave();
 
                 var namespace = result.namespace || '';
                 var displayName = folderName || packId.split(':').pop() || packId;
@@ -152,7 +152,7 @@ function showCreatePackDialog(config, onSave) {
                     for (var k = 0; k < indirectDeps.length; k++) allPaths.push(indirectDeps[k].path);
                     ops.updateDependencyPaths(config, { add: allPaths });
 
-                    persistence.saveConfig();
+                    persistence.scheduleSave();
 
                     var msg = '内容包 ' + displayName + ' 创建成功';
                     if (directDeps.length > 0) {

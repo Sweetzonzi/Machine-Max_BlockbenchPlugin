@@ -8,7 +8,7 @@
 
 var ops = require('../../ops/index.js');
 var { showToast } = require('../../utils/notify.js');
-var { saveConfig } = require('../../utils/persistence.js');
+var { scheduleSave } = require('../../utils/persistence.js');
 var { createLogger } = require('../../utils/logger.js');
 var { refreshOutlinerIcons } = require('../../mode/icons.js');
 
@@ -86,7 +86,7 @@ function showProjectSettingsDialog(config, onSaved) {
                     return false;
                 }
                 log.info('项目管理: 内容包路径已更新', { contentPackPath: formData.contentPackPath });
-                saveConfig();
+                scheduleSave();
                 showToast('内容包路径已更新', 'positive');
                 if (typeof onSaved === 'function') onSaved(config);
                 this.hide();

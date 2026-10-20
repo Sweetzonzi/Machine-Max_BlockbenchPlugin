@@ -1,5 +1,11 @@
 const { createLogger } = require('../utils/logger.js');
-const { createSubPartConfig } = require('./config.js');
+const {
+    createSubPartConfig,
+    createHitBoxConfig,
+    createInteractBoxConfig,
+    createConnectorInstanceConfig,
+} = require('./config.js');
+const { generateDefaultName, ensureUniqueName } = require('./naming.js');
 
 /**
  * Vue 2 响应式说明
@@ -865,6 +871,102 @@ function _cleanMarkerDownstream(projectConfig, partId, variantName, uuid, marker
     }
 }
 
+/**
+ * 一次性修复缺失的标记配置（docs/13 §9 / §15.2）。
+ *
+ * 旧工程里标记可能没有对应的 sub_parts / hit_boxes / interact_boxes /
+ * connectors 条目。渲染期不再自动补（那会让计算属性写配置），改在 loadConfig
+ * 时集中修复；运行时仍缺的由面板「创建配置」按钮走 ops。
+ *
+ * @param {Object} projectConfig
+ * @returns {{repaired:number, details:Array}}
+ */
+function repairMarkerConfigs(projectConfig) {
+    var details = [];
+    if (!projectConfig || !projectConfig.parts) return { repaired: 0, details: details };
+    var ns = projectConfig.namespace || 'machine_max';
+
+    function findEl(uuid) {
+        var groups = (typeof Group !== 'undefined' && Group.all) ? Group.all : [];
+        for (var g = 0; g < groups.length; g++) {
+            if (groups[g].uuid === uuid) return groups[g];
+        }
+        var locators = (typeof Locator !== 'undefined' && Locator.all) ? Locator.all : [];
+        for (var l = 0; l < locators.length; l++) {
+            if (locators[l].uuid === uuid) return locators[l];
+        }
+        return null;
+    }
+
+    Object.keys(projectConfig.parts).forEach(function (partId) {
+        var part = projectConfig.parts[partId];
+        if (!part || !part.element_markers) return;
+        Object.keys(part.element_markers).forEach(function (variantName) {
+            var variant = part.variants && part.variants[variantName];
+            if (!variant) return;
+            var markers = part.element_markers[variantName] || {};
+            Object.keys(markers).forEach(function (uuid) {
+                var marker = markers[uuid];
+                if (!marker || !marker.config_ref) return;
+                var el = findEl(uuid);
+                if (!el) return; // 幽灵标记交给 cleanGhostMarkers
+
+                if (marker.type === 'sub_part') {
+                    if (!variant.sub_parts) variant.sub_parts = {};
+                    if (!variant.sub_parts[marker.config_ref]) {
+                        var sp = createSubPartConfig();
+                        sp.start_bone = el.name || '';
+                        variant.sub_parts[marker.config_ref] = sp;
+                        details.push({ partId: partId, variantName: variantName, type: 'sub_part', key: marker.config_ref });
+                    }
+                    return;
+                }
+
+                var owner = detectOwnerSubPart(projectConfig, partId, variantName, el);
+                if (!owner || !variant.sub_parts || !variant.sub_parts[owner.spKey]) return;
+                var ownerSp = variant.sub_parts[owner.spKey];
+
+                if (marker.type === 'hit_box') {
+                    if (!ownerSp.hit_boxes) ownerSp.hit_boxes = {};
+                    if (!ownerSp.hit_boxes[uuid]) {
+                        ownerSp.hit_boxes[uuid] = createHitBoxConfig();
+                        details.push({ partId: partId, variantName: variantName, type: 'hit_box', key: uuid });
+                    }
+                } else if (marker.type === 'interact_box') {
+                    if (!ownerSp.interact_boxes) ownerSp.interact_boxes = {};
+                    var matched = Object.keys(ownerSp.interact_boxes).some(function (k) {
+                        return ownerSp.interact_boxes[k] && ownerSp.interact_boxes[k]._uuid === uuid;
+                    });
+                    if (!matched) {
+                        var base = generateDefaultName('interact_box', { namespace: ns, boneName: el.name });
+                        var ibName = ensureUniqueName('interact_box', variant, owner.spKey, base);
+                        var ib = createInteractBoxConfig();
+                        ib.bone = el.name || '';
+                        ib._uuid = uuid;
+                        ownerSp.interact_boxes[ibName] = ib;
+                        details.push({ partId: partId, variantName: variantName, type: 'interact_box', key: ibName });
+                    }
+                } else if (marker.type === 'connector') {
+                    if (!ownerSp.connectors) ownerSp.connectors = {};
+                    var connKey = marker.config_ref;
+                    if (!ownerSp.connectors[connKey]) {
+                        var conn = createConnectorInstanceConfig();
+                        conn.locator = el.name || '';
+                        conn._marker_uuid = uuid;
+                        ownerSp.connectors[connKey] = conn;
+                        details.push({ partId: partId, variantName: variantName, type: 'connector', key: connKey });
+                    }
+                }
+            });
+        });
+    });
+
+    if (details.length > 0) {
+        log.info('repairMarkerConfigs: 已补建 ' + details.length + ' 个缺失配置条目');
+    }
+    return { repaired: details.length, details: details };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         MARKER_TYPES,
@@ -883,5 +985,6 @@ if (typeof module !== 'undefined' && module.exports) {
         recalcAutoEndBones,
         cleanGhostMarkers,
         migrateConnectorMarkerRefs,
+        repairMarkerConfigs,
     };
 }

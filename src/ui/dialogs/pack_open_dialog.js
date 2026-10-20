@@ -94,7 +94,7 @@ function showOpenPackDialog(config, onSave) {
                     description: config.packMeta.description,
                     full: JSON.stringify(config.packMeta).substring(0, 500),
                 });
-                persistence.saveConfig();
+                persistence.scheduleSave();
                 var displayName = path.basename(dirPath) || result.namespace || '';
                 showToast('内容包 ' + displayName + ' 已加载', 'positive', 5000);
                 log.info('内容包已打开', { path: dirPath, namespace: result.namespace, id: meta.id });

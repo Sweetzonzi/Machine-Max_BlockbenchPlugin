@@ -32,7 +32,7 @@ function showAddSubsystemDialog(options) {
     var ssTypes = require('../core/subsystem_types.js');
     var groupedTypes = ssTypes.getTypesGroupedByCategory();
     var { showToast } = require('../utils/notify.js');
-    var { saveConfig } = require('../utils/persistence.js');
+    var { scheduleSave } = require('../utils/persistence.js');
     var ops = require('../ops/index.js');
 
     // 构建平铺所有子系统类型的下拉选项（分类前缀标注）
@@ -89,7 +89,7 @@ function showAddSubsystemDialog(options) {
             }
 
             onCreated(spKey, result.instanceName);
-            saveConfig();
+            scheduleSave();
             showToast('子系统 "' + result.instanceName + '" 已创建', 'positive');
             this.hide();
             Blockbench.dispatchEvent('update_selection');

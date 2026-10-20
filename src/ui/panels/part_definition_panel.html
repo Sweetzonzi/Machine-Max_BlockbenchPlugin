@@ -138,6 +138,10 @@
 
     <!-- 子零件属性面板（独立 v-show 容器，保留滚动位置） -->
     <div v-show="!isSubsystemSelected && isSubPartSelected" class="mm-panel-body">
+        <div v-if="!selectedSubPartConfig" class="mm-section">
+            <p class="mm-panel-hint">该骨骼已标记为子零件，但配置条目缺失（常见于旧工程或手动删除）。</p>
+            <button class="mm-btn mm-btn-sm" @click="repairSelectedConfig">创建配置</button>
+        </div>
         <mm-sub-part-panel v-if="selectedSubPartConfig"
             :config="selectedSubPartConfig"
             :element-name="selectedElementName"
@@ -164,6 +168,10 @@
 
     <!-- 碰撞箱属性面板（独立 v-show 容器，保留滚动位置） -->
     <div v-show="!isSubsystemSelected && isHitBoxSelected" class="mm-panel-body">
+        <div v-if="!selectedHitBoxConfig" class="mm-section">
+            <p class="mm-panel-hint">该骨骼已标记为碰撞箱，但配置条目缺失。</p>
+            <button class="mm-btn mm-btn-sm" @click="repairSelectedConfig">创建配置</button>
+        </div>
         <mm-hit-box-panel v-if="selectedHitBoxConfig"
             :config="selectedHitBoxConfig"
             :element-name="selectedElementName"
@@ -177,6 +185,10 @@
 
     <!-- 交互区属性面板（独立 v-show 容器，保留滚动位置） -->
     <div v-show="!isSubsystemSelected && isInteractBoxSelected" class="mm-panel-body">
+        <div v-if="!selectedInteractBoxConfig" class="mm-section">
+            <p class="mm-panel-hint">该骨骼已标记为交互区，但配置条目缺失。</p>
+            <button class="mm-btn mm-btn-sm" @click="repairSelectedConfig">创建配置</button>
+        </div>
         <mm-interact-box-panel v-if="selectedInteractBoxConfig"
             :config="selectedInteractBoxConfig"
             :element-name="selectedElementName"
@@ -194,6 +206,10 @@
 
     <!-- 连接点属性面板（独立 v-show 容器，保留滚动位置） -->
     <div v-show="!isSubsystemSelected && isConnectorSelected" class="mm-panel-body">
+        <div v-if="!selectedConnectorConfig" class="mm-section">
+            <p class="mm-panel-hint">该定位器已标记为连接点，但配置条目缺失。</p>
+            <button class="mm-btn mm-btn-sm" @click="repairSelectedConfig">创建配置</button>
+        </div>
         <mm-connector-panel v-if="selectedConnectorConfig"
             :config="selectedConnectorConfig"
             :element-name="selectedElementName"

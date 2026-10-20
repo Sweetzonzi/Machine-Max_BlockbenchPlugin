@@ -11,6 +11,7 @@ const { CONFIG_VERSION } = require('./constants.js');
 const { PartCodec } = require('../codec/codecs/part_codec.js');
 const { VariantCodec } = require('../codec/codecs/variant_codec.js');
 const { SubPartCodec } = require('../codec/codecs/sub_part_codec.js');
+const { HitBoxCodec } = require('../codec/codecs/hit_box_codec.js');
 const { createLogger } = require('../utils/logger.js');
 
 /** 模块日志 */
@@ -47,17 +48,8 @@ const MIGRATIONS = {
 };
 
 // ==================== 子工厂默认值（内联，保持旧 schema 兼容） ====================
-// 注意：HitBox/InteractBox/Connector/Subsystem 的 codec 定义使用新 schema
-// （如 HitBoxCodec 的 shape 字段 vs 旧版的 id+type），与现有调用方不兼容。
-// 因此这些子工厂的默认值直接内联自 config_defaults.js，避免破坏旧代码。
-
-const HIT_BOX_DEFAULTS = {
-    id: 'part',
-    type: 'box',
-    material: '',
-    thickness: 1.0,
-    condition: 'true',
-};
+// 注意：HitBox 已改为直接用 HitBoxCodec.decode（默认值唯一真源）；
+// InteractBox / Subsystem / Connector 的 codec 与旧调用方仍有形状差异，暂保留内联默认值。
 
 const INTERACT_BOX_DEFAULTS = {
     bone: '',
@@ -141,11 +133,11 @@ function createSubPartConfig() {
 }
 
 /**
- * 创建新的碰撞箱配置（旧 schema，内联默认值）
+ * 创建新的碰撞箱配置（默认值唯一真源：HitBoxCodec）
  */
 function createHitBoxConfig() {
     log.debug('createHitBoxConfig: 创建碰撞箱配置');
-    return JSON.parse(JSON.stringify(HIT_BOX_DEFAULTS));
+    return HitBoxCodec.decode({ id: 'part', type: 'box' });
 }
 
 /**

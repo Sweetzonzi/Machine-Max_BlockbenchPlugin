@@ -1,5 +1,5 @@
 const { createLogger } = require('../utils/logger.js');
-const { getConfig, saveConfig } = require('../utils/persistence.js');
+const { getConfig, scheduleSave } = require('../utils/persistence.js');
 const { showToast } = require('../utils/notify.js');
 const content_pack = require('../core/content_pack.js');
 
@@ -137,7 +137,7 @@ function registerMachineMaxMenu() {
                 }
                 var pd = require('./dialogs/pack_setup_dialog.js');
                 pd.showOpenPackDialog(config, function (updatedConfig) {
-                    saveConfig();
+                    scheduleSave();
                     showToast('已切换至内容包', 'positive');
                 });
             },
@@ -285,7 +285,7 @@ function _ensurePackValid(config, onResult) {
     // 弹出设置向导
     var pd = require('./dialogs/pack_setup_dialog.js');
     pd.showPackSetupDialog(config, function (updatedConfig) {
-        saveConfig();
+        scheduleSave();
         // 向导保存后再次检查
         if (updatedConfig.contentPackPath) {
             var checkResult = content_pack.openContentPack(updatedConfig.contentPackPath);

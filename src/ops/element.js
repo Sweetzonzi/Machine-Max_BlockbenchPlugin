@@ -71,8 +71,11 @@ function markInteractBox(config, options) {
 
     var spKey = options.spKey || ownerFor(config, options.partId, options.variantName, element);
     var ns = shared.namespaceOf(config);
-    var baseName = generateDefaultName('interact_box', { namespace: ns, boneName: element.name });
-    var ibName = ensureUniqueName('interact_box', variant, spKey, baseName);
+    var ibName = String(options.key || '').trim();
+    if (!ibName) {
+        var baseName = generateDefaultName('interact_box', { namespace: ns, boneName: element.name });
+        ibName = ensureUniqueName('interact_box', variant, spKey, baseName);
+    }
     var keyError = shared.validateKey('interact_boxes', ibName, config,
         ['parts', options.partId, 'variants', options.variantName, 'sub_parts', spKey,
             'interact_boxes', ibName]);
@@ -113,8 +116,11 @@ function markConnector(config, options) {
     var spKey = options.spKey || ownerFor(config, options.partId, options.variantName, element);
     var locName = element.name || '';
     var ns = shared.namespaceOf(config);
-    var baseName = generateDefaultName('connector', { namespace: ns, boneName: locName });
-    var connName = ensureUniqueName('connector', variant, spKey, baseName);
+    var connName = String(options.key || '').trim();
+    if (!connName) {
+        var baseName = generateDefaultName('connector', { namespace: ns, boneName: locName });
+        connName = ensureUniqueName('connector', variant, spKey, baseName);
+    }
     var keyError = shared.validateKey('connectors', connName, config,
         ['parts', options.partId, 'variants', options.variantName, 'sub_parts', spKey,
             'connectors', connName]);

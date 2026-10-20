@@ -45,7 +45,7 @@ const SUB_PART_DEFAULTS = {
 const HIT_BOX_DEFAULTS = {
     id: 'part',
     type: 'box',
-    material: '',
+    material: 'machine_max:default',
     thickness: 1.0,
     condition: 'true',
 };

@@ -12,7 +12,7 @@
 const { createLogger } = require('../../utils/logger.js');
 const { getConfig, saveConfig } = require('../../utils/persistence.js');
 const { showToast } = require('../../utils/notify.js');
-const { collectIssues } = require('../../mode/validation.js');
+const { canExport } = require('../../services/export.js');
 const { executeExport } = require('./export_pipeline.js');
 const ops = require('../../ops/index.js');
 const path = require('path');
@@ -225,27 +225,40 @@ function _parseDependencyText(text) {
 }
 
 /**
- * 将 collectIssues(config) 的结构化结果按 path 分组渲染为 HTML 摘要。
- * 分组层级：零件 → 变体；errors 用 ✗，warnings 用 ⚠。仅提示，不拦截导出。
- * @param {Object} config - MM 项目配置
+ * 将 canExport 的合并结果按 path 分组渲染为 HTML 摘要。
+ * 分组层级：零件 → 变体；errors 用 ✗，warnings 用 ⚠，每条附「定位」按钮。
+ * @param {{issues:Array, errors:Array, warnings:Array}} gate - canExport 返回值
  * @returns {string} HTML 字符串（无问题时为空串）
  */
-function buildValidationInfo(config) {
-    var problems = collectIssues(config);
+function buildValidationInfo(gate) {
+    var problems = (gate && gate.issues) || [];
     if (!problems || problems.length === 0) return '';
+
+    // 暴露给 Dialog 内联按钮：window.__mmNavigator.selectByIssue(problem)
+    if (typeof window !== 'undefined') {
+        window.__mmLastExportIssues = problems;
+    }
 
     // 按 partId → variantName 分组
     var tree = {};
     for (var i = 0; i < problems.length; i++) {
         var p = problems[i];
-        var partId = p.path.partId || '（全局）';
-        var v = p.path.variantName || '';
+        var partId = (p.path && p.path.partId) || '（全局）';
+        var v = (p.path && p.path.variantName) || '';
         if (!tree[partId]) tree[partId] = {};
         if (!tree[partId][v]) tree[partId][v] = [];
-        tree[partId][v].push(p);
+        tree[partId][v].push({ problem: p, index: i });
     }
 
-    var lines = ['<span style="color:#ff6b6b">校验发现 ' + problems.length + ' 个问题</span>:'];
+    var errorCount = (gate && gate.errors) ? gate.errors.length : 0;
+    var warningCount = (gate && gate.warnings) ? gate.warnings.length : 0;
+    var color = errorCount > 0 ? '#ff6b6b' : '#e0a030';
+    var lines = ['<span style="color:' + color + '">校验发现 ' + problems.length + ' 个问题'
+        + '（错误 ' + errorCount + ' / 警告 ' + warningCount + '）</span>:'];
+    if (errorCount > 0) {
+        lines.push('<span style="color:#ff6b6b">存在错误，导出已被拦截；请先修复后再试。</span>');
+    }
+
     var partIds = Object.keys(tree);
     for (var pi = 0; pi < partIds.length; pi++) {
         var partId = partIds[pi];
@@ -256,9 +269,15 @@ function buildValidationInfo(config) {
             var list = vs[v];
             lines.push('<b>' + partId + (v ? '/' + v : '') + '</b>');
             for (var li = 0; li < list.length; li++) {
-                var cur = list[li];
+                var cur = list[li].problem;
+                var idx = list[li].index;
                 var icon = cur.severity === 'error' ? '✗' : '⚠';
-                lines.push('&nbsp;&nbsp;• ' + icon + ' ' + cur.message);
+                var loc = (cur.path && cur.path.field) ? ' [' + cur.path.field + ']' : '';
+                lines.push('&nbsp;&nbsp;• ' + icon + loc + ' ' + cur.message +
+                    ' <button type="button" class="mm-btn mm-btn-sm" ' +
+                    'onclick="if(window.__mmNavigator&&window.__mmLastExportIssues){' +
+                    'window.__mmNavigator.selectByIssue(window.__mmLastExportIssues[' + idx + ']);}' +
+                    '">定位</button>');
             }
         }
     }
@@ -304,8 +323,9 @@ function showExportDialog() {
     var defaultPackId = pm.id || ns + ':' + (Project ? (Project.name || 'content_pack') : 'content_pack');
     var defaultExportDir = pm.exportDir || _getDefaultExportDir(pm);
 
-    // 校验配置（结构化结果，按 path 分组列出，仅提示不拦截）
-    var errorText = buildValidationInfo(config);
+    // 校验配置：collectIssues + validateTree(completeness:true) 合并去重
+    var gate = canExport(config);
+    var errorText = buildValidationInfo(gate);
 
     // 统计信息
     var statLines = [
@@ -390,6 +410,19 @@ function showExportDialog() {
                 if (!exportDir) {
                     showToast('请先选择导出目录', 'warning');
                     return;
+                }
+
+                // 导出闸门：错误阻断，不关闭对话框（docs/13 §4.3）
+                var finalGate = canExport(config);
+                if (!finalGate.ok) {
+                    var first = finalGate.errors[0];
+                    showToast('导出被拦截：' + (first ? first.message : '存在配置错误')
+                        + '（共 ' + finalGate.errors.length + ' 个错误）', 'error', 6000);
+                    log.warn('showExportDialog: 导出被校验拦截', {
+                        errorCount: finalGate.errors.length,
+                        warningCount: finalGate.warnings.length,
+                    });
+                    return false;
                 }
 
                 var packFolderName = _sanitizeFolderName(formData.packName)

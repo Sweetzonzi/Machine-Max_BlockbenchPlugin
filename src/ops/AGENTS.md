@@ -29,6 +29,10 @@ src/ops/
   cleaned_references, unresolved_bones, warnings}`；失败 `{ok:false,error,errors[]}`，不抛异常。
 - 结构性动作一律 `coalesce:false`；`setField` 默认也不合并，只有 UI 连续数值编辑显式传
   `{coalesce:true, mergeKey}`。
+- 每次成功编辑由 `runConfigEdit` 统一派发 `mm_config_changed`（`source/label/kinds/paths/persist`）；
+  ops 不 toast、不落盘、不刷新，UI 订阅一次做刷新 + `scheduleSave()`。
+- `markSubPart` 在 ops 内创建缺失的 `sub_parts` 条目并绑定 `start_bone`；`markConnector` /
+  `markInteractBox` 支持显式 `key`，供面板「创建配置」按钮复用。
 - 整件通道（`importPart` / `importVariant` / `importSubPart`）固定顺序：
   `clearScope(markerCleanup)` → 替换节点 → `set(markerPlan)` → `recalc auto_end_bones`。
 - marker 能力通过 `doc/ports` 注入；测试可换 fake，生产在 `plugin.js onload` 安装。

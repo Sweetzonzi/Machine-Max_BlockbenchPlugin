@@ -1,7 +1,8 @@
 'use strict';
 
 const { describe, test, expect } = require('bun:test');
-const { normalizeLegacyPlaceholders, migrateIfNeeded } = require('../../src/core/config.js');
+const { normalizeLegacyPlaceholders, migrateIfNeeded, createHitBoxConfig } = require('../../src/core/config.js');
+const { HitBoxCodec } = require('../../src/codec/codecs/hit_box_codec.js');
 const { PartCodec } = require('../../src/codec/codecs/part_codec.js');
 
 function legacyConfig() {
@@ -144,5 +145,14 @@ describe('core/config 旧占位归一化', () => {
         expect(migrated2.parts.hull.variants.model).toBeTruthy();
         expect(migrated2.parts.hull.variants.model.model).toBe('machine_max:model/named');
         expect(migrated2.parts.hull.variants.default).toBeUndefined();
+    });
+
+    test('createHitBoxConfig 使用 HitBoxCodec 作为默认值唯一真源', () => {
+        const hb = createHitBoxConfig();
+        const decoded = HitBoxCodec.decode({ id: 'part', type: 'box' });
+        expect(hb).toEqual(decoded);
+        expect(hb.material).toBe('machine_max:default');
+        expect(hb.type).toBe('box');
+        expect(hb.overwrite).toBeNull();
     });
 });

@@ -9,9 +9,8 @@
  *   - 选中连接点 Locator → 连接点属性页
  *   - 选中子系统 Locator → 子系统属性页
  */
-const { getConfig, loadConfig, saveConfig } = require('../utils/persistence.js');
+const { getConfig, loadConfig, saveConfig, scheduleSave } = require('../utils/persistence.js');
 const { getMarkerInfo, detectOwnerSubPart } = require('../core/element_markers.js');
-const { createSubPartConfig } = require('../core/config.js');
 const ops = require('../ops/index.js');
 const { createLogger } = require('../utils/logger.js');
 const { refreshOutlinerIcons } = require('../mode/icons.js');
@@ -173,18 +172,11 @@ const MM_MAIN_PANEL_OPTIONS = {
             void this.markerVersion.v;
             var variant = this.currentVariant;
             if (!variant || !variant.sub_parts) {
-                log.debug('subPartEntries: 无 variant 或 sub_parts', {
-                    variantExists: !!variant,
-                    subPartsExists: variant ? !!variant.sub_parts : false,
-                    activePartId: this.activePartId,
-                    activeVariantName: this.activeVariantName,
-                    markerVersion: this.markerVersion.v,
-                });
                 return [];
             }
             var ns = (this.config && this.config.namespace) || 'machine_max';
             var keys = Object.keys(variant.sub_parts);
-            // debug: 检查是否有子零件配置无对应标记（遗留脏数据）
+            // 只告警，不在这里改配置：清理动作必须走 ops（docs/13 §9）
             if (this.currentPart && this.currentPart.element_markers && this.currentPart.element_markers[this.activeVariantName]) {
                 var subPartMarkerKeys = {};
                 var markers = this.currentPart.element_markers[this.activeVariantName];
@@ -195,13 +187,9 @@ const MM_MAIN_PANEL_OPTIONS = {
                 }
                 var orphaned = keys.filter(function(k) { return !subPartMarkerKeys[k]; });
                 if (orphaned.length > 0) {
-                    log.warn('subPartEntries: 发现无对应标记的子零件配置（遗留脏数据），自动清理', {
+                    log.warn('subPartEntries: 发现无对应标记的子零件配置（遗留脏数据），等待用户清理', {
                         orphanedKeys: orphaned,
                     });
-                    for (var ok = 0; ok < orphaned.length; ok++) {
-                        delete variant.sub_parts[orphaned[ok]];
-                        log.debug('subPartEntries: 已清理孤儿子零件', { spKey: orphaned[ok] });
-                    }
                 }
             }
             log.debug('subPartEntries: 计算中', {
@@ -282,32 +270,18 @@ const MM_MAIN_PANEL_OPTIONS = {
         selectedSubPartConfig: function () {
             if (!this.selectedMarker || this.selectedMarker.type !== 'sub_part') return null;
             const variant = this.currentVariant;
-            if (!variant) return null;
-            if (!variant.sub_parts) {
-                this.$set(variant, 'sub_parts', {});
-            }
+            if (!variant || !variant.sub_parts) return null;
             // config_ref 存储翻译键格式的名称（如 sub_part.machine_max.main），同时也是 sub_parts 的 key
             const spKey = this.selectedMarker.config_ref;
             if (!spKey) return null;
-            // 自动创建缺失的配置（存量标记可能没有对应的配置条目）
-            if (!variant.sub_parts[spKey]) {
-                // 从标记的 Group 获取实际骨骼名
-                var groupEl = this.selectedElement;
-                const spConfig = createSubPartConfig();
-                spConfig.start_bone = groupEl ? groupEl.name : spKey;
-                this.$set(variant.sub_parts, spKey, spConfig);
-                log.debug('selectedSubPartConfig: 自动创建配置', { spKey: spKey, start_bone: spConfig.start_bone });
-            }
-            if (!variant.sub_parts[spKey].auto_end_bones) {
-                this.$set(variant.sub_parts[spKey], 'auto_end_bones', []);
-            }
+            // 不在渲染期补配置：缺失时由「创建配置」按钮走 ops.markSubPart（docs/13 §9）
             return variant.sub_parts[spKey] || null;
         },
         /**
          * 当前选中是否为已绑定配置的子零件标记
          */
         isSubPartSelected: function () {
-            return this.selectedMarker && this.selectedMarker.type === 'sub_part' && !!this.selectedSubPartConfig;
+            return this.selectedMarker && this.selectedMarker.type === 'sub_part';
         },
         /**
          * 当前选中是否为碰撞箱标记
@@ -475,20 +449,20 @@ const MM_MAIN_PANEL_OPTIONS = {
             }
             var variant = this.currentVariant;
             if (!variant || !variant.sub_parts) {
-                return { _orphan: true, id: 'part', type: 'box', material: '', thickness: 1.0, condition: 'true' };
+                return { _orphan: true, id: 'part', type: 'box', material: 'machine_max:default', thickness: 1.0, condition: 'true' };
             }
             var owner = this.hitBoxOwner;
             var spKey = owner ? owner.spKey : null;
             if (!spKey || !variant.sub_parts[spKey]) {
-                return { _orphan: true, id: 'part', type: 'box', material: '', thickness: 1.0, condition: 'true' };
+                return { _orphan: true, id: 'part', type: 'box', material: 'machine_max:default', thickness: 1.0, condition: 'true' };
             }
             var sp = variant.sub_parts[spKey];
-            if (!sp.hit_boxes) this.$set(sp, 'hit_boxes', {});
+            if (!sp.hit_boxes) return null;
             var hbKey = this.selectedElement.uuid;
             // 注意：此处不自动重建条目。若 sp.hit_boxes[hbKey] 不存在，
             // 说明标记配置不同步（通常由清除 marker 后 Vue 重算导致）。
-            // 返回游离配置允许面板正常渲染，但不修改 config。
-            return sp.hit_boxes[hbKey] || { _orphan: true, id: 'part', type: 'box', material: '', thickness: 1.0, condition: 'true' };
+            // 返回 null 由面板显示「创建配置」按钮，渲染期不改配置。
+            return sp.hit_boxes[hbKey] || null;
         },
         /**
          * 碰撞箱所属子零件的 key
@@ -556,14 +530,14 @@ const MM_MAIN_PANEL_OPTIONS = {
                 return { _orphan: true, bone: '', interact_mode: 'fast', condition: 'NOR', signal_targets: {} };
             }
             var sp = variant.sub_parts[spKey];
-            if (!sp.interact_boxes) this.$set(sp, 'interact_boxes', {});
+            if (!sp.interact_boxes) return null;
             var selectedUuid = this.selectedElement.uuid;
             for (var ibKey in sp.interact_boxes) {
                 if (sp.interact_boxes[ibKey]._uuid === selectedUuid) {
                     return sp.interact_boxes[ibKey];
                 }
             }
-            return { _orphan: true, bone: '', interact_mode: 'fast', condition: 'NOR', signal_targets: {} };
+            return null;
         },
         /**
          * 交互区在 interact_boxes 字典中的 key（即翻译键格式的名称）
@@ -596,35 +570,21 @@ const MM_MAIN_PANEL_OPTIONS = {
                 return null;
             }
             var variant = this.currentVariant;
-            if (!variant) return { _orphan: true, definition: marker.config_ref || '' };
-            if (!variant.sub_parts) {
-                this.$set(variant, 'sub_parts', {});
-            }
+            if (!variant || !variant.sub_parts) return null;
             var owner = this.connectorOwner;
             var spKey = owner ? owner.spKey : null;
             if (!spKey) {
                 return { _orphan: true, definition: marker.config_ref || '' };
             }
-            if (!variant.sub_parts[spKey]) {
-                var spConfig = createSubPartConfig();
-                spConfig.start_bone = spKey;
-                this.$set(variant.sub_parts, spKey, spConfig);
-            }
             var sp = variant.sub_parts[spKey];
-            if (!sp.connectors) {
-                this.$set(sp, 'connectors', {});
-            }
+            if (!sp || !sp.connectors) return null;
             var locatorName = this.selectedElementName;
             // 通过 locator 字段查找已有的连接点条目（key 现在是翻译键格式）
             var connKey = Object.keys(sp.connectors).find(function(k) {
                 return sp.connectors[k].locator === locatorName;
             });
-            // 注意：此处不自动重建条目。若未找到匹配的连接点条目，
-            // 说明标记配置不同步（通常由清除 marker 后 Vue 重算导致）。
-            // 返回游离配置允许面板正常渲染，但不修改 config。
-            if (!connKey) {
-                return { _orphan: true, locator: locatorName, definition: marker.config_ref || '' };
-            }
+            // 不在渲染期补条目；缺失时由面板「创建配置」按钮走 ops.markConnector。
+            if (!connKey) return null;
             return sp.connectors[connKey] || null;
         },
     },
@@ -1041,7 +1001,7 @@ const MM_MAIN_PANEL_OPTIONS = {
                     partId: this.activePartId, variant: variantName,
                     type: payload.type, spKey: payload.spKey, key: payload.key,
                 });
-                saveConfig();
+                scheduleSave();
                 refreshOutlinerIcons();
                 showToast('已自动清理幽灵' + typeLabel + ' "' + payload.key + '"（对应模型元素已不存在）', 'warning');
             } else {
@@ -1176,6 +1136,45 @@ const MM_MAIN_PANEL_OPTIONS = {
                 if (loc.showInOutliner) loc.showInOutliner();
                 Blockbench.dispatchEvent('update_selection');
             }
+        },
+        /**
+         * 为当前选中标记补建缺失的配置条目（docs/13 §9）。
+         * 渲染期只读；这里显式调用 ops，撤销边界与命名规则都在操作层。
+         */
+        repairSelectedConfig: function () {
+            var config = getConfig();
+            var marker = this.selectedMarker;
+            var element = this.selectedElement;
+            if (!config || !marker || !element) {
+                showToast('当前没有可修复的标记', 'warning');
+                return;
+            }
+            var ctx = {
+                partId: this.activePartId,
+                variantName: this.activeVariantName,
+                element: element,
+            };
+            var result;
+            if (marker.type === 'sub_part') {
+                ctx.spKey = marker.config_ref;
+                result = ops.markSubPart(config, ctx);
+            } else if (marker.type === 'hit_box') {
+                result = ops.markHitBox(config, ctx);
+            } else if (marker.type === 'interact_box') {
+                result = ops.markInteractBox(config, ctx);
+            } else if (marker.type === 'connector') {
+                ctx.key = marker.config_ref;
+                result = ops.markConnector(config, ctx);
+            } else {
+                showToast('未知的标记类型', 'warning');
+                return;
+            }
+            if (!result || !result.ok) {
+                showToast((result && result.error) || '创建配置失败', 'error');
+                return;
+            }
+            this.markerVersion.v++;
+            showToast('已创建缺失的配置条目', 'positive');
         },
         /**
          * 更新零件级字段（图标、耐久贡献、伤害传导等）
@@ -1727,6 +1726,13 @@ const MM_MAIN_PANEL_OPTIONS = {
             saveConfig();
         });
 
+        // 配置变更单一出口（docs/13 §7.2）：op 写入完成后统一刷新 + 防抖落盘
+        this._configChangedHandler = Blockbench.on('mm_config_changed', function (event) {
+            refreshOutlinerIcons();
+            self.markerVersion.v++;
+            if (!event || event.persist !== false) scheduleSave();
+        });
+
         // 撤销 / 重做把配置整块换掉之后，面板必须重新读取配置对象引用
         // （_uiState 之外的字段是直接赋值，Vue 2 观测不到）
         this._restoredHandler = Blockbench.on(undo.RESTORED_EVENT, function () {
@@ -1748,6 +1754,7 @@ const MM_MAIN_PANEL_OPTIONS = {
         if (this._selectionHandler) { this._selectionHandler(); log.debug('已移除 update_selection 监听'); }
         if (this._modeHandler) { this._modeHandler(); log.debug('已移除 select_mode 监听'); }
         if (this._saveHandler) { this._saveHandler(); log.debug('已移除 save 监听'); }
+        if (this._configChangedHandler) { this._configChangedHandler(); log.debug('已移除 mm_config_changed 监听'); }
         if (this._restoredHandler) { this._restoredHandler(); log.debug('已移除配置恢复监听'); }
         if (window.__mmNavigator === this._mmNavigatorObj) {
             delete window.__mmNavigator;

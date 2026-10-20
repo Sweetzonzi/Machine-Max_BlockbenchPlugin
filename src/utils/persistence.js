@@ -1,7 +1,7 @@
 const PROPERTY_NAME = 'machine_max_plugin';
 const { CONFIG_VERSION } = require('../core/constants.js');
 const { migrateIfNeeded, createBlankConfig } = require('../core/config.js');
-const { cleanGhostMarkers, migrateConnectorMarkerRefs } = require('../core/element_markers.js');
+const { cleanGhostMarkers, migrateConnectorMarkerRefs, repairMarkerConfigs } = require('../core/element_markers.js');
 const { createLogger } = require('./logger.js');
 
 /** 模块日志 */
@@ -117,6 +117,13 @@ function loadConfig() {
         saveConfig();
     }
 
+    // 修复旧工程中「有标记但没有配置条目」的情况（渲染期不再补配置）
+    var markerRepair = repairMarkerConfigs(result);
+    if (markerRepair.repaired > 0) {
+        log.info('loadConfig: 已补建 ' + markerRepair.repaired + ' 个缺失配置条目', markerRepair.details);
+        saveConfig();
+    }
+
     // 清理幽灵标记：删除 element_markers 中 UUID 对应的 Group/Locator 已不存在的条目
     var ghostResult = cleanGhostMarkers(result);
     if (ghostResult.cleanedCount > 0) {
@@ -126,6 +133,46 @@ function loadConfig() {
     }
 
     return result;
+}
+
+/**
+ * 防抖保存：连续字段编辑 / 事件总线一次提交只在 300ms 后落盘一次。
+ * 显式 Ctrl+S 与导出完成仍走 saveConfig()（同步、立即）。
+ */
+var _saveTimer = null;
+var SAVE_DEBOUNCE_MS = 300;
+
+/**
+ * 防抖保存：连续字段编辑 / 事件总线一次提交只在 300ms 后落盘一次。
+ * 显式 Ctrl+S 与导出完成仍走 saveConfig()（同步、立即）。
+ */
+function scheduleSave(delay) {
+    if (typeof setTimeout !== 'function') {
+        saveConfig();
+        return;
+    }
+    if (_saveTimer) clearTimeout(_saveTimer);
+    var wait = typeof delay === 'number' ? delay : SAVE_DEBOUNCE_MS;
+    _saveTimer = setTimeout(function () {
+        _saveTimer = null;
+        saveConfig();
+    }, wait);
+}
+
+/** 立即执行挂起的防抖保存（卸载 / 模式切换时用）。 */
+function flushSave() {
+    if (_saveTimer) {
+        clearTimeout(_saveTimer);
+        _saveTimer = null;
+    }
+    saveConfig();
+}
+
+function cancelScheduledSave() {
+    if (_saveTimer) {
+        clearTimeout(_saveTimer);
+        _saveTimer = null;
+    }
 }
 
 /**
@@ -245,6 +292,9 @@ if (typeof module !== 'undefined' && module.exports) {
         registerProperty,
         loadConfig,
         saveConfig,
+        scheduleSave,
+        flushSave,
+        cancelScheduledSave,
         getConfig,
         setPackPath,
         addDependencyPath,

@@ -5,6 +5,7 @@
 'use strict';
 
 var { generateDefaultName } = require('../core/naming.js');
+var { createSubPartConfig } = require('../core/config.js');
 var { runConfigEdit } = require('../core/undo.js');
 var doc = require('../doc/index.js');
 var shared = require('./shared.js');
@@ -31,18 +32,30 @@ function markSubPart(config, options) {
     if (!element || !element.uuid) return shared.fail('未选中任何元素');
 
     var ns = shared.namespaceOf(config);
-    var spKey = ensureSubPartName(config, variant, ns);
+    var spKey = String(options.spKey || '').trim();
+    if (!spKey) spKey = ensureSubPartName(config, variant, ns);
     var keyError = shared.validateKey('sub_parts', spKey, config,
         ['parts', options.partId, 'variants', options.variantName, 'sub_parts', spKey]);
     if (keyError) return shared.fail(keyError.hint, [keyError]);
 
     var mp = shared.markersPort();
+    var created = false;
     runConfigEdit('标记为子零件', function () {
+        if (!variant.sub_parts) shared.setProp(variant, 'sub_parts', {});
+        if (!variant.sub_parts[spKey]) {
+            var sp = createSubPartConfig();
+            sp.start_bone = element.name || '';
+            shared.setProp(variant.sub_parts, spKey, sp);
+            created = true;
+        } else if (!variant.sub_parts[spKey].start_bone) {
+            // 旧条目缺 start_bone 时补上标记骨骼名，不覆盖已有绑定
+            shared.setProp(variant.sub_parts[spKey], 'start_bone', element.name || '');
+        }
         mp.set(config, options.partId, options.variantName, element.uuid, 'sub_part', spKey);
         if (mp.recalc) mp.recalc(config, options.partId, options.variantName);
     }, { coalesce: false });
 
-    return shared.ok({ spKey: spKey, changed: true });
+    return shared.ok({ spKey: spKey, changed: true, created: created });
 }
 
 function importSubPart(config, options) {

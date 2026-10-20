@@ -1,5 +1,5 @@
 const { getMarkersForVariant, setMarker, clearMarker, getMarker, MARKER_TYPES, getMarkerInfo, detectOwnerSubPart, recalcAutoEndBones } = require('./core/element_markers.js');
-const { loadConfig, saveConfig, getConfig } = require('./utils/persistence.js');
+const { loadConfig, scheduleSave, getConfig } = require('./utils/persistence.js');
 const { showToast } = require('./utils/notify.js');
 const { createLogger } = require('./utils/logger.js');
 const content_pack = require('./core/content_pack.js');
@@ -183,7 +183,7 @@ function registerMode() {
                 log.info('onSelect: 未设置内容包路径，弹出设置向导');
                 var pd = require('./ui/dialogs/pack_setup_dialog.js');
                 pd.showPackSetupDialog(config, function () {
-                    saveConfig();
+                    scheduleSave();
                 });
             } else {
                 var checkResult = content_pack.openContentPack(config.contentPackPath);
@@ -192,7 +192,7 @@ function registerMode() {
                     showToast('当前内容包无效: ' + (checkResult.error || '路径不存在'), 'warning');
                     var pd = require('./ui/dialogs/pack_setup_dialog.js');
                     pd.showPackSetupDialog(config, function () {
-                        saveConfig();
+                        scheduleSave();
                     });
                 }
             }
@@ -246,8 +246,8 @@ function registerMode() {
                 }
             }
 
-            saveConfig();
-            log.debug('onUnselect: 配置已保存');
+            scheduleSave();
+            log.debug('onUnselect: 配置已加入防抖保存队列');
         },
     });
 

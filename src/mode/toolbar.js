@@ -1,4 +1,4 @@
-var { getConfig, saveConfig } = require('../utils/persistence.js');
+var { getConfig, scheduleSave } = require('../utils/persistence.js');
 var { showToast } = require('../utils/notify.js');
 var { createLogger } = require('../utils/logger.js');
 var { refreshOutlinerIcons } = require('./icons.js');
@@ -103,7 +103,7 @@ function registerToolbarActions() {
                 return;
             }
             require('../ui/dialogs/part_dialogs.js').showProjectSettingsDialog(config, function () {
-                saveConfig();
+                scheduleSave();
             });
         }
     }));

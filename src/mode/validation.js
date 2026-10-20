@@ -27,8 +27,8 @@ function _makeProblem(severity, code, message, path) {
 }
 
 /** 构造 path，仅填充有值的可选字段以免污染聚合 */
-function _mkPath(scope, partId, variantName, subPartKey, itemKey, elementUuid) {
-    var path = { scope: scope, partId: partId, variantName: variantName };
+function _mkPath(scope, partId, variantName, subPartKey, itemKey, elementUuid, field) {
+    var path = { scope: scope, partId: partId, variantName: variantName, field: field || '' };
     if (subPartKey) path.subPartKey = subPartKey;
     if (itemKey) path.itemKey = itemKey;
     if (elementUuid) path.elementUuid = elementUuid;
@@ -207,11 +207,12 @@ function _collectDanglingRefs(config, partId, vName, spKey, problems) {
                 : (ref.kind === 'power_target' ? '连接点功率目标'
                     : (ref.kind === 'power_output' ? '子系统功率输出'
                         : (ref.kind === 'connector' ? '子系统关联连接点' : '信号目标'))));
+        var field = p[baseLen + 2] || '';
         problems.push(_makeProblem(
             'error', CODES.DANGLING_SIGNAL_TARGET,
             '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：' + what
             + ' "' + ref.target + '" 指向不存在的节点（只允许同子零件条目或 local/global）',
-            _mkPath(scope, partId, vName, spKey, itemKey)
+            _mkPath(scope, partId, vName, spKey, itemKey, null, field)
         ));
     });
 }
@@ -247,7 +248,7 @@ function collectIssues(config) {
         if (variantNames.length === 0) {
             problems.push(_makeProblem(
                 'error', CODES.MISSING_REQUIRED, '零件 "' + partId + '"：没有定义变体',
-                _mkPath('part', partId, '')
+                _mkPath('part', partId, '', null, null, null, 'variants')
             ));
             continue;
         }
@@ -259,7 +260,7 @@ function collectIssues(config) {
             if (!variant.model) {
                 problems.push(_makeProblem(
                     'error', CODES.MISSING_REQUIRED, '零件 "' + partId + '" 变体 "' + vName + '"：未设置模型引用',
-                    _mkPath('variant', partId, vName)
+                    _mkPath('variant', partId, vName, null, null, null, 'model')
                 ));
             }
 
@@ -268,7 +269,7 @@ function collectIssues(config) {
             if (spKeys.length === 0) {
                 problems.push(_makeProblem(
                     'error', CODES.MISSING_REQUIRED, '零件 "' + partId + '" 变体 "' + vName + '"：未定义子零件',
-                    _mkPath('variant', partId, vName)
+                    _mkPath('variant', partId, vName, null, null, null, 'sub_parts')
                 ));
             }
 
@@ -280,14 +281,14 @@ function collectIssues(config) {
                     problems.push(_makeProblem(
                         'error', CODES.MISSING_REQUIRED,
                         '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：碰撞箱为空',
-                        _mkPath('subpart', partId, vName, spKey)
+                        _mkPath('subpart', partId, vName, spKey, null, null, 'hit_boxes')
                     ));
                 }
                 if ((sp.mass || 0) <= 0) {
                     problems.push(_makeProblem(
                         'error', CODES.MISSING_REQUIRED,
                         '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：质量必须大于 0',
-                        _mkPath('subpart', partId, vName, spKey)
+                        _mkPath('subpart', partId, vName, spKey, null, null, 'mass')
                     ));
                 }
 
@@ -305,7 +306,7 @@ function collectIssues(config) {
                         problems.push(_makeProblem(
                             'error', CODES.DEFINITION_REQUIRED,
                             '子系统 "' + ssName + '" 在零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：未指定型号定义，将导致该条目的类型在模组侧无法加载',
-                            _mkPath('subsystem', partId, vName, spKey, ssName)
+                            _mkPath('subsystem', partId, vName, spKey, ssName, null, 'definition')
                         ));
                     } else {
                         var availableDefs = meta ? _filterDefsByType(subsystemDefs, ss.type) : subsystemDefs;
@@ -313,7 +314,7 @@ function collectIssues(config) {
                             problems.push(_makeProblem(
                                 'error', CODES.DEFINITION_REF_MISSING,
                                 '子系统 "' + ssName + '" 在零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：型号定义 "' + ss.definition + '" 不存在（引用断裂），将导致该条目的类型在模组侧无法加载',
-                                _mkPath('subsystem', partId, vName, spKey, ssName)
+                                _mkPath('subsystem', partId, vName, spKey, ssName, null, 'definition')
                             ));
                         }
                     }
@@ -328,7 +329,7 @@ function collectIssues(config) {
                                 problems.push(_makeProblem(
                                     'error', CODES.SUBSYSTEM_REQUIRED_FIELD,
                                     '子系统 "' + ssName + '" 在零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：' + f.label + '（' + f.field + '）为必填字段但未配置',
-                                    _mkPath('subsystem', partId, vName, spKey, ssName)
+                                    _mkPath('subsystem', partId, vName, spKey, ssName, null, f.field)
                                 ));
                             }
                         }
@@ -343,13 +344,13 @@ function collectIssues(config) {
                         problems.push(_makeProblem(
                             'error', CODES.DEFINITION_REQUIRED,
                             '连接点 "' + connKey + '" 在零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：未指定型号定义，将导致该连接点类型在模组侧无法加载',
-                            _mkPath('connector', partId, vName, spKey, connKey)
+                            _mkPath('connector', partId, vName, spKey, connKey, null, 'definition')
                         ));
                     } else if (!connectorDefs[conn.definition]) {
                         problems.push(_makeProblem(
                             'error', CODES.DEFINITION_REF_MISSING,
                             '连接点 "' + connKey + '" 在零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：型号定义 "' + conn.definition + '" 不存在（引用断裂），将导致该连接点类型在模组侧无法加载',
-                            _mkPath('connector', partId, vName, spKey, connKey)
+                            _mkPath('connector', partId, vName, spKey, connKey, null, 'definition')
                         ));
                     }
                 }

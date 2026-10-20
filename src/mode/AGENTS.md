@@ -10,10 +10,10 @@ MachineMax 自定义模式"零件定义"的全部逻辑。负责模式生命周�
 
 ```
 src/mode/
-├── mode.js           # 模式注册 + 生命周期（341行，含 Vue 面板懒加载）
+├── mode.js           # 模式注册 + 生命周期（344行，含 Vue 面板懒加载）
 ├── icons.js          # Outliner 图标刷新（82行）
 ├── patches.js        # 原型猴子补丁 + 右键菜单（623行）
-├── validation.js     # 唯一校验 collectIssues() → Problem[]（约270行）
+├── validation.js     # 唯一校验 collectIssues() → Problem[]（约371行，字段级带 path.field）
 ├── validation_check.js # 接入 Blockbench 原生 ValidatorCheck（约90行）
 └── toolbar.js        # 工具栏 Action 注册（185行）
 ```
@@ -54,3 +54,4 @@ App.vue.js ──→ SignalFlowPanel.vue.js ──→ lib/signal_graph.js
 - **菜单/工具栏不做业务逻辑（撤销）**: `patches.js` 的 `click` 与 `toolbar.js` 的 `onConfirm` 只调用
   `src/ops/` 的操作函数并处理 `OpResult`；不要在这里直接改配置或包 `runConfigEdit`
   （撤销边界在操作函数内部，换入口自动继承）
+- **落盘**: 模式生命周期内不直接 `saveConfig()`；用 `scheduleSave()`，由 `mm_config_changed` 统一防抖。

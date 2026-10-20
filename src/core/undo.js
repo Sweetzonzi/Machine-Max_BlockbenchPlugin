@@ -374,7 +374,30 @@ function _runUnrecorded(opts, label, mutate, reason) {
             log.debug('runConfigEdit: 提示不可用', e && e.message);
         }
     }
-    return mutate();
+    var result = mutate();
+    _emitConfigChanged(opts, label);
+    return result;
+}
+
+/**
+ * 变更事件（docs/13 §7.2）：配置写入的单一出口。
+ * 由 UI 订阅后刷新 Outliner、递增 markerVersion、防抖落盘。
+ * 只在最外层编辑提交后派发；嵌套编辑并入外层一次。
+ */
+function _emitConfigChanged(opts, label) {
+    if (typeof Blockbench === 'undefined' || typeof Blockbench.dispatchEvent !== 'function') return;
+    var payload = {
+        source: (opts && opts.source) || 'ui',
+        label: label,
+        kinds: (opts && opts.kinds) || [],
+        paths: (opts && opts.paths) || [],
+        persist: !(opts && opts.persist === false),
+    };
+    try {
+        Blockbench.dispatchEvent('mm_config_changed', payload);
+    } catch (e) {
+        log.debug('runConfigEdit: 派发 mm_config_changed 失败', e && e.message);
+    }
 }
 
 /**
@@ -544,6 +567,7 @@ function runConfigEdit(label, mutate, options) {
             log.debug('runConfigEdit: 派发 update_selection 失败', e && e.message);
         }
     }
+    if (!discarded) _emitConfigChanged(opts, text);
 
     return result;
 }

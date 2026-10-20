@@ -403,7 +403,7 @@ function showManageDependenciesDialog(config, onSave) {
                 }
 
                 if (changed) {
-                    persistence.saveConfig();
+                    persistence.scheduleSave();
                     showToast('依赖包已更新', 'positive');
                     if (typeof onSave === 'function') onSave(config);
                 } else if (!formData.depPathToRemove || !formData.depPathToRemove.trim()) {

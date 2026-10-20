@@ -10466,6 +10466,7 @@
       var { PartCodec } = require_part_codec();
       var { VariantCodec } = require_variant_codec();
       var { SubPartCodec } = require_sub_part_codec();
+      var { HitBoxCodec } = require_hit_box_codec();
       var { createLogger: createLogger2 } = require_logger();
       var log2 = createLogger2("Config");
       var MIGRATIONS = {
@@ -10492,13 +10493,6 @@
           log2.info("MIGRATIONS: \u914D\u7F6E\u4ECE v3\u2192v4 \u8FC1\u79FB\u5B8C\u6210");
           return v3config;
         }
-      };
-      var HIT_BOX_DEFAULTS = {
-        id: "part",
-        type: "box",
-        material: "",
-        thickness: 1,
-        condition: "true"
       };
       var INTERACT_BOX_DEFAULTS = {
         bone: "",
@@ -10552,7 +10546,7 @@
       }
       function createHitBoxConfig() {
         log2.debug("createHitBoxConfig: \u521B\u5EFA\u78B0\u649E\u7BB1\u914D\u7F6E");
-        return JSON.parse(JSON.stringify(HIT_BOX_DEFAULTS));
+        return HitBoxCodec.decode({ id: "part", type: "box" });
       }
       function createInteractBoxConfig() {
         log2.debug("createInteractBoxConfig: \u521B\u5EFA\u4EA4\u4E92\u533A\u914D\u7F6E");
@@ -10764,6 +10758,96 @@
     }
   });
 
+  // src/core/naming.js
+  var require_naming = __commonJS({
+    "src/core/naming.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("Naming");
+      function toSnakeCase(str) {
+        if (!str) return "";
+        return str.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
+      }
+      function generateDefaultName(entityType, context) {
+        var ns = context.namespace || "machine_max";
+        switch (entityType) {
+          case "sub_part":
+            return "sub_part." + ns + ".main";
+          case "connector":
+            var locName = context.boneName || "connector";
+            return "connector." + ns + "." + toSnakeCase(locName);
+          case "interact_box":
+            var boneName = context.boneName || "interact";
+            return "interact." + ns + "." + toSnakeCase(boneName);
+          case "subsystem":
+            var shortName = context.typeShortName || "subsystem";
+            return "subsystem." + ns + "." + shortName;
+          default:
+            return "";
+        }
+      }
+      var RESERVED_SIGNAL_NAMES = ["local", "global"];
+      function validateNameUniqueness(variant, scope, subPartKey, name, excludeKey) {
+        if (!variant || !name) return { valid: false, message: "\u540D\u79F0\u4E3A\u7A7A" };
+        if (scope !== "sub_part" && RESERVED_SIGNAL_NAMES.indexOf(name) >= 0) {
+          return { valid: false, message: '"' + name + '" \u4E3A\u4FE1\u53F7\u4FDD\u7559\u5730\u5740\uFF08local/global\uFF09\uFF0C\u8BF7\u6362\u4E00\u4E2A\u540D\u79F0' };
+        }
+        var existingKeys = [];
+        switch (scope) {
+          case "sub_part":
+            existingKeys = Object.keys(variant.sub_parts || {});
+            break;
+          case "connector":
+          case "interact_box":
+          case "subsystem":
+            var field = scope === "connector" ? "connectors" : scope === "interact_box" ? "interact_boxes" : "subsystems";
+            var subParts = variant.sub_parts || {};
+            Object.keys(subParts).forEach(function(key) {
+              var map = subParts[key] && subParts[key][field] || {};
+              Object.keys(map).forEach(function(k) {
+                if (key === subPartKey && k === excludeKey) return;
+                existingKeys.push(k);
+              });
+            });
+            break;
+          default:
+            return { valid: false, message: "\u672A\u77E5\u4F5C\u7528\u57DF" };
+        }
+        for (var i = 0; i < existingKeys.length; i++) {
+          if (existingKeys[i] === name) {
+            return { valid: false, message: '"' + name + '" \u5DF2\u5B58\u5728\uFF0C\u8BF7\u6362\u4E00\u4E2A\u540D\u79F0' };
+          }
+        }
+        return { valid: true, message: "" };
+      }
+      function ensureUniqueName(scope, variant, subPartKey, baseName) {
+        var result = validateNameUniqueness(variant, scope, subPartKey, baseName);
+        if (result.valid) return baseName;
+        var suffix = 2;
+        while (!result.valid && suffix <= 999) {
+          var candidate = baseName + "_" + suffix;
+          result = validateNameUniqueness(variant, scope, subPartKey, candidate);
+          if (result.valid) return candidate;
+          suffix++;
+        }
+        return baseName + "_" + Date.now();
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          toSnakeCase,
+          generateDefaultName,
+          validateNameUniqueness,
+          ensureUniqueName
+        };
+      }
+    }
+  });
+
   // src/core/element_markers.js
   var require_element_markers = __commonJS({
     "src/core/element_markers.js"(exports, module) {
@@ -10774,7 +10858,13 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
-      var { createSubPartConfig } = require_config();
+      var {
+        createSubPartConfig,
+        createHitBoxConfig,
+        createInteractBoxConfig,
+        createConnectorInstanceConfig
+      } = require_config();
+      var { generateDefaultName, ensureUniqueName } = require_naming();
       var log2 = createLogger2("Markers");
       var MARKER_TYPES = {
         sub_part: { label: "\u5B50\u96F6\u4EF6", icon: "fa-cube", color: "#4A90D9" },
@@ -11489,6 +11579,85 @@
           }
         }
       }
+      function repairMarkerConfigs(projectConfig) {
+        var details = [];
+        if (!projectConfig || !projectConfig.parts) return { repaired: 0, details };
+        var ns = projectConfig.namespace || "machine_max";
+        function findEl(uuid) {
+          var groups = typeof Group !== "undefined" && Group.all ? Group.all : [];
+          for (var g = 0; g < groups.length; g++) {
+            if (groups[g].uuid === uuid) return groups[g];
+          }
+          var locators = typeof Locator !== "undefined" && Locator.all ? Locator.all : [];
+          for (var l = 0; l < locators.length; l++) {
+            if (locators[l].uuid === uuid) return locators[l];
+          }
+          return null;
+        }
+        Object.keys(projectConfig.parts).forEach(function(partId) {
+          var part = projectConfig.parts[partId];
+          if (!part || !part.element_markers) return;
+          Object.keys(part.element_markers).forEach(function(variantName) {
+            var variant = part.variants && part.variants[variantName];
+            if (!variant) return;
+            var markers = part.element_markers[variantName] || {};
+            Object.keys(markers).forEach(function(uuid) {
+              var marker = markers[uuid];
+              if (!marker || !marker.config_ref) return;
+              var el = findEl(uuid);
+              if (!el) return;
+              if (marker.type === "sub_part") {
+                if (!variant.sub_parts) variant.sub_parts = {};
+                if (!variant.sub_parts[marker.config_ref]) {
+                  var sp = createSubPartConfig();
+                  sp.start_bone = el.name || "";
+                  variant.sub_parts[marker.config_ref] = sp;
+                  details.push({ partId, variantName, type: "sub_part", key: marker.config_ref });
+                }
+                return;
+              }
+              var owner = detectOwnerSubPart(projectConfig, partId, variantName, el);
+              if (!owner || !variant.sub_parts || !variant.sub_parts[owner.spKey]) return;
+              var ownerSp = variant.sub_parts[owner.spKey];
+              if (marker.type === "hit_box") {
+                if (!ownerSp.hit_boxes) ownerSp.hit_boxes = {};
+                if (!ownerSp.hit_boxes[uuid]) {
+                  ownerSp.hit_boxes[uuid] = createHitBoxConfig();
+                  details.push({ partId, variantName, type: "hit_box", key: uuid });
+                }
+              } else if (marker.type === "interact_box") {
+                if (!ownerSp.interact_boxes) ownerSp.interact_boxes = {};
+                var matched = Object.keys(ownerSp.interact_boxes).some(function(k) {
+                  return ownerSp.interact_boxes[k] && ownerSp.interact_boxes[k]._uuid === uuid;
+                });
+                if (!matched) {
+                  var base = generateDefaultName("interact_box", { namespace: ns, boneName: el.name });
+                  var ibName = ensureUniqueName("interact_box", variant, owner.spKey, base);
+                  var ib = createInteractBoxConfig();
+                  ib.bone = el.name || "";
+                  ib._uuid = uuid;
+                  ownerSp.interact_boxes[ibName] = ib;
+                  details.push({ partId, variantName, type: "interact_box", key: ibName });
+                }
+              } else if (marker.type === "connector") {
+                if (!ownerSp.connectors) ownerSp.connectors = {};
+                var connKey = marker.config_ref;
+                if (!ownerSp.connectors[connKey]) {
+                  var conn = createConnectorInstanceConfig();
+                  conn.locator = el.name || "";
+                  conn._marker_uuid = uuid;
+                  ownerSp.connectors[connKey] = conn;
+                  details.push({ partId, variantName, type: "connector", key: connKey });
+                }
+              }
+            });
+          });
+        });
+        if (details.length > 0) {
+          log2.info("repairMarkerConfigs: \u5DF2\u8865\u5EFA " + details.length + " \u4E2A\u7F3A\u5931\u914D\u7F6E\u6761\u76EE");
+        }
+        return { repaired: details.length, details };
+      }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
           MARKER_TYPES,
@@ -11506,7 +11675,8 @@
           detectOwnerSubPart,
           recalcAutoEndBones,
           cleanGhostMarkers,
-          migrateConnectorMarkerRefs
+          migrateConnectorMarkerRefs,
+          repairMarkerConfigs
         };
       }
     }
@@ -11524,7 +11694,7 @@
       var PROPERTY_NAME = "machine_max_plugin";
       var { CONFIG_VERSION } = require_constants();
       var { migrateIfNeeded, createBlankConfig } = require_config();
-      var { cleanGhostMarkers, migrateConnectorMarkerRefs } = require_element_markers();
+      var { cleanGhostMarkers, migrateConnectorMarkerRefs, repairMarkerConfigs } = require_element_markers();
       var { createLogger: createLogger2 } = require_logger();
       var log2 = createLogger2("Persistence");
       function registerProperty2() {
@@ -11606,12 +11776,44 @@
           log2.info("loadConfig: \u5DF2\u8FC1\u79FB " + markerMigration.migrated + " \u4E2A connector marker \u7684 config_ref");
           saveConfig();
         }
+        var markerRepair = repairMarkerConfigs(result);
+        if (markerRepair.repaired > 0) {
+          log2.info("loadConfig: \u5DF2\u8865\u5EFA " + markerRepair.repaired + " \u4E2A\u7F3A\u5931\u914D\u7F6E\u6761\u76EE", markerRepair.details);
+          saveConfig();
+        }
         var ghostResult = cleanGhostMarkers(result);
         if (ghostResult.cleanedCount > 0) {
           log2.info("loadConfig: \u5DF2\u6E05\u7406 " + ghostResult.cleanedCount + " \u4E2A\u5E7D\u7075\u6807\u8BB0", ghostResult.details);
           saveConfig();
         }
         return result;
+      }
+      var _saveTimer = null;
+      var SAVE_DEBOUNCE_MS = 300;
+      function scheduleSave(delay) {
+        if (typeof setTimeout !== "function") {
+          saveConfig();
+          return;
+        }
+        if (_saveTimer) clearTimeout(_saveTimer);
+        var wait = typeof delay === "number" ? delay : SAVE_DEBOUNCE_MS;
+        _saveTimer = setTimeout(function() {
+          _saveTimer = null;
+          saveConfig();
+        }, wait);
+      }
+      function flushSave() {
+        if (_saveTimer) {
+          clearTimeout(_saveTimer);
+          _saveTimer = null;
+        }
+        saveConfig();
+      }
+      function cancelScheduledSave() {
+        if (_saveTimer) {
+          clearTimeout(_saveTimer);
+          _saveTimer = null;
+        }
       }
       function saveConfig() {
         if (!Project || Project === 0 || !Project[PROPERTY_NAME]) {
@@ -11696,6 +11898,9 @@
           registerProperty: registerProperty2,
           loadConfig,
           saveConfig,
+          scheduleSave,
+          flushSave,
+          cancelScheduledSave,
           getConfig,
           setPackPath,
           addDependencyPath,
@@ -13915,8 +14120,8 @@
       function _makeProblem(severity, code, message, path) {
         return { severity, code, message, path };
       }
-      function _mkPath(scope, partId, variantName, subPartKey, itemKey, elementUuid) {
-        var path = { scope, partId, variantName };
+      function _mkPath(scope, partId, variantName, subPartKey, itemKey, elementUuid, field) {
+        var path = { scope, partId, variantName, field: field || "" };
         if (subPartKey) path.subPartKey = subPartKey;
         if (itemKey) path.itemKey = itemKey;
         if (elementUuid) path.elementUuid = elementUuid;
@@ -14052,11 +14257,12 @@
           else if (container === "interact_boxes") scope = "interact_box";
           else if (container === "hit_boxes") scope = "hit_box";
           var what = ref.kind === "power_output_key" ? "\u529F\u7387\u8F93\u51FA\u76EE\u6807\uFF08power_outputs \u7684 key\uFF09" : ref.kind === "hit_box_subsystem" ? "\u78B0\u649E\u7BB1\u5B50\u7CFB\u7EDF" : ref.kind === "power_target" ? "\u8FDE\u63A5\u70B9\u529F\u7387\u76EE\u6807" : ref.kind === "power_output" ? "\u5B50\u7CFB\u7EDF\u529F\u7387\u8F93\u51FA" : ref.kind === "connector" ? "\u5B50\u7CFB\u7EDF\u5173\u8054\u8FDE\u63A5\u70B9" : "\u4FE1\u53F7\u76EE\u6807";
+          var field = p[baseLen + 2] || "";
           problems.push(_makeProblem(
             "error",
             CODES.DANGLING_SIGNAL_TARGET,
             '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A' + what + ' "' + ref.target + '" \u6307\u5411\u4E0D\u5B58\u5728\u7684\u8282\u70B9\uFF08\u53EA\u5141\u8BB8\u540C\u5B50\u96F6\u4EF6\u6761\u76EE\u6216 local/global\uFF09',
-            _mkPath(scope, partId, vName, spKey, itemKey)
+            _mkPath(scope, partId, vName, spKey, itemKey, null, field)
           ));
         });
       }
@@ -14085,7 +14291,7 @@
               "error",
               CODES.MISSING_REQUIRED,
               '\u96F6\u4EF6 "' + partId + '"\uFF1A\u6CA1\u6709\u5B9A\u4E49\u53D8\u4F53',
-              _mkPath("part", partId, "")
+              _mkPath("part", partId, "", null, null, null, "variants")
             ));
             continue;
           }
@@ -14097,7 +14303,7 @@
                 "error",
                 CODES.MISSING_REQUIRED,
                 '\u96F6\u4EF6 "' + partId + '" \u53D8\u4F53 "' + vName + '"\uFF1A\u672A\u8BBE\u7F6E\u6A21\u578B\u5F15\u7528',
-                _mkPath("variant", partId, vName)
+                _mkPath("variant", partId, vName, null, null, null, "model")
               ));
             }
             var subParts = variant.sub_parts || {};
@@ -14107,7 +14313,7 @@
                 "error",
                 CODES.MISSING_REQUIRED,
                 '\u96F6\u4EF6 "' + partId + '" \u53D8\u4F53 "' + vName + '"\uFF1A\u672A\u5B9A\u4E49\u5B50\u96F6\u4EF6',
-                _mkPath("variant", partId, vName)
+                _mkPath("variant", partId, vName, null, null, null, "sub_parts")
               ));
             }
             for (var si = 0; si < spKeys.length; si++) {
@@ -14118,7 +14324,7 @@
                   "error",
                   CODES.MISSING_REQUIRED,
                   '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u78B0\u649E\u7BB1\u4E3A\u7A7A',
-                  _mkPath("subpart", partId, vName, spKey)
+                  _mkPath("subpart", partId, vName, spKey, null, null, "hit_boxes")
                 ));
               }
               if ((sp.mass || 0) <= 0) {
@@ -14126,7 +14332,7 @@
                   "error",
                   CODES.MISSING_REQUIRED,
                   '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u8D28\u91CF\u5FC5\u987B\u5927\u4E8E 0',
-                  _mkPath("subpart", partId, vName, spKey)
+                  _mkPath("subpart", partId, vName, spKey, null, null, "mass")
                 ));
               }
               _collectDanglingRefs(config, partId, vName, spKey, problems);
@@ -14139,7 +14345,7 @@
                     "error",
                     CODES.DEFINITION_REQUIRED,
                     '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u672A\u6307\u5B9A\u578B\u53F7\u5B9A\u4E49\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u6761\u76EE\u7684\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
-                    _mkPath("subsystem", partId, vName, spKey, ssName)
+                    _mkPath("subsystem", partId, vName, spKey, ssName, null, "definition")
                   ));
                 } else {
                   var availableDefs = meta ? _filterDefsByType(subsystemDefs, ss.type) : subsystemDefs;
@@ -14148,7 +14354,7 @@
                       "error",
                       CODES.DEFINITION_REF_MISSING,
                       '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u578B\u53F7\u5B9A\u4E49 "' + ss.definition + '" \u4E0D\u5B58\u5728\uFF08\u5F15\u7528\u65AD\u88C2\uFF09\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u6761\u76EE\u7684\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
-                      _mkPath("subsystem", partId, vName, spKey, ssName)
+                      _mkPath("subsystem", partId, vName, spKey, ssName, null, "definition")
                     ));
                   }
                 }
@@ -14162,7 +14368,7 @@
                         "error",
                         CODES.SUBSYSTEM_REQUIRED_FIELD,
                         '\u5B50\u7CFB\u7EDF "' + ssName + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A' + f.label + "\uFF08" + f.field + "\uFF09\u4E3A\u5FC5\u586B\u5B57\u6BB5\u4F46\u672A\u914D\u7F6E",
-                        _mkPath("subsystem", partId, vName, spKey, ssName)
+                        _mkPath("subsystem", partId, vName, spKey, ssName, null, f.field)
                       ));
                     }
                   }
@@ -14176,14 +14382,14 @@
                     "error",
                     CODES.DEFINITION_REQUIRED,
                     '\u8FDE\u63A5\u70B9 "' + connKey + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u672A\u6307\u5B9A\u578B\u53F7\u5B9A\u4E49\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u8FDE\u63A5\u70B9\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
-                    _mkPath("connector", partId, vName, spKey, connKey)
+                    _mkPath("connector", partId, vName, spKey, connKey, null, "definition")
                   ));
                 } else if (!connectorDefs[conn.definition]) {
                   problems.push(_makeProblem(
                     "error",
                     CODES.DEFINITION_REF_MISSING,
                     '\u8FDE\u63A5\u70B9 "' + connKey + '" \u5728\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A\u578B\u53F7\u5B9A\u4E49 "' + conn.definition + '" \u4E0D\u5B58\u5728\uFF08\u5F15\u7528\u65AD\u88C2\uFF09\uFF0C\u5C06\u5BFC\u81F4\u8BE5\u8FDE\u63A5\u70B9\u7C7B\u578B\u5728\u6A21\u7EC4\u4FA7\u65E0\u6CD5\u52A0\u8F7D',
-                    _mkPath("connector", partId, vName, spKey, connKey)
+                    _mkPath("connector", partId, vName, spKey, connKey, null, "definition")
                   ));
                 }
               }
@@ -14196,1073 +14402,6 @@
       }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = { collectIssues };
-      }
-    }
-  });
-
-  // src/generators/meta_generator.js
-  var require_meta_generator = __commonJS({
-    "src/generators/meta_generator.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("GenMeta");
-      function generateMeta(projectConfig) {
-        var pm = projectConfig.packMeta || {};
-        var packId = pm.id || (Project ? Project.name || "content_pack" : "content_pack");
-        packId = packId.toLowerCase().replace(/[^a-z0-9_\-.:/]/g, "_");
-        var result = {
-          id: packId,
-          version: pm.version || "1.0",
-          author: pm.author || "Anonymous",
-          description: pm.description || ""
-        };
-        var deps = pm.dependencies || [];
-        if (deps.length > 0) {
-          result.dependencies = deps.map(function(dep) {
-            var depId = dep.id || dep;
-            var depType = dep.type || "hard";
-            return { id: depId, type: depType };
-          });
-        }
-        if (typeof pm.enable_auto_pack === "boolean") {
-          result.enable_auto_pack = pm.enable_auto_pack;
-        }
-        var parts = projectConfig.parts || {};
-        var partIds = Object.keys(parts);
-        log2.info("generateMeta: \u5305ID=" + result.id + ", \u96F6\u4EF6\u6570=" + partIds.length);
-        return result;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { generateMeta };
-      }
-    }
-  });
-
-  // src/utils/name_utils.js
-  var require_name_utils = __commonJS({
-    "src/utils/name_utils.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var TYPE_LABELS = {
-        sub_part: { zh: "\u5B50\u96F6\u4EF6", en: "SubPart" },
-        interact: { zh: "\u4EA4\u4E92\u533A", en: "Interact" },
-        connector: { zh: "\u8FDE\u63A5\u70B9", en: "Connector" },
-        subsystem: { zh: "\u5B50\u7CFB\u7EDF", en: "Subsystem" }
-      };
-      var TYPE_PREFIXES = Object.keys(TYPE_LABELS);
-      function extractType(fullKey) {
-        if (!fullKey || typeof fullKey !== "string") return null;
-        for (var i = 0; i < TYPE_PREFIXES.length; i++) {
-          if (fullKey.indexOf(TYPE_PREFIXES[i] + ".") === 0) {
-            return TYPE_PREFIXES[i];
-          }
-        }
-        return null;
-      }
-      function extractShortName(fullKey, ns) {
-        if (!fullKey || typeof fullKey !== "string") return fullKey || "";
-        ns = ns || "machine_max";
-        var prefix = "." + ns + ".";
-        var idx = fullKey.indexOf(prefix);
-        if (idx >= 0) {
-          return fullKey.substring(idx + prefix.length);
-        }
-        return fullKey;
-      }
-      function buildFullKey(type, shortName, ns) {
-        if (!shortName) return "";
-        ns = ns || "machine_max";
-        var existingType = extractType(shortName);
-        if (existingType) {
-          shortName = extractShortName(shortName, ns);
-        }
-        if (type) {
-          return type + "." + ns + "." + shortName;
-        }
-        return shortName;
-      }
-      function displayLabel(fullKey, locale, ns) {
-        if (!fullKey || typeof fullKey !== "string") return fullKey || "";
-        var type = extractType(fullKey);
-        var shortName = extractShortName(fullKey, ns);
-        if (!type) return shortName;
-        var labels = TYPE_LABELS[type];
-        var label = labels ? labels[locale] || labels["zh"] || type : type;
-        return "[" + label + "]" + shortName;
-      }
-      function getTargetOptions(variant, ns) {
-        var options = [];
-        ns = ns || "machine_max";
-        if (!variant) return options;
-        var subParts = variant.sub_parts || {};
-        for (var spKey in subParts) {
-          if (!subParts.hasOwnProperty(spKey)) continue;
-          var sp = subParts[spKey];
-          if (!sp || typeof sp !== "object") continue;
-          var connectors = sp.connectors || {};
-          for (var connKey in connectors) {
-            if (!connectors.hasOwnProperty(connKey)) continue;
-            if (options.some(function(o) {
-              return o.fullKey === connKey;
-            })) continue;
-            options.push({
-              type: "connector",
-              shortName: extractShortName(connKey, ns),
-              fullKey: connKey,
-              label: displayLabel(connKey, "zh", ns)
-            });
-          }
-          var subsystems = sp.subsystems || {};
-          for (var ssKey in subsystems) {
-            if (!subsystems.hasOwnProperty(ssKey)) continue;
-            if (options.some(function(o) {
-              return o.fullKey === ssKey;
-            })) continue;
-            options.push({
-              type: "subsystem",
-              shortName: extractShortName(ssKey, ns),
-              fullKey: ssKey,
-              label: displayLabel(ssKey, "zh", ns)
-            });
-          }
-        }
-        return options;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { extractType, extractShortName, buildFullKey, displayLabel, getTargetOptions, TYPE_LABELS, TYPE_PREFIXES };
-      }
-    }
-  });
-
-  // src/generators/lang_generator.js
-  var require_lang_generator = __commonJS({
-    "src/generators/lang_generator.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var nameUtils = require_name_utils();
-      var log2 = createLogger2("GenLang");
-      function _toDisplayName(key) {
-        return key.replace(/_/g, " ").replace(/\b\w/g, function(c) {
-          return c.toUpperCase();
-        });
-      }
-      function generateAllLangs(projectConfig) {
-        var result = {};
-        var zhLang = {};
-        var enLang = {};
-        var ns = projectConfig.namespace || "machine_max";
-        var parts = projectConfig.parts || {};
-        for (var partId in parts) {
-          if (!parts.hasOwnProperty(partId)) continue;
-          var partConfig = parts[partId];
-          var partKey = ns + "." + partId;
-          enLang[partKey] = _toDisplayName(partId);
-          zhLang[partKey] = _toDisplayName(partId);
-          var variants = partConfig.variants || {};
-          var variantMap;
-          if (typeof variants.model === "string") {
-            variantMap = { _default: variants };
-          } else {
-            variantMap = variants;
-          }
-          for (var variantName in variantMap) {
-            if (!variantMap.hasOwnProperty(variantName)) continue;
-            var variant = variantMap[variantName];
-            var subParts = variant.sub_parts || {};
-            var subPartMap;
-            if (typeof subParts.durability === "number") {
-              subPartMap = { _single: subParts };
-            } else {
-              subPartMap = subParts;
-            }
-            for (var subPartKey in subPartMap) {
-              if (!subPartMap.hasOwnProperty(subPartKey)) continue;
-              var subPart = subPartMap[subPartKey];
-              if (!subPart || typeof subPart !== "object") continue;
-              if (subPartKey !== "_single" && subPartKey !== "sub_part." + ns + ".main") {
-                var spShortName = nameUtils.extractShortName(subPartKey, ns);
-                enLang[subPartKey] = _toDisplayName(spShortName);
-                zhLang[subPartKey] = _toDisplayName(spShortName);
-              }
-              var interactBoxes = subPart.interact_boxes || {};
-              for (var interactKey in interactBoxes) {
-                if (!interactBoxes.hasOwnProperty(interactKey)) continue;
-                var ibShortName = nameUtils.extractShortName(interactKey, ns);
-                enLang[interactKey] = _toDisplayName(ibShortName);
-                zhLang[interactKey] = _toDisplayName(ibShortName);
-              }
-              var connectors = subPart.connectors || {};
-              for (var connectorKey in connectors) {
-                if (!connectors.hasOwnProperty(connectorKey)) continue;
-                var connShortName = nameUtils.extractShortName(connectorKey, ns);
-                enLang[connectorKey] = _toDisplayName(connShortName);
-                zhLang[connectorKey] = _toDisplayName(connShortName);
-              }
-              var subsystems = subPart.subsystems || {};
-              for (var subsystemKey in subsystems) {
-                if (!subsystems.hasOwnProperty(subsystemKey)) continue;
-                var ssShortName = nameUtils.extractShortName(subsystemKey, ns);
-                enLang[subsystemKey] = _toDisplayName(ssShortName);
-                zhLang[subsystemKey] = _toDisplayName(ssShortName);
-              }
-            }
-          }
-        }
-        result["zh_cn"] = zhLang;
-        result["en_us"] = enLang;
-        log2.info("generateAllLangs: \u5DF2\u751F\u6210\u672C\u5730\u5316\uFF0C\u952E\u6570=" + Object.keys(zhLang).length);
-        return result;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { generateAllLangs };
-      }
-    }
-  });
-
-  // src/generators/part_generator.js
-  var require_part_generator = __commonJS({
-    "src/generators/part_generator.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var { PartCodec } = require_part_codec();
-      var log2 = createLogger2("GenPart");
-      function generatePartJSON(partConfig) {
-        return PartCodec.encode(partConfig);
-      }
-      function _resolveUUIDKeys(obj) {
-        var resolved = {};
-        for (var key in obj) {
-          var boneName = key;
-          if (typeof Group !== "undefined" && Group.all) {
-            var group = Group.all.find(function(g) {
-              return g.uuid === key;
-            });
-            if (group) boneName = group.name;
-          }
-          resolved[boneName] = obj[key];
-        }
-        return resolved;
-      }
-      function _resolveAllUUIDKeys(partConfig) {
-        if (!partConfig || !partConfig.variants) return partConfig;
-        for (var vKey in partConfig.variants) {
-          var sub_parts = partConfig.variants[vKey].sub_parts;
-          if (!sub_parts) continue;
-          for (var spKey in sub_parts) {
-            var sp = sub_parts[spKey];
-            if (!sp) continue;
-            if (sp.hit_boxes && typeof sp.hit_boxes === "object") {
-              sp.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
-            }
-            if (sp.interact_boxes && typeof sp.interact_boxes === "object") {
-              sp.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
-            }
-          }
-        }
-        return partConfig;
-      }
-      function _cleanProjectileTypes(partConfig) {
-        if (!partConfig || !partConfig.variants) return;
-        var PLACEHOLDER_PREFIX = "__new_p_";
-        for (var vKey in partConfig.variants) {
-          var sub_parts = partConfig.variants[vKey].sub_parts;
-          if (!sub_parts) continue;
-          for (var spKey in sub_parts) {
-            var sp = sub_parts[spKey];
-            if (!sp || !sp.subsystems) continue;
-            for (var ssKey in sp.subsystems) {
-              var ss = sp.subsystems[ssKey];
-              if (!ss || ss.type !== "machine_max:regen_loader") continue;
-              var pt = ss.projectile_types;
-              if (!pt || typeof pt !== "object") continue;
-              for (var k in pt) {
-                if (pt.hasOwnProperty(k) && k.indexOf(PLACEHOLDER_PREFIX) === 0) {
-                  delete pt[k];
-                }
-              }
-            }
-          }
-        }
-      }
-      function generateAllParts(projectConfig) {
-        const parts = projectConfig.parts || {};
-        const result = {};
-        for (const [partId, partConfig] of Object.entries(parts)) {
-          var cloned = JSON.parse(JSON.stringify(partConfig));
-          _resolveAllUUIDKeys(cloned);
-          _cleanProjectileTypes(cloned);
-          result[partId] = generatePartJSON(cloned);
-        }
-        log2.info("generateAllParts: \u5DF2\u751F\u6210 " + Object.keys(result).length + " \u4E2A\u96F6\u4EF6");
-        return result;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { generatePartJSON, generateAllParts };
-      }
-    }
-  });
-
-  // src/generators/connector_generator.js
-  var require_connector_generator = __commonJS({
-    "src/generators/connector_generator.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var fileWriter = require_file_writer();
-      var path = __require("path");
-      var fs = __require("fs");
-      var log2 = createLogger2("GenConnector");
-      function copyConnectorDefs(packDir, ns, targetDir, flat) {
-        var count = 0;
-        var srcDir = path.join(packDir, ns, "connectors");
-        if (!fs.existsSync(srcDir)) {
-          log2.warn("copyConnectorDefs: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
-          return 0;
-        }
-        var files = fs.readdirSync(srcDir);
-        function resolveTarget(baseDir, id2, isFlat) {
-          if (isFlat) return baseDir;
-          var seg = id2.split("_")[0];
-          return seg && seg.length > 0 ? path.join(baseDir, seg) : baseDir;
-        }
-        for (var i = 0; i < files.length; i++) {
-          var fileName = files[i];
-          if (!fileName.endsWith(".json")) continue;
-          var srcFile = path.join(srcDir, fileName);
-          try {
-            var raw = fs.readFileSync(srcFile, "utf8");
-            var content = JSON.parse(fileWriter.stripJsonComments(raw));
-            var id = fileName.slice(0, -5);
-            var loc = fileWriter.extractResourceLocation(id, ns);
-            var tDir = resolveTarget(targetDir, loc.path, flat);
-            fileWriter.writeJSONFile(tDir, loc.path + ".json", content);
-            count++;
-          } catch (e) {
-            log2.warn("\u590D\u5236\u8FDE\u63A5\u70B9\u6587\u4EF6\u5931\u8D25: " + srcFile, e);
-          }
-        }
-        log2.info("copyConnectorDefs: \u5DF2\u590D\u5236 " + count + " \u4E2A\u8FDE\u63A5\u70B9\u5B9A\u4E49");
-        return count;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { copyConnectorDefs };
-      }
-    }
-  });
-
-  // src/generators/subsystem_generator.js
-  var require_subsystem_generator = __commonJS({
-    "src/generators/subsystem_generator.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var fileWriter = require_file_writer();
-      var path = __require("path");
-      var fs = __require("fs");
-      var log2 = createLogger2("GenSubsystem");
-      function copySubsystemDefs(packDir, ns, targetDir, flat) {
-        var count = 0;
-        var srcDir = path.join(packDir, ns, "subsystems");
-        if (!fs.existsSync(srcDir)) {
-          log2.warn("copySubsystemDefs: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
-          return 0;
-        }
-        var files = fs.readdirSync(srcDir);
-        function resolveTarget(baseDir, id2, isFlat) {
-          if (isFlat) return baseDir;
-          var seg = id2.split("_")[0];
-          return seg && seg.length > 0 ? path.join(baseDir, seg) : baseDir;
-        }
-        for (var i = 0; i < files.length; i++) {
-          var fileName = files[i];
-          if (!fileName.endsWith(".json")) continue;
-          var srcFile = path.join(srcDir, fileName);
-          try {
-            var raw = fs.readFileSync(srcFile, "utf8");
-            var content = JSON.parse(fileWriter.stripJsonComments(raw));
-            var id = fileName.slice(0, -5);
-            var loc = fileWriter.extractResourceLocation(id, ns);
-            var tDir = resolveTarget(targetDir, loc.path, flat);
-            fileWriter.writeJSONFile(tDir, loc.path + ".json", content);
-            count++;
-          } catch (e) {
-            log2.warn("\u590D\u5236\u5B50\u7CFB\u7EDF\u6587\u4EF6\u5931\u8D25: " + srcFile, e);
-          }
-        }
-        log2.info("copySubsystemDefs: \u5DF2\u590D\u5236 " + count + " \u4E2A\u5B50\u7CFB\u7EDF\u5B9A\u4E49");
-        return count;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { copySubsystemDefs };
-      }
-    }
-  });
-
-  // src/generators/material_generator.js
-  var require_material_generator = __commonJS({
-    "src/generators/material_generator.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var fileWriter = require_file_writer();
-      var path = __require("path");
-      var fs = __require("fs");
-      var log2 = createLogger2("GenMaterial");
-      function copyMaterialDefs(packDir, ns, targetDir) {
-        var count = 0;
-        var srcDir = path.join(packDir, ns, "materials");
-        if (!fs.existsSync(srcDir)) {
-          log2.warn("copyMaterialDefs: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
-          return 0;
-        }
-        var files = fs.readdirSync(srcDir);
-        for (var i = 0; i < files.length; i++) {
-          var fileName = files[i];
-          if (!fileName.endsWith(".json")) continue;
-          var srcFile = path.join(srcDir, fileName);
-          try {
-            var raw = fs.readFileSync(srcFile, "utf8");
-            var content = JSON.parse(fileWriter.stripJsonComments(raw));
-            var id = fileName.slice(0, -5);
-            var loc = fileWriter.extractResourceLocation(id, ns);
-            fileWriter.writeJSONFile(targetDir, loc.path + ".json", content);
-            count++;
-          } catch (e) {
-            log2.warn("\u590D\u5236\u6750\u6599\u6587\u4EF6\u5931\u8D25: " + srcFile, e);
-          }
-        }
-        log2.info("copyMaterialDefs: \u5DF2\u590D\u5236 " + count + " \u4E2A\u6750\u6599\u5B9A\u4E49");
-        return count;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = { copyMaterialDefs };
-      }
-    }
-  });
-
-  // src/ui/export/export_pipeline.js
-  var require_export_pipeline = __commonJS({
-    "src/ui/export/export_pipeline.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var fileWriter = require_file_writer();
-      var log2 = createLogger2("ExportPipeline");
-      function executeExport(config, packMeta, exportDir, packFolderName) {
-        var fs = __require("fs");
-        var path = __require("path");
-        if (!fs.existsSync(exportDir)) {
-          fs.mkdirSync(exportDir, { recursive: true });
-        }
-        var packRoot = path.join(exportDir, packFolderName);
-        if (!fs.existsSync(packRoot)) {
-          fs.mkdirSync(packRoot, { recursive: true });
-        }
-        var ns = config.namespace || "machine_max";
-        var stats = { parts: 0, connectors: 0, subsystems: 0, materials: 0, langs: 0 };
-        var isFlat = packMeta.flat_export !== false;
-        function _resolveTargetDir(baseDir, id, flat) {
-          if (flat) return baseDir;
-          var seg = id.split("_")[0];
-          return seg && seg.length > 0 ? path.join(baseDir, seg) : baseDir;
-        }
-        function _writeSchemasFromConstant(destBaseDir) {
-          var schemasRaw = typeof define_SCHEMAS_default !== "undefined" ? define_SCHEMAS_default : null;
-          if (!schemasRaw) {
-            log2.warn("_writeSchemasFromConstant: __SCHEMAS__ \u672A\u6CE8\u5165\u6216\u4E3A\u7A7A\uFF0CSchema \u6587\u4EF6\u5C06\u4E0D\u4F1A\u5199\u5165");
-            return;
-          }
-          var schemas = typeof schemasRaw === "string" ? JSON.parse(schemasRaw) : schemasRaw;
-          var keys = Object.keys(schemas);
-          for (var i = 0; i < keys.length; i++) {
-            var relPath = keys[i];
-            var destPath = path.join(destBaseDir, relPath);
-            fileWriter.ensureDir(path.dirname(destPath));
-            fs.writeFileSync(destPath, schemas[relPath], "utf-8");
-          }
-          log2.info("_writeSchemasFromConstant: \u5DF2\u5199\u5165 " + keys.length + " \u4E2A schema \u6587\u4EF6");
-        }
-        function _getSchemaLocale() {
-          var lang = "";
-          if (typeof navigator !== "undefined" && navigator.language) {
-            lang = navigator.language;
-          } else if (typeof Blockbench !== "undefined" && Blockbench.locale) {
-            lang = Blockbench.locale;
-          }
-          return lang.indexOf("zh") === 0 ? "zh_cn" : "en_us";
-        }
-        function _injectSchemaReferences(nsDir) {
-          var schemaLocale = _getSchemaLocale();
-          var schemaMap = {
-            parts: "docs/" + schemaLocale + "/schemas/part_definition_schema.json",
-            connectors: "docs/" + schemaLocale + "/schemas/part/subpart/connector/connector_static_attr.schema.json",
-            subsystems: "docs/" + schemaLocale + "/schemas/subsystem/subsystem_static_attr.schema.json",
-            materials: "docs/" + schemaLocale + "/schemas/base/material_attr.schema.json"
-          };
-          var recipeSchemaMap = {
-            "machine_max:research": "docs/" + schemaLocale + "/schemas/recipe/research_recipe.schema.json",
-            "machine_max:fabricating": "docs/" + schemaLocale + "/schemas/recipe/fabricating_recipe.schema.json",
-            "machine_max:blueprint_research": "docs/" + schemaLocale + "/schemas/recipe/blueprint_research_recipe.schema.json"
-          };
-          var dirs = ["parts", "connectors", "subsystems", "materials", "recipe"];
-          for (var d = 0; d < dirs.length; d++) {
-            var typeDir = path.join(nsDir, dirs[d]);
-            if (!fs.existsSync(typeDir)) continue;
-            _walkAndInject(typeDir, nsDir, dirs[d], schemaMap, recipeSchemaMap);
-          }
-        }
-        function _walkAndInject(currentDir, nsDir, typeName, schemaMap, recipeSchemaMap) {
-          var entries = fs.readdirSync(currentDir);
-          for (var e = 0; e < entries.length; e++) {
-            var fullPath = path.join(currentDir, entries[e]);
-            var stat = fs.statSync(fullPath);
-            if (stat.isDirectory()) {
-              _walkAndInject(fullPath, nsDir, typeName, schemaMap, recipeSchemaMap);
-            } else if (entries[e].endsWith(".json")) {
-              try {
-                var rawContent = fs.readFileSync(fullPath, "utf8");
-                var content = JSON.parse(fileWriter.stripJsonComments(rawContent));
-                var schemaRel;
-                if (typeName === "recipe") {
-                  schemaRel = recipeSchemaMap[content.type] || "docs/schemas/recipe/research_recipe.schema.json";
-                } else {
-                  schemaRel = schemaMap[typeName];
-                }
-                if (!schemaRel) continue;
-                var relDir = path.relative(path.dirname(fullPath), nsDir);
-                var schemaPath = path.join(relDir, schemaRel).replace(/\\/g, "/");
-                content["$schema"] = schemaPath;
-                fs.writeFileSync(fullPath, JSON.stringify(content, null, 2), "utf8");
-              } catch (_err) {
-                log2.warn("\u6CE8\u5165 $schema \u5931\u8D25: " + fullPath, _err);
-              }
-            }
-          }
-        }
-        var genMeta = require_meta_generator();
-        var savedPackMeta = config.packMeta;
-        config.packMeta = packMeta;
-        var meta = genMeta.generateMeta(config);
-        config.packMeta = savedPackMeta;
-        fileWriter.writeJSONFile(packRoot, "meta.json", meta);
-        var _emptyDirs = [
-          "textures/hud",
-          "textures/icon",
-          "textures/part",
-          "models/hud",
-          "huds",
-          "animations/hud",
-          "animations/part",
-          "assemblies",
-          "font",
-          "tooltips",
-          "templates",
-          "docs"
-        ];
-        var _nsDir = path.join(packRoot, ns);
-        for (var _ei = 0; _ei < _emptyDirs.length; _ei++) {
-          fileWriter.ensureDir(path.join(_nsDir, _emptyDirs[_ei]));
-        }
-        _writeSchemasFromConstant(path.join(_nsDir, "docs"));
-        try {
-          if (typeof Codecs !== "undefined" && Codecs.bedrock && Project) {
-            var modelDir = path.join(packRoot, ns, "models", "part");
-            var modelName = Project.geometry_name || Project.name || "model";
-            var geoContent = Codecs.bedrock.compile();
-            fileWriter.writeTextFile(modelDir, modelName + ".geo.json", geoContent);
-            log2.info("\u5DF2\u5BFC\u51FA Bedrock \u51E0\u4F55\u4F53\u6A21\u578B: " + modelName + ".geo.json");
-          }
-        } catch (e) {
-          log2.warn("\u65E0\u6CD5\u5BFC\u51FA Bedrock \u51E0\u4F55\u4F53\u6A21\u578B\uFF08\u53EF\u80FD\u975E Bedrock \u683C\u5F0F\uFF09", e);
-        }
-        var genLang = require_lang_generator();
-        var allLangs = genLang.generateAllLangs(config);
-        if (allLangs) {
-          var langDir = path.join(packRoot, ns, "lang");
-          for (var locale in allLangs) {
-            if (allLangs.hasOwnProperty(locale)) {
-              fileWriter.mergeJSONFile(langDir, locale + ".json", allLangs[locale]);
-              stats.langs++;
-            }
-          }
-        }
-        var genParts = require_part_generator();
-        var allParts = genParts.generateAllParts(config);
-        var partsBaseDir = path.join(packRoot, ns, "parts");
-        for (var partId in allParts) {
-          if (allParts.hasOwnProperty(partId)) {
-            var partsTargetDir = _resolveTargetDir(partsBaseDir, partId, isFlat);
-            fileWriter.writeJSONFile(partsTargetDir, partId + ".json", allParts[partId]);
-            stats.parts++;
-          }
-        }
-        if (config.recipes && Object.keys(config.recipes).length > 0) {
-          var recipeDir = path.join(packRoot, ns, "recipe");
-          for (var recipeId in config.recipes) {
-            if (config.recipes.hasOwnProperty(recipeId)) {
-              fileWriter.writeJSONFile(recipeDir, recipeId + ".json", config.recipes[recipeId]);
-            }
-          }
-        }
-        var packDir = config.contentPackPath;
-        if (packDir && fs.existsSync(packDir)) {
-          var genConn = require_connector_generator();
-          var genSub = require_subsystem_generator();
-          var genMat = require_material_generator();
-          stats.connectors = genConn.copyConnectorDefs(packDir, ns, path.join(packRoot, ns, "connectors"), isFlat);
-          stats.subsystems = genSub.copySubsystemDefs(packDir, ns, path.join(packRoot, ns, "subsystems"), isFlat);
-          stats.materials = genMat.copyMaterialDefs(packDir, ns, path.join(packRoot, ns, "materials"));
-          var depSrcDir = path.join(packDir, "dependency");
-          if (fs.existsSync(depSrcDir)) {
-            var depTargetDir = path.join(packRoot, "dependency");
-            fileWriter.ensureDir(depTargetDir);
-            var depFiles = fs.readdirSync(depSrcDir);
-            var j, depFile, depSrcFile, depContent;
-            for (j = 0; j < depFiles.length; j++) {
-              depFile = depFiles[j];
-              if (depFile.indexOf(".json") !== depFile.length - 5) continue;
-              depSrcFile = path.join(depSrcDir, depFile);
-              try {
-                depContent = fs.readFileSync(depSrcFile, "utf8");
-                fs.writeFileSync(path.join(depTargetDir, depFile), depContent, "utf8");
-              } catch (e) {
-                log2.warn("\u590D\u5236\u4F9D\u8D56\u5305\u5B9A\u4E49\u5931\u8D25: " + depSrcFile, e);
-              }
-            }
-          }
-        } else {
-          log2.warn("\u5185\u5BB9\u5305\u76EE\u5F55\u672A\u8BBE\u7F6E\u6216\u4E0D\u5B58\u5728\uFF0C\u8DF3\u8FC7\u8FDE\u63A5\u70B9/\u5B50\u7CFB\u7EDF/\u6750\u6599\u590D\u5236: " + packDir);
-        }
-        _injectSchemaReferences(_nsDir);
-        log2.info("\u5BFC\u51FA\u5B8C\u6210, \u96F6\u4EF6=" + stats.parts + ", \u8FDE\u63A5\u70B9=" + stats.connectors + ", \u5B50\u7CFB\u7EDF=" + stats.subsystems + ", \u6750\u6599=" + stats.materials + ", \u8BED\u8A00=" + stats.langs);
-        return stats;
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          executeExport
-        };
-      }
-    }
-  });
-
-  // src/core/undo.js
-  var require_undo = __commonJS({
-    "src/core/undo.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("Undo");
-      var PROPERTY_NAME = "machine_max_plugin";
-      var ASPECT_FLAG = "machine_max";
-      var SNAPSHOT_KEY = "machine_max_plugin_snapshot";
-      var RESTORED_EVENT = "mm_config_restored";
-      var MAX_SNAPSHOT_BYTES = 2 * 1024 * 1024;
-      var COALESCE_WINDOW_MS = 800;
-      var _listeners = [];
-      var _depth = 0;
-      var _restoring = false;
-      var _lastBlockedNoticeAt = 0;
-      var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
-      function getUndo() {
-        try {
-          if (typeof Undo !== "undefined" && Undo) return Undo;
-          if (typeof Blockbench !== "undefined" && Blockbench && Blockbench.Undo) return Blockbench.Undo;
-        } catch (e) {
-          log2.debug("getUndo: Undo \u4E0D\u53EF\u7528", e && e.message);
-        }
-        return null;
-      }
-      function getProjectConfig() {
-        if (typeof Project === "undefined" || !Project || Project === 0) return null;
-        return Project[PROPERTY_NAME] || null;
-      }
-      function deepClone(value) {
-        if (value === null || typeof value !== "object") return value;
-        if (typeof structuredClone === "function") {
-          try {
-            return structuredClone(value);
-          } catch (e) {
-            log2.debug("deepClone: structuredClone \u5931\u8D25\uFF0C\u964D\u7EA7 JSON", e && e.message);
-          }
-        }
-        return JSON.parse(JSON.stringify(value));
-      }
-      function estimateSize(value) {
-        try {
-          return JSON.stringify(value === void 0 ? null : value).length;
-        } catch (e) {
-          return MAX_SNAPSHOT_BYTES + 1;
-        }
-      }
-      function createSnapshot() {
-        var cfg = getProjectConfig();
-        if (!cfg || typeof cfg !== "object") return null;
-        var copy;
-        try {
-          copy = deepClone(cfg);
-        } catch (e) {
-          log2.error("createSnapshot: \u6DF1\u62F7\u8D1D\u5931\u8D25\uFF0C\u672C\u6761\u8BB0\u5F55\u4E0D\u542B\u914D\u7F6E\u5FEB\u7167", e);
-          return null;
-        }
-        if (copy && typeof copy === "object") {
-          delete copy._uiState;
-        }
-        var uuid = typeof Project !== "undefined" && Project && Project.uuid ? Project.uuid : "";
-        return { project_uuid: uuid, config: copy };
-      }
-      function reconcileUiState(config, uiState) {
-        var next = uiState && typeof uiState === "object" ? uiState : {};
-        var parts = config && config.parts && typeof config.parts === "object" ? config.parts : {};
-        var partIds = Object.keys(parts);
-        var activePartId = next.activePartId;
-        if (!activePartId || !hasOwn(parts, activePartId)) {
-          activePartId = partIds.length > 0 ? partIds[0] : "";
-          next.activeVariantName = "";
-        }
-        var variants = {};
-        if (activePartId && parts[activePartId] && parts[activePartId].variants) {
-          variants = parts[activePartId].variants;
-        }
-        var variantNames = Object.keys(variants);
-        var activeVariantName = next.activeVariantName;
-        if (!activeVariantName || variantNames.indexOf(activeVariantName) === -1) {
-          activeVariantName = variantNames.length > 0 ? variantNames[0] : activePartId ? "default" : "";
-        }
-        next.activePartId = activePartId;
-        next.activeVariantName = activeVariantName;
-        if (!next.activeMode) next.activeMode = "machine_max_part";
-        if (next._pendingSubsystemNav === void 0) next._pendingSubsystemNav = null;
-        return next;
-      }
-      function refreshAfterRestore() {
-        try {
-          require_icons().refreshOutlinerIcons();
-        } catch (e) {
-          log2.warn("refreshAfterRestore: \u5237\u65B0 Outliner \u56FE\u6807\u5931\u8D25", e && e.message);
-        }
-        try {
-          require_content_pack_manager().invalidateCache();
-        } catch (e) {
-          log2.warn("refreshAfterRestore: \u6E05\u7406\u5185\u5BB9\u5305\u7F13\u5B58\u5931\u8D25", e && e.message);
-        }
-        if (typeof Blockbench === "undefined" || typeof Blockbench.dispatchEvent !== "function") return;
-        try {
-          Blockbench.dispatchEvent(RESTORED_EVENT, {});
-        } catch (e) {
-          log2.warn("refreshAfterRestore: \u6D3E\u53D1 " + RESTORED_EVENT + " \u5931\u8D25", e && e.message);
-        }
-        try {
-          Blockbench.dispatchEvent("update_selection");
-        } catch (e) {
-          log2.warn("refreshAfterRestore: \u6D3E\u53D1 update_selection \u5931\u8D25", e && e.message);
-        }
-      }
-      function onCreateUndoSave(data) {
-        if (!data || !data.aspects || !data.aspects[ASPECT_FLAG]) return;
-        if (!data.save) return;
-        var snapshot = createSnapshot();
-        if (!snapshot) return;
-        data.save[SNAPSHOT_KEY] = snapshot;
-        log2.debug("create_undo_save: \u5DF2\u6302\u914D\u7F6E\u5FEB\u7167", {
-          parts: snapshot.config && snapshot.config.parts ? Object.keys(snapshot.config.parts).length : 0,
-          size: estimateSize(snapshot.config)
-        });
-      }
-      function applySnapshot(live, next) {
-        if (typeof Project === "undefined" || !Project || Project === 0) return;
-        if (!live || typeof live !== "object") {
-          Project[PROPERTY_NAME] = next;
-          return;
-        }
-        var key;
-        for (key in next) {
-          if (hasOwn(next, key)) live[key] = next[key];
-        }
-        for (key in live) {
-          if (hasOwn(live, key) && !hasOwn(next, key)) delete live[key];
-        }
-        Project[PROPERTY_NAME] = live;
-      }
-      function onLoadUndoSave(data) {
-        if (!data || !data.save) return;
-        var snapshot = data.save[SNAPSHOT_KEY];
-        if (!snapshot || !snapshot.config) return;
-        if (typeof Project === "undefined" || !Project || Project === 0) return;
-        var currentUuid = Project.uuid || "";
-        if (snapshot.project_uuid && currentUuid && snapshot.project_uuid !== currentUuid) {
-          log2.warn("load_undo_save: \u5FEB\u7167\u5C5E\u4E8E\u5176\u4ED6\u5DE5\u7A0B\uFF0C\u8DF3\u8FC7", {
-            snapshot: snapshot.project_uuid,
-            current: currentUuid
-          });
-          return;
-        }
-        _restoring = true;
-        try {
-          var live = Project[PROPERTY_NAME];
-          var uiState = live && live._uiState && typeof live._uiState === "object" ? deepClone(live._uiState) : null;
-          var next = deepClone(snapshot.config) || {};
-          next._uiState = reconcileUiState(next, uiState);
-          applySnapshot(live, next);
-          log2.debug("load_undo_save: \u914D\u7F6E\u5DF2\u6062\u590D", {
-            parts: Project[PROPERTY_NAME] && Project[PROPERTY_NAME].parts ? Object.keys(Project[PROPERTY_NAME].parts).length : 0,
-            activePartId: next._uiState.activePartId,
-            activeVariantName: next._uiState.activeVariantName
-          });
-          refreshAfterRestore();
-        } catch (e) {
-          log2.error("load_undo_save: \u6062\u590D\u914D\u7F6E\u5931\u8D25", e);
-        } finally {
-          _restoring = false;
-        }
-      }
-      function registerUndoBridge2() {
-        if (_listeners.length > 0) {
-          log2.debug("registerUndoBridge: \u5DF2\u6CE8\u518C\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        if (typeof Blockbench === "undefined" || typeof Blockbench.on !== "function") {
-          log2.warn("registerUndoBridge: Blockbench.on \u4E0D\u53EF\u7528\uFF0C\u8DF3\u8FC7");
-          return;
-        }
-        _listeners.push(Blockbench.on("create_undo_save", onCreateUndoSave));
-        _listeners.push(Blockbench.on("load_undo_save", onLoadUndoSave));
-        log2.info("registerUndoBridge: \u5DF2\u63A5\u5165 Blockbench \u539F\u751F\u64A4\u9500\uFF08aspect=" + ASPECT_FLAG + "\uFF09");
-      }
-      function unregisterUndoBridge2() {
-        for (var i = 0; i < _listeners.length; i++) {
-          try {
-            if (typeof _listeners[i] === "function") _listeners[i]();
-          } catch (e) {
-            log2.warn("unregisterUndoBridge: \u6E05\u7406\u76D1\u542C\u5931\u8D25", e && e.message);
-          }
-        }
-        _listeners.length = 0;
-        _depth = 0;
-        log2.info("unregisterUndoBridge: \u5DF2\u79FB\u9664\u64A4\u9500\u6865\u76D1\u542C");
-      }
-      function _runUnrecorded(opts, label, mutate, reason) {
-        if (opts && opts.strict) {
-          var err = new Error("\u201C" + label + "\u201D\u65E0\u6CD5\u8FDB\u5165\u64A4\u9500\u6808\uFF1A" + reason);
-          log2.warn("runConfigEdit: " + err.message);
-          throw err;
-        }
-        log2.warn("runConfigEdit: \u672A\u8BB0\u5F55\u64A4\u9500\uFF08" + reason + "\uFF09\uFF1A" + label);
-        var now = Date.now();
-        if (now - _lastBlockedNoticeAt > 5e3) {
-          _lastBlockedNoticeAt = now;
-          try {
-            require_notify().showToast("\u8BE5\u64CD\u4F5C\u5DF2\u6267\u884C\uFF0C\u4F46\u672A\u80FD\u8FDB\u5165\u64A4\u9500\u6808\uFF1A" + reason, "warning");
-          } catch (e) {
-            log2.debug("runConfigEdit: \u63D0\u793A\u4E0D\u53EF\u7528", e && e.message);
-          }
-        }
-        return mutate();
-      }
-      function _coalesceWithPrevious(undo, label, mergeKey) {
-        try {
-          var history = undo.history;
-          if (!Array.isArray(history) || history.length < 2) return;
-          var current = history[history.length - 1];
-          var previous = history[history.length - 2];
-          if (!current || !previous) return;
-          if (previous.type !== "edit" || current.type !== "edit") return;
-          if (previous.action !== label) return;
-          if (previous._mmMergeKey !== mergeKey) return;
-          if (!(Date.now() - (previous.time || 0) < COALESCE_WINDOW_MS)) return;
-          var prevPost = previous.post && previous.post[SNAPSHOT_KEY];
-          var curBefore = current.before && current.before[SNAPSHOT_KEY];
-          if (!prevPost || !curBefore) return;
-          if (estimateSize(prevPost.config) !== estimateSize(curBefore.config)) return;
-          if (JSON.stringify(prevPost.config) !== JSON.stringify(curBefore.config)) return;
-          previous.post = current.post;
-          previous.time = current.time;
-          history.pop();
-          undo.index = history.length;
-          log2.debug('_coalesceWithPrevious: \u5DF2\u5408\u5E76\u8FDE\u7EED\u7F16\u8F91 "' + label + '"');
-        } catch (e) {
-          log2.warn("_coalesceWithPrevious: \u5408\u5E76\u5931\u8D25\uFF08\u5FFD\u7565\uFF09", e && e.message);
-        }
-      }
-      function _discardEmptyEntry(undo, wasSaved) {
-        try {
-          var history = undo.history;
-          if (!Array.isArray(history) || history.length === 0) return false;
-          var entry = history[history.length - 1];
-          if (!entry || entry.type !== "edit") return false;
-          var beforeSnap = entry.before && entry.before[SNAPSHOT_KEY];
-          var postSnap = entry.post && entry.post[SNAPSHOT_KEY];
-          if (!beforeSnap || !postSnap) return false;
-          if (JSON.stringify(beforeSnap.config) !== JSON.stringify(postSnap.config)) return false;
-          history.pop();
-          undo.index = history.length;
-          if (typeof Project !== "undefined" && Project) Project.saved = wasSaved;
-          log2.debug('_discardEmptyEntry: \u5DF2\u4E22\u5F03\u7A7A\u8BB0\u5F55 "' + (entry.action || "") + '"');
-          return true;
-        } catch (e) {
-          log2.warn("_discardEmptyEntry: \u5224\u65AD\u5931\u8D25\uFF08\u5FFD\u7565\uFF09", e && e.message);
-          return false;
-        }
-      }
-      function runConfigEdit(label, mutate, options) {
-        if (typeof mutate !== "function") {
-          throw new TypeError("runConfigEdit: mutate \u5FC5\u987B\u662F\u51FD\u6570");
-        }
-        var opts = options || {};
-        var text = typeof label === "string" && label ? label : "MachineMax \u7F16\u8F91";
-        if (_depth > 0) {
-          _depth++;
-          try {
-            return mutate();
-          } finally {
-            _depth--;
-          }
-        }
-        var undo = getUndo();
-        if (_restoring || !undo || typeof undo.initEdit !== "function" || !getProjectConfig()) {
-          return mutate();
-        }
-        if (undo.current_save) {
-          return _runUnrecorded(opts, text, mutate, "\u7F16\u8F91\u5668\u6709\u672A\u5B8C\u6210\u7684\u7F16\u8F91\uFF08\u62D6\u62FD / \u7ED8\u5236 / \u8F93\u5165\u63D0\u4EA4\u4E2D\uFF09\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
-        }
-        var before = createSnapshot();
-        if (before && estimateSize(before.config) > MAX_SNAPSHOT_BYTES) {
-          return _runUnrecorded(opts, text, mutate, "\u914D\u7F6E\u5FEB\u7167\u8D85\u8FC7 2 MB");
-        }
-        var aspects = {};
-        aspects[ASPECT_FLAG] = true;
-        var wasSaved = typeof Project !== "undefined" && Project ? Project.saved : true;
-        try {
-          undo.initEdit(aspects);
-        } catch (e) {
-          log2.error("runConfigEdit: initEdit \u5931\u8D25\uFF0C\u9000\u5316\u4E3A\u4E0D\u8BB0\u5F55\u6267\u884C", e);
-          return mutate();
-        }
-        _depth = 1;
-        var result;
-        try {
-          result = mutate();
-        } catch (e) {
-          _depth = 0;
-          try {
-            undo.cancelEdit(true);
-          } catch (rollbackError) {
-            log2.error("runConfigEdit: \u53D8\u66F4\u5931\u8D25\u4E14\u56DE\u6EDA\u5931\u8D25", rollbackError);
-          }
-          throw e;
-        }
-        _depth = 0;
-        var discarded = false;
-        try {
-          undo.finishEdit(text, aspects);
-          discarded = _discardEmptyEntry(undo, wasSaved);
-          if (!discarded && opts.coalesce === true && opts.mergeKey) {
-            var entry = undo.history && undo.history[undo.history.length - 1];
-            if (entry) entry._mmMergeKey = opts.mergeKey;
-            _coalesceWithPrevious(undo, text, opts.mergeKey);
-          }
-        } catch (e) {
-          log2.error("runConfigEdit: finishEdit \u5931\u8D25", e);
-        }
-        if (!discarded && typeof Blockbench !== "undefined" && typeof Blockbench.dispatchEvent === "function") {
-          try {
-            Blockbench.dispatchEvent("update_selection");
-          } catch (e) {
-            log2.debug("runConfigEdit: \u6D3E\u53D1 update_selection \u5931\u8D25", e && e.message);
-          }
-        }
-        return result;
-      }
-      function withUndoEdit(label, fn) {
-        if (typeof fn !== "function") return fn;
-        return function() {
-          var self = this;
-          var args = arguments;
-          var text = typeof label === "function" ? label.apply(self, args) : label;
-          return runConfigEdit(text, function() {
-            return fn.apply(self, args);
-          });
-        };
-      }
-      function wrapMethodMap(methods, labels) {
-        if (!methods || !labels) return methods;
-        for (var name in labels) {
-          if (!hasOwn(labels, name)) continue;
-          var original = methods[name];
-          if (typeof original !== "function") {
-            log2.warn("wrapMethodMap: \u65B9\u6CD5\u4E0D\u5B58\u5728\u6216\u4E0D\u662F\u51FD\u6570\uFF0C\u8DF3\u8FC7: " + name);
-            continue;
-          }
-          methods[name] = withUndoEdit(labels[name], original);
-        }
-        return methods;
-      }
-      function isEditInProgress() {
-        var undo = getUndo();
-        return !!(undo && undo.current_save);
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          PROPERTY_NAME,
-          ASPECT_FLAG,
-          SNAPSHOT_KEY,
-          RESTORED_EVENT,
-          registerUndoBridge: registerUndoBridge2,
-          unregisterUndoBridge: unregisterUndoBridge2,
-          runConfigEdit,
-          withUndoEdit,
-          wrapMethodMap,
-          refreshAfterRestore,
-          isEditInProgress,
-          getUndo,
-          // 供测试使用
-          _internals: {
-            createSnapshot,
-            deepClone,
-            reconcileUiState,
-            estimateSize,
-            onCreateUndoSave,
-            onLoadUndoSave
-          }
-        };
       }
     }
   });
@@ -17493,6 +16632,1556 @@
     }
   });
 
+  // src/doc/validate.js
+  var require_validate = __commonJS({
+    "src/doc/validate.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var fieldSpecs = require_field_specs();
+      var keys = require_keys();
+      function isPlainObject(v) {
+        return v !== null && typeof v === "object" && !Array.isArray(v);
+      }
+      function makeError(path, code, expected, got, hint) {
+        return {
+          path: Array.isArray(path) ? path.slice() : [],
+          code,
+          expected,
+          got,
+          hint: hint || ""
+        };
+      }
+      function typeName(v) {
+        if (v === null) return "null";
+        if (Array.isArray(v)) return "array";
+        return typeof v;
+      }
+      function describeBranch(spec) {
+        if (!spec) return "any";
+        if (spec.type) return spec.type;
+        if (spec.oneOf) return "oneOf";
+        return "any";
+      }
+      function validateEnum(spec, value, path) {
+        if (!spec.enum || spec.enum.indexOf(value) >= 0) return [];
+        return [makeError(
+          path,
+          "invalid_enum",
+          spec.enum.slice(),
+          value,
+          "\u5141\u8BB8\u503C\uFF1A" + spec.enum.join(", ")
+        )];
+      }
+      function validateRange(spec, value, path) {
+        var errors = [];
+        if (typeof value !== "number") return errors;
+        if (typeof spec.minimum === "number" && value < spec.minimum) {
+          errors.push(makeError(path, "out_of_range", ">= " + spec.minimum, value));
+        }
+        if (typeof spec.maximum === "number" && value > spec.maximum) {
+          errors.push(makeError(path, "out_of_range", "<= " + spec.maximum, value));
+        }
+        return errors;
+      }
+      function checkType(spec, value, path) {
+        var t = spec.type;
+        if (!t || t === "any") return [];
+        switch (t) {
+          case "string":
+            return typeof value === "string" ? [] : [makeError(path, "type_mismatch", "string", typeName(value))];
+          case "number":
+            return typeof value === "number" && isFinite(value) ? [] : [makeError(path, "type_mismatch", "number", typeName(value))];
+          case "integer":
+            return typeof value === "number" && Number.isInteger(value) ? [] : [makeError(path, "type_mismatch", "integer", typeName(value))];
+          case "boolean":
+            return typeof value === "boolean" ? [] : [makeError(path, "type_mismatch", "boolean", typeName(value))];
+          case "array":
+          case "tuple":
+            return Array.isArray(value) ? [] : [makeError(path, "type_mismatch", "array", typeName(value))];
+          case "object":
+            return isPlainObject(value) ? [] : [makeError(path, "type_mismatch", "object", typeName(value))];
+          default:
+            return [];
+        }
+      }
+      function validateValue(spec, value, path, opts) {
+        opts = opts || {};
+        if (!spec) return [];
+        if (value === null) {
+          if (spec.nullable) return [];
+          return [makeError(path, "type_mismatch", describeBranch(spec) + "\uFF08\u4E0D\u5141\u8BB8 null\uFF09", "null")];
+        }
+        if (Array.isArray(spec.oneOf)) {
+          for (var i = 0; i < spec.oneOf.length; i++) {
+            var branchErrors = validateValue(spec.oneOf[i], value, path, opts);
+            if (branchErrors.length === 0) return [];
+          }
+          return [makeError(
+            path,
+            "type_mismatch",
+            spec.oneOf.map(describeBranch).join(" | "),
+            typeName(value),
+            "\u503C\u4E0D\u5339\u914D\u4EFB\u4F55\u4E00\u4E2A\u5141\u8BB8\u7684\u5206\u652F"
+          )];
+        }
+        var errors = [];
+        errors = errors.concat(checkType(spec, value, path));
+        if (errors.length > 0) return errors;
+        errors = errors.concat(validateEnum(spec, value, path));
+        errors = errors.concat(validateRange(spec, value, path));
+        if (Array.isArray(value)) {
+          if (typeof spec.minItems === "number" && value.length < spec.minItems) {
+            errors.push(makeError(
+              path,
+              "type_mismatch",
+              "array length >= " + spec.minItems,
+              value.length,
+              "\u6570\u7EC4\u957F\u5EA6\u4E0D\u8DB3"
+            ));
+          }
+          if (typeof spec.maxItems === "number" && value.length > spec.maxItems) {
+            errors.push(makeError(
+              path,
+              "type_mismatch",
+              "array length <= " + spec.maxItems,
+              value.length,
+              "\u6570\u7EC4\u957F\u5EA6\u8D85\u51FA"
+            ));
+          }
+          if (spec.type === "tuple" && Array.isArray(spec.tuple)) {
+            var tupleLen = Math.min(value.length, spec.tuple.length);
+            for (var ti = 0; ti < tupleLen; ti++) {
+              errors = errors.concat(validateValue(
+                spec.tuple[ti],
+                value[ti],
+                path.concat([ti]),
+                opts
+              ));
+            }
+          } else if (spec.items) {
+            for (var ai = 0; ai < value.length; ai++) {
+              errors = errors.concat(validateValue(
+                spec.items,
+                value[ai],
+                path.concat([ai]),
+                opts
+              ));
+            }
+          }
+          return errors;
+        }
+        if (isPlainObject(value)) {
+          var objectKeys = Object.keys(value);
+          if (opts.completeness && typeof spec.minProperties === "number" && objectKeys.length < spec.minProperties) {
+            errors.push(makeError(
+              path,
+              "missing_required",
+              "object with >= " + spec.minProperties + " properties",
+              objectKeys.length,
+              "\u81F3\u5C11\u9700\u8981 " + spec.minProperties + " \u4E2A\u6761\u76EE"
+            ));
+          }
+          var known = spec.properties || null;
+          for (var oi = 0; oi < objectKeys.length; oi++) {
+            var key = objectKeys[oi];
+            if (opts.field === "projectile_types" && key.indexOf("__new_p_") === 0) continue;
+            if (known && Object.prototype.hasOwnProperty.call(known, key)) {
+              errors = errors.concat(validateValue(
+                known[key],
+                value[key],
+                path.concat([key]),
+                { field: key, completeness: opts.completeness }
+              ));
+            } else if (spec.additionalProperties === false) {
+              errors.push(makeError(
+                path.concat([key]),
+                "unknown_field",
+                "schema \u672A\u5B9A\u4E49\u7684\u5B57\u6BB5",
+                key,
+                "\u8BE5\u5BF9\u8C61\u4E0D\u5141\u8BB8\u989D\u5916\u5B57\u6BB5"
+              ));
+            } else if (spec.additionalProperties && typeof spec.additionalProperties === "object") {
+              errors = errors.concat(validateValue(
+                spec.additionalProperties,
+                value[key],
+                path.concat([key]),
+                { field: key, completeness: opts.completeness }
+              ));
+            }
+          }
+        }
+        return errors;
+      }
+      function isMissingValue(spec, value) {
+        if (value === void 0 || value === null) return true;
+        if (typeof value === "string" && value.length === 0) return true;
+        if (isPlainObject(value) && spec && spec.minProperties > 0 && Object.keys(value).length < spec.minProperties) {
+          return true;
+        }
+        return false;
+      }
+      function validateValues(node, opts) {
+        opts = opts || {};
+        var kind = opts.kind;
+        var path = Array.isArray(opts.path) ? opts.path.slice() : [];
+        var completeness = !!opts.completeness;
+        var errors = [];
+        if (!node || typeof node !== "object" || Array.isArray(node)) {
+          return {
+            ok: false,
+            errors: [makeError(path, "type_mismatch", kind || "object", typeName(node))]
+          };
+        }
+        var typeId = fieldSpecs.getTypeId(kind, opts.typeId || node);
+        var spec = fieldSpecs.getSpec(kind, typeId || node);
+        if (kind === "subsystem" && !spec) {
+          return {
+            ok: false,
+            errors: [makeError(
+              path,
+              "unknown_type",
+              "\u5DF2\u77E5 subsystem \u7C7B\u578B",
+              typeId || node.type,
+              "\u672A\u77E5\u7684\u5B50\u7CFB\u7EDF\u7C7B\u578B"
+            )]
+          };
+        }
+        if (!spec) {
+          return { ok: true, errors: [] };
+        }
+        var fields = spec.fields || {};
+        Object.keys(fields).forEach(function(field) {
+          var fieldSpec = fields[field];
+          var present = Object.prototype.hasOwnProperty.call(node, field);
+          if (!present) {
+            if (completeness && fieldSpec.required) {
+              errors.push(makeError(
+                path.concat([field]),
+                "missing_required",
+                fieldSpec.type || "any",
+                void 0,
+                "\u5FC5\u586B\u5B57\u6BB5\u7F3A\u5931"
+              ));
+            }
+            return;
+          }
+          var value = node[field];
+          if (completeness && fieldSpec.required && isMissingValue(fieldSpec, value)) {
+            errors.push(makeError(
+              path.concat([field]),
+              "missing_required",
+              fieldSpec.type || "any",
+              value,
+              "\u5FC5\u586B\u5B57\u6BB5\u4E0D\u80FD\u4E3A\u7A7A"
+            ));
+          }
+          errors = errors.concat(validateValue(
+            fieldSpec,
+            value,
+            path.concat([field]),
+            { field, completeness }
+          ));
+        });
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!entries || typeof entries !== "object" || Array.isArray(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            var child = entries[key];
+            var childErrors = validateValues(child, {
+              kind: childKind,
+              typeId: childKind === "subsystem" ? child && child.type : void 0,
+              path: path.concat([container, key]),
+              completeness
+            }).errors;
+            errors = errors.concat(childErrors);
+          });
+        });
+        return { ok: errors.length === 0, errors };
+      }
+      function validateTree(config, opts) {
+        opts = opts || {};
+        var completeness = opts.completeness !== false;
+        var errors = [];
+        if (!config || typeof config !== "object" || Array.isArray(config)) {
+          return [makeError([], "type_mismatch", "object", typeName(config))];
+        }
+        var keyResult = keys.validateKeys("config", config, {
+          namespace: config.namespace,
+          path: []
+        });
+        errors = errors.concat(keyResult.errors);
+        var parts = config.parts;
+        if (parts && typeof parts === "object" && !Array.isArray(parts)) {
+          Object.keys(parts).forEach(function(partId) {
+            var partErrors = validateValues(parts[partId], {
+              kind: "part",
+              path: ["parts", partId],
+              completeness
+            }).errors;
+            errors = errors.concat(partErrors);
+          });
+        }
+        return errors;
+      }
+      module.exports = {
+        validateValue,
+        validateValues,
+        validateTree,
+        isMissingValue
+      };
+    }
+  });
+
+  // src/services/export.js
+  var require_export = __commonJS({
+    "src/services/export.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { collectIssues } = require_validation();
+      var { validateTree } = require_validate();
+      var keys = require_keys();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("ExportService");
+      var ITEM_CONTAINERS = {
+        hit_boxes: "hit_box",
+        interact_boxes: "interact_box",
+        connectors: "connector",
+        subsystems: "subsystem"
+      };
+      function toProblem(error, config) {
+        var segs = error && error.path || [];
+        var path = { scope: "config", partId: "", variantName: "" };
+        if (segs[0] === "parts" && segs.length >= 2) {
+          path.scope = "part";
+          path.partId = segs[1];
+        }
+        if (segs[2] === "variants" && segs.length >= 4) {
+          path.scope = "variant";
+          path.variantName = segs[3];
+        }
+        var leafStart = 4;
+        if (segs[4] === "sub_parts" && segs.length >= 6) {
+          path.scope = "subpart";
+          path.subPartKey = segs[5];
+          leafStart = 6;
+        }
+        var container = segs[leafStart];
+        if (container && ITEM_CONTAINERS[container] && segs.length > leafStart + 1) {
+          path.scope = ITEM_CONTAINERS[container];
+          path.itemKey = segs[leafStart + 1];
+          path.field = segs.slice(leafStart + 2).join(".");
+          if (path.scope === "hit_box") {
+            path.elementUuid = path.itemKey;
+          } else if (path.scope === "interact_box" && config) {
+            path.elementUuid = _findInteractBoxUuid(config, path);
+          }
+        } else {
+          path.field = segs.slice(leafStart).join(".");
+        }
+        var detail = error.hint || error.expected || "";
+        if (typeof detail === "object") detail = JSON.stringify(detail);
+        var message = error.code + (detail ? "\uFF1A" + detail : "");
+        if (error.got !== void 0 && error.got !== null && typeof error.got !== "object") {
+          message += "\uFF08\u5F53\u524D\u503C: " + String(error.got) + "\uFF09";
+        }
+        return {
+          severity: "error",
+          code: error.code,
+          message,
+          path
+        };
+      }
+      function _findInteractBoxUuid(config, path) {
+        var variant = config && config.parts && config.parts[path.partId] && config.parts[path.partId].variants && config.parts[path.partId].variants[path.variantName];
+        var sp = variant && variant.sub_parts && variant.sub_parts[path.subPartKey];
+        var entry = sp && sp.interact_boxes && sp.interact_boxes[path.itemKey];
+        return entry && entry._uuid || "";
+      }
+      function issueKey(p) {
+        var path = p && p.path || {};
+        return [
+          path.scope || "",
+          path.partId || "",
+          path.variantName || "",
+          path.subPartKey || "",
+          path.itemKey || "",
+          path.field || ""
+        ].join("|");
+      }
+      function dedupeIssues(primary, schema) {
+        var out = [];
+        var seen = {};
+        (primary || []).forEach(function(p) {
+          out.push(p);
+          seen[issueKey(p)] = true;
+        });
+        (schema || []).forEach(function(p) {
+          var key = issueKey(p);
+          if (!seen[key]) {
+            seen[key] = true;
+            out.push(p);
+          }
+        });
+        return out;
+      }
+      function canExport(config) {
+        if (!config || typeof config !== "object") {
+          return {
+            ok: false,
+            errors: [{
+              severity: "error",
+              code: "config_unavailable",
+              message: "\u914D\u7F6E\u4E0D\u53EF\u7528",
+              path: { scope: "config", partId: "", variantName: "", field: "" }
+            }],
+            warnings: [],
+            issues: []
+          };
+        }
+        var primary = collectIssues(config);
+        Object.keys(config.parts || {}).forEach(function(partId) {
+          if (!keys.isSafePartId(partId)) {
+            primary.push({
+              severity: "error",
+              code: "unsafe_part_id",
+              message: '\u96F6\u4EF6 ID "' + partId + '" \u4E0D\u5B89\u5168\uFF08\u4E0D\u80FD\u4F5C\u4E3A\u5BFC\u51FA\u8DEF\u5F84\u6BB5\uFF09',
+              path: { scope: "part", partId, variantName: "", field: "" }
+            });
+          }
+        });
+        var schema = validateTree(config, { completeness: true }).map(function(e) {
+          return toProblem(e, config);
+        });
+        var issues = dedupeIssues(primary, schema);
+        var errors = issues.filter(function(p) {
+          return p.severity === "error";
+        });
+        var warnings = issues.filter(function(p) {
+          return p.severity !== "error";
+        });
+        return { ok: errors.length === 0, errors, warnings, issues };
+      }
+      function assertSafePartIds(config) {
+        var bad = Object.keys(config && config.parts || {}).filter(function(partId) {
+          return !keys.isSafePartId(partId);
+        });
+        if (bad.length > 0) {
+          var err = new Error("\u5B58\u5728\u4E0D\u5B89\u5168\u7684\u96F6\u4EF6 ID\uFF0C\u5DF2\u963B\u6B62\u5BFC\u51FA: " + bad.join(", "));
+          err.code = "unsafe_part_id";
+          err.partIds = bad;
+          log2.error(err.message);
+          throw err;
+        }
+        return true;
+      }
+      module.exports = {
+        canExport,
+        assertSafePartIds,
+        dedupeIssues,
+        toProblem,
+        _issueKey: issueKey
+      };
+    }
+  });
+
+  // src/generators/meta_generator.js
+  var require_meta_generator = __commonJS({
+    "src/generators/meta_generator.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("GenMeta");
+      function generateMeta(projectConfig) {
+        var pm = projectConfig.packMeta || {};
+        var packId = pm.id || (Project ? Project.name || "content_pack" : "content_pack");
+        packId = packId.toLowerCase().replace(/[^a-z0-9_\-.:/]/g, "_");
+        var result = {
+          id: packId,
+          version: pm.version || "1.0",
+          author: pm.author || "Anonymous",
+          description: pm.description || ""
+        };
+        var deps = pm.dependencies || [];
+        if (deps.length > 0) {
+          result.dependencies = deps.map(function(dep) {
+            var depId = dep.id || dep;
+            var depType = dep.type || "hard";
+            return { id: depId, type: depType };
+          });
+        }
+        if (typeof pm.enable_auto_pack === "boolean") {
+          result.enable_auto_pack = pm.enable_auto_pack;
+        }
+        var parts = projectConfig.parts || {};
+        var partIds = Object.keys(parts);
+        log2.info("generateMeta: \u5305ID=" + result.id + ", \u96F6\u4EF6\u6570=" + partIds.length);
+        return result;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { generateMeta };
+      }
+    }
+  });
+
+  // src/utils/name_utils.js
+  var require_name_utils = __commonJS({
+    "src/utils/name_utils.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var TYPE_LABELS = {
+        sub_part: { zh: "\u5B50\u96F6\u4EF6", en: "SubPart" },
+        interact: { zh: "\u4EA4\u4E92\u533A", en: "Interact" },
+        connector: { zh: "\u8FDE\u63A5\u70B9", en: "Connector" },
+        subsystem: { zh: "\u5B50\u7CFB\u7EDF", en: "Subsystem" }
+      };
+      var TYPE_PREFIXES = Object.keys(TYPE_LABELS);
+      function extractType(fullKey) {
+        if (!fullKey || typeof fullKey !== "string") return null;
+        for (var i = 0; i < TYPE_PREFIXES.length; i++) {
+          if (fullKey.indexOf(TYPE_PREFIXES[i] + ".") === 0) {
+            return TYPE_PREFIXES[i];
+          }
+        }
+        return null;
+      }
+      function extractShortName(fullKey, ns) {
+        if (!fullKey || typeof fullKey !== "string") return fullKey || "";
+        ns = ns || "machine_max";
+        var prefix = "." + ns + ".";
+        var idx = fullKey.indexOf(prefix);
+        if (idx >= 0) {
+          return fullKey.substring(idx + prefix.length);
+        }
+        return fullKey;
+      }
+      function buildFullKey(type, shortName, ns) {
+        if (!shortName) return "";
+        ns = ns || "machine_max";
+        var existingType = extractType(shortName);
+        if (existingType) {
+          shortName = extractShortName(shortName, ns);
+        }
+        if (type) {
+          return type + "." + ns + "." + shortName;
+        }
+        return shortName;
+      }
+      function displayLabel(fullKey, locale, ns) {
+        if (!fullKey || typeof fullKey !== "string") return fullKey || "";
+        var type = extractType(fullKey);
+        var shortName = extractShortName(fullKey, ns);
+        if (!type) return shortName;
+        var labels = TYPE_LABELS[type];
+        var label = labels ? labels[locale] || labels["zh"] || type : type;
+        return "[" + label + "]" + shortName;
+      }
+      function getTargetOptions(variant, ns) {
+        var options = [];
+        ns = ns || "machine_max";
+        if (!variant) return options;
+        var subParts = variant.sub_parts || {};
+        for (var spKey in subParts) {
+          if (!subParts.hasOwnProperty(spKey)) continue;
+          var sp = subParts[spKey];
+          if (!sp || typeof sp !== "object") continue;
+          var connectors = sp.connectors || {};
+          for (var connKey in connectors) {
+            if (!connectors.hasOwnProperty(connKey)) continue;
+            if (options.some(function(o) {
+              return o.fullKey === connKey;
+            })) continue;
+            options.push({
+              type: "connector",
+              shortName: extractShortName(connKey, ns),
+              fullKey: connKey,
+              label: displayLabel(connKey, "zh", ns)
+            });
+          }
+          var subsystems = sp.subsystems || {};
+          for (var ssKey in subsystems) {
+            if (!subsystems.hasOwnProperty(ssKey)) continue;
+            if (options.some(function(o) {
+              return o.fullKey === ssKey;
+            })) continue;
+            options.push({
+              type: "subsystem",
+              shortName: extractShortName(ssKey, ns),
+              fullKey: ssKey,
+              label: displayLabel(ssKey, "zh", ns)
+            });
+          }
+        }
+        return options;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { extractType, extractShortName, buildFullKey, displayLabel, getTargetOptions, TYPE_LABELS, TYPE_PREFIXES };
+      }
+    }
+  });
+
+  // src/generators/lang_generator.js
+  var require_lang_generator = __commonJS({
+    "src/generators/lang_generator.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var nameUtils = require_name_utils();
+      var log2 = createLogger2("GenLang");
+      function _toDisplayName(key) {
+        return key.replace(/_/g, " ").replace(/\b\w/g, function(c) {
+          return c.toUpperCase();
+        });
+      }
+      function generateAllLangs(projectConfig) {
+        var result = {};
+        var zhLang = {};
+        var enLang = {};
+        var ns = projectConfig.namespace || "machine_max";
+        var parts = projectConfig.parts || {};
+        for (var partId in parts) {
+          if (!parts.hasOwnProperty(partId)) continue;
+          var partConfig = parts[partId];
+          var partKey = ns + "." + partId;
+          enLang[partKey] = _toDisplayName(partId);
+          zhLang[partKey] = _toDisplayName(partId);
+          var variants = partConfig.variants || {};
+          var variantMap;
+          if (typeof variants.model === "string") {
+            variantMap = { _default: variants };
+          } else {
+            variantMap = variants;
+          }
+          for (var variantName in variantMap) {
+            if (!variantMap.hasOwnProperty(variantName)) continue;
+            var variant = variantMap[variantName];
+            var subParts = variant.sub_parts || {};
+            var subPartMap;
+            if (typeof subParts.durability === "number") {
+              subPartMap = { _single: subParts };
+            } else {
+              subPartMap = subParts;
+            }
+            for (var subPartKey in subPartMap) {
+              if (!subPartMap.hasOwnProperty(subPartKey)) continue;
+              var subPart = subPartMap[subPartKey];
+              if (!subPart || typeof subPart !== "object") continue;
+              if (subPartKey !== "_single" && subPartKey !== "sub_part." + ns + ".main") {
+                var spShortName = nameUtils.extractShortName(subPartKey, ns);
+                enLang[subPartKey] = _toDisplayName(spShortName);
+                zhLang[subPartKey] = _toDisplayName(spShortName);
+              }
+              var interactBoxes = subPart.interact_boxes || {};
+              for (var interactKey in interactBoxes) {
+                if (!interactBoxes.hasOwnProperty(interactKey)) continue;
+                var ibShortName = nameUtils.extractShortName(interactKey, ns);
+                enLang[interactKey] = _toDisplayName(ibShortName);
+                zhLang[interactKey] = _toDisplayName(ibShortName);
+              }
+              var connectors = subPart.connectors || {};
+              for (var connectorKey in connectors) {
+                if (!connectors.hasOwnProperty(connectorKey)) continue;
+                var connShortName = nameUtils.extractShortName(connectorKey, ns);
+                enLang[connectorKey] = _toDisplayName(connShortName);
+                zhLang[connectorKey] = _toDisplayName(connShortName);
+              }
+              var subsystems = subPart.subsystems || {};
+              for (var subsystemKey in subsystems) {
+                if (!subsystems.hasOwnProperty(subsystemKey)) continue;
+                var ssShortName = nameUtils.extractShortName(subsystemKey, ns);
+                enLang[subsystemKey] = _toDisplayName(ssShortName);
+                zhLang[subsystemKey] = _toDisplayName(ssShortName);
+              }
+            }
+          }
+        }
+        result["zh_cn"] = zhLang;
+        result["en_us"] = enLang;
+        log2.info("generateAllLangs: \u5DF2\u751F\u6210\u672C\u5730\u5316\uFF0C\u952E\u6570=" + Object.keys(zhLang).length);
+        return result;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { generateAllLangs };
+      }
+    }
+  });
+
+  // src/generators/part_generator.js
+  var require_part_generator = __commonJS({
+    "src/generators/part_generator.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var { PartCodec } = require_part_codec();
+      var log2 = createLogger2("GenPart");
+      function generatePartJSON(partConfig) {
+        return PartCodec.encode(partConfig);
+      }
+      function _resolveUUIDKeys(obj) {
+        var resolved = {};
+        for (var key in obj) {
+          var boneName = key;
+          if (typeof Group !== "undefined" && Group.all) {
+            var group = Group.all.find(function(g) {
+              return g.uuid === key;
+            });
+            if (group) boneName = group.name;
+          }
+          resolved[boneName] = obj[key];
+        }
+        return resolved;
+      }
+      function _resolveAllUUIDKeys(partConfig) {
+        if (!partConfig || !partConfig.variants) return partConfig;
+        for (var vKey in partConfig.variants) {
+          var sub_parts = partConfig.variants[vKey].sub_parts;
+          if (!sub_parts) continue;
+          for (var spKey in sub_parts) {
+            var sp = sub_parts[spKey];
+            if (!sp) continue;
+            if (sp.hit_boxes && typeof sp.hit_boxes === "object") {
+              sp.hit_boxes = _resolveUUIDKeys(sp.hit_boxes);
+            }
+            if (sp.interact_boxes && typeof sp.interact_boxes === "object") {
+              sp.interact_boxes = _resolveUUIDKeys(sp.interact_boxes);
+            }
+          }
+        }
+        return partConfig;
+      }
+      function _cleanProjectileTypes(partConfig) {
+        if (!partConfig || !partConfig.variants) return;
+        var PLACEHOLDER_PREFIX = "__new_p_";
+        for (var vKey in partConfig.variants) {
+          var sub_parts = partConfig.variants[vKey].sub_parts;
+          if (!sub_parts) continue;
+          for (var spKey in sub_parts) {
+            var sp = sub_parts[spKey];
+            if (!sp || !sp.subsystems) continue;
+            for (var ssKey in sp.subsystems) {
+              var ss = sp.subsystems[ssKey];
+              if (!ss || ss.type !== "machine_max:regen_loader") continue;
+              var pt = ss.projectile_types;
+              if (!pt || typeof pt !== "object") continue;
+              for (var k in pt) {
+                if (pt.hasOwnProperty(k) && k.indexOf(PLACEHOLDER_PREFIX) === 0) {
+                  delete pt[k];
+                }
+              }
+            }
+          }
+        }
+      }
+      function generateAllParts(projectConfig) {
+        const parts = projectConfig.parts || {};
+        const result = {};
+        for (const [partId, partConfig] of Object.entries(parts)) {
+          var cloned = JSON.parse(JSON.stringify(partConfig));
+          _resolveAllUUIDKeys(cloned);
+          _cleanProjectileTypes(cloned);
+          result[partId] = generatePartJSON(cloned);
+        }
+        log2.info("generateAllParts: \u5DF2\u751F\u6210 " + Object.keys(result).length + " \u4E2A\u96F6\u4EF6");
+        return result;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { generatePartJSON, generateAllParts };
+      }
+    }
+  });
+
+  // src/generators/connector_generator.js
+  var require_connector_generator = __commonJS({
+    "src/generators/connector_generator.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var fileWriter = require_file_writer();
+      var path = __require("path");
+      var fs = __require("fs");
+      var log2 = createLogger2("GenConnector");
+      function copyConnectorDefs(packDir, ns, targetDir, flat) {
+        var count = 0;
+        var srcDir = path.join(packDir, ns, "connectors");
+        if (!fs.existsSync(srcDir)) {
+          log2.warn("copyConnectorDefs: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
+          return 0;
+        }
+        var files = fs.readdirSync(srcDir);
+        function resolveTarget(baseDir, id2, isFlat) {
+          if (isFlat) return baseDir;
+          var seg = id2.split("_")[0];
+          return seg && seg.length > 0 ? path.join(baseDir, seg) : baseDir;
+        }
+        for (var i = 0; i < files.length; i++) {
+          var fileName = files[i];
+          if (!fileName.endsWith(".json")) continue;
+          var srcFile = path.join(srcDir, fileName);
+          try {
+            var raw = fs.readFileSync(srcFile, "utf8");
+            var content = JSON.parse(fileWriter.stripJsonComments(raw));
+            var id = fileName.slice(0, -5);
+            var loc = fileWriter.extractResourceLocation(id, ns);
+            var tDir = resolveTarget(targetDir, loc.path, flat);
+            fileWriter.writeJSONFile(tDir, loc.path + ".json", content);
+            count++;
+          } catch (e) {
+            log2.warn("\u590D\u5236\u8FDE\u63A5\u70B9\u6587\u4EF6\u5931\u8D25: " + srcFile, e);
+          }
+        }
+        log2.info("copyConnectorDefs: \u5DF2\u590D\u5236 " + count + " \u4E2A\u8FDE\u63A5\u70B9\u5B9A\u4E49");
+        return count;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { copyConnectorDefs };
+      }
+    }
+  });
+
+  // src/generators/subsystem_generator.js
+  var require_subsystem_generator = __commonJS({
+    "src/generators/subsystem_generator.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var fileWriter = require_file_writer();
+      var path = __require("path");
+      var fs = __require("fs");
+      var log2 = createLogger2("GenSubsystem");
+      function copySubsystemDefs(packDir, ns, targetDir, flat) {
+        var count = 0;
+        var srcDir = path.join(packDir, ns, "subsystems");
+        if (!fs.existsSync(srcDir)) {
+          log2.warn("copySubsystemDefs: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
+          return 0;
+        }
+        var files = fs.readdirSync(srcDir);
+        function resolveTarget(baseDir, id2, isFlat) {
+          if (isFlat) return baseDir;
+          var seg = id2.split("_")[0];
+          return seg && seg.length > 0 ? path.join(baseDir, seg) : baseDir;
+        }
+        for (var i = 0; i < files.length; i++) {
+          var fileName = files[i];
+          if (!fileName.endsWith(".json")) continue;
+          var srcFile = path.join(srcDir, fileName);
+          try {
+            var raw = fs.readFileSync(srcFile, "utf8");
+            var content = JSON.parse(fileWriter.stripJsonComments(raw));
+            var id = fileName.slice(0, -5);
+            var loc = fileWriter.extractResourceLocation(id, ns);
+            var tDir = resolveTarget(targetDir, loc.path, flat);
+            fileWriter.writeJSONFile(tDir, loc.path + ".json", content);
+            count++;
+          } catch (e) {
+            log2.warn("\u590D\u5236\u5B50\u7CFB\u7EDF\u6587\u4EF6\u5931\u8D25: " + srcFile, e);
+          }
+        }
+        log2.info("copySubsystemDefs: \u5DF2\u590D\u5236 " + count + " \u4E2A\u5B50\u7CFB\u7EDF\u5B9A\u4E49");
+        return count;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { copySubsystemDefs };
+      }
+    }
+  });
+
+  // src/generators/material_generator.js
+  var require_material_generator = __commonJS({
+    "src/generators/material_generator.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var fileWriter = require_file_writer();
+      var path = __require("path");
+      var fs = __require("fs");
+      var log2 = createLogger2("GenMaterial");
+      function copyMaterialDefs(packDir, ns, targetDir) {
+        var count = 0;
+        var srcDir = path.join(packDir, ns, "materials");
+        if (!fs.existsSync(srcDir)) {
+          log2.warn("copyMaterialDefs: \u6E90\u76EE\u5F55\u4E0D\u5B58\u5728 " + srcDir);
+          return 0;
+        }
+        var files = fs.readdirSync(srcDir);
+        for (var i = 0; i < files.length; i++) {
+          var fileName = files[i];
+          if (!fileName.endsWith(".json")) continue;
+          var srcFile = path.join(srcDir, fileName);
+          try {
+            var raw = fs.readFileSync(srcFile, "utf8");
+            var content = JSON.parse(fileWriter.stripJsonComments(raw));
+            var id = fileName.slice(0, -5);
+            var loc = fileWriter.extractResourceLocation(id, ns);
+            fileWriter.writeJSONFile(targetDir, loc.path + ".json", content);
+            count++;
+          } catch (e) {
+            log2.warn("\u590D\u5236\u6750\u6599\u6587\u4EF6\u5931\u8D25: " + srcFile, e);
+          }
+        }
+        log2.info("copyMaterialDefs: \u5DF2\u590D\u5236 " + count + " \u4E2A\u6750\u6599\u5B9A\u4E49");
+        return count;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { copyMaterialDefs };
+      }
+    }
+  });
+
+  // src/ui/export/export_pipeline.js
+  var require_export_pipeline = __commonJS({
+    "src/ui/export/export_pipeline.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var fileWriter = require_file_writer();
+      var { assertSafePartIds } = require_export();
+      var log2 = createLogger2("ExportPipeline");
+      function executeExport(config, packMeta, exportDir, packFolderName) {
+        var fs = __require("fs");
+        var path = __require("path");
+        assertSafePartIds(config);
+        if (!fs.existsSync(exportDir)) {
+          fs.mkdirSync(exportDir, { recursive: true });
+        }
+        var packRoot = path.join(exportDir, packFolderName);
+        if (!fs.existsSync(packRoot)) {
+          fs.mkdirSync(packRoot, { recursive: true });
+        }
+        var ns = config.namespace || "machine_max";
+        var stats = { parts: 0, connectors: 0, subsystems: 0, materials: 0, langs: 0 };
+        var isFlat = packMeta.flat_export !== false;
+        function _resolveTargetDir(baseDir, id, flat) {
+          if (flat) return baseDir;
+          var seg = id.split("_")[0];
+          return seg && seg.length > 0 ? path.join(baseDir, seg) : baseDir;
+        }
+        function _writeSchemasFromConstant(destBaseDir) {
+          var schemasRaw = typeof define_SCHEMAS_default !== "undefined" ? define_SCHEMAS_default : null;
+          if (!schemasRaw) {
+            log2.warn("_writeSchemasFromConstant: __SCHEMAS__ \u672A\u6CE8\u5165\u6216\u4E3A\u7A7A\uFF0CSchema \u6587\u4EF6\u5C06\u4E0D\u4F1A\u5199\u5165");
+            return;
+          }
+          var schemas = typeof schemasRaw === "string" ? JSON.parse(schemasRaw) : schemasRaw;
+          var keys = Object.keys(schemas);
+          for (var i = 0; i < keys.length; i++) {
+            var relPath = keys[i];
+            var destPath = path.join(destBaseDir, relPath);
+            fileWriter.ensureDir(path.dirname(destPath));
+            fs.writeFileSync(destPath, schemas[relPath], "utf-8");
+          }
+          log2.info("_writeSchemasFromConstant: \u5DF2\u5199\u5165 " + keys.length + " \u4E2A schema \u6587\u4EF6");
+        }
+        function _getSchemaLocale() {
+          var lang = "";
+          if (typeof navigator !== "undefined" && navigator.language) {
+            lang = navigator.language;
+          } else if (typeof Blockbench !== "undefined" && Blockbench.locale) {
+            lang = Blockbench.locale;
+          }
+          return lang.indexOf("zh") === 0 ? "zh_cn" : "en_us";
+        }
+        function _injectSchemaReferences(nsDir) {
+          var schemaLocale = _getSchemaLocale();
+          var schemaMap = {
+            parts: "docs/" + schemaLocale + "/schemas/part_definition_schema.json",
+            connectors: "docs/" + schemaLocale + "/schemas/part/subpart/connector/connector_static_attr.schema.json",
+            subsystems: "docs/" + schemaLocale + "/schemas/subsystem/subsystem_static_attr.schema.json",
+            materials: "docs/" + schemaLocale + "/schemas/base/material_attr.schema.json"
+          };
+          var recipeSchemaMap = {
+            "machine_max:research": "docs/" + schemaLocale + "/schemas/recipe/research_recipe.schema.json",
+            "machine_max:fabricating": "docs/" + schemaLocale + "/schemas/recipe/fabricating_recipe.schema.json",
+            "machine_max:blueprint_research": "docs/" + schemaLocale + "/schemas/recipe/blueprint_research_recipe.schema.json"
+          };
+          var dirs = ["parts", "connectors", "subsystems", "materials", "recipe"];
+          for (var d = 0; d < dirs.length; d++) {
+            var typeDir = path.join(nsDir, dirs[d]);
+            if (!fs.existsSync(typeDir)) continue;
+            _walkAndInject(typeDir, nsDir, dirs[d], schemaMap, recipeSchemaMap);
+          }
+        }
+        function _walkAndInject(currentDir, nsDir, typeName, schemaMap, recipeSchemaMap) {
+          var entries = fs.readdirSync(currentDir);
+          for (var e = 0; e < entries.length; e++) {
+            var fullPath = path.join(currentDir, entries[e]);
+            var stat = fs.statSync(fullPath);
+            if (stat.isDirectory()) {
+              _walkAndInject(fullPath, nsDir, typeName, schemaMap, recipeSchemaMap);
+            } else if (entries[e].endsWith(".json")) {
+              try {
+                var rawContent = fs.readFileSync(fullPath, "utf8");
+                var content = JSON.parse(fileWriter.stripJsonComments(rawContent));
+                var schemaRel;
+                if (typeName === "recipe") {
+                  schemaRel = recipeSchemaMap[content.type] || "docs/schemas/recipe/research_recipe.schema.json";
+                } else {
+                  schemaRel = schemaMap[typeName];
+                }
+                if (!schemaRel) continue;
+                var relDir = path.relative(path.dirname(fullPath), nsDir);
+                var schemaPath = path.join(relDir, schemaRel).replace(/\\/g, "/");
+                content["$schema"] = schemaPath;
+                fs.writeFileSync(fullPath, JSON.stringify(content, null, 2), "utf8");
+              } catch (_err) {
+                log2.warn("\u6CE8\u5165 $schema \u5931\u8D25: " + fullPath, _err);
+              }
+            }
+          }
+        }
+        var genMeta = require_meta_generator();
+        var savedPackMeta = config.packMeta;
+        config.packMeta = packMeta;
+        var meta = genMeta.generateMeta(config);
+        config.packMeta = savedPackMeta;
+        fileWriter.writeJSONFile(packRoot, "meta.json", meta);
+        var _emptyDirs = [
+          "textures/hud",
+          "textures/icon",
+          "textures/part",
+          "models/hud",
+          "huds",
+          "animations/hud",
+          "animations/part",
+          "assemblies",
+          "font",
+          "tooltips",
+          "templates",
+          "docs"
+        ];
+        var _nsDir = path.join(packRoot, ns);
+        for (var _ei = 0; _ei < _emptyDirs.length; _ei++) {
+          fileWriter.ensureDir(path.join(_nsDir, _emptyDirs[_ei]));
+        }
+        _writeSchemasFromConstant(path.join(_nsDir, "docs"));
+        try {
+          if (typeof Codecs !== "undefined" && Codecs.bedrock && Project) {
+            var modelDir = path.join(packRoot, ns, "models", "part");
+            var modelName = Project.geometry_name || Project.name || "model";
+            var geoContent = Codecs.bedrock.compile();
+            fileWriter.writeTextFile(modelDir, modelName + ".geo.json", geoContent);
+            log2.info("\u5DF2\u5BFC\u51FA Bedrock \u51E0\u4F55\u4F53\u6A21\u578B: " + modelName + ".geo.json");
+          }
+        } catch (e) {
+          log2.warn("\u65E0\u6CD5\u5BFC\u51FA Bedrock \u51E0\u4F55\u4F53\u6A21\u578B\uFF08\u53EF\u80FD\u975E Bedrock \u683C\u5F0F\uFF09", e);
+        }
+        var genLang = require_lang_generator();
+        var allLangs = genLang.generateAllLangs(config);
+        if (allLangs) {
+          var langDir = path.join(packRoot, ns, "lang");
+          for (var locale in allLangs) {
+            if (allLangs.hasOwnProperty(locale)) {
+              fileWriter.mergeJSONFile(langDir, locale + ".json", allLangs[locale]);
+              stats.langs++;
+            }
+          }
+        }
+        var genParts = require_part_generator();
+        var allParts = genParts.generateAllParts(config);
+        var partsBaseDir = path.join(packRoot, ns, "parts");
+        for (var partId in allParts) {
+          if (allParts.hasOwnProperty(partId)) {
+            var partsTargetDir = _resolveTargetDir(partsBaseDir, partId, isFlat);
+            fileWriter.writeJSONFile(partsTargetDir, partId + ".json", allParts[partId]);
+            stats.parts++;
+          }
+        }
+        if (config.recipes && Object.keys(config.recipes).length > 0) {
+          var recipeDir = path.join(packRoot, ns, "recipe");
+          for (var recipeId in config.recipes) {
+            if (config.recipes.hasOwnProperty(recipeId)) {
+              fileWriter.writeJSONFile(recipeDir, recipeId + ".json", config.recipes[recipeId]);
+            }
+          }
+        }
+        var packDir = config.contentPackPath;
+        if (packDir && fs.existsSync(packDir)) {
+          var genConn = require_connector_generator();
+          var genSub = require_subsystem_generator();
+          var genMat = require_material_generator();
+          stats.connectors = genConn.copyConnectorDefs(packDir, ns, path.join(packRoot, ns, "connectors"), isFlat);
+          stats.subsystems = genSub.copySubsystemDefs(packDir, ns, path.join(packRoot, ns, "subsystems"), isFlat);
+          stats.materials = genMat.copyMaterialDefs(packDir, ns, path.join(packRoot, ns, "materials"));
+          var depSrcDir = path.join(packDir, "dependency");
+          if (fs.existsSync(depSrcDir)) {
+            var depTargetDir = path.join(packRoot, "dependency");
+            fileWriter.ensureDir(depTargetDir);
+            var depFiles = fs.readdirSync(depSrcDir);
+            var j, depFile, depSrcFile, depContent;
+            for (j = 0; j < depFiles.length; j++) {
+              depFile = depFiles[j];
+              if (depFile.indexOf(".json") !== depFile.length - 5) continue;
+              depSrcFile = path.join(depSrcDir, depFile);
+              try {
+                depContent = fs.readFileSync(depSrcFile, "utf8");
+                fs.writeFileSync(path.join(depTargetDir, depFile), depContent, "utf8");
+              } catch (e) {
+                log2.warn("\u590D\u5236\u4F9D\u8D56\u5305\u5B9A\u4E49\u5931\u8D25: " + depSrcFile, e);
+              }
+            }
+          }
+        } else {
+          log2.warn("\u5185\u5BB9\u5305\u76EE\u5F55\u672A\u8BBE\u7F6E\u6216\u4E0D\u5B58\u5728\uFF0C\u8DF3\u8FC7\u8FDE\u63A5\u70B9/\u5B50\u7CFB\u7EDF/\u6750\u6599\u590D\u5236: " + packDir);
+        }
+        _injectSchemaReferences(_nsDir);
+        log2.info("\u5BFC\u51FA\u5B8C\u6210, \u96F6\u4EF6=" + stats.parts + ", \u8FDE\u63A5\u70B9=" + stats.connectors + ", \u5B50\u7CFB\u7EDF=" + stats.subsystems + ", \u6750\u6599=" + stats.materials + ", \u8BED\u8A00=" + stats.langs);
+        return stats;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          executeExport
+        };
+      }
+    }
+  });
+
+  // src/core/undo.js
+  var require_undo = __commonJS({
+    "src/core/undo.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("Undo");
+      var PROPERTY_NAME = "machine_max_plugin";
+      var ASPECT_FLAG = "machine_max";
+      var SNAPSHOT_KEY = "machine_max_plugin_snapshot";
+      var RESTORED_EVENT = "mm_config_restored";
+      var MAX_SNAPSHOT_BYTES = 2 * 1024 * 1024;
+      var COALESCE_WINDOW_MS = 800;
+      var _listeners = [];
+      var _depth = 0;
+      var _restoring = false;
+      var _lastBlockedNoticeAt = 0;
+      var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
+      function getUndo() {
+        try {
+          if (typeof Undo !== "undefined" && Undo) return Undo;
+          if (typeof Blockbench !== "undefined" && Blockbench && Blockbench.Undo) return Blockbench.Undo;
+        } catch (e) {
+          log2.debug("getUndo: Undo \u4E0D\u53EF\u7528", e && e.message);
+        }
+        return null;
+      }
+      function getProjectConfig() {
+        if (typeof Project === "undefined" || !Project || Project === 0) return null;
+        return Project[PROPERTY_NAME] || null;
+      }
+      function deepClone(value) {
+        if (value === null || typeof value !== "object") return value;
+        if (typeof structuredClone === "function") {
+          try {
+            return structuredClone(value);
+          } catch (e) {
+            log2.debug("deepClone: structuredClone \u5931\u8D25\uFF0C\u964D\u7EA7 JSON", e && e.message);
+          }
+        }
+        return JSON.parse(JSON.stringify(value));
+      }
+      function estimateSize(value) {
+        try {
+          return JSON.stringify(value === void 0 ? null : value).length;
+        } catch (e) {
+          return MAX_SNAPSHOT_BYTES + 1;
+        }
+      }
+      function createSnapshot() {
+        var cfg = getProjectConfig();
+        if (!cfg || typeof cfg !== "object") return null;
+        var copy;
+        try {
+          copy = deepClone(cfg);
+        } catch (e) {
+          log2.error("createSnapshot: \u6DF1\u62F7\u8D1D\u5931\u8D25\uFF0C\u672C\u6761\u8BB0\u5F55\u4E0D\u542B\u914D\u7F6E\u5FEB\u7167", e);
+          return null;
+        }
+        if (copy && typeof copy === "object") {
+          delete copy._uiState;
+        }
+        var uuid = typeof Project !== "undefined" && Project && Project.uuid ? Project.uuid : "";
+        return { project_uuid: uuid, config: copy };
+      }
+      function reconcileUiState(config, uiState) {
+        var next = uiState && typeof uiState === "object" ? uiState : {};
+        var parts = config && config.parts && typeof config.parts === "object" ? config.parts : {};
+        var partIds = Object.keys(parts);
+        var activePartId = next.activePartId;
+        if (!activePartId || !hasOwn(parts, activePartId)) {
+          activePartId = partIds.length > 0 ? partIds[0] : "";
+          next.activeVariantName = "";
+        }
+        var variants = {};
+        if (activePartId && parts[activePartId] && parts[activePartId].variants) {
+          variants = parts[activePartId].variants;
+        }
+        var variantNames = Object.keys(variants);
+        var activeVariantName = next.activeVariantName;
+        if (!activeVariantName || variantNames.indexOf(activeVariantName) === -1) {
+          activeVariantName = variantNames.length > 0 ? variantNames[0] : activePartId ? "default" : "";
+        }
+        next.activePartId = activePartId;
+        next.activeVariantName = activeVariantName;
+        if (!next.activeMode) next.activeMode = "machine_max_part";
+        if (next._pendingSubsystemNav === void 0) next._pendingSubsystemNav = null;
+        return next;
+      }
+      function refreshAfterRestore() {
+        try {
+          require_icons().refreshOutlinerIcons();
+        } catch (e) {
+          log2.warn("refreshAfterRestore: \u5237\u65B0 Outliner \u56FE\u6807\u5931\u8D25", e && e.message);
+        }
+        try {
+          require_content_pack_manager().invalidateCache();
+        } catch (e) {
+          log2.warn("refreshAfterRestore: \u6E05\u7406\u5185\u5BB9\u5305\u7F13\u5B58\u5931\u8D25", e && e.message);
+        }
+        if (typeof Blockbench === "undefined" || typeof Blockbench.dispatchEvent !== "function") return;
+        try {
+          Blockbench.dispatchEvent(RESTORED_EVENT, {});
+        } catch (e) {
+          log2.warn("refreshAfterRestore: \u6D3E\u53D1 " + RESTORED_EVENT + " \u5931\u8D25", e && e.message);
+        }
+        try {
+          Blockbench.dispatchEvent("update_selection");
+        } catch (e) {
+          log2.warn("refreshAfterRestore: \u6D3E\u53D1 update_selection \u5931\u8D25", e && e.message);
+        }
+      }
+      function onCreateUndoSave(data) {
+        if (!data || !data.aspects || !data.aspects[ASPECT_FLAG]) return;
+        if (!data.save) return;
+        var snapshot = createSnapshot();
+        if (!snapshot) return;
+        data.save[SNAPSHOT_KEY] = snapshot;
+        log2.debug("create_undo_save: \u5DF2\u6302\u914D\u7F6E\u5FEB\u7167", {
+          parts: snapshot.config && snapshot.config.parts ? Object.keys(snapshot.config.parts).length : 0,
+          size: estimateSize(snapshot.config)
+        });
+      }
+      function applySnapshot(live, next) {
+        if (typeof Project === "undefined" || !Project || Project === 0) return;
+        if (!live || typeof live !== "object") {
+          Project[PROPERTY_NAME] = next;
+          return;
+        }
+        var key;
+        for (key in next) {
+          if (hasOwn(next, key)) live[key] = next[key];
+        }
+        for (key in live) {
+          if (hasOwn(live, key) && !hasOwn(next, key)) delete live[key];
+        }
+        Project[PROPERTY_NAME] = live;
+      }
+      function onLoadUndoSave(data) {
+        if (!data || !data.save) return;
+        var snapshot = data.save[SNAPSHOT_KEY];
+        if (!snapshot || !snapshot.config) return;
+        if (typeof Project === "undefined" || !Project || Project === 0) return;
+        var currentUuid = Project.uuid || "";
+        if (snapshot.project_uuid && currentUuid && snapshot.project_uuid !== currentUuid) {
+          log2.warn("load_undo_save: \u5FEB\u7167\u5C5E\u4E8E\u5176\u4ED6\u5DE5\u7A0B\uFF0C\u8DF3\u8FC7", {
+            snapshot: snapshot.project_uuid,
+            current: currentUuid
+          });
+          return;
+        }
+        _restoring = true;
+        try {
+          var live = Project[PROPERTY_NAME];
+          var uiState = live && live._uiState && typeof live._uiState === "object" ? deepClone(live._uiState) : null;
+          var next = deepClone(snapshot.config) || {};
+          next._uiState = reconcileUiState(next, uiState);
+          applySnapshot(live, next);
+          log2.debug("load_undo_save: \u914D\u7F6E\u5DF2\u6062\u590D", {
+            parts: Project[PROPERTY_NAME] && Project[PROPERTY_NAME].parts ? Object.keys(Project[PROPERTY_NAME].parts).length : 0,
+            activePartId: next._uiState.activePartId,
+            activeVariantName: next._uiState.activeVariantName
+          });
+          refreshAfterRestore();
+        } catch (e) {
+          log2.error("load_undo_save: \u6062\u590D\u914D\u7F6E\u5931\u8D25", e);
+        } finally {
+          _restoring = false;
+        }
+      }
+      function registerUndoBridge2() {
+        if (_listeners.length > 0) {
+          log2.debug("registerUndoBridge: \u5DF2\u6CE8\u518C\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        if (typeof Blockbench === "undefined" || typeof Blockbench.on !== "function") {
+          log2.warn("registerUndoBridge: Blockbench.on \u4E0D\u53EF\u7528\uFF0C\u8DF3\u8FC7");
+          return;
+        }
+        _listeners.push(Blockbench.on("create_undo_save", onCreateUndoSave));
+        _listeners.push(Blockbench.on("load_undo_save", onLoadUndoSave));
+        log2.info("registerUndoBridge: \u5DF2\u63A5\u5165 Blockbench \u539F\u751F\u64A4\u9500\uFF08aspect=" + ASPECT_FLAG + "\uFF09");
+      }
+      function unregisterUndoBridge2() {
+        for (var i = 0; i < _listeners.length; i++) {
+          try {
+            if (typeof _listeners[i] === "function") _listeners[i]();
+          } catch (e) {
+            log2.warn("unregisterUndoBridge: \u6E05\u7406\u76D1\u542C\u5931\u8D25", e && e.message);
+          }
+        }
+        _listeners.length = 0;
+        _depth = 0;
+        log2.info("unregisterUndoBridge: \u5DF2\u79FB\u9664\u64A4\u9500\u6865\u76D1\u542C");
+      }
+      function _runUnrecorded(opts, label, mutate, reason) {
+        if (opts && opts.strict) {
+          var err = new Error("\u201C" + label + "\u201D\u65E0\u6CD5\u8FDB\u5165\u64A4\u9500\u6808\uFF1A" + reason);
+          log2.warn("runConfigEdit: " + err.message);
+          throw err;
+        }
+        log2.warn("runConfigEdit: \u672A\u8BB0\u5F55\u64A4\u9500\uFF08" + reason + "\uFF09\uFF1A" + label);
+        var now = Date.now();
+        if (now - _lastBlockedNoticeAt > 5e3) {
+          _lastBlockedNoticeAt = now;
+          try {
+            require_notify().showToast("\u8BE5\u64CD\u4F5C\u5DF2\u6267\u884C\uFF0C\u4F46\u672A\u80FD\u8FDB\u5165\u64A4\u9500\u6808\uFF1A" + reason, "warning");
+          } catch (e) {
+            log2.debug("runConfigEdit: \u63D0\u793A\u4E0D\u53EF\u7528", e && e.message);
+          }
+        }
+        var result = mutate();
+        _emitConfigChanged(opts, label);
+        return result;
+      }
+      function _emitConfigChanged(opts, label) {
+        if (typeof Blockbench === "undefined" || typeof Blockbench.dispatchEvent !== "function") return;
+        var payload = {
+          source: opts && opts.source || "ui",
+          label,
+          kinds: opts && opts.kinds || [],
+          paths: opts && opts.paths || [],
+          persist: !(opts && opts.persist === false)
+        };
+        try {
+          Blockbench.dispatchEvent("mm_config_changed", payload);
+        } catch (e) {
+          log2.debug("runConfigEdit: \u6D3E\u53D1 mm_config_changed \u5931\u8D25", e && e.message);
+        }
+      }
+      function _coalesceWithPrevious(undo, label, mergeKey) {
+        try {
+          var history = undo.history;
+          if (!Array.isArray(history) || history.length < 2) return;
+          var current = history[history.length - 1];
+          var previous = history[history.length - 2];
+          if (!current || !previous) return;
+          if (previous.type !== "edit" || current.type !== "edit") return;
+          if (previous.action !== label) return;
+          if (previous._mmMergeKey !== mergeKey) return;
+          if (!(Date.now() - (previous.time || 0) < COALESCE_WINDOW_MS)) return;
+          var prevPost = previous.post && previous.post[SNAPSHOT_KEY];
+          var curBefore = current.before && current.before[SNAPSHOT_KEY];
+          if (!prevPost || !curBefore) return;
+          if (estimateSize(prevPost.config) !== estimateSize(curBefore.config)) return;
+          if (JSON.stringify(prevPost.config) !== JSON.stringify(curBefore.config)) return;
+          previous.post = current.post;
+          previous.time = current.time;
+          history.pop();
+          undo.index = history.length;
+          log2.debug('_coalesceWithPrevious: \u5DF2\u5408\u5E76\u8FDE\u7EED\u7F16\u8F91 "' + label + '"');
+        } catch (e) {
+          log2.warn("_coalesceWithPrevious: \u5408\u5E76\u5931\u8D25\uFF08\u5FFD\u7565\uFF09", e && e.message);
+        }
+      }
+      function _discardEmptyEntry(undo, wasSaved) {
+        try {
+          var history = undo.history;
+          if (!Array.isArray(history) || history.length === 0) return false;
+          var entry = history[history.length - 1];
+          if (!entry || entry.type !== "edit") return false;
+          var beforeSnap = entry.before && entry.before[SNAPSHOT_KEY];
+          var postSnap = entry.post && entry.post[SNAPSHOT_KEY];
+          if (!beforeSnap || !postSnap) return false;
+          if (JSON.stringify(beforeSnap.config) !== JSON.stringify(postSnap.config)) return false;
+          history.pop();
+          undo.index = history.length;
+          if (typeof Project !== "undefined" && Project) Project.saved = wasSaved;
+          log2.debug('_discardEmptyEntry: \u5DF2\u4E22\u5F03\u7A7A\u8BB0\u5F55 "' + (entry.action || "") + '"');
+          return true;
+        } catch (e) {
+          log2.warn("_discardEmptyEntry: \u5224\u65AD\u5931\u8D25\uFF08\u5FFD\u7565\uFF09", e && e.message);
+          return false;
+        }
+      }
+      function runConfigEdit(label, mutate, options) {
+        if (typeof mutate !== "function") {
+          throw new TypeError("runConfigEdit: mutate \u5FC5\u987B\u662F\u51FD\u6570");
+        }
+        var opts = options || {};
+        var text = typeof label === "string" && label ? label : "MachineMax \u7F16\u8F91";
+        if (_depth > 0) {
+          _depth++;
+          try {
+            return mutate();
+          } finally {
+            _depth--;
+          }
+        }
+        var undo = getUndo();
+        if (_restoring || !undo || typeof undo.initEdit !== "function" || !getProjectConfig()) {
+          return mutate();
+        }
+        if (undo.current_save) {
+          return _runUnrecorded(opts, text, mutate, "\u7F16\u8F91\u5668\u6709\u672A\u5B8C\u6210\u7684\u7F16\u8F91\uFF08\u62D6\u62FD / \u7ED8\u5236 / \u8F93\u5165\u63D0\u4EA4\u4E2D\uFF09\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
+        }
+        var before = createSnapshot();
+        if (before && estimateSize(before.config) > MAX_SNAPSHOT_BYTES) {
+          return _runUnrecorded(opts, text, mutate, "\u914D\u7F6E\u5FEB\u7167\u8D85\u8FC7 2 MB");
+        }
+        var aspects = {};
+        aspects[ASPECT_FLAG] = true;
+        var wasSaved = typeof Project !== "undefined" && Project ? Project.saved : true;
+        try {
+          undo.initEdit(aspects);
+        } catch (e) {
+          log2.error("runConfigEdit: initEdit \u5931\u8D25\uFF0C\u9000\u5316\u4E3A\u4E0D\u8BB0\u5F55\u6267\u884C", e);
+          return mutate();
+        }
+        _depth = 1;
+        var result;
+        try {
+          result = mutate();
+        } catch (e) {
+          _depth = 0;
+          try {
+            undo.cancelEdit(true);
+          } catch (rollbackError) {
+            log2.error("runConfigEdit: \u53D8\u66F4\u5931\u8D25\u4E14\u56DE\u6EDA\u5931\u8D25", rollbackError);
+          }
+          throw e;
+        }
+        _depth = 0;
+        var discarded = false;
+        try {
+          undo.finishEdit(text, aspects);
+          discarded = _discardEmptyEntry(undo, wasSaved);
+          if (!discarded && opts.coalesce === true && opts.mergeKey) {
+            var entry = undo.history && undo.history[undo.history.length - 1];
+            if (entry) entry._mmMergeKey = opts.mergeKey;
+            _coalesceWithPrevious(undo, text, opts.mergeKey);
+          }
+        } catch (e) {
+          log2.error("runConfigEdit: finishEdit \u5931\u8D25", e);
+        }
+        if (!discarded && typeof Blockbench !== "undefined" && typeof Blockbench.dispatchEvent === "function") {
+          try {
+            Blockbench.dispatchEvent("update_selection");
+          } catch (e) {
+            log2.debug("runConfigEdit: \u6D3E\u53D1 update_selection \u5931\u8D25", e && e.message);
+          }
+        }
+        if (!discarded) _emitConfigChanged(opts, text);
+        return result;
+      }
+      function withUndoEdit(label, fn) {
+        if (typeof fn !== "function") return fn;
+        return function() {
+          var self = this;
+          var args = arguments;
+          var text = typeof label === "function" ? label.apply(self, args) : label;
+          return runConfigEdit(text, function() {
+            return fn.apply(self, args);
+          });
+        };
+      }
+      function wrapMethodMap(methods, labels) {
+        if (!methods || !labels) return methods;
+        for (var name in labels) {
+          if (!hasOwn(labels, name)) continue;
+          var original = methods[name];
+          if (typeof original !== "function") {
+            log2.warn("wrapMethodMap: \u65B9\u6CD5\u4E0D\u5B58\u5728\u6216\u4E0D\u662F\u51FD\u6570\uFF0C\u8DF3\u8FC7: " + name);
+            continue;
+          }
+          methods[name] = withUndoEdit(labels[name], original);
+        }
+        return methods;
+      }
+      function isEditInProgress() {
+        var undo = getUndo();
+        return !!(undo && undo.current_save);
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          PROPERTY_NAME,
+          ASPECT_FLAG,
+          SNAPSHOT_KEY,
+          RESTORED_EVENT,
+          registerUndoBridge: registerUndoBridge2,
+          unregisterUndoBridge: unregisterUndoBridge2,
+          runConfigEdit,
+          withUndoEdit,
+          wrapMethodMap,
+          refreshAfterRestore,
+          isEditInProgress,
+          getUndo,
+          // 供测试使用
+          _internals: {
+            createSnapshot,
+            deepClone,
+            reconcileUiState,
+            estimateSize,
+            onCreateUndoSave,
+            onLoadUndoSave
+          }
+        };
+      }
+    }
+  });
+
   // src/doc/address.js
   var require_address = __commonJS({
     "src/doc/address.js"(exports, module) {
@@ -18345,312 +19034,6 @@
         getExportShape,
         decodeStrict,
         encode
-      };
-    }
-  });
-
-  // src/doc/validate.js
-  var require_validate = __commonJS({
-    "src/doc/validate.js"(exports, module) {
-      "use strict";
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var fieldSpecs = require_field_specs();
-      var keys = require_keys();
-      function isPlainObject(v) {
-        return v !== null && typeof v === "object" && !Array.isArray(v);
-      }
-      function makeError(path, code, expected, got, hint) {
-        return {
-          path: Array.isArray(path) ? path.slice() : [],
-          code,
-          expected,
-          got,
-          hint: hint || ""
-        };
-      }
-      function typeName(v) {
-        if (v === null) return "null";
-        if (Array.isArray(v)) return "array";
-        return typeof v;
-      }
-      function describeBranch(spec) {
-        if (!spec) return "any";
-        if (spec.type) return spec.type;
-        if (spec.oneOf) return "oneOf";
-        return "any";
-      }
-      function validateEnum(spec, value, path) {
-        if (!spec.enum || spec.enum.indexOf(value) >= 0) return [];
-        return [makeError(
-          path,
-          "invalid_enum",
-          spec.enum.slice(),
-          value,
-          "\u5141\u8BB8\u503C\uFF1A" + spec.enum.join(", ")
-        )];
-      }
-      function validateRange(spec, value, path) {
-        var errors = [];
-        if (typeof value !== "number") return errors;
-        if (typeof spec.minimum === "number" && value < spec.minimum) {
-          errors.push(makeError(path, "out_of_range", ">= " + spec.minimum, value));
-        }
-        if (typeof spec.maximum === "number" && value > spec.maximum) {
-          errors.push(makeError(path, "out_of_range", "<= " + spec.maximum, value));
-        }
-        return errors;
-      }
-      function checkType(spec, value, path) {
-        var t = spec.type;
-        if (!t || t === "any") return [];
-        switch (t) {
-          case "string":
-            return typeof value === "string" ? [] : [makeError(path, "type_mismatch", "string", typeName(value))];
-          case "number":
-            return typeof value === "number" && isFinite(value) ? [] : [makeError(path, "type_mismatch", "number", typeName(value))];
-          case "integer":
-            return typeof value === "number" && Number.isInteger(value) ? [] : [makeError(path, "type_mismatch", "integer", typeName(value))];
-          case "boolean":
-            return typeof value === "boolean" ? [] : [makeError(path, "type_mismatch", "boolean", typeName(value))];
-          case "array":
-          case "tuple":
-            return Array.isArray(value) ? [] : [makeError(path, "type_mismatch", "array", typeName(value))];
-          case "object":
-            return isPlainObject(value) ? [] : [makeError(path, "type_mismatch", "object", typeName(value))];
-          default:
-            return [];
-        }
-      }
-      function validateValue(spec, value, path, opts) {
-        opts = opts || {};
-        if (!spec) return [];
-        if (value === null) {
-          if (spec.nullable) return [];
-          return [makeError(path, "type_mismatch", describeBranch(spec) + "\uFF08\u4E0D\u5141\u8BB8 null\uFF09", "null")];
-        }
-        if (Array.isArray(spec.oneOf)) {
-          for (var i = 0; i < spec.oneOf.length; i++) {
-            var branchErrors = validateValue(spec.oneOf[i], value, path, opts);
-            if (branchErrors.length === 0) return [];
-          }
-          return [makeError(
-            path,
-            "type_mismatch",
-            spec.oneOf.map(describeBranch).join(" | "),
-            typeName(value),
-            "\u503C\u4E0D\u5339\u914D\u4EFB\u4F55\u4E00\u4E2A\u5141\u8BB8\u7684\u5206\u652F"
-          )];
-        }
-        var errors = [];
-        errors = errors.concat(checkType(spec, value, path));
-        if (errors.length > 0) return errors;
-        errors = errors.concat(validateEnum(spec, value, path));
-        errors = errors.concat(validateRange(spec, value, path));
-        if (Array.isArray(value)) {
-          if (typeof spec.minItems === "number" && value.length < spec.minItems) {
-            errors.push(makeError(
-              path,
-              "type_mismatch",
-              "array length >= " + spec.minItems,
-              value.length,
-              "\u6570\u7EC4\u957F\u5EA6\u4E0D\u8DB3"
-            ));
-          }
-          if (typeof spec.maxItems === "number" && value.length > spec.maxItems) {
-            errors.push(makeError(
-              path,
-              "type_mismatch",
-              "array length <= " + spec.maxItems,
-              value.length,
-              "\u6570\u7EC4\u957F\u5EA6\u8D85\u51FA"
-            ));
-          }
-          if (spec.type === "tuple" && Array.isArray(spec.tuple)) {
-            var tupleLen = Math.min(value.length, spec.tuple.length);
-            for (var ti = 0; ti < tupleLen; ti++) {
-              errors = errors.concat(validateValue(
-                spec.tuple[ti],
-                value[ti],
-                path.concat([ti]),
-                opts
-              ));
-            }
-          } else if (spec.items) {
-            for (var ai = 0; ai < value.length; ai++) {
-              errors = errors.concat(validateValue(
-                spec.items,
-                value[ai],
-                path.concat([ai]),
-                opts
-              ));
-            }
-          }
-          return errors;
-        }
-        if (isPlainObject(value)) {
-          var objectKeys = Object.keys(value);
-          if (opts.completeness && typeof spec.minProperties === "number" && objectKeys.length < spec.minProperties) {
-            errors.push(makeError(
-              path,
-              "missing_required",
-              "object with >= " + spec.minProperties + " properties",
-              objectKeys.length,
-              "\u81F3\u5C11\u9700\u8981 " + spec.minProperties + " \u4E2A\u6761\u76EE"
-            ));
-          }
-          var known = spec.properties || null;
-          for (var oi = 0; oi < objectKeys.length; oi++) {
-            var key = objectKeys[oi];
-            if (opts.field === "projectile_types" && key.indexOf("__new_p_") === 0) continue;
-            if (known && Object.prototype.hasOwnProperty.call(known, key)) {
-              errors = errors.concat(validateValue(
-                known[key],
-                value[key],
-                path.concat([key]),
-                { field: key, completeness: opts.completeness }
-              ));
-            } else if (spec.additionalProperties === false) {
-              errors.push(makeError(
-                path.concat([key]),
-                "unknown_field",
-                "schema \u672A\u5B9A\u4E49\u7684\u5B57\u6BB5",
-                key,
-                "\u8BE5\u5BF9\u8C61\u4E0D\u5141\u8BB8\u989D\u5916\u5B57\u6BB5"
-              ));
-            } else if (spec.additionalProperties && typeof spec.additionalProperties === "object") {
-              errors = errors.concat(validateValue(
-                spec.additionalProperties,
-                value[key],
-                path.concat([key]),
-                { field: key, completeness: opts.completeness }
-              ));
-            }
-          }
-        }
-        return errors;
-      }
-      function isMissingValue(spec, value) {
-        if (value === void 0 || value === null) return true;
-        if (typeof value === "string" && value.length === 0) return true;
-        if (isPlainObject(value) && spec && spec.minProperties > 0 && Object.keys(value).length < spec.minProperties) {
-          return true;
-        }
-        return false;
-      }
-      function validateValues(node, opts) {
-        opts = opts || {};
-        var kind = opts.kind;
-        var path = Array.isArray(opts.path) ? opts.path.slice() : [];
-        var completeness = !!opts.completeness;
-        var errors = [];
-        if (!node || typeof node !== "object" || Array.isArray(node)) {
-          return {
-            ok: false,
-            errors: [makeError(path, "type_mismatch", kind || "object", typeName(node))]
-          };
-        }
-        var typeId = fieldSpecs.getTypeId(kind, opts.typeId || node);
-        var spec = fieldSpecs.getSpec(kind, typeId || node);
-        if (kind === "subsystem" && !spec) {
-          return {
-            ok: false,
-            errors: [makeError(
-              path,
-              "unknown_type",
-              "\u5DF2\u77E5 subsystem \u7C7B\u578B",
-              typeId || node.type,
-              "\u672A\u77E5\u7684\u5B50\u7CFB\u7EDF\u7C7B\u578B"
-            )]
-          };
-        }
-        if (!spec) {
-          return { ok: true, errors: [] };
-        }
-        var fields = spec.fields || {};
-        Object.keys(fields).forEach(function(field) {
-          var fieldSpec = fields[field];
-          var present = Object.prototype.hasOwnProperty.call(node, field);
-          if (!present) {
-            if (completeness && fieldSpec.required) {
-              errors.push(makeError(
-                path.concat([field]),
-                "missing_required",
-                fieldSpec.type || "any",
-                void 0,
-                "\u5FC5\u586B\u5B57\u6BB5\u7F3A\u5931"
-              ));
-            }
-            return;
-          }
-          var value = node[field];
-          if (completeness && fieldSpec.required && isMissingValue(fieldSpec, value)) {
-            errors.push(makeError(
-              path.concat([field]),
-              "missing_required",
-              fieldSpec.type || "any",
-              value,
-              "\u5FC5\u586B\u5B57\u6BB5\u4E0D\u80FD\u4E3A\u7A7A"
-            ));
-          }
-          errors = errors.concat(validateValue(
-            fieldSpec,
-            value,
-            path.concat([field]),
-            { field, completeness }
-          ));
-        });
-        fieldSpecs.getContainers(kind).forEach(function(container) {
-          var childKind = fieldSpecs.getContainerChildKind(container);
-          var entries = node[container];
-          if (!entries || typeof entries !== "object" || Array.isArray(entries)) return;
-          Object.keys(entries).forEach(function(key) {
-            var child = entries[key];
-            var childErrors = validateValues(child, {
-              kind: childKind,
-              typeId: childKind === "subsystem" ? child && child.type : void 0,
-              path: path.concat([container, key]),
-              completeness
-            }).errors;
-            errors = errors.concat(childErrors);
-          });
-        });
-        return { ok: errors.length === 0, errors };
-      }
-      function validateTree(config, opts) {
-        opts = opts || {};
-        var completeness = opts.completeness !== false;
-        var errors = [];
-        if (!config || typeof config !== "object" || Array.isArray(config)) {
-          return [makeError([], "type_mismatch", "object", typeName(config))];
-        }
-        var keyResult = keys.validateKeys("config", config, {
-          namespace: config.namespace,
-          path: []
-        });
-        errors = errors.concat(keyResult.errors);
-        var parts = config.parts;
-        if (parts && typeof parts === "object" && !Array.isArray(parts)) {
-          Object.keys(parts).forEach(function(partId) {
-            var partErrors = validateValues(parts[partId], {
-              kind: "part",
-              path: ["parts", partId],
-              completeness
-            }).errors;
-            errors = errors.concat(partErrors);
-          });
-        }
-        return errors;
-      }
-      module.exports = {
-        validateValue,
-        validateValues,
-        validateTree,
-        isMissingValue
       };
     }
   });
@@ -20163,96 +20546,6 @@
     }
   });
 
-  // src/core/naming.js
-  var require_naming = __commonJS({
-    "src/core/naming.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("Naming");
-      function toSnakeCase(str) {
-        if (!str) return "";
-        return str.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
-      }
-      function generateDefaultName(entityType, context) {
-        var ns = context.namespace || "machine_max";
-        switch (entityType) {
-          case "sub_part":
-            return "sub_part." + ns + ".main";
-          case "connector":
-            var locName = context.boneName || "connector";
-            return "connector." + ns + "." + toSnakeCase(locName);
-          case "interact_box":
-            var boneName = context.boneName || "interact";
-            return "interact." + ns + "." + toSnakeCase(boneName);
-          case "subsystem":
-            var shortName = context.typeShortName || "subsystem";
-            return "subsystem." + ns + "." + shortName;
-          default:
-            return "";
-        }
-      }
-      var RESERVED_SIGNAL_NAMES = ["local", "global"];
-      function validateNameUniqueness(variant, scope, subPartKey, name, excludeKey) {
-        if (!variant || !name) return { valid: false, message: "\u540D\u79F0\u4E3A\u7A7A" };
-        if (scope !== "sub_part" && RESERVED_SIGNAL_NAMES.indexOf(name) >= 0) {
-          return { valid: false, message: '"' + name + '" \u4E3A\u4FE1\u53F7\u4FDD\u7559\u5730\u5740\uFF08local/global\uFF09\uFF0C\u8BF7\u6362\u4E00\u4E2A\u540D\u79F0' };
-        }
-        var existingKeys = [];
-        switch (scope) {
-          case "sub_part":
-            existingKeys = Object.keys(variant.sub_parts || {});
-            break;
-          case "connector":
-          case "interact_box":
-          case "subsystem":
-            var field = scope === "connector" ? "connectors" : scope === "interact_box" ? "interact_boxes" : "subsystems";
-            var subParts = variant.sub_parts || {};
-            Object.keys(subParts).forEach(function(key) {
-              var map = subParts[key] && subParts[key][field] || {};
-              Object.keys(map).forEach(function(k) {
-                if (key === subPartKey && k === excludeKey) return;
-                existingKeys.push(k);
-              });
-            });
-            break;
-          default:
-            return { valid: false, message: "\u672A\u77E5\u4F5C\u7528\u57DF" };
-        }
-        for (var i = 0; i < existingKeys.length; i++) {
-          if (existingKeys[i] === name) {
-            return { valid: false, message: '"' + name + '" \u5DF2\u5B58\u5728\uFF0C\u8BF7\u6362\u4E00\u4E2A\u540D\u79F0' };
-          }
-        }
-        return { valid: true, message: "" };
-      }
-      function ensureUniqueName(scope, variant, subPartKey, baseName) {
-        var result = validateNameUniqueness(variant, scope, subPartKey, baseName);
-        if (result.valid) return baseName;
-        var suffix = 2;
-        while (!result.valid && suffix <= 999) {
-          var candidate = baseName + "_" + suffix;
-          result = validateNameUniqueness(variant, scope, subPartKey, candidate);
-          if (result.valid) return candidate;
-          suffix++;
-        }
-        return baseName + "_" + Date.now();
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          toSnakeCase,
-          generateDefaultName,
-          validateNameUniqueness,
-          ensureUniqueName
-        };
-      }
-    }
-  });
-
   // src/ops/sub_part.js
   var require_sub_part = __commonJS({
     "src/ops/sub_part.js"(exports, module) {
@@ -20264,6 +20557,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { generateDefaultName } = require_naming();
+      var { createSubPartConfig } = require_config();
       var { runConfigEdit } = require_undo();
       var doc = require_doc();
       var shared = require_shared();
@@ -20287,7 +20581,8 @@
         var element = options.element;
         if (!element || !element.uuid) return shared.fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
         var ns = shared.namespaceOf(config);
-        var spKey = ensureSubPartName(config, variant, ns);
+        var spKey = String(options.spKey || "").trim();
+        if (!spKey) spKey = ensureSubPartName(config, variant, ns);
         var keyError = shared.validateKey(
           "sub_parts",
           spKey,
@@ -20296,11 +20591,21 @@
         );
         if (keyError) return shared.fail(keyError.hint, [keyError]);
         var mp = shared.markersPort();
+        var created = false;
         runConfigEdit("\u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6", function() {
+          if (!variant.sub_parts) shared.setProp(variant, "sub_parts", {});
+          if (!variant.sub_parts[spKey]) {
+            var sp = createSubPartConfig();
+            sp.start_bone = element.name || "";
+            shared.setProp(variant.sub_parts, spKey, sp);
+            created = true;
+          } else if (!variant.sub_parts[spKey].start_bone) {
+            shared.setProp(variant.sub_parts[spKey], "start_bone", element.name || "");
+          }
           mp.set(config, options.partId, options.variantName, element.uuid, "sub_part", spKey);
           if (mp.recalc) mp.recalc(config, options.partId, options.variantName);
         }, { coalesce: false });
-        return shared.ok({ spKey, changed: true });
+        return shared.ok({ spKey, changed: true, created });
       }
       function importSubPart(config, options) {
         options = options || {};
@@ -20641,8 +20946,11 @@
         if (!element || !element.uuid) return shared.fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
         var spKey = options.spKey || ownerFor(config, options.partId, options.variantName, element);
         var ns = shared.namespaceOf(config);
-        var baseName = generateDefaultName("interact_box", { namespace: ns, boneName: element.name });
-        var ibName = ensureUniqueName("interact_box", variant, spKey, baseName);
+        var ibName = String(options.key || "").trim();
+        if (!ibName) {
+          var baseName = generateDefaultName("interact_box", { namespace: ns, boneName: element.name });
+          ibName = ensureUniqueName("interact_box", variant, spKey, baseName);
+        }
         var keyError = shared.validateKey(
           "interact_boxes",
           ibName,
@@ -20691,8 +20999,11 @@
         var spKey = options.spKey || ownerFor(config, options.partId, options.variantName, element);
         var locName = element.name || "";
         var ns = shared.namespaceOf(config);
-        var baseName = generateDefaultName("connector", { namespace: ns, boneName: locName });
-        var connName = ensureUniqueName("connector", variant, spKey, baseName);
+        var connName = String(options.key || "").trim();
+        if (!connName) {
+          var baseName = generateDefaultName("connector", { namespace: ns, boneName: locName });
+          connName = ensureUniqueName("connector", variant, spKey, baseName);
+        }
         var keyError = shared.validateKey(
           "connectors",
           connName,
@@ -21530,7 +21841,7 @@
                 }
               }
               if (changed) {
-                persistence.saveConfig();
+                persistence.scheduleSave();
                 showToast2("\u4F9D\u8D56\u5305\u5DF2\u66F4\u65B0", "positive");
                 if (typeof onSave === "function") onSave(config);
               } else if (!formData.depPathToRemove || !formData.depPathToRemove.trim()) {
@@ -21662,7 +21973,7 @@
                 showToast2(opResult.error, "error");
                 return false;
               }
-              persistence.saveConfig();
+              persistence.scheduleSave();
               var namespace = result.namespace || "";
               var displayName = folderName || packId.split(":").pop() || packId;
               log2.info("\u5185\u5BB9\u5305\u521B\u5EFA\u6210\u529F", { path: packDirPath, namespace, id: packId, name: displayName });
@@ -21674,7 +21985,7 @@
                 for (var d = 0; d < directDeps.length; d++) allPaths.push(directDeps[d].path);
                 for (var k = 0; k < indirectDeps.length; k++) allPaths.push(indirectDeps[k].path);
                 ops.updateDependencyPaths(config, { add: allPaths });
-                persistence.saveConfig();
+                persistence.scheduleSave();
                 var msg = "\u5185\u5BB9\u5305 " + displayName + " \u521B\u5EFA\u6210\u529F";
                 if (directDeps.length > 0) {
                   msg += "\uFF0C\u5DF2\u6DFB\u52A0 " + directDeps.length + " \u4E2A\u76F4\u63A5\u4F9D\u8D56";
@@ -21777,7 +22088,7 @@
                 description: config.packMeta.description,
                 full: JSON.stringify(config.packMeta).substring(0, 500)
               });
-              persistence.saveConfig();
+              persistence.scheduleSave();
               var displayName = path.basename(dirPath) || result.namespace || "";
               showToast2("\u5185\u5BB9\u5305 " + displayName + " \u5DF2\u52A0\u8F7D", "positive", 5e3);
               log2.info("\u5185\u5BB9\u5305\u5DF2\u6253\u5F00", { path: dirPath, namespace: result.namespace, id: meta.id });
@@ -21901,7 +22212,7 @@
       var { createLogger: createLogger2 } = require_logger();
       var { getConfig, saveConfig } = require_persistence();
       var { showToast: showToast2 } = require_notify();
-      var { collectIssues } = require_validation();
+      var { canExport } = require_export();
       var { executeExport } = require_export_pipeline();
       var ops = require_ops();
       var path = __require("path");
@@ -22074,19 +22385,28 @@
           return { id: depId, type: depType };
         });
       }
-      function buildValidationInfo(config) {
-        var problems = collectIssues(config);
+      function buildValidationInfo(gate) {
+        var problems = gate && gate.issues || [];
         if (!problems || problems.length === 0) return "";
+        if (typeof window !== "undefined") {
+          window.__mmLastExportIssues = problems;
+        }
         var tree = {};
         for (var i = 0; i < problems.length; i++) {
           var p = problems[i];
-          var partId = p.path.partId || "\uFF08\u5168\u5C40\uFF09";
-          var v = p.path.variantName || "";
+          var partId = p.path && p.path.partId || "\uFF08\u5168\u5C40\uFF09";
+          var v = p.path && p.path.variantName || "";
           if (!tree[partId]) tree[partId] = {};
           if (!tree[partId][v]) tree[partId][v] = [];
-          tree[partId][v].push(p);
+          tree[partId][v].push({ problem: p, index: i });
         }
-        var lines = ['<span style="color:#ff6b6b">\u6821\u9A8C\u53D1\u73B0 ' + problems.length + " \u4E2A\u95EE\u9898</span>:"];
+        var errorCount = gate && gate.errors ? gate.errors.length : 0;
+        var warningCount = gate && gate.warnings ? gate.warnings.length : 0;
+        var color = errorCount > 0 ? "#ff6b6b" : "#e0a030";
+        var lines = ['<span style="color:' + color + '">\u6821\u9A8C\u53D1\u73B0 ' + problems.length + " \u4E2A\u95EE\u9898\uFF08\u9519\u8BEF " + errorCount + " / \u8B66\u544A " + warningCount + "\uFF09</span>:"];
+        if (errorCount > 0) {
+          lines.push('<span style="color:#ff6b6b">\u5B58\u5728\u9519\u8BEF\uFF0C\u5BFC\u51FA\u5DF2\u88AB\u62E6\u622A\uFF1B\u8BF7\u5148\u4FEE\u590D\u540E\u518D\u8BD5\u3002</span>');
+        }
         var partIds = Object.keys(tree);
         for (var pi = 0; pi < partIds.length; pi++) {
           var partId = partIds[pi];
@@ -22097,9 +22417,11 @@
             var list = vs[v];
             lines.push("<b>" + partId + (v ? "/" + v : "") + "</b>");
             for (var li = 0; li < list.length; li++) {
-              var cur = list[li];
+              var cur = list[li].problem;
+              var idx = list[li].index;
               var icon = cur.severity === "error" ? "\u2717" : "\u26A0";
-              lines.push("&nbsp;&nbsp;\u2022 " + icon + " " + cur.message);
+              var loc = cur.path && cur.path.field ? " [" + cur.path.field + "]" : "";
+              lines.push("&nbsp;&nbsp;\u2022 " + icon + loc + " " + cur.message + ' <button type="button" class="mm-btn mm-btn-sm" onclick="if(window.__mmNavigator&&window.__mmLastExportIssues){window.__mmNavigator.selectByIssue(window.__mmLastExportIssues[' + idx + ']);}">\u5B9A\u4F4D</button>');
             }
           }
         }
@@ -22134,7 +22456,8 @@
         });
         var defaultPackId = pm.id || ns + ":" + (Project ? Project.name || "content_pack" : "content_pack");
         var defaultExportDir = pm.exportDir || _getDefaultExportDir(pm);
-        var errorText = buildValidationInfo(config);
+        var gate = canExport(config);
+        var errorText = buildValidationInfo(gate);
         var statLines = [
           "\u6A21\u578B: " + (Project ? Project.name : "\u672A\u547D\u540D"),
           "\u5185\u5BB9\u5305\u8DEF\u5F84: " + (config.contentPackPath || "\u672A\u8BBE\u7F6E"),
@@ -22218,6 +22541,16 @@
               if (!exportDir) {
                 showToast2("\u8BF7\u5148\u9009\u62E9\u5BFC\u51FA\u76EE\u5F55", "warning");
                 return;
+              }
+              var finalGate = canExport(config);
+              if (!finalGate.ok) {
+                var first = finalGate.errors[0];
+                showToast2("\u5BFC\u51FA\u88AB\u62E6\u622A\uFF1A" + (first ? first.message : "\u5B58\u5728\u914D\u7F6E\u9519\u8BEF") + "\uFF08\u5171 " + finalGate.errors.length + " \u4E2A\u9519\u8BEF\uFF09", "error", 6e3);
+                log2.warn("showExportDialog: \u5BFC\u51FA\u88AB\u6821\u9A8C\u62E6\u622A", {
+                  errorCount: finalGate.errors.length,
+                  warningCount: finalGate.warnings.length
+                });
+                return false;
               }
               var packFolderName = _sanitizeFolderName(formData.packName) || _sanitizeFolderName(pm.name || (config.contentPackPath ? path.basename(config.contentPackPath) : "")) || (Project ? Project.name : "content_pack");
               var overriddenMeta = {
@@ -23500,7 +23833,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
-      var { getConfig, saveConfig } = require_persistence();
+      var { getConfig, scheduleSave } = require_persistence();
       var { showToast: showToast2 } = require_notify();
       var content_pack = require_content_pack();
       var log2 = createLogger2("Menu");
@@ -23620,7 +23953,7 @@
               }
               var pd = require_pack_setup_dialog();
               pd.showOpenPackDialog(config, function(updatedConfig) {
-                saveConfig();
+                scheduleSave();
                 showToast2("\u5DF2\u5207\u6362\u81F3\u5185\u5BB9\u5305", "positive");
               });
             }
@@ -23742,7 +24075,7 @@
         }
         var pd = require_pack_setup_dialog();
         pd.showPackSetupDialog(config, function(updatedConfig) {
-          saveConfig();
+          scheduleSave();
           if (updatedConfig.contentPackPath) {
             var checkResult = content_pack.openContentPack(updatedConfig.contentPackPath);
             if (typeof onResult === "function") onResult(checkResult.valid, updatedConfig);
@@ -23779,7 +24112,7 @@
       init_define_SCHEMAS();
       var ops = require_ops();
       var { showToast: showToast2 } = require_notify();
-      var { saveConfig } = require_persistence();
+      var { scheduleSave } = require_persistence();
       var { createLogger: createLogger2 } = require_logger();
       var { refreshOutlinerIcons } = require_icons();
       var log2 = createLogger2("PartDialogs");
@@ -23841,7 +24174,7 @@
                 return false;
               }
               log2.info("\u9879\u76EE\u7BA1\u7406: \u5185\u5BB9\u5305\u8DEF\u5F84\u5DF2\u66F4\u65B0", { contentPackPath: formData.contentPackPath });
-              saveConfig();
+              scheduleSave();
               showToast2("\u5185\u5BB9\u5305\u8DEF\u5F84\u5DF2\u66F4\u65B0", "positive");
               if (typeof onSaved === "function") onSaved(config);
               this.hide();
@@ -23871,7 +24204,7 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var { getConfig, saveConfig } = require_persistence();
+      var { getConfig, scheduleSave } = require_persistence();
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
       var { refreshOutlinerIcons } = require_icons();
@@ -23959,7 +24292,7 @@
               return;
             }
             require_part_dialogs().showProjectSettingsDialog(config, function() {
-              saveConfig();
+              scheduleSave();
             });
           }
         }));
@@ -24089,7 +24422,7 @@
         var ssTypes = require_subsystem_types();
         var groupedTypes = ssTypes.getTypesGroupedByCategory();
         var { showToast: showToast2 } = require_notify();
-        var { saveConfig } = require_persistence();
+        var { scheduleSave } = require_persistence();
         var ops = require_ops();
         var allTypeOpts = {};
         var catOrder = ["power", "control", "utility", "experimental"];
@@ -24137,7 +24470,7 @@
               return false;
             }
             onCreated(spKey, result.instanceName);
-            saveConfig();
+            scheduleSave();
             showToast2('\u5B50\u7CFB\u7EDF "' + result.instanceName + '" \u5DF2\u521B\u5EFA', "positive");
             this.hide();
             Blockbench.dispatchEvent("update_selection");
@@ -26988,9 +27321,8 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var { getConfig, loadConfig, saveConfig } = require_persistence();
+      var { getConfig, loadConfig, saveConfig, scheduleSave } = require_persistence();
       var { getMarkerInfo, detectOwnerSubPart } = require_element_markers();
-      var { createSubPartConfig } = require_config();
       var ops = require_ops();
       var { createLogger: createLogger2 } = require_logger();
       var { refreshOutlinerIcons } = require_icons();
@@ -27152,6 +27484,10 @@
 
     <!-- \u5B50\u96F6\u4EF6\u5C5E\u6027\u9762\u677F\uFF08\u72EC\u7ACB v-show \u5BB9\u5668\uFF0C\u4FDD\u7559\u6EDA\u52A8\u4F4D\u7F6E\uFF09 -->
     <div v-show="!isSubsystemSelected && isSubPartSelected" class="mm-panel-body">
+        <div v-if="!selectedSubPartConfig" class="mm-section">
+            <p class="mm-panel-hint">\u8BE5\u9AA8\u9ABC\u5DF2\u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6\uFF0C\u4F46\u914D\u7F6E\u6761\u76EE\u7F3A\u5931\uFF08\u5E38\u89C1\u4E8E\u65E7\u5DE5\u7A0B\u6216\u624B\u52A8\u5220\u9664\uFF09\u3002</p>
+            <button class="mm-btn mm-btn-sm" @click="repairSelectedConfig">\u521B\u5EFA\u914D\u7F6E</button>
+        </div>
         <mm-sub-part-panel v-if="selectedSubPartConfig"
             :config="selectedSubPartConfig"
             :element-name="selectedElementName"
@@ -27178,6 +27514,10 @@
 
     <!-- \u78B0\u649E\u7BB1\u5C5E\u6027\u9762\u677F\uFF08\u72EC\u7ACB v-show \u5BB9\u5668\uFF0C\u4FDD\u7559\u6EDA\u52A8\u4F4D\u7F6E\uFF09 -->
     <div v-show="!isSubsystemSelected && isHitBoxSelected" class="mm-panel-body">
+        <div v-if="!selectedHitBoxConfig" class="mm-section">
+            <p class="mm-panel-hint">\u8BE5\u9AA8\u9ABC\u5DF2\u6807\u8BB0\u4E3A\u78B0\u649E\u7BB1\uFF0C\u4F46\u914D\u7F6E\u6761\u76EE\u7F3A\u5931\u3002</p>
+            <button class="mm-btn mm-btn-sm" @click="repairSelectedConfig">\u521B\u5EFA\u914D\u7F6E</button>
+        </div>
         <mm-hit-box-panel v-if="selectedHitBoxConfig"
             :config="selectedHitBoxConfig"
             :element-name="selectedElementName"
@@ -27191,6 +27531,10 @@
 
     <!-- \u4EA4\u4E92\u533A\u5C5E\u6027\u9762\u677F\uFF08\u72EC\u7ACB v-show \u5BB9\u5668\uFF0C\u4FDD\u7559\u6EDA\u52A8\u4F4D\u7F6E\uFF09 -->
     <div v-show="!isSubsystemSelected && isInteractBoxSelected" class="mm-panel-body">
+        <div v-if="!selectedInteractBoxConfig" class="mm-section">
+            <p class="mm-panel-hint">\u8BE5\u9AA8\u9ABC\u5DF2\u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A\uFF0C\u4F46\u914D\u7F6E\u6761\u76EE\u7F3A\u5931\u3002</p>
+            <button class="mm-btn mm-btn-sm" @click="repairSelectedConfig">\u521B\u5EFA\u914D\u7F6E</button>
+        </div>
         <mm-interact-box-panel v-if="selectedInteractBoxConfig"
             :config="selectedInteractBoxConfig"
             :element-name="selectedElementName"
@@ -27208,6 +27552,10 @@
 
     <!-- \u8FDE\u63A5\u70B9\u5C5E\u6027\u9762\u677F\uFF08\u72EC\u7ACB v-show \u5BB9\u5668\uFF0C\u4FDD\u7559\u6EDA\u52A8\u4F4D\u7F6E\uFF09 -->
     <div v-show="!isSubsystemSelected && isConnectorSelected" class="mm-panel-body">
+        <div v-if="!selectedConnectorConfig" class="mm-section">
+            <p class="mm-panel-hint">\u8BE5\u5B9A\u4F4D\u5668\u5DF2\u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9\uFF0C\u4F46\u914D\u7F6E\u6761\u76EE\u7F3A\u5931\u3002</p>
+            <button class="mm-btn mm-btn-sm" @click="repairSelectedConfig">\u521B\u5EFA\u914D\u7F6E</button>
+        </div>
         <mm-connector-panel v-if="selectedConnectorConfig"
             :config="selectedConnectorConfig"
             :element-name="selectedElementName"
@@ -27367,13 +27715,6 @@
             void this.markerVersion.v;
             var variant = this.currentVariant;
             if (!variant || !variant.sub_parts) {
-              log2.debug("subPartEntries: \u65E0 variant \u6216 sub_parts", {
-                variantExists: !!variant,
-                subPartsExists: variant ? !!variant.sub_parts : false,
-                activePartId: this.activePartId,
-                activeVariantName: this.activeVariantName,
-                markerVersion: this.markerVersion.v
-              });
               return [];
             }
             var ns = this.config && this.config.namespace || "machine_max";
@@ -27390,13 +27731,9 @@
                 return !subPartMarkerKeys[k];
               });
               if (orphaned.length > 0) {
-                log2.warn("subPartEntries: \u53D1\u73B0\u65E0\u5BF9\u5E94\u6807\u8BB0\u7684\u5B50\u96F6\u4EF6\u914D\u7F6E\uFF08\u9057\u7559\u810F\u6570\u636E\uFF09\uFF0C\u81EA\u52A8\u6E05\u7406", {
+                log2.warn("subPartEntries: \u53D1\u73B0\u65E0\u5BF9\u5E94\u6807\u8BB0\u7684\u5B50\u96F6\u4EF6\u914D\u7F6E\uFF08\u9057\u7559\u810F\u6570\u636E\uFF09\uFF0C\u7B49\u5F85\u7528\u6237\u6E05\u7406", {
                   orphanedKeys: orphaned
                 });
-                for (var ok = 0; ok < orphaned.length; ok++) {
-                  delete variant.sub_parts[orphaned[ok]];
-                  log2.debug("subPartEntries: \u5DF2\u6E05\u7406\u5B64\u513F\u5B50\u96F6\u4EF6", { spKey: orphaned[ok] });
-                }
               }
             }
             log2.debug("subPartEntries: \u8BA1\u7B97\u4E2D", {
@@ -27477,29 +27814,16 @@
           selectedSubPartConfig: function() {
             if (!this.selectedMarker || this.selectedMarker.type !== "sub_part") return null;
             const variant = this.currentVariant;
-            if (!variant) return null;
-            if (!variant.sub_parts) {
-              this.$set(variant, "sub_parts", {});
-            }
+            if (!variant || !variant.sub_parts) return null;
             const spKey = this.selectedMarker.config_ref;
             if (!spKey) return null;
-            if (!variant.sub_parts[spKey]) {
-              var groupEl = this.selectedElement;
-              const spConfig = createSubPartConfig();
-              spConfig.start_bone = groupEl ? groupEl.name : spKey;
-              this.$set(variant.sub_parts, spKey, spConfig);
-              log2.debug("selectedSubPartConfig: \u81EA\u52A8\u521B\u5EFA\u914D\u7F6E", { spKey, start_bone: spConfig.start_bone });
-            }
-            if (!variant.sub_parts[spKey].auto_end_bones) {
-              this.$set(variant.sub_parts[spKey], "auto_end_bones", []);
-            }
             return variant.sub_parts[spKey] || null;
           },
           /**
            * 当前选中是否为已绑定配置的子零件标记
            */
           isSubPartSelected: function() {
-            return this.selectedMarker && this.selectedMarker.type === "sub_part" && !!this.selectedSubPartConfig;
+            return this.selectedMarker && this.selectedMarker.type === "sub_part";
           },
           /**
            * 当前选中是否为碰撞箱标记
@@ -27667,17 +27991,17 @@
             }
             var variant = this.currentVariant;
             if (!variant || !variant.sub_parts) {
-              return { _orphan: true, id: "part", type: "box", material: "", thickness: 1, condition: "true" };
+              return { _orphan: true, id: "part", type: "box", material: "machine_max:default", thickness: 1, condition: "true" };
             }
             var owner = this.hitBoxOwner;
             var spKey = owner ? owner.spKey : null;
             if (!spKey || !variant.sub_parts[spKey]) {
-              return { _orphan: true, id: "part", type: "box", material: "", thickness: 1, condition: "true" };
+              return { _orphan: true, id: "part", type: "box", material: "machine_max:default", thickness: 1, condition: "true" };
             }
             var sp = variant.sub_parts[spKey];
-            if (!sp.hit_boxes) this.$set(sp, "hit_boxes", {});
+            if (!sp.hit_boxes) return null;
             var hbKey = this.selectedElement.uuid;
-            return sp.hit_boxes[hbKey] || { _orphan: true, id: "part", type: "box", material: "", thickness: 1, condition: "true" };
+            return sp.hit_boxes[hbKey] || null;
           },
           /**
            * 碰撞箱所属子零件的 key
@@ -27745,14 +28069,14 @@
               return { _orphan: true, bone: "", interact_mode: "fast", condition: "NOR", signal_targets: {} };
             }
             var sp = variant.sub_parts[spKey];
-            if (!sp.interact_boxes) this.$set(sp, "interact_boxes", {});
+            if (!sp.interact_boxes) return null;
             var selectedUuid = this.selectedElement.uuid;
             for (var ibKey in sp.interact_boxes) {
               if (sp.interact_boxes[ibKey]._uuid === selectedUuid) {
                 return sp.interact_boxes[ibKey];
               }
             }
-            return { _orphan: true, bone: "", interact_mode: "fast", condition: "NOR", signal_targets: {} };
+            return null;
           },
           /**
            * 交互区在 interact_boxes 字典中的 key（即翻译键格式的名称）
@@ -27785,31 +28109,19 @@
               return null;
             }
             var variant = this.currentVariant;
-            if (!variant) return { _orphan: true, definition: marker.config_ref || "" };
-            if (!variant.sub_parts) {
-              this.$set(variant, "sub_parts", {});
-            }
+            if (!variant || !variant.sub_parts) return null;
             var owner = this.connectorOwner;
             var spKey = owner ? owner.spKey : null;
             if (!spKey) {
               return { _orphan: true, definition: marker.config_ref || "" };
             }
-            if (!variant.sub_parts[spKey]) {
-              var spConfig = createSubPartConfig();
-              spConfig.start_bone = spKey;
-              this.$set(variant.sub_parts, spKey, spConfig);
-            }
             var sp = variant.sub_parts[spKey];
-            if (!sp.connectors) {
-              this.$set(sp, "connectors", {});
-            }
+            if (!sp || !sp.connectors) return null;
             var locatorName = this.selectedElementName;
             var connKey = Object.keys(sp.connectors).find(function(k) {
               return sp.connectors[k].locator === locatorName;
             });
-            if (!connKey) {
-              return { _orphan: true, locator: locatorName, definition: marker.config_ref || "" };
-            }
+            if (!connKey) return null;
             return sp.connectors[connKey] || null;
           }
         },
@@ -28195,7 +28507,7 @@
                 spKey: payload.spKey,
                 key: payload.key
               });
-              saveConfig();
+              scheduleSave();
               refreshOutlinerIcons();
               showToast2("\u5DF2\u81EA\u52A8\u6E05\u7406\u5E7D\u7075" + typeLabel + ' "' + payload.key + '"\uFF08\u5BF9\u5E94\u6A21\u578B\u5143\u7D20\u5DF2\u4E0D\u5B58\u5728\uFF09', "warning");
             } else {
@@ -28335,6 +28647,45 @@
               if (loc.showInOutliner) loc.showInOutliner();
               Blockbench.dispatchEvent("update_selection");
             }
+          },
+          /**
+           * 为当前选中标记补建缺失的配置条目（docs/13 §9）。
+           * 渲染期只读；这里显式调用 ops，撤销边界与命名规则都在操作层。
+           */
+          repairSelectedConfig: function() {
+            var config = getConfig();
+            var marker = this.selectedMarker;
+            var element = this.selectedElement;
+            if (!config || !marker || !element) {
+              showToast2("\u5F53\u524D\u6CA1\u6709\u53EF\u4FEE\u590D\u7684\u6807\u8BB0", "warning");
+              return;
+            }
+            var ctx = {
+              partId: this.activePartId,
+              variantName: this.activeVariantName,
+              element
+            };
+            var result;
+            if (marker.type === "sub_part") {
+              ctx.spKey = marker.config_ref;
+              result = ops.markSubPart(config, ctx);
+            } else if (marker.type === "hit_box") {
+              result = ops.markHitBox(config, ctx);
+            } else if (marker.type === "interact_box") {
+              result = ops.markInteractBox(config, ctx);
+            } else if (marker.type === "connector") {
+              ctx.key = marker.config_ref;
+              result = ops.markConnector(config, ctx);
+            } else {
+              showToast2("\u672A\u77E5\u7684\u6807\u8BB0\u7C7B\u578B", "warning");
+              return;
+            }
+            if (!result || !result.ok) {
+              showToast2(result && result.error || "\u521B\u5EFA\u914D\u7F6E\u5931\u8D25", "error");
+              return;
+            }
+            this.markerVersion.v++;
+            showToast2("\u5DF2\u521B\u5EFA\u7F3A\u5931\u7684\u914D\u7F6E\u6761\u76EE", "positive");
           },
           /**
            * 更新零件级字段（图标、耐久贡献、伤害传导等）
@@ -28932,6 +29283,11 @@
             log2.debug("\u4E8B\u4EF6: save \u2014 \u4FDD\u5B58\u914D\u7F6E");
             saveConfig();
           });
+          this._configChangedHandler = Blockbench.on("mm_config_changed", function(event) {
+            refreshOutlinerIcons();
+            self.markerVersion.v++;
+            if (!event || event.persist !== false) scheduleSave();
+          });
           this._restoredHandler = Blockbench.on(undo.RESTORED_EVENT, function() {
             log2.debug("\u4E8B\u4EF6: " + undo.RESTORED_EVENT + " \u2014 \u91CD\u65B0\u8BFB\u53D6\u914D\u7F6E");
             self.loadConfigData();
@@ -28961,6 +29317,10 @@
           if (this._saveHandler) {
             this._saveHandler();
             log2.debug("\u5DF2\u79FB\u9664 save \u76D1\u542C");
+          }
+          if (this._configChangedHandler) {
+            this._configChangedHandler();
+            log2.debug("\u5DF2\u79FB\u9664 mm_config_changed \u76D1\u542C");
           }
           if (this._restoredHandler) {
             this._restoredHandler();
@@ -30059,7 +30419,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { getMarkersForVariant, setMarker, clearMarker, getMarker, MARKER_TYPES, getMarkerInfo, detectOwnerSubPart, recalcAutoEndBones } = require_element_markers();
-      var { loadConfig, saveConfig, getConfig } = require_persistence();
+      var { loadConfig, scheduleSave, getConfig } = require_persistence();
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
       var content_pack = require_content_pack();
@@ -30231,7 +30591,7 @@
               log2.info("onSelect: \u672A\u8BBE\u7F6E\u5185\u5BB9\u5305\u8DEF\u5F84\uFF0C\u5F39\u51FA\u8BBE\u7F6E\u5411\u5BFC");
               var pd = require_pack_setup_dialog();
               pd.showPackSetupDialog(config, function() {
-                saveConfig();
+                scheduleSave();
               });
             } else {
               var checkResult = content_pack.openContentPack(config.contentPackPath);
@@ -30240,7 +30600,7 @@
                 showToast2("\u5F53\u524D\u5185\u5BB9\u5305\u65E0\u6548: " + (checkResult.error || "\u8DEF\u5F84\u4E0D\u5B58\u5728"), "warning");
                 var pd = require_pack_setup_dialog();
                 pd.showPackSetupDialog(config, function() {
-                  saveConfig();
+                  scheduleSave();
                 });
               }
             }
@@ -30287,8 +30647,8 @@
                 }
               }
             }
-            saveConfig();
-            log2.debug("onUnselect: \u914D\u7F6E\u5DF2\u4FDD\u5B58");
+            scheduleSave();
+            log2.debug("onUnselect: \u914D\u7F6E\u5DF2\u52A0\u5165\u9632\u6296\u4FDD\u5B58\u961F\u5217");
           }
         });
         registerValidation();

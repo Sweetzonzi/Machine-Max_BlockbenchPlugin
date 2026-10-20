@@ -148,6 +148,81 @@ describe('ops.setField', () => {
         }
         expect(Undo.history).toHaveLength(3);
     });
+
+    test('runConfigEdit 派发 mm_config_changed 单一出口（P3）', () => {
+        const cfg = helpers.createConfig();
+        installFakeUndo(cfg);
+        const events = [];
+        global.Blockbench = {
+            dispatchEvent: function (name, payload) {
+                events.push({ name: name, payload: payload });
+            },
+        };
+        try {
+            const r = ops.setField(cfg, {
+                path: ['parts', 'hull', 'variants', 'default', 'sub_parts',
+                    'sub_part.machine_max.main', 'mass'],
+                value: 42,
+                source: 'ui',
+            });
+            expect(r.ok).toBe(true);
+        } finally {
+            delete global.Blockbench;
+        }
+        const changed = events.filter(function (e) { return e.name === 'mm_config_changed'; });
+        expect(changed).toHaveLength(1);
+        expect(changed[0].payload.source).toBe('ui');
+        expect(changed[0].payload.persist).toBe(true);
+        expect(changed[0].payload.label).toContain('mass');
+    });
+});
+
+describe('ops.markSubPart', () => {
+    test('标记时同时补建配置条目并绑定 start_bone', () => {        const cfg = helpers.createConfig();
+        cfg.parts.hull.variants.default.sub_parts = {};
+        const r = ops.markSubPart(cfg, {
+            partId: 'hull',
+            variantName: 'default',
+            element: { uuid: '11111111-1111-1111-1111-111111111111', name: 'hull' },
+        });
+        expect(r.ok).toBe(true);
+        expect(r.created).toBe(true);
+        const sp = cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        expect(sp).toBeTruthy();
+        expect(sp.start_bone).toBe('hull');
+        expect(cfg.parts.hull.element_markers.default['11111111-1111-1111-1111-111111111111'].config_ref)
+            .toBe('sub_part.machine_max.main');
+    });
+
+    test('已有配置时按显式 spKey 复用，不重复创建', () => {
+        const cfg = helpers.createConfig();
+        const before = Object.keys(cfg.parts.hull.variants.default.sub_parts).length;
+        const r = ops.markSubPart(cfg, {
+            partId: 'hull',
+            variantName: 'default',
+            element: { uuid: '11111111-1111-1111-1111-111111111111', name: 'hull' },
+            spKey: 'sub_part.machine_max.main',
+        });
+        expect(r.ok).toBe(true);
+        expect(r.created).toBe(false);
+        expect(Object.keys(cfg.parts.hull.variants.default.sub_parts)).toHaveLength(before);
+    });
+
+    test('repairMarkerConfigs 在 load 阶段补建缺失条目且幂等', () => {
+        const cfg = helpers.createConfig();
+        cfg.parts.hull.variants.default.sub_parts = {};
+        global.Group = { all: [{ uuid: '11111111-1111-1111-1111-111111111111', name: 'hull', parent: null }] };
+        try {
+            const first = em.repairMarkerConfigs(cfg);
+            expect(first.repaired).toBeGreaterThan(0);
+            expect(cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'].start_bone)
+                .toBe('hull');
+            const second = em.repairMarkerConfigs(cfg);
+            expect(second.repaired).toBe(0);
+        } finally {
+            delete global.Group;
+        }
+    });
 });
 
 describe('ops.import*', () => {

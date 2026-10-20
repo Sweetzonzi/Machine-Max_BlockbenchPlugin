@@ -34,6 +34,7 @@
 
 const { createLogger } = require('../../utils/logger.js');
 const fileWriter = require('../../utils/file_writer.js');
+const { assertSafePartIds } = require('../../services/export.js');
 
 /** 模块日志 */
 var log = createLogger('ExportPipeline');
@@ -50,6 +51,9 @@ var log = createLogger('ExportPipeline');
 function executeExport(config, packMeta, exportDir, packFolderName) {
     var fs = require('fs');
     var path = require('path');
+
+    // 任何 mkdir / writeFile 之前先拦下不安全 partId（docs/13 §4.3）
+    assertSafePartIds(config);
 
     if (!fs.existsSync(exportDir)) {
         fs.mkdirSync(exportDir, { recursive: true });
