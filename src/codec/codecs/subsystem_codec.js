@@ -196,21 +196,25 @@ const TurretDriverCodec = Codec.record({
 
 /**
  * WeaponControllerCodec — 武器控制器
- * 字段: definition, control_outputs
+ * 字段: definition, control_outputs, first_hud_layout, third_hud_layout, scope_hud_layout
  */
 const WeaponControllerCodec = Codec.record({
-    definition:      Codec.STRING.field(),
-    control_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    definition:        Codec.STRING.field(),
+    control_outputs:   Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    first_hud_layout:  Codec.STRING.default('machine_max:empty'),
+    third_hud_layout:  Codec.STRING.default('machine_max:empty'),
+    scope_hud_layout:  Codec.STRING.default('machine_max:empty'),
 });
 
 /**
  * LauncherCodec — 发射器
- * 字段: definition, locator, ammo_outputs
+ * 字段: definition, locator, fire_animation, ammo_outputs
  */
 const LauncherCodec = Codec.record({
-    definition:    Codec.STRING.field(),
-    locator:       Codec.STRING.field(),
-    ammo_outputs:  Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    definition:      Codec.STRING.field(),
+    locator:         Codec.STRING.field(),
+    fire_animation:  Codec.STRING.default('fire'),
+    ammo_outputs:    Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
 });
 
 /**
@@ -233,11 +237,12 @@ const AmmoLoaderCodec = Codec.record({
 
 /**
  * RegenLoaderCodec — 再生装弹机
- * 字段: definition, projectile_types, discovery_outputs
+ * 字段: definition, projectile_types, belt_label, discovery_outputs
  */
 const RegenLoaderCodec = Codec.record({
     definition:        Codec.STRING.field(),
     projectile_types:  Codec.map(Codec.STRING, Codec.INT).default({}),
+    belt_label:        Codec.STRING.default(''),
     discovery_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
 });
 

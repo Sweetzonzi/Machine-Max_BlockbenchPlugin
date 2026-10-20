@@ -70,7 +70,7 @@
 | 3 | `partId` 允许 `.` / `..`，会进入 `parts/<partId>.json`、纹理资源路径和 `path.join`；`import_part` 可传任意 `part_id`，存在路径穿越 | **确认**。设计规则只校验 `^[a-z0-9_.-]+$`，当前 `createPart` 仅查非空（`importPart` 尚未实现）；`export_pipeline._resolveTargetDir` 在 `flat_export:false` 时把 `partId.split('_')[0]` 直接 `path.join`；`import_part` 是规划中的 MCP 入口 | `partId` 增加路径安全判据：拒绝 `.` / `..` / 首尾点 / Windows 设备名，且**完整值与 `split('_')[0]` 目录段都查**；`createPart`、`importPart`、拖拽导入统一 `invalid_format`；导出管线在 `path.join` 前**再次**断言，绕过闸门直接调 generator 也失败；存量非法 `partId` 不自动改名，记 `key_reserved` 导出 error（§5.1.3、§15.2） |
 | 4 | `canExport` 的 `path + code` 去重不成立：`collectIssues` 报 `definition_required` / `subsystem_required_field`，`validateTree` 报 `missing_required`，同一路径两条不同 code，去重不生效 | **确认**。两层错误码本就不同；`collectIssues` 的 `Problem.path` 还缺字段名，无法与 `validateTree` 的段数组对齐 | 统一 `Problem.path` 为对象并补 `field`；`canExport` 把 `validateTree` 的段数组规范化为同一对象；去重键改为 **`scope|partId|variantName|subPartKey|itemKey|field`**，`collectIssues` 优先，`validateTree` 只补空缺；同一字段只留一条，不同字段各自保留（§4.3、§5.2.5、§12） |
 | 5 | `reset_fields` 只算顶层字段，docs/12 却把它描述成「整件语义唯一的安全网」；`import_part` 省略 `variant.tags` / `sub_part.hit_boxes` 时不会列出嵌套路径 | **确认**。§5.3.1 第 4 步明确写「顶层字段」；docs/12 的措辞过度承诺 | 保留**顶层字段**语义（递归 diff 成本高且无法区分「省略」与「默认值」）；docs/12 明说只保证顶层容器，嵌套字段整体丢弃、不逐项列出；补「省略嵌套字段不产生 reset_fields 条目」测试（§5.3.1、docs/12 §5.3） |
-| 6 | `schema_codec_allowlist.missing_fields` 为空，但 D12 尚未补 `launcher.fire_animation` / `regen_loader.belt_label`；P1 的字段集合测试会先红 | **确认；最新快照还新增了 `hit_box.module` 与 `weapon_controller` 的 3 个 HUD layout 字段**（`physics` / `armor` / `sounds` 已收进 `overwrite`，见 §5.2.2） | 6 条都以 `owner: 'D12'` 放进 `missing_fields`，P1 按 owner 放行；D12 修完后条目必须删除，否则按过期条目失败（§5.2.2） |
+| 6 | `schema_codec_allowlist.missing_fields` 为空，但 D12 尚未补 `launcher.fire_animation` / `regen_loader.belt_label`；P1 的字段集合测试会先红 | **确认；最新快照还新增了 `hit_box.module` 与 `weapon_controller` 的 3 个 HUD layout 字段**（`physics` / `armor` / `sounds` 已收进 `overwrite`，见 §5.2.2） | 6 条曾以 `owner: 'D12'` 放进 `missing_fields`，P1 按 owner 放行；现已在 P2 前补齐并清空，过期条目会使测试失败（§5.2.2） |
 | 7 | `hit_box.block_collision` 是笔误，实际字段在 `sub_part.block_collision`（`hit_box` 没有这个字段） | **确认**。`sub_part_codec.js` 的 `block_collision`；`hit_box_codec.js` 无此字段 | 修正 §5.2.5 的枚举示例；测试按 `sub_part.block_collision` 构造（§5.2.5、§11 #15） |
 | 8 | `KEY_RESERVED` 大小写/级别不统一：§15 / §12 用大写，§5.1.3 的错误码与 `_lastMigration.key_reserved` 用小写 | **确认**。仓库没有 `KEY_RESERVED` 常量；稳定 code 应统一小写 snake_case | 全部改为 `key_reserved`；顺带把同类的 `ORPHAN_ELEMENT` 改为 `orphan_element`。大写只保留为规则名 / `CODES` 常量名，不再作为 `Problem.code`（§12） |
 
@@ -92,10 +92,10 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 
 | 目录 | 文件 | 行数 |
 |---|---|---|
-| `src/ui/` | 27 JS + 7 模板 | 6,774 + 1,118 |
+| `src/ui/` | 27 JS + 7 模板 | 6,774 + 1,122 |
 | `src/mode/` | 6 | 1,479 |
 | `src/core/` | 13 | 4,709 |
-| `src/codec/` | 10 JS（11 含 AGENTS.md） | 1,279 |
+| `src/codec/` | 10 JS（11 含 AGENTS.md） | 1,286 |
 | `src/managers/` · `src/generators/` · `src/import/` | 5 · 6 · 3 | 330 · 440 · 886 |
 
 ### 2.2 写入入口
@@ -197,7 +197,8 @@ src/doc/field_specs.generated.js（含 provenance）
 | 字段 | schema | Codec | 处置 |
 |---|---|---|---|
 | `sub_part.hit_boxes` | `required` + `minProperties: 1` | 无约束 | 由 `collectIssues` 负责（已实现，§4） |
-| `hit_box.id` | 有默认 `""`，非必填（`required` 只有 `type`） | `.field()` 必填 | 修 Codec：`.default('')`（D12） |
+| `hit_box.id` | 有默认 `""`，非必填（`required` 只有 `type`） | `.field()` 必填 | 修 Codec：`.default('')`（D12 结构性修复，待办） |
+| `hit_box.module` | 可选，默认 `""` | **缺字段** | ✅ 已补：Codec `.default('')` + 碰撞箱面板「模块名」输入（D12 字段补齐） |
 | `hit_box.type` | `enum: [box,sphere,cylinder,capsule,wheel]` | `STRING` | **constraint_diff**；写入、导入、导出三侧都由 `field_specs.enum` 报 `invalid_enum`（§4.3、§5.3.1） |
 | `hit_box.overwrite` | 结构化 **3 组**（`physics` / `armor` / `sounds`）、`additionalProperties:false` | `Codec.ANY.nullable()`（上游 `optionalFieldOf` 无默认 → Java `null`） | **constraint_diff**；`field_specs.nullable:true`（可选对象），`validateValues` 允许 `null`，导出省略；结构由 object 规格校验（§5.2） |
 | `interact_box.condition` | `enum: [AND,OR,NAND,NOR,XOR,XNOR]` | `STRING` 默认 `NOR` | **constraint_diff**；同上，由 `field_specs.enum` 拦，不改成 `Codec.ENUM`（避免存量非法值在 load 阶段失败） |
@@ -209,8 +210,9 @@ src/doc/field_specs.generated.js（含 provenance）
 | `car_controller` / `motorbike_controller.control_outputs` | `required` | `.default({})`，空 map 被省略 | 修 Codec：required map + `emitEmpty` |
 | `transmission.power_outputs` | `required` | `.default({})`，空 map 被省略 | 修 Codec：required map + `emitEmpty` |
 | `regen_loader.projectile_types` | `required` + `minProperties: 1`，key 是资源地址 | `.default({})`；`subsystem_types.js` 默认值写成 `[]` | 修 Codec：required map + `emitEmpty`；registry 默认改 `{}`；空 map 由完整性规则判 error（§4.3） |
-| `launcher.fire_animation` | 可选，默认 `"fire"` | **缺字段** | 修 Codec + `subsystem_types.js`（`text_input`） |
-| `regen_loader.belt_label` | 可选，默认 `""` | **缺字段** | 修 Codec + `subsystem_types.js`（`text_input`） |
+| `launcher.fire_animation` | 可选，默认 `"fire"` | **缺字段** | ✅ 已补：Codec `.default('fire')` + `subsystem_types.js`（`text_input`） |
+| `regen_loader.belt_label` | 可选，默认 `""` | **缺字段** | ✅ 已补：Codec `.default('')` + `subsystem_types.js`（`text_input`） |
+| `weapon_controller.first_hud_layout` / `third_hud_layout` / `scope_hud_layout` | 可选，默认 `"machine_max:empty"` | **缺字段** | ✅ 已补：Codec 三个 `.default('machine_max:empty')` + `subsystem_types.js`（`text_input`） |
 | `seat.locator` / `camera.locator` | 可选，默认 `""` | seat `.field()`；camera `.default()`（`undefined`） | 改为 `.default('')`，与上游 `optionalFieldOf("locator", "")` 一致；registry `null → ''`；不 nullable |
 | 多数对象 | `additionalProperties: false` | 宽松保留 | **unknown_fields 例外**：`unknown_fields: 'preserve'`；导出时由 Codec 剥离 schema 外字段 |
 | `sub_part.projected_area` | `$ref vector_3d` = `number[3]` | `FLOAT.list(3)` | **一致**（schema 自身 example 写成 `{x,y,z}`，是文档 bug） |
@@ -239,9 +241,9 @@ src/doc/field_specs.generated.js（含 provenance）
 
 **P2 字段清单**：
 
-- 改 `subsystem_types.js`：`power_output` / `connector` / `locator` 的 `defaultValue: null` → `''`；`regen_loader.projectile_types` 的 `[]` → `{}`；补 `launcher.fire_animation`（默认 `'fire'`）与 `regen_loader.belt_label`（默认 `''`）。
+- 改 `subsystem_types.js`：`power_output` / `connector` / `locator` 的 `defaultValue: null` → `''`（待 P2）；`regen_loader.projectile_types` 的 `[]` → `{}`（待 P2）；`launcher.fire_animation`（默认 `'fire'`）、`regen_loader.belt_label`（默认 `''`）、`weapon_controller` 的 3 个 HUD layout（默认 `'machine_max:empty'`）已补。
 - 改 `createSubsystem`：`var ssConfig = { type: typeId, definition: '' };`，其余 `defaults` 原样合并。
-- 改 Codec：`seat.locator` `.field()` → `.default('')`；`camera.locator` `.default()` → `.default('')`；required map 增加 `emitEmpty`；`launcher.fire_animation` / `regen_loader.belt_label` 补字段；`STRING.encode` 严格化。**不给 `definition` / `power_output` / `connector` / `launcher|joint.locator` 加 `.nullable()`。**
+- 改 Codec：`seat.locator` `.field()` → `.default('')`；`camera.locator` `.default()` → `.default('')`；required map 增加 `emitEmpty`（均待 P2）；`launcher.fire_animation` / `regen_loader.belt_label` / `weapon_controller` 的 3 个 HUD layout 已补；`STRING.encode` 严格化待 P2。**不给 `definition` / `power_output` / `connector` / `launcher|joint.locator` 加 `.nullable()`。**
 - 迁移：`loadConfig` raw 阶段把 `definition/power_output/connector/locator: null|"null"` → `''`（缺失也可补 `''`，保证旧工程能 decode）；`projection.in` 只归一化显式 `null`/`"null"`，required 字符串缺失仍报 `missing_required`。`projectile_types: []` → `{}`；`signal_targets`/`power_outputs`/`control_outputs` 的 `null` → `{}`；optional 字段 `null` → 删除。
 
 > 为什么不用 `null` 作为 required 占位：`Codec.STRING.field()` / `ResourceLocation.CODEC.fieldOf` 只接受字符串；`null` 会在 decode 阶段直接抛错，且 `Codec.STRING.encode(null)` 会产出字符串 `"null"`。`''` 至少能通过 JSON 类型层，并把「未配置」留给校验器/闸门处理。
@@ -320,7 +322,7 @@ Codec.STRING.encode(null) = String(null) = "null"       Codec.js:74-77 / 254-256
 1. **required 字符串占位改为 `''`**：`createSubsystem` 写 `definition: ''`；`subsystem_types.js` 的 `power_output` / `connector` / `locator` 默认值 `null → ''`；Codec 保持 `.field()`（`STRING` 接受空串）。`loadConfig` / `projection.in` 在 decode 前把 `null`/`"null"` 归一化为 `''`。
 2. **required map**：`signal_targets` / `control_outputs` / `power_outputs` / `projectile_types` 用 `Codec.map(..., {emitEmpty:true})`，`{}` 也输出；decode 缺失仍补 `{}`（解码宽容，不是 nullable）。
 3. `Codec.STRING.encode` 对非 string 抛错，去掉 `String(v)` 隐式强制；`STRING.decode` 已有类型断言。
-4. `projectile_types` 的 registry 默认值 `[]` → `{}`；补 `fire_animation` / `belt_label` 两个缺失字段（§3.3 #13）。
+4. `projectile_types` 的 registry 默认值 `[]` → `{}`（待 P2）；`fire_animation` / `belt_label` / `weapon_controller` 的 3 个 HUD layout 已补（§3.3 #13）。
 5. 导出闸门（§4.3）兜底：`collectIssues` 把 `definition` / required 字段的 `''` 判 error，`validateTree(completeness:true)` 把空 `projectile_types` 判 error。
 
 > **为什么不用 nullable**：上游 required 字段是 `fieldOf`，`null` 不是合法值；`.nullable()` 虽然能让插件 round-trip，却会让“未配置”在导出时变成**缺键**，与 required 契约相反。`''`/`{}` 至少保持键存在，同时让校验器能定位“值为空”。只有 `overwrite` 这种上游 `Optional` 字段才使用 `null`。
@@ -610,17 +612,10 @@ module.exports = {
     { type: 'machine_max:ammo_loader',    owner: 'D18' },
   ],
 
-  // 3) 字段集合缺口：Codec 缺字段（D12 修完后都应为空）
-  // P1 先按 owner 放行真实缺口；D12 补齐后必须删条目，否则按过期条目失败
-  missing_fields: [
-    // 最新快照给 hit_box 增加 module；physics / armor / sounds 已收进 overwrite
-    { kind: 'hit_box', field: 'module', owner: 'D12' },
-    { kind: 'subsystem', type: 'machine_max:launcher',     field: 'fire_animation', owner: 'D12' },
-    { kind: 'subsystem', type: 'machine_max:regen_loader', field: 'belt_label',     owner: 'D12' },
-    { kind: 'subsystem', type: 'machine_max:weapon_controller', field: 'first_hud_layout', owner: 'D12' },
-    { kind: 'subsystem', type: 'machine_max:weapon_controller', field: 'third_hud_layout', owner: 'D12' },
-    { kind: 'subsystem', type: 'machine_max:weapon_controller', field: 'scope_hud_layout', owner: 'D12' },
-  ],
+  // 3) 字段集合缺口：Codec 缺字段（D12 字段补齐后为空）
+  // hit_box.module、launcher.fire_animation、regen_loader.belt_label
+  // 与 weapon_controller 的 3 个 HUD layout 已补进 Codec / registry。
+  missing_fields: [],
   extra_fields:   [],   // 例：Codec 有、schema 没有的运行时字段（目前无）
 
   // 4) 同一字段的约束差异：字段存在，但类型/required/enum/结构不同
@@ -652,11 +647,11 @@ module.exports = {
 
 1. **类型集合**：`SubsystemDispatchCodec` 的 key 集合 ∪ `missing_types` = schema 19 种 ∪ `extra_types`；`missing_types` 在 D13 完成后必须为空，`extra_types` 在 D18 完成后必须为空。
 2. **字段集合**：对 D18 删除后的 17 种类型逐类型比较 schema `properties`（去掉 `type`）与 Codec record 字段；差异只能来自 `missing_fields` / `extra_fields`（缺失的 `track_*` 两种由 `missing_types` 解释，不参与字段比较）。`constraint_diffs` **不能**用来掩盖字段缺失——字段不存在时，配置它只会得到 `unknown_field`。
-3. **约束条目有效性**：每条 `constraint_diffs` / `decode_tolerance` 必须同时指向真实存在的 schema 字段与 Codec 字段；`missing_fields` 必须带 `owner`。P1 放行 6 条真实缺口（`hit_box.module`、2 个 subsystem 字段、`weapon_controller` 的 3 个 HUD layout 字段），D12 修完后仍留在 `missing_fields` 的条目视为**过期条目**，测试失败；D13 补齐后仍留在 `missing_types` 的条目、D18 删除后仍留在 `extra_types` 的条目同样失败。
+3. **约束条目有效性**：每条 `constraint_diffs` / `decode_tolerance` 必须同时指向真实存在的 schema 字段与 Codec 字段；`missing_fields` 必须带 `owner`。P1 曾放行 6 条真实缺口，现已全部补齐，`missing_fields` 为空；仍留在 `missing_fields` 的条目视为**过期条目**，测试失败。D13 补齐后仍留在 `missing_types` 的条目、D18 删除后仍留在 `extra_types` 的条目同样失败。
 4. **encode 合规**：对 `decode_tolerance` 的字段，构造「缺失输入」，断言 `encode(decode(x))` 要么满足 schema，要么被 `canExport` 阻断；不能出现「既不满足 schema、闸门又放行」。
 5. **`unknown_fields`** 是唯一允许的全局例外，不按字段登记；导出时由 Codec 剥离未知字段，`field_specs` 不把未知字段当错误。
 
-> P1 实测补充：最新快照把 `hit_box` 的 `angle_effect` / `impact_modifiers` / `penetration_modifiers` / `damage_modifiers` / `unpen_power` 收进 `overwrite` 的 `physics` / `armor` / `sounds` 分组，顶层新增 `module`、保留 `condition`；`weapon_controller` 又新增 `first_hud_layout` / `third_hud_layout` / `scope_hud_layout`。因此 allowlist 的字段缺口为 `hit_box.module` + 3 个 HUD layout + 2 个旧 subsystem 字段，共 6 条。`hit_box.overwrite` 的约束差异从 `object(16)` 改为 `object(physics/armor/sounds)`。
+> P1 实测补充：最新快照把 `hit_box` 的 `angle_effect` / `impact_modifiers` / `penetration_modifiers` / `damage_modifiers` / `unpen_power` 收进 `overwrite` 的 `physics` / `armor` / `sounds` 分组，顶层新增 `module`、保留 `condition`；`weapon_controller` 又新增 `first_hud_layout` / `third_hud_layout` / `scope_hud_layout`。这 6 个字段已补进 Codec / registry，`missing_fields` 现为空。`hit_box.overwrite` 的约束差异从 `object(16)` 改为 `object(physics/armor/sounds)`。
 
 #### 5.2.3 副作用表（唯一手写部分：8 个字段 / 6 条规则）
 
@@ -1097,17 +1092,17 @@ bun test test/schema/field_specs.test.js
 - ✅ §5.3.1 / §5.3.2 的 in/out 顺序与 round-trip 通过：`hit_boxes` UUID↔骨骼名、单变体/单子零件、未解析骨骼、`definition:''`、`power_output:''`、`connector:''`、`locator:''`、`signal_targets:{}`、`power_outputs:{}`、`projectile_types:{}`。
 - ✅ §5.4 全部 13 行引用矩阵（含 `power_outputs` 的 key、4 类 marker）通过；`signal_translations` 不被清理。
 - ✅ `keys.js` 的 `isSafePartId` 覆盖 §11 #20（`.` / `..` / 首尾点 / `con` / `con.1` / `lpt9` / `.._hull` / `a._b`；`a.b.c` 合法）。
-- ✅ `schema_codec_allowlist` 的类型/字段集合测试：`missing_types` 2 条（D13）、`extra_types` 5 条（D18）、`missing_fields` 6 条（D12：`hit_box.module` + `launcher.fire_animation` + `regen_loader.belt_label` + `weapon_controller` 的 3 个 HUD layout）。
+- ✅ `schema_codec_allowlist` 的类型/字段集合测试：`missing_types` 2 条（D13）、`extra_types` 5 条（D18）、`missing_fields` 0 条（D12 的 6 个字段已补齐）。
 - ✅ `require` 全部 `doc` 模块；P1 无调用方，未重建 `dist`。
 - ✅ 零运行时行为变更：`Codec.record` / `Codec.dispatch` 只新增只读元数据 `schema` / `codecs`，不参与 encode/decode。
 
-验收命令：`bun test`（84 pass / 322 expect，含 P0 的 8 个 schema 测试）。
+验收命令：`bun test`（85 pass / 308 expect，含 P0 的 8 个 schema 测试）。
 
 ### P2 — 操作层（1.5–2 会话）
 
-`src/ops/*`（9 文件）；删除 `core/operations.js`（9 处 require 改写）；UI 44 个方法改薄；§4.4 **五项修复**（required 字符串 `''` / required map `emitEmpty`、`STRING.encode` 严格化、`projectile_types` 默认值与缺失字段、闸门兜底）；`subsystem_types.js` 的 `defaultValue: null → ''`；§5.2.5 的 `doc/validate.js`；§6.4 合并开关；§5.3.1 的 `markerCleanup` + `ports.markers.clearScope`（三个 `import*`）；§15.2.1 的 connector marker 迁移；`isSafePartId` 接入 `createPart` / `importPart` / `drag_import`；`renameSubPart` 的 ASCII key 校验 + `hit_box` marker 修复；`generateDefaultName('sub_part')` 用 `context.namespace`；**删除 5 个 WIP 类型**（Codec 22→17、`subsystem_types.js`、面板）；`signal_target_options.js` 改 `local`/`global` 并补交互区；`subsystem_types.js` 默认值改 `['local','global']`；`validation.js` / `naming.js` 的 `RESERVED_SIGNAL_NAMES` 收为 `['local','global']`；`collectIssues` 增加 `DANGLING_SIGNAL_TARGET`；`subsystem_types.js` 补 `fire_animation` / `belt_label`、`projectile_types` 默认改 `{}`，补 `hit_box.module` 与 `weapon_controller` 的 3 个 HUD layout 字段，并删除 `schema_codec_allowlist.missing_fields` 的 6 条 D12 占位与 `extra_types` 的 5 条 D18 占位。
+`src/ops/*`（9 文件）；删除 `core/operations.js`（9 处 require 改写）；UI 44 个方法改薄；§4.4 **五项修复**（required 字符串 `''` / required map `emitEmpty`、`STRING.encode` 严格化、`projectile_types` 默认值与缺失字段、闸门兜底）；`subsystem_types.js` 的 `defaultValue: null → ''`；§5.2.5 的 `doc/validate.js`；§6.4 合并开关；§5.3.1 的 `markerCleanup` + `ports.markers.clearScope`（三个 `import*`）；§15.2.1 的 connector marker 迁移；`isSafePartId` 接入 `createPart` / `importPart` / `drag_import`；`renameSubPart` 的 ASCII key 校验 + `hit_box` marker 修复；`generateDefaultName('sub_part')` 用 `context.namespace`；**删除 5 个 WIP 类型**（Codec 22→17、`subsystem_types.js`、面板）；`signal_target_options.js` 改 `local`/`global` 并补交互区；`subsystem_types.js` 默认值改 `['local','global']`；`validation.js` / `naming.js` 的 `RESERVED_SIGNAL_NAMES` 收为 `['local','global']`；`collectIssues` 增加 `DANGLING_SIGNAL_TARGET`；`subsystem_types.js` 的 `projectile_types` 默认改 `{}`，删除 `extra_types` 的 5 条 D18 占位。**D12 的 6 个字段补齐已完成**（`hit_box.module`、`launcher.fire_animation`、`regen_loader.belt_label`、`weapon_controller` 3 个 HUD layout；Codec + registry + 面板，`missing_fields` 已清空）；`hit_box.id` 默认值 / required map `emitEmpty` / `STRING.encode` 严格化等结构性修复仍属 P2。
 
-验收：每字段改一次 = 一条撤销记录；四个 `import*` 可用且返回 `reset_fields`；拖拽导入回归；`coalesce:false` 下三次 `set_node` = 三条；子零件改名后碰撞箱标记归属正确；非规范 key 的 import 返回 `invalid_format`；**整件替换后旧 marker 不残留、同形替换不重复、Ctrl+Z 同时恢复配置与 marker**（§11 #18）；connector marker 迁移按 §11 #19 通过；`partId` 路径安全按 §11 #20 通过；`reset_fields` 顶层语义按 §11 #22 通过；**新建 basic / transmission / interact_box / regen_loader 的 round-trip 通过**（`definition:''`、`power_outputs:{}`、`signal_targets:{}`、`projectile_types:{}`）；`import_sub_part` 传 `hit_box.type:"banana"` 返回 `invalid_enum`；D12 修完后 `missing_fields` 为空、字段集合测试转绿。
+验收：每字段改一次 = 一条撤销记录；四个 `import*` 可用且返回 `reset_fields`；拖拽导入回归；`coalesce:false` 下三次 `set_node` = 三条；子零件改名后碰撞箱标记归属正确；非规范 key 的 import 返回 `invalid_format`；**整件替换后旧 marker 不残留、同形替换不重复、Ctrl+Z 同时恢复配置与 marker**（§11 #18）；connector marker 迁移按 §11 #19 通过；`partId` 路径安全按 §11 #20 通过；`reset_fields` 顶层语义按 §11 #22 通过；**新建 basic / transmission / interact_box / regen_loader 的 round-trip 通过**（`definition:''`、`power_outputs:{}`、`signal_targets:{}`、`projectile_types:{}`）；`import_sub_part` 传 `hit_box.type:"banana"` 返回 `invalid_enum`；D12 字段补齐已完成，`missing_fields` 为空、字段集合测试已转绿（结构性修复仍按 D12 验收）。
 
 ### P3 — 事件总线 + 导出闸门（1 会话）
 
@@ -1214,7 +1209,7 @@ test/
 | D9 | 小件整件通道 | 本期不做 `hit_box`/`interact_box`/`connector` | 用户 |
 | D10 | 路径语法 | `string[]` 主 + JSON Pointer 从；`*` 为整段 token；**按位置解析** | 推荐（v3 收口） |
 | D11 | 字段规格来源 | 兄弟仓库 schema → vendored → codegen | 推荐（v2） |
-| D12 | schema↔Codec 漂移 | 以 schema/上游为准：结构性修复（`hit_box.id` 默认值改为 `''`、`STRING.encode` 严格化、required 字段保持 `.field()` + `''` 占位、optional locator 改 `.default('')`）+ 字段补齐 6 项（`launcher.fire_animation`、`regen_loader.belt_label`、`hit_box.module`、`weapon_controller.first_hud_layout` / `third_hud_layout` / `scope_hud_layout`）+ 默认值 1 项（`projectile_types: []` → `{}`）；`hit_box.overwrite` 的 `physics` / `armor` / `sounds` 分组由 `field_specs.object` 校验；枚举/结构差异由 `field_specs` 在写入/导入/导出三侧拦，其余进 allowlist | 推荐（v3.1 扩，P1 校） |
+| D12 | schema↔Codec 漂移 | 以 schema/上游为准：结构性修复（`hit_box.id` 默认值改为 `''`、`STRING.encode` 严格化、required 字段保持 `.field()` + `''` 占位、optional locator 改 `.default('')`）+ **字段补齐 6 项已完成**（`launcher.fire_animation`、`regen_loader.belt_label`、`hit_box.module`、`weapon_controller.first_hud_layout` / `third_hud_layout` / `scope_hud_layout`；`missing_fields` 已清空）+ 默认值 1 项（`projectile_types: []` → `{}`，待 P2）；`hit_box.overwrite` 的 `physics` / `armor` / `sounds` 分组由 `field_specs.object` 校验；枚举/结构差异由 `field_specs` 在写入/导入/导出三侧拦，其余进 allowlist | 推荐（v3.1 扩，P1 校；字段补齐在 P2 前完成） |
 | D13 | `track_*` 两种类型 | **单独立项**（不阻塞 P1，但 `missing_types` 留 2 条，测试为已知红灯；补齐后 allowlist 必须清空） | 用户 |
 | D14 | 可空字段清单 | **撤销「用户可选清单」**；固定内部占位：required 字符串 `''`、required map `{}`；`null` 只用于 upstream `Optional` 字段（`overwrite`）；编辑不拦、导出阻断 | 用户（§4） |
 | D15 | 导出闸门 | `severity==='error'` 阻断导出 | 用户 |

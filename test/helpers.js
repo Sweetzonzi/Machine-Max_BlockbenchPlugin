@@ -40,6 +40,7 @@ function createSubPart(overrides) {
                 thickness: 1,
                 condition: 'true',
                 subsystem: '',
+                module: '',
                 overwrite: null,
             },
         },

@@ -208,8 +208,11 @@ var SUBSYSTEM_TYPES = [
         displayName: '武器控制器',
         category: 'experimental',
         dynamicFields: [
-            { field: 'definition',      label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'control_outputs', label: '控制信号输出', editor: 'signal_targets',       required: false, defaultValue: { weapon_control: [] } },
+            { field: 'definition',       label: '型号定义',       editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'control_outputs',  label: '控制信号输出',   editor: 'signal_targets',       required: false, defaultValue: { weapon_control: [] } },
+            { field: 'first_hud_layout', label: '第一人称 HUD 布局', editor: 'text_input',        required: false, defaultValue: 'machine_max:empty' },
+            { field: 'third_hud_layout', label: '第三人称 HUD 布局', editor: 'text_input',        required: false, defaultValue: 'machine_max:empty' },
+            { field: 'scope_hud_layout', label: '瞄准镜 HUD 布局',   editor: 'text_input',        required: false, defaultValue: 'machine_max:empty' },
         ],
     },
     {
@@ -217,9 +220,10 @@ var SUBSYSTEM_TYPES = [
         displayName: '发射器',
         category: 'experimental',
         dynamicFields: [
-            { field: 'definition',    label: '型号定义',   editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'locator',       label: '发射点定位器',editor: 'locator_selector',    required: true,  defaultValue: null },
-            { field: 'ammo_outputs',  label: '弹药反馈输出',editor: 'signal_targets',       required: false, defaultValue: {} },
+            { field: 'definition',     label: '型号定义',    editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'locator',        label: '发射点定位器', editor: 'locator_selector',    required: true,  defaultValue: null },
+            { field: 'fire_animation', label: '开火动画名',   editor: 'text_input',          required: false, defaultValue: 'fire' },
+            { field: 'ammo_outputs',   label: '弹药反馈输出', editor: 'signal_targets',      required: false, defaultValue: {} },
         ],
     },
     {
@@ -247,6 +251,7 @@ var SUBSYSTEM_TYPES = [
         dynamicFields: [
             { field: 'definition',       label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'projectile_types',   label: '弹链构成',     editor: 'projectile_belt_editor', required: true,  defaultValue: [] },
+            { field: 'belt_label',       label: '弹链标签',     editor: 'text_input',          required: false, defaultValue: '' },
             { field: 'discovery_outputs', label: '弹药发现频道', editor: 'signal_targets',       required: false, defaultValue: {} },
         ],
     },

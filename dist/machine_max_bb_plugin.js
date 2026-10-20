@@ -63,7 +63,7 @@
   var define_SCHEMAS_default;
   var init_define_SCHEMAS = __esm({
     "<define:__SCHEMAS__>"() {
-      define_SCHEMAS_default = { "en_us/hud.md": '# HUD Development Guide\r\n\r\nMachine-Max provides a powerful custom HUD system that allows creating dedicated interface displays for different vehicles and subsystems. The HUD system is based on models, animations, and Molang scripts, enabling dynamic dashboards, status indicators, and information displays. HUDs have three layers: a **style** describes what it looks like, a **layout** is an ordered list of elements, and an **element** places one style at one specific position.\r\n\r\n## HUD System Overview\r\n\r\n### Core Component File Paths\r\n\r\nHere are the core component file paths for the example HUD, where you can find complete implementation examples:\r\n\r\n- **HUD Style**: [huds/example_hud.json](../../huds/example_hud.json)\r\n- **HUD Layout**: [hud_layouts/seat_dashboard.json](../../hud_layouts/seat_dashboard.json)\r\n- **3D Model File**: [models/hud/example_hud.geo.json](../../models/hud/example_hud.geo.json)\r\n- **Animation File**: [animations/hud/example_hud/example_hud.animation.json](../../animations/hud/example_hud/example_hud.animation.json)\r\n- **Texture File**: [textures/hud/example_hud.png](../../textures/hud/example_hud.png)\r\n- **Language File**: [lang/en_us.json](../../lang/en_us.json)\r\n- **Subsystem Configuration**: [subsystems/default_seat.json](../../subsystems/default_seat.json)\r\n- **Advanced Subsystem Configuration**: [subsystems/senna_gtr/senna_gtr_seat.json](../../subsystems/senna_gtr/senna_gtr_seat.json)\r\n\r\n## Table of Contents\r\n- [HUD System Overview](#hud-system-overview)\r\n- [HUD Styles (huds/)](#hud-styles-huds)\r\n- [HUD Layouts (hud_layouts/)](#hud-layouts-hud_layouts)\r\n- [Model and Animation Requirements](#model-and-animation-requirements)\r\n- [Text Display Configuration](#text-display-configuration)\r\n- [Molang in HUD Applications](#molang-in-hud-applications)\r\n- [Subsystem HUD Association](#subsystem-hud-association)\r\n- [Practical Case Analysis](#practical-case-analysis)\r\n- [Best Practices](#best-practices)\r\n\r\n## HUD System Overview\r\n\r\nMachine-Max\'s HUD system consists of the following core components:\r\n\r\n1. **HUD Style** (`huds/*.json`) - Defines model, animation, texture, tint, and text slots\r\n2. **HUD Layout** (`hud_layouts/*.json`) - An ordered element array deciding which styles are drawn and where\r\n3. **3D Model** (`.geo.json` file) - Provides HUD geometry and bone structure\r\n4. **Animation File** (`.animation.json` file) - Controls dynamic behavior of HUD elements\r\n5. **Texture File** (`.png` file) - Provides visual appearance of the HUD\r\n6. **Subsystem Configuration** - Mounts a layout on a seat or sight through a `*_hud_layout` field\r\n\r\n## HUD Styles (huds/)\r\n\r\nA HUD style defines the internal appearance of one HUD and contains no position, rotation, scale, or projection.\r\n\r\n### Basic Structure\r\n```json\r\n{\r\n  "type": "machine_max:model_hud",\r\n  "model": "machine_max:example_hud.geo",\r\n  "animation": "machine_max:example_hud",\r\n  "texture": "machine_max:textures/hud/example_hud.png",\r\n  "color": [255, 255, 255],\r\n  "alpha": 255,\r\n  "texts": {\r\n    // Text configuration\r\n  },\r\n  "scissor": {\r\n    "enable": false,\r\n    "x": 0,\r\n    "y": 0,\r\n    "width": 0,\r\n    "height": 0\r\n  }\r\n}\r\n```\r\n\r\n### Configuration Parameter Description\r\n\r\n#### Basic Properties\r\n- **type** (Required): Carrier type: `machine_max:model_hud` (Bedrock model) or `machine_max:aui_hud` (AUI page)\r\n- **model** (Required): HUD 3D model resource address, e.g., `machine_max:example_hud.geo`\r\n- **animation** (Required): HUD animation resource address, e.g., `machine_max:example_hud`\r\n- **texture** (Required): HUD texture resource address, e.g., `machine_max:textures/hud/example_hud.png`\r\n- **color** (Optional): RGB color, default white\r\n- **alpha** (Optional): Transparency, default 255\r\n\r\n#### Text Display\r\n```json\r\n"texts": {\r\n  "locator_name": {\r\n    "key": "translation.key",\r\n    "centered": true,\r\n    "shadow": false,\r\n    "scale": [0.7, 0.7, 0.7],\r\n    "color": [255, 0, 0],\r\n    "molang_args": ["expression1", "expression2"],\r\n    "significand": 0\r\n  }\r\n}\r\n```\r\n\r\n- **locator_name**: Locator name, used to control text display position and rotation\r\n- **key**: Translation key for text localization\r\n- **centered**: Whether to center the text, default true\r\n- **shadow**: Whether to render text shadow, default false\r\n- **scale**: Scaling factor, default [1, 1, 1]\r\n- **color**: RGB color\r\n- **molang_args**: Molang parameters for filling placeholder positions in translation text\r\n- **significand**: Number of decimal places to keep when Molang parameter results are numbers, default 0\r\n\r\n#### Clipping Region\r\n- **scissor**: Clipping rectangle configuration (optional, disabled by default)\r\n  - **enable**: Whether to enable clipping rectangle\r\n  - **x**: Clipping rectangle center x coordinate (pixels)\r\n  - **y**: Clipping rectangle center y coordinate (pixels)\r\n  - **width**: Clipping rectangle width (pixels)\r\n  - **height**: Clipping rectangle height (pixels)\r\n\r\n### AUI Page Styles\r\n\r\n`machine_max:aui_hud` describes a HUD with an HTML page supplied by the pack\'s `documents/` directory. The page can render in the GUI/HUD orthographic overlay or on a perspective plane in camera space.\r\n\r\n```json\r\n{\r\n  "type": "machine_max:aui_hud",\r\n  "page": "machine_max/weapon_hud_element/weapon_ammo.html",\r\n  "defaults": { "--hud-accent": "#7dd3fc" }\r\n}\r\n```\r\n\r\n- **page** (Required): AUI page key in the form `<pack namespace>/<relative path>`; the pack file `documents/weapon_hud_element/weapon_ammo.html` maps to `machine_max/weapon_hud_element/weapon_ammo.html`\r\n- **defaults** (Optional): CSS variables written onto the page `body`, readable through `var(...)` in the page stylesheet\r\n\r\nThe page shrinks to its content: the runtime adds the `mm-hud` class to `body` and sets inline rules for `inline-block`, zero margin and a transparent background. The page describes the component content; its layout controls placement and projection. Put a dark background on the component container when needed. The layout field `perspective: false` selects the orthographic overlay and `perspective: true` selects a perspective plane. The field defaults to `true`, so screen-anchored AUI elements must explicitly set it to `false`.\r\n\r\nAUI HUD pages receive no mouse input. Perspective rendering supports page geometry, text and clipping; complex screen-sampling effects such as `backdrop-filter` are not guaranteed.\r\n\r\n## HUD Layouts (hud_layouts/)\r\n\r\nA layout file is an array. Each entry is an element: one style reference plus a complete set of placement values. Elements are inline in the layout and are not registered separately; the same style may appear multiple times in one layout.\r\n\r\n```json\r\n[\r\n  {\r\n    "style": "machine_max:example_hud",\r\n    "perspective": true,\r\n    "offset": [95, 55, -135],\r\n    "rotation": [-25, -30, 0],\r\n    "scale": [15, 15, 15]\r\n  }\r\n]\r\n```\r\n\r\n| Field | Required | Description |\r\n| --- | --- | --- |\r\n| `style` | Yes | Style resource key pointing at a file under `huds/` |\r\n| `perspective` | No | Default `true`; `true` uses perspective projection, `false` uses orthographic projection |\r\n| `offset` | No | Perspective: camera-space translation `(x, -y, z)`; a visible plane must be in front of the camera (normally `z < 0`). Orthographic model: pixel offset from screen center. Orthographic AUI: GUI pixel offset from the aligned `anchor` position, with `z` controlling paint depth |\r\n| `rotation` | No | `[x, y, z]` rotation angles in degrees; perspective AUI composes Z/Y/X rotations, while orthographic AUI ignores this field |\r\n| `scale` | No | Default `[1, 1, 1]`; orthographic AUI scales its two page axes independently with X/Y, while perspective AUI converts CSS pixels into camera-space units |\r\n| `scope_behavior` | No | Default `follow_position`; only effective in a sight layout: `screen_fixed` / `follow_position` / `follow_transform` |\r\n| `ignore_zoom` | No | Default `false`; when `true`, element size does not scale with sight zoom |\r\n| `anchor` | No | Orthographic AUI only: default `top_left`, one of `top_center`, `top_right`, `center_left`, `center`, `center_right`, `bottom_left`, `bottom_center`, `bottom_right`; the element\'s matching corner (or center) aligns with the screen\'s matching corner (or center). Models and perspective AUI ignore this field |\r\n\r\nOrthographic AUI computes `anchor` alignment from the content size, then adds `offset.x/y`. The AUI viewport\'s CSS-to-GUI conversion factor applies equally to both axes, followed by the independent `scale.x/y` factors; for example, displayed width is `CSS width \xD7 viewport.renderScale \xD7 scale.x`. Painting and clipping share the same position and scale. The layout fields `rotation`, `scope_behavior` and `ignore_zoom` do not affect orthographic AUI; CSS can rotate content inside the page.\r\n\r\nPerspective AUI uses the page content center as its local origin and flips the downward CSS Y axis into the upward camera Y axis. Its placement matrix is `T(x, -y, z) \xD7 Rz \xD7 Ry \xD7 Rx \xD7 S(scale.x, -scale.y, scale.z)`, with rotation angles in degrees. This mode converts CSS pixels directly into camera-space units through `scale`, without the orthographic viewport\'s CSS-to-GUI conversion, and does not use a screen `anchor`. In a sight view, `scope_behavior` and `ignore_zoom` participate in placement; `screen_fixed` uses the camera-space origin corresponding to screen center.\r\n\r\nSave the style example in \u201CAUI Page Styles\u201D as `huds/aui_weapon_status.json` in the `machine_max` namespace to use this layout for a centered orthographic panel and a perspective panel in the upper right. The perspective values assume content of about `280 \xD7 120` CSS pixels, a 70\xB0 field of view and a 16:9 frame; adjust placement for the actual content size and field of view.\r\n\r\n```json\r\n[\r\n  {\r\n    "style": "machine_max:aui_weapon_status",\r\n    "perspective": false,\r\n    "anchor": "center",\r\n    "offset": [0, 0, 0],\r\n    "scale": [1, 1, 1]\r\n  },\r\n  {\r\n    "style": "machine_max:aui_weapon_status",\r\n    "perspective": true,\r\n    "scope_behavior": "screen_fixed",\r\n    "offset": [95, -60, -135],\r\n    "rotation": [15, -25, -5],\r\n    "scale": [0.2, 0.2, 0.2]\r\n  }\r\n]\r\n```\r\n\r\nKey rule: the file path relative to the module directory without `.json`, prefixed by the pack namespace, is the resource key. `hud_layouts/seat_dashboard.json` is `machine_max:seat_dashboard`; `hud_layouts/foo/bar.json` is `machine_max:foo/bar`. Styles follow the same rule: `huds/example_hud.json` is `machine_max:example_hud`. Layouts and styles live in separate modules, so identical keys do not collide.\r\n\r\nLayout array order is the submission order within one projection mode; the order between perspective and orthographic batches is decided by the render batches, not by the layout.\r\n\r\n## Model and Animation Requirements\r\n\r\n### 3D Model Specifications\r\nHUD models use standard Minecraft Bedrock format and need to include the following elements:\r\n\r\n1. **Bone Structure**: Each position requiring text display needs a corresponding bone\r\n2. **Locators**: Used to determine text display position and orientation\r\n3. **Geometry**: Defines the visual appearance of the HUD\r\n\r\n### Animation File\r\nAnimation files control the dynamic behavior of HUD elements and can use Molang expressions to achieve dynamic effects:\r\n\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(global.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n## Text Display Configuration\r\n\r\n### Basic Text Display\r\n```json\r\n"speed": {\r\n  "key": "hud.machine_max.default_1.speed",\r\n  "centered": true,\r\n  "shadow": true,\r\n  "scale": [2, 2, 2]\r\n}\r\n```\r\n\r\n### Dynamic Text Display\r\nUsing Molang parameters for dynamic content:\r\n```json\r\n"speed": {\r\n  "key": "hud.machine_max.default_1.speed",\r\n  "molang_args": [\r\n    "math.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n    "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n    "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n  ],\r\n  "significand": 0\r\n}\r\n```\r\n\r\n### Gear Display\r\n```json\r\n"gear": {\r\n  "key": "hud.machine_max.default_1.gear",\r\n  "molang_args": ["global.get(\'gear\')??\'NO GBX\'"],\r\n  "centered": true,\r\n  "shadow": true\r\n}\r\n```\r\n\r\n## Molang in HUD Applications\r\n\r\nThe HUD system fully utilizes Molang\'s powerful functionality to achieve complex dynamic display effects.\r\n\r\n### Common Molang Patterns\r\n\r\n#### Signal Acquisition and Unit Conversion\r\n```molang\r\n// Get vehicle speed and convert to km/h\r\nmath.abs(global.get(\'vehicle_speed\')??0.0) * 3.6\r\n\r\n// Get engine speed and convert to RPM\r\nmath.abs(global.get(\'engine_speed\')??0) * 30 / math.pi\r\n```\r\n\r\n#### Number Decomposition Display\r\n```molang\r\n// Hundreds digit\r\nmath.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)\r\n\r\n// Tens digit\r\nmath.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)\r\n\r\n// Units digit\r\nmath.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))\r\n```\r\n\r\n#### Conditional Display\r\n```molang\r\n// Display warnings based on subsystem status\r\nlocal.has_subsystem(\'engine\') && local.subsystem_destroyed(\'engine\') ? 1.0 : 0.0\r\n```\r\n\r\n## Subsystem HUD Association\r\n\r\nHUDs are associated with a specific seat or sight through the host\'s view fields: seats use `first_hud_layout` / `third_hud_layout`, cameras and sights use `scope_hud_layout`. Each field is a layout resource key; an omitted field means that view has no HUD.\r\n\r\n### Seat Subsystem Configuration\r\n```json\r\n{\r\n  "type": "machine_max:seat",\r\n  "views": {\r\n    "enable_first_person": true,\r\n    "first_hud_layout": "machine_max:seat_dashboard",\r\n    "first_person_offset": [0, 0.15, -0.1],\r\n    "enable_third_person": true,\r\n    "third_hud_layout": "machine_max:seat_dashboard",\r\n    "follow_vehicle": true,\r\n    "focus_on_center": true,\r\n    "distance_scale": 1.1\r\n  }\r\n}\r\n```\r\n\r\n### Sight/Camera Subsystem Configuration\r\n```json\r\n{\r\n  "type": "machine_max:sight",\r\n  "scope_hud_layout": "machine_max:scope_gunner"\r\n}\r\n```\r\n\r\n### View Property Description\r\n- **enable_first_person**: Whether to enable first-person perspective\r\n- **first_hud_layout**: Layout used by the first-person view; omitted means no HUD in that view\r\n- **first_person_offset**: First-person perspective offset (x+right, y+up, z+back, in meters)\r\n- **enable_third_person**: Whether to enable third-person perspective\r\n- **third_hud_layout**: Layout used by the third-person view; omitted means no HUD in that view\r\n- **follow_vehicle**: Whether camera follows vehicle rotation\r\n- **focus_on_center**: Whether camera focuses on vehicle center\r\n- **distance_scale**: Third-person perspective distance multiplier\r\n- **scope_hud_layout** (camera/sight): Layout used by the sight view; omitted means the sight adds no HUD from a layout\r\n\r\n## Practical Case Analysis\r\n\r\n### Example HUD Analysis\r\nUsing `machine_max:example_hud` as an example, analyze its complete implementation. You can view the complete implementation files through the following paths:\r\n\r\n#### 1. HUD Style ([example_hud.json](../../huds/example_hud.json))\r\n\r\nThis is a fully functional vehicle dashboard style that can simultaneously display key information such as engine speed, transmission gear, and vehicle speed. Placement lives in [seat_dashboard.json](../../hud_layouts/seat_dashboard.json).\r\n\r\n```json\r\n{\r\n  "type": "machine_max:model_hud",\r\n  "model": "machine_max:example_hud.geo",\r\n  "animation": "machine_max:example_hud",\r\n  "texture": "machine_max:textures/hud/example_hud.png",\r\n  "texts": {\r\n    "speed": {\r\n      "key": "hud.machine_max.default_1.speed",\r\n      "centered": true,\r\n      "shadow": true,\r\n      "scale": [2, 2, 2],\r\n      "molang_args": [\r\n        "math.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n        "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n        "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n      ]\r\n    },\r\n    "gear": {\r\n      "key": "hud.machine_max.default_1.gear",\r\n      "centered": true,\r\n      "shadow": true,\r\n      "molang_args": ["global.get(\'gear\')??\'NO GBX\'"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n**HUD Function Overview:**\r\n\r\nThis HUD style and the layout it references implement the following core functions:\r\n\r\n- **Speed Display**: Real-time display of vehicle speed in kilometers per hour, using three-digit display format\r\n- **Gear Indicator**: Displays current transmission gear status, including forward gears, reverse gear, and neutral\r\n- **Tachometer Pointer**: Controls dynamic rotation of tachometer pointer through animation system, reflecting engine operating status\r\n\r\n##### Translation Key-Value Pair Analysis ([lang/en_us.json](../../lang/en_us.json))\r\n\r\nThe language file defines the translation format for HUD text. These translation keys work closely with the text slots in the style to achieve formatted display of dynamic content:\r\n\r\n```json\r\n"hud.machine_max.default_1.speed": "\xA7o%1$s%2$s%3$s",\r\n"hud.machine_max.default_1.gear": "\xA7o%1$s",\r\n"hud.machine_max.default_1.kmh": "\xA7oKM/H"\r\n```\r\n\r\n**How Translation Keys Work:**\r\n\r\n- **Speed Display** (`hud.machine_max.default_1.speed`): This translation key receives three parameters, corresponding to the hundreds, tens, and units digits of the speed. The `\xA7o` code indicates using italic font for display, making speed readings more prominent.\r\n\r\n- **Gear Display** (`hud.machine_max.default_1.gear`): Only needs one parameter to display current gear information, also using italic format to enhance readability.\r\n\r\n**Complete Number Conversion Process:**\r\n\r\nWhen the vehicle is moving, the HUD system processes speed signals in real time and displays them on the interface. This process can be divided into the following steps:\r\n\r\n1. **Acquire Real-time Data**: First obtain current speed signal from the vehicle system, in meters per second\r\n2. **Unit Conversion**: Convert meters per second to more commonly used kilometers per hour\r\n3. **Number Decomposition**: Decompose the three-digit speed value into three independent digits: hundreds, tens, and units\r\n4. **Format Display**: Fill the decomposed numbers into the placeholder positions of the translation key and apply italic format\r\n5. **Final Presentation**: For example, when the vehicle is traveling at 123 km/h, the HUD will display as "\xA7o123" in italic numbers\r\n\r\nThis design allows the HUD to reflect vehicle status in real time while maintaining interface aesthetics and consistency.\r\n\r\n#### 2. Animation Control ([example_hud.animation.json](../../animations/hud/example_hud/example_hud.animation.json))\r\n\r\nAnimation files define the dynamic behavior of HUD elements, such as the rotation effect of the tachometer pointer:\r\n\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(global.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nThis animation configuration implements the dynamic rotation effect of the tachometer pointer. When engine speed changes, the pointer rotates in real time, providing intuitive speed feedback to the driver.\r\n\r\n#### 3. Subsystem Association ([senna_gtr_seat.json](../../subsystems/senna_gtr/senna_gtr_seat.json))\r\n\r\nSeat subsystem configuration associates HUDs with specific seats and defines the layout used by each view:\r\n\r\n```json\r\n{\r\n  "views": {\r\n    "enable_first_person": true,\r\n    "first_hud_layout": "machine_max:seat_dashboard",\r\n    "first_person_offset": [0, 0.15, -0.1],\r\n    "enable_third_person": true,\r\n    "third_hud_layout": "machine_max:seat_dashboard",\r\n    "follow_vehicle": true,\r\n    "focus_on_center": true,\r\n    "distance_scale": 1.1\r\n  }\r\n}\r\n```\r\n\r\n**One layout can hold multiple elements**: to show a speedometer, tachometer, and fuel gauge together, write multiple elements in the layout array, each referencing its style and giving its own placement; a view reads a single `*_hud_layout` field. When a different position is needed, copy the layout and change its placement rather than duplicating the style.\r\n\r\n## Best Practices\r\n\r\n1. **Performance Optimization**: Keep HUD models simple and avoid complex geometry to ensure smooth performance\r\n2. **Consistent Design**: Maintain consistent visual style across different HUD elements\r\n3. **Clear Information Hierarchy**: Prioritize important information and use appropriate sizing and positioning\r\n4. **Responsive Design**: Ensure HUD elements work well in both first-person and third-person perspectives\r\n5. **Testing**: Thoroughly test HUD functionality across different vehicles and scenarios\r\n6. **Localization**: Use translation keys for all text to support multiple languages\r\n7. **Error Handling**: Implement proper fallbacks for missing data or subsystem failures', "en_us/molang/examples.md": '# Molang Usage Examples\r\n\r\nThis document provides practical usage examples of Molang in Machine-Max, helping to understand how to apply Molang in real projects.\r\n\r\n## Example 1: AE86 Suspension System Animation\r\n\r\n### File Location\r\n`machine_max/animations/part/ae86/ae86.animation.json`\r\n\r\n### Code Example\r\n```json\r\n{\r\n  "axisRightFront": {\r\n    "rotation": [0, 0, "math.atan2(local.connector_offset(\'connector.machine_max.right_front_wheel\', 1)*16,20)"]\r\n  },\r\n  "rodLeftFront": {\r\n    "rotation": ["-65.7725+math.atan2(20-local.connector_offset(\'connector.machine_max.left_front_wheel\', 1)*16,9)", 0, 0]\r\n  },\r\n  "rodLeftFrontInner": {\r\n    "scale": [1, "math.sqrt(math.pow(20-local.connector_offset(\'connector.machine_max.left_front_wheel\', 1)*16,2)+81)/22", 1]\r\n  }\r\n}\r\n```\r\n\r\n### Technical Analysis\r\n\r\n1. **Suspension Height Retrieval**:\r\n   ```molang\r\n   local.connector_offset(\'connector.machine_max.left_front_wheel\', 1)\r\n   ```\r\n   - Gets Y-axis offset of left front wheel connector (suspension height)\r\n   - Return value in meters\r\n\r\n2. **Suspension Angle Calculation**:\r\n   ```molang\r\n   math.atan2(20 - height * 16, 9)\r\n   ```\r\n   - Uses arctangent function to calculate suspension link angle\r\n   - `20` is base height, `9` is horizontal distance\r\n   - `height * 16` is unit conversion (meters to game units)\r\n\r\n3. **Link Length Calculation**:\r\n   ```molang\r\n   math.sqrt(math.pow(20 - height * 16, 2) + 81) / 22\r\n   ```\r\n   - Uses Pythagorean theorem to calculate link length\r\n   - `81` is square of horizontal distance (9\xB2)\r\n   - `/22` normalizes to base length\r\n\r\n### Physical Principle\r\nThis suspension system simulates real double-wishbone suspension:\r\n- When wheels move up and down, connector offset changes\r\n- Calculate suspension link angles and lengths using trigonometric functions\r\n- Achieve realistic suspension kinematics\r\n\r\n## Example 2: HUD Tachometer Pointer Control\r\n\r\n### File Location\r\n`machine_max/animations/hud/example_hud/example_hud.animation.json`\r\n\r\n### Code Example\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(global.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n### Technical Analysis\r\n\r\n1. **Engine Speed Retrieval**:\r\n   ```molang\r\n   global.get(\'engine_speed\')??0\r\n   ```\r\n   - Retrieves engine speed signal\r\n   - `??0` is null coalescing operator, ensures default value\r\n\r\n2. **Unit Conversion**:\r\n   ```molang\r\n   math.abs(engine_speed) * 30 / math.pi\r\n   ```\r\n   - `math.abs()` ensures speed is positive\r\n   - `* 30 / math.pi` converts radians per second to revolutions per minute (RPM)\r\n   - Conversion formula: RPM = (rad/s) \xD7 60 / (2\u03C0) = (rad/s) \xD7 30 / \u03C0\r\n\r\n3. **Normalization**:\r\n   ```molang\r\n   normalized_rpm = rpm / 9000\r\n   ```\r\n   - Assumes maximum speed of 9000 RPM\r\n   - Normalizes actual speed to 0-1 range\r\n\r\n4. **Pointer Angle Calculation**:\r\n   ```molang\r\n   pointer_angle = normalized_rpm * 240\r\n   ```\r\n   - Assumes tachometer full scale of 240 degrees\r\n   - Converts normalized speed to pointer rotation angle\r\n\r\n### Instrument Design\r\n- **Range**: 0-9000 RPM\r\n- **Pointer Range**: 0-240 degrees\r\n- **Idle Protection**: Uses `??0` to handle signal loss\r\n\r\n## Example 3: HUD Speed Display\r\n\r\n### File Location\r\n`machine_max/huds/example_hud.json`\r\n\r\n### Code Example\r\n```json\r\n{\r\n  "speed": {\r\n    "molang_args": [\r\n      "math.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n      "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n      "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n### Technical Analysis\r\n\r\n1. **Speed Retrieval and Unit Conversion**:\r\n   ```molang\r\n   speed_kmh = math.abs(global.get(\'vehicle_speed\')??0.0) * 3.6\r\n   ```\r\n   - Retrieves vehicle speed (meters per second)\r\n   - Converts to kilometers per hour: km/h = m/s \xD7 3.6\r\n\r\n2. **Hundreds Digit Extraction**:\r\n   ```molang\r\n   hundreds = math.floor(speed_kmh / 100)\r\n   ```\r\n   - Calculates hundreds digit of speed\r\n   - Example: 123 km/h \u2192 hundreds digit is 1\r\n\r\n3. **Tens Digit Extraction**:\r\n   ```molang\r\n   tens = math.floor(math.mod(speed_kmh, 100) / 10)\r\n   ```\r\n   - First modulo 100 to get last two digits\r\n   - Then divide by 10 and floor to get tens digit\r\n   - Example: 123 km/h \u2192 modulo 100 gives 23 \u2192 divide by 10 gives 2.3 \u2192 floor gives 2\r\n\r\n4. **Units Digit Extraction**:\r\n   ```molang\r\n   units = math.floor(math.mod(speed_kmh, 10))\r\n   ```\r\n   - Direct modulo 10 to get units digit\r\n   - Example: 123 km/h \u2192 modulo 10 gives 3\r\n\r\n### Display Logic\r\nThis method decomposes three-digit speed into three separate numbers, making it easy to display using three different text elements in HUD, implementing a digital speedometer.\r\n\r\n## Example 4: Steering Wheel Animation Control\r\n\r\n### File Location\r\n`machine_max/animations/part/ae86/ae86.animation.json`\r\n\r\n### Code Example\r\n```json\r\n{\r\n  "rot2": {\r\n    "rotation": [0, 0, "global.get(\'steering\')*225"]\r\n  }\r\n}\r\n```\r\n\r\n### Technical Analysis\r\n\r\n1. **Steering Signal Retrieval**:\r\n   ```molang\r\n   steering_input = global.get(\'steering\')\r\n   ```\r\n   - Retrieves steering input signal\r\n   - Range: -1.0 (left turn) to 1.0 (right turn)\r\n\r\n2. **Angle Conversion**:\r\n   ```molang\r\n   steering_angle = steering_input * 225\r\n   ```\r\n   - Converts input signal to rotation angle\r\n   - 225 degrees is maximum steering angle\r\n   - Left turn: -1.0 \xD7 225 = -225 degrees\r\n   - Right turn: 1.0 \xD7 225 = 225 degrees\r\n\r\n### Steering System Design\r\n- **Steering Ratio**: 1:225 (input signal to angle)\r\n- **Steering Range**: \xB1225 degrees\r\n- **Linear Mapping**: Simple multiplication relationship ensures linear steering response\r\n\r\n## Best Practices\r\n\r\n### 1. Error Handling\r\n```molang\r\n// Use null coalescing operator\r\nglobal.get(\'signal_name\')??default_value\r\n\r\n// Check subsystem existence\r\nlocal.has_subsystem(\'engine\') ? local.subsystem_durability(\'engine\') : 0.0\r\n```\r\n\r\n### 2. Performance Optimization\r\n```molang\r\n// Avoid repeated calculations\r\nlet speed = math.abs(global.get(\'vehicle_speed\')??0.0) * 3.6;\r\nmath.floor(speed / 100), math.floor(math.mod(speed, 100) / 10), math.floor(math.mod(speed, 10))\r\n\r\n// Use simple mathematical operations\r\n// Avoid complex trigonometric and exponential operations\r\n```\r\n\r\n### 3. Readability\r\n```molang\r\n// Use meaningful variable names\r\nlet engine_rpm = math.abs(global.get(\'engine_speed\')??0) * 30 / math.pi;\r\nlet max_rpm = 9000;\r\nlet pointer_range = 240;\r\nlet pointer_angle = (engine_rpm / max_rpm) * pointer_range;\r\n\r\n// Add comments to explain complex calculations\r\n```\r\n\r\n## Debugging Tips\r\n\r\n1. **Step-by-Step Testing**: Break down complex expressions into multiple steps for testing\r\n2. **Boundary Value Testing**: Test minimum, maximum, and boundary conditions\r\n3. **Unit Verification**: Ensure all unit conversions are correct\r\n4. **Performance Monitoring**: Monitor execution performance of complex expressions\r\n\r\nThese examples demonstrate Molang\'s powerful application capabilities in Machine-Max, from simple signal mapping to complex physical simulations, Molang provides flexible and efficient solutions.', "en_us/molang/math.md": "# Math Functions\r\n\r\nThe `math` object provides mathematical calculation capabilities, including trigonometric functions, exponential functions, rounding functions, and more.\r\n\r\n## Trigonometric Functions\r\n\r\n### math.sin(value)\r\nCalculates the sine of an angle.\r\n\r\n**Parameters**:\r\n- `value` (double): Angle value (degrees)\r\n\r\n**Return Value**: Sine value\r\n\r\n**Example**:\r\n```molang\r\nmath.sin(90)  // Returns 1.0\r\n```\r\n\r\n### math.cos(value)\r\nCalculates the cosine of an angle.\r\n\r\n**Parameters**:\r\n- `value` (double): Angle value (degrees)\r\n\r\n**Return Value**: Cosine value\r\n\r\n**Example**:\r\n```molang\r\nmath.cos(0)  // Returns 1.0\r\n```\r\n\r\n### math.tan(value)\r\nCalculates the tangent of an angle.\r\n\r\n**Parameters**:\r\n- `value` (double): Angle value (degrees)\r\n\r\n**Return Value**: Tangent value\r\n\r\n### math.asin(value)\r\nCalculates the arcsine of a value (returns angle).\r\n\r\n**Parameters**:\r\n- `value` (double): Value (-1.0 to 1.0)\r\n\r\n**Return Value**: Angle value (degrees)\r\n\r\n### math.acos(value)\r\nCalculates the arccosine of a value (returns angle).\r\n\r\n**Parameters**:\r\n- `value` (double): Value (-1.0 to 1.0)\r\n\r\n**Return Value**: Angle value (degrees)\r\n\r\n### math.atan(value)\r\nCalculates the arctangent of a value (returns angle).\r\n\r\n**Parameters**:\r\n- `value` (double): Value\r\n\r\n**Return Value**: Angle value (degrees)\r\n\r\n### math.atan2(y, x)\r\nCalculates the arctangent of y/x (returns angle).\r\n\r\n**Parameters**:\r\n- `y` (double): Y coordinate value\r\n- `x` (double): X coordinate value\r\n\r\n**Return Value**: Angle value (degrees)\r\n\r\n**Example**:\r\n```molang\r\n// Used in AE86 suspension animation\r\nmath.atan2(local.connector_offset('connector.machine_max.right_front_wheel', 1)*16, 20)\r\n```\r\n\r\n## Exponential and Logarithmic Functions\r\n\r\n### math.exp(value)\r\nCalculates e raised to the power of value.\r\n\r\n**Parameters**:\r\n- `value` (double): Exponent\r\n\r\n**Return Value**: e^value\r\n\r\n### math.log(value)\r\nCalculates the natural logarithm (base e) of a value.\r\n\r\n**Parameters**:\r\n- `value` (double): Value (> 0)\r\n\r\n**Return Value**: Natural logarithm\r\n\r\n### math.pow(base, exponent)\r\nCalculates base raised to the power of exponent.\r\n\r\n**Parameters**:\r\n- `base` (double): Base\r\n- `exponent` (double): Exponent\r\n\r\n**Return Value**: base^exponent\r\n\r\n### math.sqrt(value)\r\nCalculates the square root of a value.\r\n\r\n**Parameters**:\r\n- `value` (double): Value (\u2265 0)\r\n\r\n**Return Value**: Square root\r\n\r\n**Example**:\r\n```molang\r\n// Calculate link length in AE86 suspension animation\r\nmath.sqrt(math.pow(20-local.connector_offset('connector.machine_max.left_front_wheel', 1)*16, 2)+81)\r\n```\r\n\r\n## Rounding Functions\r\n\r\n### math.floor(value)\r\nRounds down to the nearest integer.\r\n\r\n**Parameters**:\r\n- `value` (double): Value\r\n\r\n**Return Value**: Largest integer less than or equal to value\r\n\r\n**Example**:\r\n```molang\r\n// Used in HUD speed display\r\nmath.floor((math.abs(global.get('vehicle_speed')??0.0)) * 3.6 / 100)\r\n```\r\n\r\n### math.ceil(value)\r\nRounds up to the nearest integer.\r\n\r\n**Parameters**:\r\n- `value` (double): Value\r\n\r\n**Return Value**: Smallest integer greater than or equal to value\r\n\r\n### math.round(value)\r\nRounds to the nearest integer.\r\n\r\n**Parameters**:\r\n- `value` (double): Value\r\n\r\n**Return Value**: Nearest integer\r\n\r\n## Other Mathematical Functions\r\n\r\n### math.abs(value)\r\nCalculates the absolute value.\r\n\r\n**Parameters**:\r\n- `value` (double): Value\r\n\r\n**Return Value**: Absolute value\r\n\r\n**Example**:\r\n```molang\r\n// Ensure speed value is positive\r\nmath.abs(global.get('vehicle_speed')??0.0)\r\n```\r\n\r\n### math.mod(value1, value2)\r\nCalculates the remainder of value1 divided by value2.\r\n\r\n**Parameters**:\r\n- `value1` (double): Dividend\r\n- `value2` (double): Divisor\r\n\r\n**Return Value**: Remainder\r\n\r\n**Example**:\r\n```molang\r\n// Extract tens digit in HUD speed display\r\nmath.floor(math.mod((math.abs(global.get('vehicle_speed')??0.0)) * 3.6, 100) / 10)\r\n```\r\n\r\n### math.sign(value)\r\nGets the sign of a value.\r\n\r\n**Parameters**:\r\n- `value` (double): Value\r\n\r\n**Return Value**: 1.0 (positive), -1.0 (negative), 0.0 (zero)\r\n\r\n### math.min(value1, value2)\r\nReturns the smaller of two values.\r\n\r\n**Parameters**:\r\n- `value1` (double): First value\r\n- `value2` (double): Second value\r\n\r\n**Return Value**: Smaller value\r\n\r\n### math.max(value1, value2)\r\nReturns the larger of two values.\r\n\r\n**Parameters**:\r\n- `value1` (double): First value\r\n- `value2` (double): Second value\r\n\r\n**Return Value**: Larger value\r\n\r\n### math.clamp(value, min, max)\r\nClamps a value to the specified range.\r\n\r\n**Parameters**:\r\n- `value` (double): Value to clamp\r\n- `min` (double): Minimum value\r\n- `max` (double): Maximum value\r\n\r\n**Return Value**: Clamped value\r\n\r\n### math.lerp(start, end, alpha)\r\nLinear interpolation.\r\n\r\n**Parameters**:\r\n- `start` (double): Start value\r\n- `end` (double): End value\r\n- `alpha` (double): Interpolation coefficient (0.0 to 1.0)\r\n\r\n**Return Value**: Interpolation result\r\n\r\n## Mathematical Constants\r\n\r\n### math.pi\r\nThe value of pi (\u03C0).\r\n\r\n**Type**: Read-only double value\r\n\r\n**Value**: Approximately 3.141592653589793\r\n\r\n**Example**:\r\n```molang\r\n// Radians to degrees\r\nradians * 180 / math.pi\r\n\r\n// Degrees to radians\r\ndegrees * math.pi / 180\r\n```\r\n\r\n## Practical Usage Examples\r\n\r\n### 1. Unit Conversion\r\n```molang\r\n// Meters per second to kilometers per hour\r\nglobal.get('vehicle_speed') * 3.6\r\n\r\n// Radians per second to revolutions per minute (RPM)\r\nglobal.get('engine_speed') * 30 / math.pi\r\n```\r\n\r\n### 2. Animation Control\r\n```molang\r\n// Smooth animation interpolation\r\nmath.lerp(current_angle, target_angle, 0.1)\r\n\r\n// Limit rotation angle to reasonable range\r\nmath.clamp(rotation_angle, -180, 180)\r\n```\r\n\r\n### 3. Physical Calculations\r\n```molang\r\n// Calculate distance between two points\r\nmath.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2) + math.pow(z2-z1, 2))\r\n\r\n// Calculate angle difference\r\nmath.abs(math.mod(angle1 - angle2 + 180, 360) - 180)\r\n```\r\n\r\n## Notes\r\n\r\n1. **Angle Units**: All trigonometric functions use degrees as units, not radians\r\n2. **Performance Considerations**: Complex mathematical calculations may affect performance, simplify expressions when possible\r\n3. **Numerical Range**: Pay attention to function domains and ranges to avoid mathematical errors\r\n4. **Precision Issues**: Floating-point calculations may have precision errors, perform appropriate rounding for important calculations", "en_us/molang/README.md": "# Molang Documentation\r\n\r\nMachine-Max uses the Molang scripting system to control vehicle animations, HUD displays, and interaction logic. Molang is a lightweight scripting language specifically designed for real-time calculations and animation control.\r\n\r\n## Table of Contents\r\n\r\n- [Local Methods](./local.md) - Methods and properties related to parts\r\n- [Global Methods](./global.md) - Methods and properties related to vehicles\r\n- [Math Functions](./math.md) - Mathematical calculation functions\r\n- [Usage Examples](./examples.md) - Practical usage examples\r\n\r\n## Basic Syntax\r\n\r\nMolang expressions use JavaScript-like syntax, supporting basic mathematical operations, conditional judgments, and function calls.\r\n\r\n### Basic Operations\r\n```molang\r\n// Arithmetic operations\r\n1.0 + 2.0 * 3.0  // Result: 7.0\r\n(1.0 + 2.0) * 3.0  // Result: 9.0\r\n\r\n// Comparison operations\r\nspeed > 0  // Greater than comparison\r\ndurability <= max_durability  // Less than or equal to comparison\r\nv.a == 3.0  // Equal to comparison\r\n```\r\n\r\n### Ternary Expressions (Conditional Operator)\r\n```molang\r\n// Basic syntax: condition ? true_value : false_value\r\nvariable > 0 ? 1.0 : 0.0\r\n\r\n// Practical application: warning light based on subsystem status\r\nlocal.has_subsystem('engine') && local.subsystem_destroyed('engine') ? 1.0 : 0.0\r\n\r\n// Nested usage\r\nv.fuel_level > 50 ? 0.0 : (v.fuel_level > 10 ? 0.5 : 1.0)\r\n```\r\n\r\n### Null Coalescing Operator (??)\r\n```molang\r\n// Basic syntax: value ?? default_value\r\nglobal.get('signal_name')??0.0\r\n\r\n// Practical application: handling potentially missing signals\r\nmath.abs(global.get('vehicle_speed')??0.0) * 3.6\r\n\r\n// Chained usage\r\nglobal.get('engine_speed')??global.get('motor_speed')??0.0\r\n```\r\n\r\n### Function Calls\r\n```molang\r\n// Math functions\r\nmath.sin(angle)\r\nmath.floor(value)\r\n\r\n// Vehicle and part methods\r\nglobal.get('steering')\r\nlocal.has_subsystem('engine')\r\n```\r\n\r\n## Common Patterns\r\n\r\n### Signal Retrieval and Safe Access\r\n```molang\r\n// Safe signal value retrieval\r\nglobal.get('signal_name')??default_value\r\n\r\n// Conditional access after checking\r\nlocal.has_subsystem('engine') ? local.subsystem_durability('engine') : 0.0\r\n```\r\n\r\n### Unit Conversion\r\n```molang\r\n// Meters per second to kilometers per hour\r\nglobal.get('vehicle_speed')??0.0 * 3.6\r\n\r\n// Radians per second to revolutions per minute (RPM)\r\nglobal.get('engine_speed')??0.0 * 30 / math.pi\r\n```\r\n\r\n## Next Steps\r\n\r\n- View [Local Methods](./local.md) to learn about all part-related methods\r\n- View [Global Methods](./global.md) to learn about vehicle signal retrieval methods\r\n- View [Math Functions](./math.md) to learn about available mathematical calculation functions\r\n- View [Usage Examples](./examples.md) to learn practical application examples", "en_us/molang/subpart.md": "# Local Methods\r\n\r\nThe `local` object provides methods to access part status, connectors, and subsystems.\r\n\r\n## Signal-Related Methods\r\n\r\n### local.get(channel)\r\n\r\nRetrieves the value from the part's signal storage.\r\n\r\n**Syntax**: `local.get(channel_name)`\r\n\r\n**Parameters**:\r\n- `channel_name` (string): Signal channel name\r\n\r\n**Return Value**: Signal value, returns `null` if the channel doesn't exist\r\n\r\n**Example**:\r\n```molang\r\n// Retrieve specific part signal\r\nlocal.get('custom_signal')\r\n```\r\n\r\n## Connector-Related Methods\r\n\r\n### local.has_connector(connectorName)\r\n\r\nChecks if the part has the specified connector and whether the connector is connected to a part.\r\n\r\n**Syntax**: `local.has_connector(connector_name)`\r\n\r\n**Parameters**:\r\n- `connector_name` (string): Connector name\r\n\r\n**Return Value**: Returns 1.0 if the connector exists and is connected to a part, otherwise 0.0\r\n\r\n**Example**:\r\n```molang\r\n// Check if front wheel connector is connected\r\nlocal.has_connector('connector.machine_max.front_wheel')\r\n```\r\n\r\n### local.connector_offset(connectorName, axis)\r\n\r\nGets the connector's offset (position).\r\n\r\n**Syntax**: `local.connector_offset(connector_name, axis)`\r\n\r\n**Parameters**:\r\n- `connector_name` (string): Connector name\r\n- `axis` (integer): Coordinate axis (0=X, 1=Y, 2=Z)\r\n\r\n**Return Value**: Offset value for the specified axis (in meters), returns 0.0 if the connector doesn't exist\r\n\r\n**Example**:\r\n```molang\r\n// Get Y-axis offset of front wheel connector (suspension height)\r\nlocal.connector_offset('connector.machine_max.front_wheel', 1)\r\n```\r\n\r\n### local.connector_rotation(connectorName, axis)\r\n\r\nGets the connector's rotation angle.\r\n\r\n**Syntax**: `local.connector_rotation(connector_name, axis)`\r\n\r\n**Parameters**:\r\n- `connector_name` (string): Connector name\r\n- `axis` (integer): Rotation axis (0=X, 1=Y, 2=Z)\r\n\r\n**Return Value**: Rotation angle for the specified axis (in degrees), returns 0.0 if the connector doesn't exist\r\n\r\n## Subsystem-Related Methods\r\n\r\n### local.has_subsystem(subsystemName)\r\n\r\nChecks if the part has a subsystem with the specified name.\r\n\r\n**Syntax**: `local.has_subsystem(subsystem_name)`\r\n\r\n**Parameters**:\r\n- `subsystem_name` (string): Subsystem name\r\n\r\n**Return Value**: Returns 1.0 if the subsystem exists, otherwise 0.0\r\n\r\n**Example**:\r\n```molang\r\n// Check if engine subsystem exists\r\nlocal.has_subsystem('subsystem.machine_max.engine')\r\n```\r\n\r\n### local.subsystem_durability(subsystemName)\r\n\r\nGets the current durability of the specified subsystem.\r\n\r\n**Syntax**: `local.subsystem_durability(subsystem_name)`\r\n\r\n**Parameters**:\r\n- `subsystem_name` (string): Subsystem name\r\n\r\n**Return Value**: Subsystem durability, returns 0.0 if the subsystem doesn't exist\r\n\r\n### local.subsystem_max_durability(subsystemName)\r\n\r\nGets the maximum durability of the specified subsystem.\r\n\r\n**Syntax**: `local.subsystem_max_durability(subsystem_name)`\r\n\r\n**Parameters**:\r\n- `subsystem_name` (string): Subsystem name\r\n\r\n**Return Value**: Subsystem maximum durability, returns 0.0 if the subsystem doesn't exist\r\n\r\n### local.subsystem_active(subsystemName)\r\n\r\nChecks if the specified subsystem is active.\r\n\r\n**Syntax**: `local.subsystem_active(subsystem_name)`\r\n\r\n**Parameters**:\r\n- `subsystem_name` (string): Subsystem name\r\n\r\n**Return Value**: Returns 1.0 if the subsystem is active, otherwise 0.0\r\n\r\n### local.subsystem_destroyed(subsystemName)\r\n\r\nChecks if the specified subsystem is destroyed.\r\n\r\n**Syntax**: `local.subsystem_destroyed(subsystem_name)`\r\n\r\n**Parameters**:\r\n- `subsystem_name` (string): Subsystem name\r\n\r\n**Return Value**: Returns 1.0 if the subsystem is destroyed, otherwise 0.0\r\n\r\n## Part Properties\r\n\r\n### local.durability\r\n\r\nCurrent durability of the part.\r\n\r\n**Type**: Read-only double value\r\n\r\n### local.max_durability\r\n\r\nMaximum durability of the part.\r\n\r\n**Type**: Read-only double value\r\n\r\n### local.is_destroyed\r\n\r\nWhether the part has been destroyed.\r\n\r\n**Type**: Read-only double value (1.0=destroyed, 0.0=normal)\r\n\r\n## Practical Usage Examples\r\n\r\n### 1. Suspension System Animation\r\nControl suspension system using connector offsets in AE86 animation:\r\n\r\n```json\r\n{\r\n  \"axisRightFront\": {\r\n    \"rotation\": [0, 0, \"math.atan2(local.connector_offset('connector.machine_max.right_front_wheel', 1)*16,20)\"]\r\n  },\r\n  \"rodLeftFront\": {\r\n    \"rotation\": [\"-65.7725+math.atan2(20-local.connector_offset('connector.machine_max.left_front_wheel', 1)*16,9)\", 0, 0]\r\n  },\r\n  \"rodLeftFrontInner\": {\r\n    \"scale\": [1, \"math.sqrt(math.pow(20-local.connector_offset('connector.machine_max.left_front_wheel', 1)*16,2)+81)/22\", 1]\r\n  }\r\n}\r\n```\r\n\r\n**Explanation**:\r\n- Use `local.connector_offset` to get Y-axis offset of wheel connectors (suspension height)\r\n- Calculate suspension link angles and lengths using trigonometric functions\r\n- Achieve realistic suspension kinematics\r\n\r\n### 2. Subsystem Status Display\r\nControl warning lights in HUD using subsystem status:\r\n\r\n```molang\r\n// Engine subsystem status check\r\nlocal.has_subsystem('engine') && local.subsystem_active('engine') ? 1.0 : 0.0\r\n\r\n// Low fuel warning for fuel subsystem\r\nlocal.has_subsystem('fuel_tank') && local.subsystem_durability('fuel_tank') < 10.0 ? 1.0 : 0.0\r\n\r\n// Engine overheating warning\r\nlocal.has_subsystem('engine') && local.subsystem_destroyed('engine') ? 1.0 : 0.0\r\n```\r\n\r\n### 3. Conditional Animation Control\r\nControl part animations based on subsystem status:\r\n\r\n```json\r\n{\r\n  \"engine_cover\": {\r\n    \"rotation\": [\r\n      \"local.has_subsystem('engine') ? 45.0 : 0.0\", \r\n      0, \r\n      0\r\n    ]\r\n  },\r\n  \"warning_light\": {\r\n    \"scale\": [\r\n      \"local.subsystem_destroyed('engine') ? 1.5 : 1.0\", \r\n      \"local.subsystem_destroyed('engine') ? 1.5 : 1.0\", \r\n      \"local.subsystem_destroyed('engine') ? 1.5 : 1.0\"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n## Notes\r\n\r\n1. **Connector Naming**: Connector names typically follow the `connector.machine_max.xxx` naming convention\r\n2. **Subsystem Naming**: Subsystem names typically follow the `subsystem.machine_max.xxx` naming convention\r\n3. **Coordinate System**: Connector offsets and rotations use local coordinate system\r\n4. **Performance Optimization**: Consider performance impact for frequently called methods", "en_us/molang/vehicle.md": "# Global Methods\r\n\r\nThe `global` object provides methods to access global vehicle status and signals.\r\n\r\n## global.get(channel)\r\n\r\nRetrieves the value from the vehicle's signal channel.\r\n\r\n### Syntax\r\n```molang\r\nglobal.get(channel_name)\r\n```\r\n\r\n### Parameters\r\n- `channel_name` (string): Signal channel name\r\n\r\n### Return Value\r\n- Signal value, returns `null` if the channel doesn't exist\r\n\r\n### Examples\r\n```molang\r\n// Get steering signal\r\nglobal.get('steering')\r\n\r\n// Get throttle signal\r\nglobal.get('throttle')\r\n\r\n// Get brake signal\r\nglobal.get('brake')\r\n\r\n// Get vehicle speed (meters per second)\r\nglobal.get('vehicle_speed')\r\n\r\n// Get engine speed (radians per second)\r\nglobal.get('engine_speed')\r\n```\r\n\r\n## Common Signal Channels\r\n\r\n### Control Signals\r\n- `steering`: Steering input, range [-1.0, 1.0]\r\n- `throttle`: Throttle input, range [0.0, 1.0]\r\n- `brake`: Brake input, range [0.0, 1.0]\r\n- `handbrake`: Handbrake input, range [0.0, 1.0]\r\n\r\n### Status Signals\r\n- `vehicle_speed`: Vehicle speed (meters per second)\r\n- `engine_speed`: Engine speed (radians per second)\r\n- `gear`: Current gear\r\n- `rpm`: Engine speed (revolutions per minute)\r\n\r\n### System Signals\r\n- `fuel_level`: Fuel level\r\n- `temperature`: Engine temperature\r\n- `battery_voltage`: Battery voltage\r\n\r\n## Practical Usage Examples\r\n\r\n### 1. Steering Wheel Animation Control\r\nUse steering signal to control steering wheel rotation in AE86 animation file:\r\n\r\n```json\r\n{\r\n  \"rot2\": {\r\n    \"rotation\": [0, 0, \"global.get('steering')*225\"]\r\n  }\r\n}\r\n```\r\n\r\n**Explanation**: \r\n- `global.get('steering')` retrieves steering input value (-1.0 to 1.0)\r\n- Multiply by 225 degrees to convert input value to rotation angle\r\n- When steering input is -1.0 (left turn), steering wheel rotates -225 degrees\r\n- When steering input is 1.0 (right turn), steering wheel rotates 225 degrees\r\n\r\n### 2. HUD Tachometer Pointer Control\r\nUse engine speed to control pointer deflection in example HUD animation:\r\n\r\n```json\r\n{\r\n  \"Pointer\": {\r\n    \"rotation\": {\r\n      \"0.0\": [0, 0, \"240*(math.abs(global.get('engine_speed')??0)*30/math.pi)/9000\"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n**Explanation**:\r\n- `global.get('engine_speed')` retrieves engine speed (radians per second)\r\n- `??0` is null coalescing operator, uses 0 if signal doesn't exist\r\n- `*30/math.pi` converts radians per second to revolutions per minute (RPM)\r\n- `/9000` normalizes to maximum speed of 9000 RPM\r\n- `*240` converts normalized value to pointer rotation angle (240 degree full scale)\r\n\r\n### 3. HUD Speed Display\r\nCalculate display values using speed signal in HUD configuration:\r\n\r\n```json\r\n{\r\n  \"speed\": {\r\n    \"molang_args\": [\r\n      \"math.floor((math.abs(global.get('vehicle_speed')??0.0)) * 3.6 / 100)\",\r\n      \"math.floor(math.mod((math.abs(global.get('vehicle_speed')??0.0)) * 3.6, 100) / 10)\",\r\n      \"math.floor(math.mod((math.abs(global.get('vehicle_speed')??0.0)) * 3.6, 10))\"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n**Explanation**:\r\n- `global.get('vehicle_speed')` retrieves vehicle speed (meters per second)\r\n- `* 3.6` converts meters per second to kilometers per hour\r\n- First parameter: Calculate hundreds digit (speed divided by 100, floored)\r\n- Second parameter: Calculate tens digit (speed modulo 100, divided by 10, floored)\r\n- Third parameter: Calculate units digit (speed modulo 10, floored)\r\n\r\n## Notes\r\n\r\n1. **Null Value Handling**: Use `??` operator to handle potentially missing signal channels\r\n2. **Unit Conversion**: Pay attention to units of different signals (rad/s vs RPM, m/s vs km/h)\r\n3. **Range Limitation**: Some signals have specific value ranges that require appropriate scaling in animations\r\n4. **Performance Considerations**: Complex Molang expressions may affect performance, keep them concise", "en_us/schemas/base/axis.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/axis.json",\r\n  "title": "Axis Direction",\r\n  "description": "Represents the axis direction in 3D space, used to define the normal direction of connection points.",\r\n  "type": "string",\r\n  "enum": ["xp", "xn", "yp", "yn", "zp", "zn"],\r\n  "default": "yp",\r\n  "examples": ["yp", "xn", "zp"],\r\n  "description_map": {\r\n    "xp": "Positive X-axis direction",\r\n    "xn": "Negative X-axis direction",\r\n    "yp": "Positive Y-axis direction",\r\n    "yn": "Negative Y-axis direction",\r\n    "zp": "Positive Z-axis direction",\r\n    "zn": "Negative Z-axis direction"\r\n  }\r\n}', "en_us/schemas/base/material_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/material_attr.json",\r\n  "title": "Material Attributes",\r\n  "description": "Defines the physical properties, armor protection, and hit sounds of materials, organized in three groups: physics / armor / sounds.",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "JSON Schema reference path for editor intellisense and validation",\r\n      "default": "../docs/en_us/schemas/base/material_attr.schema.json"\r\n    },\r\n    "physics": {\r\n      "type": "object",\r\n      "description": "Physical properties: friction, slip, elasticity, etc.",\r\n      "properties": {\r\n        "friction": {\r\n          "$ref": "vector_3d.schema.json",\r\n          "default": [0.5, 0.5, 0.5],\r\n          "description": "Friction coefficient vector [x, y, z]. x = lateral, y = forward, z = unused."\r\n        },\r\n        "slip_adaptation": {\r\n          "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.5,\r\n          "description": "Slip adaptation coefficient, adjusts friction behavior during sliding."\r\n        },\r\n        "slip_curve": {\r\n          "type": "object",\r\n          "description": "Tire slip friction curve parameters.",\r\n          "properties": {\r\n            "longitudinal": {\r\n              "type": "object",\r\n              "description": "Longitudinal slip-ratio curve.",\r\n              "properties": {\r\n                "peak_slip_ratio": { "type": "number", "minimum": 0.0, "default": 0.2, "description": "Slip ratio at peak friction." },\r\n                "base_scale": { "type": "number", "default": 1.0, "description": "Friction scale at zero slip." },\r\n                "peak_scale": { "type": "number", "default": 1.4, "description": "Friction scale at peak_slip_ratio." },\r\n                "kinetic_scale": { "type": "number", "default": 0.9, "description": "Friction scale in high-slip kinetic region." }\r\n              },\r\n              "additionalProperties": false\r\n            },\r\n            "lateral": {\r\n              "type": "object",\r\n              "description": "Lateral slip-angle curve (angles in degrees).",\r\n              "properties": {\r\n                "peak_angle_deg": { "type": "number", "minimum": 0.0, "default": 12.0, "description": "Slip angle at peak friction." },\r\n                "kinetic_angle_deg": { "type": "number", "minimum": 0.0, "default": 90.0, "description": "Slip angle where kinetic plateau begins." },\r\n                "base_scale": { "type": "number", "default": 1.0, "description": "Friction scale at zero slip angle." },\r\n                "peak_scale": { "type": "number", "default": 1.2, "description": "Friction scale at peak_angle_deg." },\r\n                "kinetic_scale": { "type": "number", "default": 0.7, "description": "Friction scale in high-angle kinetic region." }\r\n              },\r\n              "additionalProperties": false\r\n            }\r\n          },\r\n          "additionalProperties": false\r\n        },\r\n        "rolling_friction": { "type": "number", "minimum": 0.0, "default": 0.2, "description": "Rolling friction coefficient." },\r\n        "spinning_friction": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "Spinning friction coefficient." },\r\n        "restitution": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.1, "description": "Restitution (elasticity), 0 = perfectly inelastic, 1 = perfectly elastic." },\r\n        "block_damage_factor": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "Block damage factor, 0 = cannot break blocks." }\r\n      },\r\n      "additionalProperties": false\r\n    },\r\n    "armor": {\r\n      "type": "object",\r\n      "description": "Armor properties: penetration resistance, linear/percentage damage reduction, durability decay, and conditional modifiers. Pipeline: damage_modifiers -> (dmg - dmg_resist) * dmg_mult.",\r\n      "properties": {\r\n        "rha": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "Material penetration resistance coefficient relative to RHA (Rolled Homogeneous Armor)." },\r\n        "angle_effect": { "type": "boolean", "default": true, "description": "Whether equivalent armor thickness is affected by impact angle." },\r\n        "dmg_resist": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "Global linear damage reduction. Final damage is reduced by this value (affected by durability decay)." },\r\n        "dmg_mult": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.95, "description": "Global damage multiplier. Final damage is multiplied by this value (affected by durability decay). 0.95 = take 95% damage." },\r\n        "decay_rha": { "type": "number", "minimum": 0.0, "default": 0.3, "description": "Residual RHA coefficient when durability reaches zero." },\r\n        "decay_dmg_resist": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "Residual linear reduction when durability reaches zero. Default 0.0 = completely gone." },\r\n        "decay_dmg_mult": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 1.0, "description": "Residual damage multiplier when durability reaches zero. Default 1.0 = fully ineffective." },\r\n        "decay_power": { "type": "number", "minimum": 0.0, "default": 1.5, "description": "Armor degradation curve exponent. >1 = degrades slowly at first, then rapidly near failure (brittle); =1 = linear." },\r\n        "unpen_power": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "Damage exponent when attack fails to fully penetrate. Formula: dmg*(penetration/equivalent_armor)^unpen_power." },\r\n        "impact_modifiers": {\r\n          "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json",\r\n          "description": "Condition-driven impact damage modifiers."\r\n        },\r\n        "penetration_modifiers": {\r\n          "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json",\r\n          "description": "Condition-driven penetration depth modifiers."\r\n        },\r\n        "damage_modifiers": {\r\n          "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json",\r\n          "description": "Condition-driven damage modifiers (type/entity-specific adjustments)."\r\n        }\r\n      },\r\n      "additionalProperties": false\r\n    },\r\n    "sounds": {\r\n      "type": "object",\r\n      "properties": {\r\n        "hit_un_pen": {\r\n          "$ref": "sound_event.schema.json",\r\n          "description": "Sound event when hit box is hit but not penetrated.",\r\n          "default": { "sound_id": "machine_max:hit_box.hit.up_pen.metal", "range": 64 }\r\n        },\r\n        "hit_pen": {\r\n          "$ref": "sound_event.schema.json",\r\n          "description": "Sound event when hit box is hit and penetrated.",\r\n          "default": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }\r\n        }\r\n      },\r\n      "additionalProperties": false,\r\n      "description": "Material hit sound configuration."\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "physics": { "friction": [0.5, 0.5, 0.5] },\r\n      "armor": {\r\n        "rha": 1.0,\r\n        "dmg_resist": 1.0,\r\n        "dmg_mult": 0.95\r\n      },\r\n      "sounds": {\r\n        "hit_un_pen": { "sound_id": "machine_max:hit_box.hit.up_pen.metal", "range": 64 },\r\n        "hit_pen": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }\r\n      }\r\n    }\r\n  ]\r\n}', "en_us/schemas/base/operation.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/operation.json",\r\n  "title": "Operator",\r\n  "description": "Mathematical operator, used for numerical operations in modifiers",\r\n  "type": "string",\r\n  "enum": ["add", "multiply"],\r\n  "default": "add",\r\n  "examples": ["add", "multiply"]\r\n}', "en_us/schemas/base/resource_location.schema.json": `{\r
+      define_SCHEMAS_default = { "en_us/hud.md": '# HUD Development Guide\r\n\r\nMachine-Max provides a powerful custom HUD system that allows creating dedicated interface displays for different vehicles and subsystems. The HUD system is based on models, animations, and Molang scripts, enabling dynamic dashboards, status indicators, and information displays. HUDs have three layers: a **style** describes what it looks like, a **layout** is an ordered list of elements, and an **element** places one style at one specific position.\r\n\r\n## HUD System Overview\r\n\r\n### Core Component File Paths\r\n\r\nHere are the core component file paths for the example HUD, where you can find complete implementation examples:\r\n\r\n- **HUD Style**: [huds/example_hud.json](../../huds/example_hud.json)\r\n- **HUD Layout**: [hud_layouts/seat_dashboard.json](../../hud_layouts/seat_dashboard.json)\r\n- **3D Model File**: [models/hud/example_hud.geo.json](../../models/hud/example_hud.geo.json)\r\n- **Animation File**: [animations/hud/example_hud/example_hud.animation.json](../../animations/hud/example_hud/example_hud.animation.json)\r\n- **Texture File**: [textures/hud/example_hud.png](../../textures/hud/example_hud.png)\r\n- **Language File**: [lang/en_us.json](../../lang/en_us.json)\r\n- **Subsystem Configuration**: [subsystems/default_seat.json](../../subsystems/default_seat.json)\r\n- **Advanced Subsystem Configuration**: [subsystems/senna_gtr/senna_gtr_seat.json](../../subsystems/senna_gtr/senna_gtr_seat.json)\r\n\r\n## Table of Contents\r\n- [HUD System Overview](#hud-system-overview)\r\n- [HUD Styles (huds/)](#hud-styles-huds)\r\n- [HUD Layouts (hud_layouts/)](#hud-layouts-hud_layouts)\r\n- [Model and Animation Requirements](#model-and-animation-requirements)\r\n- [Text Display Configuration](#text-display-configuration)\r\n- [Molang in HUD Applications](#molang-in-hud-applications)\r\n- [Subsystem HUD Association](#subsystem-hud-association)\r\n- [Practical Case Analysis](#practical-case-analysis)\r\n- [Best Practices](#best-practices)\r\n\r\n## HUD System Overview\r\n\r\nMachine-Max\'s HUD system consists of the following core components:\r\n\r\n1. **HUD Style** (`huds/*.json`) - Defines model, animation, texture, tint, and text slots\r\n2. **HUD Layout** (`hud_layouts/*.json`) - An ordered element array deciding which styles are drawn and where\r\n3. **3D Model** (`.geo.json` file) - Provides HUD geometry and bone structure\r\n4. **Animation File** (`.animation.json` file) - Controls dynamic behavior of HUD elements\r\n5. **Texture File** (`.png` file) - Provides visual appearance of the HUD\r\n6. **Subsystem Configuration** - Mounts a layout on a seat or sight through a `*_hud_layout` field\r\n\r\n## HUD Styles (huds/)\r\n\r\nA HUD style defines the internal appearance of one HUD and contains no position, rotation, scale, or projection.\r\n\r\n### Basic Structure\r\n```json\r\n{\r\n  "type": "machine_max:model_hud",\r\n  "model": "machine_max:example_hud.geo",\r\n  "animation": "machine_max:example_hud",\r\n  "texture": "machine_max:textures/hud/example_hud.png",\r\n  "color": [255, 255, 255],\r\n  "alpha": 255,\r\n  "texts": {\r\n    // Text configuration\r\n  },\r\n  "scissor": {\r\n    "enable": false,\r\n    "x": 0,\r\n    "y": 0,\r\n    "width": 0,\r\n    "height": 0\r\n  }\r\n}\r\n```\r\n\r\n### Configuration Parameter Description\r\n\r\n#### Basic Properties\r\n- **type** (Required): Carrier type: `machine_max:model_hud` (Bedrock model) or `machine_max:aui_hud` (AUI page)\r\n- **model** (Required): HUD 3D model resource address, e.g., `machine_max:example_hud.geo`\r\n- **animation** (Required): HUD animation resource address, e.g., `machine_max:example_hud`\r\n- **texture** (Required): HUD texture resource address, e.g., `machine_max:textures/hud/example_hud.png`\r\n- **color** (Optional): RGB color, default white\r\n- **alpha** (Optional): Transparency, default 255\r\n\r\n#### Text Display\r\n```json\r\n"texts": {\r\n  "locator_name": {\r\n    "key": "translation.key",\r\n    "centered": true,\r\n    "shadow": false,\r\n    "scale": [0.7, 0.7, 0.7],\r\n    "color": [255, 0, 0],\r\n    "molang_args": ["expression1", "expression2"],\r\n    "significand": 0\r\n  }\r\n}\r\n```\r\n\r\n- **locator_name**: Locator name, used to control text display position and rotation\r\n- **key**: Translation key for text localization\r\n- **centered**: Whether to center the text, default true\r\n- **shadow**: Whether to render text shadow, default false\r\n- **scale**: Scaling factor, default [1, 1, 1]\r\n- **color**: RGB color\r\n- **molang_args**: Molang parameters for filling placeholder positions in translation text\r\n- **significand**: Number of decimal places to keep when Molang parameter results are numbers, default 0\r\n\r\n#### Clipping Region\r\n- **scissor**: Clipping rectangle configuration (optional, disabled by default)\r\n  - **enable**: Whether to enable clipping rectangle\r\n  - **x**: Clipping rectangle center x coordinate (pixels)\r\n  - **y**: Clipping rectangle center y coordinate (pixels)\r\n  - **width**: Clipping rectangle width (pixels)\r\n  - **height**: Clipping rectangle height (pixels)\r\n\r\n### AUI Page Styles\r\n\r\n`machine_max:aui_hud` describes a HUD with an HTML page supplied by the pack\'s `documents/` directory. The page can render in the GUI/HUD orthographic overlay or on a perspective plane in camera space.\r\n\r\n```json\r\n{\r\n  "type": "machine_max:aui_hud",\r\n  "page": "machine_max/weapon_hud_element/weapon_ammo.html",\r\n  "defaults": { "--hud-accent": "#7dd3fc" }\r\n}\r\n```\r\n\r\n- **page** (Required): AUI page key in the form `<pack namespace>/<relative path>`; the pack file `documents/weapon_hud_element/weapon_ammo.html` maps to `machine_max/weapon_hud_element/weapon_ammo.html`\r\n- **defaults** (Optional): CSS variables written onto the page `body`, readable through `var(...)` in the page stylesheet\r\n\r\nThe page shrinks to its content: the runtime adds the `mm-hud` class to `body` and sets inline rules for `inline-block`, zero margin and a transparent background. The page describes the component content; its layout controls placement and projection. Put a dark background on the component container when needed. The layout field `perspective: false` selects the orthographic overlay and `perspective: true` selects a perspective plane. The field defaults to `true`, so screen-anchored AUI elements must explicitly set it to `false`.\r\n\r\nAUI HUD pages receive no mouse input. Perspective rendering supports page geometry, text and clipping; complex screen-sampling effects such as `backdrop-filter` are not guaranteed.\r\n\r\n## HUD Layouts (hud_layouts/)\r\n\r\nA layout file is an array. Each entry is an element: one style reference plus a complete set of placement values. Elements are inline in the layout and are not registered separately; the same style may appear multiple times in one layout.\r\n\r\n```json\r\n[\r\n  {\r\n    "style": "machine_max:example_hud",\r\n    "perspective": true,\r\n    "offset": [95, 55, -135],\r\n    "rotation": [-25, -30, 0],\r\n    "scale": [15, 15, 15]\r\n  }\r\n]\r\n```\r\n\r\n| Field | Required | Description |\r\n| --- | --- | --- |\r\n| `style` | Yes | Style resource key pointing at a file under `huds/` |\r\n| `perspective` | No | Default `true`; `true` uses perspective projection, `false` uses orthographic projection |\r\n| `offset` | No | Perspective: camera-space translation `(x, -y, z)`; a visible plane must be in front of the camera (normally `z < 0`). Orthographic model: pixel offset from screen center. Orthographic AUI: GUI pixel offset from the aligned `anchor` position, with `z` controlling paint depth |\r\n| `rotation` | No | `[x, y, z]` rotation angles in degrees; perspective AUI composes Z/Y/X rotations, while orthographic AUI ignores this field |\r\n| `scale` | No | Default `[1, 1, 1]`; orthographic AUI scales its two page axes independently with X/Y, while perspective AUI converts CSS pixels into camera-space units |\r\n| `scope_behavior` | No | Default `follow_position`; only effective in a sight layout: `screen_fixed` / `follow_position` / `follow_transform` |\r\n| `ignore_zoom` | No | Default `false`; when `true`, element size does not scale with sight zoom |\r\n| `anchor` | No | Orthographic AUI only: default `top_left`, one of `top_center`, `top_right`, `center_left`, `center`, `center_right`, `bottom_left`, `bottom_center`, `bottom_right`; the element\'s matching corner (or center) aligns with the screen\'s matching corner (or center). Models and perspective AUI ignore this field |\r\n\r\nOrthographic AUI computes `anchor` alignment from the content size, then adds `offset.x/y`. The AUI viewport\'s CSS-to-GUI conversion factor applies equally to both axes, followed by the independent `scale.x/y` factors; for example, displayed width is `CSS width \xD7 viewport.renderScale \xD7 scale.x`. Painting and clipping share the same position and scale. The layout fields `rotation`, `scope_behavior` and `ignore_zoom` do not affect orthographic AUI; CSS can rotate content inside the page.\r\n\r\nPerspective AUI uses the page content center as its local origin and flips the downward CSS Y axis into the upward camera Y axis. Its placement matrix is `T(x, -y, z) \xD7 Rz \xD7 Ry \xD7 Rx \xD7 S(scale.x, -scale.y, scale.z)`, with rotation angles in degrees. This mode converts CSS pixels directly into camera-space units through `scale`, without the orthographic viewport\'s CSS-to-GUI conversion, and does not use a screen `anchor`. In a sight view, `scope_behavior` and `ignore_zoom` participate in placement; `screen_fixed` uses the camera-space origin corresponding to screen center.\r\n\r\nSave the style example in \u201CAUI Page Styles\u201D as `huds/aui_weapon_status.json` in the `machine_max` namespace to use this layout for a centered orthographic panel and a perspective panel in the upper right. The perspective values assume content of about `280 \xD7 120` CSS pixels, a 70\xB0 field of view and a 16:9 frame; adjust placement for the actual content size and field of view.\r\n\r\n```json\r\n[\r\n  {\r\n    "style": "machine_max:aui_weapon_status",\r\n    "perspective": false,\r\n    "anchor": "center",\r\n    "offset": [0, 0, 0],\r\n    "scale": [1, 1, 1]\r\n  },\r\n  {\r\n    "style": "machine_max:aui_weapon_status",\r\n    "perspective": true,\r\n    "scope_behavior": "screen_fixed",\r\n    "offset": [95, -60, -135],\r\n    "rotation": [15, -25, -5],\r\n    "scale": [0.2, 0.2, 0.2]\r\n  }\r\n]\r\n```\r\n\r\nKey rule: the file path relative to the module directory without `.json`, prefixed by the pack namespace, is the resource key. `hud_layouts/seat_dashboard.json` is `machine_max:seat_dashboard`; `hud_layouts/foo/bar.json` is `machine_max:foo/bar`. Styles follow the same rule: `huds/example_hud.json` is `machine_max:example_hud`. Layouts and styles live in separate modules, so identical keys do not collide.\r\n\r\nLayout array order is the submission order within one projection mode; the order between perspective and orthographic batches is decided by the render batches, not by the layout.\r\n\r\n## Model and Animation Requirements\r\n\r\n### 3D Model Specifications\r\nHUD models use standard Minecraft Bedrock format and need to include the following elements:\r\n\r\n1. **Bone Structure**: Each position requiring text display needs a corresponding bone\r\n2. **Locators**: Used to determine text display position and orientation\r\n3. **Geometry**: Defines the visual appearance of the HUD\r\n\r\n### Animation File\r\nAnimation files control the dynamic behavior of HUD elements and can use Molang expressions to achieve dynamic effects:\r\n\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(global.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n## Text Display Configuration\r\n\r\n### Basic Text Display\r\n```json\r\n"speed": {\r\n  "key": "hud.machine_max.default_1.speed",\r\n  "centered": true,\r\n  "shadow": true,\r\n  "scale": [2, 2, 2]\r\n}\r\n```\r\n\r\n### Dynamic Text Display\r\nUsing Molang parameters for dynamic content:\r\n```json\r\n"speed": {\r\n  "key": "hud.machine_max.default_1.speed",\r\n  "molang_args": [\r\n    "math.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n    "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n    "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n  ],\r\n  "significand": 0\r\n}\r\n```\r\n\r\n### Gear Display\r\n```json\r\n"gear": {\r\n  "key": "hud.machine_max.default_1.gear",\r\n  "molang_args": ["global.get(\'gear\')??\'NO GBX\'"],\r\n  "centered": true,\r\n  "shadow": true\r\n}\r\n```\r\n\r\n## Molang in HUD Applications\r\n\r\nThe HUD system fully utilizes Molang\'s powerful functionality to achieve complex dynamic display effects.\r\n\r\n### Common Molang Patterns\r\n\r\n#### Signal Acquisition and Unit Conversion\r\n```molang\r\n// Get vehicle speed and convert to km/h\r\nmath.abs(global.get(\'vehicle_speed\')??0.0) * 3.6\r\n\r\n// Get engine speed and convert to RPM\r\nmath.abs(global.get(\'engine_speed\')??0) * 30 / math.pi\r\n```\r\n\r\n#### Number Decomposition Display\r\n```molang\r\n// Hundreds digit\r\nmath.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)\r\n\r\n// Tens digit\r\nmath.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)\r\n\r\n// Units digit\r\nmath.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))\r\n```\r\n\r\n#### Conditional Display\r\n```molang\r\n// Display warnings based on subsystem status\r\nlocal.has_subsystem(\'engine\') && local.subsystem_destroyed(\'engine\') ? 1.0 : 0.0\r\n```\r\n\r\n## Subsystem HUD Association\r\n\r\nHUDs are associated with a specific seat or sight through the host\'s view fields: seats use `first_hud_layout` / `third_hud_layout`, cameras and sights use `scope_hud_layout`. Each field is a layout resource key; an omitted field means that view has no HUD.\r\n\r\n### Seat Subsystem Configuration\r\n```json\r\n{\r\n  "type": "machine_max:seat",\r\n  "views": {\r\n    "enable_first_person": true,\r\n    "first_hud_layout": "machine_max:seat_dashboard",\r\n    "first_person_offset": [0, 0.15, -0.1],\r\n    "enable_third_person": true,\r\n    "third_hud_layout": "machine_max:seat_dashboard",\r\n    "follow_vehicle": true,\r\n    "focus_on_center": true,\r\n    "distance_scale": 1.1\r\n  }\r\n}\r\n```\r\n\r\n### Sight/Camera Subsystem Configuration\r\n```json\r\n{\r\n  "type": "machine_max:sight",\r\n  "scope_hud_layout": "machine_max:scope_gunner"\r\n}\r\n```\r\n\r\n### View Property Description\r\n- **enable_first_person**: Whether to enable first-person perspective\r\n- **first_hud_layout**: Layout used by the first-person view; omitted means no HUD in that view\r\n- **first_person_offset**: First-person perspective offset (x+right, y+up, z+back, in meters)\r\n- **enable_third_person**: Whether to enable third-person perspective\r\n- **third_hud_layout**: Layout used by the third-person view; omitted means no HUD in that view\r\n- **follow_vehicle**: Whether camera follows vehicle rotation\r\n- **focus_on_center**: Whether camera focuses on vehicle center\r\n- **distance_scale**: Third-person perspective distance multiplier\r\n- **scope_hud_layout** (camera/sight): Layout used by the sight view; omitted means the sight adds no HUD from a layout\r\n\r\n## Practical Case Analysis\r\n\r\n### Example HUD Analysis\r\nUsing `machine_max:example_hud` as an example, analyze its complete implementation. You can view the complete implementation files through the following paths:\r\n\r\n#### 1. HUD Style ([example_hud.json](../../huds/example_hud.json))\r\n\r\nThis is a fully functional vehicle dashboard style that can simultaneously display key information such as engine speed, transmission gear, and vehicle speed. Placement lives in [seat_dashboard.json](../../hud_layouts/seat_dashboard.json).\r\n\r\n```json\r\n{\r\n  "type": "machine_max:model_hud",\r\n  "model": "machine_max:example_hud.geo",\r\n  "animation": "machine_max:example_hud",\r\n  "texture": "machine_max:textures/hud/example_hud.png",\r\n  "texts": {\r\n    "speed": {\r\n      "key": "hud.machine_max.default_1.speed",\r\n      "centered": true,\r\n      "shadow": true,\r\n      "scale": [2, 2, 2],\r\n      "molang_args": [\r\n        "math.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n        "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n        "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n      ]\r\n    },\r\n    "gear": {\r\n      "key": "hud.machine_max.default_1.gear",\r\n      "centered": true,\r\n      "shadow": true,\r\n      "molang_args": ["global.get(\'gear\')??\'NO GBX\'"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n**HUD Function Overview:**\r\n\r\nThis HUD style and the layout it references implement the following core functions:\r\n\r\n- **Speed Display**: Real-time display of vehicle speed in kilometers per hour, using three-digit display format\r\n- **Gear Indicator**: Displays current transmission gear status, including forward gears, reverse gear, and neutral\r\n- **Tachometer Pointer**: Controls dynamic rotation of tachometer pointer through animation system, reflecting engine operating status\r\n\r\n##### Translation Key-Value Pair Analysis ([lang/en_us.json](../../lang/en_us.json))\r\n\r\nThe language file defines the translation format for HUD text. These translation keys work closely with the text slots in the style to achieve formatted display of dynamic content:\r\n\r\n```json\r\n"hud.machine_max.default_1.speed": "\xA7o%1$s%2$s%3$s",\r\n"hud.machine_max.default_1.gear": "\xA7o%1$s",\r\n"hud.machine_max.default_1.kmh": "\xA7oKM/H"\r\n```\r\n\r\n**How Translation Keys Work:**\r\n\r\n- **Speed Display** (`hud.machine_max.default_1.speed`): This translation key receives three parameters, corresponding to the hundreds, tens, and units digits of the speed. The `\xA7o` code indicates using italic font for display, making speed readings more prominent.\r\n\r\n- **Gear Display** (`hud.machine_max.default_1.gear`): Only needs one parameter to display current gear information, also using italic format to enhance readability.\r\n\r\n**Complete Number Conversion Process:**\r\n\r\nWhen the vehicle is moving, the HUD system processes speed signals in real time and displays them on the interface. This process can be divided into the following steps:\r\n\r\n1. **Acquire Real-time Data**: First obtain current speed signal from the vehicle system, in meters per second\r\n2. **Unit Conversion**: Convert meters per second to more commonly used kilometers per hour\r\n3. **Number Decomposition**: Decompose the three-digit speed value into three independent digits: hundreds, tens, and units\r\n4. **Format Display**: Fill the decomposed numbers into the placeholder positions of the translation key and apply italic format\r\n5. **Final Presentation**: For example, when the vehicle is traveling at 123 km/h, the HUD will display as "\xA7o123" in italic numbers\r\n\r\nThis design allows the HUD to reflect vehicle status in real time while maintaining interface aesthetics and consistency.\r\n\r\n#### 2. Animation Control ([example_hud.animation.json](../../animations/hud/example_hud/example_hud.animation.json))\r\n\r\nAnimation files define the dynamic behavior of HUD elements, such as the rotation effect of the tachometer pointer:\r\n\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(global.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nThis animation configuration implements the dynamic rotation effect of the tachometer pointer. When engine speed changes, the pointer rotates in real time, providing intuitive speed feedback to the driver.\r\n\r\n#### 3. Subsystem Association ([senna_gtr_seat.json](../../subsystems/senna_gtr/senna_gtr_seat.json))\r\n\r\nSeat subsystem configuration associates HUDs with specific seats and defines the layout used by each view:\r\n\r\n```json\r\n{\r\n  "views": {\r\n    "enable_first_person": true,\r\n    "first_hud_layout": "machine_max:seat_dashboard",\r\n    "first_person_offset": [0, 0.15, -0.1],\r\n    "enable_third_person": true,\r\n    "third_hud_layout": "machine_max:seat_dashboard",\r\n    "follow_vehicle": true,\r\n    "focus_on_center": true,\r\n    "distance_scale": 1.1\r\n  }\r\n}\r\n```\r\n\r\n**One layout can hold multiple elements**: to show a speedometer, tachometer, and fuel gauge together, write multiple elements in the layout array, each referencing its style and giving its own placement; a view reads a single `*_hud_layout` field. When a different position is needed, copy the layout and change its placement rather than duplicating the style.\r\n\r\n## Best Practices\r\n\r\n1. **Performance Optimization**: Keep HUD models simple and avoid complex geometry to ensure smooth performance\r\n2. **Consistent Design**: Maintain consistent visual style across different HUD elements\r\n3. **Clear Information Hierarchy**: Prioritize important information and use appropriate sizing and positioning\r\n4. **Responsive Design**: Ensure HUD elements work well in both first-person and third-person perspectives\r\n5. **Testing**: Thoroughly test HUD functionality across different vehicles and scenarios\r\n6. **Localization**: Use translation keys for all text to support multiple languages\r\n7. **Error Handling**: Implement proper fallbacks for missing data or subsystem failures', "en_us/molang/examples.md": '# Molang Usage Examples\r\n\r\nThis document provides practical usage examples of Molang in Machine-Max, helping to understand how to apply Molang in real projects.\r\n\r\n## Example 1: AE86 Suspension System Animation\r\n\r\n### File Location\r\n`machine_max/animations/part/ae86/ae86.animation.json`\r\n\r\n### Code Example\r\n```json\r\n{\r\n  "axisRightFront": {\r\n    "rotation": [0, 0, "math.atan2(local.connector_offset(\'connector.machine_max.right_front_wheel\', 1)*16,20)"]\r\n  },\r\n  "rodLeftFront": {\r\n    "rotation": ["-65.7725+math.atan2(20-local.connector_offset(\'connector.machine_max.left_front_wheel\', 1)*16,9)", 0, 0]\r\n  },\r\n  "rodLeftFrontInner": {\r\n    "scale": [1, "math.sqrt(math.pow(20-local.connector_offset(\'connector.machine_max.left_front_wheel\', 1)*16,2)+81)/22", 1]\r\n  }\r\n}\r\n```\r\n\r\n### Technical Analysis\r\n\r\n1. **Suspension Height Retrieval**:\r\n   ```molang\r\n   local.connector_offset(\'connector.machine_max.left_front_wheel\', 1)\r\n   ```\r\n   - Gets Y-axis offset of left front wheel connector (suspension height)\r\n   - Return value in meters\r\n\r\n2. **Suspension Angle Calculation**:\r\n   ```molang\r\n   math.atan2(20 - height * 16, 9)\r\n   ```\r\n   - Uses arctangent function to calculate suspension link angle\r\n   - `20` is base height, `9` is horizontal distance\r\n   - `height * 16` is unit conversion (meters to game units)\r\n\r\n3. **Link Length Calculation**:\r\n   ```molang\r\n   math.sqrt(math.pow(20 - height * 16, 2) + 81) / 22\r\n   ```\r\n   - Uses Pythagorean theorem to calculate link length\r\n   - `81` is square of horizontal distance (9\xB2)\r\n   - `/22` normalizes to base length\r\n\r\n### Physical Principle\r\nThis suspension system simulates real double-wishbone suspension:\r\n- When wheels move up and down, connector offset changes\r\n- Calculate suspension link angles and lengths using trigonometric functions\r\n- Achieve realistic suspension kinematics\r\n\r\n## Example 2: HUD Tachometer Pointer Control\r\n\r\n### File Location\r\n`machine_max/animations/hud/example_hud/example_hud.animation.json`\r\n\r\n### Code Example\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(global.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n### Technical Analysis\r\n\r\n1. **Engine Speed Retrieval**:\r\n   ```molang\r\n   global.get(\'engine_speed\')??0\r\n   ```\r\n   - Retrieves engine speed signal\r\n   - `??0` is null coalescing operator, ensures default value\r\n\r\n2. **Unit Conversion**:\r\n   ```molang\r\n   math.abs(engine_speed) * 30 / math.pi\r\n   ```\r\n   - `math.abs()` ensures speed is positive\r\n   - `* 30 / math.pi` converts radians per second to revolutions per minute (RPM)\r\n   - Conversion formula: RPM = (rad/s) \xD7 60 / (2\u03C0) = (rad/s) \xD7 30 / \u03C0\r\n\r\n3. **Normalization**:\r\n   ```molang\r\n   normalized_rpm = rpm / 9000\r\n   ```\r\n   - Assumes maximum speed of 9000 RPM\r\n   - Normalizes actual speed to 0-1 range\r\n\r\n4. **Pointer Angle Calculation**:\r\n   ```molang\r\n   pointer_angle = normalized_rpm * 240\r\n   ```\r\n   - Assumes tachometer full scale of 240 degrees\r\n   - Converts normalized speed to pointer rotation angle\r\n\r\n### Instrument Design\r\n- **Range**: 0-9000 RPM\r\n- **Pointer Range**: 0-240 degrees\r\n- **Idle Protection**: Uses `??0` to handle signal loss\r\n\r\n## Example 3: HUD Speed Display\r\n\r\n### File Location\r\n`machine_max/huds/example_hud.json`\r\n\r\n### Code Example\r\n```json\r\n{\r\n  "speed": {\r\n    "molang_args": [\r\n      "math.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n      "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n      "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n### Technical Analysis\r\n\r\n1. **Speed Retrieval and Unit Conversion**:\r\n   ```molang\r\n   speed_kmh = math.abs(global.get(\'vehicle_speed\')??0.0) * 3.6\r\n   ```\r\n   - Retrieves vehicle speed (meters per second)\r\n   - Converts to kilometers per hour: km/h = m/s \xD7 3.6\r\n\r\n2. **Hundreds Digit Extraction**:\r\n   ```molang\r\n   hundreds = math.floor(speed_kmh / 100)\r\n   ```\r\n   - Calculates hundreds digit of speed\r\n   - Example: 123 km/h \u2192 hundreds digit is 1\r\n\r\n3. **Tens Digit Extraction**:\r\n   ```molang\r\n   tens = math.floor(math.mod(speed_kmh, 100) / 10)\r\n   ```\r\n   - First modulo 100 to get last two digits\r\n   - Then divide by 10 and floor to get tens digit\r\n   - Example: 123 km/h \u2192 modulo 100 gives 23 \u2192 divide by 10 gives 2.3 \u2192 floor gives 2\r\n\r\n4. **Units Digit Extraction**:\r\n   ```molang\r\n   units = math.floor(math.mod(speed_kmh, 10))\r\n   ```\r\n   - Direct modulo 10 to get units digit\r\n   - Example: 123 km/h \u2192 modulo 10 gives 3\r\n\r\n### Display Logic\r\nThis method decomposes three-digit speed into three separate numbers, making it easy to display using three different text elements in HUD, implementing a digital speedometer.\r\n\r\n## Example 4: Steering Wheel Animation Control\r\n\r\n### File Location\r\n`machine_max/animations/part/ae86/ae86.animation.json`\r\n\r\n### Code Example\r\n```json\r\n{\r\n  "rot2": {\r\n    "rotation": [0, 0, "global.get(\'steering\')*225"]\r\n  }\r\n}\r\n```\r\n\r\n### Technical Analysis\r\n\r\n1. **Steering Signal Retrieval**:\r\n   ```molang\r\n   steering_input = global.get(\'steering\')\r\n   ```\r\n   - Retrieves steering input signal\r\n   - Range: -1.0 (left turn) to 1.0 (right turn)\r\n\r\n2. **Angle Conversion**:\r\n   ```molang\r\n   steering_angle = steering_input * 225\r\n   ```\r\n   - Converts input signal to rotation angle\r\n   - 225 degrees is maximum steering angle\r\n   - Left turn: -1.0 \xD7 225 = -225 degrees\r\n   - Right turn: 1.0 \xD7 225 = 225 degrees\r\n\r\n### Steering System Design\r\n- **Steering Ratio**: 1:225 (input signal to angle)\r\n- **Steering Range**: \xB1225 degrees\r\n- **Linear Mapping**: Simple multiplication relationship ensures linear steering response\r\n\r\n## Best Practices\r\n\r\n### 1. Error Handling\r\n```molang\r\n// Use null coalescing operator\r\nglobal.get(\'signal_name\')??default_value\r\n\r\n// Check subsystem existence\r\nlocal.has_subsystem(\'engine\') ? local.subsystem_durability(\'engine\') : 0.0\r\n```\r\n\r\n### 2. Performance Optimization\r\n```molang\r\n// Avoid repeated calculations\r\nlet speed = math.abs(global.get(\'vehicle_speed\')??0.0) * 3.6;\r\nmath.floor(speed / 100), math.floor(math.mod(speed, 100) / 10), math.floor(math.mod(speed, 10))\r\n\r\n// Use simple mathematical operations\r\n// Avoid complex trigonometric and exponential operations\r\n```\r\n\r\n### 3. Readability\r\n```molang\r\n// Use meaningful variable names\r\nlet engine_rpm = math.abs(global.get(\'engine_speed\')??0) * 30 / math.pi;\r\nlet max_rpm = 9000;\r\nlet pointer_range = 240;\r\nlet pointer_angle = (engine_rpm / max_rpm) * pointer_range;\r\n\r\n// Add comments to explain complex calculations\r\n```\r\n\r\n## Debugging Tips\r\n\r\n1. **Step-by-Step Testing**: Break down complex expressions into multiple steps for testing\r\n2. **Boundary Value Testing**: Test minimum, maximum, and boundary conditions\r\n3. **Unit Verification**: Ensure all unit conversions are correct\r\n4. **Performance Monitoring**: Monitor execution performance of complex expressions\r\n\r\nThese examples demonstrate Molang\'s powerful application capabilities in Machine-Max, from simple signal mapping to complex physical simulations, Molang provides flexible and efficient solutions.', "en_us/molang/math.md": "# Math Functions\r\n\r\nThe `math` object provides mathematical calculation capabilities, including trigonometric functions, exponential functions, rounding functions, and more.\r\n\r\n## Trigonometric Functions\r\n\r\n### math.sin(value)\r\nCalculates the sine of an angle.\r\n\r\n**Parameters**:\r\n- `value` (double): Angle value (degrees)\r\n\r\n**Return Value**: Sine value\r\n\r\n**Example**:\r\n```molang\r\nmath.sin(90)  // Returns 1.0\r\n```\r\n\r\n### math.cos(value)\r\nCalculates the cosine of an angle.\r\n\r\n**Parameters**:\r\n- `value` (double): Angle value (degrees)\r\n\r\n**Return Value**: Cosine value\r\n\r\n**Example**:\r\n```molang\r\nmath.cos(0)  // Returns 1.0\r\n```\r\n\r\n### math.tan(value)\r\nCalculates the tangent of an angle.\r\n\r\n**Parameters**:\r\n- `value` (double): Angle value (degrees)\r\n\r\n**Return Value**: Tangent value\r\n\r\n### math.asin(value)\r\nCalculates the arcsine of a value (returns angle).\r\n\r\n**Parameters**:\r\n- `value` (double): Value (-1.0 to 1.0)\r\n\r\n**Return Value**: Angle value (degrees)\r\n\r\n### math.acos(value)\r\nCalculates the arccosine of a value (returns angle).\r\n\r\n**Parameters**:\r\n- `value` (double): Value (-1.0 to 1.0)\r\n\r\n**Return Value**: Angle value (degrees)\r\n\r\n### math.atan(value)\r\nCalculates the arctangent of a value (returns angle).\r\n\r\n**Parameters**:\r\n- `value` (double): Value\r\n\r\n**Return Value**: Angle value (degrees)\r\n\r\n### math.atan2(y, x)\r\nCalculates the arctangent of y/x (returns angle).\r\n\r\n**Parameters**:\r\n- `y` (double): Y coordinate value\r\n- `x` (double): X coordinate value\r\n\r\n**Return Value**: Angle value (degrees)\r\n\r\n**Example**:\r\n```molang\r\n// Used in AE86 suspension animation\r\nmath.atan2(local.connector_offset('connector.machine_max.right_front_wheel', 1)*16, 20)\r\n```\r\n\r\n## Exponential and Logarithmic Functions\r\n\r\n### math.exp(value)\r\nCalculates e raised to the power of value.\r\n\r\n**Parameters**:\r\n- `value` (double): Exponent\r\n\r\n**Return Value**: e^value\r\n\r\n### math.log(value)\r\nCalculates the natural logarithm (base e) of a value.\r\n\r\n**Parameters**:\r\n- `value` (double): Value (> 0)\r\n\r\n**Return Value**: Natural logarithm\r\n\r\n### math.pow(base, exponent)\r\nCalculates base raised to the power of exponent.\r\n\r\n**Parameters**:\r\n- `base` (double): Base\r\n- `exponent` (double): Exponent\r\n\r\n**Return Value**: base^exponent\r\n\r\n### math.sqrt(value)\r\nCalculates the square root of a value.\r\n\r\n**Parameters**:\r\n- `value` (double): Value (\u2265 0)\r\n\r\n**Return Value**: Square root\r\n\r\n**Example**:\r\n```molang\r\n// Calculate link length in AE86 suspension animation\r\nmath.sqrt(math.pow(20-local.connector_offset('connector.machine_max.left_front_wheel', 1)*16, 2)+81)\r\n```\r\n\r\n## Rounding Functions\r\n\r\n### math.floor(value)\r\nRounds down to the nearest integer.\r\n\r\n**Parameters**:\r\n- `value` (double): Value\r\n\r\n**Return Value**: Largest integer less than or equal to value\r\n\r\n**Example**:\r\n```molang\r\n// Used in HUD speed display\r\nmath.floor((math.abs(global.get('vehicle_speed')??0.0)) * 3.6 / 100)\r\n```\r\n\r\n### math.ceil(value)\r\nRounds up to the nearest integer.\r\n\r\n**Parameters**:\r\n- `value` (double): Value\r\n\r\n**Return Value**: Smallest integer greater than or equal to value\r\n\r\n### math.round(value)\r\nRounds to the nearest integer.\r\n\r\n**Parameters**:\r\n- `value` (double): Value\r\n\r\n**Return Value**: Nearest integer\r\n\r\n## Other Mathematical Functions\r\n\r\n### math.abs(value)\r\nCalculates the absolute value.\r\n\r\n**Parameters**:\r\n- `value` (double): Value\r\n\r\n**Return Value**: Absolute value\r\n\r\n**Example**:\r\n```molang\r\n// Ensure speed value is positive\r\nmath.abs(global.get('vehicle_speed')??0.0)\r\n```\r\n\r\n### math.mod(value1, value2)\r\nCalculates the remainder of value1 divided by value2.\r\n\r\n**Parameters**:\r\n- `value1` (double): Dividend\r\n- `value2` (double): Divisor\r\n\r\n**Return Value**: Remainder\r\n\r\n**Example**:\r\n```molang\r\n// Extract tens digit in HUD speed display\r\nmath.floor(math.mod((math.abs(global.get('vehicle_speed')??0.0)) * 3.6, 100) / 10)\r\n```\r\n\r\n### math.sign(value)\r\nGets the sign of a value.\r\n\r\n**Parameters**:\r\n- `value` (double): Value\r\n\r\n**Return Value**: 1.0 (positive), -1.0 (negative), 0.0 (zero)\r\n\r\n### math.min(value1, value2)\r\nReturns the smaller of two values.\r\n\r\n**Parameters**:\r\n- `value1` (double): First value\r\n- `value2` (double): Second value\r\n\r\n**Return Value**: Smaller value\r\n\r\n### math.max(value1, value2)\r\nReturns the larger of two values.\r\n\r\n**Parameters**:\r\n- `value1` (double): First value\r\n- `value2` (double): Second value\r\n\r\n**Return Value**: Larger value\r\n\r\n### math.clamp(value, min, max)\r\nClamps a value to the specified range.\r\n\r\n**Parameters**:\r\n- `value` (double): Value to clamp\r\n- `min` (double): Minimum value\r\n- `max` (double): Maximum value\r\n\r\n**Return Value**: Clamped value\r\n\r\n### math.lerp(start, end, alpha)\r\nLinear interpolation.\r\n\r\n**Parameters**:\r\n- `start` (double): Start value\r\n- `end` (double): End value\r\n- `alpha` (double): Interpolation coefficient (0.0 to 1.0)\r\n\r\n**Return Value**: Interpolation result\r\n\r\n## Mathematical Constants\r\n\r\n### math.pi\r\nThe value of pi (\u03C0).\r\n\r\n**Type**: Read-only double value\r\n\r\n**Value**: Approximately 3.141592653589793\r\n\r\n**Example**:\r\n```molang\r\n// Radians to degrees\r\nradians * 180 / math.pi\r\n\r\n// Degrees to radians\r\ndegrees * math.pi / 180\r\n```\r\n\r\n## Practical Usage Examples\r\n\r\n### 1. Unit Conversion\r\n```molang\r\n// Meters per second to kilometers per hour\r\nglobal.get('vehicle_speed') * 3.6\r\n\r\n// Radians per second to revolutions per minute (RPM)\r\nglobal.get('engine_speed') * 30 / math.pi\r\n```\r\n\r\n### 2. Animation Control\r\n```molang\r\n// Smooth animation interpolation\r\nmath.lerp(current_angle, target_angle, 0.1)\r\n\r\n// Limit rotation angle to reasonable range\r\nmath.clamp(rotation_angle, -180, 180)\r\n```\r\n\r\n### 3. Physical Calculations\r\n```molang\r\n// Calculate distance between two points\r\nmath.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2) + math.pow(z2-z1, 2))\r\n\r\n// Calculate angle difference\r\nmath.abs(math.mod(angle1 - angle2 + 180, 360) - 180)\r\n```\r\n\r\n## Notes\r\n\r\n1. **Angle Units**: All trigonometric functions use degrees as units, not radians\r\n2. **Performance Considerations**: Complex mathematical calculations may affect performance, simplify expressions when possible\r\n3. **Numerical Range**: Pay attention to function domains and ranges to avoid mathematical errors\r\n4. **Precision Issues**: Floating-point calculations may have precision errors, perform appropriate rounding for important calculations", "en_us/molang/README.md": "# Molang Documentation\r\n\r\nMachine-Max uses the Molang scripting system to control vehicle animations, HUD displays, and interaction logic. Molang is a lightweight scripting language specifically designed for real-time calculations and animation control.\r\n\r\n## Table of Contents\r\n\r\n- [Local Methods](./local.md) - Methods and properties related to parts\r\n- [Global Methods](./global.md) - Methods and properties related to vehicles\r\n- [Math Functions](./math.md) - Mathematical calculation functions\r\n- [Usage Examples](./examples.md) - Practical usage examples\r\n\r\n## Basic Syntax\r\n\r\nMolang expressions use JavaScript-like syntax, supporting basic mathematical operations, conditional judgments, and function calls.\r\n\r\n### Basic Operations\r\n```molang\r\n// Arithmetic operations\r\n1.0 + 2.0 * 3.0  // Result: 7.0\r\n(1.0 + 2.0) * 3.0  // Result: 9.0\r\n\r\n// Comparison operations\r\nspeed > 0  // Greater than comparison\r\ndurability <= max_durability  // Less than or equal to comparison\r\nv.a == 3.0  // Equal to comparison\r\n```\r\n\r\n### Ternary Expressions (Conditional Operator)\r\n```molang\r\n// Basic syntax: condition ? true_value : false_value\r\nvariable > 0 ? 1.0 : 0.0\r\n\r\n// Practical application: warning light based on subsystem status\r\nlocal.has_subsystem('engine') && local.subsystem_destroyed('engine') ? 1.0 : 0.0\r\n\r\n// Nested usage\r\nv.fuel_level > 50 ? 0.0 : (v.fuel_level > 10 ? 0.5 : 1.0)\r\n```\r\n\r\n### Null Coalescing Operator (??)\r\n```molang\r\n// Basic syntax: value ?? default_value\r\nglobal.get('signal_name')??0.0\r\n\r\n// Practical application: handling potentially missing signals\r\nmath.abs(global.get('vehicle_speed')??0.0) * 3.6\r\n\r\n// Chained usage\r\nglobal.get('engine_speed')??global.get('motor_speed')??0.0\r\n```\r\n\r\n### Function Calls\r\n```molang\r\n// Math functions\r\nmath.sin(angle)\r\nmath.floor(value)\r\n\r\n// Vehicle and part methods\r\nglobal.get('steering')\r\nlocal.has_subsystem('engine')\r\n```\r\n\r\n## Common Patterns\r\n\r\n### Signal Retrieval and Safe Access\r\n```molang\r\n// Safe signal value retrieval\r\nglobal.get('signal_name')??default_value\r\n\r\n// Conditional access after checking\r\nlocal.has_subsystem('engine') ? local.subsystem_durability('engine') : 0.0\r\n```\r\n\r\n### Unit Conversion\r\n```molang\r\n// Meters per second to kilometers per hour\r\nglobal.get('vehicle_speed')??0.0 * 3.6\r\n\r\n// Radians per second to revolutions per minute (RPM)\r\nglobal.get('engine_speed')??0.0 * 30 / math.pi\r\n```\r\n\r\n## Next Steps\r\n\r\n- View [Local Methods](./local.md) to learn about all part-related methods\r\n- View [Global Methods](./global.md) to learn about vehicle signal retrieval methods\r\n- View [Math Functions](./math.md) to learn about available mathematical calculation functions\r\n- View [Usage Examples](./examples.md) to learn practical application examples", "en_us/molang/subpart.md": "# Local Methods\r\n\r\nThe `local` object provides methods to access part status, connectors, and subsystems.\r\n\r\n## Signal-Related Methods\r\n\r\n### local.get(channel)\r\n\r\nRetrieves the value from the part's signal storage.\r\n\r\n**Syntax**: `local.get(channel_name)`\r\n\r\n**Parameters**:\r\n- `channel_name` (string): Signal channel name\r\n\r\n**Return Value**: Signal value, returns `null` if the channel doesn't exist\r\n\r\n**Example**:\r\n```molang\r\n// Retrieve specific part signal\r\nlocal.get('custom_signal')\r\n```\r\n\r\n## Connector-Related Methods\r\n\r\n### local.has_connector(connectorName)\r\n\r\nChecks if the part has the specified connector and whether the connector is connected to a part.\r\n\r\n**Syntax**: `local.has_connector(connector_name)`\r\n\r\n**Parameters**:\r\n- `connector_name` (string): Connector name\r\n\r\n**Return Value**: Returns 1.0 if the connector exists and is connected to a part, otherwise 0.0\r\n\r\n**Example**:\r\n```molang\r\n// Check if front wheel connector is connected\r\nlocal.has_connector('connector.machine_max.front_wheel')\r\n```\r\n\r\n### local.connector_offset(connectorName, axis)\r\n\r\nGets the connector's offset (position).\r\n\r\n**Syntax**: `local.connector_offset(connector_name, axis)`\r\n\r\n**Parameters**:\r\n- `connector_name` (string): Connector name\r\n- `axis` (integer): Coordinate axis (0=X, 1=Y, 2=Z)\r\n\r\n**Return Value**: Offset value for the specified axis (in meters), returns 0.0 if the connector doesn't exist\r\n\r\n**Example**:\r\n```molang\r\n// Get Y-axis offset of front wheel connector (suspension height)\r\nlocal.connector_offset('connector.machine_max.front_wheel', 1)\r\n```\r\n\r\n### local.connector_rotation(connectorName, axis)\r\n\r\nGets the connector's rotation angle.\r\n\r\n**Syntax**: `local.connector_rotation(connector_name, axis)`\r\n\r\n**Parameters**:\r\n- `connector_name` (string): Connector name\r\n- `axis` (integer): Rotation axis (0=X, 1=Y, 2=Z)\r\n\r\n**Return Value**: Rotation angle for the specified axis (in degrees), returns 0.0 if the connector doesn't exist\r\n\r\n## Subsystem-Related Methods\r\n\r\n### local.has_subsystem(subsystemName)\r\n\r\nChecks if the part has a subsystem with the specified name.\r\n\r\n**Syntax**: `local.has_subsystem(subsystem_name)`\r\n\r\n**Parameters**:\r\n- `subsystem_name` (string): Subsystem name\r\n\r\n**Return Value**: Returns 1.0 if the subsystem exists, otherwise 0.0\r\n\r\n**Example**:\r\n```molang\r\n// Check if engine subsystem exists\r\nlocal.has_subsystem('subsystem.machine_max.engine')\r\n```\r\n\r\n### local.subsystem_durability(subsystemName)\r\n\r\nGets the current durability of the specified subsystem.\r\n\r\n**Syntax**: `local.subsystem_durability(subsystem_name)`\r\n\r\n**Parameters**:\r\n- `subsystem_name` (string): Subsystem name\r\n\r\n**Return Value**: Subsystem durability, returns 0.0 if the subsystem doesn't exist\r\n\r\n### local.subsystem_max_durability(subsystemName)\r\n\r\nGets the maximum durability of the specified subsystem.\r\n\r\n**Syntax**: `local.subsystem_max_durability(subsystem_name)`\r\n\r\n**Parameters**:\r\n- `subsystem_name` (string): Subsystem name\r\n\r\n**Return Value**: Subsystem maximum durability, returns 0.0 if the subsystem doesn't exist\r\n\r\n### local.subsystem_active(subsystemName)\r\n\r\nChecks if the specified subsystem is active.\r\n\r\n**Syntax**: `local.subsystem_active(subsystem_name)`\r\n\r\n**Parameters**:\r\n- `subsystem_name` (string): Subsystem name\r\n\r\n**Return Value**: Returns 1.0 if the subsystem is active, otherwise 0.0\r\n\r\n### local.subsystem_destroyed(subsystemName)\r\n\r\nChecks if the specified subsystem is destroyed.\r\n\r\n**Syntax**: `local.subsystem_destroyed(subsystem_name)`\r\n\r\n**Parameters**:\r\n- `subsystem_name` (string): Subsystem name\r\n\r\n**Return Value**: Returns 1.0 if the subsystem is destroyed, otherwise 0.0\r\n\r\n## Part Properties\r\n\r\n### local.durability\r\n\r\nCurrent durability of the part.\r\n\r\n**Type**: Read-only double value\r\n\r\n### local.max_durability\r\n\r\nMaximum durability of the part.\r\n\r\n**Type**: Read-only double value\r\n\r\n### local.is_destroyed\r\n\r\nWhether the part has been destroyed.\r\n\r\n**Type**: Read-only double value (1.0=destroyed, 0.0=normal)\r\n\r\n## Practical Usage Examples\r\n\r\n### 1. Suspension System Animation\r\nControl suspension system using connector offsets in AE86 animation:\r\n\r\n```json\r\n{\r\n  \"axisRightFront\": {\r\n    \"rotation\": [0, 0, \"math.atan2(local.connector_offset('connector.machine_max.right_front_wheel', 1)*16,20)\"]\r\n  },\r\n  \"rodLeftFront\": {\r\n    \"rotation\": [\"-65.7725+math.atan2(20-local.connector_offset('connector.machine_max.left_front_wheel', 1)*16,9)\", 0, 0]\r\n  },\r\n  \"rodLeftFrontInner\": {\r\n    \"scale\": [1, \"math.sqrt(math.pow(20-local.connector_offset('connector.machine_max.left_front_wheel', 1)*16,2)+81)/22\", 1]\r\n  }\r\n}\r\n```\r\n\r\n**Explanation**:\r\n- Use `local.connector_offset` to get Y-axis offset of wheel connectors (suspension height)\r\n- Calculate suspension link angles and lengths using trigonometric functions\r\n- Achieve realistic suspension kinematics\r\n\r\n### 2. Subsystem Status Display\r\nControl warning lights in HUD using subsystem status:\r\n\r\n```molang\r\n// Engine subsystem status check\r\nlocal.has_subsystem('engine') && local.subsystem_active('engine') ? 1.0 : 0.0\r\n\r\n// Low fuel warning for fuel subsystem\r\nlocal.has_subsystem('fuel_tank') && local.subsystem_durability('fuel_tank') < 10.0 ? 1.0 : 0.0\r\n\r\n// Engine overheating warning\r\nlocal.has_subsystem('engine') && local.subsystem_destroyed('engine') ? 1.0 : 0.0\r\n```\r\n\r\n### 3. Conditional Animation Control\r\nControl part animations based on subsystem status:\r\n\r\n```json\r\n{\r\n  \"engine_cover\": {\r\n    \"rotation\": [\r\n      \"local.has_subsystem('engine') ? 45.0 : 0.0\", \r\n      0, \r\n      0\r\n    ]\r\n  },\r\n  \"warning_light\": {\r\n    \"scale\": [\r\n      \"local.subsystem_destroyed('engine') ? 1.5 : 1.0\", \r\n      \"local.subsystem_destroyed('engine') ? 1.5 : 1.0\", \r\n      \"local.subsystem_destroyed('engine') ? 1.5 : 1.0\"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n## Notes\r\n\r\n1. **Connector Naming**: Connector names typically follow the `connector.machine_max.xxx` naming convention\r\n2. **Subsystem Naming**: Subsystem names typically follow the `subsystem.machine_max.xxx` naming convention\r\n3. **Coordinate System**: Connector offsets and rotations use local coordinate system\r\n4. **Performance Optimization**: Consider performance impact for frequently called methods", "en_us/molang/vehicle.md": "# Global Methods\r\n\r\nThe `global` object provides methods to access global vehicle status and signals.\r\n\r\n## global.get(channel)\r\n\r\nRetrieves the value from the vehicle's signal channel.\r\n\r\n### Syntax\r\n```molang\r\nglobal.get(channel_name)\r\n```\r\n\r\n### Parameters\r\n- `channel_name` (string): Signal channel name\r\n\r\n### Return Value\r\n- Signal value, returns `null` if the channel doesn't exist\r\n\r\n### Examples\r\n```molang\r\n// Get steering signal\r\nglobal.get('steering')\r\n\r\n// Get throttle signal\r\nglobal.get('throttle')\r\n\r\n// Get brake signal\r\nglobal.get('brake')\r\n\r\n// Get vehicle speed (meters per second)\r\nglobal.get('vehicle_speed')\r\n\r\n// Get engine speed (radians per second)\r\nglobal.get('engine_speed')\r\n```\r\n\r\n## Common Signal Channels\r\n\r\n### Control Signals\r\n- `steering`: Steering input, range [-1.0, 1.0]\r\n- `throttle`: Throttle input, range [0.0, 1.0]\r\n- `brake`: Brake input, range [0.0, 1.0]\r\n- `handbrake`: Handbrake input, range [0.0, 1.0]\r\n\r\n### Status Signals\r\n- `vehicle_speed`: Vehicle speed (meters per second)\r\n- `engine_speed`: Engine speed (radians per second)\r\n- `gear`: Current gear\r\n- `rpm`: Engine speed (revolutions per minute)\r\n\r\n### System Signals\r\n- `fuel_level`: Fuel level\r\n- `temperature`: Engine temperature\r\n- `battery_voltage`: Battery voltage\r\n\r\n## Practical Usage Examples\r\n\r\n### 1. Steering Wheel Animation Control\r\nUse steering signal to control steering wheel rotation in AE86 animation file:\r\n\r\n```json\r\n{\r\n  \"rot2\": {\r\n    \"rotation\": [0, 0, \"global.get('steering')*225\"]\r\n  }\r\n}\r\n```\r\n\r\n**Explanation**: \r\n- `global.get('steering')` retrieves steering input value (-1.0 to 1.0)\r\n- Multiply by 225 degrees to convert input value to rotation angle\r\n- When steering input is -1.0 (left turn), steering wheel rotates -225 degrees\r\n- When steering input is 1.0 (right turn), steering wheel rotates 225 degrees\r\n\r\n### 2. HUD Tachometer Pointer Control\r\nUse engine speed to control pointer deflection in example HUD animation:\r\n\r\n```json\r\n{\r\n  \"Pointer\": {\r\n    \"rotation\": {\r\n      \"0.0\": [0, 0, \"240*(math.abs(global.get('engine_speed')??0)*30/math.pi)/9000\"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n**Explanation**:\r\n- `global.get('engine_speed')` retrieves engine speed (radians per second)\r\n- `??0` is null coalescing operator, uses 0 if signal doesn't exist\r\n- `*30/math.pi` converts radians per second to revolutions per minute (RPM)\r\n- `/9000` normalizes to maximum speed of 9000 RPM\r\n- `*240` converts normalized value to pointer rotation angle (240 degree full scale)\r\n\r\n### 3. HUD Speed Display\r\nCalculate display values using speed signal in HUD configuration:\r\n\r\n```json\r\n{\r\n  \"speed\": {\r\n    \"molang_args\": [\r\n      \"math.floor((math.abs(global.get('vehicle_speed')??0.0)) * 3.6 / 100)\",\r\n      \"math.floor(math.mod((math.abs(global.get('vehicle_speed')??0.0)) * 3.6, 100) / 10)\",\r\n      \"math.floor(math.mod((math.abs(global.get('vehicle_speed')??0.0)) * 3.6, 10))\"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n**Explanation**:\r\n- `global.get('vehicle_speed')` retrieves vehicle speed (meters per second)\r\n- `* 3.6` converts meters per second to kilometers per hour\r\n- First parameter: Calculate hundreds digit (speed divided by 100, floored)\r\n- Second parameter: Calculate tens digit (speed modulo 100, divided by 10, floored)\r\n- Third parameter: Calculate units digit (speed modulo 10, floored)\r\n\r\n## Notes\r\n\r\n1. **Null Value Handling**: Use `??` operator to handle potentially missing signal channels\r\n2. **Unit Conversion**: Pay attention to units of different signals (rad/s vs RPM, m/s vs km/h)\r\n3. **Range Limitation**: Some signals have specific value ranges that require appropriate scaling in animations\r\n4. **Performance Considerations**: Complex Molang expressions may affect performance, keep them concise", "en_us/schemas/base/axis.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/axis.json",\r\n  "title": "Axis Direction",\r\n  "description": "Represents the axis direction in 3D space, used to define the normal direction of connection points.",\r\n  "type": "string",\r\n  "enum": ["xp", "xn", "yp", "yn", "zp", "zn"],\r\n  "default": "yp",\r\n  "examples": ["yp", "xn", "zp"],\r\n  "description_map": {\r\n    "xp": "Positive X-axis direction",\r\n    "xn": "Negative X-axis direction",\r\n    "yp": "Positive Y-axis direction",\r\n    "yn": "Negative Y-axis direction",\r\n    "zp": "Positive Z-axis direction",\r\n    "zn": "Negative Z-axis direction"\r\n  }\r\n}', "en_us/schemas/base/material_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/material_attr.json",\r\n  "title": "Material Attributes",\r\n  "description": "Defines the physical properties, armor protection, and hit sounds of materials, organized in three groups: physics / armor / sounds.",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "JSON Schema reference path for editor intellisense and validation",\r\n      "default": "../docs/en_us/schemas/base/material_attr.schema.json"\r\n    },\r\n    "physics": {\r\n      "type": "object",\r\n      "description": "Physical properties: friction, slip, elasticity, etc.",\r\n      "properties": {\r\n        "friction": {\r\n          "allOf": [\r\n            { "$ref": "vector_3d.schema.json" }\r\n          ],\r\n          "default": [0.5, 0.5, 0.5],\r\n          "description": "Friction coefficient vector [x, y, z]. x = lateral, y = forward, z = unused."\r\n        },\r\n        "slip_adaptation": {\r\n          "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.5,\r\n          "description": "Slip adaptation coefficient, adjusts friction behavior during sliding."\r\n        },\r\n        "slip_curve": {\r\n          "type": "object",\r\n          "description": "Tire slip friction curve parameters.",\r\n          "properties": {\r\n            "longitudinal": {\r\n              "type": "object",\r\n              "description": "Longitudinal slip-ratio curve.",\r\n              "properties": {\r\n                "peak_slip_ratio": { "type": "number", "minimum": 0.0, "default": 0.2, "description": "Slip ratio at peak friction." },\r\n                "base_scale": { "type": "number", "default": 1.0, "description": "Friction scale at zero slip." },\r\n                "peak_scale": { "type": "number", "default": 1.4, "description": "Friction scale at peak_slip_ratio." },\r\n                "kinetic_scale": { "type": "number", "default": 0.9, "description": "Friction scale in high-slip kinetic region." }\r\n              },\r\n              "additionalProperties": false\r\n            },\r\n            "lateral": {\r\n              "type": "object",\r\n              "description": "Lateral slip-angle curve (angles in degrees).",\r\n              "properties": {\r\n                "peak_angle_deg": { "type": "number", "minimum": 0.0, "default": 12.0, "description": "Slip angle at peak friction." },\r\n                "kinetic_angle_deg": { "type": "number", "minimum": 0.0, "default": 90.0, "description": "Slip angle where kinetic plateau begins." },\r\n                "base_scale": { "type": "number", "default": 1.0, "description": "Friction scale at zero slip angle." },\r\n                "peak_scale": { "type": "number", "default": 1.2, "description": "Friction scale at peak_angle_deg." },\r\n                "kinetic_scale": { "type": "number", "default": 0.7, "description": "Friction scale in high-angle kinetic region." }\r\n              },\r\n              "additionalProperties": false\r\n            }\r\n          },\r\n          "additionalProperties": false\r\n        },\r\n        "rolling_friction": { "type": "number", "minimum": 0.0, "default": 0.2, "description": "Rolling friction coefficient." },\r\n        "spinning_friction": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "Spinning friction coefficient." },\r\n        "restitution": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.1, "description": "Restitution (elasticity), 0 = perfectly inelastic, 1 = perfectly elastic." },\r\n        "block_damage_factor": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "Block damage factor, 0 = cannot break blocks." }\r\n      },\r\n      "additionalProperties": false\r\n    },\r\n    "armor": {\r\n      "type": "object",\r\n      "description": "Armor properties: penetration resistance, linear/percentage damage reduction, durability decay, and conditional modifiers. Pipeline: damage_modifiers -> (dmg - dmg_resist) * dmg_mult.",\r\n      "properties": {\r\n        "rha": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "Material penetration resistance coefficient relative to RHA (Rolled Homogeneous Armor)." },\r\n        "angle_effect": { "type": "boolean", "default": true, "description": "Whether equivalent armor thickness is affected by impact angle." },\r\n        "dmg_resist": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "Global linear damage reduction. Final damage is reduced by this value (affected by durability decay)." },\r\n        "dmg_mult": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.95, "description": "Global damage multiplier. Final damage is multiplied by this value (affected by durability decay). 0.95 = take 95% damage." },\r\n        "decay_rha": { "type": "number", "minimum": 0.0, "default": 0.3, "description": "Residual RHA coefficient when durability reaches zero." },\r\n        "decay_dmg_resist": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "Residual linear reduction when durability reaches zero. Default 0.0 = completely gone." },\r\n        "decay_dmg_mult": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 1.0, "description": "Residual damage multiplier when durability reaches zero. Default 1.0 = fully ineffective." },\r\n        "decay_power": { "type": "number", "minimum": 0.0, "default": 1.5, "description": "Armor degradation curve exponent. >1 = degrades slowly at first, then rapidly near failure (brittle); =1 = linear." },\r\n        "unpen_power": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "Damage exponent when attack fails to fully penetrate. Formula: dmg*(penetration/equivalent_armor)^unpen_power." },\r\n        "impact_modifiers": {\r\n          "allOf": [\r\n            { "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json" }\r\n          ],\r\n          "description": "Condition-driven impact damage modifiers."\r\n        },\r\n        "penetration_modifiers": {\r\n          "allOf": [\r\n            { "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json" }\r\n          ],\r\n          "description": "Condition-driven penetration depth modifiers."\r\n        },\r\n        "damage_modifiers": {\r\n          "allOf": [\r\n            { "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json" }\r\n          ],\r\n          "description": "Condition-driven damage modifiers (type/entity-specific adjustments)."\r\n        }\r\n      },\r\n      "additionalProperties": false\r\n    },\r\n    "sounds": {\r\n      "type": "object",\r\n      "properties": {\r\n        "hit_un_pen": {\r\n          "allOf": [\r\n            { "$ref": "sound_event.schema.json" }\r\n          ],\r\n          "description": "Sound event when hit box is hit but not penetrated.",\r\n          "default": { "sound_id": "machine_max:hit_box.hit.up_pen.metal", "range": 64 }\r\n        },\r\n        "hit_pen": {\r\n          "allOf": [\r\n            { "$ref": "sound_event.schema.json" }\r\n          ],\r\n          "description": "Sound event when hit box is hit and penetrated.",\r\n          "default": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }\r\n        }\r\n      },\r\n      "additionalProperties": false,\r\n      "description": "Material hit sound configuration."\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "physics": { "friction": [0.5, 0.5, 0.5] },\r\n      "armor": {\r\n        "rha": 1.0,\r\n        "dmg_resist": 1.0,\r\n        "dmg_mult": 0.95\r\n      },\r\n      "sounds": {\r\n        "hit_un_pen": { "sound_id": "machine_max:hit_box.hit.up_pen.metal", "range": 64 },\r\n        "hit_pen": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }\r\n      }\r\n    }\r\n  ]\r\n}', "en_us/schemas/base/operation.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/operation.json",\r\n  "title": "Operator",\r\n  "description": "Mathematical operator, used for numerical operations in modifiers",\r\n  "type": "string",\r\n  "enum": ["add", "multiply"],\r\n  "default": "add",\r\n  "examples": ["add", "multiply"]\r\n}', "en_us/schemas/base/resource_location.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/base/resource_location.json",\r
   "title": "Resource Location",\r
@@ -121,6 +121,7 @@
     },\r
     "definition": {\r
       "type": "string",\r
+      "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$",\r
       "description": "Connection point definition ID, references predefined connection point static attributes. For example: \\"machine_max:simple_connector\\"."\r
     },\r
     "power_target": {\r
@@ -137,7 +138,9 @@
           "description": "Connection point type overwrite."\r
         },\r
         "direction": {\r
-          "$ref": "../../../base/axis.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../../base/axis.schema.json" }\r
+          ],\r
           "description": "Connection point normal direction overwrite."\r
         },\r
         "integrity": {\r
@@ -148,7 +151,13 @@
         "impact_absorption": {\r
           "type": "number",\r
           "minimum": 0.0,\r
+          "maximum": 1.0,\r
           "description": "Impact to structural loss ratio overwrite."\r
+        },\r
+        "impact_absorption_destroyed": {\r
+          "type": "number",\r
+          "minimum": 0.0,\r
+          "description": "Impact to structural loss ratio overwrite for an already destroyed sub-part."\r
         },\r
         "impact_reduction": {\r
           "type": "number",\r
@@ -220,9 +229,10 @@
       "definition": "machine_max:advanced_wheel_connector",\r
       "overwrite": {\r
         "type": "Advanced",\r
-        "direction": "y+",\r
+        "direction": "xp",\r
         "integrity": 32.0,\r
         "impact_absorption": 0.15,\r
+        "impact_absorption_destroyed": 2.5,\r
         "impact_reduction": 3.0,\r
         "impact_multiplier": 0.8,\r
         "collide_between_parts": false,\r
@@ -250,11 +260,10 @@
       "signal_targets": {\r
         "wheel_control": ["wheel_driver", "local"],\r
         "abs_request": ["global"]\r
-      },\r
-      "internal": true\r
+      }\r
     }\r
   ]\r
-}`, "en_us/schemas/part/subpart/connector/connector_static_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/connector/connector_static_attr.schema.json",\r\n  "title": "Connection Point Static Attributes",\r\n  "description": "Defines the static attributes of connection points, including type, direction, structural integrity, impact handling, etc. These attributes are referenced by definition ID to avoid repetitive definitions in each part definition.",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "JSON Schema reference path, used for editor intelligent suggestions and validation",\r\n      "default": "../docs/en_us/schemas/part/subpart/connector/connector_static_attr.schema.json"\r\n    },\r\n    "type": {\r\n      "type": "string",\r\n      "enum": ["Simple", "simple", "advanced", "Advanced"],\r\n      "description": "Connection point type. Simple: Simple connection point; Advanced: Advanced connection point, supports complex joint attributes."\r\n    },\r\n    "direction": {\r\n      "$ref": "../../../base/axis.schema.json",\r\n      "description": "Normal direction of the connection point, used to determine the connection direction. X+ = right, Y+ = up, Z+ = back."\r\n    },\r\n    "integrity": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 15.0,\r\n      "description": "Basic structural integrity of the part, the part can withstand impact forces not exceeding this value without detaching, impact forces come from damage or joint stress."\r\n    },\r\n    "impact_reduction": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 2.0,\r\n      "description": "Impact reduction value of the connection point, applied before calculating part detachment, can reduce impact to 0 to completely avoid effects on structural integrity."\r\n    },\r\n    "impact_multiplier": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "Impact absorption rate of the connection point, applied after impact reduction before calculating part detachment, greater than 1 will make the connection point easier to break."\r\n    },\r\n    "impact_absorption": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "maximum": 1,\r\n      "default": 0.3,\r\n      "description": "The proportion of impact converted to structural integrity loss when the connection point is impacted but not detached. For example, 0.5 means 50% of the impact will be converted to structural integrity loss."\r\n    },\r\n    "impact_absorption_destroyed": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 2.0,\r\n      "description": "The proportion of impact converted to connector integrity loss when the SubPart is destroyed. For example, 2.0 means 200% of the impact will be converted to integrity loss (for rapid wreck disassembly)."\r\n    },\r\n    "required_tags": {\r\n      "type": "array",\r\n      "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n      "default": [],\r\n      "description": "Tags that the connecting part must all have, leave empty to allow any tags. For example: [\\"machine_max:left\\"] means must include left variant tag."\r\n    },\r\n    "acceptable_tags": {\r\n      "type": "array",\r\n      "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n      "default": [],\r\n      "description": "Tags that the connecting part must have at least one of, leave empty to allow any tags. For example: [\\"machine_max:door\\", \\"machine_max:hatch\\"] means must include one of door or hatch tags."\r\n    },\r\n    "forbidden_tags": {\r\n      "type": "array",\r\n      "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n      "default": [],\r\n      "description": "Tags that the connecting part must not contain, leave empty to allow any tags. For example: [\\"machine_max:explosive\\"] means cannot include explosive tag."\r\n    },\r\n    "joint_attrs": {\r\n      "type": "object",\r\n      "additionalProperties": { "$ref": "joint_attr.schema.json"},\r\n      "default": {},\r\n      "description": "Joint attributes, currently only effective when joint type is Advanced. Keys are x, y, z, xr, yr, zr, representing translation along x, y, z axes and rotation around x, y, z axes respectively."\r\n    },\r\n    "collide_between_parts": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "Whether the connection point allows collision between parts. Usually set to false to avoid penetration issues between connection points."\r\n    }\r\n  },\r\n  "required": ["type"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "type": "Simple",\r\n      "description": "\u6700\u7B80\u8FDE\u63A5\u70B9\u793A\u4F8B\uFF0C\u4EC5\u5305\u542B\u5FC5\u9700\u5B57\u6BB5"\r\n    },\r\n    {\r\n      "type": "Advanced",\r\n      "required_tags": ["machine_max:direction/left"],\r\n      "impact_absorption": 0.1,\r\n      "impact_reduction": 3.0,\r\n      "impact_multiplier": 0.5,\r\n      "joint_attrs": {\r\n        "y": {\r\n          "lower_limit": -0.5,\r\n          "upper_limit": 1.0,\r\n          "stiffness": 28000,\r\n          "damping": 1500\r\n        },\r\n        "yr": {\r\n          "lower_limit": -45.0,\r\n          "upper_limit": 45.0,\r\n          "stiffness": 4000,\r\n          "damping": 20\r\n        }\r\n      },\r\n      "description": "\u5DE6\u524D\u8F6E\u8FDE\u63A5\u70B9\uFF0C\u4EC5\u5141\u8BB8\u5DE6\u53D8\u4F53\uFF0C\u5177\u6709\u5782\u76F4\u7F13\u51B2\u548C\u8F6C\u5411\u80FD\u529B\uFF0C\u51B2\u51FB\u5438\u6536\u7387\u8F83\u4F4E\uFF0C\u51B2\u51FB\u51CF\u514D\u8F83\u9AD8"\r\n    }\r\n  ]\r\n}', "en_us/schemas/part/subpart/connector/joint_attr.schema.json": `{\r
+}`, "en_us/schemas/part/subpart/connector/connector_static_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/connector/connector_static_attr.schema.json",\r\n  "title": "Connection Point Static Attributes",\r\n  "description": "Defines the static attributes of connection points, including type, direction, structural integrity, impact handling, etc. These attributes are referenced by definition ID to avoid repetitive definitions in each part definition.",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "JSON Schema reference path, used for editor intelligent suggestions and validation",\r\n      "default": "../docs/en_us/schemas/part/subpart/connector/connector_static_attr.schema.json"\r\n    },\r\n    "type": {\r\n      "type": "string",\r\n      "enum": ["Simple", "simple", "advanced", "Advanced"],\r\n      "description": "Connection point type. Simple: Simple connection point; Advanced: Advanced connection point, supports complex joint attributes."\r\n    },\r\n    "direction": {\r\n      "allOf": [\r\n        { "$ref": "../../../base/axis.schema.json" }\r\n      ],\r\n      "description": "Normal direction of the connection point, used to determine the connection direction. X+ = right, Y+ = up, Z+ = back."\r\n    },\r\n    "integrity": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 15.0,\r\n      "description": "Basic structural integrity of the part, the part can withstand impact forces not exceeding this value without detaching, impact forces come from damage or joint stress."\r\n    },\r\n    "impact_reduction": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 2.0,\r\n      "description": "Impact reduction value of the connection point, applied before calculating part detachment, can reduce impact to 0 to completely avoid effects on structural integrity."\r\n    },\r\n    "impact_multiplier": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "Impact absorption rate of the connection point, applied after impact reduction before calculating part detachment, greater than 1 will make the connection point easier to break."\r\n    },\r\n    "impact_absorption": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "maximum": 1,\r\n      "default": 0.3,\r\n      "description": "The proportion of impact converted to structural integrity loss when the connection point is impacted but not detached. For example, 0.5 means 50% of the impact will be converted to structural integrity loss."\r\n    },\r\n    "impact_absorption_destroyed": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 2.0,\r\n      "description": "The proportion of impact converted to connector integrity loss when the SubPart is destroyed. For example, 2.0 means 200% of the impact will be converted to integrity loss (for rapid wreck disassembly)."\r\n    },\r\n    "required_tags": {\r\n      "type": "array",\r\n      "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n      "default": [],\r\n      "description": "Tags that the connecting part must all have, leave empty to allow any tags. For example: [\\"machine_max:left\\"] means must include left variant tag."\r\n    },\r\n    "acceptable_tags": {\r\n      "type": "array",\r\n      "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n      "default": [],\r\n      "description": "Tags that the connecting part must have at least one of, leave empty to allow any tags. For example: [\\"machine_max:door\\", \\"machine_max:hatch\\"] means must include one of door or hatch tags."\r\n    },\r\n    "forbidden_tags": {\r\n      "type": "array",\r\n      "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n      "default": [],\r\n      "description": "Tags that the connecting part must not contain, leave empty to allow any tags. For example: [\\"machine_max:explosive\\"] means cannot include explosive tag."\r\n    },\r\n    "joint_attrs": {\r\n      "type": "object",\r\n      "additionalProperties": { "$ref": "joint_attr.schema.json"},\r\n      "default": {},\r\n      "description": "Joint attributes, currently only effective when joint type is Advanced. Keys are x, y, z, xr, yr, zr, representing translation along x, y, z axes and rotation around x, y, z axes respectively."\r\n    },\r\n    "collide_between_parts": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "Whether the connection point allows collision between parts. Usually set to false to avoid penetration issues between connection points."\r\n    }\r\n  },\r\n  "required": ["type"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "type": "Simple",\r\n      "description": "Minimal connection point example, required fields only"\r\n    },\r\n    {\r\n      "type": "Advanced",\r\n      "required_tags": ["machine_max:direction/left"],\r\n      "impact_absorption": 0.1,\r\n      "impact_reduction": 3.0,\r\n      "impact_multiplier": 0.5,\r\n      "joint_attrs": {\r\n        "y": {\r\n          "lower_limit": -0.5,\r\n          "upper_limit": 1.0,\r\n          "stiffness": 28000,\r\n          "damping": 1500\r\n        },\r\n        "yr": {\r\n          "lower_limit": -45.0,\r\n          "upper_limit": 45.0,\r\n          "stiffness": 4000,\r\n          "damping": 20\r\n        }\r\n      },\r\n      "description": "Left front wheel connection point: left-side variants only, vertical suspension travel and steering, lower impact absorption and higher impact reduction"\r\n    }\r\n  ]\r\n}', "en_us/schemas/part/subpart/connector/joint_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/joint/joint_attr.schema.json",\r
   "title": "Joint Attributes",\r
@@ -321,270 +330,285 @@
       "description": "Hinge joint, allows large angle rotation, used for doors or hatches"\r
     }\r
   ]\r
-}`, "en_us/schemas/part/subpart/hit_box/hit_box_attr.schema.json": `{\r
-  "$schema": "http://json-schema.org/draft-07/schema#",\r
-  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/hit_box_attr.json",\r
-  "title": "Hit Box Attributes",\r
-  "description": "Defines the physical properties, armor values, and damage modification system of part collision boxes.",\r
-  "type": "object",\r
-  "properties": {\r
-    "id": {\r
-      "type": "string",\r
-      "default": "part",\r
-      "description": "Collision shape id, same id collision volumes will not be hit by the same attack."\r
-    },\r
-    "type": {\r
-      "type": "string",\r
-      "enum": ["box", "sphere", "cylinder", "capsule", "wheel"],\r
-      "description": "Collision shape type. Each type works as follows:\\n- box: Box collision shape, generated from cube pose and half-extents.\\n- sphere: Sphere collision shape, uses cube y-direction half-length as radius.\\n- cylinder: Cylinder collision shape, generated from cube pose and half-extents, cylinder axis is z-axis.\\n- capsule: Capsule collision shape, generated from cube pose and half-extents, capsule axis is y-axis.\\n- wheel: Special sphere collision shape, uses cube y-direction half-length as radius and x-direction size as width. During collision, checks the relative position of contact point, ignores collision if x value exceeds half-width. This type adjusts the entire rigid body's moment of inertia using cylinder formula based on cube dimensions. It is recommended that a single subpart contains only one hitbox of type wheel, with only one cube inside."\r
-    },\r
-    "subsystem": {\r
-      "type": "string",\r
-      "default": "",\r
-      "description": "Subsystem name, used to associate this hit box with a specific subsystem, when this hit box takes damage, the associated subsystem will take equivalent damage."\r
-    },\r
-    "material": {\r
-      "$ref": "../../../base/resource_location.schema.json",\r
-      "default": "machine_max:default",\r
-      "description": "Material registry id, used to obtain friction coefficients, damage reduction properties, sound effects, and other physical properties."\r
-    },\r
-    "angle_effect": {\r
-      "type": "boolean",\r
-      "default": true,\r
-      "description": "Whether equivalent armor thickness is affected by impact angle, if false, impact angle is not considered when calculating thickness."\r
-    },\r
-    "thickness": {\r
-      "type": "number",\r
-      "minimum": 0.0,\r
-      "default": 1.0,\r
-      "description": "Armor thickness, unit mm, reduces damage and controls energy distribution during collisions."\r
-    },\r
-    "overwrite": {\r
-      "type": "object",\r
-      "description": "Hit box material override. Any provided fields override the referenced material fields.",\r
-      "properties": {\r
-        "friction": {\r
-          "$ref": "../../../base/vector_3d.schema.json"\r
-        },\r
-        "slip_adaptation": {\r
-          "type": "number",\r
-          "minimum": 0.0\r
-        },\r
-        "slip_curve": {\r
-          "type": "object",\r
-          "description": "Slip curve override. Supports partial override, unspecified fields inherit from material.",\r
-          "properties": {\r
-            "longitudinal": {\r
-              "type": "object",\r
-              "properties": {\r
-                "peak_slip_ratio": {\r
-                  "type": "number",\r
-                  "minimum": 0.0\r
-                },\r
-                "base_scale": {\r
-                  "type": "number"\r
-                },\r
-                "peak_scale": {\r
-                  "type": "number"\r
-                },\r
-                "kinetic_scale": {\r
-                  "type": "number"\r
-                }\r
-              },\r
-              "additionalProperties": false\r
-            },\r
-            "lateral": {\r
-              "type": "object",\r
-              "properties": {\r
-                "peak_angle_deg": {\r
-                  "type": "number",\r
-                  "minimum": 0.0,\r
-                  "description": "Slip-angle peak in degrees."\r
-                },\r
-                "kinetic_angle_deg": {\r
-                  "type": "number",\r
-                  "minimum": 0.0,\r
-                  "description": "Kinetic-region slip angle endpoint in degrees."\r
-                },\r
-                "base_scale": {\r
-                  "type": "number"\r
-                },\r
-                "peak_scale": {\r
-                  "type": "number"\r
-                },\r
-                "kinetic_scale": {\r
-                  "type": "number"\r
-                }\r
-              },\r
-              "additionalProperties": false\r
-            }\r
-          },\r
-          "additionalProperties": false\r
-        },\r
-        "rolling_friction": {\r
-          "type": "number",\r
-          "minimum": 0.0\r
-        },\r
-        "spinning_friction": {\r
-          "type": "number",\r
-          "minimum": 0.0\r
-        },\r
-        "restitution": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "maximum": 1.0\r
-        },\r
-        "block_damage_factor": {\r
-          "type": "number",\r
-          "minimum": 0.0\r
-        },\r
-        "rha": {\r
-          "type": "number",\r
-          "minimum": 0.0\r
-        },\r
-        "angle_effect": {\r
-          "type": "boolean"\r
-        },\r
-        "impact_modifiers": {\r
-          "$ref": "modifier/damage_modifier.schema.json"\r
-        },\r
-        "piercing_modifiers": {\r
-          "$ref": "modifier/damage_modifier.schema.json"\r
-        },\r
-        "damage_modifiers": {\r
-          "$ref": "modifier/damage_modifier.schema.json"\r
-        },\r
-        "decay_rha": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "description": "Override RHA coefficient when durability reaches zero."\r
-        },\r
-        "decay_power": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "description": "Override armor degradation curve exponent."\r
-        },\r
-        "unpen_power": {\r
-          "type": "number",\r
-          "minimum": 0.0\r
-        },\r
-        "sounds": {\r
-          "type": "object",\r
-          "properties": {\r
-            "hit_un_pen": {\r
-              "$ref": "../../../base/sound_event.schema.json"\r
-            },\r
-            "hit_pen": {\r
-              "$ref": "../../../base/sound_event.schema.json"\r
-            }\r
-          },\r
-          "additionalProperties": false\r
-        }\r
-      },\r
-      "additionalProperties": false\r
-    },\r
-    "impact_modifiers": {\r
-      "$ref": "modifier/damage_modifier.schema.json",\r
-      "description": "Impact modifiers, convert received damage into impact values applied to connection points according to certain rules. Default is empty list, apply as much impact as the damage caused to connection points."\r
-    },\r
-    "penetration_modifiers": {\r
-      "$ref": "modifier/damage_modifier.schema.json",\r
-      "default": [\r
-        {\r
-          "operation": "multiply",\r
-          "value": 0.5,\r
-          "condition": {\r
-            "type": "not",\r
-            "condition": {\r
-              "type": "damage_tag",\r
-              "tag": "machine_max:has_pen_depth"\r
-            }\r
-          }\r
-        }\r
-      ],\r
-      "description": "Penetration depth modifiers, adjust penetration depth based on received damage. If damage doesn't include penetration depth data, pass in damage value, otherwise pass in penetration depth. Default is to use 0.5 times the damage as penetration depth when the incoming damage doesn't include penetration depth."\r
-    },\r
-    "damage_modifiers": {\r
-      "$ref": "modifier/damage_modifier.schema.json",\r
-      "default": [\r
-        {\r
-          "operation": "add",\r
-          "value": -5.0,\r
-          "condition": {\r
-            "type": "damage_type",\r
-            "id": "minecraft:fly_into_wall"\r
-          }\r
-        },\r
-        {\r
-          "operation": "multiply",\r
-          "value": 0.05,\r
-          "condition": {\r
-            "type": "damage_type",\r
-            "id": "minecraft:sweet_berry_bush"\r
-          }\r
-        },\r
-        {\r
-          "operation": "multiply",\r
-          "value": 0.05,\r
-          "condition": {\r
-            "type": "entity_type",\r
-            "id": "minecraft:slime"\r
-          }\r
-        },\r
-        {\r
-          "operation": "multiply",\r
-          "value": 0.1,\r
-          "condition": {\r
-            "type": "entity_type",\r
-            "id": "minecraft:magma_cube"\r
-          }\r
-        }\r
-      ],\r
-      "description": "Damage modifiers, convert received damage into damage values according to certain rules. If damage doesn't include damage data, pass in damage value, otherwise pass in damage data. Default ignores impact damage below 5, significantly reduces damage caused by slimes per tick."\r
-    },\r
-    "unpen_power": {\r
-      "type": "number",\r
-      "minimum": 0.0,\r
-      "default": 0.0,\r
-      "description": "Damage coefficient when attack fails to fully penetrate armor, formula: attack damage * (penetration depth / equivalent armor)^unpen_power, when this value is 0.0, no damage is dealt if not penetrated."\r
-    },\r
-    "condition": {\r
-      "type": "string",\r
-      "default": "true",\r
-      "description": "Activation condition, uses molang expression to control whether the hit box is active. Can be used to implement features like glass losing hit detection after being broken, trailer supports, etc."\r
-    }\r
-  },\r
-  "required": ["type"],\r
-  "additionalProperties": false,\r
-  "examples": [\r
-    {\r
-      "type": "box"\r
-    },\r
-    {\r
-      "id": "chassis",\r
-      "type": "box",\r
-      "material": "machine_max:heavy_armor",\r
-      "thickness": 10.0,\r
-      "overwrite": {\r
-        "slip_curve": {\r
-          "lateral": {\r
-            "peak_angle_deg": 9.0\r
-          }\r
-        }\r
-      },\r
-      "angle_effect": true,\r
-      "damage_modifiers": [\r
-        {\r
-          "operation": "add",\r
-          "value": -1.0,\r
-          "condition": {\r
-            "type": "always"\r
-          }\r
-        }\r
-      ],\r
-      "condition": "!local.has_connector('connector.machine_max.chassis_connection')"\r
-    }\r
-  ]\r
+}`, "en_us/schemas/part/subpart/hit_box/hit_box_attr.schema.json": `{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/hit_box_attr.json",
+  "title": "Hit Box Attributes",
+  "description": "Defines one hit box of a sub-part: collision shape, armor thickness, the referenced hit box material and per-hit-box material overrides. Overrides use the same physics / armor / sounds groups as the material definition; every override field is optional and an omitted field keeps the material value.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "default": "",
+      "description": "Hit box id. Hit boxes sharing an id are not hit twice by the same attack."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["box", "sphere", "cylinder", "capsule", "wheel"],
+      "description": "Collision shape type.\\n- box: box generated from the cube pose and half-extents.\\n- sphere: sphere using the cube y half-length as radius.\\n- cylinder: cylinder generated from the cube pose and half-extents, axis is z.\\n- capsule: capsule generated from the cube pose and half-extents, axis is y.\\n- wheel: sphere using the cube y half-length as radius and the x size as width; contacts beyond half-width are ignored and the rigid body inertia tensor is adjusted with the cylinder formula. Prefer a single wheel hit box holding a single cube per sub-part."
+    },
+    "subsystem": {
+      "type": "string",
+      "default": "",
+      "description": "Subsystem name. Damage taken by this hit box is applied to the named subsystem as well."
+    },
+    "module": {
+      "type": "string",
+      "default": "",
+      "description": "Module name inside the subsystem, for example \\"barrel\\", \\"breech\\", \\"radiator\\". An empty string applies to the subsystem as a whole."
+    },
+    "material": {
+      "allOf": [
+        { "$ref": "../../../base/resource_location.schema.json" }
+      ],
+      "default": "machine_max:default",
+      "description": "Material registry id, used to obtain friction coefficients, damage reduction, hit sounds and other physical properties."
+    },
+    "thickness": {
+      "type": "number",
+      "minimum": 0.0,
+      "default": 1.0,
+      "description": "Armor thickness, unit mm. Reduces damage and controls energy distribution during collisions."
+    },
+    "condition": {
+      "type": "string",
+      "default": "true",
+      "description": "Activation condition, a molang expression deciding whether the hit box is active, for example glass losing its hit box once broken or a trailer jack losing it when deployed."
+    },
+    "overwrite": {
+      "type": "object",
+      "description": "Material override applied on top of the referenced material.",
+      "properties": {
+        "physics": {
+          "type": "object",
+          "description": "Physics override: friction, slip, elasticity and block damage.",
+          "properties": {
+            "friction": {
+              "allOf": [
+                { "$ref": "../../../base/vector_3d.schema.json" }
+              ],
+              "description": "Friction coefficient vector [x, y, z]. x = lateral, y = forward, z = unused."
+            },
+            "slip_adaptation": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "Slip adaptation coefficient, adjusts friction behaviour during sliding."
+            },
+            "slip_curve": {
+              "type": "object",
+              "description": "Tire slip friction curve parameters.",
+              "properties": {
+                "longitudinal": {
+                  "type": "object",
+                  "description": "Longitudinal slip-ratio curve.",
+                  "properties": {
+                    "peak_slip_ratio": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "description": "Slip ratio at peak friction."
+                    },
+                    "base_scale": {
+                      "type": "number",
+                      "description": "Friction scale at zero slip."
+                    },
+                    "peak_scale": {
+                      "type": "number",
+                      "description": "Friction scale at peak_slip_ratio."
+                    },
+                    "kinetic_scale": {
+                      "type": "number",
+                      "description": "Friction scale in the high-slip kinetic region."
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "lateral": {
+                  "type": "object",
+                  "description": "Lateral slip-angle curve, angles in degrees.",
+                  "properties": {
+                    "peak_angle_deg": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "description": "Slip angle at peak friction."
+                    },
+                    "kinetic_angle_deg": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "description": "Slip angle where the kinetic plateau begins."
+                    },
+                    "base_scale": {
+                      "type": "number",
+                      "description": "Friction scale at zero slip angle."
+                    },
+                    "peak_scale": {
+                      "type": "number",
+                      "description": "Friction scale at peak_angle_deg."
+                    },
+                    "kinetic_scale": {
+                      "type": "number",
+                      "description": "Friction scale in the high-angle kinetic region."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "rolling_friction": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Rolling friction coefficient."
+            },
+            "spinning_friction": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Spinning friction coefficient."
+            },
+            "restitution": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "Restitution (elasticity); 0 = perfectly inelastic, 1 = perfectly elastic."
+            },
+            "block_damage_factor": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Block damage factor; 0 = cannot break blocks."
+            }
+          },
+          "additionalProperties": false
+        },
+        "armor": {
+          "type": "object",
+          "description": "Armor override: penetration resistance, damage reduction, durability decay and conditional modifiers. Pipeline: damage_modifiers -> (damage - dmg_resist) * dmg_mult.",
+          "properties": {
+            "rha": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Penetration resistance coefficient relative to RHA (rolled homogeneous armor)."
+            },
+            "angle_effect": {
+              "type": "boolean",
+              "description": "Whether equivalent armor thickness is affected by the impact angle."
+            },
+            "dmg_resist": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Linear damage reduction applied before dmg_mult, decayed by durability."
+            },
+            "dmg_mult": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "Damage multiplier applied after dmg_resist, decayed by durability."
+            },
+            "decay_rha": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Residual RHA coefficient once durability reaches zero."
+            },
+            "decay_dmg_resist": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Residual linear damage reduction once durability reaches zero."
+            },
+            "decay_dmg_mult": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "Residual damage multiplier once durability reaches zero."
+            },
+            "decay_power": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Armor degradation curve exponent; larger than 1 degrades slowly at first and quickly near failure, 1 degrades linearly."
+            },
+            "unpen_power": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Damage exponent used when the attack fails to fully penetrate: damage * (penetration / equivalent armor) ^ unpen_power."
+            },
+            "impact_modifiers": {
+              "allOf": [
+                { "$ref": "modifier/damage_modifier.schema.json" }
+              ],
+              "description": "Impact modifiers, converting received damage into impact applied to connection points."
+            },
+            "penetration_modifiers": {
+              "allOf": [
+                { "$ref": "modifier/damage_modifier.schema.json" }
+              ],
+              "description": "Penetration modifiers, adjusting penetration depth according to the received damage."
+            },
+            "damage_modifiers": {
+              "allOf": [
+                { "$ref": "modifier/damage_modifier.schema.json" }
+              ],
+              "description": "Damage modifiers, adjusting the received damage according to its kind."
+            }
+          },
+          "additionalProperties": false
+        },
+        "sounds": {
+          "type": "object",
+          "description": "Hit sound override.",
+          "properties": {
+            "hit_un_pen": {
+              "allOf": [
+                { "$ref": "../../../base/sound_event.schema.json" }
+              ],
+              "description": "Sound event played when the hit does not penetrate."
+            },
+            "hit_pen": {
+              "allOf": [
+                { "$ref": "../../../base/sound_event.schema.json" }
+              ],
+              "description": "Sound event played when the hit penetrates."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["type"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "type": "box"
+    },
+    {
+      "id": "chassis",
+      "type": "box",
+      "material": "machine_max:heavy_armor",
+      "thickness": 10.0,
+      "overwrite": {
+        "physics": {
+          "slip_curve": {
+            "lateral": {
+              "peak_angle_deg": 9.0
+            }
+          }
+        },
+        "armor": {
+          "angle_effect": true,
+          "dmg_mult": 0.9,
+          "damage_modifiers": [
+            {
+              "operation": "add",
+              "value": -1.0,
+              "condition": {
+                "type": "always"
+              }
+            }
+          ]
+        }
+      },
+      "condition": "!local.has_connector('connector.machine_max.chassis_connection')"
+    }
+  ]
 }`, "en_us/schemas/part/subpart/hit_box/modifier/condition/condition.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/modifier/condition/condition.json",\r\n  "title": "Condition",\r\n  "description": "Condition judgment system for damage modifiers. Supports nested logical operations.",\r\n  "allOf": [\r\n    { "$ref": "condition_base.schema.json"}\r\n  ]\r\n}', "en_us/schemas/part/subpart/hit_box/modifier/condition/condition_base.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/part/subpart/hit_box/modifier/condition/condition_base.json",\r
@@ -637,7 +661,9 @@
       "properties": {\r
         "type": { "const": "damage_type" },\r
         "id": {\r
-          "$ref": "../../../../../base/resource_location.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../../../../base/resource_location.schema.json" }\r
+          ],\r
           "description": "Resource location of damage type, for example: 'minecraft:fly_into_wall'."\r
         }\r
       },\r
@@ -649,7 +675,9 @@
       "properties": {\r
         "type": { "const": "damage_tag" },\r
         "id": {\r
-          "$ref": "../../../../../base/resource_location.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../../../../base/resource_location.schema.json" }\r
+          ],\r
           "description": "Resource location of damage tag, for example: 'machine_max:has_pen_depth'."\r
         }\r
       },\r
@@ -661,7 +689,9 @@
       "properties": {\r
         "type": { "const": "entity_type" },\r
         "id": {\r
-          "$ref": "../../../../../base/resource_location.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../../../../base/resource_location.schema.json" }\r
+          ],\r
           "description": "Resource location of entity type, for example: 'minecraft:slime'."\r
         }\r
       },\r
@@ -673,7 +703,9 @@
       "properties": {\r
         "type": { "const": "entity_tag" },\r
         "id": {\r
-          "$ref": "../../../../../base/resource_location.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../../../../base/resource_location.schema.json" }\r
+          ],\r
           "description": "Resource location of entity tag, for example: 'minecraft:skeletons'."\r
         }\r
       },\r
@@ -713,7 +745,9 @@
       "properties": {\r
         "type": { "const": "not" },\r
         "condition": {\r
-          "$ref": "condition.schema.json",\r
+          "allOf": [\r
+            { "$ref": "condition.schema.json" }\r
+          ],\r
           "description": "Sub-condition, returns true when this condition is not satisfied."\r
         }\r
       },\r
@@ -722,11 +756,11 @@
       "description": "Logical NOT condition, reverses the result of the sub-condition."\r
     }\r
   }\r
-}`, "en_us/schemas/part/subpart/hit_box/modifier/damage_modifier.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/modifier/damage_modifier.json",\r\n  "title": "Damage Modifier",\r\n  "description": "A list containing multiple modifier entries, applied in sequence. Each modifier entry determines whether to take effect based on conditions.",\r\n  "type": "array",\r\n  "items": {\r\n    "$ref": "modifier_entry.schema.json"\r\n  },\r\n  "default": [],\r\n  "examples": [\r\n    [\r\n      {\r\n        "operation": "add",\r\n        "value": -5.0,\r\n        "condition": {\r\n          "type": "damage_type",\r\n          "id": "minecraft:fly_into_wall"\r\n        }\r\n      },\r\n      {\r\n        "operation": "multiply",\r\n        "value": 0.05,\r\n        "condition": {\r\n          "type": "damage_type",\r\n          "id": "minecraft:sweet_berry_bush"\r\n        }\r\n      }\r\n    ]\r\n  ]\r\n}', "en_us/schemas/part/subpart/hit_box/modifier/modifier_entry.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/modifier/modifier_entry.json",\r\n  "title": "Modifier Entry",\r\n  "description": "A single entry in the damage modifier, containing operator, value, and activation conditions. Multiple modifiers are applied in sequence.",\r\n  "type": "object",\r\n  "properties": {\r\n    "operation": {\r\n      "$ref": "../../../../base/operation.schema.json",\r\n      "description": "Operation type. add: add the value to the base value; multiply: multiply the base value by the value."\r\n    },\r\n    "value": {\r\n      "type": "number",\r\n      "description": "Value for the operation. For add operation, can be positive or negative (such as -5 means damage reduction); for multiply operation, usually a positive number (such as 0.05 means reduce to 5%)."\r\n    },\r\n    "condition": {\r\n      "$ref": "condition/condition.schema.json",\r\n      "description": "Condition, apply this modifier when the condition is met."\r\n    }\r\n  },\r\n  "required": ["operation", "value", "condition"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "operation": "add",\r\n      "value": -5.0,\r\n      "condition": {\r\n        "type": "damage_type",\r\n        "id": "minecraft:fly_into_wall"\r\n      },\r\n      "description": "Reduce impact damage by 5 points (not less than 0)"\r\n    },\r\n    {\r\n      "operation": "multiply",\r\n      "value": 0.05,\r\n      "condition": {\r\n        "type": "entity_type",\r\n        "id": "minecraft:slime"\r\n      },\r\n      "description": "Reduce damage caused by slimes to 5%"\r\n    }\r\n  ]\r\n}', "en_us/schemas/part/subpart/hydrodynamic_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subpart/hydrodynamic_attr.schema.json",\r\n  "title": "Hydrodynamic Attributes",\r\n  "description": "Defines the dynamic properties of parts in fluids (air, water), including drag, lift, etc. Used to simulate aerodynamic and hydrodynamic effects.\\n\\n## Aerodynamic Calculation Model\\n\\nFluid dynamic calculations are based on the following physical models:\\n\\n### Default Mode (advanced = false)\\n- **Drag calculation**: Uses first-order (viscous) + second-order (inertial) model in all directions\\n- **Lift calculation**: Simple velocity squared model (x/y/z_lift)\\n\\n### Advanced Aerodynamic Mode (advanced = true)\\n- **In advanced aerodynamic convention directions**: Uses lift line model to calculate lift and second-order drag\\n- **First-order drag (viscous)**: Still preserved and superimposed\\n- **Non-lift directions**: Still uses original drag model\\n\\n**Note: Advanced aerodynamic mode is still WIP. It is already connected to real force application, but it has not yet seen sufficient official content usage or long-term tuning validation.**\\n\\n## Coordinate Convention\\n- **Fluid dynamic calculation point local coordinate system**:\\n  - y+ : Lift normal direction\\n  - z- : Flow direction (forward)\\n\\n## Detailed Calculation Model\\n\\n### Drag Calculation\\n- **First-order drag (viscous drag)**: Related to fluid viscosity, calculated using wetted surface area\\n  - Formula: `F_viscous = viscosity \xD7 C_d1 \xD7 v \xD7 wettedArea`\\n  - Suitable for low-speed flow, linearly related to velocity\\n- **Second-order drag (pressure drag)**: Related to fluid density, calculated using projected area\\n  - Formula: `F_pressure = 0.5 \xD7 density \xD7 C_d2 \xD7 v\xB2 \xD7 projectedArea`\\n  - Suitable for high-speed flow, related to velocity squared\\n\\n### Lift Calculation\\n- **Lift**: Related to fluid density, calculated using projected area\\n  - Formula: `F_lift = 0.5 \xD7 density \xD7 C_L \xD7 v \xD7 projectedArea`\\n  - Based on velocity component perpendicular to flow direction\\n\\n### Area Definitions\\n- **Projected area**: Area perpendicular to flow direction\\n- **Wetted surface area**: Total surface area in contact with fluid, approximated as sum of projected areas \xD7 2\\n\\n## Parameter Description\\nDrag coefficient list must contain 2 values: [first-order coefficient, second-order coefficient], lift coefficient is a single value.",\r\n  "type": "object",\r\n  "properties": {\r\n    "scale": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "Scale factor, used to adjust hydrodynamic effects as a whole."\r\n    },\r\n    "effective_range": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "Effective calculation range, unit in m, when obstructions are detected within this distance in the flow direction, the actual air drag coefficient of the part will be reduced, to simulate drag reduction effects such as streamline flow caused by vehicle shell obstruction."\r\n    },\r\n    "transonic_amplifier": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 5.0,\r\n      "description": "Transonic amplification coefficient, used to simulate drag changes during transonic speeds. When speed approaches sonic speed, drag increases sharply."\r\n    },\r\n    "front_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "Front drag coefficient list, must contain two values: [first-order coefficient, second-order coefficient]. First-order coefficient is used for low-speed viscous drag calculation, second-order coefficient is used for high-speed pressure drag calculation."\r\n    },\r\n    "back_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "Back drag coefficient list, must contain two values: [first-order coefficient, second-order coefficient]."\r\n    },\r\n    "left_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "Left drag coefficient list, must contain two values: [first-order coefficient, second-order coefficient]."\r\n    },\r\n    "right_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "Right drag coefficient list, must contain two values: [first-order coefficient, second-order coefficient]."\r\n    },\r\n    "up_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "Up drag coefficient list, must contain two values: [first-order coefficient, second-order coefficient]."\r\n    },\r\n    "down_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "Down drag coefficient list, must contain two values: [first-order coefficient, second-order coefficient]."\r\n    },\r\n    "x_lift": {\r\n      "type": "number",\r\n      "default": 0.0,\r\n      "description": "X-axis lift coefficient. Based on Y-Z plane velocity component to calculate lift, usually 0 indicates no X-axis lift is generated."\r\n    },\r\n    "y_lift": {\r\n      "type": "number",\r\n      "default": 0.0,\r\n      "description": "Y-axis lift coefficient. Based on X-Z plane velocity component to calculate lift, usually 0 indicates no Y-axis lift is generated."\r\n    },\r\n    "z_lift": {\r\n      "type": "number",\r\n      "default": 0.0,\r\n      "description": "Z-axis lift coefficient. Based on X-Y plane velocity component to calculate lift, usually 0 indicates no Z-axis lift is generated."\r\n    },\r\n    "advanced": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "Whether to enable advanced aerodynamic mode. When enabled, uses lift line model to calculate lift and second-order drag in advanced aerodynamic convention directions. Note: This mode is still WIP, but it is already connected to real force application and mainly lacks sufficient official content usage and long-term tuning validation."\r\n    },\r\n    "advanced_aero": {\r\n      "type": "object",\r\n      "properties": {\r\n        "lift_slope": {\r\n          "type": "number",\r\n          "default": 6.28,\r\n          "description": "Lift line slope dCl/d\u03B1 (unit: 1/rad), thin airfoil theory default value is 2\u03C0"\r\n        },\r\n        "alpha0": {\r\n          "type": "number",\r\n          "default": 0.0,\r\n          "description": "Zero-lift angle of attack (unit: rad), no lift at this angle of attack"\r\n        },\r\n        "alpha_stall": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "default": 0.52,\r\n          "description": "Stall angle of attack (unit: rad, positive value, symmetric stall), approximately 30\xB0"\r\n        },\r\n        "cd0": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "default": 0.02,\r\n          "description": "Zero-lift drag coefficient"\r\n        },\r\n        "k_induced": {\r\n          "type": "number",\r\n          "default": 0.05,\r\n          "description": "Induced drag coefficient (\u2248 1 / (\u03C0 * AR * e))"\r\n        }\r\n      },\r\n      "default": {\r\n        "lift_slope": 6.28,\r\n        "alpha0": 0.0,\r\n        "alpha_stall": 0.52,\r\n        "cd0": 0.02,\r\n        "k_induced": 0.05\r\n      },\r\n      "description": "Advanced aerodynamic parameter configuration, only effective when advanced = true. Based on simplified lift line theory: lift coefficient Cl = liftSlope * (\u03B1 - alpha0), drag coefficient Cd = cd0 + kInduced * Cl\xB2."\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "scale": 1.0,\r\n      "effective_range": [5.0, 5.0, 5.0],\r\n      "transonic_amplifier": 5.0,\r\n      "front_drag": [0.2, 1.5],\r\n      "back_drag": [0.3, 1.8],\r\n      "left_drag": [0.15, 1.2],\r\n      "right_drag": [0.15, 1.2],\r\n      "up_drag": [0.1, 0.8],\r\n      "down_drag": [0.1, 0.8],\r\n      "x_lift": 0.0,\r\n      "y_lift": 0.0,\r\n      "z_lift": 0.0,\r\n      "advanced": false,\r\n      "description": "Typical vehicle aerodynamic configuration with larger front drag, smaller lateral and vertical drag"\r\n    }\r\n  ]\r\n}', "en_us/schemas/part/subpart/interact_box_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/interact_box_attr.schema.json",\r\n  "title": "Interaction Box Attributes",\r\n  "description": "Defines the attributes of an interaction box, used for player interaction with parts. The interaction box typically corresponds to bones in the model, triggering signals when the player clicks.",\r\n  "type": "object",\r\n  "properties": {\r\n    "bone": {\r\n      "type": "string",\r\n      "description": "Bone name corresponding to the interaction area, bones in the model will serve as the interaction area."\r\n    },\r\n    "signal_targets": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "type": "array",\r\n        "items": { "type": "string" }\r\n      },\r\n      "description": "Signal transmission targets, key is signal channel, value is target list (subsystem/connection point name/part/global). For example: {\\"door_interact\\": [\\"door_controller\\"]}."\r\n    },\r\n    "interact_mode": {\r\n      "type": "string",\r\n      "enum": ["fast", "accurate"],\r\n      "default": "fast",\r\n      "description": "Interaction mode. fast: quick interaction, only requires player to intersect with the interaction area; accurate: requires player to aim at the interaction area. Between the two, accurate has higher priority than fast."\r\n    },\r\n    "condition": {\r\n      "type": "string",\r\n      "enum": ["AND", "OR", "NAND", "NOR", "XOR", "XNOR"],\r\n      "default": "NOR",\r\n      "description": "Conditions for interaction area availability, AND: all input signals are non-zero; OR: any input signal is non-zero; NAND: all input signals are zero; NOR: any input signal is zero; XOR: only one input signal is 1; XNOR: only one input signal is 0."\r\n    }\r\n  },\r\n  "required": ["bone", "signal_targets"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "bone": "DoorHandle",\r\n      "signal_targets": {\r\n        "door_interact": ["door_controller"]\r\n      },\r\n      "condition": "NOR",\r\n      "description": "Door handle interaction box, triggers door controller"\r\n    },\r\n    {\r\n      "bone": "Lever",\r\n      "signal_targets": {\r\n        "lever_pull": ["engine_start", "lights"]\r\n      },\r\n      "interact_mode": "toggle",\r\n      "condition": "OR",\r\n      "description": "Lever interaction box, toggles engine and light status"\r\n    }\r\n  ]\r\n}', "en_us/schemas/part/subpart/sub_part_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/sub_part_attr.schema.json",\r\n  "title": "Sub-Part Attributes",\r\n  "description": "Defines the attributes of a sub-part (smallest motion unit) in a vehicle part, including physical properties, collision detection, connection points and subsystems, etc.",\r\n  "type": "object",\r\n  "properties": {\r\n    "start_bone": {\r\n      "type": "string",\r\n      "default": "",\r\n      "description": "The starting bone name of the sub-part, used to select the set of bones to render and calculate collisions from the model. If empty, all bones of the entire model will be used"\r\n    },\r\n    "end_bones": {\r\n      "type": "array",\r\n      "items": {\r\n        "type": "string"\r\n      },\r\n      "default": [],\r\n      "description": "List of ending bone names, bones between the starting and ending bones will be included in the sub-part. Used to exclude unwanted parts"\r\n    },\r\n    "durability": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 20.0,\r\n      "description": "Base health value of the sub-part, when reduced to 0, all subsystems of the sub-part will be paralyzed. Note: Multiple sub-parts can share durability (controlled by share_durability in the part definition)"\r\n    },\r\n    "mass": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 25.0,\r\n      "description": "Sub-part mass (kg), must be greater than 0, used for physics calculations"\r\n    },\r\n    "mass_center": {\r\n      "type": "string",\r\n      "default": "mass_center",\r\n      "description": "Mass center locator name, used to specify a locator with the same name in the model as the mass center position. If not specified or not found, the geometric center of the collision volume will be used as the mass center."\r\n    },\r\n    "projected_area": {\r\n      "$ref": "../../base/vector_3d.schema.json",\r\n      "default": {"x": 0, "y": 0, "z": 0},\r\n      "description": "Projected area of the sub-part in three axial directions (m\xB2), used to calculate air resistance"\r\n    },\r\n    "block_collision": {\r\n      "type": "string",\r\n      "enum": ["true", "false", "ground"],\r\n      "default": "true",\r\n      "description": "Terrain collision mode: true (default, collides with all blocks), ground (only collides with ground blocks below the part), false (does not collide with any blocks)"\r\n    },\r\n    "collision_height": {\r\n      "type": "number",\r\n      "default": -1.0,\r\n      "description": "Collision detection height (m), when encountering obstacles lower than this height, no collision occurs with the obstacle (block collision mode needs to be ground). Default -1.0 means all obstacles collide"\r\n    },\r\n    "climb_assist": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "Climbing assistance, whether to enable climbing assistance function"\r\n    },\r\n    "hit_boxes": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "hit_box/hit_box_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "minProperties": 1,\r\n      "description": "Collision box definition, key is bone name, will search for bones with matching names, and create collision volumes of different shapes based on the blocks in them. Each sub-part needs at least one collision box"\r\n    },\r\n    "interact_boxes": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "interact_box_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "description": "Interaction box definition, key is interaction box name, value is interaction box attributes. Used to define areas where players can interact"\r\n    },\r\n    "connectors": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "connector/connector_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "description": "List of connection points, interface definitions for sub-parts to connect with other parts"\r\n    },\r\n    "subsystems": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "../../subsystem/subsystem_dynamic_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "description": "Subsystem definition, key is subsystem name, value is subsystem dynamic attributes. Defines the interaction relationship between sub-parts and connection points, other subsystems"\r\n    },\r\n    "hydro_priority": {\r\n      "type": "integer",\r\n      "default": 0,\r\n      "description": "Air resistance calculation priority, the higher the value the higher the priority. Parts with higher or equal priority will block parts with lower or equal priority, causing changes in drag coefficients"\r\n    },\r\n    "hydrodynamics": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "hydrodynamic_attr.schema.json"\r\n      },\r\n      "default": {\r\n        "": {}\r\n      },\r\n      "description": "List of hydrodynamic calculation reference points, key-value pair key name is first searched as bone name, if a matching bone is found, all locators within that bone are used as aerodynamic calculation points; if no matching bone is found, it is searched as locator name. Empty string means calculation based on center of mass position."\r\n    }\r\n  },\r\n  "required": ["hit_boxes"],\r\n  "examples": [\r\n    {\r\n      "hit_boxes": {\r\n        "mmCollision_Box_Chassis": {\r\n          "name": "chassis",\r\n          "type": "box"\r\n        }\r\n      },\r\n      "description": "Minimal sub-part example, only includes required hit box definition"\r\n    },\r\n    {\r\n      "start_bone": "chassis",\r\n      "end_bones": ["engine"],\r\n      "mass_center": "hull_mass_center",\r\n      "durability": 550.0,\r\n      "mass": 1200.0,\r\n      "projected_area": {\r\n        "x": 1.5,\r\n        "y": 0.8,\r\n        "z": 3.2\r\n      },\r\n      "block_collision": "ground",\r\n      "collision_height": 2.5,\r\n      "climb_assist": true,\r\n      "hit_boxes": {\r\n        "mmCollision_Box_Chassis": {\r\n          "name": "chassis",\r\n          "type": "box",\r\n          "block_damage_factor": 1.5,\r\n          "angle_effect": true,\r\n          "thickness": 10\r\n        },\r\n        "mmCollision_Box_Engine": {\r\n          "name": "engine",\r\n          "type": "box",\r\n          "subsystem": "engine",\r\n          "block_damage_factor": 0.95,\r\n          "angle_effect": true,\r\n          "thickness": 3\r\n        }\r\n      },\r\n      "interact_boxes": {\r\n        "driver_seat": {\r\n          "bone_name": "driver_seat",\r\n          "interact_type": "seat"\r\n        }\r\n      },\r\n      "connectors": {\r\n        "wheel_front_left": {\r\n          "locator": "wheel_front_left",\r\n          "type": "Advanced"\r\n        },\r\n        "wheel_front_right": {\r\n          "locator": "wheel_front_right",\r\n          "type": "Advanced"\r\n        }\r\n      },\r\n      "subsystems": {\r\n        "driver_seat": {\r\n          "type": "machine_max:seat",\r\n          "definition": "machine_max:default_seat",\r\n          "locator": "driver_seat_point",\r\n          "move_outputs": {\r\n            "move_input": ["car_controller"]\r\n          },\r\n          "regular_outputs": {\r\n            "regular_input": ["car_controller"]\r\n          },\r\n          "aim_outputs": {\r\n            "aim_input": ["car_controller"]\r\n          }\r\n        },\r\n        "passenger_seat": {\r\n          "type": "machine_max:seat",\r\n          "definition": "machine_max:default_passenger_seat",\r\n          "locator": "passenger_seat_point"\r\n        },\r\n        "car_controller": {\r\n          "type": "machine_max:car_controller",\r\n          "definition": "machine_max:default_car_controller"\r\n        },\r\n        "engine": {\r\n          "type": "machine_max:engine",\r\n          "definition": "machine_max:default_engine"\r\n        },\r\n        "gearbox": {\r\n          "type": "machine_max:gearbox",\r\n          "definition": "machine_max:default_gearbox"\r\n        },\r\n        "trunk_storage": {\r\n          "type": "machine_max:item_storage",\r\n          "definition": "machine_max:default_trunk"\r\n        },\r\n        "glove_box": {\r\n          "type": "machine_max:item_storage",\r\n          "definition": "machine_max:glove_box"\r\n        },\r\n        "left_front_wheel_driver": {\r\n          "type": "machine_max:wheel_driver",\r\n          "definition": "machine_max:default_wheel_driver",\r\n          "connector": "wheel_front_left"\r\n        },\r\n        "right_front_wheel_driver": {\r\n          "type": "machine_max:wheel_driver",\r\n          "definition": "machine_max:default_wheel_driver",\r\n          "connector": "wheel_front_right"\r\n        }\r\n      },\r\n      "hydro_priority": 0,\r\n      "hydrodynamics": {\r\n        "hull_aero": {\r\n          "drag_coefficient": 0.3,\r\n          "lift_coefficient": 0.1\r\n        }\r\n      },\r\n      "description": "Complete sub-part example, includes mass center locator, hydrodynamics, connectors and comprehensive subsystem configuration (seats, storage, controller, engine, gearbox, etc.)"\r\n    }\r\n  ]\r\n}', "en_us/schemas/part/variant_attr.schema.json": `{\r
+}`, "en_us/schemas/part/subpart/hit_box/modifier/damage_modifier.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/modifier/damage_modifier.json",\r\n  "title": "Damage Modifier",\r\n  "description": "A list containing multiple modifier entries, applied in sequence. Each modifier entry determines whether to take effect based on conditions.",\r\n  "type": "array",\r\n  "items": {\r\n    "$ref": "modifier_entry.schema.json"\r\n  },\r\n  "default": [],\r\n  "examples": [\r\n    [\r\n      {\r\n        "operation": "add",\r\n        "value": -5.0,\r\n        "condition": {\r\n          "type": "damage_type",\r\n          "id": "minecraft:fly_into_wall"\r\n        }\r\n      },\r\n      {\r\n        "operation": "multiply",\r\n        "value": 0.05,\r\n        "condition": {\r\n          "type": "damage_type",\r\n          "id": "minecraft:sweet_berry_bush"\r\n        }\r\n      }\r\n    ]\r\n  ]\r\n}', "en_us/schemas/part/subpart/hit_box/modifier/modifier_entry.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/modifier/modifier_entry.json",\r\n  "title": "Modifier Entry",\r\n  "description": "A single entry in the damage modifier, containing operator, value, and activation conditions. Multiple modifiers are applied in sequence.",\r\n  "type": "object",\r\n  "properties": {\r\n    "operation": {\r\n      "allOf": [\r\n        { "$ref": "../../../../base/operation.schema.json" }\r\n      ],\r\n      "description": "Operation type. add: add the value to the base value; multiply: multiply the base value by the value."\r\n    },\r\n    "value": {\r\n      "type": "number",\r\n      "description": "Value for the operation. For add operation, can be positive or negative (such as -5 means damage reduction); for multiply operation, usually a positive number (such as 0.05 means reduce to 5%)."\r\n    },\r\n    "condition": {\r\n      "allOf": [\r\n        { "$ref": "condition/condition.schema.json" }\r\n      ],\r\n      "description": "Condition, apply this modifier when the condition is met."\r\n    }\r\n  },\r\n  "required": ["operation", "value", "condition"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "operation": "add",\r\n      "value": -5.0,\r\n      "condition": {\r\n        "type": "damage_type",\r\n        "id": "minecraft:fly_into_wall"\r\n      },\r\n      "description": "Reduce impact damage by 5 points (not less than 0)"\r\n    },\r\n    {\r\n      "operation": "multiply",\r\n      "value": 0.05,\r\n      "condition": {\r\n        "type": "entity_type",\r\n        "id": "minecraft:slime"\r\n      },\r\n      "description": "Reduce damage caused by slimes to 5%"\r\n    }\r\n  ]\r\n}', "en_us/schemas/part/subpart/hydrodynamic_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subpart/hydrodynamic_attr.schema.json",\r\n  "title": "Hydrodynamic Attributes",\r\n  "description": "Defines the dynamic properties of parts in fluids (air, water), including drag, lift, etc. Used to simulate aerodynamic and hydrodynamic effects.\\n\\n## Aerodynamic Calculation Model\\n\\nFluid dynamic calculations are based on the following physical models:\\n\\n### Default Mode (advanced = false)\\n- **Drag calculation**: Uses first-order (viscous) + second-order (inertial) model in all directions\\n- **Lift calculation**: Simple velocity squared model (x/y/z_lift)\\n\\n### Advanced Aerodynamic Mode (advanced = true)\\n- **In advanced aerodynamic convention directions**: Uses lift line model to calculate lift and second-order drag\\n- **First-order drag (viscous)**: Still preserved and superimposed\\n- **Non-lift directions**: Still uses original drag model\\n\\n**Note: Advanced aerodynamic mode is still WIP. It is already connected to real force application, but it has not yet seen sufficient official content usage or long-term tuning validation.**\\n\\n## Coordinate Convention\\n- **Fluid dynamic calculation point local coordinate system**:\\n  - y+ : Lift normal direction\\n  - z- : Flow direction (forward)\\n\\n## Detailed Calculation Model\\n\\n### Drag Calculation\\n- **First-order drag (viscous drag)**: Related to fluid viscosity, calculated using wetted surface area\\n  - Formula: `F_viscous = viscosity \xD7 C_d1 \xD7 v \xD7 wettedArea`\\n  - Suitable for low-speed flow, linearly related to velocity\\n- **Second-order drag (pressure drag)**: Related to fluid density, calculated using projected area\\n  - Formula: `F_pressure = 0.5 \xD7 density \xD7 C_d2 \xD7 v\xB2 \xD7 projectedArea`\\n  - Suitable for high-speed flow, related to velocity squared\\n\\n### Lift Calculation\\n- **Lift**: Related to fluid density, calculated using projected area\\n  - Formula: `F_lift = 0.5 \xD7 density \xD7 C_L \xD7 v \xD7 projectedArea`\\n  - Based on velocity component perpendicular to flow direction\\n\\n### Area Definitions\\n- **Projected area**: Area perpendicular to flow direction\\n- **Wetted surface area**: Total surface area in contact with fluid, approximated as sum of projected areas \xD7 2\\n\\n## Parameter Description\\nDrag coefficient list must contain 2 values: [first-order coefficient, second-order coefficient], lift coefficient is a single value.",\r\n  "type": "object",\r\n  "properties": {\r\n    "scale": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "Scale factor, used to adjust hydrodynamic effects as a whole."\r\n    },\r\n    "effective_range": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "Effective calculation range, unit in m, when obstructions are detected within this distance in the flow direction, the actual air drag coefficient of the part will be reduced, to simulate drag reduction effects such as streamline flow caused by vehicle shell obstruction."\r\n    },\r\n    "transonic_amplifier": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 5.0,\r\n      "description": "Transonic amplification coefficient, used to simulate drag changes during transonic speeds. When speed approaches sonic speed, drag increases sharply."\r\n    },\r\n    "front_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "Front drag coefficient list, must contain two values: [first-order coefficient, second-order coefficient]. First-order coefficient is used for low-speed viscous drag calculation, second-order coefficient is used for high-speed pressure drag calculation."\r\n    },\r\n    "back_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "Back drag coefficient list, must contain two values: [first-order coefficient, second-order coefficient]."\r\n    },\r\n    "left_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "Left drag coefficient list, must contain two values: [first-order coefficient, second-order coefficient]."\r\n    },\r\n    "right_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "Right drag coefficient list, must contain two values: [first-order coefficient, second-order coefficient]."\r\n    },\r\n    "up_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "Up drag coefficient list, must contain two values: [first-order coefficient, second-order coefficient]."\r\n    },\r\n    "down_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "Down drag coefficient list, must contain two values: [first-order coefficient, second-order coefficient]."\r\n    },\r\n    "x_lift": {\r\n      "type": "number",\r\n      "default": 0.0,\r\n      "description": "X-axis lift coefficient. Based on Y-Z plane velocity component to calculate lift, usually 0 indicates no X-axis lift is generated."\r\n    },\r\n    "y_lift": {\r\n      "type": "number",\r\n      "default": 0.0,\r\n      "description": "Y-axis lift coefficient. Based on X-Z plane velocity component to calculate lift, usually 0 indicates no Y-axis lift is generated."\r\n    },\r\n    "z_lift": {\r\n      "type": "number",\r\n      "default": 0.0,\r\n      "description": "Z-axis lift coefficient. Based on X-Y plane velocity component to calculate lift, usually 0 indicates no Z-axis lift is generated."\r\n    },\r\n    "advanced": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "Whether to enable advanced aerodynamic mode. When enabled, uses lift line model to calculate lift and second-order drag in advanced aerodynamic convention directions. Note: This mode is still WIP, but it is already connected to real force application and mainly lacks sufficient official content usage and long-term tuning validation."\r\n    },\r\n    "advanced_aero": {\r\n      "type": "object",\r\n      "properties": {\r\n        "lift_slope": {\r\n          "type": "number",\r\n          "default": 6.28,\r\n          "description": "Lift line slope dCl/d\u03B1 (unit: 1/rad), thin airfoil theory default value is 2\u03C0"\r\n        },\r\n        "alpha0": {\r\n          "type": "number",\r\n          "default": 0.0,\r\n          "description": "Zero-lift angle of attack (unit: rad), no lift at this angle of attack"\r\n        },\r\n        "alpha_stall": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "default": 0.52,\r\n          "description": "Stall angle of attack (unit: rad, positive value, symmetric stall), approximately 30\xB0"\r\n        },\r\n        "cd0": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "default": 0.02,\r\n          "description": "Zero-lift drag coefficient"\r\n        },\r\n        "k_induced": {\r\n          "type": "number",\r\n          "default": 0.05,\r\n          "description": "Induced drag coefficient (\u2248 1 / (\u03C0 * AR * e))"\r\n        }\r\n      },\r\n      "default": {\r\n        "lift_slope": 6.28,\r\n        "alpha0": 0.0,\r\n        "alpha_stall": 0.52,\r\n        "cd0": 0.02,\r\n        "k_induced": 0.05\r\n      },\r\n      "description": "Advanced aerodynamic parameter configuration, only effective when advanced = true. Based on simplified lift line theory: lift coefficient Cl = liftSlope * (\u03B1 - alpha0), drag coefficient Cd = cd0 + kInduced * Cl\xB2."\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "scale": 1.0,\r\n      "effective_range": 5.0,\r\n      "transonic_amplifier": 5.0,\r\n      "front_drag": [0.2, 1.5],\r\n      "back_drag": [0.3, 1.8],\r\n      "left_drag": [0.15, 1.2],\r\n      "right_drag": [0.15, 1.2],\r\n      "up_drag": [0.1, 0.8],\r\n      "down_drag": [0.1, 0.8],\r\n      "x_lift": 0.0,\r\n      "y_lift": 0.0,\r\n      "z_lift": 0.0,\r\n      "advanced": false,\r\n      "description": "Typical vehicle aerodynamic configuration with larger front drag, smaller lateral and vertical drag"\r\n    }\r\n  ]\r\n}', "en_us/schemas/part/subpart/interact_box_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/interact_box_attr.schema.json",\r\n  "title": "Interaction Box Attributes",\r\n  "description": "Defines the attributes of an interaction box, used for player interaction with parts. The interaction box typically corresponds to bones in the model, triggering signals when the player clicks.",\r\n  "type": "object",\r\n  "properties": {\r\n    "bone": {\r\n      "type": "string",\r\n      "description": "Bone name corresponding to the interaction area, bones in the model will serve as the interaction area."\r\n    },\r\n    "signal_targets": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "type": "array",\r\n        "items": { "type": "string" }\r\n      },\r\n      "description": "Signal transmission targets, key is signal channel, value is target list (subsystem/connection point name/part/global). For example: {\\"door_interact\\": [\\"door_controller\\"]}."\r\n    },\r\n    "interact_mode": {\r\n      "type": "string",\r\n      "enum": ["fast", "accurate"],\r\n      "default": "fast",\r\n      "description": "Interaction mode. fast: quick interaction, only requires player to intersect with the interaction area; accurate: requires player to aim at the interaction area. Between the two, accurate has higher priority than fast."\r\n    },\r\n    "condition": {\r\n      "type": "string",\r\n      "enum": ["AND", "OR", "NAND", "NOR", "XOR", "XNOR"],\r\n      "default": "NOR",\r\n      "description": "Conditions for interaction area availability, AND: all input signals are non-zero; OR: any input signal is non-zero; NAND: all input signals are zero; NOR: any input signal is zero; XOR: only one input signal is 1; XNOR: only one input signal is 0."\r\n    }\r\n  },\r\n  "required": ["bone", "signal_targets"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "bone": "DoorHandle",\r\n      "signal_targets": {\r\n        "door_interact": ["door_controller"]\r\n      },\r\n      "condition": "NOR",\r\n      "description": "Door handle interaction box, triggers door controller"\r\n    },\r\n    {\r\n      "bone": "Lever",\r\n      "signal_targets": {\r\n        "lever_pull": ["engine_start", "lights"]\r\n      },\r\n      "interact_mode": "accurate",\r\n      "condition": "OR",\r\n      "description": "Lever interaction box, toggles engine and light status"\r\n    }\r\n  ]\r\n}', "en_us/schemas/part/subpart/sub_part_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/sub_part_attr.schema.json",\r\n  "title": "Sub-Part Attributes",\r\n  "description": "Defines the attributes of a sub-part (smallest motion unit) in a vehicle part, including physical properties, collision detection, connection points and subsystems, etc.",\r\n  "type": "object",\r\n  "properties": {\r\n    "start_bone": {\r\n      "type": "string",\r\n      "default": "",\r\n      "description": "The starting bone name of the sub-part, used to select the set of bones to render and calculate collisions from the model. If empty, all bones of the entire model will be used"\r\n    },\r\n    "end_bones": {\r\n      "type": "array",\r\n      "items": {\r\n        "type": "string"\r\n      },\r\n      "default": [],\r\n      "description": "List of ending bone names, bones between the starting and ending bones will be included in the sub-part. Used to exclude unwanted parts"\r\n    },\r\n    "durability": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 20.0,\r\n      "description": "Base health value of the sub-part, when reduced to 0, all subsystems of the sub-part will be paralyzed. Note: Multiple sub-parts can share durability (controlled by share_durability in the part definition)"\r\n    },\r\n    "mass": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 25.0,\r\n      "description": "Sub-part mass (kg), must be greater than 0, used for physics calculations"\r\n    },\r\n    "mass_center": {\r\n      "type": "string",\r\n      "default": "mass_center",\r\n      "description": "Mass center locator name, used to specify a locator with the same name in the model as the mass center position. If not specified or not found, the geometric center of the collision volume will be used as the mass center."\r\n    },\r\n    "projected_area": {\r\n      "allOf": [\r\n        { "$ref": "../../base/vector_3d.schema.json" }\r\n      ],\r\n      "default": {"x": 0, "y": 0, "z": 0},\r\n      "description": "Projected area of the sub-part in three axial directions (m\xB2), used to calculate air resistance"\r\n    },\r\n    "block_collision": {\r\n      "type": "string",\r\n      "enum": ["true", "false", "ground"],\r\n      "default": "true",\r\n      "description": "Terrain collision mode: true (default, collides with all blocks), ground (only collides with ground blocks below the part), false (does not collide with any blocks)"\r\n    },\r\n    "collision_height": {\r\n      "type": "number",\r\n      "default": -1.0,\r\n      "description": "Collision detection height (m), when encountering obstacles lower than this height, no collision occurs with the obstacle (block collision mode needs to be ground). Default -1.0 means all obstacles collide"\r\n    },\r\n    "climb_assist": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "Climbing assistance, whether to enable climbing assistance function"\r\n    },\r\n    "hit_boxes": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "hit_box/hit_box_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "minProperties": 1,\r\n      "description": "Collision box definition, key is bone name, will search for bones with matching names, and create collision volumes of different shapes based on the blocks in them. Each sub-part needs at least one collision box"\r\n    },\r\n    "interact_boxes": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "interact_box_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "description": "Interaction box definition, key is interaction box name, value is interaction box attributes. Used to define areas where players can interact"\r\n    },\r\n    "connectors": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "connector/connector_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "description": "List of connection points, interface definitions for sub-parts to connect with other parts"\r\n    },\r\n    "subsystems": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "../../subsystem/subsystem_dynamic_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "description": "Subsystem definition, key is subsystem name, value is subsystem dynamic attributes. Defines the interaction relationship between sub-parts and connection points, other subsystems"\r\n    },\r\n    "hydro_priority": {\r\n      "type": "integer",\r\n      "default": 0,\r\n      "description": "Air resistance calculation priority, the higher the value the higher the priority. Parts with higher or equal priority will block parts with lower or equal priority, causing changes in drag coefficients"\r\n    },\r\n    "hydrodynamics": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "hydrodynamic_attr.schema.json"\r\n      },\r\n      "default": {\r\n        "": {}\r\n      },\r\n      "description": "List of hydrodynamic calculation reference points, key-value pair key name is first searched as bone name, if a matching bone is found, all locators within that bone are used as aerodynamic calculation points; if no matching bone is found, it is searched as locator name. Empty string means calculation based on center of mass position."\r\n    }\r\n  },\r\n  "required": ["hit_boxes"],\r\n  "examples": [\r\n    {\r\n      "hit_boxes": {\r\n        "mmCollision_Box_Chassis": {\r\n          "id": "chassis",\r\n          "type": "box"\r\n        }\r\n      },\r\n      "description": "Minimal sub-part example, only includes required hit box definition"\r\n    },\r\n    {\r\n      "start_bone": "chassis",\r\n      "end_bones": ["engine"],\r\n      "mass_center": "hull_mass_center",\r\n      "durability": 550.0,\r\n      "mass": 1200.0,\r\n      "projected_area": [1.5, 0.8, 3.2],\r\n      "block_collision": "ground",\r\n      "collision_height": 2.5,\r\n      "climb_assist": true,\r\n      "hit_boxes": {\r\n        "mmCollision_Box_Chassis": {\r\n          "id": "chassis",\r\n          "type": "box",\r\n          "thickness": 10\r\n        },\r\n        "mmCollision_Box_Engine": {\r\n          "type": "box",\r\n          "subsystem": "engine",\r\n          "thickness": 3\r\n        }\r\n      },\r\n      "interact_boxes": {\r\n        "driver_seat": {\r\n          "bone": "driver_seat",\r\n          "signal_targets": {\r\n            "seat_interact": ["driver_seat"]\r\n          }\r\n        }\r\n      },\r\n      "connectors": {\r\n        "wheel_front_left": {\r\n          "locator": "wheel_front_left",\r\n          "definition": "machine_max:light_left_wheel"\r\n        },\r\n        "wheel_front_right": {\r\n          "locator": "wheel_front_right",\r\n          "definition": "machine_max:light_right_wheel"\r\n        }\r\n      },\r\n      "subsystems": {\r\n        "driver_seat": {\r\n          "type": "machine_max:seat",\r\n          "definition": "machine_max:default_seat",\r\n          "locator": "driver_seat_point",\r\n          "move_outputs": {\r\n            "move_input": ["car_controller"]\r\n          },\r\n          "regular_outputs": {\r\n            "regular_input": ["car_controller"]\r\n          },\r\n          "aim_outputs": {\r\n            "aim_input": ["car_controller"]\r\n          }\r\n        },\r\n        "passenger_seat": {\r\n          "type": "machine_max:seat",\r\n          "definition": "machine_max:default_passenger_seat",\r\n          "locator": "passenger_seat_point"\r\n        },\r\n        "car_controller": {\r\n          "type": "machine_max:car_controller",\r\n          "definition": "machine_max:default_car_controller",\r\n          "control_outputs": {\r\n            "car_control": ["engine", "gearbox"]\r\n          }\r\n        },\r\n        "engine": {\r\n          "type": "machine_max:engine",\r\n          "definition": "machine_max:default_engine",\r\n          "power_output": "gearbox"\r\n        },\r\n        "gearbox": {\r\n          "type": "machine_max:gearbox",\r\n          "definition": "machine_max:default_gearbox",\r\n          "power_output": "wheel_front_left"\r\n        },\r\n        "trunk_storage": {\r\n          "type": "machine_max:item_storage",\r\n          "definition": "machine_max:default_trunk"\r\n        },\r\n        "glove_box": {\r\n          "type": "machine_max:item_storage",\r\n          "definition": "machine_max:glove_box"\r\n        },\r\n        "left_front_wheel_driver": {\r\n          "type": "machine_max:wheel_driver",\r\n          "definition": "machine_max:default_wheel_driver",\r\n          "connector": "wheel_front_left"\r\n        },\r\n        "right_front_wheel_driver": {\r\n          "type": "machine_max:wheel_driver",\r\n          "definition": "machine_max:default_wheel_driver",\r\n          "connector": "wheel_front_right"\r\n        }\r\n      },\r\n      "hydro_priority": 0,\r\n      "hydrodynamics": {\r\n        "hull_aero": {\r\n          "front_drag": [0.05, 0.6],\r\n          "back_drag": [0.1, 0.8],\r\n          "y_lift": 0.2\r\n        }\r\n      },\r\n      "description": "Complete sub-part example, includes mass center locator, hydrodynamics, connectors and comprehensive subsystem configuration (seats, storage, controller, engine, gearbox, etc.)"\r\n    }\r\n  ]\r\n}', "en_us/schemas/part/variant_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/part/variant_attr.json",\r
   "title": "Part Variant Attributes",\r
-  "description": "Defines a variant of a vehicle part, including the variant's appearance, models, sub-parts, etc. Supports multi-state mapping.",\r
+  "description": "Defines one variant of a vehicle part: its model, textures, animations, tags and sub-parts. A part definition either holds a single variant written inline or a map of named variants.",\r
   "type": "object",\r
   "properties": {\r
     "tags": {\r
@@ -735,43 +769,50 @@
         "$ref": "../base/resource_location.schema.json"\r
       },\r
       "default": [],\r
-      "description": "List of part tags, used for connection point matching and functional classification"\r
+      "description": "Part tags, used for connector matching (required_tags / acceptable_tags / forbidden_tags of the opposite connector) and functional classification."\r
     },\r
     "model": {\r
-      "$ref": "../base/resource_location.schema.json",\r
-      "description": "Model path configuration, \u65E0\u89C6\u5185\u5C42\u6587\u4EF6\u5939\u67B6\u6784\uFF0C\u4F8B\u5982machine_max:ae86_chassis.geo\u4F1A\u5728\u6240\u6709\u5185\u5BB9\u5305\u7684models/machine_max/part\u7684\u6240\u6709\u5B50\u76EE\u5F55\u4E2D\u4E2D\u5BFB\u627Eae86_chassis.geo.json"\r
+      "allOf": [\r
+        { "$ref": "../base/resource_location.schema.json" }\r
+      ],\r
+      "description": "Model path. Leading folders are ignored: machine_max:ae86_chassis.geo matches ae86_chassis.geo.json anywhere under models/ in the content pack."\r
     },\r
     "textures": {\r
       "oneOf": [\r
         {\r
-          "$ref": "../base/resource_location.schema.json",\r
-          "default": "minecraft:missingno",\r
-          "description": "\u5355\u4E00\u7EB9\u7406\uFF0C\u4F8B\u5982\\"machine_max:textures/part/ae86/ae86_armor.png\\"\u4F1A\u5C06\u5185\u5BB9\u5305\u76F8\u5E94\u8DEF\u5F84\u7684\u56FE\u50CF\u4F5C\u4E3A\u90E8\u4EF6\u7684\\"default\\"\u7EB9\u7406"\r
+          "allOf": [\r
+            { "$ref": "../base/resource_location.schema.json" }\r
+          ],\r
+          "description": "Single texture, registered under the name \\"default\\". For example \\"machine_max:textures/part/ae86/ae86_armor.png\\" becomes the part's \\"default\\" texture."\r
         },\r
         {\r
           "type": "object",\r
           "additionalProperties": {\r
             "$ref": "../base/resource_location.schema.json"\r
           },\r
-          "default": {\r
-            "default": "minecraft:missingno"\r
-          },\r
-          "description": "\u540D\u79F0\u5230\u7EB9\u7406\u5217\u8868\u7684\u6620\u5C04\uFF0C\u952E\u4E3A\u7EB9\u7406\u540D\u79F0\uFF0C\u503C\u4E3A\u7EB9\u7406\u8DEF\u5F84\u3002\u4F8B\u5982\uFF1A\\"textures\\": {\\n            \\"example_2\\": \\"machine_max:textures/part/texture_2.png\\"\\n          }\u5219\u4F1A\u5C06\u76F8\u5E94\u8DEF\u5F84\u7684\u56FE\u50CF\u4F5C\u4E3A\u90E8\u4EF6\u7684\\"example_2\\"\u7EB9\u7406\u3002"\r
+          "minProperties": 1,\r
+          "description": "Map of texture name to image path. The first entry is the texture the part starts with, by convention named \\"default\\"; another entry is selected by name, e.g. by a spray can."\r
         }\r
       ],\r
-      "default": {},\r
-      "description": "\u7EB9\u7406\u8DEF\u5F84\u914D\u7F6E\u3002"\r
+      "default": {\r
+        "default": "minecraft:missingno"\r
+      },\r
+      "description": "Texture configuration. The part fails to load when the resulting texture map is empty."\r
     },\r
     "animations": {\r
-      "$ref": "../base/resource_location.schema.json",\r
-      "default": {},\r
-      "description": "\u52A8\u753B\u8DEF\u5F84\uFF0C\u65E0\u89C6\u5185\u5C42\u6587\u4EF6\u5939\u67B6\u6784\uFF0C\u4F8B\u5982machine_max:ae86\u4F1A\u5728\u6240\u6709\u5185\u5BB9\u5305\u7684animations/machine_max/part/ae86\u4E2D\u7684\u6240\u6709\u52A8\u753Bjson\u4F5C\u4E3A\u6A21\u578B\u7684\u53EF\u7528\u52A8\u753B"\r
+      "allOf": [\r
+        { "$ref": "../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
+      "description": "Animation path. Leading folders are ignored: machine_max:ae86 matches every animation json under animations/ in the content pack whose folder is named ae86, and exposes them as available animations of the model."\r
     },\r
     "sub_parts": {\r
       "oneOf": [\r
         {\r
-          "$ref": "subpart/sub_part_attr.schema.json",\r
-          "description": "Single sub-part definition, using default sub-part name (\\"sub_part.machine_max.main\\")"\r
+          "allOf": [\r
+            { "$ref": "subpart/sub_part_attr.schema.json" }\r
+          ],\r
+          "description": "Single sub-part, registered under the default name \\"sub_part.machine_max.main\\"."\r
         },\r
         {\r
           "type": "object",\r
@@ -779,21 +820,18 @@
             "$ref": "subpart/sub_part_attr.schema.json"\r
           },\r
           "minProperties": 1,\r
-          "description": "Multi sub-part definition, key is sub-part name, value is the sub-part configuration"\r
+          "description": "Map of sub-part name to sub-part configuration."\r
         }\r
       ],\r
-      "description": "Sub-part definition, supports either a single sub-part (shorthand) or multiple sub-parts (key-value pairs). This is the smallest unit of part movement, each movable part of the part should be a sub-part"\r
+      "description": "Sub-part definition. A sub-part is the smallest unit of part movement, so every movable part of the model is a sub-part."\r
     }\r
   },\r
   "additionalProperties": false,\r
-  "required": ["models", "sub_parts"],\r
+  "required": ["model", "sub_parts"],\r
   "examples": [\r
     {\r
-      "models": "machine_max:ae86_chassis_all_terrain.geo",\r
-      "textures": [\r
-        "machine_max:textures/part/ae86_all_terrain_1.png",\r
-        "machine_max:textures/part/ae86_all_terrain_2.png"\r
-      ],\r
+      "model": "machine_max:ae86_chassis_all_terrain.geo",\r
+      "textures": "machine_max:textures/part/ae86_all_terrain.png",\r
       "animations": "machine_max:ae86",\r
       "tags": [],\r
       "sub_parts": {\r
@@ -802,8 +840,8 @@
           "mass": 1200.0,\r
           "hit_boxes": {\r
             "mmCollision_Box_Chassis": {\r
-              "name": "chassis",\r
               "type": "box",\r
+              "material": "machine_max:structural_steel",\r
               "thickness": 10\r
             }\r
           }\r
@@ -811,24 +849,12 @@
       }\r
     },\r
     {\r
-      "models": {\r
-        "default": "machine_max:tank_turret_normal.geo",\r
-        "broken": "machine_max:tank_turret_damaged.geo"\r
-      },\r
+      "model": "machine_max:tank_turret_normal.geo",\r
       "textures": {\r
-        "default": [\r
-          "machine_max:textures/part/tank_turret_1.png",\r
-          "machine_max:textures/part/tank_turret_2.png"\r
-        ],\r
-        "broken": [\r
-          "machine_max:textures/part/tank_turret_damaged_1.png",\r
-          "machine_max:textures/part/tank_turret_damaged_2.png"\r
-        ]\r
+        "default": "machine_max:textures/part/tank_turret_1.png",\r
+        "desert": "machine_max:textures/part/tank_turret_desert.png"\r
       },\r
-      "animations": {\r
-        "default": "machine_max:tank_turret_rotation",\r
-        "broken": "machine_max:tank_turret_broken"\r
-      },\r
+      "animations": "machine_max:tank_turret_rotation",\r
       "tags": ["machine_max:turret", "machine_max:rotatable"],\r
       "sub_parts": {\r
         "turret_base": {\r
@@ -836,8 +862,8 @@
           "mass": 800.0,\r
           "hit_boxes": {\r
             "mmCollision_Turret": {\r
-              "name": "turret",\r
               "type": "cylinder",\r
+              "material": "machine_max:rha",\r
               "thickness": 50\r
             }\r
           }\r
@@ -855,7 +881,7 @@
     "$schema": {\r
       "type": "string",\r
       "description": "JSON Schema reference path, used for editor intelligent suggestions and validation",\r
-      "default": "../../docs/zh_cn/schemas/part_definition_schema.json"\r
+      "default": "../../docs/en_us/schemas/part_definition_schema.json"\r
     },\r
     "icon": {\r
       "$ref": "base/resource_location.schema.json",\r
@@ -930,11 +956,8 @@
       "functional_threshold": 0.6,\r
       "share_durability": true,\r
       "variants": {\r
-        "models": "machine_max:ae86_chassis_all_terrain.geo",\r
-        "textures": [\r
-          "machine_max:textures/part/ae86_all_terrain_1.png",\r
-          "machine_max:textures/part/ae86_all_terrain_2.png"\r
-        ],\r
+        "model": "machine_max:ae86_chassis_all_terrain.geo",\r
+        "textures": "machine_max:textures/part/ae86_all_terrain.png",\r
         "animations": "machine_max:ae86",\r
         "tags": [],\r
         "sub_parts": {\r
@@ -958,8 +981,8 @@
       "vehicle_durability_rate": 0.9,\r
       "variants": {\r
         "red": {\r
-          "models": "machine_max:car_chassis.geo",\r
-          "textures": ["machine_max:textures/part/car_chassis_red.png"],\r
+          "model": "machine_max:car_chassis.geo",\r
+          "textures": "machine_max:textures/part/car_chassis_red.png",\r
           "sub_parts": {\r
             "chassis": {\r
               "durability": 400.0,\r
@@ -974,8 +997,8 @@
           }\r
         },\r
         "blue": {\r
-          "models": "machine_max:car_chassis.geo",\r
-          "textures": ["machine_max:textures/part/car_chassis_blue.png"],\r
+          "model": "machine_max:car_chassis.geo",\r
+          "textures": "machine_max:textures/part/car_chassis_blue.png",\r
           "sub_parts": {\r
             "chassis": {\r
               "durability": 400.0,\r
@@ -1325,31 +1348,43 @@
       "description": "Resource location of the subsystem model, pointing to the corresponding subsystem static attribute definition file."\r
     },\r
     "control_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "description": "Unified control signal output channel and targets. All controlled subsystems (engine/motor/gearbox/wheel) are discovered and signaled through this channel."\r
     },\r
     "speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "vehicle_speed": ["local", "global"] },\r
       "description": "Movement speed signal output channel and targets. Optional, by default sends movement speed (m/s) to the vehicle_speed channel of parts and vehicles."\r
     },\r
     "throttle_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "throttle": ["local", "global"] },\r
       "description": "Throttle signal output channel and targets. Optional, by default sends throttle [0,1] to the throttle channel of parts and vehicles."\r
     },\r
     "brake_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "brake": ["local", "global"] },\r
       "description": "Brake signal output channel and targets. Optional, by default sends brake level [0,1] to the brake channel of parts and vehicles."\r
     },\r
     "steering_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "steering": ["local", "global"] },\r
       "description": "Steering angle signal output channel and targets. Optional, by default sends steering level [-1,1] to the steering channel of parts and vehicles."\r
     },\r
     "handbrake_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "handbrake": ["local", "global"] },\r
       "description": "Handbrake switch signal output channel and targets. Optional, by default sends handbrake level [0,1] to the handbrake channel of parts and vehicles."\r
     }\r
@@ -1391,7 +1426,9 @@
       "description": "Power output target, can be any other subsystem name within this part, part connection point name, or 'part', or 'global'."\r
     },\r
     "speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "Engine speed signal output channel and targets. Optional, by default sends engine speed (rad/s) to the engine_speed channel of parts and vehicles."\r
     }\r
@@ -1425,7 +1462,9 @@
       "description": "Power output target, subsystem or part interface name."\r
     },\r
     "gear_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "gear": ["part", "global"] },\r
       "description": "Gear name output channel and targets. Optional, by default sends current gear name to the gear channel of parts and vehicles."\r
     }\r
@@ -1462,46 +1501,48 @@
       "definition": "machine_max:default_trunk"\r
     }\r
   ]\r
-}`, "en_us/schemas/subsystem/dynamic/launcher_dynamic_attr.schema.json": `{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://machine_max.io/schemas/subsystem/dynamic/launcher_dynamic_attr.json",
-  "title": "Launcher Subsystem Dynamic Attributes",
-  "description": "Dynamic attributes of the launcher subsystem, defining the muzzle locator, fire animation, and remaining ammo feedback outputs.",
-  "properties": {
-    "type": {
-      "type": "string",
-      "const": "machine_max:launcher",
-      "description": "Subsystem type, must be 'machine_max:launcher'."
-    },
-    "definition": {
-      "type": "string",
-      "description": "Resource location of the subsystem model, pointing to the corresponding launcher subsystem static attribute definition file."
-    },
-    "locator": {
-      "type": "string",
-      "description": "Muzzle locator name. Projectiles are fired from the world transform of this locator."
-    },
-    "fire_animation": {
-      "type": "string",
-      "default": "fire",
-      "description": "Animation name played on fire, keyed in the part's animation set. Defaults to 'fire'. Same-name animations restart from 0; multiple launchers on the same part must use different names to avoid interrupting each other. A missing animation triggers a single warning and disables the fire animation."
-    },
-    "ammo_outputs": {
-      "$ref": "../base/signal_targets.json",
-      "default": {},
-      "description": "Remaining ammo feedback output channels and targets. Optional."
-    }
-  },
-  "required": ["type", "definition", "locator"],
-  "additionalProperties": false,
-  "examples": [
-    {
-      "type": "machine_max:launcher",
-      "definition": "machine_max:2a42_launcher",
-      "locator": "2a42_launch_point",
-      "fire_animation": "recoil_2a42"
-    }
-  ]
+}`, "en_us/schemas/subsystem/dynamic/launcher_dynamic_attr.schema.json": `{\r
+  "$schema": "http://json-schema.org/draft-07/schema#",\r
+  "$id": "https://machine_max.io/schemas/subsystem/dynamic/launcher_dynamic_attr.json",\r
+  "title": "Launcher Subsystem Dynamic Attributes",\r
+  "description": "Dynamic attributes of the launcher subsystem, defining the muzzle locator, fire animation, and remaining ammo feedback outputs.",\r
+  "properties": {\r
+    "type": {\r
+      "type": "string",\r
+      "const": "machine_max:launcher",\r
+      "description": "Subsystem type, must be 'machine_max:launcher'."\r
+    },\r
+    "definition": {\r
+      "type": "string",\r
+      "description": "Resource location of the subsystem model, pointing to the corresponding launcher subsystem static attribute definition file."\r
+    },\r
+    "locator": {\r
+      "type": "string",\r
+      "description": "Muzzle locator name. Projectiles are fired from the world transform of this locator."\r
+    },\r
+    "fire_animation": {\r
+      "type": "string",\r
+      "default": "fire",\r
+      "description": "Animation name played on fire, keyed in the part's animation set. Defaults to 'fire'. Same-name animations restart from 0; multiple launchers on the same part must use different names to avoid interrupting each other. A missing animation triggers a single warning and disables the fire animation."\r
+    },\r
+    "ammo_outputs": {\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
+      "default": {},\r
+      "description": "Remaining ammo feedback output channels and targets. Optional."\r
+    }\r
+  },\r
+  "required": ["type", "definition", "locator"],\r
+  "additionalProperties": false,\r
+  "examples": [\r
+    {\r
+      "type": "machine_max:launcher",\r
+      "definition": "machine_max:2a42_launcher",\r
+      "locator": "2a42_launch_point",\r
+      "fire_animation": "recoil_2a42"\r
+    }\r
+  ]\r
 }`, "en_us/schemas/subsystem/dynamic/lighting_dynamic_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/dynamic/lighting_dynamic_attr.json",\r
@@ -1547,31 +1588,43 @@
       "description": "Resource location of the subsystem model, pointing to the corresponding subsystem static attribute definition file."\r
     },\r
     "control_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "description": "Unified control signal output channel and targets. All controlled subsystems (engine/motor/gearbox/wheel) are discovered and signaled through this channel."\r
     },\r
     "speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "vehicle_speed": ["local", "global"] },\r
       "description": "Movement speed signal output channel and targets. Optional, by default sends movement speed (m/s) to the vehicle_speed channel of parts and vehicles."\r
     },\r
     "throttle_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "throttle": ["local", "global"] },\r
       "description": "Throttle signal output channel and targets. Optional, by default sends throttle [0,1] to the throttle channel of parts and vehicles."\r
     },\r
     "brake_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "brake": ["local", "global"] },\r
       "description": "Brake signal output channel and targets. Optional, by default sends brake level [0,1] to the brake channel of parts and vehicles."\r
     },\r
     "steering_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "steering": ["local", "global"] },\r
       "description": "Steering angle signal output channel and targets. Optional, by default sends steering level [-1,1] to the steering channel of parts and vehicles."\r
     },\r
     "handbrake_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "handbrake": ["local", "global"] },\r
       "description": "Handbrake switch signal output channel and targets. Optional, by default sends handbrake level [0,1] to the handbrake channel of parts and vehicles."\r
     }\r
@@ -1611,7 +1664,9 @@
       "description": "Power output target, can be any other subsystem name within this part, part connection point name, or 'part', or 'global'."\r
     },\r
     "speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "Motor speed signal output channel and targets. Optional, by default sends motor speed (rad/s) to the motor_speed channel of parts and vehicles."\r
     }\r
@@ -1625,54 +1680,56 @@
       "speed_outputs": { "motor_speed": ["part", "global"] }\r
     }\r
   ]\r
-}`, "en_us/schemas/subsystem/dynamic/regen_loader_dynamic_attr.schema.json": `{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://machine_max.io/schemas/subsystem/dynamic/regen_loader_dynamic_attr.json",
-  "title": "Regen Loader Subsystem Instance Attributes",
-  "description": "Per-instance attributes of a regen loader subsystem, written in the subsystems block of a part JSON: belt composition, belt label and the ammo discovery channel. Attributes shared by every instance of a model (magazine capacity, regen rate, ...) live in the static attribute file referenced by definition and are not described here.",
-  "properties": {
-    "type": {
-      "type": "string",
-      "const": "machine_max:regen_loader",
-      "description": "Subsystem type. Must be 'machine_max:regen_loader'."
-    },
-    "definition": {
-      "type": "string",
-      "description": "Resource address of the subsystem model, pointing at the matching regen loader static attribute definition file."
-    },
-    "projectile_types": {
-      "type": "object",
-      "minProperties": 1,
-      "additionalProperties": { "type": "integer", "minimum": 1 },
-      "description": "Belt composition: keys are projectile resource addresses, values are how many rounds of that type the belt repeats. Each entry is expanded by count into an ordered belt ({\\"machine_max:7_62mm_ap\\": 3, \\"machine_max:7_62mm_tracer\\": 1} expands to AP, AP, AP, tracer), and firing consumes it cyclically in that order. Key order is belt order, so the first projectile decides the belt label when belt_label is left empty. The text shown for a projectile in the HUD comes from that projectile's own language key (spelled <namespace>.<path> from the projectile registry key, slashes in the path kept as-is), provided by the lang/<locale>.json of the pack that owns the projectile; when the key is missing the HUD shows the key itself, which surfaces the omission."
-    },
-    "belt_label": {
-      "type": "string",
-      "default": "",
-      "description": "Belt name shown on the weapon status HUD belt tab. When empty the display text of the belt's first projectile is used; when set, the string is used verbatim without a language file lookup, so one pack definition shows the same name in every language. Set it when the belt holds more than one projectile type or when the automatic value is not accurate enough. It affects the belt name only: the current-round slot still reports the projectile the belt pointer points at, and the field takes no part in ammo pool grouping, so changing it never affects ammo routing or already-loaded vehicles."
-    },
-    "discovery_outputs": {
-      "$ref": "../base/signal_targets.json",
-      "default": {},
-      "description": "Ammo discovery channels and targets, used by the loader to discover the ammo consumers on the same vehicle. Optional."
-    }
-  },
-  "required": ["type", "definition", "projectile_types"],
-  "additionalProperties": false,
-  "examples": [
-    {
-      "type": "machine_max:regen_loader",
-      "definition": "machine_max:2a42_regen_loader",
-      "projectile_types": {
-        "machine_max:30mm_ap": 1,
-        "machine_max:30mm_he": 1
-      },
-      "belt_label": "AP/HE",
-      "discovery_outputs": {
-        "ammo_2a42": ["global"]
-      }
-    }
-  ]
+}`, "en_us/schemas/subsystem/dynamic/regen_loader_dynamic_attr.schema.json": `{\r
+  "$schema": "http://json-schema.org/draft-07/schema#",\r
+  "$id": "https://machine_max.io/schemas/subsystem/dynamic/regen_loader_dynamic_attr.json",\r
+  "title": "Regen Loader Subsystem Instance Attributes",\r
+  "description": "Per-instance attributes of a regen loader subsystem, written in the subsystems block of a part JSON: belt composition, belt label and the ammo discovery channel. Attributes shared by every instance of a model (magazine capacity, regen rate, ...) live in the static attribute file referenced by definition and are not described here.",\r
+  "properties": {\r
+    "type": {\r
+      "type": "string",\r
+      "const": "machine_max:regen_loader",\r
+      "description": "Subsystem type. Must be 'machine_max:regen_loader'."\r
+    },\r
+    "definition": {\r
+      "type": "string",\r
+      "description": "Resource address of the subsystem model, pointing at the matching regen loader static attribute definition file."\r
+    },\r
+    "projectile_types": {\r
+      "type": "object",\r
+      "minProperties": 1,\r
+      "additionalProperties": { "type": "integer", "minimum": 1 },\r
+      "description": "Belt composition: keys are projectile resource addresses, values are how many rounds of that type the belt repeats. Each entry is expanded by count into an ordered belt ({\\"machine_max:7_62mm_ap\\": 3, \\"machine_max:7_62mm_tracer\\": 1} expands to AP, AP, AP, tracer), and firing consumes it cyclically in that order. Key order is belt order, so the first projectile decides the belt label when belt_label is left empty. The text shown for a projectile in the HUD comes from that projectile's own language key (spelled <namespace>.<path> from the projectile registry key, slashes in the path kept as-is), provided by the lang/<locale>.json of the pack that owns the projectile; when the key is missing the HUD shows the key itself, which surfaces the omission."\r
+    },\r
+    "belt_label": {\r
+      "type": "string",\r
+      "default": "",\r
+      "description": "Belt name shown on the weapon status HUD belt tab. When empty the display text of the belt's first projectile is used; when set, the string is used verbatim without a language file lookup, so one pack definition shows the same name in every language. Set it when the belt holds more than one projectile type or when the automatic value is not accurate enough. It affects the belt name only: the current-round slot still reports the projectile the belt pointer points at, and the field takes no part in ammo pool grouping, so changing it never affects ammo routing or already-loaded vehicles."\r
+    },\r
+    "discovery_outputs": {\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
+      "default": {},\r
+      "description": "Ammo discovery channels and targets, used by the loader to discover the ammo consumers on the same vehicle. Optional."\r
+    }\r
+  },\r
+  "required": ["type", "definition", "projectile_types"],\r
+  "additionalProperties": false,\r
+  "examples": [\r
+    {\r
+      "type": "machine_max:regen_loader",\r
+      "definition": "machine_max:2a42_regen_loader",\r
+      "projectile_types": {\r
+        "machine_max:30mm_ap": 1,\r
+        "machine_max:30mm_he": 1\r
+      },\r
+      "belt_label": "AP/HE",\r
+      "discovery_outputs": {\r
+        "ammo_2a42": ["global"]\r
+      }\r
+    }\r
+  ]\r
 }`, "en_us/schemas/subsystem/dynamic/seat_dynamic_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/dynamic/seat_dynamic_attr.json",\r
@@ -1699,12 +1756,16 @@
       "description": "Resource location of the control group preset, defining the available control channel mappings for this seat. e.g. machine_max:default_driver."\r
     },\r
     "passenger_num_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "Passenger count signal output channel and targets."\r
     },\r
     "camera_discovery_targets": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "Camera discovery handshake configuration. Subsystems on these channels will receive handshake signals to discover available cameras on this vehicle. e.g. {\\"gunner_optics\\": [\\"gunner_primary_sight\\"]}"\r
     },\r
@@ -1772,11 +1833,15 @@
       "description": "Resource location of the subsystem model, pointing to the corresponding subsystem static attribute definition file."\r
     },\r
     "control_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "description": "Unified control signal output channel and targets. Engines, motors, gearboxes and track drives are discovered through this map."\r
     },\r
     "speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {\r
         "vehicle_speed": [\r
           "local",\r
@@ -1830,7 +1895,9 @@
       "description": "Name of the body-side connector that joins the driven wheel."\r
     },\r
     "speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {\r
         "track_speed": [\r
           "local",\r
@@ -1840,7 +1907,9 @@
       "description": "Track linear speed output (m/s, forward positive). Optional."\r
     },\r
     "force_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {\r
         "track_force": [\r
           "local",\r
@@ -1890,7 +1959,9 @@
       "description": "Resource location of the subsystem model, pointing to the corresponding subsystem static attribute definition file."\r
     },\r
     "power_outputs": {\r
-      "$ref": "../base/power_outputs.schema.json",\r
+      "allOf": [\r
+        { "$ref": "../base/power_outputs.schema.json" }\r
+      ],\r
       "description": "Power output targets and reduction ratios."\r
     }\r
   },\r
@@ -1927,7 +1998,9 @@
       "description": "Name of the controlled AdvancedConnector. The turret driver controls turret rotation through this connector's New6Dof joint."\r
     },\r
     "rotation_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "Current joint angle feedback output channels and targets. Optional, sends current yaw/pitch angles (radians) to specified channels."\r
     }\r
@@ -1959,9 +2032,32 @@
       "description": "Resource location of the subsystem model, pointing to the corresponding subsystem static attribute definition file."\r
     },\r
     "control_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "Control signal output channels and target lists. The weapon controller sends control signals to turret drivers and launchers through these channels, and uses them for handshake discovery of subordinate subsystems within the same vehicle."\r
+    },\r
+    "first_hud_layout": {\r
+      "allOf": [\r
+        { "$ref": "../../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
+      "description": "HUD layout used by the first-person view; machine_max:empty shows no HUD."\r
+    },\r
+    "third_hud_layout": {\r
+      "allOf": [\r
+        { "$ref": "../../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
+      "description": "HUD layout used by the third-person view; machine_max:empty shows no HUD."\r
+    },\r
+    "scope_hud_layout": {\r
+      "allOf": [\r
+        { "$ref": "../../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
+      "description": "HUD layout used by the scope view; machine_max:empty shows no HUD."\r
     }\r
   },\r
   "required": ["type", "definition"],\r
@@ -1998,12 +2094,16 @@
       "description": "Name of the controlled connection point."\r
     },\r
     "roll_speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "Rolling speed signal output channel and targets."\r
     },\r
     "steering_angle_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "Steering angle signal output channel and targets."\r
     }\r
@@ -2058,8 +2158,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is deactivated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2067,7 +2179,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2141,11 +2255,6 @@
       "default": false,\r
       "description": "Whether horizontal stabilization is enabled (compensates for vehicle yaw)."\r
     },\r
-    "base_fov": {\r
-      "type": "number",\r
-      "default": 40.0,\r
-      "description": "Base field of view in degrees, i.e., the FOV at 1x zoom."\r
-    },\r
     "base_zoom": {\r
       "type": "number",\r
       "default": 1.0,\r
@@ -2172,8 +2281,11 @@
       "description": "Yaw angle span limit in degrees, the actual range is [center - limit/2, center + limit/2]."\r
     },\r
     "scope_hud_layout": {\r
-      "$ref": "../../base/resource_location.schema.json",\r
-      "description": "\u70AE\u955C\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u70AE\u955C\u4E0D\u663E\u793A\u8BE5\u5E03\u5C40\u63D0\u4F9B\u7684 HUD\u3002"\r
+      "allOf": [\r
+        { "$ref": "../../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
+      "description": "HUD layout resource location: a file under the content pack's hud_layouts/ directory, keyed as <namespace>:<relative path>. When absent, the scope view shows no HUD."\r
     },\r
     "tracking_target_inputs": {\r
       "type": "array",\r
@@ -2204,7 +2316,9 @@
       "type": "object",\r
       "properties": {\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the camera is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2212,7 +2326,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the camera is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2220,7 +2336,9 @@
           }\r
         },\r
         "on_deactivate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the camera is deactivated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2239,7 +2357,6 @@
     {\r
       "type": "machine_max:camera",\r
       "basic_durability": 15.0,\r
-      "base_fov": 40.0,\r
       "base_zoom": 1.0,\r
       "max_zoom": 5.0,\r
       "discovery_inputs": [\r
@@ -2385,8 +2502,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is deactivated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2394,7 +2523,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2402,7 +2533,9 @@
           }\r
         },\r
         "handbrake_on": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event for handbrake engagement.",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.car_controller.handbrake_on",\r
@@ -2410,7 +2543,9 @@
           }\r
         },\r
         "handbrake_off": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event for handbrake disengagement.",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.car_controller.handbrake_off",\r
@@ -2580,7 +2715,9 @@
       "type": "object",\r
       "properties": {\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2588,7 +2725,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2596,7 +2735,9 @@
           }\r
         },\r
         "on_deactivate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is deactivated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2696,8 +2837,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is deactivated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2705,7 +2858,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2713,7 +2868,9 @@
           }\r
         },\r
         "clutch_in": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event for clutch engagement.",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.gearbox.clutch_in",\r
@@ -2721,7 +2878,9 @@
           }\r
         },\r
         "clutch_out": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event for clutch disengagement.",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.gearbox.clutch_out",\r
@@ -2729,7 +2888,9 @@
           }\r
         },\r
         "gear_up": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event for shifting up.",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.gearbox.up.light",\r
@@ -2737,7 +2898,9 @@
           }\r
         },\r
         "gear_down": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event for shifting down.",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.gearbox.down.light",\r
@@ -2843,8 +3006,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is deactivated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2852,7 +3027,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -2874,259 +3051,275 @@
       "columns": 9\r
     }\r
   ]\r
-}`, "en_us/schemas/subsystem/static/launcher_static_attr.schema.json": `{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://machine_max.io/schemas/subsystem/static/launcher_static_attr.json",
-  "title": "Launcher Subsystem Static Attributes",
-  "description": "Static attributes of the launcher subsystem, containing configuration for barrel, breech, and capacitor modules.",
-  "properties": {
-    "$schema": {
-      "type": "string",
-      "description": "JSON Schema reference path, used for editor intelligent suggestions and validation",
-      "default": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json"
-    },
-    "type": {
-      "type": "string",
-      "const": "machine_max:launcher",
-      "description": "Subsystem type, must be 'machine_max:launcher'."
-    },
-    "basic_durability": {
-      "type": "number",
-      "minimum": 0,
-      "default": 20.0,
-      "description": "Subsystem basic durability. Becomes paralyzed at 0, restores functionality when repaired to 30%."
-    },
-    "pass_damage": {
-      "type": "boolean",
-      "default": true,
-      "description": "Whether to pass damage to the subsystem holder. If true, damage received by the subsystem is transferred to the part."
-    },
-    "limit_damage": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether to limit damage transfer to remaining durability. e.g. 40 damage, 20 remaining, only 20 transfers."
-    },
-    "hidden": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether to hide the subsystem in HUD, commonly used for non-functional parts that only provide damage differentiation."
-    },
-    "control_inputs": {
-      "type": "array",
-      "items": { "type": "string" },
-      "default": ["weapon_control"],
-      "description": "Fire signal input channel list, ordered by priority (highest first). Naming follows a 'class + optional model' convention: base channel is weapon.<class> (e.g. weapon.autocannon, weapon.mg machine gun, weapon.gun direct-fire cannon), optional model channel is weapon.<class>.<model> (e.g. weapon.autocannon.2a42) for dedicated fire-control computers. List order determines priority; the main/secondary weapon role is determined by the seat's control group wiring, not reflected in the channel name."
-    },
-    "ammo_inputs": {
-      "type": "array",
-      "items": { "type": "string" },
-      "default": [],
-      "description": "Ammunition supply discovery channel list. Empty list means universal receive mode (accepts any channel signal)."
-    },
-    "sounds": {
-      "type": "object",
-      "properties": {
-        "on_destroyed": {
-          "$ref": "../../base/sound_event.schema.json",
-          "description": "Sound event when the subsystem is destroyed.",
-          "default": {
-            "sound_id": "machine_max:empty_sound",
-            "range": 16
-          }
-        },
-        "on_activate": {
-          "$ref": "../../base/sound_event.schema.json",
-          "description": "Sound event when the subsystem is activated.",
-          "default": {
-            "sound_id": "machine_max:empty_sound",
-            "range": 16
-          }
-        },
-        "dry_fire": {
-          "$ref": "../../base/sound_event.schema.json",
-          "description": "Dry fire sound event (trigger pulled but no ammunition).",
-          "default": {
-            "sound_id": "machine_max:subsystem.launcher.dry_fire",
-            "range": 16
-          }
-        }
-      },
-      "additionalProperties": false,
-      "description": "Launcher sound attributes, including basic sounds and dry fire sound."
-    },
-    "barrel": {
-      "type": "object",
-      "properties": {
-        "durability_weight": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "Module durability weight. Total subsystem durability is distributed among modules proportionally to their weight."
-        },
-        "decay_power": {
-          "type": "number",
-          "minimum": 0,
-          "default": 2.0,
-          "description": "Barrel decay curve exponent. Higher values mean shallower initial performance degradation and steeper decline at low durability."
-        },
-        "damaged_spread": {
-          "type": "number",
-          "minimum": 0,
-          "default": 2.0,
-          "description": "Damage limit spread multiplier. Spread multiplier when durability approaches 0 but is not yet destroyed."
-        },
-        "destroyed_spread": {
-          "type": "number",
-          "minimum": 0,
-          "default": 8.0,
-          "description": "Destroyed spread multiplier. Spread multiplier when durability reaches 0 (cliff effect)."
-        },
-        "damaged_muzzle_velocity": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1.0,
-          "default": 0.7,
-          "description": "Damage limit muzzle velocity multiplier. Velocity ratio when durability approaches 0 but is not yet destroyed."
-        },
-        "destroyed_muzzle_velocity": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1.0,
-          "default": 0.1,
-          "description": "Destroyed muzzle velocity multiplier. Velocity ratio when durability reaches 0."
-        },
-        "velocity_multiplier": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "Velocity multiplier, applied first (determined by barrel length/rifling)."
-        },
-        "velocity_bonus": {
-          "type": "number",
-          "default": 0,
-          "description": "Velocity linear bonus (m/s)."
-        },
-        "horizontal_accuracy_multiplier": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "Horizontal accuracy multiplier. 1.0 = no change from projectile's default horizontal accuracy."
-        },
-        "vertical_accuracy_multiplier": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "Vertical accuracy multiplier. 1.0 = no change from projectile's default vertical accuracy."
-        },
-        "recoil_multiplier": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.5,
-          "description": "Recoil multiplier. Total recoil impulse = projectile total momentum \xD7 this value. 1.0 = projectile only; default 1.5 \u2248 projectile + propellant gas (muzzle blast); muzzle brake < 1.0; recoilless \u2248 0."
-        }
-      },
-      "additionalProperties": false,
-      "description": "Barrel module attributes - defines baseline accuracy, muzzle velocity, recoil, and damage/destroyed decay."
-    },
-    "breech": {
-      "type": "object",
-      "properties": {
-        "durability_weight": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "Module durability weight. Total subsystem durability is distributed among modules proportionally to their weight."
-        },
-        "fire_rate": {
-          "type": "number",
-          "minimum": 0,
-          "description": "Fire rate (RPM)."
-        },
-        "required_tags": {
-          "type": "array",
-          "items": { "type": "string" },
-          "default": [],
-          "description": "Ammunition tags that must all be present. Empty list means no requirement."
-        },
-        "acceptable_tags": {
-          "type": "array",
-          "items": { "type": "string" },
-          "default": [],
-          "description": "Ammunition tags where at least one must be present. Empty list means any is accepted."
-        },
-        "forbidden_tags": {
-          "type": "array",
-          "items": { "type": "string" },
-          "default": [],
-          "description": "Ammunition tags that must not be present. Empty list means no restriction."
-        }
-      },
-      "additionalProperties": false,
-      "description": "Breech module attributes - defines fire rate and ammunition compatibility constraints."
-    },
-    "capacitor": {
-      "type": "object",
-      "properties": {
-        "durability_weight": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "Module durability weight. Total subsystem durability is distributed among modules proportionally to their weight."
-        },
-        "decay_power": {
-          "type": "number",
-          "minimum": 0,
-          "default": 2.0,
-          "description": "Capacitor decay curve exponent."
-        },
-        "damaged_charge_rate": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1.0,
-          "default": 0.5,
-          "description": "Damage limit charge rate multiplier."
-        },
-        "destroyed_charge_rate": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1.0,
-          "default": 0.0,
-          "description": "Destroyed charge rate multiplier."
-        },
-        "damaged_max_power": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1.0,
-          "default": 0.7,
-          "description": "Damage limit max power multiplier."
-        },
-        "destroyed_max_power": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1.0,
-          "default": 0.0,
-          "description": "Destroyed max power multiplier."
-        }
-      },
-      "additionalProperties": false,
-      "description": "Capacitor module attributes (optional, used for railgun-style charge weapons)."
-    }
-  },
-  "required": ["type"],
-  "additionalProperties": false,
-  "examples": [
-    {
-      "type": "machine_max:launcher",
-      "description": "Minimal example - required fields only, uses all defaults"
-    },
-    {
-      "type": "machine_max:launcher",
-      "basic_durability": 80,
-      "control_inputs": ["weapon_control"],
-      "ammo_inputs": ["ammo_main"],
-      "description": "Standard example - basic launcher configuration"
-    }
-  ]
+}`, "en_us/schemas/subsystem/static/launcher_static_attr.schema.json": `{\r
+  "$schema": "http://json-schema.org/draft-07/schema#",\r
+  "$id": "https://machine_max.io/schemas/subsystem/static/launcher_static_attr.json",\r
+  "title": "Launcher Subsystem Static Attributes",\r
+  "description": "Static attributes of the launcher subsystem, containing configuration for barrel, breech, and capacitor modules.",\r
+  "properties": {\r
+    "$schema": {\r
+      "type": "string",\r
+      "description": "JSON Schema reference path, used for editor intelligent suggestions and validation",\r
+      "default": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json"\r
+    },\r
+    "type": {\r
+      "type": "string",\r
+      "const": "machine_max:launcher",\r
+      "description": "Subsystem type, must be 'machine_max:launcher'."\r
+    },\r
+    "basic_durability": {\r
+      "type": "number",\r
+      "minimum": 0,\r
+      "default": 20.0,\r
+      "description": "Subsystem basic durability. Becomes paralyzed at 0, restores functionality when repaired to 30%."\r
+    },\r
+    "pass_damage": {\r
+      "type": "boolean",\r
+      "default": true,\r
+      "description": "Whether to pass damage to the subsystem holder. If true, damage received by the subsystem is transferred to the part."\r
+    },\r
+    "limit_damage": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "Whether to limit damage transfer to remaining durability. e.g. 40 damage, 20 remaining, only 20 transfers."\r
+    },\r
+    "hidden": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "Whether to hide the subsystem in HUD, commonly used for non-functional parts that only provide damage differentiation."\r
+    },\r
+    "control_inputs": {\r
+      "type": "array",\r
+      "items": { "type": "string" },\r
+      "default": ["weapon_control"],\r
+      "description": "Fire signal input channel list, ordered by priority (highest first). Naming follows a 'class + optional model' convention: base channel is weapon.<class> (e.g. weapon.autocannon, weapon.mg machine gun, weapon.gun direct-fire cannon), optional model channel is weapon.<class>.<model> (e.g. weapon.autocannon.2a42) for dedicated fire-control computers. List order determines priority; the main/secondary weapon role is determined by the seat's control group wiring, not reflected in the channel name."\r
+    },\r
+    "ammo_inputs": {\r
+      "type": "array",\r
+      "items": { "type": "string" },\r
+      "default": [],\r
+      "description": "Ammunition supply discovery channel list. Empty list means universal receive mode (accepts any channel signal)."\r
+    },\r
+    "sounds": {\r
+      "type": "object",\r
+      "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is deactivated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
+        "on_destroyed": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is destroyed.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
+        "on_activate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is activated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
+        "dry_fire": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Dry fire sound event (trigger pulled but no ammunition).",\r
+          "default": {\r
+            "sound_id": "machine_max:subsystem.launcher.dry_fire",\r
+            "range": 16\r
+          }\r
+        }\r
+      },\r
+      "additionalProperties": false,\r
+      "description": "Launcher sound attributes, including basic sounds and dry fire sound."\r
+    },\r
+    "barrel": {\r
+      "type": "object",\r
+      "properties": {\r
+        "durability_weight": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.0,\r
+          "description": "Module durability weight. Total subsystem durability is distributed among modules proportionally to their weight."\r
+        },\r
+        "decay_power": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 2.0,\r
+          "description": "Barrel decay curve exponent. Higher values mean shallower initial performance degradation and steeper decline at low durability."\r
+        },\r
+        "damaged_spread": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 2.0,\r
+          "description": "Damage limit spread multiplier. Spread multiplier when durability approaches 0 but is not yet destroyed."\r
+        },\r
+        "destroyed_spread": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 8.0,\r
+          "description": "Destroyed spread multiplier. Spread multiplier when durability reaches 0 (cliff effect)."\r
+        },\r
+        "damaged_muzzle_velocity": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "maximum": 1.0,\r
+          "default": 0.7,\r
+          "description": "Damage limit muzzle velocity multiplier. Velocity ratio when durability approaches 0 but is not yet destroyed."\r
+        },\r
+        "destroyed_muzzle_velocity": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "maximum": 1.0,\r
+          "default": 0.1,\r
+          "description": "Destroyed muzzle velocity multiplier. Velocity ratio when durability reaches 0."\r
+        },\r
+        "velocity_multiplier": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.0,\r
+          "description": "Velocity multiplier, applied first (determined by barrel length/rifling)."\r
+        },\r
+        "velocity_bonus": {\r
+          "type": "number",\r
+          "default": 0,\r
+          "description": "Velocity linear bonus (m/s)."\r
+        },\r
+        "horizontal_accuracy_multiplier": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.0,\r
+          "description": "Horizontal accuracy multiplier. 1.0 = no change from projectile's default horizontal accuracy."\r
+        },\r
+        "vertical_accuracy_multiplier": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.0,\r
+          "description": "Vertical accuracy multiplier. 1.0 = no change from projectile's default vertical accuracy."\r
+        },\r
+        "recoil_multiplier": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.5,\r
+          "description": "Recoil multiplier. Total recoil impulse = projectile total momentum \xD7 this value. 1.0 = projectile only; default 1.5 \u2248 projectile + propellant gas (muzzle blast); muzzle brake < 1.0; recoilless \u2248 0."\r
+        }\r
+      },\r
+      "additionalProperties": false,\r
+      "description": "Barrel module attributes - defines baseline accuracy, muzzle velocity, recoil, and damage/destroyed decay."\r
+    },\r
+    "breech": {\r
+      "type": "object",\r
+      "properties": {\r
+        "durability_weight": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.0,\r
+          "description": "Module durability weight. Total subsystem durability is distributed among modules proportionally to their weight."\r
+        },\r
+        "fire_rate": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "description": "Fire rate (RPM)."\r
+        },\r
+        "required_tags": {\r
+          "type": "array",\r
+          "items": { "type": "string" },\r
+          "default": [],\r
+          "description": "Ammunition tags that must all be present. Empty list means no requirement."\r
+        },\r
+        "acceptable_tags": {\r
+          "type": "array",\r
+          "items": { "type": "string" },\r
+          "default": [],\r
+          "description": "Ammunition tags where at least one must be present. Empty list means any is accepted."\r
+        },\r
+        "forbidden_tags": {\r
+          "type": "array",\r
+          "items": { "type": "string" },\r
+          "default": [],\r
+          "description": "Ammunition tags that must not be present. Empty list means no restriction."\r
+        }\r
+      },\r
+      "additionalProperties": false,\r
+      "description": "Breech module attributes - defines fire rate and ammunition compatibility constraints."\r
+    },\r
+    "capacitor": {\r
+      "type": "object",\r
+      "properties": {\r
+        "durability_weight": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.0,\r
+          "description": "Module durability weight. Total subsystem durability is distributed among modules proportionally to their weight."\r
+        },\r
+        "decay_power": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 2.0,\r
+          "description": "Capacitor decay curve exponent."\r
+        },\r
+        "damaged_charge_rate": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "maximum": 1.0,\r
+          "default": 0.5,\r
+          "description": "Damage limit charge rate multiplier."\r
+        },\r
+        "destroyed_charge_rate": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "maximum": 1.0,\r
+          "default": 0.0,\r
+          "description": "Destroyed charge rate multiplier."\r
+        },\r
+        "damaged_max_power": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "maximum": 1.0,\r
+          "default": 0.7,\r
+          "description": "Damage limit max power multiplier."\r
+        },\r
+        "destroyed_max_power": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "maximum": 1.0,\r
+          "default": 0.0,\r
+          "description": "Destroyed max power multiplier."\r
+        }\r
+      },\r
+      "additionalProperties": false,\r
+      "description": "Capacitor module attributes (optional, used for railgun-style charge weapons)."\r
+    }\r
+  },\r
+  "required": ["type"],\r
+  "additionalProperties": false,\r
+  "examples": [\r
+    {\r
+      "type": "machine_max:launcher",\r
+      "description": "Minimal example - required fields only, uses all defaults"\r
+    },\r
+    {\r
+      "type": "machine_max:launcher",\r
+      "basic_durability": 80,\r
+      "control_inputs": ["weapon_control"],\r
+      "ammo_inputs": ["ammo_main"],\r
+      "description": "Standard example - basic launcher configuration"\r
+    }\r
+  ]\r
 }`, "en_us/schemas/subsystem/static/lighting_static_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/static/lighting_static_attr.json",\r
@@ -3197,6 +3390,43 @@
       "maximum": 179,\r
       "default": 24,\r
       "description": "Full directional beam cone angle in degrees."\r
+    },\r
+    "sounds": {\r
+      "type": "object",\r
+      "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is deactivated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
+        "on_destroyed": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is destroyed.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
+        "on_activate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is activated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        }\r
+      },\r
+      "additionalProperties": false,\r
+      "description": "Subsystem sound configuration."\r
     }\r
   },\r
   "required": ["type"],\r
@@ -3253,7 +3483,7 @@
     "min_steering_radius": {\r
       "type": "number",\r
       "minimum": 0,\r
-      "default": 3.0,\r
+      "default": 5.0,\r
       "description": "Minimum steering radius, in meters. Used for steering limits at low speeds and when handbrake is applied."\r
     },\r
     "lateral_acceleration": {\r
@@ -3325,7 +3555,7 @@
     "control_inputs": {\r
       "type": "array",\r
       "items": { "type": "string" },\r
-      "default": ["move_input"],\r
+      "default": ["move_input_p0", "move_input_p1", "move_input_p2", "move_input_p3", "move_input"],\r
       "description": "List of control input signal keys, from highest to lowest priority."\r
     },\r
     "max_angle": {\r
@@ -3352,8 +3582,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is deactivated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -3361,7 +3603,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -3403,9 +3647,6 @@
         "60": 2.5\r
       },\r
       "manual_gear_shift": true,\r
-      "abs_enabled": true,\r
-      "abs_target_slip_ratio": 0.15,\r
-      "abs_wheel_radius": 0.3,\r
       "max_angle": 35.0,\r
       "parking_angle": -3.0,\r
       "correction_force_multiplier": 0.8\r
@@ -3506,7 +3747,9 @@
       "type": "object",\r
       "properties": {\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -3514,7 +3757,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -3522,7 +3767,9 @@
           }\r
         },\r
         "on_deactivate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is deactivated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -3557,77 +3804,84 @@
       "generator_efficiency": 0.9\r
     }\r
   ]\r
-}`, "en_us/schemas/subsystem/static/regen_loader_static_attr.schema.json": `{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://machine_max.io/schemas/subsystem/static/regen_loader_static_attr.json",
-  "title": "Regen Loader Subsystem Static Attributes",
-  "description": "Static attributes of the regen loader subsystem, defining magazine capacity, regen rate, energy cost per round, and ammo supply behavior. Used for energy weapons (lasers, blasters) and arcade-style regenerating weapons (missile cooldown regen).Belt composition (projectile_types) and the belt label (belt_label) are per-instance fields written in the subsystems block of a part JSON; see subsystem/dynamic/regen_loader_dynamic_attr.schema.json. They do not belong in this file.",
-  "properties": {
-    "$schema": {
-      "type": "string",
-      "description": "JSON Schema reference path, used for editor intelligent suggestions and validation",
-      "default": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json"
-    },
-    "type": {
-      "type": "string",
-      "const": "machine_max:regen_loader",
-      "description": "Subsystem type, must be 'machine_max:regen_loader'."
-    },
-    "basic_durability": { "type": "number", "minimum": 0, "default": 20.0, "description": "Subsystem basic durability. Becomes paralyzed at 0, restores functionality when repaired to 30%." },
-    "pass_damage": { "type": "boolean", "default": true, "description": "Whether to pass damage to the subsystem holder. If true, damage received by the subsystem is transferred to the part." },
-    "limit_damage": { "type": "boolean", "default": false, "description": "Whether to limit damage transfer to remaining durability. e.g. 40 damage, 20 remaining, only 20 transfers." },
-    "hidden": { "type": "boolean", "default": false, "description": "Whether to hide the subsystem in HUD, commonly used for non-functional parts that only provide damage differentiation." },
-    "magazine_capacity": { "type": "integer", "minimum": 1, "description": "Magazine capacity, maximum number of rounds that can be stored." },
-    "regen_per_minute": { "type": "number", "minimum": 0, "default": 0, "description": "Regeneration rate. regenRoundByRound=true: rounds recovered per minute; regenRoundByRound=false: full reload cycles per minute. 0 = no auto-regeneration (static magazine)." },
-    "regen_round_by_round": { "type": "boolean", "default": true, "description": "Regeneration mode. true = round-by-round (regenerates immediately after each round consumed); false = batch reload (replenishes entire magazine when empty)." },
-    "energy_cost_per_round": { "type": "number", "minimum": 0, "default": 0, "description": "Energy consumed per round regenerated (Joules). 0 = free regeneration." },
-    "reload_time": {
-      "type": "number",
-      "minimum": 0,
-      "description": "Time to deliver one round to a consumer (in seconds). In regen mode, the delay from round birth to availability."
-    },
-    "can_supply_multiple": { "type": "boolean", "default": false, "description": "Whether multiple consumers can receive ammo from this loader simultaneously." },
-    "regen_delay": { "type": "number", "minimum": 0, "default": 0, "description": "Delay (in seconds) after delivering a round before regeneration starts. 0 = regen starts immediately (produce while supply)." },
-    "sounds": {
-      "type": "object",
-      "properties": {
-        "on_destroyed": { "$ref": "../../base/sound_event.schema.json", "description": "Sound event when the subsystem is destroyed.", "default": { "sound_id": "machine_max:empty_sound", "range": 16 } },
-        "on_activate": { "$ref": "../../base/sound_event.schema.json", "description": "Sound event when the subsystem is activated.", "default": { "sound_id": "machine_max:empty_sound", "range": 16 } }
-      },
-      "additionalProperties": false,
-      "description": "Regen loader subsystem sound configuration."
-    }
-  },
-  "required": ["type", "magazine_capacity", "reload_time"],
-  "additionalProperties": false,
-  "examples": [
-    { "type": "machine_max:regen_loader", "magazine_capacity": 100, "reload_time": 0,
-      "description": "Minimal example - required fields only"
-    },
-    {
-      "type": "machine_max:regen_loader",
-      "basic_durability": 40,
-      "magazine_capacity": 150,
-      "regen_per_minute": 800,
-      "regen_round_by_round": true,
-      "energy_cost_per_round": 0,
-      "reload_time": 0,
-      "can_supply_multiple": false,
-      "regen_delay": 0.5,
-      "description": "Round-by-round regen example - MG34 machine gun, 150-round magazine, 800 rounds/min, with 0.5s regen delay"
-    },
-    {
-      "type": "machine_max:regen_loader",
-      "basic_durability": 80,
-      "magazine_capacity": 40,
-      "regen_per_minute": 10,
-      "regen_round_by_round": true,
-      "energy_cost_per_round": 0,
-      "reload_time": 2.0,
-      "can_supply_multiple": false,
-      "description": "Slow regen example - 50mm cannon, 40 rounds, 10 rounds/min, with reload time delay"
-    }
-  ]
+}`, "en_us/schemas/subsystem/static/regen_loader_static_attr.schema.json": `{\r
+  "$schema": "http://json-schema.org/draft-07/schema#",\r
+  "$id": "https://machine_max.io/schemas/subsystem/static/regen_loader_static_attr.json",\r
+  "title": "Regen Loader Subsystem Static Attributes",\r
+  "description": "Static attributes of the regen loader subsystem, defining magazine capacity, regen rate, energy cost per round, and ammo supply behavior. Used for energy weapons (lasers, blasters) and arcade-style regenerating weapons (missile cooldown regen).Belt composition (projectile_types) and the belt label (belt_label) are per-instance fields written in the subsystems block of a part JSON; see subsystem/dynamic/regen_loader_dynamic_attr.schema.json. They do not belong in this file.",\r
+  "properties": {\r
+    "$schema": {\r
+      "type": "string",\r
+      "description": "JSON Schema reference path, used for editor intelligent suggestions and validation",\r
+      "default": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json"\r
+    },\r
+    "type": {\r
+      "type": "string",\r
+      "const": "machine_max:regen_loader",\r
+      "description": "Subsystem type, must be 'machine_max:regen_loader'."\r
+    },\r
+    "basic_durability": { "type": "number", "minimum": 0, "default": 20.0, "description": "Subsystem basic durability. Becomes paralyzed at 0, restores functionality when repaired to 30%." },\r
+    "pass_damage": { "type": "boolean", "default": true, "description": "Whether to pass damage to the subsystem holder. If true, damage received by the subsystem is transferred to the part." },\r
+    "limit_damage": { "type": "boolean", "default": false, "description": "Whether to limit damage transfer to remaining durability. e.g. 40 damage, 20 remaining, only 20 transfers." },\r
+    "hidden": { "type": "boolean", "default": false, "description": "Whether to hide the subsystem in HUD, commonly used for non-functional parts that only provide damage differentiation." },\r
+    "magazine_capacity": { "type": "integer", "minimum": 1, "description": "Magazine capacity, maximum number of rounds that can be stored." },\r
+    "regen_per_minute": { "type": "number", "minimum": 0, "default": 0, "description": "Regeneration rate. regenRoundByRound=true: rounds recovered per minute; regenRoundByRound=false: full reload cycles per minute. 0 = no auto-regeneration (static magazine)." },\r
+    "regen_round_by_round": { "type": "boolean", "default": true, "description": "Regeneration mode. true = round-by-round (regenerates immediately after each round consumed); false = batch reload (replenishes entire magazine when empty)." },\r
+    "energy_cost_per_round": { "type": "number", "minimum": 0, "default": 0, "description": "Energy consumed per round regenerated (Joules). 0 = free regeneration." },\r
+    "reload_time": {\r
+      "type": "number",\r
+      "minimum": 0,\r
+      "description": "Time to deliver one round to a consumer (in seconds). In regen mode, the delay from round birth to availability."\r
+    },\r
+    "can_supply_multiple": { "type": "boolean", "default": false, "description": "Whether multiple consumers can receive ammo from this loader simultaneously." },\r
+    "regen_delay": { "type": "number", "minimum": 0, "default": 0, "description": "Delay (in seconds) after delivering a round before regeneration starts. 0 = regen starts immediately (produce while supply)." },\r
+    "sounds": {\r
+      "type": "object",\r
+      "properties": {\r
+        "on_destroyed": { "allOf": [\r
+   { "$ref": "../../base/sound_event.schema.json" }\r
+ ], "description": "Sound event when the subsystem is destroyed.", "default": { "sound_id": "machine_max:empty_sound", "range": 16 } },\r
+        "on_activate": { "allOf": [\r
+   { "$ref": "../../base/sound_event.schema.json" }\r
+ ], "description": "Sound event when the subsystem is activated.", "default": { "sound_id": "machine_max:empty_sound", "range": 16 } },\r
+        "on_deactivate": { "allOf": [\r
+   { "$ref": "../../base/sound_event.schema.json" }\r
+ ], "description": "Sound event when the subsystem is deactivated.", "default": { "sound_id": "machine_max:empty_sound", "range": 16 } }\r
+      },\r
+      "additionalProperties": false,\r
+      "description": "Regen loader subsystem sound configuration."\r
+    }\r
+  },\r
+  "required": ["type", "magazine_capacity", "reload_time"],\r
+  "additionalProperties": false,\r
+  "examples": [\r
+    { "type": "machine_max:regen_loader", "magazine_capacity": 100, "reload_time": 0,\r
+      "description": "Minimal example - required fields only"\r
+    },\r
+    {\r
+      "type": "machine_max:regen_loader",\r
+      "basic_durability": 40,\r
+      "magazine_capacity": 150,\r
+      "regen_per_minute": 800,\r
+      "regen_round_by_round": true,\r
+      "energy_cost_per_round": 0,\r
+      "reload_time": 0,\r
+      "can_supply_multiple": false,\r
+      "regen_delay": 0.5,\r
+      "description": "Round-by-round regen example - MG34 machine gun, 150-round magazine, 800 rounds/min, with 0.5s regen delay"\r
+    },\r
+    {\r
+      "type": "machine_max:regen_loader",\r
+      "basic_durability": 80,\r
+      "magazine_capacity": 40,\r
+      "regen_per_minute": 10,\r
+      "regen_round_by_round": true,\r
+      "energy_cost_per_round": 0,\r
+      "reload_time": 2.0,\r
+      "can_supply_multiple": false,\r
+      "description": "Slow regen example - 50mm cannon, 40 rounds, 10 rounds/min, with reload time delay"\r
+    }\r
+  ]\r
 }`, "en_us/schemas/subsystem/static/seat_static_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/static/seat_static_attr.json",\r
@@ -3676,7 +3930,9 @@
       "description": "Whether to render the passenger model."\r
     },\r
     "passenger_scale": {\r
-      "$ref": "../../base/vector_3d.schema.json",\r
+      "allOf": [\r
+        { "$ref": "../../base/vector_3d.schema.json" }\r
+      ],\r
       "default": [\r
         1,\r
         1,\r
@@ -3685,7 +3941,9 @@
       "description": "Scale of the passenger model."\r
     },\r
     "views": {\r
-      "$ref": "view_attr.schema.json",\r
+      "allOf": [\r
+        { "$ref": "view_attr.schema.json" }\r
+      ],\r
       "default": {\r
         "enable_first_person": true,\r
         "first_person_offset": 0.0,\r
@@ -3723,8 +3981,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is deactivated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -3732,7 +4002,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -3826,11 +4098,6 @@
       "default": false,\r
       "description": "Whether horizontal stabilization is enabled (compensates for vehicle yaw)."\r
     },\r
-    "base_fov": {\r
-      "type": "number",\r
-      "default": 40.0,\r
-      "description": "Base field of view in degrees, i.e., the FOV at 1x zoom."\r
-    },\r
     "base_zoom": {\r
       "type": "number",\r
       "default": 1.0,\r
@@ -3857,8 +4124,11 @@
       "description": "Yaw angle span limit in degrees, the actual range is [center - limit/2, center + limit/2]."\r
     },\r
     "scope_hud_layout": {\r
-      "$ref": "../../base/resource_location.schema.json",\r
-      "description": "\u70AE\u955C\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u70AE\u955C\u4E0D\u663E\u793A\u8BE5\u5E03\u5C40\u63D0\u4F9B\u7684 HUD\u3002"\r
+      "allOf": [\r
+        { "$ref": "../../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
+      "description": "HUD layout resource location: a file under the content pack's hud_layouts/ directory, keyed as <namespace>:<relative path>. When absent, the scope view shows no HUD."\r
     },\r
     "tracking_target_inputs": {\r
       "type": "array",\r
@@ -3889,7 +4159,9 @@
       "type": "object",\r
       "properties": {\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the sight is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -3897,7 +4169,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the sight is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -3905,7 +4179,9 @@
           }\r
         },\r
         "on_deactivate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the sight is deactivated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -3924,7 +4200,6 @@
     {\r
       "type": "machine_max:sight",\r
       "basic_durability": 15.0,\r
-      "base_fov": 40.0,\r
       "base_zoom": 1.0,\r
       "max_zoom": 5.0,\r
       "discovery_inputs": [\r
@@ -3951,6 +4226,21 @@
       "type": "number",\r
       "minimum": 0,\r
       "default": 40.0\r
+    },\r
+    "pass_damage": {\r
+      "type": "boolean",\r
+      "default": true,\r
+      "description": "Whether damage is passed to the owning sub-part."\r
+    },\r
+    "limit_damage": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "Whether passed damage is limited by the remaining subsystem durability."\r
+    },\r
+    "hidden": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "Whether this subsystem is hidden from HUD displays."\r
     },\r
     "sounds": {\r
       "type": "object",\r
@@ -4097,6 +4387,21 @@
       "minimum": 0,\r
       "default": 40.0\r
     },\r
+    "pass_damage": {\r
+      "type": "boolean",\r
+      "default": true,\r
+      "description": "Whether damage is passed to the owning sub-part."\r
+    },\r
+    "limit_damage": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "Whether passed damage is limited by the remaining subsystem durability."\r
+    },\r
+    "hidden": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "Whether this subsystem is hidden from HUD displays."\r
+    },\r
     "sounds": {\r
       "type": "object",\r
       "additionalProperties": true\r
@@ -4214,8 +4519,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is deactivated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -4223,7 +4540,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -4303,11 +4622,15 @@
       "description": "Whether to hide the subsystem in HUD, commonly used for non-functional parts that only provide damage differentiation."\r
     },\r
     "yaw": {\r
-      "$ref": "#/definitions/TurretAxisAttr",\r
+      "allOf": [\r
+        { "$ref": "#/definitions/TurretAxisAttr" }\r
+      ],\r
       "description": "Yaw axis (azimuth) configuration. Enables horizontal turret rotation. Omit to disable yaw control."\r
     },\r
     "pitch": {\r
-      "$ref": "#/definitions/TurretAxisAttr",\r
+      "allOf": [\r
+        { "$ref": "#/definitions/TurretAxisAttr" }\r
+      ],\r
       "description": "Pitch axis (elevation) configuration. Enables vertical turret aiming. Omit to disable pitch control."\r
     },\r
     "control_inputs": {\r
@@ -4319,8 +4642,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is deactivated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -4328,7 +4663,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -4395,11 +4732,16 @@
       "description": "Whether to enable first-person view."\r
     },\r
     "first_hud_layout": {\r
-      "$ref": "../../base/resource_location.schema.json",\r
-      "description": "HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\u3002"\r
+      "allOf": [\r
+        { "$ref": "../../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
+      "description": "HUD layout resource location: a file under the content pack's hud_layouts/ directory, keyed as <namespace>:<relative path>. When absent, this view shows no HUD."\r
     },\r
     "first_person_offset": {\r
-      "$ref": "../../base/vector_3d.schema.json",\r
+      "allOf": [\r
+        { "$ref": "../../base/vector_3d.schema.json" }\r
+      ],\r
       "default": [\r
         0.0,\r
         0.0,\r
@@ -4413,11 +4755,16 @@
       "description": "Whether to enable third-person view."\r
     },\r
     "third_hud_layout": {\r
-      "$ref": "../../base/resource_location.schema.json",\r
-      "description": "HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\u3002"\r
+      "allOf": [\r
+        { "$ref": "../../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
+      "description": "HUD layout resource location: a file under the content pack's hud_layouts/ directory, keyed as <namespace>:<relative path>. When absent, this view shows no HUD."\r
     },\r
     "third_person_offset": {\r
-      "$ref": "../../base/vector_3d.schema.json",\r
+      "allOf": [\r
+        { "$ref": "../../base/vector_3d.schema.json" }\r
+      ],\r
       "default": [\r
         0.0,\r
         0.75,\r
@@ -4534,7 +4881,7 @@
     },\r
     "ripple_interval": {\r
       "type": "number",\r
-      "minimum": 1,\r
+      "minimum": 0,\r
       "default": 0.1,\r
       "description": "Interval between each fire in ripple mode (in seconds). Only applicable when fire_mode is RIPPLE."\r
     },\r
@@ -4556,11 +4903,29 @@
       "default": [],\r
       "description": "List of fire command input channels. A channel counts as firing when it carries a fire signal: a main/secondary weapon fire instruction, a boolean true, or a non-zero number. Ammo-type switching instructions share these channels and are never treated as fire. Typically receives key-triggered fire signals."\r
     },\r
+    "fire_correction_angle_deg": {\r
+      "type": "number",\r
+      "minimum": 0,\r
+      "default": 1.0,\r
+      "description": "Ballistic correction angle in degrees. 0 = fire exactly along the locator direction (vehicle mode); a larger value lets the shot direction be corrected toward the target by up to this angle. It is added to aim_tolerance_deg when checking whether a launcher is aimed."\r
+    },\r
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is deactivated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -4568,7 +4933,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -4627,27 +4994,6 @@
           "default": 10000.0,\r
           "description": "Maximum driving force, in newtons (N)."\r
         },\r
-        "basic_durability": {\r
-          "type": "number",\r
-          "minimum": 0,\r
-          "default": 20.0,\r
-          "description": "Subsystem basic durability, becomes paralyzed when reduced to 0, restores functionality when repaired to 30% durability."\r
-        },\r
-        "pass_damage": {\r
-          "type": "boolean",\r
-          "default": true,\r
-          "description": "Whether to pass damage to the subsystem holder. If true, damage received by the subsystem will be transferred to the sub-part."\r
-        },\r
-        "limit_damage": {\r
-          "type": "boolean",\r
-          "default": false,\r
-          "description": "Whether to limit damage transfer value to the subsystem's remaining durability. For example, 40 damage with 20 remaining durability will only transfer 20 damage to the holder."\r
-        },\r
-        "hidden": {\r
-          "type": "boolean",\r
-          "default": false,\r
-          "description": "Whether to hide the subsystem in HUD displays, commonly used for purely providing model part damage differentiation for non-functional subsystems"\r
-        },\r
         "max_brake_force": {\r
           "type": "number",\r
           "minimum": 0,\r
@@ -4694,6 +5040,27 @@
       "const": "machine_max:wheel_driver",\r
       "description": "Subsystem type, must be 'machine_max:wheel_driver'."\r
     },\r
+    "basic_durability": {\r
+      "type": "number",\r
+      "minimum": 0,\r
+      "default": 20.0,\r
+      "description": "Subsystem basic durability, becomes paralyzed when reduced to 0, restores functionality when repaired to 30% durability."\r
+    },\r
+    "pass_damage": {\r
+      "type": "boolean",\r
+      "default": true,\r
+      "description": "Whether to pass damage to the subsystem holder. If true, damage received by the subsystem will be transferred to the sub-part."\r
+    },\r
+    "limit_damage": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "Whether to limit damage transfer value to the subsystem's remaining durability. For example, 40 damage with 20 remaining durability will only transfer 20 damage to the holder."\r
+    },\r
+    "hidden": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "Whether to hide the subsystem in HUD displays, commonly used for purely providing model part damage differentiation for non-functional subsystems"\r
+    },\r
     "control_inputs": {\r
       "type": "array",\r
       "items": { "type": "string" },\r
@@ -4701,19 +5068,23 @@
       "description": "List of control input signal keys."\r
     },\r
     "roll": {\r
-      "$ref": "#/definitions/StaticWheelRollingAxisAttr",\r
+      "allOf": [\r
+        { "$ref": "#/definitions/StaticWheelRollingAxisAttr" }\r
+      ],\r
       "default": {\r
         "max_drive_force": 10000.0,\r
-        "max_brake_force": 1500.0,\r
+        "max_brake_force": 3500.0,\r
         "max_hand_brake_force": 0.0,\r
         "max_rpm": 30000.0\r
       },\r
       "description": "Rolling axis attributes."\r
     },\r
     "steering": {\r
-      "$ref": "#/definitions/StaticWheelSteeringAxisAttr",\r
+      "allOf": [\r
+        { "$ref": "#/definitions/StaticWheelSteeringAxisAttr" }\r
+      ],\r
       "default": {\r
-        "max_force": 4000.0,\r
+        "max_force": 2000.0,\r
         "max_speed": 180\r
       },\r
       "description": "Steering axis attributes."\r
@@ -4739,8 +5110,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "Sound event when the subsystem is deactivated.",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -4748,7 +5131,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the subsystem is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -4756,7 +5141,9 @@
           }\r
         },\r
         "brake_on": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event for brake engagement.",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.wheel_driver.brake_on",\r
@@ -4764,7 +5151,9 @@
           }\r
         },\r
         "brake_off": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event for brake disengagement.",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.wheel_driver.brake_off",\r
@@ -4786,11 +5175,11 @@
       "roll": {\r
         "max_drive_force": 12000.0,\r
         "max_brake_force": 4000.0,\r
-        "max_speed": 2800.0\r
+        "max_rpm": 2800.0\r
       },\r
       "steering": {\r
         "max_force": 3000.0,\r
-        "max_speed": 2.5\r
+        "max_speed": 120.0\r
       }\r
     },\r
     {\r
@@ -4800,18 +5189,18 @@
       "roll": {\r
         "max_drive_force": 10000.0,\r
         "max_brake_force": 3500.0,\r
-        "max_speed": 3000.0\r
+        "max_rpm": 3000.0\r
       },\r
       "steering": {\r
         "max_force": 2500.0,\r
-        "max_speed": 3.0\r
+        "max_speed": 150.0\r
       },\r
       "abs_enabled": true,\r
       "abs_target_slip_ratio": 0.15,\r
       "abs_wheel_radius": 0.35\r
     }\r
   ]\r
-}`, "en_us/schemas/subsystem/subsystem_dynamic_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subsystem/subsystem_dynamic_attr.json",\r\n  "title": "Subsystem Dynamic Attributes",\r\n  "description": "Top-level architecture for subsystem dynamic attributes, dispatched to specific subsystem dynamic attribute schemas based on the type field.",\r\n  "type": "object",\r\n  "properties": {\r\n    "type": {\r\n      "type": "string",\r\n      "enum": [\r\n        "machine_max:basic",\r\n        "machine_max:camera",\r\n        "machine_max:car_controller",\r\n        "machine_max:motorbike_controller",\r\n        "machine_max:engine",\r\n        "machine_max:gearbox",\r\n        "machine_max:item_storage",\r\n        "machine_max:motor",\r\n        "machine_max:seat",\r\n        "machine_max:sight",\r\n        "machine_max:transmission",\r\n        "machine_max:wheel_driver",\r\n        "machine_max:lighting",\r\n        "machine_max:turret_driver",\r\n        "machine_max:weapon_controller",\r\n        "machine_max:launcher",\r\n        "machine_max:regen_loader",\r\n        "machine_max:track_controller",\r\n        "machine_max:track_drive"\r\n      ],\r\n      "description": "Subsystem type, determines which specific subsystem schema to use."\r\n    }\r\n  },\r\n  "additionalProperties": true,\r\n  "required": [\r\n    "type"\r\n  ],\r\n  "allOf": [\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:camera"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/camera_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:car_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/car_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:engine"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/engine_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:gearbox"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/gearbox_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:item_storage"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/item_storage_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motor"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/motor_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motorbike_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/motorbike_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:seat"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/seat_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:sight"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/sight_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:transmission"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/transmission_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:wheel_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/wheel_driver_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:lighting"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/lighting_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:turret_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/turret_driver_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:weapon_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/weapon_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:launcher"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/launcher_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:regen_loader"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/regen_loader_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:track_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/track_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:track_drive"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/track_drive_dynamic_attr.schema.json"\r\n      }\r\n    }\r\n  ],\r\n  "examples": [\r\n    {\r\n      "type": "machine_max:car_controller",\r\n      "definition": "machine_max:ae86at_car_controller",\r\n      "control_outputs": {\r\n        "car_control": [\r\n          "subsystem.machine_max.engine",\r\n          "subsystem.machine_max.left_front_wheel_driver",\r\n          "subsystem.machine_max.right_front_wheel_driver",\r\n          "subsystem.machine_max.left_back_wheel_driver",\r\n          "subsystem.machine_max.right_back_wheel_driver",\r\n          "subsystem.machine_max.gearbox"\r\n        ]\r\n      }\r\n    },\r\n    {\r\n      "type": "machine_max:engine",\r\n      "definition": "machine_max:ae86at_engine",\r\n      "power_output": "gearbox"\r\n    }\r\n  ]\r\n}', "en_us/schemas/subsystem/subsystem_static_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subsystem/subsystem_static_attr.json",\r\n  "title": "Subsystem Static Attributes",\r\n  "description": "Top-level architecture for subsystem static attributes, dispatched to specific subsystem types based on the type field.",\r\n  "type": "object",\r\n  "properties": {\r\n    "type": {\r\n      "type": "string",\r\n      "enum": [\r\n        "machine_max:basic",\r\n        "machine_max:camera",\r\n        "machine_max:car_controller",\n        "machine_max:motorbike_controller",\r\n        "machine_max:engine",\r\n        "machine_max:gearbox",\r\n        "machine_max:item_storage",\r\n        "machine_max:launcher",\r\n        "machine_max:motor",\r\n        "machine_max:regen_loader",\r\n        "machine_max:seat",\r\n        "machine_max:sight",\r\n        "machine_max:transmission",\r\n        "machine_max:wheel_driver",\r\n        "machine_max:lighting",\r\n        "machine_max:turret_driver",\r\n        "machine_max:weapon_controller",\r\n        "machine_max:track_controller",\r\n        "machine_max:track_drive"\r\n      ],\r\n      "description": "Subsystem type, determines which specific subsystem schema to use."\r\n    }\r\n  },\r\n  "additionalProperties": true,\r\n  "required": [\r\n    "type"\r\n  ],\r\n  "allOf": [\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:camera"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/camera_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:car_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/car_controller_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:engine"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/engine_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:gearbox"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/gearbox_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:item_storage"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/item_storage_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:launcher"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/launcher_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motor"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/motor_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motorbike_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/motorbike_controller_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:seat"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/seat_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:sight"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/sight_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:transmission"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/transmission_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:wheel_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/wheel_driver_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:lighting"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/lighting_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:turret_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/turret_driver_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:regen_loader"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/regen_loader_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:weapon_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/weapon_controller_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:track_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/track_controller_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:track_drive"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/track_drive_static_attr.schema.json"\r\n      }\r\n    }\r\n  ],\r\n  "examples": [\r\n    {\r\n      "$schema": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json",\r\n      "type": "machine_max:item_storage",\r\n      "basic_durability": 100.0,\r\n      "rows": 6,\r\n      "columns": 9\r\n    },\r\n    {\r\n      "$schema": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json",\r\n      "type": "machine_max:engine",\r\n      "max_power": 75000.0,\r\n      "max_torque": 130.0,\r\n      "red_line_rpm": 6500.0\r\n    }\r\n  ]\r\n}', "en_us/schemas/\u5982\u4F55\u4F7F\u7528JSON\u6A21\u677F.md": '# JSON Schema\u5728Machine-Max\u5185\u5BB9\u5305\u5236\u4F5C\u4E2D\u7684\u5E94\u7528\u6307\u5357\r\n\r\n## \u4EC0\u4E48\u662FJSON Schema\uFF1F\r\n\r\nJSON Schema\u662F\u4E00\u79CD\u7528\u4E8E\u63CF\u8FF0\u548C\u9A8C\u8BC1JSON\u6587\u6863\u7ED3\u6784\u7684\u89C4\u8303\u3002\u5BF9\u4E8EMachine-Max\u7684\u5185\u5BB9\u5305\u5236\u4F5C\uFF0CJSON Schema\u80FD\u591F\u5E2E\u52A9\u4F60\uFF1A\r\n\r\n- **\u9A8C\u8BC1\u914D\u7F6E\u683C\u5F0F**\uFF1A\u786E\u4FDD\u4F60\u7684JSON\u914D\u7F6E\u6587\u4EF6\u683C\u5F0F\u6B63\u786E\r\n- **\u63D0\u4F9B\u667A\u80FD\u63D0\u793A**\uFF1A\u5728\u652F\u6301\u7684\u7F16\u8F91\u5668\u4E2D\u663E\u793A\u5C5E\u6027\u8BF4\u660E\u548C\u7C7B\u578B\u8981\u6C42\r\n- **\u51CF\u5C11\u9519\u8BEF**\uFF1A\u63D0\u524D\u53D1\u73B0\u914D\u7F6E\u9519\u8BEF\uFF0C\u907F\u514D\u6E38\u620F\u5185\u95EE\u9898\r\n\r\n## \u4E3A\u4EC0\u4E48\u5185\u5BB9\u5305\u5236\u4F5C\u8005\u9700\u8981\u5173\u6CE8JSON Schema\uFF1F\r\n\r\n\u5373\u4F7F\u4F60\u6CA1\u6709\u7F16\u7A0B\u7ECF\u9A8C\uFF0CJSON Schema\u4E5F\u80FD\u8BA9\u4F60\u7684\u5185\u5BB9\u5305\u5236\u4F5C\u8FC7\u7A0B\u66F4\u987A\u7545\uFF1A\r\n\r\n1. **\u81EA\u52A8\u8865\u5168**\uFF1A\u73B0\u4EE3\u7F16\u8F91\u5668\uFF08\u5982VSCode\uFF09\u53EF\u4EE5\u6839\u636ESchema\u63D0\u4F9B\u5C5E\u6027\u540D\u81EA\u52A8\u8865\u5168\r\n2. **\u9519\u8BEF\u63D0\u793A**\uFF1A\u5728\u914D\u7F6E\u9519\u8BEF\u65F6\u7ACB\u5373\u63D0\u793A\uFF0C\u800C\u4E0D\u662F\u7B49\u5230\u6E38\u620F\u4E2D\u624D\u53D1\u73B0\u95EE\u9898\r\n3. **\u5C5E\u6027\u8BF4\u660E**\uFF1A\u67E5\u770B\u6BCF\u4E2A\u914D\u7F6E\u9879\u7684\u5177\u4F53\u542B\u4E49\u548C\u4F7F\u7528\u65B9\u6CD5\r\n4. **\u7C7B\u578B\u68C0\u67E5**\uFF1A\u786E\u4FDD\u4F60\u8F93\u5165\u7684\u6570\u636E\u7C7B\u578B\u6B63\u786E\uFF08\u6570\u5B57\u3001\u5B57\u7B26\u4E32\u3001\u5E03\u5C14\u503C\u7B49\uFF09\r\n\r\n## \u5982\u4F55\u4F7F\u7528JSON Schema\uFF1F\r\n\r\n### 1. \u914D\u7F6E\u7F16\u8F91\u5668\u652F\u6301\r\n\r\n\u5728\u4F60\u7684JSON\u6587\u4EF6\u9876\u90E8\u6DFB\u52A0`$schema`\u5B57\u6BB5\uFF0C\u6216\u76F4\u63A5\u590D\u5236\u5DF2\u6709\u7684\u793A\u4F8BJSON\uFF0C\u4F8B\u5982\uFF1A\r\n\r\n```json\r\n{\r\n  "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",\r\n  "vehicle_durability_rate": 1.0,\r\n  "variants": {\r\n    "default": {\r\n      "icon": "machine_max:textures/icon/example.png",\r\n      "models": "machine_max:example.geo"\r\n    }\r\n  }\r\n}\r\n```\r\n\u6CE8\u610F\uFF0C\u5728\u8FD9\u91CC`$schema`\u5B57\u6BB5\u7684\u503C\u4E3A\u76F8\u5BF9\u8DEF\u5F84\uFF0C"../"\u8868\u793A\u5F53\u524D\u6587\u4EF6\u7684\u4E0A\u7EA7\u76EE\u5F55\u3002\r\n\r\n### 2. \u63A8\u8350\u7F16\u8F91\u5668\r\n\r\n- **VSCode**\uFF1A\u539F\u751F\u652F\u6301JSON Schema\r\n\r\n### 3. \u5728VSCode\u4E2D\u542F\u7528JSON Schema\u9A8C\u8BC1\r\n\r\n **\u63A8\u8350\u76F4\u63A5\u590D\u7528\u5B98\u65B9\u5185\u5BB9\u5305\u7684\u6587\u4EF6\u7ED3\u6784\uFF0C\u5E76\u539F\u6837\u590D\u5236docs\u6587\u4EF6\u5939\u5230\u4F60\u81EA\u5DF1\u7684\u5185\u5BB9\u5305\uFF0C\u518D\u5728\u90E8\u4EF6\u548C\u5B50\u7CFB\u7EDFjson\u6587\u4EF6\u5F00\u5934\u6DFB\u52A0`$schema`\u5F15\u7528\u5373\u53EF\u3002**\r\n\r\n## \u5B9E\u9645\u5236\u4F5C\u4E2D\u7684\u5E94\u7528\u793A\u4F8B\r\n\r\n### \u6B65\u9AA41\uFF1A\u521B\u5EFA\u65B0\u90E8\u4EF6\r\n\r\n1. \u590D\u5236\u73B0\u6709\u7684\u90E8\u4EF6JSON\u6587\u4EF6\u4F5C\u4E3A\u6A21\u677F\r\n2. \u5728\u6587\u4EF6\u5F00\u5934\u6DFB\u52A0`$schema`\u5F15\u7528\r\n3. \u6839\u636E\u7F16\u8F91\u5668\u7684\u667A\u80FD\u63D0\u793A\u6DFB\u52A0\u914D\u7F6E\u9879\r\n\r\n### \u6B65\u9AA42\uFF1A\u9A8C\u8BC1\u914D\u7F6E\r\n\r\n1. \u4FDD\u5B58\u6587\u4EF6\u540E\u67E5\u770B\u7F16\u8F91\u5668\u662F\u5426\u663E\u793A\u9519\u8BEF\r\n2. \u6839\u636E\u63D0\u793A\u4FEE\u6B63\u914D\u7F6E\u683C\u5F0F\u95EE\u9898\r\n3. \u6D4B\u8BD5\u5185\u5BB9\u5305\u5728\u6E38\u620F\u4E2D\u662F\u5426\u6B63\u5E38\u5DE5\u4F5C\r\n\r\n### \u6B65\u9AA43\uFF1A\u8C03\u8BD5\u95EE\u9898\r\n\r\n\u5982\u679C\u5185\u5BB9\u5305\u5728\u6E38\u620F\u4E2D\u4E0D\u5DE5\u4F5C\uFF0C\u68C0\u67E5\uFF1A\r\n\r\n1. JSON\u683C\u5F0F\u662F\u5426\u6B63\u786E\uFF08\u4F7F\u7528Schema\u9A8C\u8BC1\uFF09\r\n2. \u6240\u6709\u5FC5\u9700\u5B57\u6BB5\u662F\u5426\u90FD\u5DF2\u586B\u5199\r\n3. \u6570\u636E\u7C7B\u578B\u662F\u5426\u5339\u914D\uFF08\u6570\u5B57 vs \u5B57\u7B26\u4E32\u7B49\uFF09\r\n\r\n## \u5E38\u89C1\u95EE\u9898\u4E0E\u89E3\u51B3\u65B9\u6848\r\n\r\n### Q: \u7F16\u8F91\u5668\u63D0\u793A\u9519\u8BEF\uFF0C\u4F46\u914D\u7F6E\u770B\u8D77\u6765\u662F\u6B63\u786E\u7684\uFF1F\r\nA: \u68C0\u67E5\uFF1A\r\n- JSON\u8BED\u6CD5\u662F\u5426\u6B63\u786E\uFF08\u9017\u53F7\u3001\u62EC\u53F7\u662F\u5426\u6709\u7F3A\u6F0F\u7B49\uFF0C\u52A1\u5FC5\u6CE8\u610F\u4E0D\u8981\u4F7F\u7528\u4E2D\u6587\u6807\u70B9\u7B26\u53F7\uFF09\r\n- \u5B57\u6BB5\u540D\u79F0\u662F\u5426\u62FC\u5199\u6B63\u786E\r\n- \u6570\u636E\u7C7B\u578B\u662F\u5426\u5339\u914D\uFF08\u5982\u9700\u8981\u6570\u5B57\u4F46\u8F93\u5165\u4E86\u5B57\u7B26\u4E32\uFF09\r\n\r\n### Q: \u5982\u4F55\u77E5\u9053\u54EA\u4E9B\u5B57\u6BB5\u662F\u5FC5\u9700\u7684\uFF1F\r\nA: \u67E5\u770BSchema\u6587\u4EF6\u4E2D\u7684`required`\u5B57\u6BB5\uFF0C\u6216\u8005\u5728\u652F\u6301\u7684\u7F16\u8F91\u5668\u4E2D\u4F1A\u6709\u76F8\u5E94\u63D0\u793A\u3002\r\n\r\n### Q: \u8FD9\u4E9B\u5B57\u6BB5\u7684\u4F5C\u7528\u90FD\u662F\u4EC0\u4E48\uFF1F\r\nA: \u5C06\u9F20\u6807\u653E\u5230\u5B57\u6BB5\u4E0A\uFF0C\u5373\u53EF\u67E5\u770B\u5B57\u6BB5\u7684\u8BF4\u660E\u548C\u7C7B\u578B\u8981\u6C42\u3002\r\n\r\n## \u63D0\u9AD8\u6548\u7387\u7684\u6280\u5DE7\r\n\r\n1. **\u4F7F\u7528\u6A21\u677F**\uFF1A\u57FA\u4E8E\u73B0\u6709\u5DE5\u4F5C\u6B63\u5E38\u7684\u914D\u7F6E\u521B\u5EFA\u65B0\u914D\u7F6E\r\n2. **\u9010\u6B65\u6DFB\u52A0**\uFF1A\u5148\u6DFB\u52A0\u57FA\u672C\u914D\u7F6E\uFF0C\u9A8C\u8BC1\u65E0\u8BEF\u540E\u518D\u6DFB\u52A0\u9AD8\u7EA7\u9009\u9879\r\n3. **\u53C2\u8003\u793A\u4F8B**\uFF1A\u67E5\u770B\u5B98\u65B9\u5305\u4E2D\u7684\u793A\u4F8B\u914D\u7F6E\u6587\u4EF6\r\n4. **\u5B9E\u65F6\u9A8C\u8BC1**\uFF1A\u5728\u7F16\u8F91\u5668\u4E2D\u5B9E\u65F6\u67E5\u770B\u9A8C\u8BC1\u7ED3\u679C\r\n\r\n## \u603B\u7ED3\r\n\r\nJSON Schema\u662F\u5185\u5BB9\u5305\u5236\u4F5C\u7684\u5F3A\u5927\u8F85\u52A9\u5DE5\u5177\uFF0C\u5B83\u80FD\u5E2E\u52A9\u4F60\u521B\u5EFA\u683C\u5F0F\u6B63\u786E\u3001\u7ED3\u6784\u5B8C\u6574\u7684\u914D\u7F6E\u6587\u4EF6\u3002\u5373\u4F7F\u6CA1\u6709\u7F16\u7A0B\u7ECF\u9A8C\uFF0C\u4F7F\u7528\u652F\u6301Schema\u7684\u7F16\u8F91\u5668\u4E5F\u80FD\u5927\u5927\u63D0\u9AD8\u5236\u4F5C\u6548\u7387\u548C\u51C6\u786E\u6027\u3002\r\n\r\n\u5F00\u59CB\u4F7F\u7528\u65F6\uFF0C\u5EFA\u8BAE\u5148\u4ECE\u7B80\u5355\u7684\u914D\u7F6E\u5F00\u59CB\uFF0C\u9010\u6B65\u719F\u6089Schema\u63D0\u4F9B\u7684\u5404\u79CD\u529F\u80FD\uFF0C\u968F\u7740\u7ECF\u9A8C\u7684\u79EF\u7D2F\uFF0C\u4F60\u4F1A\u53D1\u73B0\u5236\u4F5C\u5185\u5BB9\u5305\u53D8\u5F97\u66F4\u52A0\u7B80\u5355\u548C\u53EF\u9760\u3002', "zh_cn/hud.md": '# HUD \u7F16\u5199\u6307\u5357\r\n\r\nMachine-Max \u63D0\u4F9B\u4E86\u5F3A\u5927\u7684\u81EA\u5B9A\u4E49HUD\u7CFB\u7EDF\uFF0C\u5141\u8BB8\u4E3A\u4E0D\u540C\u7684\u8F66\u8F86\u548C\u5B50\u7CFB\u7EDF\u521B\u5EFA\u4E13\u5C5E\u7684\u754C\u9762\u663E\u793A\u3002HUD\u7CFB\u7EDF\u57FA\u4E8E\u6A21\u578B\u3001\u52A8\u753B\u548CMolang\u811A\u672C\uFF0C\u53EF\u4EE5\u5B9E\u73B0\u52A8\u6001\u7684\u4EEA\u8868\u76D8\u3001\u72B6\u6001\u6307\u793A\u5668\u548C\u4FE1\u606F\u663E\u793A\u3002HUD \u5206\u4E3A\u4E09\u5C42\uFF1A**\u6837\u5F0F**\u53EA\u63CF\u8FF0\u957F\u4EC0\u4E48\u6837\uFF0C**\u5E03\u5C40**\u662F\u4E00\u7EC4\u6709\u5E8F\u7684\u5143\u7D20\uFF0C**\u5143\u7D20**\u628A\u4E00\u4EFD\u6837\u5F0F\u653E\u5230\u4E00\u4E2A\u5177\u4F53\u4F4D\u7F6E\u3002\r\n\r\n## HUD\u7CFB\u7EDF\u6982\u8FF0\r\n\r\n### \u6838\u5FC3\u7EC4\u4EF6\u6587\u4EF6\u8DEF\u5F84\r\n\r\n\u4EE5\u4E0B\u662F\u793A\u4F8BHUD\u7684\u6838\u5FC3\u7EC4\u4EF6\u6587\u4EF6\u8DEF\u5F84\uFF0C\u60A8\u53EF\u4EE5\u5728\u8FD9\u4E9B\u4F4D\u7F6E\u627E\u5230\u5B8C\u6574\u7684\u5B9E\u73B0\u793A\u4F8B\uFF1A\r\n\r\n- **HUD\u6837\u5F0F**: [huds/example_hud.json](../../huds/example_hud.json)\r\n- **HUD\u5E03\u5C40**: [hud_layouts/seat_dashboard.json](../../hud_layouts/seat_dashboard.json)\r\n- **3D\u6A21\u578B\u6587\u4EF6**: [models/hud/example_hud.geo.json](../../models/hud/example_hud.geo.json)\r\n- **\u52A8\u753B\u6587\u4EF6**: [animations/hud/example_hud/example_hud.animation.json](../../animations/hud/example_hud/example_hud.animation.json)\r\n- **\u7EB9\u7406\u6587\u4EF6**: [textures/hud/example_hud.png](../../textures/hud/example_hud.png)\r\n- **\u8BED\u8A00\u6587\u4EF6**: [lang/zh_cn.json](../../lang/zh_cn.json)\r\n- **\u5B50\u7CFB\u7EDF\u914D\u7F6E**: [subsystems/default_seat.json](../../subsystems/default_seat.json)\r\n- **\u9AD8\u7EA7\u5B50\u7CFB\u7EDF\u914D\u7F6E**: [subsystems/senna_gtr/senna_gtr_seat.json](../../subsystems/senna_gtr/senna_gtr_seat.json)\r\n\r\n\r\n## \u76EE\u5F55\u7ED3\u6784\r\n- [HUD\u7CFB\u7EDF\u6982\u8FF0](#hud\u7CFB\u7EDF\u6982\u8FF0)\r\n- [HUD\u6837\u5F0F\uFF08huds/\uFF09](#hud\u6837\u5F0Fhuds)\r\n- [HUD\u5E03\u5C40\uFF08hud_layouts/\uFF09](#hud\u5E03\u5C40hud_layouts)\r\n- [\u6A21\u578B\u548C\u52A8\u753B\u8981\u6C42](#\u6A21\u578B\u548C\u52A8\u753B\u8981\u6C42)\r\n- [\u6587\u672C\u663E\u793A\u914D\u7F6E](#\u6587\u672C\u663E\u793A\u914D\u7F6E)\r\n- [Molang\u5728HUD\u4E2D\u7684\u5E94\u7528](#molang\u5728hud\u4E2D\u7684\u5E94\u7528)\r\n- [\u5B50\u7CFB\u7EDFHUD\u5173\u8054](#\u5B50\u7CFB\u7EDFhud\u5173\u8054)\r\n- [\u5B9E\u9645\u6848\u4F8B\u89E3\u6790](#\u5B9E\u9645\u6848\u4F8B\u89E3\u6790)\r\n- [\u6700\u4F73\u5B9E\u8DF5](#\u6700\u4F73\u5B9E\u8DF5)\r\n\r\n## HUD\u7CFB\u7EDF\u6982\u8FF0\r\n\r\nMachine-Max\u7684HUD\u7CFB\u7EDF\u5305\u542B\u4EE5\u4E0B\u6838\u5FC3\u7EC4\u4EF6\uFF1A\r\n\r\n1. **HUD\u6837\u5F0F**\uFF08`huds/*.json`\uFF09 - \u5B9A\u4E49\u6A21\u578B\u3001\u52A8\u753B\u3001\u7EB9\u7406\u3001\u67D3\u8272\u548C\u6587\u672C\u69FD\r\n2. **HUD\u5E03\u5C40**\uFF08`hud_layouts/*.json`\uFF09 - \u6709\u5E8F\u7684\u5143\u7D20\u6570\u7EC4\uFF0C\u51B3\u5B9A\u753B\u54EA\u4E9B\u6837\u5F0F\u3001\u5404\u5728\u4EC0\u4E48\u4F4D\u7F6E\r\n3. **3D\u6A21\u578B** (`.geo.json`\u6587\u4EF6) - \u63D0\u4F9BHUD\u7684\u51E0\u4F55\u5F62\u72B6\u548C\u9AA8\u9ABC\u7ED3\u6784\r\n4. **\u52A8\u753B\u6587\u4EF6** (`.animation.json`\u6587\u4EF6) - \u63A7\u5236HUD\u5143\u7D20\u7684\u52A8\u6001\u884C\u4E3A\r\n5. **\u7EB9\u7406\u6587\u4EF6** (`.png`\u6587\u4EF6) - \u63D0\u4F9BHUD\u7684\u89C6\u89C9\u5916\u89C2\r\n6. **\u5B50\u7CFB\u7EDF\u914D\u7F6E** - \u901A\u8FC7 `*_hud_layout` \u5B57\u6BB5\u628A\u5E03\u5C40\u6302\u5230\u5EA7\u4F4D\u6216\u7784\u5177\u4E0A\r\n\r\n## HUD\u6837\u5F0F\uFF08huds/\uFF09\r\n\r\nHUD\u6837\u5F0F\u5B9A\u4E49\u4E00\u4E2A HUD \u7684\u5185\u90E8\u5916\u89C2\uFF0C\u4E0D\u5305\u542B\u4F4D\u7F6E\u3001\u65CB\u8F6C\u3001\u7F29\u653E\u6216\u6295\u5F71\u3002\r\n\r\n### \u57FA\u672C\u7ED3\u6784\r\n```json\r\n{\r\n  "type": "machine_max:model_hud",\r\n  "model": "machine_max:example_hud.geo",\r\n  "animation": "machine_max:example_hud",\r\n  "texture": "machine_max:textures/hud/example_hud.png",\r\n  "color": [255, 255, 255],\r\n  "alpha": 255,\r\n  "texts": {\r\n    // \u6587\u672C\u914D\u7F6E\r\n  },\r\n  "scissor": {\r\n    "enable": false,\r\n    "x": 0,\r\n    "y": 0,\r\n    "width": 0,\r\n    "height": 0\r\n  }\r\n}\r\n```\r\n\r\n### \u914D\u7F6E\u53C2\u6570\u8BF4\u660E\r\n\r\n#### \u57FA\u672C\u5C5E\u6027\r\n- **type** (\u5FC5\u9700): \u8F7D\u4F53\u7C7B\u578B\uFF1A`machine_max:model_hud`\uFF08\u57FA\u5CA9\u6A21\u578B\uFF09\u6216 `machine_max:aui_hud`\uFF08AUI \u9875\u9762\uFF09\r\n- **model** (\u5FC5\u9700): HUD\u76843D\u6A21\u578B\u8D44\u6E90\u5730\u5740\uFF0C\u5982 `machine_max:example_hud.geo`\r\n- **animation** (\u5FC5\u9700): HUD\u7684\u52A8\u753B\u8D44\u6E90\u5730\u5740\uFF0C\u5982 `machine_max:example_hud`\r\n- **texture** (\u5FC5\u9700): HUD\u7684\u7EB9\u7406\u8D44\u6E90\u5730\u5740\uFF0C\u5982 `machine_max:textures/hud/example_hud.png`\r\n- **color** (\u53EF\u9009): RGB\u989C\u8272\uFF0C\u9ED8\u8BA4\u767D\u8272\r\n- **alpha** (\u53EF\u9009): \u900F\u660E\u5EA6\uFF0C\u9ED8\u8BA4255\r\n\r\n\r\n#### \u6587\u672C\u663E\u793A\r\n```json\r\n"texts": {\r\n  "locator_name": {\r\n    "key": "translation.key",\r\n    "centered": true,\r\n    "shadow": false,\r\n    "scale": [0.7, 0.7, 0.7],\r\n    "color": [255, 0, 0],\r\n    "molang_args": ["expression1", "expression2"],\r\n    "significand": 0\r\n  }\r\n}\r\n```\r\n\r\n- **locator_name**: \u5B9A\u4F4D\u5668\u540D\u79F0\uFF0C\u7528\u4E8E\u63A7\u5236\u6587\u5B57\u7684\u663E\u793A\u4F4D\u7F6E\u548C\u65CB\u8F6C\r\n- **key**: \u7FFB\u8BD1\u952E\uFF0C\u7528\u4E8E\u7FFB\u8BD1\u6587\u672C\r\n- **centered**: \u662F\u5426\u5C45\u4E2D\u663E\u793A\uFF0C\u9ED8\u8BA4true\r\n- **shadow**: \u662F\u5426\u6E32\u67D3\u6587\u5B57\u9634\u5F71\uFF0C\u9ED8\u8BA4false\r\n- **scale**: \u7F29\u653E\u6BD4\u4F8B\uFF0C\u9ED8\u8BA4[1, 1, 1]\r\n- **color**: RGB\u989C\u8272\r\n- **molang_args**: Molang\u53C2\u6570\uFF0C\u7528\u4E8E\u586B\u5145\u7FFB\u8BD1\u6587\u672C\u9884\u7559\u7684\u53C2\u6570\u4F4D\u7F6E\r\n- **significand**: Molang\u53C2\u6570\u8BA1\u7B97\u7ED3\u679C\u4E3A\u6570\u5B57\u65F6\uFF0C\u4FDD\u7559\u7684\u5C0F\u6570\u70B9\u540E\u4F4D\u6570\uFF0C\u9ED8\u8BA40\r\n\r\n#### \u526A\u88C1\u533A\u57DF\r\n- **scissor**: \u526A\u88C1\u77E9\u5F62\u914D\u7F6E\uFF08\u53EF\u9009\uFF0C\u9ED8\u8BA4\u4E0D\u542F\u7528\uFF09\r\n  - **enable**: \u662F\u5426\u542F\u7528\u526A\u88C1\u77E9\u5F62\r\n  - **x**: \u526A\u88C1\u77E9\u5F62\u4E2D\u5FC3 x \u5750\u6807\uFF08\u50CF\u7D20\uFF09\r\n  - **y**: \u526A\u88C1\u77E9\u5F62\u4E2D\u5FC3 y \u5750\u6807\uFF08\u50CF\u7D20\uFF09\r\n  - **width**: \u526A\u88C1\u77E9\u5F62\u5BBD\u5EA6\uFF08\u50CF\u7D20\uFF09\r\n  - **height**: \u526A\u88C1\u77E9\u5F62\u9AD8\u5EA6\uFF08\u50CF\u7D20\uFF09\r\n\r\n### AUI \u9875\u9762\u6837\u5F0F\r\n\r\n`machine_max:aui_hud` \u7528\u4E00\u4E2A HTML \u9875\u9762\u63CF\u8FF0 HUD \u5916\u89C2\uFF0C\u9875\u9762\u7531\u5185\u5BB9\u5305 `documents/` \u76EE\u5F55\u63D0\u4F9B\uFF0C\u53EF\u5728 GUI/HUD \u6B63\u4EA4\u53E0\u5C42\u6216\u76F8\u673A\u7A7A\u95F4\u7684\u900F\u89C6\u5E73\u9762\u4E0A\u7ED8\u5236\u3002\r\n\r\n```json\r\n{\r\n  "type": "machine_max:aui_hud",\r\n  "page": "machine_max/weapon_hud_element/weapon_ammo.html",\r\n  "defaults": { "--hud-accent": "#7dd3fc" }\r\n}\r\n```\r\n\r\n- **page** (\u5FC5\u9700): AUI \u9875\u9762\u952E\uFF0C\u5F62\u5F0F\u4E3A `<\u5185\u5BB9\u5305\u547D\u540D\u7A7A\u95F4>/<\u76F8\u5BF9\u8DEF\u5F84>`\uFF0C\u4F8B\u5982\u5185\u5BB9\u5305\u91CC\u7684 `documents/weapon_hud_element/weapon_ammo.html` \u5BF9\u5E94 `machine_max/weapon_hud_element/weapon_ammo.html`\r\n- **defaults** (\u53EF\u9009): \u5199\u8FDB\u9875\u9762 `body` \u7684 CSS \u53D8\u91CF\uFF0C\u9875\u9762\u6837\u5F0F\u8868\u53EF\u7528 `var(...)` \u8BFB\u53D6\r\n\r\n\u9875\u9762\u6309\u5185\u5BB9\u6536\u7F29\uFF1A\u8FD0\u884C\u65F6\u7ED9 `body` \u52A0\u4E0A `mm-hud` \u7C7B\u5E76\u8BBE\u7F6E `inline-block`\u3001\u65E0\u5916\u8FB9\u8DDD\u3001\u900F\u660E\u80CC\u666F\u7684\u5185\u8054\u89C4\u5219\u3002\u9875\u9762\u63CF\u8FF0\u7EC4\u4EF6\u5185\u5BB9\uFF0C\u5E03\u5C40\u51B3\u5B9A\u6295\u653E\u4F4D\u7F6E\u4E0E\u6295\u5F71\uFF1B\u9700\u8981\u6697\u5E95\u65F6\uFF0C\u5728\u7EC4\u4EF6\u5BB9\u5668\u4E0A\u8BBE\u7F6E\u80CC\u666F\u3002\u5E03\u5C40\u7684 `perspective: false` \u9009\u62E9\u6B63\u4EA4\u53E0\u5C42\uFF0C`perspective: true` \u9009\u62E9\u900F\u89C6\u5E73\u9762\uFF1B\u8BE5\u5B57\u6BB5\u9ED8\u8BA4\u662F `true`\uFF0C\u5C4F\u5E55\u951A\u5B9A\u7684 AUI \u5143\u7D20\u5E94\u663E\u5F0F\u5199 `false`\u3002\r\n\r\nAUI HUD \u4E0D\u5411\u9875\u9762\u8F6C\u53D1\u9F20\u6807\u8F93\u5165\u3002\u900F\u89C6\u6A21\u5F0F\u652F\u6301\u9875\u9762\u7684\u51E0\u4F55\u3001\u6587\u5B57\u4E0E\u88C1\u526A\uFF0C\u4E0D\u4FDD\u8BC1\u590D\u6742 `backdrop-filter` \u7B49\u5C4F\u5E55\u91C7\u6837\u6548\u679C\u3002\r\n\r\n## HUD\u5E03\u5C40\uFF08hud_layouts/\uFF09\r\n\r\n\u5E03\u5C40\u6587\u4EF6\u7684\u5185\u5BB9\u662F\u4E00\u4E2A\u6570\u7EC4\uFF0C\u6BCF\u4E2A\u6761\u76EE\u662F\u4E00\u4E2A\u5143\u7D20\uFF1A\u4E00\u4EFD\u6837\u5F0F\u5F15\u7528\u52A0\u4E00\u7EC4\u5B8C\u6574\u6295\u653E\u503C\u3002\u5143\u7D20\u5185\u8054\u5728\u5E03\u5C40\u91CC\uFF0C\u4E0D\u5355\u72EC\u6CE8\u518C\uFF1B\u540C\u4E00\u4E2A\u6837\u5F0F\u53EF\u4EE5\u5728\u4E00\u4E2A\u5E03\u5C40\u91CC\u51FA\u73B0\u591A\u6B21\u3002\r\n\r\n```json\r\n[\r\n  {\r\n    "style": "machine_max:example_hud",\r\n    "perspective": true,\r\n    "offset": [95, 55, -135],\r\n    "rotation": [-25, -30, 0],\r\n    "scale": [15, 15, 15]\r\n  }\r\n]\r\n```\r\n\r\n| \u5B57\u6BB5 | \u5FC5\u9700 | \u8BF4\u660E |\r\n| --- | --- | --- |\r\n| `style` | \u662F | \u6837\u5F0F\u8D44\u6E90\u952E\uFF0C\u6307\u5411 `huds/` \u4E0B\u7684\u6587\u4EF6 |\r\n| `perspective` | \u5426 | \u9ED8\u8BA4 `true`\uFF1B`true` \u8D70\u900F\u89C6\u6295\u5F71\uFF0C`false` \u8D70\u6B63\u4EA4\u6295\u5F71 |\r\n| `offset` | \u5426 | \u900F\u89C6\uFF1A\u76F8\u673A\u7A7A\u95F4\u4F4D\u79FB `(x, -y, z)`\uFF0C\u53EF\u89C1\u5E73\u9762\u9700\u5728\u76F8\u673A\u524D\u65B9\uFF08\u901A\u5E38 `z < 0`\uFF09\uFF1B\u6B63\u4EA4\u6A21\u578B\uFF1A\u76F8\u5BF9\u5C4F\u5E55\u4E2D\u5FC3\u7684\u50CF\u7D20\u504F\u79FB\uFF1B\u6B63\u4EA4 AUI\uFF1A\u76F8\u5BF9 `anchor` \u5BF9\u9F50\u4F4D\u7F6E\u7684 GUI \u50CF\u7D20\u504F\u79FB\uFF0C`z` \u4E3A\u7ED8\u5236\u6DF1\u5EA6 |\r\n| `rotation` | \u5426 | `[x, y, z]` \u65CB\u8F6C\u89D2\u5EA6\uFF0C\u5355\u4F4D\u4E3A\u5EA6\uFF1B\u900F\u89C6 AUI \u6309 Z/Y/X \u5408\u6210\uFF0C\u6B63\u4EA4 AUI \u4E0D\u8BFB\u53D6\u8BE5\u5B57\u6BB5 |\r\n| `scale` | \u5426 | \u9ED8\u8BA4 `[1, 1, 1]`\uFF1B\u6B63\u4EA4 AUI \u7684 X/Y \u5206\u91CF\u5206\u522B\u7F29\u653E\u9875\u9762\u4E24\u8F74\uFF0C\u900F\u89C6 AUI \u5C06 CSS \u50CF\u7D20\u7F29\u653E\u4E3A\u76F8\u673A\u7A7A\u95F4\u5355\u4F4D |\r\n| `scope_behavior` | \u5426 | \u9ED8\u8BA4 `follow_position`\uFF1B\u53EA\u5728\u70AE\u955C\u5E03\u5C40\u91CC\u751F\u6548\uFF0C\u53EF\u9009 `screen_fixed` / `follow_position` / `follow_transform` |\r\n| `ignore_zoom` | \u5426 | \u9ED8\u8BA4 `false`\uFF1B`true` \u65F6\u5143\u7D20\u5C3A\u5BF8\u4E0D\u968F\u70AE\u955C\u53D8\u7126\u53D8\u5316 |\r\n| `anchor` | \u5426 | \u4EC5\u6B63\u4EA4 AUI \u8F7D\u4F53\uFF1A\u9ED8\u8BA4 `top_left`\uFF0C\u53EF\u9009 `top_center`\u3001`top_right`\u3001`center_left`\u3001`center`\u3001`center_right`\u3001`bottom_left`\u3001`bottom_center`\u3001`bottom_right`\uFF1B\u5143\u7D20\u7684\u5BF9\u5E94\u89D2\uFF08\u6216\u4E2D\u5FC3\uFF09\u5BF9\u9F50\u5C4F\u5E55\u7684\u5BF9\u5E94\u89D2\uFF08\u6216\u4E2D\u5FC3\uFF09\uFF1B\u6A21\u578B\u4E0E\u900F\u89C6 AUI \u5FFD\u7565\u8BE5\u5B57\u6BB5 |\r\n\r\n\u6B63\u4EA4 AUI \u6309\u5185\u5BB9\u5C3A\u5BF8\u8BA1\u7B97 `anchor`\uFF0C\u5E76\u5728\u5BF9\u9F50\u540E\u53E0\u52A0 `offset.x/y`\u3002AUI \u89C6\u53E3\u7684 CSS \u2192 GUI \u6362\u7B97\u6BD4\u4F8B\u540C\u65F6\u4F5C\u7528\u4E8E\u4E24\u8F74\uFF0C\u518D\u5206\u522B\u4E58 `scale.x/y`\uFF1B\u4F8B\u5982\u5B9E\u9645\u5BBD\u5EA6\u4E3A `CSS \u5BBD\u5EA6 \xD7 viewport.renderScale \xD7 scale.x`\u3002\u7ED8\u5236\u4E0E\u88C1\u526A\u4F7F\u7528\u540C\u4E00\u7EC4\u4F4D\u7F6E\u548C\u7F29\u653E\u3002\u6B63\u4EA4 AUI \u7684\u5E03\u5C40 `rotation`\u3001`scope_behavior` \u4E0E `ignore_zoom` \u4E0D\u751F\u6548\uFF0C\u9875\u9762\u5185\u90E8\u53EF\u7528 CSS \u65CB\u8F6C\u3002\r\n\r\n\u900F\u89C6 AUI \u4EE5\u9875\u9762\u5185\u5BB9\u4E2D\u5FC3\u4E3A\u5C40\u90E8\u539F\u70B9\uFF0C\u5C06 CSS \u5411\u4E0B\u7684 Y \u8F74\u7FFB\u4E3A\u76F8\u673A\u5411\u4E0A\u7684 Y \u8F74\uFF0C\u6309 `T(x, -y, z) \xD7 Rz \xD7 Ry \xD7 Rx \xD7 S(scale.x, -scale.y, scale.z)` \u6295\u653E\uFF1B\u89D2\u5EA6\u4EE5\u5EA6\u4E3A\u5355\u4F4D\u3002\u8BE5\u6A21\u5F0F\u76F4\u63A5\u628A CSS \u50CF\u7D20\u7ECF `scale` \u6362\u7B97\u4E3A\u76F8\u673A\u7A7A\u95F4\u5355\u4F4D\uFF0C\u4E0D\u53E0\u52A0\u6B63\u4EA4\u89C6\u53E3\u7684 CSS \u2192 GUI \u7F29\u653E\uFF0C\u4E5F\u4E0D\u4F7F\u7528\u5C4F\u5E55 `anchor`\u3002`scope_behavior` \u4E0E `ignore_zoom` \u5728\u70AE\u955C\u89C6\u89D2\u4E2D\u53C2\u4E0E\u6295\u653E\uFF1B`screen_fixed` \u4F7F\u7528\u5C4F\u5E55\u4E2D\u5FC3\u5BF9\u5E94\u7684\u76F8\u673A\u7A7A\u95F4\u539F\u70B9\u3002\r\n\r\n\u5C06\u201CAUI \u9875\u9762\u6837\u5F0F\u201D\u4E2D\u7684\u6837\u5F0F\u793A\u4F8B\u4FDD\u5B58\u4E3A\u547D\u540D\u7A7A\u95F4 `machine_max` \u7684 `huds/aui_weapon_status.json` \u540E\uFF0C\u53EF\u7528\u8FD9\u4EFD\u5E03\u5C40\u540C\u65F6\u663E\u793A\u4E2D\u5FC3\u6B63\u4EA4\u9762\u677F\u4E0E\u53F3\u4E0A\u89D2\u900F\u89C6\u9762\u677F\u3002\u900F\u89C6\u53C2\u6570\u6309\u7EA6 `280 \xD7 120` CSS \u50CF\u7D20\u7684\u5185\u5BB9\u300170\xB0 \u89C6\u573A\u89D2\u4E0E 16:9 \u753B\u9762\u8BBE\u7F6E\uFF0C\u9762\u677F\u4F4D\u7F6E\u9700\u968F\u5B9E\u9645\u5185\u5BB9\u5C3A\u5BF8\u548C\u89C6\u573A\u89D2\u8C03\u6574\u3002\r\n\r\n```json\r\n[\r\n  {\r\n    "style": "machine_max:aui_weapon_status",\r\n    "perspective": false,\r\n    "anchor": "center",\r\n    "offset": [0, 0, 0],\r\n    "scale": [1, 1, 1]\r\n  },\r\n  {\r\n    "style": "machine_max:aui_weapon_status",\r\n    "perspective": true,\r\n    "scope_behavior": "screen_fixed",\r\n    "offset": [95, -60, -135],\r\n    "rotation": [15, -25, -5],\r\n    "scale": [0.2, 0.2, 0.2]\r\n  }\r\n]\r\n```\r\n\r\n\u952E\u7684\u89C4\u5219\uFF1A\u6587\u4EF6\u76F8\u5BF9\u8DEF\u5F84\u53BB\u6389 `.json` \u5C31\u662F\u8D44\u6E90\u952E\uFF0C\u5E76\u5E26\u4E0A\u5185\u5BB9\u5305\u547D\u540D\u7A7A\u95F4\u3002`hud_layouts/seat_dashboard.json` \u7684\u952E\u662F `machine_max:seat_dashboard`\uFF1B`hud_layouts/foo/bar.json` \u7684\u952E\u662F `machine_max:foo/bar`\u3002\u6837\u5F0F\u540C\u7406\uFF1A`huds/example_hud.json` \u7684\u952E\u662F `machine_max:example_hud`\u3002\u5E03\u5C40\u4E0E\u6837\u5F0F\u5206\u5C5E\u4E24\u4E2A\u6A21\u5757\uFF0C\u952E\u540C\u540D\u4E0D\u4F1A\u51B2\u7A81\u3002\r\n\r\n\u5E03\u5C40\u6570\u7EC4\u7684\u987A\u5E8F\u5C31\u662F\u540C\u4E00\u79CD\u6295\u5F71\u6A21\u5F0F\u5185\u7684\u63D0\u4EA4\u987A\u5E8F\uFF1B\u900F\u89C6\u4E0E\u6B63\u4EA4\u4E4B\u95F4\u7684\u5148\u540E\u7531\u6E32\u67D3\u6279\u6B21\u51B3\u5B9A\uFF0C\u4E0D\u7531\u5E03\u5C40\u8868\u8FBE\u3002\r\n\r\n## \u6A21\u578B\u548C\u52A8\u753B\u8981\u6C42\r\n\r\n### 3D\u6A21\u578B\u89C4\u8303\r\nHUD\u6A21\u578B\u4F7F\u7528\u6807\u51C6\u7684Minecraft Bedrock\u683C\u5F0F\uFF0C\u9700\u8981\u5305\u542B\u4EE5\u4E0B\u5143\u7D20\uFF1A\r\n\r\n1. **\u9AA8\u9ABC\u7ED3\u6784**: \u6BCF\u4E2A\u9700\u8981\u663E\u793A\u6587\u672C\u7684\u4F4D\u7F6E\u9700\u8981\u4E00\u4E2A\u5BF9\u5E94\u7684\u9AA8\u9ABC\r\n2. **\u5B9A\u4F4D\u5668**: \u7528\u4E8E\u786E\u5B9A\u6587\u672C\u663E\u793A\u7684\u4F4D\u7F6E\u548C\u65B9\u5411\r\n3. **\u51E0\u4F55\u5F62\u72B6**: \u5B9A\u4E49HUD\u7684\u89C6\u89C9\u5916\u89C2\r\n\r\n\r\n### \u52A8\u753B\u6587\u4EF6\r\n\u52A8\u753B\u6587\u4EF6\u63A7\u5236HUD\u5143\u7D20\u7684\u52A8\u6001\u884C\u4E3A\uFF0C\u53EF\u4EE5\u4F7F\u7528Molang\u8868\u8FBE\u5F0F\u5B9E\u73B0\u52A8\u6001\u6548\u679C\uFF1A\r\n\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(global.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\r\n## \u6587\u672C\u663E\u793A\u914D\u7F6E\r\n\r\n### \u57FA\u672C\u6587\u672C\u663E\u793A\r\n```json\r\n"speed": {\r\n  "key": "hud.machine_max.default_1.speed",\r\n  "centered": true,\r\n  "shadow": true,\r\n  "scale": [2, 2, 2]\r\n}\r\n```\r\n\r\n### \u52A8\u6001\u6587\u672C\u663E\u793A\r\n\u4F7F\u7528Molang\u53C2\u6570\u5B9E\u73B0\u52A8\u6001\u5185\u5BB9\uFF1A\r\n```json\r\n"speed": {\r\n  "key": "hud.machine_max.default_1.speed",\r\n  "molang_args": [\r\n    "math.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n    "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n    "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n  ],\r\n  "significand": 0\r\n}\r\n```\r\n\r\n### \u6863\u4F4D\u663E\u793A\r\n```json\r\n"gear": {\r\n  "key": "hud.machine_max.default_1.gear",\r\n  "molang_args": ["global.get(\'gear\')??\'NO GBX\'"],\r\n  "centered": true,\r\n  "shadow": true\r\n}\r\n```\r\n\r\n## Molang\u5728HUD\u4E2D\u7684\u5E94\u7528\r\n\r\nHUD\u7CFB\u7EDF\u5145\u5206\u5229\u7528\u4E86Molang\u7684\u5F3A\u5927\u529F\u80FD\uFF0C\u53EF\u4EE5\u5B9E\u73B0\u590D\u6742\u7684\u52A8\u6001\u663E\u793A\u6548\u679C\u3002\r\n\r\n### \u5E38\u7528Molang\u6A21\u5F0F\r\n\r\n#### \u4FE1\u53F7\u83B7\u53D6\u548C\u5355\u4F4D\u8F6C\u6362\r\n```molang\r\n// \u83B7\u53D6\u8F66\u8F86\u901F\u5EA6\u5E76\u8F6C\u6362\u4E3Akm/h\r\nmath.abs(global.get(\'vehicle_speed\')??0.0) * 3.6\r\n\r\n// \u83B7\u53D6\u53D1\u52A8\u673A\u8F6C\u901F\u5E76\u8F6C\u6362\u4E3ARPM\r\nmath.abs(global.get(\'engine_speed\')??0) * 30 / math.pi\r\n```\r\n\r\n#### \u6570\u5B57\u5206\u89E3\u663E\u793A\r\n```molang\r\n// \u767E\u4F4D\u6570\r\nmath.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)\r\n\r\n// \u5341\u4F4D\u6570\r\nmath.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)\r\n\r\n// \u4E2A\u4F4D\u6570\r\nmath.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))\r\n```\r\n\r\n#### \u6761\u4EF6\u663E\u793A\r\n```molang\r\n// \u6839\u636E\u5B50\u7CFB\u7EDF\u72B6\u6001\u663E\u793A\u8B66\u544A\r\nlocal.has_subsystem(\'engine\') && local.subsystem_destroyed(\'engine\') ? 1.0 : 0.0\r\n```\r\n\r\n## \u5B50\u7CFB\u7EDFHUD\u5173\u8054\r\n\r\nHUD \u901A\u8FC7\u5BBF\u4E3B\u7684\u89C6\u89D2\u5B57\u6BB5\u4E0E\u7279\u5B9A\u5EA7\u4F4D\u6216\u7784\u5177\u5173\u8054\uFF1A\u5EA7\u6905\u4F7F\u7528 `first_hud_layout` / `third_hud_layout`\uFF0C\u76F8\u673A\u4E0E\u7784\u5177\u4F7F\u7528 `scope_hud_layout`\u3002\u6BCF\u4E2A\u5B57\u6BB5\u662F\u4E00\u4E2A\u5E03\u5C40\u8D44\u6E90\u952E\uFF0C\u7F3A\u5931\u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\u3002\r\n\r\n### \u5EA7\u6905\u5B50\u7CFB\u7EDF\u914D\u7F6E\r\n```json\r\n{\r\n  "type": "machine_max:seat",\r\n  "views": {\r\n    "enable_first_person": true,\r\n    "first_hud_layout": "machine_max:seat_dashboard",\r\n    "first_person_offset": [0, 0.15, -0.1],\r\n    "enable_third_person": true,\r\n    "third_hud_layout": "machine_max:seat_dashboard",\r\n    "follow_vehicle": true,\r\n    "focus_on_center": true,\r\n    "distance_scale": 1.1\r\n  }\r\n}\r\n```\r\n\r\n### \u7784\u5177/\u76F8\u673A\u5B50\u7CFB\u7EDF\u914D\u7F6E\r\n```json\r\n{\r\n  "type": "machine_max:sight",\r\n  "scope_hud_layout": "machine_max:scope_gunner"\r\n}\r\n```\r\n\r\n### \u89C6\u56FE\u5C5E\u6027\u8BF4\u660E\r\n- **enable_first_person**: \u662F\u5426\u542F\u7528\u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\r\n- **first_hud_layout**: \u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\uFF1B\u7701\u7565\u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\r\n- **first_person_offset**: \u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u504F\u79FB\u91CF (x+\u53F3, y+\u4E0A, z+\u540E\uFF0C\u5355\u4F4D\u7C73)\r\n- **enable_third_person**: \u662F\u5426\u542F\u7528\u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\r\n- **third_hud_layout**: \u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\uFF1B\u7701\u7565\u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\r\n- **follow_vehicle**: \u6444\u50CF\u673A\u662F\u5426\u8DDF\u968F\u8F66\u8F86\u65CB\u8F6C\r\n- **focus_on_center**: \u6444\u50CF\u673A\u662F\u5426\u805A\u7126\u4E8E\u8F7D\u5177\u4E2D\u5FC3\r\n- **distance_scale**: \u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u8DDD\u79BB\u500D\u7387\r\n- **scope_hud_layout**\uFF08\u76F8\u673A/\u7784\u5177\uFF09: \u70AE\u955C\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\uFF1B\u7701\u7565\u8868\u793A\u70AE\u955C\u4E0D\u53E0\u52A0\u5E03\u5C40\u63D0\u4F9B\u7684 HUD\r\n\r\n## \u5B9E\u9645\u6848\u4F8B\u89E3\u6790\r\n\r\n### \u793A\u4F8BHUD\u5206\u6790\r\n\u4EE5 `machine_max:example_hud` \u4E3A\u4F8B\uFF0C\u5206\u6790\u5176\u5B8C\u6574\u5B9E\u73B0\u3002\u60A8\u53EF\u4EE5\u901A\u8FC7\u4EE5\u4E0B\u8DEF\u5F84\u67E5\u770B\u5B8C\u6574\u7684\u5B9E\u73B0\u6587\u4EF6\uFF1A\r\n\r\n#### 1. HUD\u6837\u5F0F ([example_hud.json](../../huds/example_hud.json))\r\n\r\n\u8FD9\u662F\u4E00\u4E2A\u529F\u80FD\u5B8C\u6574\u7684\u8F66\u8F86\u4EEA\u8868\u76D8\u6837\u5F0F\uFF0C\u80FD\u591F\u540C\u65F6\u663E\u793A\u53D1\u52A8\u673A\u8F6C\u901F\u3001\u53D8\u901F\u7BB1\u6321\u4F4D\u548C\u8F7D\u5177\u901F\u5EA6\u7B49\u5173\u952E\u4FE1\u606F\u3002\u6295\u653E\u503C\u5728\u540C\u76EE\u5F55\u7684 [seat_dashboard.json](../../hud_layouts/seat_dashboard.json) \u91CC\u3002\r\n\r\n```json\r\n{\r\n  "type": "machine_max:model_hud",\r\n  "model": "machine_max:example_hud.geo",\r\n  "animation": "machine_max:example_hud",\r\n  "texture": "machine_max:textures/hud/example_hud.png",\r\n  "texts": {\r\n    "speed": {\r\n      "key": "hud.machine_max.default_1.speed",\r\n      "centered": true,\r\n      "shadow": true,\r\n      "scale": [2, 2, 2],\r\n      "molang_args": [\r\n        "math.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n        "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n        "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n      ]\r\n    },\r\n    "gear": {\r\n      "key": "hud.machine_max.default_1.gear",\r\n      "centered": true,\r\n      "shadow": true,\r\n      "molang_args": ["global.get(\'gear\')??\'NO GBX\'"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n**HUD\u529F\u80FD\u6982\u8FF0\uFF1A**\r\n\r\n\u8FD9\u4E2AHUD\u6837\u5F0F\u4E0E\u5B83\u5F15\u7528\u7684\u5E03\u5C40\u5B9E\u73B0\u4E86\u4EE5\u4E0B\u6838\u5FC3\u529F\u80FD\uFF1A\r\n\r\n- **\u901F\u5EA6\u663E\u793A**\uFF1A\u5B9E\u65F6\u663E\u793A\u8F66\u8F86\u884C\u9A76\u901F\u5EA6\uFF0C\u4EE5\u516C\u91CC/\u5C0F\u65F6\u4E3A\u5355\u4F4D\uFF0C\u91C7\u7528\u4E09\u4F4D\u6570\u5B57\u663E\u793A\u683C\u5F0F\r\n- **\u6321\u4F4D\u6307\u793A**\uFF1A\u663E\u793A\u5F53\u524D\u53D8\u901F\u7BB1\u6240\u5904\u7684\u6321\u4F4D\u72B6\u6001\uFF0C\u5305\u62EC\u524D\u8FDB\u6321\u3001\u5012\u6321\u548C\u7A7A\u6321\r\n- **\u8F6C\u901F\u8868\u6307\u9488**\uFF1A\u901A\u8FC7\u52A8\u753B\u7CFB\u7EDF\u63A7\u5236\u8F6C\u901F\u8868\u6307\u9488\u7684\u52A8\u6001\u65CB\u8F6C\uFF0C\u53CD\u6620\u53D1\u52A8\u673A\u5DE5\u4F5C\u72B6\u6001\r\n\r\n\r\n##### \u7FFB\u8BD1\u952E\u503C\u5BF9\u89E3\u6790 ([lang/zh_cn.json](../../lang/zh_cn.json))\r\n\r\n\u5728\u8BED\u8A00\u6587\u4EF6\u4E2D\u5B9A\u4E49\u4E86HUD\u6587\u672C\u7684\u7FFB\u8BD1\u683C\u5F0F\uFF0C\u8FD9\u4E9B\u7FFB\u8BD1\u952E\u4E0E\u6837\u5F0F\u4E2D\u7684\u6587\u672C\u69FD\u7D27\u5BC6\u914D\u5408\uFF0C\u5B9E\u73B0\u4E86\u52A8\u6001\u5185\u5BB9\u7684\u683C\u5F0F\u5316\u663E\u793A\uFF1A\r\n\r\n```json\r\n"hud.machine_max.default_1.speed": "\xA7o%1$s%2$s%3$s",\r\n"hud.machine_max.default_1.gear": "\xA7o%1$s",\r\n"hud.machine_max.default_1.kmh": "\xA7oKM/H"\r\n```\r\n\r\n**\u7FFB\u8BD1\u952E\u7684\u5DE5\u4F5C\u539F\u7406**\uFF1A\r\n\r\n- **\u901F\u5EA6\u663E\u793A** (`hud.machine_max.default_1.speed`)\uFF1A\u8FD9\u4E2A\u7FFB\u8BD1\u952E\u63A5\u6536\u4E09\u4E2A\u53C2\u6570\uFF0C\u5206\u522B\u5BF9\u5E94\u901F\u5EA6\u7684\u767E\u4F4D\u3001\u5341\u4F4D\u548C\u4E2A\u4F4D\u6570\u5B57\u3002`\xA7o`\u4EE3\u7801\u8868\u793A\u4F7F\u7528\u659C\u4F53\u5B57\u4F53\u663E\u793A\uFF0C\u8BA9\u901F\u5EA6\u8BFB\u6570\u66F4\u52A0\u9192\u76EE\u3002\r\n\r\n- **\u6863\u4F4D\u663E\u793A** (`hud.machine_max.default_1.gear`)\uFF1A\u53EA\u9700\u8981\u4E00\u4E2A\u53C2\u6570\u6765\u663E\u793A\u5F53\u524D\u6863\u4F4D\u4FE1\u606F\uFF0C\u540C\u6837\u4F7F\u7528\u659C\u4F53\u683C\u5F0F\u589E\u5F3A\u53EF\u8BFB\u6027\u3002\r\n\r\n**\u6570\u5B57\u8F6C\u6362\u7684\u5B8C\u6574\u8FC7\u7A0B**\uFF1A\r\n\r\n\u5F53\u8F66\u8F86\u884C\u9A76\u65F6\uFF0CHUD\u7CFB\u7EDF\u4F1A\u5B9E\u65F6\u5904\u7406\u901F\u5EA6\u4FE1\u53F7\u5E76\u663E\u793A\u5728\u754C\u9762\u4E0A\u3002\u8FD9\u4E2A\u8FC7\u7A0B\u53EF\u4EE5\u5206\u4E3A\u4EE5\u4E0B\u51E0\u4E2A\u6B65\u9AA4\uFF1A\r\n\r\n1. **\u83B7\u53D6\u5B9E\u65F6\u6570\u636E**\uFF1A\u9996\u5148\u4ECE\u8F66\u8F86\u7CFB\u7EDF\u4E2D\u83B7\u53D6\u5F53\u524D\u7684\u901F\u5EA6\u4FE1\u53F7\uFF0C\u5355\u4F4D\u4E3A\u7C73/\u79D2\r\n2. **\u5355\u4F4D\u8F6C\u6362**\uFF1A\u5C06\u7C73/\u79D2\u8F6C\u6362\u4E3A\u66F4\u5E38\u7528\u7684\u516C\u91CC/\u5C0F\u65F6\u5355\u4F4D\r\n3. **\u6570\u5B57\u5206\u89E3**\uFF1A\u5C06\u4E09\u4F4D\u6570\u7684\u901F\u5EA6\u503C\u5206\u89E3\u4E3A\u767E\u4F4D\u3001\u5341\u4F4D\u548C\u4E2A\u4F4D\u4E09\u4E2A\u72EC\u7ACB\u7684\u6570\u5B57\r\n4. **\u683C\u5F0F\u5316\u663E\u793A**\uFF1A\u5C06\u5206\u89E3\u540E\u7684\u6570\u5B57\u586B\u5145\u5230\u7FFB\u8BD1\u952E\u7684\u5360\u4F4D\u7B26\u4E2D\uFF0C\u5E76\u5E94\u7528\u659C\u4F53\u683C\u5F0F\r\n5. **\u6700\u7EC8\u5448\u73B0**\uFF1A\u4F8B\u5982\u5F53\u8F66\u8F86\u4EE5123\u516C\u91CC/\u5C0F\u65F6\u7684\u901F\u5EA6\u884C\u9A76\u65F6\uFF0CHUD\u4F1A\u663E\u793A\u4E3A"\xA7o123"\u7684\u659C\u4F53\u6570\u5B57\r\n\r\n\u8FD9\u79CD\u8BBE\u8BA1\u4F7F\u5F97HUD\u80FD\u591F\u5B9E\u65F6\u53CD\u6620\u8F66\u8F86\u72B6\u6001\uFF0C\u540C\u65F6\u4FDD\u6301\u754C\u9762\u7684\u7F8E\u89C2\u548C\u4E00\u81F4\u6027\u3002\r\n\r\n#### 2. \u52A8\u753B\u63A7\u5236 ([example_hud.animation.json](../../animations/hud/example_hud/example_hud.animation.json))\r\n\r\n\u52A8\u753B\u6587\u4EF6\u5B9A\u4E49\u4E86HUD\u5143\u7D20\u7684\u52A8\u6001\u884C\u4E3A\uFF0C\u6BD4\u5982\u8F6C\u901F\u8868\u6307\u9488\u7684\u65CB\u8F6C\u6548\u679C\uFF1A\r\n\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(global.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\u8FD9\u4E2A\u52A8\u753B\u914D\u7F6E\u5B9E\u73B0\u4E86\u8F6C\u901F\u8868\u6307\u9488\u7684\u52A8\u6001\u65CB\u8F6C\u6548\u679C\u3002\u5F53\u53D1\u52A8\u673A\u8F6C\u901F\u53D8\u5316\u65F6\uFF0C\u6307\u9488\u4F1A\u5B9E\u65F6\u65CB\u8F6C\uFF0C\u4E3A\u9A7E\u9A76\u5458\u63D0\u4F9B\u76F4\u89C2\u7684\u8F6C\u901F\u53CD\u9988\u3002\r\n\r\n#### 3. \u5B50\u7CFB\u7EDF\u5173\u8054 ([senna_gtr_seat.json](../../subsystems/senna_gtr/senna_gtr_seat.json))\r\n\r\n\u5EA7\u6905\u5B50\u7CFB\u7EDF\u914D\u7F6E\u5C06 HUD \u4E0E\u7279\u5B9A\u7684\u5EA7\u4F4D\u5173\u8054\u8D77\u6765\uFF0C\u5B9A\u4E49\u4E86\u4E0D\u540C\u89C6\u89D2\u4F7F\u7528\u7684\u5E03\u5C40\uFF1A\r\n\r\n```json\r\n{\r\n  "views": {\r\n    "enable_first_person": true,\r\n    "first_hud_layout": "machine_max:seat_dashboard",\r\n    "first_person_offset": [0, 0.15, -0.1],\r\n    "enable_third_person": true,\r\n    "third_hud_layout": "machine_max:seat_dashboard",\r\n    "follow_vehicle": true,\r\n    "focus_on_center": true,\r\n    "distance_scale": 1.1\r\n  }\r\n}\r\n```\r\n\r\n**\u4E00\u4E2A\u5E03\u5C40\u53EF\u4EE5\u5305\u542B\u591A\u4E2A\u5143\u7D20**\uFF1A\u8981\u540C\u65F6\u663E\u793A\u901F\u5EA6\u8868\u3001\u8F6C\u901F\u8868\u3001\u6CB9\u91CF\u8868\uFF0C\u5C31\u5728\u5E03\u5C40\u6570\u7EC4\u91CC\u5199\u591A\u4E2A\u5143\u7D20\uFF0C\u5404\u81EA\u5F15\u7528\u5BF9\u5E94\u6837\u5F0F\u5E76\u7ED9\u51FA\u81EA\u5DF1\u7684\u6295\u653E\uFF1B\u540C\u4E00\u4E2A\u89C6\u89D2\u53EA\u8BFB\u4E00\u4E2A `*_hud_layout` \u5B57\u6BB5\u3002\u9700\u8981\u53E6\u4E00\u5957\u4F4D\u7F6E\u65F6\uFF0C\u590D\u5236\u4E00\u4EFD\u5E03\u5C40\u6587\u4EF6\u5E76\u6539\u6295\u653E\uFF0C\u800C\u4E0D\u662F\u590D\u5236\u6837\u5F0F\u3002', "zh_cn/molang/\u4F7F\u7528\u6848\u4F8B.md": '# Molang \u793A\u4F8B\u548C\u6848\u4F8B\r\n\r\n\u672C\u6587\u6863\u63D0\u4F9B Machine-Max \u4E2D Molang \u7684\u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\uFF0C\u5E2E\u52A9\u7406\u89E3\u5982\u4F55\u5728\u5B9E\u9645\u9879\u76EE\u4E2D\u5E94\u7528 Molang\u3002\r\n\r\n## \u6848\u4F8B 1: AE86 \u60AC\u6302\u7CFB\u7EDF\u52A8\u753B\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/animations/part/ae86/ae86.animation.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "axisRightFront": {\r\n    "rotation": [0, 0, "math.atan2(local.connector_offset(\'connector.machine_max.right_front_wheel\', 1)*16,20)"]\r\n  },\r\n  "rodLeftFront": {\r\n    "rotation": ["-65.7725+math.atan2(20-local.connector_offset(\'connector.machine_max.left_front_wheel\', 1)*16,9)", 0, 0]\r\n  },\r\n  "rodLeftFrontInner": {\r\n    "scale": [1, "math.sqrt(math.pow(20-local.connector_offset(\'connector.machine_max.left_front_wheel\', 1)*16,2)+81)/22", 1]\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u60AC\u6302\u9AD8\u5EA6\u83B7\u53D6**:\r\n   ```molang\r\n   local.connector_offset(\'connector.machine_max.left_front_wheel\', 1)\r\n   ```\r\n   - \u83B7\u53D6\u5DE6\u524D\u8F6E\u8FDE\u63A5\u5668\u7684Y\u8F74\u504F\u79FB\uFF08\u60AC\u6302\u9AD8\u5EA6\uFF09\r\n   - \u8FD4\u56DE\u503C\u5355\u4F4D\u4E3A\u7C73\r\n\r\n2. **\u60AC\u6302\u89D2\u5EA6\u8BA1\u7B97**:\r\n   ```molang\r\n   math.atan2(20 - height * 16, 9)\r\n   ```\r\n   - \u4F7F\u7528\u53CD\u6B63\u5207\u51FD\u6570\u8BA1\u7B97\u60AC\u6302\u8FDE\u6746\u7684\u89D2\u5EA6\r\n   - `20` \u662F\u57FA\u51C6\u9AD8\u5EA6\uFF0C`9` \u662F\u6C34\u5E73\u8DDD\u79BB\r\n   - `height * 16` \u662F\u5355\u4F4D\u8F6C\u6362\uFF08\u7C73\u5230\u6E38\u620F\u5355\u4F4D\uFF09\r\n\r\n3. **\u8FDE\u6746\u957F\u5EA6\u8BA1\u7B97**:\r\n   ```molang\r\n   math.sqrt(math.pow(20 - height * 16, 2) + 81) / 22\r\n   ```\r\n   - \u4F7F\u7528\u52FE\u80A1\u5B9A\u7406\u8BA1\u7B97\u8FDE\u6746\u957F\u5EA6\r\n   - `81` \u662F\u6C34\u5E73\u8DDD\u79BB\u7684\u5E73\u65B9\uFF089\xB2\uFF09\r\n   - `/22` \u662F\u5F52\u4E00\u5316\u5230\u57FA\u51C6\u957F\u5EA6\r\n\r\n### \u7269\u7406\u539F\u7406\r\n\u8FD9\u4E2A\u60AC\u6302\u7CFB\u7EDF\u6A21\u62DF\u4E86\u771F\u5B9E\u7684\u53CC\u53C9\u81C2\u60AC\u6302\uFF1A\r\n- \u5F53\u8F66\u8F6E\u4E0A\u4E0B\u79FB\u52A8\u65F6\uFF0C\u8FDE\u63A5\u5668\u504F\u79FB\u91CF\u53D8\u5316\r\n- \u901A\u8FC7\u4E09\u89D2\u51FD\u6570\u8BA1\u7B97\u60AC\u6302\u8FDE\u6746\u7684\u89D2\u5EA6\u548C\u957F\u5EA6\r\n- \u5B9E\u73B0\u771F\u5B9E\u7684\u60AC\u6302\u8FD0\u52A8\u5B66\u6548\u679C\r\n\r\n## \u6848\u4F8B 2: HUD \u8F6C\u901F\u8868\u6307\u9488\u63A7\u5236\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/animations/hud/example_hud/example_hud.animation.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(global.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u53D1\u52A8\u673A\u8F6C\u901F\u83B7\u53D6**:\r\n   ```molang\r\n   global.get(\'engine_speed\')??0\r\n   ```\r\n   - \u83B7\u53D6\u53D1\u52A8\u673A\u8F6C\u901F\u4FE1\u53F7\r\n   - `??0` \u662F\u7A7A\u503C\u5408\u5E76\u64CD\u4F5C\u7B26\uFF0C\u786E\u4FDD\u6709\u9ED8\u8BA4\u503C\r\n\r\n2. **\u5355\u4F4D\u8F6C\u6362**:\r\n   ```molang\r\n   math.abs(engine_speed) * 30 / math.pi\r\n   ```\r\n   - `math.abs()` \u786E\u4FDD\u8F6C\u901F\u4E3A\u6B63\u6570\r\n   - `* 30 / math.pi` \u5C06\u5F27\u5EA6/\u79D2\u8F6C\u6362\u4E3A\u8F6C/\u5206\u949F\uFF08RPM\uFF09\r\n   - \u8F6C\u6362\u516C\u5F0F\uFF1ARPM = (rad/s) \xD7 60 / (2\u03C0) = (rad/s) \xD7 30 / \u03C0\r\n\r\n3. **\u5F52\u4E00\u5316\u5904\u7406**:\r\n   ```molang\r\n   normalized_rpm = rpm / 9000\r\n   ```\r\n   - \u5047\u8BBE\u6700\u5927\u8F6C\u901F\u4E3A 9000 RPM\r\n   - \u5C06\u5B9E\u9645\u8F6C\u901F\u5F52\u4E00\u5316\u5230 0-1 \u8303\u56F4\r\n\r\n4. **\u6307\u9488\u89D2\u5EA6\u8BA1\u7B97**:\r\n   ```molang\r\n   pointer_angle = normalized_rpm * 240\r\n   ```\r\n   - \u5047\u8BBE\u8F6C\u901F\u8868\u6EE1\u91CF\u7A0B\u4E3A 240 \u5EA6\r\n   - \u5C06\u5F52\u4E00\u5316\u8F6C\u901F\u8F6C\u6362\u4E3A\u6307\u9488\u65CB\u8F6C\u89D2\u5EA6\r\n\r\n### \u4EEA\u8868\u8BBE\u8BA1\r\n- **\u91CF\u7A0B**: 0-9000 RPM\r\n- **\u6307\u9488\u8303\u56F4**: 0-240 \u5EA6\r\n- **\u7A7A\u8F6C\u4FDD\u62A4**: \u4F7F\u7528 `??0` \u5904\u7406\u4FE1\u53F7\u4E22\u5931\u60C5\u51B5\r\n\r\n## \u6848\u4F8B 3: HUD \u901F\u5EA6\u663E\u793A\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/huds/example_hud.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "speed": {\r\n    "molang_args": [\r\n      "math.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n      "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n      "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u901F\u5EA6\u83B7\u53D6\u548C\u5355\u4F4D\u8F6C\u6362**:\r\n   ```molang\r\n   speed_kmh = math.abs(global.get(\'vehicle_speed\')??0.0) * 3.6\r\n   ```\r\n   - \u83B7\u53D6\u8F66\u8F86\u901F\u5EA6\uFF08\u7C73/\u79D2\uFF09\r\n   - \u8F6C\u6362\u4E3A\u516C\u91CC/\u5C0F\u65F6\uFF1Akm/h = m/s \xD7 3.6\r\n\r\n2. **\u767E\u4F4D\u6570\u63D0\u53D6**:\r\n   ```molang\r\n   hundreds = math.floor(speed_kmh / 100)\r\n   ```\r\n   - \u8BA1\u7B97\u901F\u5EA6\u7684\u767E\u4F4D\u6570\r\n   - \u4F8B\u5982\uFF1A123 km/h \u2192 \u767E\u4F4D\u6570\u4E3A 1\r\n\r\n3. **\u5341\u4F4D\u6570\u63D0\u53D6**:\r\n   ```molang\r\n   tens = math.floor(math.mod(speed_kmh, 100) / 10)\r\n   ```\r\n   - \u5148\u53D6\u6A21100\u5F97\u5230\u540E\u4E24\u4F4D\u6570\r\n   - \u518D\u9664\u4EE510\u53D6\u6574\u5F97\u5230\u5341\u4F4D\u6570\r\n   - \u4F8B\u5982\uFF1A123 km/h \u2192 \u6A21100\u5F9723 \u2192 \u9664\u4EE510\u5F972.3 \u2192 \u53D6\u6574\u5F972\r\n\r\n4. **\u4E2A\u4F4D\u6570\u63D0\u53D6**:\r\n   ```molang\r\n   units = math.floor(math.mod(speed_kmh, 10))\r\n   ```\r\n   - \u76F4\u63A5\u53D6\u6A2110\u5F97\u5230\u4E2A\u4F4D\u6570\r\n   - \u4F8B\u5982\uFF1A123 km/h \u2192 \u6A2110\u5F973\r\n\r\n### \u663E\u793A\u903B\u8F91\r\n\u8FD9\u79CD\u65B9\u6CD5\u5C06\u4E09\u4F4D\u6570\u901F\u5EA6\u5206\u89E3\u4E3A\u4E09\u4E2A\u72EC\u7ACB\u7684\u6570\u5B57\uFF0C\u4FBF\u4E8E\u5728HUD\u4E2D\u4F7F\u7528\u4E09\u4E2A\u4E0D\u540C\u7684\u6587\u672C\u5143\u7D20\u663E\u793A\uFF0C\u5B9E\u73B0\u6570\u5B57\u5F0F\u901F\u5EA6\u8868\u3002\r\n\r\n## \u6848\u4F8B 4: \u65B9\u5411\u76D8\u52A8\u753B\u63A7\u5236\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/animations/part/ae86/ae86.animation.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "rot2": {\r\n    "rotation": [0, 0, "global.get(\'steering\')*225"]\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u8F6C\u5411\u4FE1\u53F7\u83B7\u53D6**:\r\n   ```molang\r\n   steering_input = global.get(\'steering\')\r\n   ```\r\n   - \u83B7\u53D6\u8F6C\u5411\u8F93\u5165\u4FE1\u53F7\r\n   - \u8303\u56F4\uFF1A-1.0\uFF08\u5DE6\u8F6C\uFF09\u5230 1.0\uFF08\u53F3\u8F6C\uFF09\r\n\r\n2. **\u89D2\u5EA6\u8F6C\u6362**:\r\n   ```molang\r\n   steering_angle = steering_input * 225\r\n   ```\r\n   - \u5C06\u8F93\u5165\u4FE1\u53F7\u8F6C\u6362\u4E3A\u65CB\u8F6C\u89D2\u5EA6\r\n   - 225\u5EA6\u662F\u6700\u5927\u8F6C\u5411\u89D2\u5EA6\r\n   - \u5DE6\u8F6C\uFF1A-1.0 \xD7 225 = -225\u5EA6\r\n   - \u53F3\u8F6C\uFF1A1.0 \xD7 225 = 225\u5EA6\r\n\r\n### \u8F6C\u5411\u7CFB\u7EDF\u8BBE\u8BA1\r\n- **\u8F6C\u5411\u6BD4**: 1:225\uFF08\u8F93\u5165\u4FE1\u53F7\u5230\u89D2\u5EA6\uFF09\r\n- **\u8F6C\u5411\u8303\u56F4**: \xB1225\u5EA6\r\n- **\u7EBF\u6027\u6620\u5C04**: \u7B80\u5355\u7684\u4E58\u6CD5\u5173\u7CFB\uFF0C\u786E\u4FDD\u8F6C\u5411\u54CD\u5E94\u7EBF\u6027\r\n\r\n## \u6700\u4F73\u5B9E\u8DF5\r\n\r\n### 1. \u9519\u8BEF\u5904\u7406\r\n```molang\r\n// \u4F7F\u7528\u7A7A\u503C\u5408\u5E76\u64CD\u4F5C\u7B26\r\nglobal.get(\'signal_name\')??default_value\r\n\r\n// \u68C0\u67E5\u5B50\u7CFB\u7EDF\u5B58\u5728\u6027\r\nlocal.has_subsystem(\'engine\') ? local.subsystem_durability(\'engine\') : 0.0\r\n```\r\n\r\n### 2. \u6027\u80FD\u4F18\u5316\r\n```molang\r\n// \u907F\u514D\u91CD\u590D\u8BA1\u7B97\r\nlet speed = math.abs(global.get(\'vehicle_speed\')??0.0) * 3.6;\r\nmath.floor(speed / 100), math.floor(math.mod(speed, 100) / 10), math.floor(math.mod(speed, 10))\r\n\r\n// \u4F7F\u7528\u7B80\u5355\u7684\u6570\u5B66\u8FD0\u7B97\r\n// \u907F\u514D\u590D\u6742\u7684\u4E09\u89D2\u51FD\u6570\u548C\u6307\u6570\u8FD0\u7B97\r\n```\r\n\r\n### 3. \u53EF\u8BFB\u6027\r\n```molang\r\n// \u4F7F\u7528\u6709\u610F\u4E49\u7684\u53D8\u91CF\u540D\r\nlet engine_rpm = math.abs(global.get(\'engine_speed\')??0) * 30 / math.pi;\r\nlet max_rpm = 9000;\r\nlet pointer_range = 240;\r\nlet pointer_angle = (engine_rpm / max_rpm) * pointer_range;\r\n\r\n// \u6DFB\u52A0\u6CE8\u91CA\u8BF4\u660E\u590D\u6742\u8BA1\u7B97\r\n```\r\n\r\n## \u8C03\u8BD5\u6280\u5DE7\r\n\r\n1. **\u9010\u6B65\u6D4B\u8BD5**: \u5C06\u590D\u6742\u8868\u8FBE\u5F0F\u5206\u89E3\u4E3A\u591A\u4E2A\u6B65\u9AA4\u6D4B\u8BD5\r\n2. **\u8FB9\u754C\u503C\u6D4B\u8BD5**: \u6D4B\u8BD5\u6700\u5C0F\u503C\u3001\u6700\u5927\u503C\u548C\u8FB9\u754C\u60C5\u51B5\r\n3. **\u5355\u4F4D\u9A8C\u8BC1**: \u786E\u4FDD\u6240\u6709\u5355\u4F4D\u8F6C\u6362\u6B63\u786E\r\n4. **\u6027\u80FD\u76D1\u63A7**: \u76D1\u63A7\u590D\u6742\u8868\u8FBE\u5F0F\u7684\u6267\u884C\u6027\u80FD\r\n\r\n\u8FD9\u4E9B\u6848\u4F8B\u5C55\u793A\u4E86 Molang \u5728 Machine-Max \u4E2D\u7684\u5F3A\u5927\u5E94\u7528\u80FD\u529B\uFF0C\u4ECE\u7B80\u5355\u7684\u4FE1\u53F7\u6620\u5C04\u5230\u590D\u6742\u7684\u7269\u7406\u6A21\u62DF\uFF0CMolang \u90FD\u80FD\u63D0\u4F9B\u7075\u6D3B\u800C\u9AD8\u6548\u7684\u89E3\u51B3\u65B9\u6848\u3002', "zh_cn/molang/\u603B\u89C8.md": "# Molang \u6587\u6863\r\n\r\nMachine-Max \u4F7F\u7528 Molang \u811A\u672C\u7CFB\u7EDF\u6765\u63A7\u5236\u8F66\u8F86\u52A8\u753B\u3001HUD\u663E\u793A\u548C\u4EA4\u4E92\u903B\u8F91\u3002Molang \u662F\u4E00\u79CD\u8F7B\u91CF\u7EA7\u7684\u811A\u672C\u8BED\u8A00\uFF0C\u4E13\u95E8\u7528\u4E8E\u5B9E\u65F6\u8BA1\u7B97\u548C\u52A8\u753B\u63A7\u5236\u3002\r\n\r\n## \u76EE\u5F55\u7ED3\u6784\r\n\r\n- [local \u65B9\u6CD5](./local.md) - \u96F6\u4EF6\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [global \u65B9\u6CD5](./global.md) - \u8F66\u8F86\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [math \u51FD\u6570](./math.md) - \u6570\u5B66\u8BA1\u7B97\u51FD\u6570\r\n- [\u793A\u4F8B\u548C\u6848\u4F8B](./examples.md) - \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n## \u57FA\u672C\u8BED\u6CD5\r\n\r\nMolang \u8868\u8FBE\u5F0F\u4F7F\u7528\u7C7B\u4F3C JavaScript \u7684\u8BED\u6CD5\uFF0C\u652F\u6301\u57FA\u672C\u7684\u6570\u5B66\u8FD0\u7B97\u3001\u6761\u4EF6\u5224\u65AD\u548C\u51FD\u6570\u8C03\u7528\uFF1A\r\n\r\n```molang\r\n// \u57FA\u672C\u8FD0\u7B97\r\n1.0 + 2.0 * 3.0\r\n\r\n// \u6761\u4EF6\u8868\u8FBE\u5F0F\r\nvariable > 0 ? 1.0 : 0.0\r\n\r\n// \u51FD\u6570\u8C03\u7528\r\nmath.sin(angle)\r\nlocal.has_subsystem('engine')\r\n```\r\n\r\n## \u53D8\u91CF\u548C\u4E0A\u4E0B\u6587\r\n\r\nMolang \u8868\u8FBE\u5F0F\u5728\u4E0D\u540C\u7684\u4E0A\u4E0B\u6587\u4E2D\u6267\u884C\uFF0C\u53EF\u4EE5\u8BBF\u95EE\u4E0D\u540C\u7684\u53D8\u91CF\u548C\u65B9\u6CD5\uFF1A\r\n\r\n- **\u52A8\u753B\u4E0A\u4E0B\u6587**: \u5728\u6A21\u578B\u52A8\u753B\u4E2D\u4F7F\u7528\uFF0C\u53EF\u4EE5\u8BBF\u95EE `local` \u548C `global` \u5BF9\u8C61\r\n- **HUD\u4E0A\u4E0B\u6587**: \u5728HUD\u663E\u793A\u4E2D\u4F7F\u7528\uFF0C\u53EF\u4EE5\u8BBF\u95EE\u73A9\u5BB6\u5B9E\u4F53\u3001 `local` \u548C `global` \u5BF9\u8C61\r\n\r\n## \u5E38\u7528\u6A21\u5F0F\r\n\r\n### \u4FE1\u53F7\u83B7\u53D6\r\n```molang\r\n// \u83B7\u53D6\u8F66\u8F86\u5728\u67D0\u4E2A\u9891\u9053\u7684\u4FE1\u53F7\u503C\r\nglobal.get('signal_channel')\r\n\r\n// \u83B7\u53D6\u96F6\u4EF6\u5728\u67D0\u4E2A\u9891\u9053\u7684\u4FE1\u53F7\u503C\r\nlocal.get('signal_channel')\r\n```\r\n\r\n### \u6761\u4EF6\u52A8\u753B\r\n```molang\r\n// \u6839\u636E\u6761\u4EF6\u63A7\u5236\u52A8\u753B\r\nlocal.has_subsystem('engine') ? 1.0 : 0.0\r\n```\r\n\r\n### \u6570\u5B66\u8BA1\u7B97\r\n```molang\r\n// \u5355\u4F4D\u8F6C\u6362\uFF08\u7C73/\u79D2\u8F6C\u516C\u91CC/\u5C0F\u65F6\uFF09\r\nmath.abs(global.get('vehicle_speed')) * 3.6\r\n```", "zh_cn/molang/\u6570\u5B66\u51FD\u6570.md": "# math \u51FD\u6570\r\n\r\n`math` \u5BF9\u8C61\u63D0\u4F9B\u4E86\u6570\u5B66\u8BA1\u7B97\u529F\u80FD\uFF0C\u5305\u62EC\u4E09\u89D2\u51FD\u6570\u3001\u6307\u6570\u51FD\u6570\u3001\u53D6\u6574\u51FD\u6570\u7B49\u3002\r\n\r\n## \u4E09\u89D2\u51FD\u6570\r\n\r\n### math.sin(value)\r\n\u8BA1\u7B97\u89D2\u5EA6\u7684\u6B63\u5F26\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u6B63\u5F26\u503C\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\nmath.sin(90)  // \u8FD4\u56DE 1.0\r\n```\r\n\r\n### math.cos(value)\r\n\u8BA1\u7B97\u89D2\u5EA6\u7684\u4F59\u5F26\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u4F59\u5F26\u503C\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\nmath.cos(0)  // \u8FD4\u56DE 1.0\r\n```\r\n\r\n### math.tan(value)\r\n\u8BA1\u7B97\u89D2\u5EA6\u7684\u6B63\u5207\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u6B63\u5207\u503C\r\n\r\n### math.asin(value)\r\n\u8BA1\u7B97\u503C\u7684\u53CD\u6B63\u5F26\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08-1.0 \u5230 1.0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n### math.acos(value)\r\n\u8BA1\u7B97\u503C\u7684\u53CD\u4F59\u5F26\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08-1.0 \u5230 1.0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n### math.atan(value)\r\n\u8BA1\u7B97\u503C\u7684\u53CD\u6B63\u5207\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n### math.atan2(y, x)\r\n\u8BA1\u7B97 y/x \u7684\u53CD\u6B63\u5207\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `y` (double): Y\u5750\u6807\u503C\r\n- `x` (double): X\u5750\u6807\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728AE86\u60AC\u6302\u52A8\u753B\u4E2D\u4F7F\u7528\r\nmath.atan2(local.connector_offset('connector.machine_max.right_front_wheel', 1)*16, 20)\r\n```\r\n\r\n## \u6307\u6570\u548C\u5BF9\u6570\u51FD\u6570\r\n\r\n### math.exp(value)\r\n\u8BA1\u7B97 e \u7684 value \u6B21\u5E42\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u6307\u6570\r\n\r\n**\u8FD4\u56DE\u503C**: e^value\r\n\r\n### math.log(value)\r\n\u8BA1\u7B97\u503C\u7684\u81EA\u7136\u5BF9\u6570\uFF08\u4EE5 e \u4E3A\u5E95\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08> 0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u81EA\u7136\u5BF9\u6570\r\n\r\n### math.pow(base, exponent)\r\n\u8BA1\u7B97 base \u7684 exponent \u6B21\u5E42\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `base` (double): \u5E95\u6570\r\n- `exponent` (double): \u6307\u6570\r\n\r\n**\u8FD4\u56DE\u503C**: base^exponent\r\n\r\n### math.sqrt(value)\r\n\u8BA1\u7B97\u503C\u7684\u5E73\u65B9\u6839\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08\u2265 0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u5E73\u65B9\u6839\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728AE86\u60AC\u6302\u52A8\u753B\u4E2D\u8BA1\u7B97\u8FDE\u6746\u957F\u5EA6\r\nmath.sqrt(math.pow(20-local.connector_offset('connector.machine_max.left_front_wheel', 1)*16, 2)+81)\r\n```\r\n\r\n## \u53D6\u6574\u51FD\u6570\r\n\r\n### math.floor(value)\r\n\u5411\u4E0B\u53D6\u6574\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u5C0F\u4E8E\u7B49\u4E8E value \u7684\u6700\u5927\u6574\u6570\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728HUD\u901F\u5EA6\u663E\u793A\u4E2D\u4F7F\u7528\r\nmath.floor((math.abs(global.get('vehicle_speed')??0.0)) * 3.6 / 100)\r\n```\r\n\r\n### math.ceil(value)\r\n\u5411\u4E0A\u53D6\u6574\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u5927\u4E8E\u7B49\u4E8E value \u7684\u6700\u5C0F\u6574\u6570\r\n\r\n### math.round(value)\r\n\u56DB\u820D\u4E94\u5165\u53D6\u6574\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u6700\u63A5\u8FD1\u7684\u6574\u6570\r\n\r\n## \u5176\u4ED6\u6570\u5B66\u51FD\u6570\r\n\r\n### math.abs(value)\r\n\u8BA1\u7B97\u7EDD\u5BF9\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u7EDD\u5BF9\u503C\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u786E\u4FDD\u901F\u5EA6\u503C\u4E3A\u6B63\u6570\r\nmath.abs(global.get('vehicle_speed')??0.0)\r\n```\r\n\r\n### math.mod(value1, value2)\r\n\u8BA1\u7B97 value1 \u9664\u4EE5 value2 \u7684\u4F59\u6570\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value1` (double): \u88AB\u9664\u6570\r\n- `value2` (double): \u9664\u6570\r\n\r\n**\u8FD4\u56DE\u503C**: \u4F59\u6570\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728HUD\u901F\u5EA6\u663E\u793A\u4E2D\u63D0\u53D6\u5341\u4F4D\u6570\r\nmath.floor(math.mod((math.abs(global.get('vehicle_speed')??0.0)) * 3.6, 100) / 10)\r\n```\r\n\r\n### math.sign(value)\r\n\u83B7\u53D6\u503C\u7684\u7B26\u53F7\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: 1.0\uFF08\u6B63\u6570\uFF09\u3001-1.0\uFF08\u8D1F\u6570\uFF09\u30010.0\uFF08\u96F6\uFF09\r\n\r\n### math.min(value1, value2)\r\n\u8FD4\u56DE\u4E24\u4E2A\u503C\u4E2D\u7684\u8F83\u5C0F\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value1` (double): \u7B2C\u4E00\u4E2A\u503C\r\n- `value2` (double): \u7B2C\u4E8C\u4E2A\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u8F83\u5C0F\u503C\r\n\r\n### math.max(value1, value2)\r\n\u8FD4\u56DE\u4E24\u4E2A\u503C\u4E2D\u7684\u8F83\u5927\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value1` (double): \u7B2C\u4E00\u4E2A\u503C\r\n- `value2` (double): \u7B2C\u4E8C\u4E2A\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u8F83\u5927\u503C\r\n\r\n### math.clamp(value, min, max)\r\n\u5C06\u503C\u9650\u5236\u5728\u6307\u5B9A\u8303\u56F4\u5185\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u8981\u9650\u5236\u7684\u503C\r\n- `min` (double): \u6700\u5C0F\u503C\r\n- `max` (double): \u6700\u5927\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u9650\u5236\u540E\u7684\u503C\r\n\r\n### math.lerp(start, end, alpha)\r\n\u7EBF\u6027\u63D2\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `start` (double): \u8D77\u59CB\u503C\r\n- `end` (double): \u7ED3\u675F\u503C\r\n- `alpha` (double): \u63D2\u503C\u7CFB\u6570\uFF080.0 \u5230 1.0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u63D2\u503C\u7ED3\u679C\r\n\r\n## \u6570\u5B66\u5E38\u91CF\r\n\r\n### math.pi\r\n\u5706\u5468\u7387 \u03C0 \u7684\u503C\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\r\n\r\n**\u503C**: \u7EA6\u7B49\u4E8E 3.141592653589793\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5F27\u5EA6\u8F6C\u89D2\u5EA6\r\nradians * 180 / math.pi\r\n\r\n// \u89D2\u5EA6\u8F6C\u5F27\u5EA6\r\ndegrees * math.pi / 180\r\n```\r\n\r\n## \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n### 1. \u5355\u4F4D\u8F6C\u6362\r\n```molang\r\n// \u7C73/\u79D2\u8F6C\u516C\u91CC/\u5C0F\u65F6\r\nglobal.get('vehicle_speed') * 3.6\r\n\r\n// \u5F27\u5EA6/\u79D2\u8F6C\u8F6C/\u5206\u949F\uFF08RPM\uFF09\r\nglobal.get('engine_speed') * 30 / math.pi\r\n```\r\n\r\n### 2. \u52A8\u753B\u63A7\u5236\r\n```molang\r\n// \u5E73\u6ED1\u52A8\u753B\u63D2\u503C\r\nmath.lerp(current_angle, target_angle, 0.1)\r\n\r\n// \u9650\u5236\u65CB\u8F6C\u89D2\u5EA6\u5728\u5408\u7406\u8303\u56F4\u5185\r\nmath.clamp(rotation_angle, -180, 180)\r\n```\r\n\r\n### 3. \u7269\u7406\u8BA1\u7B97\r\n```molang\r\n// \u8BA1\u7B97\u4E24\u70B9\u95F4\u8DDD\u79BB\r\nmath.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2) + math.pow(z2-z1, 2))\r\n\r\n// \u8BA1\u7B97\u89D2\u5EA6\u5DEE\r\nmath.abs(math.mod(angle1 - angle2 + 180, 360) - 180)\r\n```\r\n\r\n## \u6CE8\u610F\u4E8B\u9879\r\n\r\n1. **\u89D2\u5EA6\u5355\u4F4D**: \u6240\u6709\u4E09\u89D2\u51FD\u6570\u4F7F\u7528\u5EA6\u4E3A\u5355\u4F4D\uFF0C\u800C\u4E0D\u662F\u5F27\u5EA6\r\n2. **\u6027\u80FD\u8003\u8651**: \u590D\u6742\u7684\u6570\u5B66\u8BA1\u7B97\u53EF\u80FD\u5F71\u54CD\u6027\u80FD\uFF0C\u5C3D\u91CF\u7B80\u5316\u8868\u8FBE\u5F0F\r\n3. **\u6570\u503C\u8303\u56F4**: \u6CE8\u610F\u51FD\u6570\u7684\u5B9A\u4E49\u57DF\u548C\u503C\u57DF\uFF0C\u907F\u514D\u6570\u5B66\u9519\u8BEF\r\n4. **\u7CBE\u5EA6\u95EE\u9898**: \u6D6E\u70B9\u6570\u8BA1\u7B97\u53EF\u80FD\u5B58\u5728\u7CBE\u5EA6\u8BEF\u5DEE\uFF0C\u91CD\u8981\u8BA1\u7B97\u5E94\u8FDB\u884C\u9002\u5F53\u7684\u820D\u5165", "zh_cn/molang/\u8F7D\u5177\u65B9\u6CD5.md": "# Molang \u6587\u6863\r\n\r\nMachine-Max \u4F7F\u7528 Molang \u811A\u672C\u7CFB\u7EDF\u6765\u63A7\u5236\u8F66\u8F86\u52A8\u753B\u3001HUD\u663E\u793A\u548C\u4EA4\u4E92\u903B\u8F91\u3002Molang \u662F\u4E00\u79CD\u8F7B\u91CF\u7EA7\u7684\u811A\u672C\u8BED\u8A00\uFF0C\u4E13\u95E8\u7528\u4E8E\u5B9E\u65F6\u8BA1\u7B97\u548C\u52A8\u753B\u63A7\u5236\u3002\r\n\r\n## \u76EE\u5F55\u7ED3\u6784\r\n\r\n- [\u96F6\u4EF6\u65B9\u6CD5](./\u96F6\u4EF6\u65B9\u6CD5.md) - \u96F6\u4EF6\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [\u8F66\u8F86\u65B9\u6CD5](./\u8F66\u8F86\u65B9\u6CD5.md) - \u8F66\u8F86\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [\u6570\u5B66\u51FD\u6570](./\u6570\u5B66\u51FD\u6570.md) - \u6570\u5B66\u8BA1\u7B97\u51FD\u6570\r\n- [\u4F7F\u7528\u6848\u4F8B](./\u4F7F\u7528\u6848\u4F8B.md) - \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n## \u57FA\u672C\u8BED\u6CD5\r\n\r\nMolang \u8868\u8FBE\u5F0F\u4F7F\u7528\u7C7B\u4F3C JavaScript \u7684\u8BED\u6CD5\uFF0C\u652F\u6301\u57FA\u672C\u7684\u6570\u5B66\u8FD0\u7B97\u3001\u6761\u4EF6\u5224\u65AD\u548C\u51FD\u6570\u8C03\u7528\u3002\r\n\r\n### \u57FA\u672C\u8FD0\u7B97\r\n```molang\r\n// \u7B97\u672F\u8FD0\u7B97\r\n1.0 + 2.0 * 3.0  // \u7ED3\u679C\u4E3A 7.0\r\n(1.0 + 2.0) * 3.0  // \u7ED3\u679C\u4E3A 9.0\r\n\r\n// \u6BD4\u8F83\u8FD0\u7B97\r\nspeed > 0  // \u5927\u4E8E\u6BD4\u8F83\r\ndurability <= max_durability  // \u5C0F\u4E8E\u7B49\u4E8E\u6BD4\u8F83\r\nv.a == 3.0  // \u7B49\u4E8E\u6BD4\u8F83\r\n```\r\n\r\n### \u4E09\u5143\u8868\u8FBE\u5F0F\uFF08\u6761\u4EF6\u8FD0\u7B97\u7B26\uFF09\r\n```molang\r\n// \u57FA\u672C\u8BED\u6CD5\uFF1A\u6761\u4EF6 ? \u771F\u503C : \u5047\u503C\r\nvariable > 0 ? 1.0 : 0.0\r\n\r\n// \u5B9E\u9645\u5E94\u7528\uFF1A\u6839\u636E\u5B50\u7CFB\u7EDF\u72B6\u6001\u663E\u793A\u8B66\u544A\u706F\r\nlocal.has_subsystem('engine') && local.subsystem_destroyed('engine') ? 1.0 : 0.0\r\n\r\n// \u5D4C\u5957\u4F7F\u7528\r\nv.fuel_level > 50 ? 0.0 : (v.fuel_level > 10 ? 0.5 : 1.0)\r\n```\r\n\r\n### \u7A7A\u503C\u5408\u5E76\u8FD0\u7B97\u7B26\uFF08??\uFF09\r\n```molang\r\n// \u57FA\u672C\u8BED\u6CD5\uFF1A\u503C ?? \u9ED8\u8BA4\u503C\r\nglobal.get('signal_name')??0.0\r\n\r\n// \u5B9E\u9645\u5E94\u7528\uFF1A\u5904\u7406\u53EF\u80FD\u4E0D\u5B58\u5728\u7684\u4FE1\u53F7\r\nmath.abs(global.get('vehicle_speed')??0.0) * 3.6\r\n\r\n// \u94FE\u5F0F\u4F7F\u7528\r\nglobal.get('engine_speed')??global.get('motor_speed')??0.0\r\n```\r\n\r\n### \u51FD\u6570\u8C03\u7528\r\n```molang\r\n// \u6570\u5B66\u51FD\u6570\r\nmath.sin(angle)\r\nmath.floor(value)\r\n\r\n// \u8F66\u8F86\u548C\u96F6\u4EF6\u65B9\u6CD5\r\nglobal.get('steering')\r\nlocal.has_subsystem('engine')\r\n```\r\n\r\n## \u5E38\u7528\u6A21\u5F0F\r\n\r\n### \u4FE1\u53F7\u83B7\u53D6\u548C\u5B89\u5168\u8BBF\u95EE\r\n```molang\r\n// \u5B89\u5168\u83B7\u53D6\u4FE1\u53F7\u503C\r\nglobal.get('signal_name')??default_value\r\n\r\n// \u6761\u4EF6\u68C0\u67E5\u540E\u8BBF\u95EE\r\nlocal.has_subsystem('engine') ? local.subsystem_durability('engine') : 0.0\r\n```\r\n\r\n### \u5355\u4F4D\u8F6C\u6362\r\n```molang\r\n// \u7C73/\u79D2\u8F6C\u516C\u91CC/\u5C0F\u65F6\r\nglobal.get('vehicle_speed')??0.0 * 3.6\r\n\r\n// \u5F27\u5EA6/\u79D2\u8F6C\u8F6C/\u5206\u949F\uFF08RPM\uFF09\r\nglobal.get('engine_speed')??0.0 * 30 / math.pi\r\n```\r\n\r\n## \u4E0B\u4E00\u6B65\r\n\r\n- \u67E5\u770B [\u96F6\u4EF6\u65B9\u6CD5](./\u96F6\u4EF6\u65B9\u6CD5.md) \u4E86\u89E3\u96F6\u4EF6\u76F8\u5173\u7684\u6240\u6709\u65B9\u6CD5\r\n- \u67E5\u770B [\u8F66\u8F86\u65B9\u6CD5](./\u8F66\u8F86\u65B9\u6CD5.md) \u4E86\u89E3\u8F66\u8F86\u4FE1\u53F7\u83B7\u53D6\u65B9\u6CD5\r\n- \u67E5\u770B [\u6570\u5B66\u51FD\u6570](./\u6570\u5B66\u51FD\u6570.md) \u5B66\u4E60\u53EF\u7528\u7684\u6570\u5B66\u8BA1\u7B97\u529F\u80FD\r\n- \u67E5\u770B [\u4F7F\u7528\u6848\u4F8B](./\u4F7F\u7528\u6848\u4F8B.md) \u5B66\u4E60\u5B9E\u9645\u5E94\u7528\u793A\u4F8B", "zh_cn/molang/\u96F6\u4EF6\u65B9\u6CD5.md": "# local \u65B9\u6CD5\r\n\r\n`local` \u5BF9\u8C61\u63D0\u4F9B\u4E86\u8BBF\u95EE\u96F6\u4EF6\u72B6\u6001\u3001\u8FDE\u63A5\u5668\u548C\u5B50\u7CFB\u7EDF\u7684\u65B9\u6CD5\u3002\r\n\r\n## \u4FE1\u53F7\u76F8\u5173\u65B9\u6CD5\r\n\r\n### local.get(channel)\r\n\r\n\u83B7\u53D6\u96F6\u4EF6\u4FE1\u53F7\u5B58\u50A8\u4E2D\u7684\u503C\u3002\r\n\r\n**\u8BED\u6CD5**: `local.get(channel_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `channel_name` (\u5B57\u7B26\u4E32): \u4FE1\u53F7\u9891\u9053\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u4FE1\u53F7\u503C\uFF0C\u5982\u679C\u9891\u9053\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE `null`\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u83B7\u53D6\u96F6\u4EF6\u7279\u5B9A\u4FE1\u53F7\r\nlocal.get('custom_signal')\r\n```\r\n\r\n## \u8FDE\u63A5\u5668\u76F8\u5173\u65B9\u6CD5\r\n\r\n### local.has_connector(connectorName)\r\n\r\n\u68C0\u67E5\u96F6\u4EF6\u662F\u5426\u62E5\u6709\u6307\u5B9A\u8FDE\u63A5\u5668\uFF0C\u5E76\u4E14\u8FDE\u63A5\u5668\u662F\u5426\u8FDE\u63A5\u4E86\u96F6\u4EF6\u3002\r\n\r\n**\u8BED\u6CD5**: `local.has_connector(connector_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `connector_name` (\u5B57\u7B26\u4E32): \u8FDE\u63A5\u5668\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u8FDE\u63A5\u5668\u5B58\u5728\u4E14\u5DF2\u8FDE\u63A5\u96F6\u4EF6\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u68C0\u67E5\u524D\u8F6E\u8FDE\u63A5\u5668\u662F\u5426\u8FDE\u63A5\r\nlocal.has_connector('connector.machine_max.front_wheel')\r\n```\r\n\r\n### local.connector_offset(connectorName, axis)\r\n\r\n\u83B7\u53D6\u8FDE\u63A5\u5668\u7684\u504F\u79FB\u91CF\uFF08\u4F4D\u7F6E\uFF09\u3002\r\n\r\n**\u8BED\u6CD5**: `local.connector_offset(connector_name, axis)`\r\n\r\n**\u53C2\u6570**:\r\n- `connector_name` (\u5B57\u7B26\u4E32): \u8FDE\u63A5\u5668\u540D\u79F0\r\n- `axis` (\u6574\u6570): \u5750\u6807\u8F74 (0=X, 1=Y, 2=Z)\r\n\r\n**\u8FD4\u56DE\u503C**: \u6307\u5B9A\u8F74\u7684\u504F\u79FB\u91CF\uFF08\u7C73\uFF09\uFF0C\u5982\u679C\u8FDE\u63A5\u5668\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u83B7\u53D6\u524D\u8F6E\u8FDE\u63A5\u5668\u7684Y\u8F74\u504F\u79FB\uFF08\u60AC\u6302\u9AD8\u5EA6\uFF09\r\nlocal.connector_offset('connector.machine_max.front_wheel', 1)\r\n```\r\n\r\n### local.connector_rotation(connectorName, axis)\r\n\r\n\u83B7\u53D6\u8FDE\u63A5\u5668\u7684\u65CB\u8F6C\u89D2\u5EA6\u3002\r\n\r\n**\u8BED\u6CD5**: `local.connector_rotation(connector_name, axis)`\r\n\r\n**\u53C2\u6570**:\r\n- `connector_name` (\u5B57\u7B26\u4E32): \u8FDE\u63A5\u5668\u540D\u79F0\r\n- `axis` (\u6574\u6570): \u65CB\u8F6C\u8F74 (0=X, 1=Y, 2=Z)\r\n\r\n**\u8FD4\u56DE\u503C**: \u6307\u5B9A\u8F74\u7684\u65CB\u8F6C\u89D2\u5EA6\uFF08\u5EA6\uFF09\uFF0C\u5982\u679C\u8FDE\u63A5\u5668\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n## \u5B50\u7CFB\u7EDF\u76F8\u5173\u65B9\u6CD5\r\n\r\n### local.has_subsystem(subsystemName)\r\n\r\n\u68C0\u67E5\u96F6\u4EF6\u662F\u5426\u62E5\u6709\u6307\u5B9A\u540D\u79F0\u7684\u5B50\u7CFB\u7EDF\u3002\r\n\r\n**\u8BED\u6CD5**: `local.has_subsystem(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u62E5\u6709\u8BE5\u5B50\u7CFB\u7EDF\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u68C0\u67E5\u662F\u5426\u6709\u53D1\u52A8\u673A\u5B50\u7CFB\u7EDF\r\nlocal.has_subsystem('subsystem.machine_max.engine')\r\n```\r\n\r\n### local.subsystem_durability(subsystemName)\r\n\r\n\u83B7\u53D6\u6307\u5B9A\u5B50\u7CFB\u7EDF\u7684\u5F53\u524D\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u8BED\u6CD5**: `local.subsystem_durability(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5B50\u7CFB\u7EDF\u8010\u4E45\u5EA6\uFF0C\u5982\u679C\u5B50\u7CFB\u7EDF\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n### local.subsystem_max_durability(subsystemName)\r\n\r\n\u83B7\u53D6\u6307\u5B9A\u5B50\u7CFB\u7EDF\u7684\u6700\u5927\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u8BED\u6CD5**: `local.subsystem_max_durability(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5B50\u7CFB\u7EDF\u6700\u5927\u8010\u4E45\u5EA6\uFF0C\u5982\u679C\u5B50\u7CFB\u7EDF\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n### local.subsystem_active(subsystemName)\r\n\r\n\u68C0\u67E5\u6307\u5B9A\u5B50\u7CFB\u7EDF\u662F\u5426\u5904\u4E8E\u6FC0\u6D3B\u72B6\u6001\u3002\r\n\r\n**\u8BED\u6CD5**: `local.subsystem_active(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u5B50\u7CFB\u7EDF\u6FC0\u6D3B\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n### local.subsystem_destroyed(subsystemName)\r\n\r\n\u68C0\u67E5\u6307\u5B9A\u5B50\u7CFB\u7EDF\u662F\u5426\u5DF2\u88AB\u6467\u6BC1\u3002\r\n\r\n**\u8BED\u6CD5**: `local.subsystem_destroyed(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n## \u96F6\u4EF6\u5C5E\u6027\r\n\r\n### local.durability\r\n\r\n\u96F6\u4EF6\u7684\u5F53\u524D\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\r\n\r\n### local.max_durability\r\n\r\n\u96F6\u4EF6\u7684\u6700\u5927\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\r\n\r\n### local.is_destroyed\r\n\r\n\u96F6\u4EF6\u662F\u5426\u5DF2\u88AB\u6467\u6BC1\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\uFF081.0=\u5DF2\u6467\u6BC1\uFF0C0.0=\u6B63\u5E38\uFF09\r\n\r\n## \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n### 1. \u60AC\u6302\u7CFB\u7EDF\u52A8\u753B\r\n\u5728 AE86 \u52A8\u753B\u4E2D\u4F7F\u7528\u8FDE\u63A5\u5668\u504F\u79FB\u63A7\u5236\u60AC\u6302\u7CFB\u7EDF\uFF1A\r\n\r\n```json\r\n{\r\n  \"axisRightFront\": {\r\n    \"rotation\": [0, 0, \"math.atan2(local.connector_offset('connector.machine_max.right_front_wheel', 1)*16,20)\"]\r\n  },\r\n  \"rodLeftFront\": {\r\n    \"rotation\": [\"-65.7725+math.atan2(20-local.connector_offset('connector.machine_max.left_front_wheel', 1)*16,9)\", 0, 0]\r\n  },\r\n  \"rodLeftFrontInner\": {\r\n    \"scale\": [1, \"math.sqrt(math.pow(20-local.connector_offset('connector.machine_max.left_front_wheel', 1)*16,2)+81)/22\", 1]\r\n  }\r\n}\r\n```\r\n\r\n**\u89E3\u91CA**:\r\n- \u4F7F\u7528 `local.connector_offset` \u83B7\u53D6\u8F66\u8F6E\u8FDE\u63A5\u5668\u7684Y\u8F74\u504F\u79FB\uFF08\u60AC\u6302\u9AD8\u5EA6\uFF09\r\n- \u901A\u8FC7\u4E09\u89D2\u51FD\u6570\u8BA1\u7B97\u60AC\u6302\u8FDE\u6746\u7684\u89D2\u5EA6\u548C\u957F\u5EA6\r\n- \u5B9E\u73B0\u771F\u5B9E\u7684\u60AC\u6302\u7CFB\u7EDF\u8FD0\u52A8\u5B66\r\n\r\n### 2. \u5B50\u7CFB\u7EDF\u72B6\u6001\u663E\u793A\r\n\u5728HUD\u4E2D\u4F7F\u7528\u5B50\u7CFB\u7EDF\u72B6\u6001\u63A7\u5236\u8B66\u544A\u706F\uFF1A\r\n\r\n```molang\r\n// \u53D1\u52A8\u673A\u5B50\u7CFB\u7EDF\u72B6\u6001\u68C0\u67E5\r\nlocal.has_subsystem('engine') && local.subsystem_active('engine') ? 1.0 : 0.0\r\n\r\n// \u71C3\u6CB9\u5B50\u7CFB\u7EDF\u4F4E\u6CB9\u91CF\u8B66\u544A\r\nlocal.has_subsystem('fuel_tank') && local.subsystem_durability('fuel_tank') < 10.0 ? 1.0 : 0.0\r\n\r\n// \u53D1\u52A8\u673A\u8FC7\u70ED\u8B66\u544A\r\nlocal.has_subsystem('engine') && local.subsystem_destroyed('engine') ? 1.0 : 0.0\r\n```\r\n\r\n### 3. \u6761\u4EF6\u52A8\u753B\u63A7\u5236\r\n\u6839\u636E\u5B50\u7CFB\u7EDF\u72B6\u6001\u63A7\u5236\u96F6\u4EF6\u52A8\u753B\uFF1A\r\n\r\n```json\r\n{\r\n  \"engine_cover\": {\r\n    \"rotation\": [\r\n      \"local.has_subsystem('engine') ? 45.0 : 0.0\", \r\n      0, \r\n      0\r\n    ]\r\n  },\r\n  \"warning_light\": {\r\n    \"scale\": [\r\n      \"local.subsystem_destroyed('engine') ? 1.5 : 1.0\", \r\n      \"local.subsystem_destroyed('engine') ? 1.5 : 1.0\", \r\n      \"local.subsystem_destroyed('engine') ? 1.5 : 1.0\"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n## \u6CE8\u610F\u4E8B\u9879\r\n\r\n1. **\u8FDE\u63A5\u5668\u547D\u540D**: \u8FDE\u63A5\u5668\u540D\u79F0\u901A\u5E38\u9075\u5FAA `connector.machine_max.xxx` \u7684\u547D\u540D\u7EA6\u5B9A\r\n2. **\u5B50\u7CFB\u7EDF\u547D\u540D**: \u5B50\u7CFB\u7EDF\u540D\u79F0\u901A\u5E38\u9075\u5FAA `subsystem.machine_max.xxx` \u7684\u547D\u540D\u7EA6\u5B9A\r\n3. **\u5750\u6807\u7CFB**: \u8FDE\u63A5\u5668\u504F\u79FB\u548C\u65CB\u8F6C\u4F7F\u7528\u5C40\u90E8\u5750\u6807\u7CFB\r\n4. **\u6027\u80FD\u4F18\u5316**: \u9891\u7E41\u8C03\u7528\u7684\u65B9\u6CD5\u5E94\u8003\u8651\u6027\u80FD\u5F71\u54CD", "zh_cn/schemas/base/axis.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/axis.json",\r\n  "title": "\u8F74\u65B9\u5411",\r\n  "description": "\u8868\u793A\u4E09\u7EF4\u7A7A\u95F4\u4E2D\u7684\u8F74\u65B9\u5411\uFF0C\u7528\u4E8E\u5B9A\u4E49\u8FDE\u63A5\u70B9\u7684\u6CD5\u7EBF\u65B9\u5411\u3002",\r\n  "type": "string",\r\n  "enum": ["xp", "xn", "yp", "yn", "zp", "zn"],\r\n  "default": "yp",\r\n  "examples": ["yp", "xn", "zp"],\r\n  "description_map": {\r\n    "xp": "\u6B63X\u8F74\u65B9\u5411",\r\n    "xn": "\u8D1FX\u8F74\u65B9\u5411",\r\n    "yp": "\u6B63Y\u8F74\u65B9\u5411",\r\n    "yn": "\u8D1FY\u8F74\u65B9\u5411",\r\n    "zp": "\u6B63Z\u8F74\u65B9\u5411",\r\n    "zn": "\u8D1FZ\u8F74\u65B9\u5411"\r\n  }\r\n}', "zh_cn/schemas/base/material_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/material_attr.json",\r\n  "title": "\u6750\u6599\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u6750\u6599\u7684\u7269\u7406\u5C5E\u6027\u3001\u88C5\u7532\u9632\u62A4\u548C\u547D\u4E2D\u97F3\u6548\uFF0C\u6309 physics / armor / sounds \u4E09\u7EC4\u7EC4\u7EC7\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "JSON Schema\u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u667A\u80FD\u63D0\u793A\u548C\u9A8C\u8BC1",\r\n      "default": "../docs/zh_cn/schemas/base/material_attr.schema.json"\r\n    },\r\n    "physics": {\r\n      "type": "object",\r\n      "description": "\u7269\u7406\u5C5E\u6027\uFF1A\u6469\u64E6\u3001\u6ED1\u79FB\u3001\u5F39\u6027\u7B49\u7269\u7406\u6A21\u62DF\u53C2\u6570\u3002",\r\n      "properties": {\r\n        "friction": {\r\n          "$ref": "vector_3d.schema.json",\r\n          "default": [0.5, 0.5, 0.5],\r\n          "description": "\u6469\u64E6\u7CFB\u6570\u5411\u91CF\uFF0C\u683C\u5F0F\u4E3A[x, y, z]\u3002x\u4E3A\u4FA7\u5411\u6469\u64E6\u7CFB\u6570\uFF0Cy\u4E3A\u524D\u5411\u6469\u64E6\u7CFB\u6570\uFF0Cz\u65E0\u5B9E\u9645\u610F\u4E49\u3002"\r\n        },\r\n        "slip_adaptation": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "maximum": 1.0,\r\n          "default": 0.5,\r\n          "description": "\u6ED1\u79FB\u9002\u5E94\u7CFB\u6570\uFF0C\u7528\u4E8E\u8C03\u6574\u5728\u6ED1\u52A8\u65F6\u7684\u6469\u64E6\u884C\u4E3A\u3002"\r\n        },\r\n        "slip_curve": {\r\n          "type": "object",\r\n          "description": "\u8F6E\u80CE\u6ED1\u79FB\u6469\u64E6\u66F2\u7EBF\u53C2\u6570\u3002",\r\n          "properties": {\r\n            "longitudinal": {\r\n              "type": "object",\r\n              "description": "\u7EB5\u5411\u6ED1\u79FB\u7387\u66F2\u7EBF\u53C2\u6570\u3002",\r\n              "properties": {\r\n                "peak_slip_ratio": { "type": "number", "minimum": 0.0, "default": 0.2, "description": "\u5CF0\u503C\u6ED1\u79FB\u7387\uFF08\u65E0\u91CF\u7EB2\uFF09\u3002" },\r\n                "base_scale": { "type": "number", "default": 1.0, "description": "\u6ED1\u79FB\u7387\u4E3A0\u65F6\u7684\u6469\u64E6\u7F29\u653E\u3002" },\r\n                "peak_scale": { "type": "number", "default": 1.4, "description": "\u5CF0\u503C\u6ED1\u79FB\u7387\u5904\u7684\u6469\u64E6\u7F29\u653E\u3002" },\r\n                "kinetic_scale": { "type": "number", "default": 0.9, "description": "\u9AD8\u6ED1\u79FB\u72B6\u6001\u4E0B\uFF08\u52A8\u6469\u64E6\u6BB5\uFF09\u7684\u6469\u64E6\u7F29\u653E\u3002" }\r\n              },\r\n              "additionalProperties": false\r\n            },\r\n            "lateral": {\r\n              "type": "object",\r\n              "description": "\u4FA7\u5411\u6ED1\u79FB\u89D2\u66F2\u7EBF\u53C2\u6570\uFF08\u89D2\u5EA6\u5355\u4F4D\u4E3A\u5EA6\uFF09\u3002",\r\n              "properties": {\r\n                "peak_angle_deg": { "type": "number", "minimum": 0.0, "default": 12.0, "description": "\u5CF0\u503C\u4FA7\u504F\u89D2\uFF08\u5EA6\uFF09\u3002" },\r\n                "kinetic_angle_deg": { "type": "number", "minimum": 0.0, "default": 90.0, "description": "\u8FDB\u5165\u52A8\u6469\u64E6\u5E73\u53F0\u7684\u4FA7\u504F\u89D2\uFF08\u5EA6\uFF09\u3002" },\r\n                "base_scale": { "type": "number", "default": 1.0, "description": "\u4FA7\u504F\u89D2\u4E3A0\u5EA6\u65F6\u7684\u6469\u64E6\u7F29\u653E\u3002" },\r\n                "peak_scale": { "type": "number", "default": 1.2, "description": "\u5CF0\u503C\u4FA7\u504F\u89D2\u5904\u7684\u6469\u64E6\u7F29\u653E\u3002" },\r\n                "kinetic_scale": { "type": "number", "default": 0.7, "description": "\u9AD8\u4FA7\u504F\u89D2\u72B6\u6001\u4E0B\uFF08\u52A8\u6469\u64E6\u6BB5\uFF09\u7684\u6469\u64E6\u7F29\u653E\u3002" }\r\n              },\r\n              "additionalProperties": false\r\n            }\r\n          },\r\n          "additionalProperties": false\r\n        },\r\n        "rolling_friction": { "type": "number", "minimum": 0.0, "default": 0.2, "description": "\u6EDA\u52A8\u6469\u64E6\u7CFB\u6570\u3002" },\r\n        "spinning_friction": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "\u65CB\u8F6C\u6469\u64E6\u7CFB\u6570\u3002" },\r\n        "restitution": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.1, "description": "\u6062\u590D\u7CFB\u6570\uFF08\u5F39\u6027\uFF09\uFF0C0\u4E3A\u5B8C\u5168\u975E\u5F39\u6027\u78B0\u649E\uFF0C1\u4E3A\u5B8C\u5168\u5F39\u6027\u78B0\u649E\u3002" },\r\n        "block_damage_factor": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "\u65B9\u5757\u7834\u574F\u7CFB\u6570\uFF0C0\u4E3A\u65E0\u6CD5\u7834\u574F\u65B9\u5757\u3002" }\r\n      },\r\n      "additionalProperties": false\r\n    },\r\n    "armor": {\r\n      "type": "object",\r\n      "description": "\u88C5\u7532\u5C5E\u6027\uFF1A\u6297\u7A7F\u3001\u7EBF\u6027\u51CF\u4F24\u3001\u767E\u5206\u6BD4\u51CF\u4F24\u3001\u8010\u4E45\u8870\u51CF\u53C2\u6570\u53CA\u6761\u4EF6\u5316\u4F24\u5BB3\u4FEE\u6B63\u5668\u3002\u4F24\u5BB3\u7BA1\u7EBF\uFF1Adamage_modifiers \u2192 (dmg - dmg_resist) * dmg_mult\u3002",\r\n      "properties": {\r\n        "rha": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "\u6750\u6599\u76F8\u5BF9\u8F67\u5236\u5747\u8D28\u88C5\u7532(RHA)\u7684\u6297\u7A7F\u80FD\u529B\u7CFB\u6570\u3002" },\r\n        "angle_effect": { "type": "boolean", "default": true, "description": "\u7B49\u6548\u62A4\u7532\u539A\u5EA6\u662F\u5426\u53D7\u5165\u5C04\u89D2\u5EA6\u5F71\u54CD\u3002" },\r\n        "dmg_resist": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "\u5168\u5C40\u7EBF\u6027\u51CF\u4F24\u503C\uFF0C\u6700\u7EC8\u4F24\u5BB3\u5C06\u88AB\u51CF\u53BB\u8BE5\u503C\uFF08\u53D7\u8010\u4E45\u8870\u51CF\u5F71\u54CD\uFF09\u3002" },\r\n        "dmg_mult": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.95, "description": "\u5168\u5C40\u4F24\u5BB3\u4E58\u6570\uFF0C\u6700\u7EC8\u4F24\u5BB3\u5C06\u88AB\u4E58\u4EE5\u8BE5\u503C\uFF08\u53D7\u8010\u4E45\u8870\u51CF\u5F71\u54CD\uFF09\u30020.95=\u627F\u53D795%\u4F24\u5BB3\u3002" },\r\n        "decay_rha": { "type": "number", "minimum": 0.0, "default": 0.3, "description": "\u8010\u4E45\u5F52\u96F6\u65F6 RHA \u7CFB\u6570\u7684\u6B8B\u4F59\u503C\u3002" },\r\n        "decay_dmg_resist": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "\u8010\u4E45\u5F52\u96F6\u65F6\u7EBF\u6027\u51CF\u4F24\u7684\u6B8B\u4F59\u503C\uFF0C\u9ED8\u8BA40.0\u8868\u793A\u5B8C\u5168\u5F52\u96F6\u3002" },\r\n        "decay_dmg_mult": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 1.0, "description": "\u8010\u4E45\u5F52\u96F6\u65F6\u4F24\u5BB3\u4E58\u6570\u7684\u6B8B\u4F59\u503C\uFF0C\u9ED8\u8BA41.0\u8868\u793A\u5B8C\u5168\u5931\u6548\u3002" },\r\n        "decay_power": { "type": "number", "minimum": 0.0, "default": 1.5, "description": "\u88C5\u7532\u9000\u5316\u66F2\u7EBF\u6307\u6570\u3002>1\u65F6\u88C5\u7532\u524D\u671F\u9000\u5316\u6162\u3001\u4E34\u8FD1\u635F\u574F\u65F6\u5FEB\u901F\u5931\u6548\uFF08\u8106\u6027\uFF09\uFF1B=1\u65F6\u4E3A\u7EBF\u6027\u9000\u5316\u3002" },\r\n        "unpen_power": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "\u653B\u51FB\u672A\u80FD\u5B8C\u5168\u51FB\u7A7F\u62A4\u7532\u65F6\u7684\u4F24\u5BB3\u6307\u6570\u3002\u516C\u5F0F: \u4F24\u5BB3*(\u7A7F\u6DF1/\u7B49\u6548\u62A4\u7532)^unpen_power\u3002" },\r\n        "impact_modifiers": {\r\n          "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json",\r\n          "description": "\u6761\u4EF6\u9A71\u52A8\u7684\u51B2\u51FB\u4FEE\u6B63\u5668\u3002"\r\n        },\r\n        "penetration_modifiers": {\r\n          "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json",\r\n          "description": "\u6761\u4EF6\u9A71\u52A8\u7684\u7A7F\u6DF1\u4FEE\u6B63\u5668\u3002"\r\n        },\r\n        "damage_modifiers": {\r\n          "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json",\r\n          "description": "\u6761\u4EF6\u9A71\u52A8\u7684\u4F24\u5BB3\u4FEE\u6B63\u5668\uFF08\u7C7B\u578B/\u5B9E\u4F53\u7279\u5B9A\u8C03\u8282\uFF09\u3002"\r\n        }\r\n      },\r\n      "additionalProperties": false\r\n    },\r\n    "sounds": {\r\n      "type": "object",\r\n      "properties": {\r\n        "hit_un_pen": {\r\n          "$ref": "sound_event.schema.json",\r\n          "description": "\u78B0\u649E\u7BB1\u88AB\u547D\u4E2D\u4F46\u672A\u7A7F\u900F\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r\n          "default": { "sound_id": "machine_max:hit_box.hit.up_pen.metal", "range": 64 }\r\n        },\r\n        "hit_pen": {\r\n          "$ref": "sound_event.schema.json",\r\n          "description": "\u78B0\u649E\u7BB1\u88AB\u547D\u4E2D\u4E14\u7A7F\u900F\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r\n          "default": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }\r\n        }\r\n      },\r\n      "additionalProperties": false,\r\n      "description": "\u6750\u6599\u547D\u4E2D\u97F3\u6548\u914D\u7F6E\u3002"\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "physics": { "friction": [0.5, 0.5, 0.5] },\r\n      "armor": {\r\n        "rha": 1.0,\r\n        "dmg_resist": 1.0,\r\n        "dmg_mult": 0.95\r\n      },\r\n      "sounds": {\r\n        "hit_un_pen": { "sound_id": "machine_max:hit_box.hit.up_pen.metal", "range": 64 },\r\n        "hit_pen": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }\r\n      }\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/base/operation.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/operation.json",\r\n  "title": "\u64CD\u4F5C\u7B26",\r\n  "description": "\u6570\u5B66\u64CD\u4F5C\u7B26\uFF0C\u7528\u4E8E\u4FEE\u6539\u5668\u4E2D\u7684\u6570\u503C\u8FD0\u7B97",\r\n  "type": "string",\r\n  "enum": ["add", "multiply"],\r\n  "default": "add",\r\n  "examples": ["add", "multiply"]\r\n}', "zh_cn/schemas/base/resource_location.schema.json": `{\r
+}`, "en_us/schemas/subsystem/subsystem_dynamic_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subsystem/subsystem_dynamic_attr.json",\r\n  "title": "Subsystem Dynamic Attributes",\r\n  "description": "Top-level architecture for subsystem dynamic attributes, dispatched to specific subsystem dynamic attribute schemas based on the type field.",\r\n  "type": "object",\r\n  "properties": {\r\n    "type": {\r\n      "type": "string",\r\n      "enum": [\r\n        "machine_max:basic",\r\n        "machine_max:camera",\r\n        "machine_max:car_controller",\r\n        "machine_max:motorbike_controller",\r\n        "machine_max:engine",\r\n        "machine_max:gearbox",\r\n        "machine_max:item_storage",\r\n        "machine_max:motor",\r\n        "machine_max:seat",\r\n        "machine_max:sight",\r\n        "machine_max:transmission",\r\n        "machine_max:wheel_driver",\r\n        "machine_max:lighting",\r\n        "machine_max:turret_driver",\r\n        "machine_max:weapon_controller",\r\n        "machine_max:launcher",\r\n        "machine_max:regen_loader",\r\n        "machine_max:track_controller",\r\n        "machine_max:track_drive"\r\n      ],\r\n      "description": "Subsystem type, determines which specific subsystem schema to use."\r\n    }\r\n  },\r\n  "additionalProperties": true,\r\n  "required": [\r\n    "type"\r\n  ],\r\n  "allOf": [\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:camera"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/camera_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:car_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/car_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:engine"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/engine_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:gearbox"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/gearbox_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:item_storage"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/item_storage_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motor"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/motor_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motorbike_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/motorbike_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:seat"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/seat_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:sight"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/sight_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:transmission"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/transmission_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:wheel_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/wheel_driver_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:lighting"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/lighting_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:turret_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/turret_driver_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:weapon_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/weapon_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:launcher"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/launcher_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:regen_loader"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/regen_loader_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:track_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/track_controller_dynamic_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:track_drive"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "dynamic/track_drive_dynamic_attr.schema.json"\r\n      }\r\n    }\r\n  ],\r\n  "examples": [\r\n    {\r\n      "type": "machine_max:car_controller",\r\n      "definition": "machine_max:ae86at_car_controller",\r\n      "control_outputs": {\r\n        "car_control": [\r\n          "subsystem.machine_max.engine",\r\n          "subsystem.machine_max.left_front_wheel_driver",\r\n          "subsystem.machine_max.right_front_wheel_driver",\r\n          "subsystem.machine_max.left_back_wheel_driver",\r\n          "subsystem.machine_max.right_back_wheel_driver",\r\n          "subsystem.machine_max.gearbox"\r\n        ]\r\n      }\r\n    },\r\n    {\r\n      "type": "machine_max:engine",\r\n      "definition": "machine_max:ae86at_engine",\r\n      "power_output": "gearbox"\r\n    }\r\n  ]\r\n}', "en_us/schemas/subsystem/subsystem_static_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subsystem/subsystem_static_attr.json",\r\n  "title": "Subsystem Static Attributes",\r\n  "description": "Top-level architecture for subsystem static attributes, dispatched to specific subsystem types based on the type field.",\r\n  "type": "object",\r\n  "properties": {\r\n    "type": {\r\n      "type": "string",\r\n      "enum": [\r\n        "machine_max:basic",\r\n        "machine_max:camera",\r\n        "machine_max:car_controller",\n        "machine_max:motorbike_controller",\r\n        "machine_max:engine",\r\n        "machine_max:gearbox",\r\n        "machine_max:item_storage",\r\n        "machine_max:launcher",\r\n        "machine_max:motor",\r\n        "machine_max:regen_loader",\r\n        "machine_max:seat",\r\n        "machine_max:sight",\r\n        "machine_max:transmission",\r\n        "machine_max:wheel_driver",\r\n        "machine_max:lighting",\r\n        "machine_max:turret_driver",\r\n        "machine_max:weapon_controller",\r\n        "machine_max:track_controller",\r\n        "machine_max:track_drive"\r\n      ],\r\n      "description": "Subsystem type, determines which specific subsystem schema to use."\r\n    }\r\n  },\r\n  "additionalProperties": true,\r\n  "required": [\r\n    "type"\r\n  ],\r\n  "allOf": [\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:camera"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/camera_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:car_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/car_controller_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:engine"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/engine_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:gearbox"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/gearbox_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:item_storage"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/item_storage_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:launcher"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/launcher_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motor"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/motor_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:motorbike_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/motorbike_controller_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:seat"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/seat_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:sight"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/sight_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:transmission"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/transmission_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:wheel_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/wheel_driver_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:lighting"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/lighting_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:turret_driver"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/turret_driver_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:regen_loader"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/regen_loader_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:weapon_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/weapon_controller_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:track_controller"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/track_controller_static_attr.schema.json"\r\n      }\r\n    },\r\n    {\r\n      "if": {\r\n        "properties": {\r\n          "type": {\r\n            "const": "machine_max:track_drive"\r\n          }\r\n        }\r\n      },\r\n      "then": {\r\n        "$ref": "static/track_drive_static_attr.schema.json"\r\n      }\r\n    }\r\n  ],\r\n  "examples": [\r\n    {\r\n      "$schema": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json",\r\n      "type": "machine_max:item_storage",\r\n      "basic_durability": 100.0,\r\n      "rows": 6,\r\n      "columns": 9\r\n    },\r\n    {\r\n      "$schema": "../../docs/en_us/schemas/subsystem/subsystem_static_attr.schema.json",\r\n      "type": "machine_max:engine",\r\n      "max_power": 75000.0,\r\n      "max_torque": 130.0,\r\n      "red_line_rpm": 6500.0\r\n    }\r\n  ]\r\n}', "en_us/schemas/\u5982\u4F55\u4F7F\u7528JSON\u6A21\u677F.md": '# JSON Schema\u5728Machine-Max\u5185\u5BB9\u5305\u5236\u4F5C\u4E2D\u7684\u5E94\u7528\u6307\u5357\r\n\r\n## \u4EC0\u4E48\u662FJSON Schema\uFF1F\r\n\r\nJSON Schema\u662F\u4E00\u79CD\u7528\u4E8E\u63CF\u8FF0\u548C\u9A8C\u8BC1JSON\u6587\u6863\u7ED3\u6784\u7684\u89C4\u8303\u3002\u5BF9\u4E8EMachine-Max\u7684\u5185\u5BB9\u5305\u5236\u4F5C\uFF0CJSON Schema\u80FD\u591F\u5E2E\u52A9\u4F60\uFF1A\r\n\r\n- **\u9A8C\u8BC1\u914D\u7F6E\u683C\u5F0F**\uFF1A\u786E\u4FDD\u4F60\u7684JSON\u914D\u7F6E\u6587\u4EF6\u683C\u5F0F\u6B63\u786E\r\n- **\u63D0\u4F9B\u667A\u80FD\u63D0\u793A**\uFF1A\u5728\u652F\u6301\u7684\u7F16\u8F91\u5668\u4E2D\u663E\u793A\u5C5E\u6027\u8BF4\u660E\u548C\u7C7B\u578B\u8981\u6C42\r\n- **\u51CF\u5C11\u9519\u8BEF**\uFF1A\u63D0\u524D\u53D1\u73B0\u914D\u7F6E\u9519\u8BEF\uFF0C\u907F\u514D\u6E38\u620F\u5185\u95EE\u9898\r\n\r\n## \u4E3A\u4EC0\u4E48\u5185\u5BB9\u5305\u5236\u4F5C\u8005\u9700\u8981\u5173\u6CE8JSON Schema\uFF1F\r\n\r\n\u5373\u4F7F\u4F60\u6CA1\u6709\u7F16\u7A0B\u7ECF\u9A8C\uFF0CJSON Schema\u4E5F\u80FD\u8BA9\u4F60\u7684\u5185\u5BB9\u5305\u5236\u4F5C\u8FC7\u7A0B\u66F4\u987A\u7545\uFF1A\r\n\r\n1. **\u81EA\u52A8\u8865\u5168**\uFF1A\u73B0\u4EE3\u7F16\u8F91\u5668\uFF08\u5982VSCode\uFF09\u53EF\u4EE5\u6839\u636ESchema\u63D0\u4F9B\u5C5E\u6027\u540D\u81EA\u52A8\u8865\u5168\r\n2. **\u9519\u8BEF\u63D0\u793A**\uFF1A\u5728\u914D\u7F6E\u9519\u8BEF\u65F6\u7ACB\u5373\u63D0\u793A\uFF0C\u800C\u4E0D\u662F\u7B49\u5230\u6E38\u620F\u4E2D\u624D\u53D1\u73B0\u95EE\u9898\r\n3. **\u5C5E\u6027\u8BF4\u660E**\uFF1A\u67E5\u770B\u6BCF\u4E2A\u914D\u7F6E\u9879\u7684\u5177\u4F53\u542B\u4E49\u548C\u4F7F\u7528\u65B9\u6CD5\r\n4. **\u7C7B\u578B\u68C0\u67E5**\uFF1A\u786E\u4FDD\u4F60\u8F93\u5165\u7684\u6570\u636E\u7C7B\u578B\u6B63\u786E\uFF08\u6570\u5B57\u3001\u5B57\u7B26\u4E32\u3001\u5E03\u5C14\u503C\u7B49\uFF09\r\n\r\n## \u5982\u4F55\u4F7F\u7528JSON Schema\uFF1F\r\n\r\n### 1. \u914D\u7F6E\u7F16\u8F91\u5668\u652F\u6301\r\n\r\n\u5728\u4F60\u7684JSON\u6587\u4EF6\u9876\u90E8\u6DFB\u52A0`$schema`\u5B57\u6BB5\uFF0C\u6216\u76F4\u63A5\u590D\u5236\u5DF2\u6709\u7684\u793A\u4F8BJSON\uFF0C\u4F8B\u5982\uFF1A\r\n\r\n```json\r\n{\r\n  "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",\r\n  "vehicle_durability_rate": 1.0,\r\n  "variants": {\r\n    "default": {\r\n      "icon": "machine_max:textures/icon/example.png",\r\n      "models": "machine_max:example.geo"\r\n    }\r\n  }\r\n}\r\n```\r\n\u6CE8\u610F\uFF0C\u5728\u8FD9\u91CC`$schema`\u5B57\u6BB5\u7684\u503C\u4E3A\u76F8\u5BF9\u8DEF\u5F84\uFF0C"../"\u8868\u793A\u5F53\u524D\u6587\u4EF6\u7684\u4E0A\u7EA7\u76EE\u5F55\u3002\r\n\r\n### 2. \u63A8\u8350\u7F16\u8F91\u5668\r\n\r\n- **VSCode**\uFF1A\u539F\u751F\u652F\u6301JSON Schema\r\n\r\n### 3. \u5728VSCode\u4E2D\u542F\u7528JSON Schema\u9A8C\u8BC1\r\n\r\n **\u63A8\u8350\u76F4\u63A5\u590D\u7528\u5B98\u65B9\u5185\u5BB9\u5305\u7684\u6587\u4EF6\u7ED3\u6784\uFF0C\u5E76\u539F\u6837\u590D\u5236docs\u6587\u4EF6\u5939\u5230\u4F60\u81EA\u5DF1\u7684\u5185\u5BB9\u5305\uFF0C\u518D\u5728\u90E8\u4EF6\u548C\u5B50\u7CFB\u7EDFjson\u6587\u4EF6\u5F00\u5934\u6DFB\u52A0`$schema`\u5F15\u7528\u5373\u53EF\u3002**\r\n\r\n## \u5B9E\u9645\u5236\u4F5C\u4E2D\u7684\u5E94\u7528\u793A\u4F8B\r\n\r\n### \u6B65\u9AA41\uFF1A\u521B\u5EFA\u65B0\u90E8\u4EF6\r\n\r\n1. \u590D\u5236\u73B0\u6709\u7684\u90E8\u4EF6JSON\u6587\u4EF6\u4F5C\u4E3A\u6A21\u677F\r\n2. \u5728\u6587\u4EF6\u5F00\u5934\u6DFB\u52A0`$schema`\u5F15\u7528\r\n3. \u6839\u636E\u7F16\u8F91\u5668\u7684\u667A\u80FD\u63D0\u793A\u6DFB\u52A0\u914D\u7F6E\u9879\r\n\r\n### \u6B65\u9AA42\uFF1A\u9A8C\u8BC1\u914D\u7F6E\r\n\r\n1. \u4FDD\u5B58\u6587\u4EF6\u540E\u67E5\u770B\u7F16\u8F91\u5668\u662F\u5426\u663E\u793A\u9519\u8BEF\r\n2. \u6839\u636E\u63D0\u793A\u4FEE\u6B63\u914D\u7F6E\u683C\u5F0F\u95EE\u9898\r\n3. \u6D4B\u8BD5\u5185\u5BB9\u5305\u5728\u6E38\u620F\u4E2D\u662F\u5426\u6B63\u5E38\u5DE5\u4F5C\r\n\r\n### \u6B65\u9AA43\uFF1A\u8C03\u8BD5\u95EE\u9898\r\n\r\n\u5982\u679C\u5185\u5BB9\u5305\u5728\u6E38\u620F\u4E2D\u4E0D\u5DE5\u4F5C\uFF0C\u68C0\u67E5\uFF1A\r\n\r\n1. JSON\u683C\u5F0F\u662F\u5426\u6B63\u786E\uFF08\u4F7F\u7528Schema\u9A8C\u8BC1\uFF09\r\n2. \u6240\u6709\u5FC5\u9700\u5B57\u6BB5\u662F\u5426\u90FD\u5DF2\u586B\u5199\r\n3. \u6570\u636E\u7C7B\u578B\u662F\u5426\u5339\u914D\uFF08\u6570\u5B57 vs \u5B57\u7B26\u4E32\u7B49\uFF09\r\n\r\n## \u5E38\u89C1\u95EE\u9898\u4E0E\u89E3\u51B3\u65B9\u6848\r\n\r\n### Q: \u7F16\u8F91\u5668\u63D0\u793A\u9519\u8BEF\uFF0C\u4F46\u914D\u7F6E\u770B\u8D77\u6765\u662F\u6B63\u786E\u7684\uFF1F\r\nA: \u68C0\u67E5\uFF1A\r\n- JSON\u8BED\u6CD5\u662F\u5426\u6B63\u786E\uFF08\u9017\u53F7\u3001\u62EC\u53F7\u662F\u5426\u6709\u7F3A\u6F0F\u7B49\uFF0C\u52A1\u5FC5\u6CE8\u610F\u4E0D\u8981\u4F7F\u7528\u4E2D\u6587\u6807\u70B9\u7B26\u53F7\uFF09\r\n- \u5B57\u6BB5\u540D\u79F0\u662F\u5426\u62FC\u5199\u6B63\u786E\r\n- \u6570\u636E\u7C7B\u578B\u662F\u5426\u5339\u914D\uFF08\u5982\u9700\u8981\u6570\u5B57\u4F46\u8F93\u5165\u4E86\u5B57\u7B26\u4E32\uFF09\r\n\r\n### Q: \u5982\u4F55\u77E5\u9053\u54EA\u4E9B\u5B57\u6BB5\u662F\u5FC5\u9700\u7684\uFF1F\r\nA: \u67E5\u770BSchema\u6587\u4EF6\u4E2D\u7684`required`\u5B57\u6BB5\uFF0C\u6216\u8005\u5728\u652F\u6301\u7684\u7F16\u8F91\u5668\u4E2D\u4F1A\u6709\u76F8\u5E94\u63D0\u793A\u3002\r\n\r\n### Q: \u8FD9\u4E9B\u5B57\u6BB5\u7684\u4F5C\u7528\u90FD\u662F\u4EC0\u4E48\uFF1F\r\nA: \u5C06\u9F20\u6807\u653E\u5230\u5B57\u6BB5\u4E0A\uFF0C\u5373\u53EF\u67E5\u770B\u5B57\u6BB5\u7684\u8BF4\u660E\u548C\u7C7B\u578B\u8981\u6C42\u3002\r\n\r\n## \u63D0\u9AD8\u6548\u7387\u7684\u6280\u5DE7\r\n\r\n1. **\u4F7F\u7528\u6A21\u677F**\uFF1A\u57FA\u4E8E\u73B0\u6709\u5DE5\u4F5C\u6B63\u5E38\u7684\u914D\u7F6E\u521B\u5EFA\u65B0\u914D\u7F6E\r\n2. **\u9010\u6B65\u6DFB\u52A0**\uFF1A\u5148\u6DFB\u52A0\u57FA\u672C\u914D\u7F6E\uFF0C\u9A8C\u8BC1\u65E0\u8BEF\u540E\u518D\u6DFB\u52A0\u9AD8\u7EA7\u9009\u9879\r\n3. **\u53C2\u8003\u793A\u4F8B**\uFF1A\u67E5\u770B\u5B98\u65B9\u5305\u4E2D\u7684\u793A\u4F8B\u914D\u7F6E\u6587\u4EF6\r\n4. **\u5B9E\u65F6\u9A8C\u8BC1**\uFF1A\u5728\u7F16\u8F91\u5668\u4E2D\u5B9E\u65F6\u67E5\u770B\u9A8C\u8BC1\u7ED3\u679C\r\n\r\n## \u603B\u7ED3\r\n\r\nJSON Schema\u662F\u5185\u5BB9\u5305\u5236\u4F5C\u7684\u5F3A\u5927\u8F85\u52A9\u5DE5\u5177\uFF0C\u5B83\u80FD\u5E2E\u52A9\u4F60\u521B\u5EFA\u683C\u5F0F\u6B63\u786E\u3001\u7ED3\u6784\u5B8C\u6574\u7684\u914D\u7F6E\u6587\u4EF6\u3002\u5373\u4F7F\u6CA1\u6709\u7F16\u7A0B\u7ECF\u9A8C\uFF0C\u4F7F\u7528\u652F\u6301Schema\u7684\u7F16\u8F91\u5668\u4E5F\u80FD\u5927\u5927\u63D0\u9AD8\u5236\u4F5C\u6548\u7387\u548C\u51C6\u786E\u6027\u3002\r\n\r\n\u5F00\u59CB\u4F7F\u7528\u65F6\uFF0C\u5EFA\u8BAE\u5148\u4ECE\u7B80\u5355\u7684\u914D\u7F6E\u5F00\u59CB\uFF0C\u9010\u6B65\u719F\u6089Schema\u63D0\u4F9B\u7684\u5404\u79CD\u529F\u80FD\uFF0C\u968F\u7740\u7ECF\u9A8C\u7684\u79EF\u7D2F\uFF0C\u4F60\u4F1A\u53D1\u73B0\u5236\u4F5C\u5185\u5BB9\u5305\u53D8\u5F97\u66F4\u52A0\u7B80\u5355\u548C\u53EF\u9760\u3002', "zh_cn/hud.md": '# HUD \u7F16\u5199\u6307\u5357\r\n\r\nMachine-Max \u63D0\u4F9B\u4E86\u5F3A\u5927\u7684\u81EA\u5B9A\u4E49HUD\u7CFB\u7EDF\uFF0C\u5141\u8BB8\u4E3A\u4E0D\u540C\u7684\u8F66\u8F86\u548C\u5B50\u7CFB\u7EDF\u521B\u5EFA\u4E13\u5C5E\u7684\u754C\u9762\u663E\u793A\u3002HUD\u7CFB\u7EDF\u57FA\u4E8E\u6A21\u578B\u3001\u52A8\u753B\u548CMolang\u811A\u672C\uFF0C\u53EF\u4EE5\u5B9E\u73B0\u52A8\u6001\u7684\u4EEA\u8868\u76D8\u3001\u72B6\u6001\u6307\u793A\u5668\u548C\u4FE1\u606F\u663E\u793A\u3002HUD \u5206\u4E3A\u4E09\u5C42\uFF1A**\u6837\u5F0F**\u53EA\u63CF\u8FF0\u957F\u4EC0\u4E48\u6837\uFF0C**\u5E03\u5C40**\u662F\u4E00\u7EC4\u6709\u5E8F\u7684\u5143\u7D20\uFF0C**\u5143\u7D20**\u628A\u4E00\u4EFD\u6837\u5F0F\u653E\u5230\u4E00\u4E2A\u5177\u4F53\u4F4D\u7F6E\u3002\r\n\r\n## HUD\u7CFB\u7EDF\u6982\u8FF0\r\n\r\n### \u6838\u5FC3\u7EC4\u4EF6\u6587\u4EF6\u8DEF\u5F84\r\n\r\n\u4EE5\u4E0B\u662F\u793A\u4F8BHUD\u7684\u6838\u5FC3\u7EC4\u4EF6\u6587\u4EF6\u8DEF\u5F84\uFF0C\u60A8\u53EF\u4EE5\u5728\u8FD9\u4E9B\u4F4D\u7F6E\u627E\u5230\u5B8C\u6574\u7684\u5B9E\u73B0\u793A\u4F8B\uFF1A\r\n\r\n- **HUD\u6837\u5F0F**: [huds/example_hud.json](../../huds/example_hud.json)\r\n- **HUD\u5E03\u5C40**: [hud_layouts/seat_dashboard.json](../../hud_layouts/seat_dashboard.json)\r\n- **3D\u6A21\u578B\u6587\u4EF6**: [models/hud/example_hud.geo.json](../../models/hud/example_hud.geo.json)\r\n- **\u52A8\u753B\u6587\u4EF6**: [animations/hud/example_hud/example_hud.animation.json](../../animations/hud/example_hud/example_hud.animation.json)\r\n- **\u7EB9\u7406\u6587\u4EF6**: [textures/hud/example_hud.png](../../textures/hud/example_hud.png)\r\n- **\u8BED\u8A00\u6587\u4EF6**: [lang/zh_cn.json](../../lang/zh_cn.json)\r\n- **\u5B50\u7CFB\u7EDF\u914D\u7F6E**: [subsystems/default_seat.json](../../subsystems/default_seat.json)\r\n- **\u9AD8\u7EA7\u5B50\u7CFB\u7EDF\u914D\u7F6E**: [subsystems/senna_gtr/senna_gtr_seat.json](../../subsystems/senna_gtr/senna_gtr_seat.json)\r\n\r\n\r\n## \u76EE\u5F55\u7ED3\u6784\r\n- [HUD\u7CFB\u7EDF\u6982\u8FF0](#hud\u7CFB\u7EDF\u6982\u8FF0)\r\n- [HUD\u6837\u5F0F\uFF08huds/\uFF09](#hud\u6837\u5F0Fhuds)\r\n- [HUD\u5E03\u5C40\uFF08hud_layouts/\uFF09](#hud\u5E03\u5C40hud_layouts)\r\n- [\u6A21\u578B\u548C\u52A8\u753B\u8981\u6C42](#\u6A21\u578B\u548C\u52A8\u753B\u8981\u6C42)\r\n- [\u6587\u672C\u663E\u793A\u914D\u7F6E](#\u6587\u672C\u663E\u793A\u914D\u7F6E)\r\n- [Molang\u5728HUD\u4E2D\u7684\u5E94\u7528](#molang\u5728hud\u4E2D\u7684\u5E94\u7528)\r\n- [\u5B50\u7CFB\u7EDFHUD\u5173\u8054](#\u5B50\u7CFB\u7EDFhud\u5173\u8054)\r\n- [\u5B9E\u9645\u6848\u4F8B\u89E3\u6790](#\u5B9E\u9645\u6848\u4F8B\u89E3\u6790)\r\n- [\u6700\u4F73\u5B9E\u8DF5](#\u6700\u4F73\u5B9E\u8DF5)\r\n\r\n## HUD\u7CFB\u7EDF\u6982\u8FF0\r\n\r\nMachine-Max\u7684HUD\u7CFB\u7EDF\u5305\u542B\u4EE5\u4E0B\u6838\u5FC3\u7EC4\u4EF6\uFF1A\r\n\r\n1. **HUD\u6837\u5F0F**\uFF08`huds/*.json`\uFF09 - \u5B9A\u4E49\u6A21\u578B\u3001\u52A8\u753B\u3001\u7EB9\u7406\u3001\u67D3\u8272\u548C\u6587\u672C\u69FD\r\n2. **HUD\u5E03\u5C40**\uFF08`hud_layouts/*.json`\uFF09 - \u6709\u5E8F\u7684\u5143\u7D20\u6570\u7EC4\uFF0C\u51B3\u5B9A\u753B\u54EA\u4E9B\u6837\u5F0F\u3001\u5404\u5728\u4EC0\u4E48\u4F4D\u7F6E\r\n3. **3D\u6A21\u578B** (`.geo.json`\u6587\u4EF6) - \u63D0\u4F9BHUD\u7684\u51E0\u4F55\u5F62\u72B6\u548C\u9AA8\u9ABC\u7ED3\u6784\r\n4. **\u52A8\u753B\u6587\u4EF6** (`.animation.json`\u6587\u4EF6) - \u63A7\u5236HUD\u5143\u7D20\u7684\u52A8\u6001\u884C\u4E3A\r\n5. **\u7EB9\u7406\u6587\u4EF6** (`.png`\u6587\u4EF6) - \u63D0\u4F9BHUD\u7684\u89C6\u89C9\u5916\u89C2\r\n6. **\u5B50\u7CFB\u7EDF\u914D\u7F6E** - \u901A\u8FC7 `*_hud_layout` \u5B57\u6BB5\u628A\u5E03\u5C40\u6302\u5230\u5EA7\u4F4D\u6216\u7784\u5177\u4E0A\r\n\r\n## HUD\u6837\u5F0F\uFF08huds/\uFF09\r\n\r\nHUD\u6837\u5F0F\u5B9A\u4E49\u4E00\u4E2A HUD \u7684\u5185\u90E8\u5916\u89C2\uFF0C\u4E0D\u5305\u542B\u4F4D\u7F6E\u3001\u65CB\u8F6C\u3001\u7F29\u653E\u6216\u6295\u5F71\u3002\r\n\r\n### \u57FA\u672C\u7ED3\u6784\r\n```json\r\n{\r\n  "type": "machine_max:model_hud",\r\n  "model": "machine_max:example_hud.geo",\r\n  "animation": "machine_max:example_hud",\r\n  "texture": "machine_max:textures/hud/example_hud.png",\r\n  "color": [255, 255, 255],\r\n  "alpha": 255,\r\n  "texts": {\r\n    // \u6587\u672C\u914D\u7F6E\r\n  },\r\n  "scissor": {\r\n    "enable": false,\r\n    "x": 0,\r\n    "y": 0,\r\n    "width": 0,\r\n    "height": 0\r\n  }\r\n}\r\n```\r\n\r\n### \u914D\u7F6E\u53C2\u6570\u8BF4\u660E\r\n\r\n#### \u57FA\u672C\u5C5E\u6027\r\n- **type** (\u5FC5\u9700): \u8F7D\u4F53\u7C7B\u578B\uFF1A`machine_max:model_hud`\uFF08\u57FA\u5CA9\u6A21\u578B\uFF09\u6216 `machine_max:aui_hud`\uFF08AUI \u9875\u9762\uFF09\r\n- **model** (\u5FC5\u9700): HUD\u76843D\u6A21\u578B\u8D44\u6E90\u5730\u5740\uFF0C\u5982 `machine_max:example_hud.geo`\r\n- **animation** (\u5FC5\u9700): HUD\u7684\u52A8\u753B\u8D44\u6E90\u5730\u5740\uFF0C\u5982 `machine_max:example_hud`\r\n- **texture** (\u5FC5\u9700): HUD\u7684\u7EB9\u7406\u8D44\u6E90\u5730\u5740\uFF0C\u5982 `machine_max:textures/hud/example_hud.png`\r\n- **color** (\u53EF\u9009): RGB\u989C\u8272\uFF0C\u9ED8\u8BA4\u767D\u8272\r\n- **alpha** (\u53EF\u9009): \u900F\u660E\u5EA6\uFF0C\u9ED8\u8BA4255\r\n\r\n\r\n#### \u6587\u672C\u663E\u793A\r\n```json\r\n"texts": {\r\n  "locator_name": {\r\n    "key": "translation.key",\r\n    "centered": true,\r\n    "shadow": false,\r\n    "scale": [0.7, 0.7, 0.7],\r\n    "color": [255, 0, 0],\r\n    "molang_args": ["expression1", "expression2"],\r\n    "significand": 0\r\n  }\r\n}\r\n```\r\n\r\n- **locator_name**: \u5B9A\u4F4D\u5668\u540D\u79F0\uFF0C\u7528\u4E8E\u63A7\u5236\u6587\u5B57\u7684\u663E\u793A\u4F4D\u7F6E\u548C\u65CB\u8F6C\r\n- **key**: \u7FFB\u8BD1\u952E\uFF0C\u7528\u4E8E\u7FFB\u8BD1\u6587\u672C\r\n- **centered**: \u662F\u5426\u5C45\u4E2D\u663E\u793A\uFF0C\u9ED8\u8BA4true\r\n- **shadow**: \u662F\u5426\u6E32\u67D3\u6587\u5B57\u9634\u5F71\uFF0C\u9ED8\u8BA4false\r\n- **scale**: \u7F29\u653E\u6BD4\u4F8B\uFF0C\u9ED8\u8BA4[1, 1, 1]\r\n- **color**: RGB\u989C\u8272\r\n- **molang_args**: Molang\u53C2\u6570\uFF0C\u7528\u4E8E\u586B\u5145\u7FFB\u8BD1\u6587\u672C\u9884\u7559\u7684\u53C2\u6570\u4F4D\u7F6E\r\n- **significand**: Molang\u53C2\u6570\u8BA1\u7B97\u7ED3\u679C\u4E3A\u6570\u5B57\u65F6\uFF0C\u4FDD\u7559\u7684\u5C0F\u6570\u70B9\u540E\u4F4D\u6570\uFF0C\u9ED8\u8BA40\r\n\r\n#### \u526A\u88C1\u533A\u57DF\r\n- **scissor**: \u526A\u88C1\u77E9\u5F62\u914D\u7F6E\uFF08\u53EF\u9009\uFF0C\u9ED8\u8BA4\u4E0D\u542F\u7528\uFF09\r\n  - **enable**: \u662F\u5426\u542F\u7528\u526A\u88C1\u77E9\u5F62\r\n  - **x**: \u526A\u88C1\u77E9\u5F62\u4E2D\u5FC3 x \u5750\u6807\uFF08\u50CF\u7D20\uFF09\r\n  - **y**: \u526A\u88C1\u77E9\u5F62\u4E2D\u5FC3 y \u5750\u6807\uFF08\u50CF\u7D20\uFF09\r\n  - **width**: \u526A\u88C1\u77E9\u5F62\u5BBD\u5EA6\uFF08\u50CF\u7D20\uFF09\r\n  - **height**: \u526A\u88C1\u77E9\u5F62\u9AD8\u5EA6\uFF08\u50CF\u7D20\uFF09\r\n\r\n### AUI \u9875\u9762\u6837\u5F0F\r\n\r\n`machine_max:aui_hud` \u7528\u4E00\u4E2A HTML \u9875\u9762\u63CF\u8FF0 HUD \u5916\u89C2\uFF0C\u9875\u9762\u7531\u5185\u5BB9\u5305 `documents/` \u76EE\u5F55\u63D0\u4F9B\uFF0C\u53EF\u5728 GUI/HUD \u6B63\u4EA4\u53E0\u5C42\u6216\u76F8\u673A\u7A7A\u95F4\u7684\u900F\u89C6\u5E73\u9762\u4E0A\u7ED8\u5236\u3002\r\n\r\n```json\r\n{\r\n  "type": "machine_max:aui_hud",\r\n  "page": "machine_max/weapon_hud_element/weapon_ammo.html",\r\n  "defaults": { "--hud-accent": "#7dd3fc" }\r\n}\r\n```\r\n\r\n- **page** (\u5FC5\u9700): AUI \u9875\u9762\u952E\uFF0C\u5F62\u5F0F\u4E3A `<\u5185\u5BB9\u5305\u547D\u540D\u7A7A\u95F4>/<\u76F8\u5BF9\u8DEF\u5F84>`\uFF0C\u4F8B\u5982\u5185\u5BB9\u5305\u91CC\u7684 `documents/weapon_hud_element/weapon_ammo.html` \u5BF9\u5E94 `machine_max/weapon_hud_element/weapon_ammo.html`\r\n- **defaults** (\u53EF\u9009): \u5199\u8FDB\u9875\u9762 `body` \u7684 CSS \u53D8\u91CF\uFF0C\u9875\u9762\u6837\u5F0F\u8868\u53EF\u7528 `var(...)` \u8BFB\u53D6\r\n\r\n\u9875\u9762\u6309\u5185\u5BB9\u6536\u7F29\uFF1A\u8FD0\u884C\u65F6\u7ED9 `body` \u52A0\u4E0A `mm-hud` \u7C7B\u5E76\u8BBE\u7F6E `inline-block`\u3001\u65E0\u5916\u8FB9\u8DDD\u3001\u900F\u660E\u80CC\u666F\u7684\u5185\u8054\u89C4\u5219\u3002\u9875\u9762\u63CF\u8FF0\u7EC4\u4EF6\u5185\u5BB9\uFF0C\u5E03\u5C40\u51B3\u5B9A\u6295\u653E\u4F4D\u7F6E\u4E0E\u6295\u5F71\uFF1B\u9700\u8981\u6697\u5E95\u65F6\uFF0C\u5728\u7EC4\u4EF6\u5BB9\u5668\u4E0A\u8BBE\u7F6E\u80CC\u666F\u3002\u5E03\u5C40\u7684 `perspective: false` \u9009\u62E9\u6B63\u4EA4\u53E0\u5C42\uFF0C`perspective: true` \u9009\u62E9\u900F\u89C6\u5E73\u9762\uFF1B\u8BE5\u5B57\u6BB5\u9ED8\u8BA4\u662F `true`\uFF0C\u5C4F\u5E55\u951A\u5B9A\u7684 AUI \u5143\u7D20\u5E94\u663E\u5F0F\u5199 `false`\u3002\r\n\r\nAUI HUD \u4E0D\u5411\u9875\u9762\u8F6C\u53D1\u9F20\u6807\u8F93\u5165\u3002\u900F\u89C6\u6A21\u5F0F\u652F\u6301\u9875\u9762\u7684\u51E0\u4F55\u3001\u6587\u5B57\u4E0E\u88C1\u526A\uFF0C\u4E0D\u4FDD\u8BC1\u590D\u6742 `backdrop-filter` \u7B49\u5C4F\u5E55\u91C7\u6837\u6548\u679C\u3002\r\n\r\n## HUD\u5E03\u5C40\uFF08hud_layouts/\uFF09\r\n\r\n\u5E03\u5C40\u6587\u4EF6\u7684\u5185\u5BB9\u662F\u4E00\u4E2A\u6570\u7EC4\uFF0C\u6BCF\u4E2A\u6761\u76EE\u662F\u4E00\u4E2A\u5143\u7D20\uFF1A\u4E00\u4EFD\u6837\u5F0F\u5F15\u7528\u52A0\u4E00\u7EC4\u5B8C\u6574\u6295\u653E\u503C\u3002\u5143\u7D20\u5185\u8054\u5728\u5E03\u5C40\u91CC\uFF0C\u4E0D\u5355\u72EC\u6CE8\u518C\uFF1B\u540C\u4E00\u4E2A\u6837\u5F0F\u53EF\u4EE5\u5728\u4E00\u4E2A\u5E03\u5C40\u91CC\u51FA\u73B0\u591A\u6B21\u3002\r\n\r\n```json\r\n[\r\n  {\r\n    "style": "machine_max:example_hud",\r\n    "perspective": true,\r\n    "offset": [95, 55, -135],\r\n    "rotation": [-25, -30, 0],\r\n    "scale": [15, 15, 15]\r\n  }\r\n]\r\n```\r\n\r\n| \u5B57\u6BB5 | \u5FC5\u9700 | \u8BF4\u660E |\r\n| --- | --- | --- |\r\n| `style` | \u662F | \u6837\u5F0F\u8D44\u6E90\u952E\uFF0C\u6307\u5411 `huds/` \u4E0B\u7684\u6587\u4EF6 |\r\n| `perspective` | \u5426 | \u9ED8\u8BA4 `true`\uFF1B`true` \u8D70\u900F\u89C6\u6295\u5F71\uFF0C`false` \u8D70\u6B63\u4EA4\u6295\u5F71 |\r\n| `offset` | \u5426 | \u900F\u89C6\uFF1A\u76F8\u673A\u7A7A\u95F4\u4F4D\u79FB `(x, -y, z)`\uFF0C\u53EF\u89C1\u5E73\u9762\u9700\u5728\u76F8\u673A\u524D\u65B9\uFF08\u901A\u5E38 `z < 0`\uFF09\uFF1B\u6B63\u4EA4\u6A21\u578B\uFF1A\u76F8\u5BF9\u5C4F\u5E55\u4E2D\u5FC3\u7684\u50CF\u7D20\u504F\u79FB\uFF1B\u6B63\u4EA4 AUI\uFF1A\u76F8\u5BF9 `anchor` \u5BF9\u9F50\u4F4D\u7F6E\u7684 GUI \u50CF\u7D20\u504F\u79FB\uFF0C`z` \u4E3A\u7ED8\u5236\u6DF1\u5EA6 |\r\n| `rotation` | \u5426 | `[x, y, z]` \u65CB\u8F6C\u89D2\u5EA6\uFF0C\u5355\u4F4D\u4E3A\u5EA6\uFF1B\u900F\u89C6 AUI \u6309 Z/Y/X \u5408\u6210\uFF0C\u6B63\u4EA4 AUI \u4E0D\u8BFB\u53D6\u8BE5\u5B57\u6BB5 |\r\n| `scale` | \u5426 | \u9ED8\u8BA4 `[1, 1, 1]`\uFF1B\u6B63\u4EA4 AUI \u7684 X/Y \u5206\u91CF\u5206\u522B\u7F29\u653E\u9875\u9762\u4E24\u8F74\uFF0C\u900F\u89C6 AUI \u5C06 CSS \u50CF\u7D20\u7F29\u653E\u4E3A\u76F8\u673A\u7A7A\u95F4\u5355\u4F4D |\r\n| `scope_behavior` | \u5426 | \u9ED8\u8BA4 `follow_position`\uFF1B\u53EA\u5728\u70AE\u955C\u5E03\u5C40\u91CC\u751F\u6548\uFF0C\u53EF\u9009 `screen_fixed` / `follow_position` / `follow_transform` |\r\n| `ignore_zoom` | \u5426 | \u9ED8\u8BA4 `false`\uFF1B`true` \u65F6\u5143\u7D20\u5C3A\u5BF8\u4E0D\u968F\u70AE\u955C\u53D8\u7126\u53D8\u5316 |\r\n| `anchor` | \u5426 | \u4EC5\u6B63\u4EA4 AUI \u8F7D\u4F53\uFF1A\u9ED8\u8BA4 `top_left`\uFF0C\u53EF\u9009 `top_center`\u3001`top_right`\u3001`center_left`\u3001`center`\u3001`center_right`\u3001`bottom_left`\u3001`bottom_center`\u3001`bottom_right`\uFF1B\u5143\u7D20\u7684\u5BF9\u5E94\u89D2\uFF08\u6216\u4E2D\u5FC3\uFF09\u5BF9\u9F50\u5C4F\u5E55\u7684\u5BF9\u5E94\u89D2\uFF08\u6216\u4E2D\u5FC3\uFF09\uFF1B\u6A21\u578B\u4E0E\u900F\u89C6 AUI \u5FFD\u7565\u8BE5\u5B57\u6BB5 |\r\n\r\n\u6B63\u4EA4 AUI \u6309\u5185\u5BB9\u5C3A\u5BF8\u8BA1\u7B97 `anchor`\uFF0C\u5E76\u5728\u5BF9\u9F50\u540E\u53E0\u52A0 `offset.x/y`\u3002AUI \u89C6\u53E3\u7684 CSS \u2192 GUI \u6362\u7B97\u6BD4\u4F8B\u540C\u65F6\u4F5C\u7528\u4E8E\u4E24\u8F74\uFF0C\u518D\u5206\u522B\u4E58 `scale.x/y`\uFF1B\u4F8B\u5982\u5B9E\u9645\u5BBD\u5EA6\u4E3A `CSS \u5BBD\u5EA6 \xD7 viewport.renderScale \xD7 scale.x`\u3002\u7ED8\u5236\u4E0E\u88C1\u526A\u4F7F\u7528\u540C\u4E00\u7EC4\u4F4D\u7F6E\u548C\u7F29\u653E\u3002\u6B63\u4EA4 AUI \u7684\u5E03\u5C40 `rotation`\u3001`scope_behavior` \u4E0E `ignore_zoom` \u4E0D\u751F\u6548\uFF0C\u9875\u9762\u5185\u90E8\u53EF\u7528 CSS \u65CB\u8F6C\u3002\r\n\r\n\u900F\u89C6 AUI \u4EE5\u9875\u9762\u5185\u5BB9\u4E2D\u5FC3\u4E3A\u5C40\u90E8\u539F\u70B9\uFF0C\u5C06 CSS \u5411\u4E0B\u7684 Y \u8F74\u7FFB\u4E3A\u76F8\u673A\u5411\u4E0A\u7684 Y \u8F74\uFF0C\u6309 `T(x, -y, z) \xD7 Rz \xD7 Ry \xD7 Rx \xD7 S(scale.x, -scale.y, scale.z)` \u6295\u653E\uFF1B\u89D2\u5EA6\u4EE5\u5EA6\u4E3A\u5355\u4F4D\u3002\u8BE5\u6A21\u5F0F\u76F4\u63A5\u628A CSS \u50CF\u7D20\u7ECF `scale` \u6362\u7B97\u4E3A\u76F8\u673A\u7A7A\u95F4\u5355\u4F4D\uFF0C\u4E0D\u53E0\u52A0\u6B63\u4EA4\u89C6\u53E3\u7684 CSS \u2192 GUI \u7F29\u653E\uFF0C\u4E5F\u4E0D\u4F7F\u7528\u5C4F\u5E55 `anchor`\u3002`scope_behavior` \u4E0E `ignore_zoom` \u5728\u70AE\u955C\u89C6\u89D2\u4E2D\u53C2\u4E0E\u6295\u653E\uFF1B`screen_fixed` \u4F7F\u7528\u5C4F\u5E55\u4E2D\u5FC3\u5BF9\u5E94\u7684\u76F8\u673A\u7A7A\u95F4\u539F\u70B9\u3002\r\n\r\n\u5C06\u201CAUI \u9875\u9762\u6837\u5F0F\u201D\u4E2D\u7684\u6837\u5F0F\u793A\u4F8B\u4FDD\u5B58\u4E3A\u547D\u540D\u7A7A\u95F4 `machine_max` \u7684 `huds/aui_weapon_status.json` \u540E\uFF0C\u53EF\u7528\u8FD9\u4EFD\u5E03\u5C40\u540C\u65F6\u663E\u793A\u4E2D\u5FC3\u6B63\u4EA4\u9762\u677F\u4E0E\u53F3\u4E0A\u89D2\u900F\u89C6\u9762\u677F\u3002\u900F\u89C6\u53C2\u6570\u6309\u7EA6 `280 \xD7 120` CSS \u50CF\u7D20\u7684\u5185\u5BB9\u300170\xB0 \u89C6\u573A\u89D2\u4E0E 16:9 \u753B\u9762\u8BBE\u7F6E\uFF0C\u9762\u677F\u4F4D\u7F6E\u9700\u968F\u5B9E\u9645\u5185\u5BB9\u5C3A\u5BF8\u548C\u89C6\u573A\u89D2\u8C03\u6574\u3002\r\n\r\n```json\r\n[\r\n  {\r\n    "style": "machine_max:aui_weapon_status",\r\n    "perspective": false,\r\n    "anchor": "center",\r\n    "offset": [0, 0, 0],\r\n    "scale": [1, 1, 1]\r\n  },\r\n  {\r\n    "style": "machine_max:aui_weapon_status",\r\n    "perspective": true,\r\n    "scope_behavior": "screen_fixed",\r\n    "offset": [95, -60, -135],\r\n    "rotation": [15, -25, -5],\r\n    "scale": [0.2, 0.2, 0.2]\r\n  }\r\n]\r\n```\r\n\r\n\u952E\u7684\u89C4\u5219\uFF1A\u6587\u4EF6\u76F8\u5BF9\u8DEF\u5F84\u53BB\u6389 `.json` \u5C31\u662F\u8D44\u6E90\u952E\uFF0C\u5E76\u5E26\u4E0A\u5185\u5BB9\u5305\u547D\u540D\u7A7A\u95F4\u3002`hud_layouts/seat_dashboard.json` \u7684\u952E\u662F `machine_max:seat_dashboard`\uFF1B`hud_layouts/foo/bar.json` \u7684\u952E\u662F `machine_max:foo/bar`\u3002\u6837\u5F0F\u540C\u7406\uFF1A`huds/example_hud.json` \u7684\u952E\u662F `machine_max:example_hud`\u3002\u5E03\u5C40\u4E0E\u6837\u5F0F\u5206\u5C5E\u4E24\u4E2A\u6A21\u5757\uFF0C\u952E\u540C\u540D\u4E0D\u4F1A\u51B2\u7A81\u3002\r\n\r\n\u5E03\u5C40\u6570\u7EC4\u7684\u987A\u5E8F\u5C31\u662F\u540C\u4E00\u79CD\u6295\u5F71\u6A21\u5F0F\u5185\u7684\u63D0\u4EA4\u987A\u5E8F\uFF1B\u900F\u89C6\u4E0E\u6B63\u4EA4\u4E4B\u95F4\u7684\u5148\u540E\u7531\u6E32\u67D3\u6279\u6B21\u51B3\u5B9A\uFF0C\u4E0D\u7531\u5E03\u5C40\u8868\u8FBE\u3002\r\n\r\n## \u6A21\u578B\u548C\u52A8\u753B\u8981\u6C42\r\n\r\n### 3D\u6A21\u578B\u89C4\u8303\r\nHUD\u6A21\u578B\u4F7F\u7528\u6807\u51C6\u7684Minecraft Bedrock\u683C\u5F0F\uFF0C\u9700\u8981\u5305\u542B\u4EE5\u4E0B\u5143\u7D20\uFF1A\r\n\r\n1. **\u9AA8\u9ABC\u7ED3\u6784**: \u6BCF\u4E2A\u9700\u8981\u663E\u793A\u6587\u672C\u7684\u4F4D\u7F6E\u9700\u8981\u4E00\u4E2A\u5BF9\u5E94\u7684\u9AA8\u9ABC\r\n2. **\u5B9A\u4F4D\u5668**: \u7528\u4E8E\u786E\u5B9A\u6587\u672C\u663E\u793A\u7684\u4F4D\u7F6E\u548C\u65B9\u5411\r\n3. **\u51E0\u4F55\u5F62\u72B6**: \u5B9A\u4E49HUD\u7684\u89C6\u89C9\u5916\u89C2\r\n\r\n\r\n### \u52A8\u753B\u6587\u4EF6\r\n\u52A8\u753B\u6587\u4EF6\u63A7\u5236HUD\u5143\u7D20\u7684\u52A8\u6001\u884C\u4E3A\uFF0C\u53EF\u4EE5\u4F7F\u7528Molang\u8868\u8FBE\u5F0F\u5B9E\u73B0\u52A8\u6001\u6548\u679C\uFF1A\r\n\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(global.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\r\n## \u6587\u672C\u663E\u793A\u914D\u7F6E\r\n\r\n### \u57FA\u672C\u6587\u672C\u663E\u793A\r\n```json\r\n"speed": {\r\n  "key": "hud.machine_max.default_1.speed",\r\n  "centered": true,\r\n  "shadow": true,\r\n  "scale": [2, 2, 2]\r\n}\r\n```\r\n\r\n### \u52A8\u6001\u6587\u672C\u663E\u793A\r\n\u4F7F\u7528Molang\u53C2\u6570\u5B9E\u73B0\u52A8\u6001\u5185\u5BB9\uFF1A\r\n```json\r\n"speed": {\r\n  "key": "hud.machine_max.default_1.speed",\r\n  "molang_args": [\r\n    "math.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n    "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n    "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n  ],\r\n  "significand": 0\r\n}\r\n```\r\n\r\n### \u6863\u4F4D\u663E\u793A\r\n```json\r\n"gear": {\r\n  "key": "hud.machine_max.default_1.gear",\r\n  "molang_args": ["global.get(\'gear\')??\'NO GBX\'"],\r\n  "centered": true,\r\n  "shadow": true\r\n}\r\n```\r\n\r\n## Molang\u5728HUD\u4E2D\u7684\u5E94\u7528\r\n\r\nHUD\u7CFB\u7EDF\u5145\u5206\u5229\u7528\u4E86Molang\u7684\u5F3A\u5927\u529F\u80FD\uFF0C\u53EF\u4EE5\u5B9E\u73B0\u590D\u6742\u7684\u52A8\u6001\u663E\u793A\u6548\u679C\u3002\r\n\r\n### \u5E38\u7528Molang\u6A21\u5F0F\r\n\r\n#### \u4FE1\u53F7\u83B7\u53D6\u548C\u5355\u4F4D\u8F6C\u6362\r\n```molang\r\n// \u83B7\u53D6\u8F66\u8F86\u901F\u5EA6\u5E76\u8F6C\u6362\u4E3Akm/h\r\nmath.abs(global.get(\'vehicle_speed\')??0.0) * 3.6\r\n\r\n// \u83B7\u53D6\u53D1\u52A8\u673A\u8F6C\u901F\u5E76\u8F6C\u6362\u4E3ARPM\r\nmath.abs(global.get(\'engine_speed\')??0) * 30 / math.pi\r\n```\r\n\r\n#### \u6570\u5B57\u5206\u89E3\u663E\u793A\r\n```molang\r\n// \u767E\u4F4D\u6570\r\nmath.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)\r\n\r\n// \u5341\u4F4D\u6570\r\nmath.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)\r\n\r\n// \u4E2A\u4F4D\u6570\r\nmath.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))\r\n```\r\n\r\n#### \u6761\u4EF6\u663E\u793A\r\n```molang\r\n// \u6839\u636E\u5B50\u7CFB\u7EDF\u72B6\u6001\u663E\u793A\u8B66\u544A\r\nlocal.has_subsystem(\'engine\') && local.subsystem_destroyed(\'engine\') ? 1.0 : 0.0\r\n```\r\n\r\n## \u5B50\u7CFB\u7EDFHUD\u5173\u8054\r\n\r\nHUD \u901A\u8FC7\u5BBF\u4E3B\u7684\u89C6\u89D2\u5B57\u6BB5\u4E0E\u7279\u5B9A\u5EA7\u4F4D\u6216\u7784\u5177\u5173\u8054\uFF1A\u5EA7\u6905\u4F7F\u7528 `first_hud_layout` / `third_hud_layout`\uFF0C\u76F8\u673A\u4E0E\u7784\u5177\u4F7F\u7528 `scope_hud_layout`\u3002\u6BCF\u4E2A\u5B57\u6BB5\u662F\u4E00\u4E2A\u5E03\u5C40\u8D44\u6E90\u952E\uFF0C\u7F3A\u5931\u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\u3002\r\n\r\n### \u5EA7\u6905\u5B50\u7CFB\u7EDF\u914D\u7F6E\r\n```json\r\n{\r\n  "type": "machine_max:seat",\r\n  "views": {\r\n    "enable_first_person": true,\r\n    "first_hud_layout": "machine_max:seat_dashboard",\r\n    "first_person_offset": [0, 0.15, -0.1],\r\n    "enable_third_person": true,\r\n    "third_hud_layout": "machine_max:seat_dashboard",\r\n    "follow_vehicle": true,\r\n    "focus_on_center": true,\r\n    "distance_scale": 1.1\r\n  }\r\n}\r\n```\r\n\r\n### \u7784\u5177/\u76F8\u673A\u5B50\u7CFB\u7EDF\u914D\u7F6E\r\n```json\r\n{\r\n  "type": "machine_max:sight",\r\n  "scope_hud_layout": "machine_max:scope_gunner"\r\n}\r\n```\r\n\r\n### \u89C6\u56FE\u5C5E\u6027\u8BF4\u660E\r\n- **enable_first_person**: \u662F\u5426\u542F\u7528\u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\r\n- **first_hud_layout**: \u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\uFF1B\u7701\u7565\u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\r\n- **first_person_offset**: \u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u504F\u79FB\u91CF (x+\u53F3, y+\u4E0A, z+\u540E\uFF0C\u5355\u4F4D\u7C73)\r\n- **enable_third_person**: \u662F\u5426\u542F\u7528\u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\r\n- **third_hud_layout**: \u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\uFF1B\u7701\u7565\u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\r\n- **follow_vehicle**: \u6444\u50CF\u673A\u662F\u5426\u8DDF\u968F\u8F66\u8F86\u65CB\u8F6C\r\n- **focus_on_center**: \u6444\u50CF\u673A\u662F\u5426\u805A\u7126\u4E8E\u8F7D\u5177\u4E2D\u5FC3\r\n- **distance_scale**: \u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u8DDD\u79BB\u500D\u7387\r\n- **scope_hud_layout**\uFF08\u76F8\u673A/\u7784\u5177\uFF09: \u70AE\u955C\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\uFF1B\u7701\u7565\u8868\u793A\u70AE\u955C\u4E0D\u53E0\u52A0\u5E03\u5C40\u63D0\u4F9B\u7684 HUD\r\n\r\n## \u5B9E\u9645\u6848\u4F8B\u89E3\u6790\r\n\r\n### \u793A\u4F8BHUD\u5206\u6790\r\n\u4EE5 `machine_max:example_hud` \u4E3A\u4F8B\uFF0C\u5206\u6790\u5176\u5B8C\u6574\u5B9E\u73B0\u3002\u60A8\u53EF\u4EE5\u901A\u8FC7\u4EE5\u4E0B\u8DEF\u5F84\u67E5\u770B\u5B8C\u6574\u7684\u5B9E\u73B0\u6587\u4EF6\uFF1A\r\n\r\n#### 1. HUD\u6837\u5F0F ([example_hud.json](../../huds/example_hud.json))\r\n\r\n\u8FD9\u662F\u4E00\u4E2A\u529F\u80FD\u5B8C\u6574\u7684\u8F66\u8F86\u4EEA\u8868\u76D8\u6837\u5F0F\uFF0C\u80FD\u591F\u540C\u65F6\u663E\u793A\u53D1\u52A8\u673A\u8F6C\u901F\u3001\u53D8\u901F\u7BB1\u6321\u4F4D\u548C\u8F7D\u5177\u901F\u5EA6\u7B49\u5173\u952E\u4FE1\u606F\u3002\u6295\u653E\u503C\u5728\u540C\u76EE\u5F55\u7684 [seat_dashboard.json](../../hud_layouts/seat_dashboard.json) \u91CC\u3002\r\n\r\n```json\r\n{\r\n  "type": "machine_max:model_hud",\r\n  "model": "machine_max:example_hud.geo",\r\n  "animation": "machine_max:example_hud",\r\n  "texture": "machine_max:textures/hud/example_hud.png",\r\n  "texts": {\r\n    "speed": {\r\n      "key": "hud.machine_max.default_1.speed",\r\n      "centered": true,\r\n      "shadow": true,\r\n      "scale": [2, 2, 2],\r\n      "molang_args": [\r\n        "math.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n        "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n        "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n      ]\r\n    },\r\n    "gear": {\r\n      "key": "hud.machine_max.default_1.gear",\r\n      "centered": true,\r\n      "shadow": true,\r\n      "molang_args": ["global.get(\'gear\')??\'NO GBX\'"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n**HUD\u529F\u80FD\u6982\u8FF0\uFF1A**\r\n\r\n\u8FD9\u4E2AHUD\u6837\u5F0F\u4E0E\u5B83\u5F15\u7528\u7684\u5E03\u5C40\u5B9E\u73B0\u4E86\u4EE5\u4E0B\u6838\u5FC3\u529F\u80FD\uFF1A\r\n\r\n- **\u901F\u5EA6\u663E\u793A**\uFF1A\u5B9E\u65F6\u663E\u793A\u8F66\u8F86\u884C\u9A76\u901F\u5EA6\uFF0C\u4EE5\u516C\u91CC/\u5C0F\u65F6\u4E3A\u5355\u4F4D\uFF0C\u91C7\u7528\u4E09\u4F4D\u6570\u5B57\u663E\u793A\u683C\u5F0F\r\n- **\u6321\u4F4D\u6307\u793A**\uFF1A\u663E\u793A\u5F53\u524D\u53D8\u901F\u7BB1\u6240\u5904\u7684\u6321\u4F4D\u72B6\u6001\uFF0C\u5305\u62EC\u524D\u8FDB\u6321\u3001\u5012\u6321\u548C\u7A7A\u6321\r\n- **\u8F6C\u901F\u8868\u6307\u9488**\uFF1A\u901A\u8FC7\u52A8\u753B\u7CFB\u7EDF\u63A7\u5236\u8F6C\u901F\u8868\u6307\u9488\u7684\u52A8\u6001\u65CB\u8F6C\uFF0C\u53CD\u6620\u53D1\u52A8\u673A\u5DE5\u4F5C\u72B6\u6001\r\n\r\n\r\n##### \u7FFB\u8BD1\u952E\u503C\u5BF9\u89E3\u6790 ([lang/zh_cn.json](../../lang/zh_cn.json))\r\n\r\n\u5728\u8BED\u8A00\u6587\u4EF6\u4E2D\u5B9A\u4E49\u4E86HUD\u6587\u672C\u7684\u7FFB\u8BD1\u683C\u5F0F\uFF0C\u8FD9\u4E9B\u7FFB\u8BD1\u952E\u4E0E\u6837\u5F0F\u4E2D\u7684\u6587\u672C\u69FD\u7D27\u5BC6\u914D\u5408\uFF0C\u5B9E\u73B0\u4E86\u52A8\u6001\u5185\u5BB9\u7684\u683C\u5F0F\u5316\u663E\u793A\uFF1A\r\n\r\n```json\r\n"hud.machine_max.default_1.speed": "\xA7o%1$s%2$s%3$s",\r\n"hud.machine_max.default_1.gear": "\xA7o%1$s",\r\n"hud.machine_max.default_1.kmh": "\xA7oKM/H"\r\n```\r\n\r\n**\u7FFB\u8BD1\u952E\u7684\u5DE5\u4F5C\u539F\u7406**\uFF1A\r\n\r\n- **\u901F\u5EA6\u663E\u793A** (`hud.machine_max.default_1.speed`)\uFF1A\u8FD9\u4E2A\u7FFB\u8BD1\u952E\u63A5\u6536\u4E09\u4E2A\u53C2\u6570\uFF0C\u5206\u522B\u5BF9\u5E94\u901F\u5EA6\u7684\u767E\u4F4D\u3001\u5341\u4F4D\u548C\u4E2A\u4F4D\u6570\u5B57\u3002`\xA7o`\u4EE3\u7801\u8868\u793A\u4F7F\u7528\u659C\u4F53\u5B57\u4F53\u663E\u793A\uFF0C\u8BA9\u901F\u5EA6\u8BFB\u6570\u66F4\u52A0\u9192\u76EE\u3002\r\n\r\n- **\u6863\u4F4D\u663E\u793A** (`hud.machine_max.default_1.gear`)\uFF1A\u53EA\u9700\u8981\u4E00\u4E2A\u53C2\u6570\u6765\u663E\u793A\u5F53\u524D\u6863\u4F4D\u4FE1\u606F\uFF0C\u540C\u6837\u4F7F\u7528\u659C\u4F53\u683C\u5F0F\u589E\u5F3A\u53EF\u8BFB\u6027\u3002\r\n\r\n**\u6570\u5B57\u8F6C\u6362\u7684\u5B8C\u6574\u8FC7\u7A0B**\uFF1A\r\n\r\n\u5F53\u8F66\u8F86\u884C\u9A76\u65F6\uFF0CHUD\u7CFB\u7EDF\u4F1A\u5B9E\u65F6\u5904\u7406\u901F\u5EA6\u4FE1\u53F7\u5E76\u663E\u793A\u5728\u754C\u9762\u4E0A\u3002\u8FD9\u4E2A\u8FC7\u7A0B\u53EF\u4EE5\u5206\u4E3A\u4EE5\u4E0B\u51E0\u4E2A\u6B65\u9AA4\uFF1A\r\n\r\n1. **\u83B7\u53D6\u5B9E\u65F6\u6570\u636E**\uFF1A\u9996\u5148\u4ECE\u8F66\u8F86\u7CFB\u7EDF\u4E2D\u83B7\u53D6\u5F53\u524D\u7684\u901F\u5EA6\u4FE1\u53F7\uFF0C\u5355\u4F4D\u4E3A\u7C73/\u79D2\r\n2. **\u5355\u4F4D\u8F6C\u6362**\uFF1A\u5C06\u7C73/\u79D2\u8F6C\u6362\u4E3A\u66F4\u5E38\u7528\u7684\u516C\u91CC/\u5C0F\u65F6\u5355\u4F4D\r\n3. **\u6570\u5B57\u5206\u89E3**\uFF1A\u5C06\u4E09\u4F4D\u6570\u7684\u901F\u5EA6\u503C\u5206\u89E3\u4E3A\u767E\u4F4D\u3001\u5341\u4F4D\u548C\u4E2A\u4F4D\u4E09\u4E2A\u72EC\u7ACB\u7684\u6570\u5B57\r\n4. **\u683C\u5F0F\u5316\u663E\u793A**\uFF1A\u5C06\u5206\u89E3\u540E\u7684\u6570\u5B57\u586B\u5145\u5230\u7FFB\u8BD1\u952E\u7684\u5360\u4F4D\u7B26\u4E2D\uFF0C\u5E76\u5E94\u7528\u659C\u4F53\u683C\u5F0F\r\n5. **\u6700\u7EC8\u5448\u73B0**\uFF1A\u4F8B\u5982\u5F53\u8F66\u8F86\u4EE5123\u516C\u91CC/\u5C0F\u65F6\u7684\u901F\u5EA6\u884C\u9A76\u65F6\uFF0CHUD\u4F1A\u663E\u793A\u4E3A"\xA7o123"\u7684\u659C\u4F53\u6570\u5B57\r\n\r\n\u8FD9\u79CD\u8BBE\u8BA1\u4F7F\u5F97HUD\u80FD\u591F\u5B9E\u65F6\u53CD\u6620\u8F66\u8F86\u72B6\u6001\uFF0C\u540C\u65F6\u4FDD\u6301\u754C\u9762\u7684\u7F8E\u89C2\u548C\u4E00\u81F4\u6027\u3002\r\n\r\n#### 2. \u52A8\u753B\u63A7\u5236 ([example_hud.animation.json](../../animations/hud/example_hud/example_hud.animation.json))\r\n\r\n\u52A8\u753B\u6587\u4EF6\u5B9A\u4E49\u4E86HUD\u5143\u7D20\u7684\u52A8\u6001\u884C\u4E3A\uFF0C\u6BD4\u5982\u8F6C\u901F\u8868\u6307\u9488\u7684\u65CB\u8F6C\u6548\u679C\uFF1A\r\n\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(global.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\u8FD9\u4E2A\u52A8\u753B\u914D\u7F6E\u5B9E\u73B0\u4E86\u8F6C\u901F\u8868\u6307\u9488\u7684\u52A8\u6001\u65CB\u8F6C\u6548\u679C\u3002\u5F53\u53D1\u52A8\u673A\u8F6C\u901F\u53D8\u5316\u65F6\uFF0C\u6307\u9488\u4F1A\u5B9E\u65F6\u65CB\u8F6C\uFF0C\u4E3A\u9A7E\u9A76\u5458\u63D0\u4F9B\u76F4\u89C2\u7684\u8F6C\u901F\u53CD\u9988\u3002\r\n\r\n#### 3. \u5B50\u7CFB\u7EDF\u5173\u8054 ([senna_gtr_seat.json](../../subsystems/senna_gtr/senna_gtr_seat.json))\r\n\r\n\u5EA7\u6905\u5B50\u7CFB\u7EDF\u914D\u7F6E\u5C06 HUD \u4E0E\u7279\u5B9A\u7684\u5EA7\u4F4D\u5173\u8054\u8D77\u6765\uFF0C\u5B9A\u4E49\u4E86\u4E0D\u540C\u89C6\u89D2\u4F7F\u7528\u7684\u5E03\u5C40\uFF1A\r\n\r\n```json\r\n{\r\n  "views": {\r\n    "enable_first_person": true,\r\n    "first_hud_layout": "machine_max:seat_dashboard",\r\n    "first_person_offset": [0, 0.15, -0.1],\r\n    "enable_third_person": true,\r\n    "third_hud_layout": "machine_max:seat_dashboard",\r\n    "follow_vehicle": true,\r\n    "focus_on_center": true,\r\n    "distance_scale": 1.1\r\n  }\r\n}\r\n```\r\n\r\n**\u4E00\u4E2A\u5E03\u5C40\u53EF\u4EE5\u5305\u542B\u591A\u4E2A\u5143\u7D20**\uFF1A\u8981\u540C\u65F6\u663E\u793A\u901F\u5EA6\u8868\u3001\u8F6C\u901F\u8868\u3001\u6CB9\u91CF\u8868\uFF0C\u5C31\u5728\u5E03\u5C40\u6570\u7EC4\u91CC\u5199\u591A\u4E2A\u5143\u7D20\uFF0C\u5404\u81EA\u5F15\u7528\u5BF9\u5E94\u6837\u5F0F\u5E76\u7ED9\u51FA\u81EA\u5DF1\u7684\u6295\u653E\uFF1B\u540C\u4E00\u4E2A\u89C6\u89D2\u53EA\u8BFB\u4E00\u4E2A `*_hud_layout` \u5B57\u6BB5\u3002\u9700\u8981\u53E6\u4E00\u5957\u4F4D\u7F6E\u65F6\uFF0C\u590D\u5236\u4E00\u4EFD\u5E03\u5C40\u6587\u4EF6\u5E76\u6539\u6295\u653E\uFF0C\u800C\u4E0D\u662F\u590D\u5236\u6837\u5F0F\u3002', "zh_cn/molang/\u4F7F\u7528\u6848\u4F8B.md": '# Molang \u793A\u4F8B\u548C\u6848\u4F8B\r\n\r\n\u672C\u6587\u6863\u63D0\u4F9B Machine-Max \u4E2D Molang \u7684\u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\uFF0C\u5E2E\u52A9\u7406\u89E3\u5982\u4F55\u5728\u5B9E\u9645\u9879\u76EE\u4E2D\u5E94\u7528 Molang\u3002\r\n\r\n## \u6848\u4F8B 1: AE86 \u60AC\u6302\u7CFB\u7EDF\u52A8\u753B\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/animations/part/ae86/ae86.animation.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "axisRightFront": {\r\n    "rotation": [0, 0, "math.atan2(local.connector_offset(\'connector.machine_max.right_front_wheel\', 1)*16,20)"]\r\n  },\r\n  "rodLeftFront": {\r\n    "rotation": ["-65.7725+math.atan2(20-local.connector_offset(\'connector.machine_max.left_front_wheel\', 1)*16,9)", 0, 0]\r\n  },\r\n  "rodLeftFrontInner": {\r\n    "scale": [1, "math.sqrt(math.pow(20-local.connector_offset(\'connector.machine_max.left_front_wheel\', 1)*16,2)+81)/22", 1]\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u60AC\u6302\u9AD8\u5EA6\u83B7\u53D6**:\r\n   ```molang\r\n   local.connector_offset(\'connector.machine_max.left_front_wheel\', 1)\r\n   ```\r\n   - \u83B7\u53D6\u5DE6\u524D\u8F6E\u8FDE\u63A5\u5668\u7684Y\u8F74\u504F\u79FB\uFF08\u60AC\u6302\u9AD8\u5EA6\uFF09\r\n   - \u8FD4\u56DE\u503C\u5355\u4F4D\u4E3A\u7C73\r\n\r\n2. **\u60AC\u6302\u89D2\u5EA6\u8BA1\u7B97**:\r\n   ```molang\r\n   math.atan2(20 - height * 16, 9)\r\n   ```\r\n   - \u4F7F\u7528\u53CD\u6B63\u5207\u51FD\u6570\u8BA1\u7B97\u60AC\u6302\u8FDE\u6746\u7684\u89D2\u5EA6\r\n   - `20` \u662F\u57FA\u51C6\u9AD8\u5EA6\uFF0C`9` \u662F\u6C34\u5E73\u8DDD\u79BB\r\n   - `height * 16` \u662F\u5355\u4F4D\u8F6C\u6362\uFF08\u7C73\u5230\u6E38\u620F\u5355\u4F4D\uFF09\r\n\r\n3. **\u8FDE\u6746\u957F\u5EA6\u8BA1\u7B97**:\r\n   ```molang\r\n   math.sqrt(math.pow(20 - height * 16, 2) + 81) / 22\r\n   ```\r\n   - \u4F7F\u7528\u52FE\u80A1\u5B9A\u7406\u8BA1\u7B97\u8FDE\u6746\u957F\u5EA6\r\n   - `81` \u662F\u6C34\u5E73\u8DDD\u79BB\u7684\u5E73\u65B9\uFF089\xB2\uFF09\r\n   - `/22` \u662F\u5F52\u4E00\u5316\u5230\u57FA\u51C6\u957F\u5EA6\r\n\r\n### \u7269\u7406\u539F\u7406\r\n\u8FD9\u4E2A\u60AC\u6302\u7CFB\u7EDF\u6A21\u62DF\u4E86\u771F\u5B9E\u7684\u53CC\u53C9\u81C2\u60AC\u6302\uFF1A\r\n- \u5F53\u8F66\u8F6E\u4E0A\u4E0B\u79FB\u52A8\u65F6\uFF0C\u8FDE\u63A5\u5668\u504F\u79FB\u91CF\u53D8\u5316\r\n- \u901A\u8FC7\u4E09\u89D2\u51FD\u6570\u8BA1\u7B97\u60AC\u6302\u8FDE\u6746\u7684\u89D2\u5EA6\u548C\u957F\u5EA6\r\n- \u5B9E\u73B0\u771F\u5B9E\u7684\u60AC\u6302\u8FD0\u52A8\u5B66\u6548\u679C\r\n\r\n## \u6848\u4F8B 2: HUD \u8F6C\u901F\u8868\u6307\u9488\u63A7\u5236\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/animations/hud/example_hud/example_hud.animation.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "Pointer": {\r\n    "rotation": {\r\n      "0.0": [0, 0, "240*(math.abs(global.get(\'engine_speed\')??0)*30/math.pi)/9000"]\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u53D1\u52A8\u673A\u8F6C\u901F\u83B7\u53D6**:\r\n   ```molang\r\n   global.get(\'engine_speed\')??0\r\n   ```\r\n   - \u83B7\u53D6\u53D1\u52A8\u673A\u8F6C\u901F\u4FE1\u53F7\r\n   - `??0` \u662F\u7A7A\u503C\u5408\u5E76\u64CD\u4F5C\u7B26\uFF0C\u786E\u4FDD\u6709\u9ED8\u8BA4\u503C\r\n\r\n2. **\u5355\u4F4D\u8F6C\u6362**:\r\n   ```molang\r\n   math.abs(engine_speed) * 30 / math.pi\r\n   ```\r\n   - `math.abs()` \u786E\u4FDD\u8F6C\u901F\u4E3A\u6B63\u6570\r\n   - `* 30 / math.pi` \u5C06\u5F27\u5EA6/\u79D2\u8F6C\u6362\u4E3A\u8F6C/\u5206\u949F\uFF08RPM\uFF09\r\n   - \u8F6C\u6362\u516C\u5F0F\uFF1ARPM = (rad/s) \xD7 60 / (2\u03C0) = (rad/s) \xD7 30 / \u03C0\r\n\r\n3. **\u5F52\u4E00\u5316\u5904\u7406**:\r\n   ```molang\r\n   normalized_rpm = rpm / 9000\r\n   ```\r\n   - \u5047\u8BBE\u6700\u5927\u8F6C\u901F\u4E3A 9000 RPM\r\n   - \u5C06\u5B9E\u9645\u8F6C\u901F\u5F52\u4E00\u5316\u5230 0-1 \u8303\u56F4\r\n\r\n4. **\u6307\u9488\u89D2\u5EA6\u8BA1\u7B97**:\r\n   ```molang\r\n   pointer_angle = normalized_rpm * 240\r\n   ```\r\n   - \u5047\u8BBE\u8F6C\u901F\u8868\u6EE1\u91CF\u7A0B\u4E3A 240 \u5EA6\r\n   - \u5C06\u5F52\u4E00\u5316\u8F6C\u901F\u8F6C\u6362\u4E3A\u6307\u9488\u65CB\u8F6C\u89D2\u5EA6\r\n\r\n### \u4EEA\u8868\u8BBE\u8BA1\r\n- **\u91CF\u7A0B**: 0-9000 RPM\r\n- **\u6307\u9488\u8303\u56F4**: 0-240 \u5EA6\r\n- **\u7A7A\u8F6C\u4FDD\u62A4**: \u4F7F\u7528 `??0` \u5904\u7406\u4FE1\u53F7\u4E22\u5931\u60C5\u51B5\r\n\r\n## \u6848\u4F8B 3: HUD \u901F\u5EA6\u663E\u793A\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/huds/example_hud.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "speed": {\r\n    "molang_args": [\r\n      "math.floor((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6 / 100)",\r\n      "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 100) / 10)",\r\n      "math.floor(math.mod((math.abs(global.get(\'vehicle_speed\')??0.0)) * 3.6, 10))"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u901F\u5EA6\u83B7\u53D6\u548C\u5355\u4F4D\u8F6C\u6362**:\r\n   ```molang\r\n   speed_kmh = math.abs(global.get(\'vehicle_speed\')??0.0) * 3.6\r\n   ```\r\n   - \u83B7\u53D6\u8F66\u8F86\u901F\u5EA6\uFF08\u7C73/\u79D2\uFF09\r\n   - \u8F6C\u6362\u4E3A\u516C\u91CC/\u5C0F\u65F6\uFF1Akm/h = m/s \xD7 3.6\r\n\r\n2. **\u767E\u4F4D\u6570\u63D0\u53D6**:\r\n   ```molang\r\n   hundreds = math.floor(speed_kmh / 100)\r\n   ```\r\n   - \u8BA1\u7B97\u901F\u5EA6\u7684\u767E\u4F4D\u6570\r\n   - \u4F8B\u5982\uFF1A123 km/h \u2192 \u767E\u4F4D\u6570\u4E3A 1\r\n\r\n3. **\u5341\u4F4D\u6570\u63D0\u53D6**:\r\n   ```molang\r\n   tens = math.floor(math.mod(speed_kmh, 100) / 10)\r\n   ```\r\n   - \u5148\u53D6\u6A21100\u5F97\u5230\u540E\u4E24\u4F4D\u6570\r\n   - \u518D\u9664\u4EE510\u53D6\u6574\u5F97\u5230\u5341\u4F4D\u6570\r\n   - \u4F8B\u5982\uFF1A123 km/h \u2192 \u6A21100\u5F9723 \u2192 \u9664\u4EE510\u5F972.3 \u2192 \u53D6\u6574\u5F972\r\n\r\n4. **\u4E2A\u4F4D\u6570\u63D0\u53D6**:\r\n   ```molang\r\n   units = math.floor(math.mod(speed_kmh, 10))\r\n   ```\r\n   - \u76F4\u63A5\u53D6\u6A2110\u5F97\u5230\u4E2A\u4F4D\u6570\r\n   - \u4F8B\u5982\uFF1A123 km/h \u2192 \u6A2110\u5F973\r\n\r\n### \u663E\u793A\u903B\u8F91\r\n\u8FD9\u79CD\u65B9\u6CD5\u5C06\u4E09\u4F4D\u6570\u901F\u5EA6\u5206\u89E3\u4E3A\u4E09\u4E2A\u72EC\u7ACB\u7684\u6570\u5B57\uFF0C\u4FBF\u4E8E\u5728HUD\u4E2D\u4F7F\u7528\u4E09\u4E2A\u4E0D\u540C\u7684\u6587\u672C\u5143\u7D20\u663E\u793A\uFF0C\u5B9E\u73B0\u6570\u5B57\u5F0F\u901F\u5EA6\u8868\u3002\r\n\r\n## \u6848\u4F8B 4: \u65B9\u5411\u76D8\u52A8\u753B\u63A7\u5236\r\n\r\n### \u6587\u4EF6\u4F4D\u7F6E\r\n`machine_max/animations/part/ae86/ae86.animation.json`\r\n\r\n### \u4EE3\u7801\u793A\u4F8B\r\n```json\r\n{\r\n  "rot2": {\r\n    "rotation": [0, 0, "global.get(\'steering\')*225"]\r\n  }\r\n}\r\n```\r\n\r\n### \u6280\u672F\u89E3\u6790\r\n\r\n1. **\u8F6C\u5411\u4FE1\u53F7\u83B7\u53D6**:\r\n   ```molang\r\n   steering_input = global.get(\'steering\')\r\n   ```\r\n   - \u83B7\u53D6\u8F6C\u5411\u8F93\u5165\u4FE1\u53F7\r\n   - \u8303\u56F4\uFF1A-1.0\uFF08\u5DE6\u8F6C\uFF09\u5230 1.0\uFF08\u53F3\u8F6C\uFF09\r\n\r\n2. **\u89D2\u5EA6\u8F6C\u6362**:\r\n   ```molang\r\n   steering_angle = steering_input * 225\r\n   ```\r\n   - \u5C06\u8F93\u5165\u4FE1\u53F7\u8F6C\u6362\u4E3A\u65CB\u8F6C\u89D2\u5EA6\r\n   - 225\u5EA6\u662F\u6700\u5927\u8F6C\u5411\u89D2\u5EA6\r\n   - \u5DE6\u8F6C\uFF1A-1.0 \xD7 225 = -225\u5EA6\r\n   - \u53F3\u8F6C\uFF1A1.0 \xD7 225 = 225\u5EA6\r\n\r\n### \u8F6C\u5411\u7CFB\u7EDF\u8BBE\u8BA1\r\n- **\u8F6C\u5411\u6BD4**: 1:225\uFF08\u8F93\u5165\u4FE1\u53F7\u5230\u89D2\u5EA6\uFF09\r\n- **\u8F6C\u5411\u8303\u56F4**: \xB1225\u5EA6\r\n- **\u7EBF\u6027\u6620\u5C04**: \u7B80\u5355\u7684\u4E58\u6CD5\u5173\u7CFB\uFF0C\u786E\u4FDD\u8F6C\u5411\u54CD\u5E94\u7EBF\u6027\r\n\r\n## \u6700\u4F73\u5B9E\u8DF5\r\n\r\n### 1. \u9519\u8BEF\u5904\u7406\r\n```molang\r\n// \u4F7F\u7528\u7A7A\u503C\u5408\u5E76\u64CD\u4F5C\u7B26\r\nglobal.get(\'signal_name\')??default_value\r\n\r\n// \u68C0\u67E5\u5B50\u7CFB\u7EDF\u5B58\u5728\u6027\r\nlocal.has_subsystem(\'engine\') ? local.subsystem_durability(\'engine\') : 0.0\r\n```\r\n\r\n### 2. \u6027\u80FD\u4F18\u5316\r\n```molang\r\n// \u907F\u514D\u91CD\u590D\u8BA1\u7B97\r\nlet speed = math.abs(global.get(\'vehicle_speed\')??0.0) * 3.6;\r\nmath.floor(speed / 100), math.floor(math.mod(speed, 100) / 10), math.floor(math.mod(speed, 10))\r\n\r\n// \u4F7F\u7528\u7B80\u5355\u7684\u6570\u5B66\u8FD0\u7B97\r\n// \u907F\u514D\u590D\u6742\u7684\u4E09\u89D2\u51FD\u6570\u548C\u6307\u6570\u8FD0\u7B97\r\n```\r\n\r\n### 3. \u53EF\u8BFB\u6027\r\n```molang\r\n// \u4F7F\u7528\u6709\u610F\u4E49\u7684\u53D8\u91CF\u540D\r\nlet engine_rpm = math.abs(global.get(\'engine_speed\')??0) * 30 / math.pi;\r\nlet max_rpm = 9000;\r\nlet pointer_range = 240;\r\nlet pointer_angle = (engine_rpm / max_rpm) * pointer_range;\r\n\r\n// \u6DFB\u52A0\u6CE8\u91CA\u8BF4\u660E\u590D\u6742\u8BA1\u7B97\r\n```\r\n\r\n## \u8C03\u8BD5\u6280\u5DE7\r\n\r\n1. **\u9010\u6B65\u6D4B\u8BD5**: \u5C06\u590D\u6742\u8868\u8FBE\u5F0F\u5206\u89E3\u4E3A\u591A\u4E2A\u6B65\u9AA4\u6D4B\u8BD5\r\n2. **\u8FB9\u754C\u503C\u6D4B\u8BD5**: \u6D4B\u8BD5\u6700\u5C0F\u503C\u3001\u6700\u5927\u503C\u548C\u8FB9\u754C\u60C5\u51B5\r\n3. **\u5355\u4F4D\u9A8C\u8BC1**: \u786E\u4FDD\u6240\u6709\u5355\u4F4D\u8F6C\u6362\u6B63\u786E\r\n4. **\u6027\u80FD\u76D1\u63A7**: \u76D1\u63A7\u590D\u6742\u8868\u8FBE\u5F0F\u7684\u6267\u884C\u6027\u80FD\r\n\r\n\u8FD9\u4E9B\u6848\u4F8B\u5C55\u793A\u4E86 Molang \u5728 Machine-Max \u4E2D\u7684\u5F3A\u5927\u5E94\u7528\u80FD\u529B\uFF0C\u4ECE\u7B80\u5355\u7684\u4FE1\u53F7\u6620\u5C04\u5230\u590D\u6742\u7684\u7269\u7406\u6A21\u62DF\uFF0CMolang \u90FD\u80FD\u63D0\u4F9B\u7075\u6D3B\u800C\u9AD8\u6548\u7684\u89E3\u51B3\u65B9\u6848\u3002', "zh_cn/molang/\u603B\u89C8.md": "# Molang \u6587\u6863\r\n\r\nMachine-Max \u4F7F\u7528 Molang \u811A\u672C\u7CFB\u7EDF\u6765\u63A7\u5236\u8F66\u8F86\u52A8\u753B\u3001HUD\u663E\u793A\u548C\u4EA4\u4E92\u903B\u8F91\u3002Molang \u662F\u4E00\u79CD\u8F7B\u91CF\u7EA7\u7684\u811A\u672C\u8BED\u8A00\uFF0C\u4E13\u95E8\u7528\u4E8E\u5B9E\u65F6\u8BA1\u7B97\u548C\u52A8\u753B\u63A7\u5236\u3002\r\n\r\n## \u76EE\u5F55\u7ED3\u6784\r\n\r\n- [local \u65B9\u6CD5](./local.md) - \u96F6\u4EF6\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [global \u65B9\u6CD5](./global.md) - \u8F66\u8F86\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [math \u51FD\u6570](./math.md) - \u6570\u5B66\u8BA1\u7B97\u51FD\u6570\r\n- [\u793A\u4F8B\u548C\u6848\u4F8B](./examples.md) - \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n## \u57FA\u672C\u8BED\u6CD5\r\n\r\nMolang \u8868\u8FBE\u5F0F\u4F7F\u7528\u7C7B\u4F3C JavaScript \u7684\u8BED\u6CD5\uFF0C\u652F\u6301\u57FA\u672C\u7684\u6570\u5B66\u8FD0\u7B97\u3001\u6761\u4EF6\u5224\u65AD\u548C\u51FD\u6570\u8C03\u7528\uFF1A\r\n\r\n```molang\r\n// \u57FA\u672C\u8FD0\u7B97\r\n1.0 + 2.0 * 3.0\r\n\r\n// \u6761\u4EF6\u8868\u8FBE\u5F0F\r\nvariable > 0 ? 1.0 : 0.0\r\n\r\n// \u51FD\u6570\u8C03\u7528\r\nmath.sin(angle)\r\nlocal.has_subsystem('engine')\r\n```\r\n\r\n## \u53D8\u91CF\u548C\u4E0A\u4E0B\u6587\r\n\r\nMolang \u8868\u8FBE\u5F0F\u5728\u4E0D\u540C\u7684\u4E0A\u4E0B\u6587\u4E2D\u6267\u884C\uFF0C\u53EF\u4EE5\u8BBF\u95EE\u4E0D\u540C\u7684\u53D8\u91CF\u548C\u65B9\u6CD5\uFF1A\r\n\r\n- **\u52A8\u753B\u4E0A\u4E0B\u6587**: \u5728\u6A21\u578B\u52A8\u753B\u4E2D\u4F7F\u7528\uFF0C\u53EF\u4EE5\u8BBF\u95EE `local` \u548C `global` \u5BF9\u8C61\r\n- **HUD\u4E0A\u4E0B\u6587**: \u5728HUD\u663E\u793A\u4E2D\u4F7F\u7528\uFF0C\u53EF\u4EE5\u8BBF\u95EE\u73A9\u5BB6\u5B9E\u4F53\u3001 `local` \u548C `global` \u5BF9\u8C61\r\n\r\n## \u5E38\u7528\u6A21\u5F0F\r\n\r\n### \u4FE1\u53F7\u83B7\u53D6\r\n```molang\r\n// \u83B7\u53D6\u8F66\u8F86\u5728\u67D0\u4E2A\u9891\u9053\u7684\u4FE1\u53F7\u503C\r\nglobal.get('signal_channel')\r\n\r\n// \u83B7\u53D6\u96F6\u4EF6\u5728\u67D0\u4E2A\u9891\u9053\u7684\u4FE1\u53F7\u503C\r\nlocal.get('signal_channel')\r\n```\r\n\r\n### \u6761\u4EF6\u52A8\u753B\r\n```molang\r\n// \u6839\u636E\u6761\u4EF6\u63A7\u5236\u52A8\u753B\r\nlocal.has_subsystem('engine') ? 1.0 : 0.0\r\n```\r\n\r\n### \u6570\u5B66\u8BA1\u7B97\r\n```molang\r\n// \u5355\u4F4D\u8F6C\u6362\uFF08\u7C73/\u79D2\u8F6C\u516C\u91CC/\u5C0F\u65F6\uFF09\r\nmath.abs(global.get('vehicle_speed')) * 3.6\r\n```", "zh_cn/molang/\u6570\u5B66\u51FD\u6570.md": "# math \u51FD\u6570\r\n\r\n`math` \u5BF9\u8C61\u63D0\u4F9B\u4E86\u6570\u5B66\u8BA1\u7B97\u529F\u80FD\uFF0C\u5305\u62EC\u4E09\u89D2\u51FD\u6570\u3001\u6307\u6570\u51FD\u6570\u3001\u53D6\u6574\u51FD\u6570\u7B49\u3002\r\n\r\n## \u4E09\u89D2\u51FD\u6570\r\n\r\n### math.sin(value)\r\n\u8BA1\u7B97\u89D2\u5EA6\u7684\u6B63\u5F26\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u6B63\u5F26\u503C\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\nmath.sin(90)  // \u8FD4\u56DE 1.0\r\n```\r\n\r\n### math.cos(value)\r\n\u8BA1\u7B97\u89D2\u5EA6\u7684\u4F59\u5F26\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u4F59\u5F26\u503C\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\nmath.cos(0)  // \u8FD4\u56DE 1.0\r\n```\r\n\r\n### math.tan(value)\r\n\u8BA1\u7B97\u89D2\u5EA6\u7684\u6B63\u5207\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u6B63\u5207\u503C\r\n\r\n### math.asin(value)\r\n\u8BA1\u7B97\u503C\u7684\u53CD\u6B63\u5F26\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08-1.0 \u5230 1.0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n### math.acos(value)\r\n\u8BA1\u7B97\u503C\u7684\u53CD\u4F59\u5F26\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08-1.0 \u5230 1.0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n### math.atan(value)\r\n\u8BA1\u7B97\u503C\u7684\u53CD\u6B63\u5207\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n### math.atan2(y, x)\r\n\u8BA1\u7B97 y/x \u7684\u53CD\u6B63\u5207\u503C\uFF08\u8FD4\u56DE\u89D2\u5EA6\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `y` (double): Y\u5750\u6807\u503C\r\n- `x` (double): X\u5750\u6807\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u89D2\u5EA6\u503C\uFF08\u5EA6\uFF09\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728AE86\u60AC\u6302\u52A8\u753B\u4E2D\u4F7F\u7528\r\nmath.atan2(local.connector_offset('connector.machine_max.right_front_wheel', 1)*16, 20)\r\n```\r\n\r\n## \u6307\u6570\u548C\u5BF9\u6570\u51FD\u6570\r\n\r\n### math.exp(value)\r\n\u8BA1\u7B97 e \u7684 value \u6B21\u5E42\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u6307\u6570\r\n\r\n**\u8FD4\u56DE\u503C**: e^value\r\n\r\n### math.log(value)\r\n\u8BA1\u7B97\u503C\u7684\u81EA\u7136\u5BF9\u6570\uFF08\u4EE5 e \u4E3A\u5E95\uFF09\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08> 0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u81EA\u7136\u5BF9\u6570\r\n\r\n### math.pow(base, exponent)\r\n\u8BA1\u7B97 base \u7684 exponent \u6B21\u5E42\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `base` (double): \u5E95\u6570\r\n- `exponent` (double): \u6307\u6570\r\n\r\n**\u8FD4\u56DE\u503C**: base^exponent\r\n\r\n### math.sqrt(value)\r\n\u8BA1\u7B97\u503C\u7684\u5E73\u65B9\u6839\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\uFF08\u2265 0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u5E73\u65B9\u6839\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728AE86\u60AC\u6302\u52A8\u753B\u4E2D\u8BA1\u7B97\u8FDE\u6746\u957F\u5EA6\r\nmath.sqrt(math.pow(20-local.connector_offset('connector.machine_max.left_front_wheel', 1)*16, 2)+81)\r\n```\r\n\r\n## \u53D6\u6574\u51FD\u6570\r\n\r\n### math.floor(value)\r\n\u5411\u4E0B\u53D6\u6574\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u5C0F\u4E8E\u7B49\u4E8E value \u7684\u6700\u5927\u6574\u6570\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728HUD\u901F\u5EA6\u663E\u793A\u4E2D\u4F7F\u7528\r\nmath.floor((math.abs(global.get('vehicle_speed')??0.0)) * 3.6 / 100)\r\n```\r\n\r\n### math.ceil(value)\r\n\u5411\u4E0A\u53D6\u6574\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u5927\u4E8E\u7B49\u4E8E value \u7684\u6700\u5C0F\u6574\u6570\r\n\r\n### math.round(value)\r\n\u56DB\u820D\u4E94\u5165\u53D6\u6574\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u6700\u63A5\u8FD1\u7684\u6574\u6570\r\n\r\n## \u5176\u4ED6\u6570\u5B66\u51FD\u6570\r\n\r\n### math.abs(value)\r\n\u8BA1\u7B97\u7EDD\u5BF9\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u7EDD\u5BF9\u503C\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u786E\u4FDD\u901F\u5EA6\u503C\u4E3A\u6B63\u6570\r\nmath.abs(global.get('vehicle_speed')??0.0)\r\n```\r\n\r\n### math.mod(value1, value2)\r\n\u8BA1\u7B97 value1 \u9664\u4EE5 value2 \u7684\u4F59\u6570\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value1` (double): \u88AB\u9664\u6570\r\n- `value2` (double): \u9664\u6570\r\n\r\n**\u8FD4\u56DE\u503C**: \u4F59\u6570\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5728HUD\u901F\u5EA6\u663E\u793A\u4E2D\u63D0\u53D6\u5341\u4F4D\u6570\r\nmath.floor(math.mod((math.abs(global.get('vehicle_speed')??0.0)) * 3.6, 100) / 10)\r\n```\r\n\r\n### math.sign(value)\r\n\u83B7\u53D6\u503C\u7684\u7B26\u53F7\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u503C\r\n\r\n**\u8FD4\u56DE\u503C**: 1.0\uFF08\u6B63\u6570\uFF09\u3001-1.0\uFF08\u8D1F\u6570\uFF09\u30010.0\uFF08\u96F6\uFF09\r\n\r\n### math.min(value1, value2)\r\n\u8FD4\u56DE\u4E24\u4E2A\u503C\u4E2D\u7684\u8F83\u5C0F\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value1` (double): \u7B2C\u4E00\u4E2A\u503C\r\n- `value2` (double): \u7B2C\u4E8C\u4E2A\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u8F83\u5C0F\u503C\r\n\r\n### math.max(value1, value2)\r\n\u8FD4\u56DE\u4E24\u4E2A\u503C\u4E2D\u7684\u8F83\u5927\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value1` (double): \u7B2C\u4E00\u4E2A\u503C\r\n- `value2` (double): \u7B2C\u4E8C\u4E2A\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u8F83\u5927\u503C\r\n\r\n### math.clamp(value, min, max)\r\n\u5C06\u503C\u9650\u5236\u5728\u6307\u5B9A\u8303\u56F4\u5185\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `value` (double): \u8981\u9650\u5236\u7684\u503C\r\n- `min` (double): \u6700\u5C0F\u503C\r\n- `max` (double): \u6700\u5927\u503C\r\n\r\n**\u8FD4\u56DE\u503C**: \u9650\u5236\u540E\u7684\u503C\r\n\r\n### math.lerp(start, end, alpha)\r\n\u7EBF\u6027\u63D2\u503C\u3002\r\n\r\n**\u53C2\u6570**:\r\n- `start` (double): \u8D77\u59CB\u503C\r\n- `end` (double): \u7ED3\u675F\u503C\r\n- `alpha` (double): \u63D2\u503C\u7CFB\u6570\uFF080.0 \u5230 1.0\uFF09\r\n\r\n**\u8FD4\u56DE\u503C**: \u63D2\u503C\u7ED3\u679C\r\n\r\n## \u6570\u5B66\u5E38\u91CF\r\n\r\n### math.pi\r\n\u5706\u5468\u7387 \u03C0 \u7684\u503C\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\r\n\r\n**\u503C**: \u7EA6\u7B49\u4E8E 3.141592653589793\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u5F27\u5EA6\u8F6C\u89D2\u5EA6\r\nradians * 180 / math.pi\r\n\r\n// \u89D2\u5EA6\u8F6C\u5F27\u5EA6\r\ndegrees * math.pi / 180\r\n```\r\n\r\n## \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n### 1. \u5355\u4F4D\u8F6C\u6362\r\n```molang\r\n// \u7C73/\u79D2\u8F6C\u516C\u91CC/\u5C0F\u65F6\r\nglobal.get('vehicle_speed') * 3.6\r\n\r\n// \u5F27\u5EA6/\u79D2\u8F6C\u8F6C/\u5206\u949F\uFF08RPM\uFF09\r\nglobal.get('engine_speed') * 30 / math.pi\r\n```\r\n\r\n### 2. \u52A8\u753B\u63A7\u5236\r\n```molang\r\n// \u5E73\u6ED1\u52A8\u753B\u63D2\u503C\r\nmath.lerp(current_angle, target_angle, 0.1)\r\n\r\n// \u9650\u5236\u65CB\u8F6C\u89D2\u5EA6\u5728\u5408\u7406\u8303\u56F4\u5185\r\nmath.clamp(rotation_angle, -180, 180)\r\n```\r\n\r\n### 3. \u7269\u7406\u8BA1\u7B97\r\n```molang\r\n// \u8BA1\u7B97\u4E24\u70B9\u95F4\u8DDD\u79BB\r\nmath.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2) + math.pow(z2-z1, 2))\r\n\r\n// \u8BA1\u7B97\u89D2\u5EA6\u5DEE\r\nmath.abs(math.mod(angle1 - angle2 + 180, 360) - 180)\r\n```\r\n\r\n## \u6CE8\u610F\u4E8B\u9879\r\n\r\n1. **\u89D2\u5EA6\u5355\u4F4D**: \u6240\u6709\u4E09\u89D2\u51FD\u6570\u4F7F\u7528\u5EA6\u4E3A\u5355\u4F4D\uFF0C\u800C\u4E0D\u662F\u5F27\u5EA6\r\n2. **\u6027\u80FD\u8003\u8651**: \u590D\u6742\u7684\u6570\u5B66\u8BA1\u7B97\u53EF\u80FD\u5F71\u54CD\u6027\u80FD\uFF0C\u5C3D\u91CF\u7B80\u5316\u8868\u8FBE\u5F0F\r\n3. **\u6570\u503C\u8303\u56F4**: \u6CE8\u610F\u51FD\u6570\u7684\u5B9A\u4E49\u57DF\u548C\u503C\u57DF\uFF0C\u907F\u514D\u6570\u5B66\u9519\u8BEF\r\n4. **\u7CBE\u5EA6\u95EE\u9898**: \u6D6E\u70B9\u6570\u8BA1\u7B97\u53EF\u80FD\u5B58\u5728\u7CBE\u5EA6\u8BEF\u5DEE\uFF0C\u91CD\u8981\u8BA1\u7B97\u5E94\u8FDB\u884C\u9002\u5F53\u7684\u820D\u5165", "zh_cn/molang/\u8F7D\u5177\u65B9\u6CD5.md": "# Molang \u6587\u6863\r\n\r\nMachine-Max \u4F7F\u7528 Molang \u811A\u672C\u7CFB\u7EDF\u6765\u63A7\u5236\u8F66\u8F86\u52A8\u753B\u3001HUD\u663E\u793A\u548C\u4EA4\u4E92\u903B\u8F91\u3002Molang \u662F\u4E00\u79CD\u8F7B\u91CF\u7EA7\u7684\u811A\u672C\u8BED\u8A00\uFF0C\u4E13\u95E8\u7528\u4E8E\u5B9E\u65F6\u8BA1\u7B97\u548C\u52A8\u753B\u63A7\u5236\u3002\r\n\r\n## \u76EE\u5F55\u7ED3\u6784\r\n\r\n- [\u96F6\u4EF6\u65B9\u6CD5](./\u96F6\u4EF6\u65B9\u6CD5.md) - \u96F6\u4EF6\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [\u8F66\u8F86\u65B9\u6CD5](./\u8F66\u8F86\u65B9\u6CD5.md) - \u8F66\u8F86\u76F8\u5173\u7684\u65B9\u6CD5\u548C\u5C5E\u6027\r\n- [\u6570\u5B66\u51FD\u6570](./\u6570\u5B66\u51FD\u6570.md) - \u6570\u5B66\u8BA1\u7B97\u51FD\u6570\r\n- [\u4F7F\u7528\u6848\u4F8B](./\u4F7F\u7528\u6848\u4F8B.md) - \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n## \u57FA\u672C\u8BED\u6CD5\r\n\r\nMolang \u8868\u8FBE\u5F0F\u4F7F\u7528\u7C7B\u4F3C JavaScript \u7684\u8BED\u6CD5\uFF0C\u652F\u6301\u57FA\u672C\u7684\u6570\u5B66\u8FD0\u7B97\u3001\u6761\u4EF6\u5224\u65AD\u548C\u51FD\u6570\u8C03\u7528\u3002\r\n\r\n### \u57FA\u672C\u8FD0\u7B97\r\n```molang\r\n// \u7B97\u672F\u8FD0\u7B97\r\n1.0 + 2.0 * 3.0  // \u7ED3\u679C\u4E3A 7.0\r\n(1.0 + 2.0) * 3.0  // \u7ED3\u679C\u4E3A 9.0\r\n\r\n// \u6BD4\u8F83\u8FD0\u7B97\r\nspeed > 0  // \u5927\u4E8E\u6BD4\u8F83\r\ndurability <= max_durability  // \u5C0F\u4E8E\u7B49\u4E8E\u6BD4\u8F83\r\nv.a == 3.0  // \u7B49\u4E8E\u6BD4\u8F83\r\n```\r\n\r\n### \u4E09\u5143\u8868\u8FBE\u5F0F\uFF08\u6761\u4EF6\u8FD0\u7B97\u7B26\uFF09\r\n```molang\r\n// \u57FA\u672C\u8BED\u6CD5\uFF1A\u6761\u4EF6 ? \u771F\u503C : \u5047\u503C\r\nvariable > 0 ? 1.0 : 0.0\r\n\r\n// \u5B9E\u9645\u5E94\u7528\uFF1A\u6839\u636E\u5B50\u7CFB\u7EDF\u72B6\u6001\u663E\u793A\u8B66\u544A\u706F\r\nlocal.has_subsystem('engine') && local.subsystem_destroyed('engine') ? 1.0 : 0.0\r\n\r\n// \u5D4C\u5957\u4F7F\u7528\r\nv.fuel_level > 50 ? 0.0 : (v.fuel_level > 10 ? 0.5 : 1.0)\r\n```\r\n\r\n### \u7A7A\u503C\u5408\u5E76\u8FD0\u7B97\u7B26\uFF08??\uFF09\r\n```molang\r\n// \u57FA\u672C\u8BED\u6CD5\uFF1A\u503C ?? \u9ED8\u8BA4\u503C\r\nglobal.get('signal_name')??0.0\r\n\r\n// \u5B9E\u9645\u5E94\u7528\uFF1A\u5904\u7406\u53EF\u80FD\u4E0D\u5B58\u5728\u7684\u4FE1\u53F7\r\nmath.abs(global.get('vehicle_speed')??0.0) * 3.6\r\n\r\n// \u94FE\u5F0F\u4F7F\u7528\r\nglobal.get('engine_speed')??global.get('motor_speed')??0.0\r\n```\r\n\r\n### \u51FD\u6570\u8C03\u7528\r\n```molang\r\n// \u6570\u5B66\u51FD\u6570\r\nmath.sin(angle)\r\nmath.floor(value)\r\n\r\n// \u8F66\u8F86\u548C\u96F6\u4EF6\u65B9\u6CD5\r\nglobal.get('steering')\r\nlocal.has_subsystem('engine')\r\n```\r\n\r\n## \u5E38\u7528\u6A21\u5F0F\r\n\r\n### \u4FE1\u53F7\u83B7\u53D6\u548C\u5B89\u5168\u8BBF\u95EE\r\n```molang\r\n// \u5B89\u5168\u83B7\u53D6\u4FE1\u53F7\u503C\r\nglobal.get('signal_name')??default_value\r\n\r\n// \u6761\u4EF6\u68C0\u67E5\u540E\u8BBF\u95EE\r\nlocal.has_subsystem('engine') ? local.subsystem_durability('engine') : 0.0\r\n```\r\n\r\n### \u5355\u4F4D\u8F6C\u6362\r\n```molang\r\n// \u7C73/\u79D2\u8F6C\u516C\u91CC/\u5C0F\u65F6\r\nglobal.get('vehicle_speed')??0.0 * 3.6\r\n\r\n// \u5F27\u5EA6/\u79D2\u8F6C\u8F6C/\u5206\u949F\uFF08RPM\uFF09\r\nglobal.get('engine_speed')??0.0 * 30 / math.pi\r\n```\r\n\r\n## \u4E0B\u4E00\u6B65\r\n\r\n- \u67E5\u770B [\u96F6\u4EF6\u65B9\u6CD5](./\u96F6\u4EF6\u65B9\u6CD5.md) \u4E86\u89E3\u96F6\u4EF6\u76F8\u5173\u7684\u6240\u6709\u65B9\u6CD5\r\n- \u67E5\u770B [\u8F66\u8F86\u65B9\u6CD5](./\u8F66\u8F86\u65B9\u6CD5.md) \u4E86\u89E3\u8F66\u8F86\u4FE1\u53F7\u83B7\u53D6\u65B9\u6CD5\r\n- \u67E5\u770B [\u6570\u5B66\u51FD\u6570](./\u6570\u5B66\u51FD\u6570.md) \u5B66\u4E60\u53EF\u7528\u7684\u6570\u5B66\u8BA1\u7B97\u529F\u80FD\r\n- \u67E5\u770B [\u4F7F\u7528\u6848\u4F8B](./\u4F7F\u7528\u6848\u4F8B.md) \u5B66\u4E60\u5B9E\u9645\u5E94\u7528\u793A\u4F8B", "zh_cn/molang/\u96F6\u4EF6\u65B9\u6CD5.md": "# local \u65B9\u6CD5\r\n\r\n`local` \u5BF9\u8C61\u63D0\u4F9B\u4E86\u8BBF\u95EE\u96F6\u4EF6\u72B6\u6001\u3001\u8FDE\u63A5\u5668\u548C\u5B50\u7CFB\u7EDF\u7684\u65B9\u6CD5\u3002\r\n\r\n## \u4FE1\u53F7\u76F8\u5173\u65B9\u6CD5\r\n\r\n### local.get(channel)\r\n\r\n\u83B7\u53D6\u96F6\u4EF6\u4FE1\u53F7\u5B58\u50A8\u4E2D\u7684\u503C\u3002\r\n\r\n**\u8BED\u6CD5**: `local.get(channel_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `channel_name` (\u5B57\u7B26\u4E32): \u4FE1\u53F7\u9891\u9053\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u4FE1\u53F7\u503C\uFF0C\u5982\u679C\u9891\u9053\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE `null`\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u83B7\u53D6\u96F6\u4EF6\u7279\u5B9A\u4FE1\u53F7\r\nlocal.get('custom_signal')\r\n```\r\n\r\n## \u8FDE\u63A5\u5668\u76F8\u5173\u65B9\u6CD5\r\n\r\n### local.has_connector(connectorName)\r\n\r\n\u68C0\u67E5\u96F6\u4EF6\u662F\u5426\u62E5\u6709\u6307\u5B9A\u8FDE\u63A5\u5668\uFF0C\u5E76\u4E14\u8FDE\u63A5\u5668\u662F\u5426\u8FDE\u63A5\u4E86\u96F6\u4EF6\u3002\r\n\r\n**\u8BED\u6CD5**: `local.has_connector(connector_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `connector_name` (\u5B57\u7B26\u4E32): \u8FDE\u63A5\u5668\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u8FDE\u63A5\u5668\u5B58\u5728\u4E14\u5DF2\u8FDE\u63A5\u96F6\u4EF6\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u68C0\u67E5\u524D\u8F6E\u8FDE\u63A5\u5668\u662F\u5426\u8FDE\u63A5\r\nlocal.has_connector('connector.machine_max.front_wheel')\r\n```\r\n\r\n### local.connector_offset(connectorName, axis)\r\n\r\n\u83B7\u53D6\u8FDE\u63A5\u5668\u7684\u504F\u79FB\u91CF\uFF08\u4F4D\u7F6E\uFF09\u3002\r\n\r\n**\u8BED\u6CD5**: `local.connector_offset(connector_name, axis)`\r\n\r\n**\u53C2\u6570**:\r\n- `connector_name` (\u5B57\u7B26\u4E32): \u8FDE\u63A5\u5668\u540D\u79F0\r\n- `axis` (\u6574\u6570): \u5750\u6807\u8F74 (0=X, 1=Y, 2=Z)\r\n\r\n**\u8FD4\u56DE\u503C**: \u6307\u5B9A\u8F74\u7684\u504F\u79FB\u91CF\uFF08\u7C73\uFF09\uFF0C\u5982\u679C\u8FDE\u63A5\u5668\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u83B7\u53D6\u524D\u8F6E\u8FDE\u63A5\u5668\u7684Y\u8F74\u504F\u79FB\uFF08\u60AC\u6302\u9AD8\u5EA6\uFF09\r\nlocal.connector_offset('connector.machine_max.front_wheel', 1)\r\n```\r\n\r\n### local.connector_rotation(connectorName, axis)\r\n\r\n\u83B7\u53D6\u8FDE\u63A5\u5668\u7684\u65CB\u8F6C\u89D2\u5EA6\u3002\r\n\r\n**\u8BED\u6CD5**: `local.connector_rotation(connector_name, axis)`\r\n\r\n**\u53C2\u6570**:\r\n- `connector_name` (\u5B57\u7B26\u4E32): \u8FDE\u63A5\u5668\u540D\u79F0\r\n- `axis` (\u6574\u6570): \u65CB\u8F6C\u8F74 (0=X, 1=Y, 2=Z)\r\n\r\n**\u8FD4\u56DE\u503C**: \u6307\u5B9A\u8F74\u7684\u65CB\u8F6C\u89D2\u5EA6\uFF08\u5EA6\uFF09\uFF0C\u5982\u679C\u8FDE\u63A5\u5668\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n## \u5B50\u7CFB\u7EDF\u76F8\u5173\u65B9\u6CD5\r\n\r\n### local.has_subsystem(subsystemName)\r\n\r\n\u68C0\u67E5\u96F6\u4EF6\u662F\u5426\u62E5\u6709\u6307\u5B9A\u540D\u79F0\u7684\u5B50\u7CFB\u7EDF\u3002\r\n\r\n**\u8BED\u6CD5**: `local.has_subsystem(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u62E5\u6709\u8BE5\u5B50\u7CFB\u7EDF\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n**\u793A\u4F8B**:\r\n```molang\r\n// \u68C0\u67E5\u662F\u5426\u6709\u53D1\u52A8\u673A\u5B50\u7CFB\u7EDF\r\nlocal.has_subsystem('subsystem.machine_max.engine')\r\n```\r\n\r\n### local.subsystem_durability(subsystemName)\r\n\r\n\u83B7\u53D6\u6307\u5B9A\u5B50\u7CFB\u7EDF\u7684\u5F53\u524D\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u8BED\u6CD5**: `local.subsystem_durability(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5B50\u7CFB\u7EDF\u8010\u4E45\u5EA6\uFF0C\u5982\u679C\u5B50\u7CFB\u7EDF\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n### local.subsystem_max_durability(subsystemName)\r\n\r\n\u83B7\u53D6\u6307\u5B9A\u5B50\u7CFB\u7EDF\u7684\u6700\u5927\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u8BED\u6CD5**: `local.subsystem_max_durability(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5B50\u7CFB\u7EDF\u6700\u5927\u8010\u4E45\u5EA6\uFF0C\u5982\u679C\u5B50\u7CFB\u7EDF\u4E0D\u5B58\u5728\u5219\u8FD4\u56DE 0.0\r\n\r\n### local.subsystem_active(subsystemName)\r\n\r\n\u68C0\u67E5\u6307\u5B9A\u5B50\u7CFB\u7EDF\u662F\u5426\u5904\u4E8E\u6FC0\u6D3B\u72B6\u6001\u3002\r\n\r\n**\u8BED\u6CD5**: `local.subsystem_active(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u5B50\u7CFB\u7EDF\u6FC0\u6D3B\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n### local.subsystem_destroyed(subsystemName)\r\n\r\n\u68C0\u67E5\u6307\u5B9A\u5B50\u7CFB\u7EDF\u662F\u5426\u5DF2\u88AB\u6467\u6BC1\u3002\r\n\r\n**\u8BED\u6CD5**: `local.subsystem_destroyed(subsystem_name)`\r\n\r\n**\u53C2\u6570**:\r\n- `subsystem_name` (\u5B57\u7B26\u4E32): \u5B50\u7CFB\u7EDF\u540D\u79F0\r\n\r\n**\u8FD4\u56DE\u503C**: \u5982\u679C\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u5219\u8FD4\u56DE 1.0\uFF0C\u5426\u5219\u8FD4\u56DE 0.0\r\n\r\n## \u96F6\u4EF6\u5C5E\u6027\r\n\r\n### local.durability\r\n\r\n\u96F6\u4EF6\u7684\u5F53\u524D\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\r\n\r\n### local.max_durability\r\n\r\n\u96F6\u4EF6\u7684\u6700\u5927\u8010\u4E45\u5EA6\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\r\n\r\n### local.is_destroyed\r\n\r\n\u96F6\u4EF6\u662F\u5426\u5DF2\u88AB\u6467\u6BC1\u3002\r\n\r\n**\u7C7B\u578B**: \u53EA\u8BFB double \u503C\uFF081.0=\u5DF2\u6467\u6BC1\uFF0C0.0=\u6B63\u5E38\uFF09\r\n\r\n## \u5B9E\u9645\u4F7F\u7528\u6848\u4F8B\r\n\r\n### 1. \u60AC\u6302\u7CFB\u7EDF\u52A8\u753B\r\n\u5728 AE86 \u52A8\u753B\u4E2D\u4F7F\u7528\u8FDE\u63A5\u5668\u504F\u79FB\u63A7\u5236\u60AC\u6302\u7CFB\u7EDF\uFF1A\r\n\r\n```json\r\n{\r\n  \"axisRightFront\": {\r\n    \"rotation\": [0, 0, \"math.atan2(local.connector_offset('connector.machine_max.right_front_wheel', 1)*16,20)\"]\r\n  },\r\n  \"rodLeftFront\": {\r\n    \"rotation\": [\"-65.7725+math.atan2(20-local.connector_offset('connector.machine_max.left_front_wheel', 1)*16,9)\", 0, 0]\r\n  },\r\n  \"rodLeftFrontInner\": {\r\n    \"scale\": [1, \"math.sqrt(math.pow(20-local.connector_offset('connector.machine_max.left_front_wheel', 1)*16,2)+81)/22\", 1]\r\n  }\r\n}\r\n```\r\n\r\n**\u89E3\u91CA**:\r\n- \u4F7F\u7528 `local.connector_offset` \u83B7\u53D6\u8F66\u8F6E\u8FDE\u63A5\u5668\u7684Y\u8F74\u504F\u79FB\uFF08\u60AC\u6302\u9AD8\u5EA6\uFF09\r\n- \u901A\u8FC7\u4E09\u89D2\u51FD\u6570\u8BA1\u7B97\u60AC\u6302\u8FDE\u6746\u7684\u89D2\u5EA6\u548C\u957F\u5EA6\r\n- \u5B9E\u73B0\u771F\u5B9E\u7684\u60AC\u6302\u7CFB\u7EDF\u8FD0\u52A8\u5B66\r\n\r\n### 2. \u5B50\u7CFB\u7EDF\u72B6\u6001\u663E\u793A\r\n\u5728HUD\u4E2D\u4F7F\u7528\u5B50\u7CFB\u7EDF\u72B6\u6001\u63A7\u5236\u8B66\u544A\u706F\uFF1A\r\n\r\n```molang\r\n// \u53D1\u52A8\u673A\u5B50\u7CFB\u7EDF\u72B6\u6001\u68C0\u67E5\r\nlocal.has_subsystem('engine') && local.subsystem_active('engine') ? 1.0 : 0.0\r\n\r\n// \u71C3\u6CB9\u5B50\u7CFB\u7EDF\u4F4E\u6CB9\u91CF\u8B66\u544A\r\nlocal.has_subsystem('fuel_tank') && local.subsystem_durability('fuel_tank') < 10.0 ? 1.0 : 0.0\r\n\r\n// \u53D1\u52A8\u673A\u8FC7\u70ED\u8B66\u544A\r\nlocal.has_subsystem('engine') && local.subsystem_destroyed('engine') ? 1.0 : 0.0\r\n```\r\n\r\n### 3. \u6761\u4EF6\u52A8\u753B\u63A7\u5236\r\n\u6839\u636E\u5B50\u7CFB\u7EDF\u72B6\u6001\u63A7\u5236\u96F6\u4EF6\u52A8\u753B\uFF1A\r\n\r\n```json\r\n{\r\n  \"engine_cover\": {\r\n    \"rotation\": [\r\n      \"local.has_subsystem('engine') ? 45.0 : 0.0\", \r\n      0, \r\n      0\r\n    ]\r\n  },\r\n  \"warning_light\": {\r\n    \"scale\": [\r\n      \"local.subsystem_destroyed('engine') ? 1.5 : 1.0\", \r\n      \"local.subsystem_destroyed('engine') ? 1.5 : 1.0\", \r\n      \"local.subsystem_destroyed('engine') ? 1.5 : 1.0\"\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\n## \u6CE8\u610F\u4E8B\u9879\r\n\r\n1. **\u8FDE\u63A5\u5668\u547D\u540D**: \u8FDE\u63A5\u5668\u540D\u79F0\u901A\u5E38\u9075\u5FAA `connector.machine_max.xxx` \u7684\u547D\u540D\u7EA6\u5B9A\r\n2. **\u5B50\u7CFB\u7EDF\u547D\u540D**: \u5B50\u7CFB\u7EDF\u540D\u79F0\u901A\u5E38\u9075\u5FAA `subsystem.machine_max.xxx` \u7684\u547D\u540D\u7EA6\u5B9A\r\n3. **\u5750\u6807\u7CFB**: \u8FDE\u63A5\u5668\u504F\u79FB\u548C\u65CB\u8F6C\u4F7F\u7528\u5C40\u90E8\u5750\u6807\u7CFB\r\n4. **\u6027\u80FD\u4F18\u5316**: \u9891\u7E41\u8C03\u7528\u7684\u65B9\u6CD5\u5E94\u8003\u8651\u6027\u80FD\u5F71\u54CD", "zh_cn/schemas/base/axis.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/axis.json",\r\n  "title": "\u8F74\u65B9\u5411",\r\n  "description": "\u8868\u793A\u4E09\u7EF4\u7A7A\u95F4\u4E2D\u7684\u8F74\u65B9\u5411\uFF0C\u7528\u4E8E\u5B9A\u4E49\u8FDE\u63A5\u70B9\u7684\u6CD5\u7EBF\u65B9\u5411\u3002",\r\n  "type": "string",\r\n  "enum": ["xp", "xn", "yp", "yn", "zp", "zn"],\r\n  "default": "yp",\r\n  "examples": ["yp", "xn", "zp"],\r\n  "description_map": {\r\n    "xp": "\u6B63X\u8F74\u65B9\u5411",\r\n    "xn": "\u8D1FX\u8F74\u65B9\u5411",\r\n    "yp": "\u6B63Y\u8F74\u65B9\u5411",\r\n    "yn": "\u8D1FY\u8F74\u65B9\u5411",\r\n    "zp": "\u6B63Z\u8F74\u65B9\u5411",\r\n    "zn": "\u8D1FZ\u8F74\u65B9\u5411"\r\n  }\r\n}', "zh_cn/schemas/base/material_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/material_attr.json",\r\n  "title": "\u6750\u6599\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u6750\u6599\u7684\u7269\u7406\u5C5E\u6027\u3001\u88C5\u7532\u9632\u62A4\u548C\u547D\u4E2D\u97F3\u6548\uFF0C\u6309 physics / armor / sounds \u4E09\u7EC4\u7EC4\u7EC7\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "JSON Schema\u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u667A\u80FD\u63D0\u793A\u548C\u9A8C\u8BC1",\r\n      "default": "../docs/zh_cn/schemas/base/material_attr.schema.json"\r\n    },\r\n    "physics": {\r\n      "type": "object",\r\n      "description": "\u7269\u7406\u5C5E\u6027\uFF1A\u6469\u64E6\u3001\u6ED1\u79FB\u3001\u5F39\u6027\u7B49\u7269\u7406\u6A21\u62DF\u53C2\u6570\u3002",\r\n      "properties": {\r\n        "friction": {\r\n          "allOf": [\r\n            { "$ref": "vector_3d.schema.json" }\r\n          ],\r\n          "default": [0.5, 0.5, 0.5],\r\n          "description": "\u6469\u64E6\u7CFB\u6570\u5411\u91CF\uFF0C\u683C\u5F0F\u4E3A[x, y, z]\u3002x\u4E3A\u4FA7\u5411\u6469\u64E6\u7CFB\u6570\uFF0Cy\u4E3A\u524D\u5411\u6469\u64E6\u7CFB\u6570\uFF0Cz\u65E0\u5B9E\u9645\u610F\u4E49\u3002"\r\n        },\r\n        "slip_adaptation": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "maximum": 1.0,\r\n          "default": 0.5,\r\n          "description": "\u6ED1\u79FB\u9002\u5E94\u7CFB\u6570\uFF0C\u7528\u4E8E\u8C03\u6574\u5728\u6ED1\u52A8\u65F6\u7684\u6469\u64E6\u884C\u4E3A\u3002"\r\n        },\r\n        "slip_curve": {\r\n          "type": "object",\r\n          "description": "\u8F6E\u80CE\u6ED1\u79FB\u6469\u64E6\u66F2\u7EBF\u53C2\u6570\u3002",\r\n          "properties": {\r\n            "longitudinal": {\r\n              "type": "object",\r\n              "description": "\u7EB5\u5411\u6ED1\u79FB\u7387\u66F2\u7EBF\u53C2\u6570\u3002",\r\n              "properties": {\r\n                "peak_slip_ratio": { "type": "number", "minimum": 0.0, "default": 0.2, "description": "\u5CF0\u503C\u6ED1\u79FB\u7387\uFF08\u65E0\u91CF\u7EB2\uFF09\u3002" },\r\n                "base_scale": { "type": "number", "default": 1.0, "description": "\u6ED1\u79FB\u7387\u4E3A0\u65F6\u7684\u6469\u64E6\u7F29\u653E\u3002" },\r\n                "peak_scale": { "type": "number", "default": 1.4, "description": "\u5CF0\u503C\u6ED1\u79FB\u7387\u5904\u7684\u6469\u64E6\u7F29\u653E\u3002" },\r\n                "kinetic_scale": { "type": "number", "default": 0.9, "description": "\u9AD8\u6ED1\u79FB\u72B6\u6001\u4E0B\uFF08\u52A8\u6469\u64E6\u6BB5\uFF09\u7684\u6469\u64E6\u7F29\u653E\u3002" }\r\n              },\r\n              "additionalProperties": false\r\n            },\r\n            "lateral": {\r\n              "type": "object",\r\n              "description": "\u4FA7\u5411\u6ED1\u79FB\u89D2\u66F2\u7EBF\u53C2\u6570\uFF08\u89D2\u5EA6\u5355\u4F4D\u4E3A\u5EA6\uFF09\u3002",\r\n              "properties": {\r\n                "peak_angle_deg": { "type": "number", "minimum": 0.0, "default": 12.0, "description": "\u5CF0\u503C\u4FA7\u504F\u89D2\uFF08\u5EA6\uFF09\u3002" },\r\n                "kinetic_angle_deg": { "type": "number", "minimum": 0.0, "default": 90.0, "description": "\u8FDB\u5165\u52A8\u6469\u64E6\u5E73\u53F0\u7684\u4FA7\u504F\u89D2\uFF08\u5EA6\uFF09\u3002" },\r\n                "base_scale": { "type": "number", "default": 1.0, "description": "\u4FA7\u504F\u89D2\u4E3A0\u5EA6\u65F6\u7684\u6469\u64E6\u7F29\u653E\u3002" },\r\n                "peak_scale": { "type": "number", "default": 1.2, "description": "\u5CF0\u503C\u4FA7\u504F\u89D2\u5904\u7684\u6469\u64E6\u7F29\u653E\u3002" },\r\n                "kinetic_scale": { "type": "number", "default": 0.7, "description": "\u9AD8\u4FA7\u504F\u89D2\u72B6\u6001\u4E0B\uFF08\u52A8\u6469\u64E6\u6BB5\uFF09\u7684\u6469\u64E6\u7F29\u653E\u3002" }\r\n              },\r\n              "additionalProperties": false\r\n            }\r\n          },\r\n          "additionalProperties": false\r\n        },\r\n        "rolling_friction": { "type": "number", "minimum": 0.0, "default": 0.2, "description": "\u6EDA\u52A8\u6469\u64E6\u7CFB\u6570\u3002" },\r\n        "spinning_friction": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "\u65CB\u8F6C\u6469\u64E6\u7CFB\u6570\u3002" },\r\n        "restitution": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.1, "description": "\u6062\u590D\u7CFB\u6570\uFF08\u5F39\u6027\uFF09\uFF0C0\u4E3A\u5B8C\u5168\u975E\u5F39\u6027\u78B0\u649E\uFF0C1\u4E3A\u5B8C\u5168\u5F39\u6027\u78B0\u649E\u3002" },\r\n        "block_damage_factor": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "\u65B9\u5757\u7834\u574F\u7CFB\u6570\uFF0C0\u4E3A\u65E0\u6CD5\u7834\u574F\u65B9\u5757\u3002" }\r\n      },\r\n      "additionalProperties": false\r\n    },\r\n    "armor": {\r\n      "type": "object",\r\n      "description": "\u88C5\u7532\u5C5E\u6027\uFF1A\u6297\u7A7F\u3001\u7EBF\u6027\u51CF\u4F24\u3001\u767E\u5206\u6BD4\u51CF\u4F24\u3001\u8010\u4E45\u8870\u51CF\u53C2\u6570\u53CA\u6761\u4EF6\u5316\u4F24\u5BB3\u4FEE\u6B63\u5668\u3002\u4F24\u5BB3\u7BA1\u7EBF\uFF1Adamage_modifiers \u2192 (dmg - dmg_resist) * dmg_mult\u3002",\r\n      "properties": {\r\n        "rha": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "\u6750\u6599\u76F8\u5BF9\u8F67\u5236\u5747\u8D28\u88C5\u7532(RHA)\u7684\u6297\u7A7F\u80FD\u529B\u7CFB\u6570\u3002" },\r\n        "angle_effect": { "type": "boolean", "default": true, "description": "\u7B49\u6548\u62A4\u7532\u539A\u5EA6\u662F\u5426\u53D7\u5165\u5C04\u89D2\u5EA6\u5F71\u54CD\u3002" },\r\n        "dmg_resist": { "type": "number", "minimum": 0.0, "default": 1.0, "description": "\u5168\u5C40\u7EBF\u6027\u51CF\u4F24\u503C\uFF0C\u6700\u7EC8\u4F24\u5BB3\u5C06\u88AB\u51CF\u53BB\u8BE5\u503C\uFF08\u53D7\u8010\u4E45\u8870\u51CF\u5F71\u54CD\uFF09\u3002" },\r\n        "dmg_mult": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.95, "description": "\u5168\u5C40\u4F24\u5BB3\u4E58\u6570\uFF0C\u6700\u7EC8\u4F24\u5BB3\u5C06\u88AB\u4E58\u4EE5\u8BE5\u503C\uFF08\u53D7\u8010\u4E45\u8870\u51CF\u5F71\u54CD\uFF09\u30020.95=\u627F\u53D795%\u4F24\u5BB3\u3002" },\r\n        "decay_rha": { "type": "number", "minimum": 0.0, "default": 0.3, "description": "\u8010\u4E45\u5F52\u96F6\u65F6 RHA \u7CFB\u6570\u7684\u6B8B\u4F59\u503C\u3002" },\r\n        "decay_dmg_resist": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "\u8010\u4E45\u5F52\u96F6\u65F6\u7EBF\u6027\u51CF\u4F24\u7684\u6B8B\u4F59\u503C\uFF0C\u9ED8\u8BA40.0\u8868\u793A\u5B8C\u5168\u5F52\u96F6\u3002" },\r\n        "decay_dmg_mult": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 1.0, "description": "\u8010\u4E45\u5F52\u96F6\u65F6\u4F24\u5BB3\u4E58\u6570\u7684\u6B8B\u4F59\u503C\uFF0C\u9ED8\u8BA41.0\u8868\u793A\u5B8C\u5168\u5931\u6548\u3002" },\r\n        "decay_power": { "type": "number", "minimum": 0.0, "default": 1.5, "description": "\u88C5\u7532\u9000\u5316\u66F2\u7EBF\u6307\u6570\u3002>1\u65F6\u88C5\u7532\u524D\u671F\u9000\u5316\u6162\u3001\u4E34\u8FD1\u635F\u574F\u65F6\u5FEB\u901F\u5931\u6548\uFF08\u8106\u6027\uFF09\uFF1B=1\u65F6\u4E3A\u7EBF\u6027\u9000\u5316\u3002" },\r\n        "unpen_power": { "type": "number", "minimum": 0.0, "default": 0.0, "description": "\u653B\u51FB\u672A\u80FD\u5B8C\u5168\u51FB\u7A7F\u62A4\u7532\u65F6\u7684\u4F24\u5BB3\u6307\u6570\u3002\u516C\u5F0F: \u4F24\u5BB3*(\u7A7F\u6DF1/\u7B49\u6548\u62A4\u7532)^unpen_power\u3002" },\r\n        "impact_modifiers": {\r\n          "allOf": [\r\n            { "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json" }\r\n          ],\r\n          "description": "\u6761\u4EF6\u9A71\u52A8\u7684\u51B2\u51FB\u4FEE\u6B63\u5668\u3002"\r\n        },\r\n        "penetration_modifiers": {\r\n          "allOf": [\r\n            { "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json" }\r\n          ],\r\n          "description": "\u6761\u4EF6\u9A71\u52A8\u7684\u7A7F\u6DF1\u4FEE\u6B63\u5668\u3002"\r\n        },\r\n        "damage_modifiers": {\r\n          "allOf": [\r\n            { "$ref": "../part/subpart/hit_box/modifier/damage_modifier.schema.json" }\r\n          ],\r\n          "description": "\u6761\u4EF6\u9A71\u52A8\u7684\u4F24\u5BB3\u4FEE\u6B63\u5668\uFF08\u7C7B\u578B/\u5B9E\u4F53\u7279\u5B9A\u8C03\u8282\uFF09\u3002"\r\n        }\r\n      },\r\n      "additionalProperties": false\r\n    },\r\n    "sounds": {\r\n      "type": "object",\r\n      "properties": {\r\n        "hit_un_pen": {\r\n          "allOf": [\r\n            { "$ref": "sound_event.schema.json" }\r\n          ],\r\n          "description": "\u78B0\u649E\u7BB1\u88AB\u547D\u4E2D\u4F46\u672A\u7A7F\u900F\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r\n          "default": { "sound_id": "machine_max:hit_box.hit.up_pen.metal", "range": 64 }\r\n        },\r\n        "hit_pen": {\r\n          "allOf": [\r\n            { "$ref": "sound_event.schema.json" }\r\n          ],\r\n          "description": "\u78B0\u649E\u7BB1\u88AB\u547D\u4E2D\u4E14\u7A7F\u900F\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r\n          "default": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }\r\n        }\r\n      },\r\n      "additionalProperties": false,\r\n      "description": "\u6750\u6599\u547D\u4E2D\u97F3\u6548\u914D\u7F6E\u3002"\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "physics": { "friction": [0.5, 0.5, 0.5] },\r\n      "armor": {\r\n        "rha": 1.0,\r\n        "dmg_resist": 1.0,\r\n        "dmg_mult": 0.95\r\n      },\r\n      "sounds": {\r\n        "hit_un_pen": { "sound_id": "machine_max:hit_box.hit.up_pen.metal", "range": 64 },\r\n        "hit_pen": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }\r\n      }\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/base/operation.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/operation.json",\r\n  "title": "\u64CD\u4F5C\u7B26",\r\n  "description": "\u6570\u5B66\u64CD\u4F5C\u7B26\uFF0C\u7528\u4E8E\u4FEE\u6539\u5668\u4E2D\u7684\u6570\u503C\u8FD0\u7B97",\r\n  "type": "string",\r\n  "enum": ["add", "multiply"],\r\n  "default": "add",\r\n  "examples": ["add", "multiply"]\r\n}', "zh_cn/schemas/base/resource_location.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/base/resource_location.json",\r
   "title": "\u8D44\u6E90\u4F4D\u7F6E",\r
@@ -4856,254 +5245,322 @@
       "range": 8\r
     }\r
   ]\r
-}`, "zh_cn/schemas/base/vector_3d.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/vector_3d.json",\r\n  "title": "\u4E09\u7EF4\u5411\u91CF",\r\n  "description": "\u8868\u793A\u4E09\u7EF4\u7A7A\u95F4\u4E2D\u7684\u5411\u91CF",\r\n  "type": "array",\r\n  "items": {\r\n    "type": "number"\r\n  },\r\n  "minItems": 3,\r\n  "maxItems": 3,\r\n  "default": [0.5, 0.5, 0.5],\r\n  "examples": [\r\n    [0.5, 0.5, 0.5],\r\n    [1.0, 0.0, 0.0]\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/connector/connector_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/connector/connector_attr.schema.json",\r\n  "title": "\u8FDE\u63A5\u70B9\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u90E8\u4EF6\u8FDE\u63A5\u70B9\u7684\u5C5E\u6027\uFF0C\u5305\u62EC\u4F4D\u7F6E\u3001\u5B9A\u4E49ID\u3001\u4FE1\u53F7\u4F20\u8F93\u7B49\u3002\u8FDE\u63A5\u70B9\u7528\u4E8E\u90E8\u4EF6\u4E4B\u95F4\u7684\u7269\u7406\u8FDE\u63A5\u548C\u4FE1\u53F7\u4F20\u9012\u3002\u9759\u6001\u5C5E\u6027\u901A\u8FC7definition\u5B57\u6BB5\u5F15\u7528\u9884\u5B9A\u4E49\u7684\u8FDE\u63A5\u70B9\u7C7B\u578B\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "locator": {\r\n      "type": "string",\r\n      "description": "\u8FDE\u63A5\u70B9\u5BF9\u5E94\u7684Locator\u540D\u79F0\uFF0C\u4F1A\u5BFB\u627E\u540D\u79F0\u5339\u914D\u7684Locator\uFF0C\u4EE5\u5176\u4F4D\u7F6E\u4E0E\u59FF\u6001\u4F5C\u4E3A\u8FDE\u63A5\u70B9\u7684\u4F4D\u7F6E\u548C\u59FF\u6001\u3002"\r\n    },\r\n    "definition": {\r\n      "type": "string",\r\n      "description": "\u8FDE\u63A5\u70B9\u5B9A\u4E49ID\uFF0C\u5F15\u7528\u9884\u5B9A\u4E49\u7684\u8FDE\u63A5\u70B9\u9759\u6001\u5C5E\u6027\u3002\u4F8B\u5982\uFF1A\\"machine_max:simple_connector\\"\u3002"\r\n    },\r\n    "power_target": {\r\n      "type": "string",\r\n      "description": "\u5BF9\u4FA7\u8FDE\u63A5\u5668\u4F20\u5165\u7684\u673A\u68B0\u80FD\u5728\u672C\u96F6\u4EF6\u5185\u7684\u63A5\u6536\u76EE\u6807\uFF08\u5B50\u7CFB\u7EDF\u540D\u6216\u8FDE\u63A5\u70B9\u540D\uFF09\u3002\u8BBE\u7F6E\u540E\u8BE5\u8FDE\u63A5\u70B9\u53EF\u4F5C\u4E3A\u673A\u68B0\u80FD\u4F20\u8F93\u901A\u9053\uFF0C\u5C06\u5BF9\u4FA7\u4F20\u5165\u7684\u673A\u68B0\u80FD\u8F6C\u53D1\u81F3\u672C\u96F6\u4EF6\u5185\u7684\u76EE\u6807\u3002\u4F8B\u5982\uFF1A\\"subsystem.machine_max.engine\\"\u3002"\r\n    },\r\n    "overwrite": {\r\n      "type": "object",\r\n      "description": "\u8FDE\u63A5\u70B9\u5C5E\u6027\u8986\u5199\u3002\u53EF\u6309\u9700\u8986\u5199definition\u6307\u5411\u7684\u9759\u6001\u8FDE\u63A5\u70B9\u5C5E\u6027\u3002",\r\n      "properties": {\r\n        "type": {\r\n          "type": "string",\r\n          "enum": ["Simple", "simple", "advanced", "Advanced"],\r\n          "description": "\u8FDE\u63A5\u70B9\u7C7B\u578B\u8986\u5199\u3002"\r\n        },\r\n        "direction": {\r\n          "$ref": "../../../base/axis.schema.json",\r\n          "description": "\u8FDE\u63A5\u70B9\u6CD5\u7EBF\u65B9\u5411\u8986\u5199\u3002"\r\n        },\r\n        "integrity": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "description": "\u7ED3\u6784\u5B8C\u6574\u6027\u8986\u5199\u3002"\r\n        },\r\n        "impact_absorption": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "description": "\u51B2\u51FB\u8F6C\u7ED3\u6784\u635F\u8017\u6BD4\u4F8B\u8986\u5199\u3002"\r\n        },\r\n        "impact_reduction": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "description": "\u51B2\u51FB\u51CF\u514D\u503C\u8986\u5199\u3002"\r\n        },\r\n        "impact_multiplier": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "description": "\u51B2\u51FB\u500D\u7387\u8986\u5199\u3002"\r\n        },\r\n        "collide_between_parts": {\r\n          "type": "boolean",\r\n          "description": "\u662F\u5426\u5141\u8BB8\u90E8\u4EF6\u95F4\u78B0\u649E\u8986\u5199\u3002"\r\n        },\r\n        "required_tags": {\r\n          "type": "array",\r\n          "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n          "description": "\u5FC5\u9700\u6807\u7B7E\u8986\u5199\u3002"\r\n        },\r\n        "acceptable_tags": {\r\n          "type": "array",\r\n          "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n          "description": "\u53EF\u63A5\u53D7\u6807\u7B7E\u8986\u5199\u3002"\r\n        },\r\n        "forbidden_tags": {\r\n          "type": "array",\r\n          "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n          "description": "\u7981\u6B62\u6807\u7B7E\u8986\u5199\u3002"\r\n        },\r\n        "joint_attrs": {\r\n          "type": "object",\r\n          "additionalProperties": { "$ref": "joint_attr.schema.json" },\r\n          "description": "\u5173\u8282\u5C5E\u6027\u8986\u5199\u3002"\r\n        }\r\n      },\r\n      "additionalProperties": false\r\n    },\r\n    "signal_translations": {\r\n      "type": "object",\r\n      "additionalProperties": { "type": "string" },\r\n      "default": {},\r\n      "description": "\u4ECE\u5BF9\u4FA7\u8FDE\u63A5\u70B9\u63A5\u6536\u5230\u7684\u4FE1\u53F7\u9891\u9053\u8F6C\u8BD1\u89C4\u5219\uFF0C\u4F8B\u5982\uFF1A{\\"channel_a\\": \\"channel_c\\"}\u8868\u793A\u5C06channel_a\u4FE1\u53F7\u8F6C\u8BD1\u4E3Achannel_c\u3002"\r\n    },\r\n    "signal_targets": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "type": "array",\r\n        "items": { "type": "string" }\r\n      },\r\n      "default": {},\r\n      "description": "\u8FDE\u63A5\u70B9\u5728\u672C\u96F6\u4EF6\u5185\u7684\u63A7\u5236\u4FE1\u53F7\u4F20\u8F93\u76EE\u6807\uFF0C\u952E\u4E3A\u4FE1\u53F7\u9891\u9053\uFF0C\u503C\u4E3A\u76EE\u6807\u5217\u8868\uFF08\u5B50\u7CFB\u7EDF/\u8FDE\u63A5\u70B9\u540D/part/global\uFF09\u3002\u4F8B\u5982\uFF1A{\\"move_input\\": [\\"car_controller\\", \\"engine\\"]}\u3002"\r\n    },\r\n    "internal": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "\u662F\u5426\u4E3A\u90E8\u4EF6\u5185\u90E8\u8FDE\u63A5\u70B9\u3002\u4E3Atrue\u65F6\u4EC5\u7528\u4E8E\u540C\u4E00Part\u5185\u90E8\u81EA\u52A8\u8FDE\u63A5\uFF0C\u4E0D\u53C2\u4E0E\u5BF9\u5916\u62FC\u88C5\u3002"\r\n    }\r\n  },\r\n  "required": ["locator", "definition"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "locator": "Hull",\r\n      "definition": "machine_max:simple_connector"\r\n    },\r\n    {\r\n      "locator": "LeftFrontWheel",\r\n      "definition": "machine_max:advanced_wheel_connector",\r\n      "overwrite": {\r\n        "type": "Advanced",\r\n        "direction": "y+",\r\n        "integrity": 32.0,\r\n        "impact_absorption": 0.15,\r\n        "impact_reduction": 3.0,\r\n        "impact_multiplier": 0.8,\r\n        "collide_between_parts": false,\r\n        "required_tags": ["machine_max:direction/left"],\r\n        "acceptable_tags": ["machine_max:wheel", "machine_max:suspension"],\r\n        "forbidden_tags": ["machine_max:broken_only"],\r\n        "joint_attrs": {\r\n          "y": {\r\n            "lower_limit": -0.2,\r\n            "upper_limit": 0.25,\r\n            "stiffness": 30000,\r\n            "damping": 1600\r\n          },\r\n          "yr": {\r\n            "lower_limit": -35.0,\r\n            "upper_limit": 35.0,\r\n            "stiffness": 4500,\r\n            "damping": 24\r\n          }\r\n        }\r\n      },\r\n      "signal_translations": {\r\n        "steering": "wheel_control"\r\n      },\r\n      "signal_targets": {\r\n        "wheel_control": ["wheel_driver", "local"],\r\n        "abs_request": ["global"]\r\n      },\r\n      "internal": true\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/connector/connector_static_attr.schema.json",\r\n  "title": "\u8FDE\u63A5\u70B9\u9759\u6001\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u8FDE\u63A5\u70B9\u7684\u9759\u6001\u5C5E\u6027\uFF0C\u5305\u62EC\u7C7B\u578B\u3001\u65B9\u5411\u3001\u7ED3\u6784\u5B8C\u6574\u6027\u3001\u51B2\u51FB\u5904\u7406\u7B49\u3002\u8FD9\u4E9B\u5C5E\u6027\u901A\u8FC7\u5B9A\u4E49ID\u5F15\u7528\uFF0C\u907F\u514D\u5728\u6BCF\u4E2A\u96F6\u4EF6\u5B9A\u4E49\u4E2D\u91CD\u590D\u5B9A\u4E49\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "JSON Schema\u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u667A\u80FD\u63D0\u793A\u548C\u9A8C\u8BC1",\r\n      "default": "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json"\r\n    },\r\n    "type": {\r\n      "type": "string",\r\n      "enum": ["Simple", "simple", "advanced", "Advanced"],\r\n      "description": "\u8FDE\u63A5\u70B9\u7C7B\u578B\u3002Simple\uFF1A\u7B80\u5355\u8FDE\u63A5\u70B9\uFF1BAdvanced\uFF1A\u9AD8\u7EA7\u8FDE\u63A5\u70B9\uFF0C\u652F\u6301\u590D\u6742\u7684\u5173\u8282\u5C5E\u6027\u3002"\r\n    },\r\n    "direction": {\r\n      "$ref": "../../../base/axis.schema.json",\r\n      "description": "\u8FDE\u63A5\u70B9\u7684\u6CD5\u7EBF\u65B9\u5411\uFF0C\u7528\u4E8E\u786E\u5B9A\u8FDE\u63A5\u70B9\u7684\u8FDE\u63A5\u65B9\u5411\u3002x+\u4E3A\u53F3\uFF0Cy+\u4E3A\u4E0A\uFF0Cz+\u4E3A\u540E\u3002"\r\n    },\r\n    "integrity": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 15.0,\r\n      "description": "\u90E8\u4EF6\u57FA\u7840\u7ED3\u6784\u5B8C\u6574\u5EA6\uFF0C\u90E8\u4EF6\u53EF\u627F\u53D7\u4E0D\u9AD8\u4E8E\u6B64\u6570\u503C\u7684\u51B2\u51FB\u529B\u800C\u4E0D\u8131\u843D\uFF0C\u51B2\u51FB\u529B\u6765\u81EA\u4F24\u5BB3\u6216\u5173\u8282\u5E94\u529B\u3002"\r\n    },\r\n    "impact_reduction": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 2.0,\r\n      "description": "\u8FDE\u63A5\u70B9\u7684\u51B2\u51FB\u51CF\u514D\u503C\uFF0C\u5728\u8BA1\u7B97\u90E8\u4EF6\u51FB\u843D\u524D\u5E94\u7528\uFF0C\u53EF\u5C06\u51B2\u51FB\u524A\u51CF\u81F30\u4EE5\u5B8C\u5168\u907F\u514D\u5BF9\u7ED3\u6784\u5B8C\u6574\u6027\u7684\u5F71\u54CD\u3002"\r\n    },\r\n    "impact_multiplier": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "\u8FDE\u63A5\u70B9\u7684\u51B2\u51FB\u5438\u6536\u7387\uFF0C\u5728\u8BA1\u7B97\u90E8\u4EF6\u51FB\u843D\u524D\uFF0C\u5E94\u7528\u51B2\u51FB\u51CF\u514D\u540E\u5E94\u7528\uFF0C\u5927\u4E8E1\u5C06\u4F7F\u8FDE\u63A5\u70B9\u66F4\u5BB9\u6613\u65AD\u5F00\u3002"\r\n    },\r\n    "impact_absorption": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "maximum": 1,\r\n      "default": 0.3,\r\n      "description": "\u8FDE\u63A5\u70B9\u53D7\u5230\u51B2\u51FB\u4F46\u672A\u88AB\u51FB\u843D\u65F6\uFF0C\u51B2\u51FB\u8F6C\u4E3A\u7ED3\u6784\u5B8C\u6574\u6027\u635F\u8017\u7684\u6BD4\u4F8B\u3002\u4F8B\u59820.5\u8868\u793A50%\u7684\u51B2\u51FB\u4F1A\u8F6C\u5316\u4E3A\u7ED3\u6784\u5B8C\u6574\u6027\u7684\u635F\u8017\u3002"\r\n    },\r\n    "impact_absorption_destroyed": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 2.0,\r\n      "description": "SubPart\u5DF2\u6467\u6BC1\u65F6\uFF0C\u51B2\u51FB\u8F6C\u4E3A\u8FDE\u63A5\u70B9\u5B8C\u6574\u6027\u635F\u8017\u7684\u6BD4\u4F8B\u3002\u4F8B\u59822.0\u8868\u793A200%\u7684\u51B2\u51FB\u4F1A\u8F6C\u5316\u4E3A\u7ED3\u6784\u5B8C\u6574\u6027\u7684\u635F\u8017\uFF08\u7528\u4E8E\u6B8B\u9AB8\u5FEB\u901F\u89E3\u4F53\uFF09\u3002"\r\n    },\r\n    "required_tags": {\r\n      "type": "array",\r\n      "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n      "default": [],\r\n      "description": "\u8FDE\u63A5\u90E8\u4EF6\u5FC5\u987B\u5168\u90E8\u62E5\u6709\u7684\u6807\u7B7E\uFF0C\u7559\u7A7A\u4EE5\u5141\u8BB8\u4EFB\u610F\u6807\u7B7E\u3002\u4F8B\u5982\uFF1A[\\"machine_max:left\\"]\u8868\u793A\u5FC5\u987B\u5305\u542B\u5DE6\u53D8\u4F53\u6807\u7B7E\u3002"\r\n    },\r\n    "acceptable_tags": {\r\n      "type": "array",\r\n      "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n      "default": [],\r\n      "description": "\u8FDE\u63A5\u90E8\u4EF6\u5FC5\u987B\u81F3\u5C11\u62E5\u6709\u5176\u4E2D\u4E00\u4E2A\u7684\u6807\u7B7E\uFF0C\u7559\u7A7A\u4EE5\u5141\u8BB8\u4EFB\u610F\u6807\u7B7E\u3002\u4F8B\u5982\uFF1A[\\"machine_max:door\\", \\"machine_max:hatch\\"]\u8868\u793A\u5FC5\u987B\u5305\u542B\u95E8\u6216\u8231\u53E3\u6807\u7B7E\u4E4B\u4E00\u3002"\r\n    },\r\n    "forbidden_tags": {\r\n      "type": "array",\r\n      "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n      "default": [],\r\n      "description": "\u8FDE\u63A5\u90E8\u4EF6\u4E0D\u53EF\u5305\u542B\u7684\u6807\u7B7E\uFF0C\u7559\u7A7A\u4EE5\u5141\u8BB8\u4EFB\u610F\u6807\u7B7E\u3002\u4F8B\u5982\uFF1A[\\"machine_max:explosive\\"]\u8868\u793A\u4E0D\u80FD\u5305\u542B\u7206\u70B8\u7269\u6807\u7B7E\u3002"\r\n    },\r\n    "joint_attrs": {\r\n      "type": "object",\r\n      "additionalProperties": { "$ref": "joint_attr.schema.json"},\r\n      "default": {},\r\n      "description": "\u5173\u8282\u5C5E\u6027\uFF0C\u76EE\u524D\u4EC5\u5728\u5173\u8282\u7C7B\u578B\u4E3AAdvanced\u65F6\u751F\u6548\u3002\u952E\u4E3Ax\u3001y\u3001z\u3001xr\u3001yr\u3001zr\uFF0C\u5206\u522B\u4EE3\u8868x\u3001y\u3001z\u8F74\u7684\u5E73\u52A8\u548Cx\u3001y\u3001z\u8F74\u7684\u65CB\u8F6C\u3002"\r\n    },\r\n    "collide_between_parts": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "\u8FDE\u63A5\u70B9\u662F\u5426\u5141\u8BB8\u90E8\u4EF6\u95F4\u78B0\u649E\u3002\u901A\u5E38\u8BBE\u7F6E\u4E3Afalse\u4EE5\u907F\u514D\u8FDE\u63A5\u70B9\u4E4B\u95F4\u7684\u7A7F\u900F\u95EE\u9898\u3002"\r\n    }\r\n  },\r\n  "required": ["type"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "type": "Simple",\r\n      "description": "\u6700\u7B80\u8FDE\u63A5\u70B9\u793A\u4F8B\uFF0C\u4EC5\u5305\u542B\u5FC5\u9700\u5B57\u6BB5"\r\n    },\r\n    {\r\n      "type": "Advanced",\r\n      "required_tags": ["machine_max:direction/left"],\r\n      "impact_absorption": 0.1,\r\n      "impact_reduction": 3.0,\r\n      "impact_multiplier": 0.5,\r\n      "joint_attrs": {\r\n        "y": {\r\n          "lower_limit": -0.5,\r\n          "upper_limit": 1.0,\r\n          "stiffness": 28000,\r\n          "damping": 1500\r\n        },\r\n        "yr": {\r\n          "lower_limit": -45.0,\r\n          "upper_limit": 45.0,\r\n          "stiffness": 4000,\r\n          "damping": 20\r\n        }\r\n      },\r\n      "description": "\u5DE6\u524D\u8F6E\u8FDE\u63A5\u70B9\uFF0C\u4EC5\u5141\u8BB8\u5DE6\u53D8\u4F53\uFF0C\u5177\u6709\u5782\u76F4\u7F13\u51B2\u548C\u8F6C\u5411\u80FD\u529B\uFF0C\u51B2\u51FB\u5438\u6536\u7387\u8F83\u4F4E\uFF0C\u51B2\u51FB\u51CF\u514D\u8F83\u9AD8"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/connector/joint_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/joint/joint_attr.schema.json",\r\n  "title": "\u5173\u8282\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u5173\u8282\u7684\u7269\u7406\u5C5E\u6027\uFF0C\u5305\u62EC\u9650\u5236\u3001\u521A\u5EA6\u3001\u963B\u5C3C\u7B49\u3002\u6BCF\u4E2A\u5173\u8282\u5C5E\u6027\u5BF9\u5E94\u4E00\u4E2A\u81EA\u7531\u5EA6\uFF08\u5E73\u52A8\u6216\u65CB\u8F6C\uFF09\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "lower_limit": {\r\n      "type": "number",\r\n      "description": "\u5173\u8282\u4F4D\u7F6E\u4E0B\u9650\uFF0C\u5BF9\u4E8E\u5E73\u52A8\u8F74\u5355\u4F4D\u4E3Am\uFF0C\u5BF9\u4E8E\u65CB\u8F6C\u8F74\u5355\u4F4D\u4E3A\u5EA6\u3002\u5F53\u4E0B\u9650\u9AD8\u4E8E\u4E0A\u9650\u65F6\uFF0C\u6307\u5B9A\u7684\u8F74\u81EA\u7531\u6D3B\u52A8\uFF1B\u4E0B\u9650\u4F4E\u4E8E\u4E0A\u9650\u65F6\uFF0C\u6307\u5B9A\u7684\u8F74\u88AB\u9650\u5B9A\u4E8E\u533A\u95F4\u5185\u6D3B\u52A8\uFF1B\u4E0B\u9650\u7B49\u4E8E\u4E0A\u9650\u65F6\uFF0C\u6307\u5B9A\u7684\u8F74\u88AB\u56FA\u5B9A\u6B7B\u3002"\r\n    },\r\n    "upper_limit": {\r\n      "type": "number",\r\n      "description": "\u5173\u8282\u4F4D\u7F6E\u4E0A\u9650\uFF0C\u5BF9\u4E8E\u5E73\u52A8\u8F74\u5355\u4F4D\u4E3Am\uFF0C\u5BF9\u4E8E\u65CB\u8F6C\u8F74\u5355\u4F4D\u4E3A\u5EA6\u3002\u5F53\u4E0B\u9650\u9AD8\u4E8E\u4E0A\u9650\u65F6\uFF0C\u6307\u5B9A\u7684\u8F74\u81EA\u7531\u6D3B\u52A8\uFF1B\u4E0B\u9650\u4F4E\u4E8E\u4E0A\u9650\u65F6\uFF0C\u6307\u5B9A\u7684\u8F74\u88AB\u9650\u5B9A\u4E8E\u533A\u95F4\u5185\u6D3B\u52A8\uFF1B\u4E0B\u9650\u7B49\u4E8E\u4E0A\u9650\u65F6\uFF0C\u6307\u5B9A\u7684\u8F74\u88AB\u56FA\u5B9A\u6B7B\u3002"\r\n    },\r\n    "equilibrium": {\r\n      "type": "number",\r\n      "description": "\u5E73\u8861\u4F4D\u7F6E\uFF0C\u5173\u8282\u5728\u65E0\u5916\u529B\u4F5C\u7528\u65F6\u8D8B\u5411\u7684\u4F4D\u7F6E\u3002"\r\n    },\r\n    "stiffness": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "description": "\u521A\u5EA6\u7CFB\u6570(N/m\u6216N\xB7m/\u5EA6)\uFF0C\u8868\u793A\u5173\u8282\u62B5\u6297\u53D8\u5F62\u7684\u80FD\u529B\u3002"\r\n    },\r\n    "damping": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "description": "\u963B\u5C3C\u7CFB\u6570(N/(m/s)\u6216N\xB7m\xB7s/\u5EA6)\uFF0C\u8868\u793A\u5173\u8282\u8FD0\u52A8\u65F6\u7684\u80FD\u91CF\u8017\u6563\u3002"\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "lower_limit": -45.0,\r\n      "upper_limit": 45.0,\r\n      "stiffness": 229000,\r\n      "damping": 1150,\r\n      "description": "\u65CB\u8F6C\u5173\u8282\uFF0C\u9650\u5236\u5728-45\xB0\u523045\xB0\u4E4B\u95F4\uFF0C\u5177\u6709\u4E2D\u7B49\u521A\u5EA6\u548C\u963B\u5C3C"\r\n    },\r\n    {\r\n      "lower_limit": 1.0,\r\n      "upper_limit": -1.0,\r\n      "description": "\u81EA\u7531\u6D3B\u52A8\u7684\u5173\u8282\uFF08\u4E0B\u9650\u9AD8\u4E8E\u4E0A\u9650\uFF09"\r\n    },\r\n    {\r\n      "lower_limit": 0.0,\r\n      "upper_limit": 0.0,\r\n      "stiffness": 5730000,\r\n      "damping": 57300,\r\n      "description": "\u56FA\u5B9A\u5173\u8282\uFF08\u4E0A\u4E0B\u9650\u76F8\u540C\uFF09"\r\n    },\r\n    {\r\n      "lower_limit": -0.2,\r\n      "upper_limit": 0.2,\r\n      "stiffness": 2865000,\r\n      "damping": 11500,\r\n      "description": "\u7F13\u51B2\u5173\u8282\uFF0C\u5141\u8BB8\u5C0F\u8303\u56F4\u4F4D\u79FB\uFF0C\u7528\u4E8E\u51CF\u9707\u5668"\r\n    },\r\n    {\r\n      "lower_limit": -90.0,\r\n      "upper_limit": 90.0,\r\n      "equilibrium": 0.0,\r\n      "stiffness": 57000,\r\n      "damping": 2900,\r\n      "description": "\u94F0\u94FE\u5173\u8282\uFF0C\u5141\u8BB8\u5927\u89D2\u5EA6\u65CB\u8F6C\uFF0C\u7528\u4E8E\u95E8\u6216\u8231\u76D6"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/hit_box/hit_box_attr.schema.json": `{\r
-  "$schema": "http://json-schema.org/draft-07/schema#",\r
-  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/hit_box_attr.json",\r
-  "title": "\u78B0\u649E\u7BB1\u5C5E\u6027",\r
-  "description": "\u5B9A\u4E49\u90E8\u4EF6\u78B0\u649E\u7BB1\u7684\u7269\u7406\u5C5E\u6027\u3001\u62A4\u7532\u503C\u548C\u4F24\u5BB3\u4FEE\u6B63\u7CFB\u7EDF\u3002",\r
-  "type": "object",\r
-  "properties": {\r
-    "id": {\r
-      "type": "string",\r
-      "default": "part",\r
-      "description": "\u78B0\u649E\u5F62\u72B6id\uFF0C\u540Cid\u7684\u78B0\u649E\u4F53\u79EF\u4E0D\u4F1A\u88AB\u540C\u4E00\u6B21\u653B\u51FB\u91CD\u590D\u547D\u4E2D\u3002"\r
-    },\r
-    "type": {\r
-      "type": "string",\r
-      "enum": ["box", "sphere", "cylinder", "capsule", "wheel"],\r
-      "description": "\u78B0\u649E\u5F62\u72B6\u7C7B\u578B\u3002\u5404\u7C7B\u578B\u751F\u6548\u65B9\u5F0F\u5982\u4E0B\uFF1A\\n- box\uFF1A\u957F\u65B9\u4F53\u78B0\u649E\u5F62\u72B6\uFF0C\u53D6\u65B9\u5757\u4F4D\u59FF\u548C\u534A\u957F\u751F\u6210\u3002\\n- sphere\uFF1A\u7403\u4F53\u78B0\u649E\u5F62\u72B6\uFF0C\u53D6\u65B9\u5757y\u65B9\u5411\u534A\u957F\u4F5C\u4E3A\u534A\u5F84\u3002\\n- cylinder\uFF1A\u5706\u67F1\u4F53\u78B0\u649E\u5F62\u72B6\uFF0C\u53D6\u65B9\u5757\u4F4D\u59FF\u548C\u534A\u957F\u751F\u6210\uFF0C\u5706\u67F1\u8F74\u5411\u4E3Az\u8F74\u3002\\n- capsule\uFF1A\u80F6\u56CA\u4F53\u78B0\u649E\u5F62\u72B6\uFF0C\u53D6\u65B9\u5757\u4F4D\u59FF\u548C\u534A\u957F\u751F\u6210\uFF0C\u80F6\u56CA\u8F74\u5411\u4E3Ay\u8F74\u3002\\n- wheel\uFF1A\u7279\u6B8A\u7403\u4F53\u78B0\u649E\u5F62\u72B6\uFF0C\u53D6\u65B9\u5757y\u65B9\u5411\u534A\u957F\u4F5C\u4E3A\u534A\u5F84\uFF0Cx\u65B9\u5411\u5C3A\u5BF8\u4F5C\u4E3A\u5BBD\u5EA6\u3002\u78B0\u649E\u65F6\u68C0\u6D4B\u78B0\u649E\u70B9\u7684\u76F8\u5BF9\u4F4D\u7F6E\uFF0C\u82E5x\u503C\u8D85\u51FA\u8F6E\u80CE\u534A\u5BBD\u5219\u5FFD\u7565\u6B64\u6B21\u78B0\u649E\u3002\u6B64\u7C7B\u578B\u78B0\u649E\u4F53\u79EF\u4F1A\u6839\u636E\u65B9\u5757\u5C3A\u5BF8\u4EE5\u5706\u67F1\u4F53\u8F6C\u52A8\u60EF\u91CF\u516C\u5F0F\u8C03\u6574\u6574\u4E2A\u521A\u4F53\u7684\u8F6C\u52A8\u60EF\u91CF\uFF0C\u5EFA\u8BAE\u5355\u4E2Asubpart\u4EC5\u5305\u542B\u4E00\u4E2A\u7C7B\u578B\u4E3Awheel\u7684hitbox\uFF0C\u4E14\u5185\u90E8\u4EC5\u5305\u542B\u4E00\u4E2Acube\u3002"\r
-    },\r
-    "subsystem": {\r
-      "type": "string",\r
-      "default": "",\r
-      "description": "\u5B50\u7CFB\u7EDF\u540D\u79F0\uFF0C\u7528\u4E8E\u5C06\u6B64\u78B0\u649E\u7BB1\u4E0E\u7279\u5B9A\u5B50\u7CFB\u7EDF\u5173\u8054\uFF0C\u5F53\u6B64\u78B0\u649E\u7BB1\u53D7\u5230\u4F24\u5BB3\u65F6\uFF0C\u5173\u8054\u7684\u5B50\u7CFB\u7EDF\u4F1A\u53D7\u5230\u7B49\u91CF\u4F24\u5BB3\u3002"\r
-    },\r
-    "material": {\r
-      "$ref": "../../../base/resource_location.schema.json",\r
-      "default": "machine_max:default",\r
-      "description": "\u6750\u6599\u6CE8\u518Cid\uFF0C\u7528\u4E8E\u83B7\u53D6\u6469\u64E6\u7CFB\u6570\u3001\u51CF\u4F24\u5C5E\u6027\u3001\u97F3\u6548\u7B49\u7269\u7406\u5C5E\u6027\u3002"\r
-    },\r
-    "thickness": {\r
-      "type": "number",\r
-      "minimum": 0.0,\r
-      "default": 1.0,\r
-      "description": "\u62A4\u7532\u539A\u5EA6\uFF0C\u5355\u4F4Dmm\uFF0C\u51CF\u514D\u4F24\u5BB3\u5E76\u63A7\u5236\u78B0\u649E\u65F6\u7684\u80FD\u91CF\u5206\u914D\u60C5\u51B5\u3002"\r
-    },\r
-    "overwrite": {\r
-      "type": "object",\r
-      "description": "\u547D\u4E2D\u7BB1\u6750\u8D28\u5C5E\u6027\u8986\u5199\u3002\u53EF\u6309\u9700\u8986\u5199material\u5F15\u7528\u6750\u8D28\u4E2D\u7684\u4EFB\u610F\u5B57\u6BB5\u3002",\r
-      "properties": {\r
-        "friction": {\r
-          "$ref": "../../../base/vector_3d.schema.json",\r
-          "description": "\u6469\u64E6\u7CFB\u6570\u8986\u5199\u3002"\r
-        },\r
-        "slip_adaptation": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "description": "\u6ED1\u79FB\u9002\u5E94\u7CFB\u6570\u8986\u5199\u3002"\r
-        },\r
-        "slip_curve": {\r
-          "type": "object",\r
-          "description": "\u6ED1\u79FB\u66F2\u7EBF\u8986\u5199\u3002\u53EF\u53EA\u8986\u5199\u90E8\u5206\u5B57\u6BB5\uFF0C\u5176\u4F59\u7EE7\u627F\u6750\u8D28\u5B9A\u4E49\u3002",\r
-          "properties": {\r
-            "longitudinal": {\r
-              "type": "object",\r
-              "properties": {\r
-                "peak_slip_ratio": {\r
-                  "type": "number",\r
-                  "minimum": 0.0\r
-                },\r
-                "base_scale": {\r
-                  "type": "number"\r
-                },\r
-                "peak_scale": {\r
-                  "type": "number"\r
-                },\r
-                "kinetic_scale": {\r
-                  "type": "number"\r
-                }\r
-              },\r
-              "additionalProperties": false\r
-            },\r
-            "lateral": {\r
-              "type": "object",\r
-              "properties": {\r
-                "peak_angle_deg": {\r
-                  "type": "number",\r
-                  "minimum": 0.0,\r
-                  "description": "\u4FA7\u504F\u89D2\u5CF0\u503C\uFF0C\u5355\u4F4D\uFF1A\u5EA6\u3002"\r
-                },\r
-                "kinetic_angle_deg": {\r
-                  "type": "number",\r
-                  "minimum": 0.0,\r
-                  "description": "\u52A8\u6469\u64E6\u7EC8\u70B9\u4FA7\u504F\u89D2\uFF0C\u5355\u4F4D\uFF1A\u5EA6\u3002"\r
-                },\r
-                "base_scale": {\r
-                  "type": "number"\r
-                },\r
-                "peak_scale": {\r
-                  "type": "number"\r
-                },\r
-                "kinetic_scale": {\r
-                  "type": "number"\r
-                }\r
-              },\r
-              "additionalProperties": false\r
-            }\r
-          },\r
-          "additionalProperties": false\r
-        },\r
-        "rolling_friction": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "description": "\u6EDA\u52A8\u6469\u64E6\u7CFB\u6570\u8986\u5199\u3002"\r
-        },\r
-        "spinning_friction": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "description": "\u65CB\u8F6C\u6469\u64E6\u7CFB\u6570\u8986\u5199\u3002"\r
-        },\r
-        "restitution": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "maximum": 1.0,\r
-          "description": "\u6062\u590D\u7CFB\u6570\u8986\u5199\u3002"\r
-        },\r
-        "block_damage_factor": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "description": "\u65B9\u5757\u4F24\u5BB3\u7CFB\u6570\u8986\u5199\u3002"\r
-        },\r
-        "rha": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "description": "\u76F8\u5BF9RHA\u6297\u7A7F\u7CFB\u6570\u8986\u5199\u30021.0\u8868\u793A\u7B49\u6548RHA\uFF0C0.5\u8868\u793A\u540C\u539A\u5EA6\u4E0B\u4EC550%\u6297\u7A7F\uFF0C1.5\u8868\u793A1.5\u500D\u6297\u7A7F\u3002"\r
-        },\r
-        "angle_effect": {\r
-          "type": "boolean",\r
-          "description": "\u89D2\u5EA6\u6548\u5E94\u8986\u5199\u3002"\r
-        },\r
-        "impact_modifiers": {\r
-          "$ref": "modifier/damage_modifier.schema.json",\r
-          "description": "\u51B2\u51FB\u4FEE\u6B63\u8986\u5199\u3002"\r
-        },\r
-        "piercing_modifiers": {\r
-          "$ref": "modifier/damage_modifier.schema.json",\r
-          "description": "\u7A7F\u6DF1\u4FEE\u6B63\u8986\u5199\u3002"\r
-        },\r
-        "damage_modifiers": {\r
-          "$ref": "modifier/damage_modifier.schema.json",\r
-          "description": "\u4F24\u5BB3\u4FEE\u6B63\u8986\u5199\u3002"\r
-        },\r
-        "decay_rha": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "description": "\u8010\u4E45\u5F52\u96F6\u65F6 RHA \u7CFB\u6570\u8986\u5199\u3002"\r
-        },\r
-        "decay_power": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "description": "\u88C5\u7532\u9000\u5316\u66F2\u7EBF\u6307\u6570\u8986\u5199\u3002"\r
-        },\r
-        "unpen_power": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "description": "\u672A\u51FB\u7A7F\u4F24\u5BB3\u7CFB\u6570\u8986\u5199\u3002"\r
-        },\r
-        "sounds": {\r
-          "type": "object",\r
-          "properties": {\r
-            "hit_un_pen": {\r
-              "$ref": "../../../base/sound_event.schema.json"\r
-            },\r
-            "hit_pen": {\r
-              "$ref": "../../../base/sound_event.schema.json"\r
-            }\r
-          },\r
-          "additionalProperties": false,\r
-          "description": "\u6750\u8D28\u97F3\u6548\u8986\u5199\u3002"\r
-        }\r
-      },\r
-      "additionalProperties": false\r
-    },\r
-    "condition": {\r
-      "type": "string",\r
-      "default": "true",\r
-      "description": "\u751F\u6548\u6761\u4EF6\uFF0C\u4F7F\u7528molang\u8868\u8FBE\u5F0F\u63A7\u5236\u78B0\u649E\u7BB1\u662F\u5426\u751F\u6548\u3002\u53EF\u7528\u4E8E\u5B9E\u73B0\u73BB\u7483\u88AB\u51FB\u788E\u540E\u4E0D\u518D\u6709\u547D\u4E2D\u5224\u5B9A\u3001\u62D6\u8F66\u6491\u811A\u7B49\u529F\u80FD\u3002"\r
-    }\r
-  },\r
-  "required": ["type"],\r
-  "additionalProperties": false,\r
-  "examples": [\r
-    {\r
-      "type": "box"\r
-    },\r
-    {\r
-      "id": "chassis",\r
-      "type": "box",\r
-      "subsystem": "sub_part.machine_max.main",\r
-      "material": "machine_max:heavy_armor",\r
-      "thickness": 10.0,\r
-      "overwrite": {\r
-        "rha": 1.35,\r
-        "angle_effect": true,\r
-        "slip_curve": {\r
-          "lateral": {\r
-            "peak_angle_deg": 9.0\r
-          }\r
-        },\r
-        "impact_modifiers": [\r
-          {\r
-            "operation": "multiply",\r
-            "value": 0.8,\r
-            "condition": {\r
-              "type": "always"\r
-            }\r
-          }\r
-        ],\r
-        "piercing_modifiers": [\r
-          {\r
-            "operation": "multiply",\r
-            "value": 0.9,\r
-            "condition": {\r
-              "type": "always"\r
-            }\r
-          }\r
-        ],\r
-        "damage_modifiers": [\r
-          {\r
-            "operation": "add",\r
-            "value": -1.0,\r
-            "condition": {\r
-              "type": "always"\r
-            }\r
-          }\r
-        ],\r
-        "decay_rha": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "description": "\u8010\u4E45\u5F52\u96F6\u65F6 RHA \u7CFB\u6570\u8986\u5199\u3002"\r
-        },\r
-        "decay_power": {\r
-          "type": "number",\r
-          "minimum": 0.0,\r
-          "description": "\u88C5\u7532\u9000\u5316\u66F2\u7EBF\u6307\u6570\u8986\u5199\u3002"\r
-        },\r
-        "unpen_power": 0.15,\r
-        "sounds": {\r
-          "hit_un_pen": {\r
-            "sound_id": "machine_max:hit_box.hit.up_pen.metal",\r
-            "range": 64\r
-          },\r
-          "hit_pen": {\r
-            "sound_id": "machine_max:hit_box.hit.pen.metal",\r
-            "range": 64\r
-          }\r
-        }\r
-      },\r
-      "condition": "!local.has_connector('connector.machine_max.chassis_connection')"\r
-    }\r
-  ]\r
+}`, "zh_cn/schemas/base/vector_3d.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/base/vector_3d.json",\r\n  "title": "\u4E09\u7EF4\u5411\u91CF",\r\n  "description": "\u8868\u793A\u4E09\u7EF4\u7A7A\u95F4\u4E2D\u7684\u5411\u91CF",\r\n  "type": "array",\r\n  "items": {\r\n    "type": "number"\r\n  },\r\n  "minItems": 3,\r\n  "maxItems": 3,\r\n  "default": [0.5, 0.5, 0.5],\r\n  "examples": [\r\n    [0.5, 0.5, 0.5],\r\n    [1.0, 0.0, 0.0]\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/connector/connector_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/connector/connector_attr.schema.json",\r\n  "title": "\u8FDE\u63A5\u70B9\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u90E8\u4EF6\u8FDE\u63A5\u70B9\u7684\u5C5E\u6027\uFF0C\u5305\u62EC\u4F4D\u7F6E\u3001\u5B9A\u4E49ID\u3001\u4FE1\u53F7\u4F20\u8F93\u7B49\u3002\u8FDE\u63A5\u70B9\u7528\u4E8E\u90E8\u4EF6\u4E4B\u95F4\u7684\u7269\u7406\u8FDE\u63A5\u548C\u4FE1\u53F7\u4F20\u9012\u3002\u9759\u6001\u5C5E\u6027\u901A\u8FC7definition\u5B57\u6BB5\u5F15\u7528\u9884\u5B9A\u4E49\u7684\u8FDE\u63A5\u70B9\u7C7B\u578B\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "locator": {\r\n      "type": "string",\r\n      "description": "\u8FDE\u63A5\u70B9\u5BF9\u5E94\u7684Locator\u540D\u79F0\uFF0C\u4F1A\u5BFB\u627E\u540D\u79F0\u5339\u914D\u7684Locator\uFF0C\u4EE5\u5176\u4F4D\u7F6E\u4E0E\u59FF\u6001\u4F5C\u4E3A\u8FDE\u63A5\u70B9\u7684\u4F4D\u7F6E\u548C\u59FF\u6001\u3002"\r\n    },\r\n    "definition": {\r\n      "type": "string",\r\n      "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$",\r\n      "description": "\u8FDE\u63A5\u70B9\u5B9A\u4E49ID\uFF0C\u5F15\u7528\u9884\u5B9A\u4E49\u7684\u8FDE\u63A5\u70B9\u9759\u6001\u5C5E\u6027\u3002\u4F8B\u5982\uFF1A\\"machine_max:simple_connector\\"\u3002"\r\n    },\r\n    "power_target": {\r\n      "type": "string",\r\n      "description": "\u5BF9\u4FA7\u8FDE\u63A5\u5668\u4F20\u5165\u7684\u673A\u68B0\u80FD\u5728\u672C\u96F6\u4EF6\u5185\u7684\u63A5\u6536\u76EE\u6807\uFF08\u5B50\u7CFB\u7EDF\u540D\u6216\u8FDE\u63A5\u70B9\u540D\uFF09\u3002\u8BBE\u7F6E\u540E\u8BE5\u8FDE\u63A5\u70B9\u53EF\u4F5C\u4E3A\u673A\u68B0\u80FD\u4F20\u8F93\u901A\u9053\uFF0C\u5C06\u5BF9\u4FA7\u4F20\u5165\u7684\u673A\u68B0\u80FD\u8F6C\u53D1\u81F3\u672C\u96F6\u4EF6\u5185\u7684\u76EE\u6807\u3002\u4F8B\u5982\uFF1A\\"subsystem.machine_max.engine\\"\u3002"\r\n    },\r\n    "overwrite": {\r\n      "type": "object",\r\n      "description": "\u8FDE\u63A5\u70B9\u5C5E\u6027\u8986\u5199\u3002\u53EF\u6309\u9700\u8986\u5199definition\u6307\u5411\u7684\u9759\u6001\u8FDE\u63A5\u70B9\u5C5E\u6027\u3002",\r\n      "properties": {\r\n        "type": {\r\n          "type": "string",\r\n          "enum": ["Simple", "simple", "advanced", "Advanced"],\r\n          "description": "\u8FDE\u63A5\u70B9\u7C7B\u578B\u8986\u5199\u3002"\r\n        },\r\n        "direction": {\r\n          "allOf": [\r\n            { "$ref": "../../../base/axis.schema.json" }\r\n          ],\r\n          "description": "\u8FDE\u63A5\u70B9\u6CD5\u7EBF\u65B9\u5411\u8986\u5199\u3002"\r\n        },\r\n        "integrity": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "description": "\u7ED3\u6784\u5B8C\u6574\u6027\u8986\u5199\u3002"\r\n        },\r\n        "impact_absorption": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "maximum": 1.0,\r\n          "description": "\u51B2\u51FB\u8F6C\u7ED3\u6784\u635F\u8017\u6BD4\u4F8B\u8986\u5199\u3002"\r\n        },\r\n        "impact_absorption_destroyed": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "description": "\u6240\u5728\u96F6\u4EF6\u5DF2\u6467\u6BC1\u65F6\u51B2\u51FB\u8F6C\u7ED3\u6784\u635F\u8017\u6BD4\u4F8B\u7684\u8986\u5199\u3002"\r\n        },\r\n        "impact_reduction": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "description": "\u51B2\u51FB\u51CF\u514D\u503C\u8986\u5199\u3002"\r\n        },\r\n        "impact_multiplier": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "description": "\u51B2\u51FB\u500D\u7387\u8986\u5199\u3002"\r\n        },\r\n        "collide_between_parts": {\r\n          "type": "boolean",\r\n          "description": "\u662F\u5426\u5141\u8BB8\u90E8\u4EF6\u95F4\u78B0\u649E\u8986\u5199\u3002"\r\n        },\r\n        "required_tags": {\r\n          "type": "array",\r\n          "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n          "description": "\u5FC5\u9700\u6807\u7B7E\u8986\u5199\u3002"\r\n        },\r\n        "acceptable_tags": {\r\n          "type": "array",\r\n          "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n          "description": "\u53EF\u63A5\u53D7\u6807\u7B7E\u8986\u5199\u3002"\r\n        },\r\n        "forbidden_tags": {\r\n          "type": "array",\r\n          "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n          "description": "\u7981\u6B62\u6807\u7B7E\u8986\u5199\u3002"\r\n        },\r\n        "joint_attrs": {\r\n          "type": "object",\r\n          "additionalProperties": { "$ref": "joint_attr.schema.json" },\r\n          "description": "\u5173\u8282\u5C5E\u6027\u8986\u5199\u3002"\r\n        }\r\n      },\r\n      "additionalProperties": false\r\n    },\r\n    "signal_translations": {\r\n      "type": "object",\r\n      "additionalProperties": { "type": "string" },\r\n      "default": {},\r\n      "description": "\u4ECE\u5BF9\u4FA7\u8FDE\u63A5\u70B9\u63A5\u6536\u5230\u7684\u4FE1\u53F7\u9891\u9053\u8F6C\u8BD1\u89C4\u5219\uFF0C\u4F8B\u5982\uFF1A{\\"channel_a\\": \\"channel_c\\"}\u8868\u793A\u5C06channel_a\u4FE1\u53F7\u8F6C\u8BD1\u4E3Achannel_c\u3002"\r\n    },\r\n    "signal_targets": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "type": "array",\r\n        "items": { "type": "string" }\r\n      },\r\n      "default": {},\r\n      "description": "\u8FDE\u63A5\u70B9\u5728\u672C\u96F6\u4EF6\u5185\u7684\u63A7\u5236\u4FE1\u53F7\u4F20\u8F93\u76EE\u6807\uFF0C\u952E\u4E3A\u4FE1\u53F7\u9891\u9053\uFF0C\u503C\u4E3A\u76EE\u6807\u5217\u8868\uFF08\u5B50\u7CFB\u7EDF/\u8FDE\u63A5\u70B9\u540D/part/global\uFF09\u3002\u4F8B\u5982\uFF1A{\\"move_input\\": [\\"car_controller\\", \\"engine\\"]}\u3002"\r\n    },\r\n    "internal": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "\u662F\u5426\u4E3A\u90E8\u4EF6\u5185\u90E8\u8FDE\u63A5\u70B9\u3002\u4E3Atrue\u65F6\u4EC5\u7528\u4E8E\u540C\u4E00Part\u5185\u90E8\u81EA\u52A8\u8FDE\u63A5\uFF0C\u4E0D\u53C2\u4E0E\u5BF9\u5916\u62FC\u88C5\u3002"\r\n    }\r\n  },\r\n  "required": ["locator", "definition"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "locator": "Hull",\r\n      "definition": "machine_max:simple_connector"\r\n    },\r\n    {\r\n      "locator": "LeftFrontWheel",\r\n      "definition": "machine_max:advanced_wheel_connector",\r\n      "overwrite": {\r\n        "type": "Advanced",\r\n        "direction": "xp",\r\n        "integrity": 32.0,\r\n        "impact_absorption": 0.15,\r\n        "impact_absorption_destroyed": 2.5,\r\n        "impact_reduction": 3.0,\r\n        "impact_multiplier": 0.8,\r\n        "collide_between_parts": false,\r\n        "required_tags": ["machine_max:direction/left"],\r\n        "acceptable_tags": ["machine_max:wheel", "machine_max:suspension"],\r\n        "forbidden_tags": ["machine_max:broken_only"],\r\n        "joint_attrs": {\r\n          "y": {\r\n            "lower_limit": -0.2,\r\n            "upper_limit": 0.25,\r\n            "stiffness": 30000,\r\n            "damping": 1600\r\n          },\r\n          "yr": {\r\n            "lower_limit": -35.0,\r\n            "upper_limit": 35.0,\r\n            "stiffness": 4500,\r\n            "damping": 24\r\n          }\r\n        }\r\n      },\r\n      "signal_translations": {\r\n        "steering": "wheel_control"\r\n      },\r\n      "signal_targets": {\r\n        "wheel_control": ["wheel_driver", "local"],\r\n        "abs_request": ["global"]\r\n      }\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/connector/connector_static_attr.schema.json",\r\n  "title": "\u8FDE\u63A5\u70B9\u9759\u6001\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u8FDE\u63A5\u70B9\u7684\u9759\u6001\u5C5E\u6027\uFF0C\u5305\u62EC\u7C7B\u578B\u3001\u65B9\u5411\u3001\u7ED3\u6784\u5B8C\u6574\u6027\u3001\u51B2\u51FB\u5904\u7406\u7B49\u3002\u8FD9\u4E9B\u5C5E\u6027\u901A\u8FC7\u5B9A\u4E49ID\u5F15\u7528\uFF0C\u907F\u514D\u5728\u6BCF\u4E2A\u96F6\u4EF6\u5B9A\u4E49\u4E2D\u91CD\u590D\u5B9A\u4E49\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "JSON Schema\u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u667A\u80FD\u63D0\u793A\u548C\u9A8C\u8BC1",\r\n      "default": "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json"\r\n    },\r\n    "type": {\r\n      "type": "string",\r\n      "enum": ["Simple", "simple", "advanced", "Advanced"],\r\n      "description": "\u8FDE\u63A5\u70B9\u7C7B\u578B\u3002Simple\uFF1A\u7B80\u5355\u8FDE\u63A5\u70B9\uFF1BAdvanced\uFF1A\u9AD8\u7EA7\u8FDE\u63A5\u70B9\uFF0C\u652F\u6301\u590D\u6742\u7684\u5173\u8282\u5C5E\u6027\u3002"\r\n    },\r\n    "direction": {\r\n      "allOf": [\r\n        { "$ref": "../../../base/axis.schema.json" }\r\n      ],\r\n      "description": "\u8FDE\u63A5\u70B9\u7684\u6CD5\u7EBF\u65B9\u5411\uFF0C\u7528\u4E8E\u786E\u5B9A\u8FDE\u63A5\u70B9\u7684\u8FDE\u63A5\u65B9\u5411\u3002x+\u4E3A\u53F3\uFF0Cy+\u4E3A\u4E0A\uFF0Cz+\u4E3A\u540E\u3002"\r\n    },\r\n    "integrity": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 15.0,\r\n      "description": "\u90E8\u4EF6\u57FA\u7840\u7ED3\u6784\u5B8C\u6574\u5EA6\uFF0C\u90E8\u4EF6\u53EF\u627F\u53D7\u4E0D\u9AD8\u4E8E\u6B64\u6570\u503C\u7684\u51B2\u51FB\u529B\u800C\u4E0D\u8131\u843D\uFF0C\u51B2\u51FB\u529B\u6765\u81EA\u4F24\u5BB3\u6216\u5173\u8282\u5E94\u529B\u3002"\r\n    },\r\n    "impact_reduction": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 2.0,\r\n      "description": "\u8FDE\u63A5\u70B9\u7684\u51B2\u51FB\u51CF\u514D\u503C\uFF0C\u5728\u8BA1\u7B97\u90E8\u4EF6\u51FB\u843D\u524D\u5E94\u7528\uFF0C\u53EF\u5C06\u51B2\u51FB\u524A\u51CF\u81F30\u4EE5\u5B8C\u5168\u907F\u514D\u5BF9\u7ED3\u6784\u5B8C\u6574\u6027\u7684\u5F71\u54CD\u3002"\r\n    },\r\n    "impact_multiplier": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "\u8FDE\u63A5\u70B9\u7684\u51B2\u51FB\u5438\u6536\u7387\uFF0C\u5728\u8BA1\u7B97\u90E8\u4EF6\u51FB\u843D\u524D\uFF0C\u5E94\u7528\u51B2\u51FB\u51CF\u514D\u540E\u5E94\u7528\uFF0C\u5927\u4E8E1\u5C06\u4F7F\u8FDE\u63A5\u70B9\u66F4\u5BB9\u6613\u65AD\u5F00\u3002"\r\n    },\r\n    "impact_absorption": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "maximum": 1,\r\n      "default": 0.3,\r\n      "description": "\u8FDE\u63A5\u70B9\u53D7\u5230\u51B2\u51FB\u4F46\u672A\u88AB\u51FB\u843D\u65F6\uFF0C\u51B2\u51FB\u8F6C\u4E3A\u7ED3\u6784\u5B8C\u6574\u6027\u635F\u8017\u7684\u6BD4\u4F8B\u3002\u4F8B\u59820.5\u8868\u793A50%\u7684\u51B2\u51FB\u4F1A\u8F6C\u5316\u4E3A\u7ED3\u6784\u5B8C\u6574\u6027\u7684\u635F\u8017\u3002"\r\n    },\r\n    "impact_absorption_destroyed": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 2.0,\r\n      "description": "SubPart\u5DF2\u6467\u6BC1\u65F6\uFF0C\u51B2\u51FB\u8F6C\u4E3A\u8FDE\u63A5\u70B9\u5B8C\u6574\u6027\u635F\u8017\u7684\u6BD4\u4F8B\u3002\u4F8B\u59822.0\u8868\u793A200%\u7684\u51B2\u51FB\u4F1A\u8F6C\u5316\u4E3A\u7ED3\u6784\u5B8C\u6574\u6027\u7684\u635F\u8017\uFF08\u7528\u4E8E\u6B8B\u9AB8\u5FEB\u901F\u89E3\u4F53\uFF09\u3002"\r\n    },\r\n    "required_tags": {\r\n      "type": "array",\r\n      "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n      "default": [],\r\n      "description": "\u8FDE\u63A5\u90E8\u4EF6\u5FC5\u987B\u5168\u90E8\u62E5\u6709\u7684\u6807\u7B7E\uFF0C\u7559\u7A7A\u4EE5\u5141\u8BB8\u4EFB\u610F\u6807\u7B7E\u3002\u4F8B\u5982\uFF1A[\\"machine_max:left\\"]\u8868\u793A\u5FC5\u987B\u5305\u542B\u5DE6\u53D8\u4F53\u6807\u7B7E\u3002"\r\n    },\r\n    "acceptable_tags": {\r\n      "type": "array",\r\n      "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n      "default": [],\r\n      "description": "\u8FDE\u63A5\u90E8\u4EF6\u5FC5\u987B\u81F3\u5C11\u62E5\u6709\u5176\u4E2D\u4E00\u4E2A\u7684\u6807\u7B7E\uFF0C\u7559\u7A7A\u4EE5\u5141\u8BB8\u4EFB\u610F\u6807\u7B7E\u3002\u4F8B\u5982\uFF1A[\\"machine_max:door\\", \\"machine_max:hatch\\"]\u8868\u793A\u5FC5\u987B\u5305\u542B\u95E8\u6216\u8231\u53E3\u6807\u7B7E\u4E4B\u4E00\u3002"\r\n    },\r\n    "forbidden_tags": {\r\n      "type": "array",\r\n      "items": { "$ref": "../../../base/resource_location.schema.json" },\r\n      "default": [],\r\n      "description": "\u8FDE\u63A5\u90E8\u4EF6\u4E0D\u53EF\u5305\u542B\u7684\u6807\u7B7E\uFF0C\u7559\u7A7A\u4EE5\u5141\u8BB8\u4EFB\u610F\u6807\u7B7E\u3002\u4F8B\u5982\uFF1A[\\"machine_max:explosive\\"]\u8868\u793A\u4E0D\u80FD\u5305\u542B\u7206\u70B8\u7269\u6807\u7B7E\u3002"\r\n    },\r\n    "joint_attrs": {\r\n      "type": "object",\r\n      "additionalProperties": { "$ref": "joint_attr.schema.json"},\r\n      "default": {},\r\n      "description": "\u5173\u8282\u5C5E\u6027\uFF0C\u76EE\u524D\u4EC5\u5728\u5173\u8282\u7C7B\u578B\u4E3AAdvanced\u65F6\u751F\u6548\u3002\u952E\u4E3Ax\u3001y\u3001z\u3001xr\u3001yr\u3001zr\uFF0C\u5206\u522B\u4EE3\u8868x\u3001y\u3001z\u8F74\u7684\u5E73\u52A8\u548Cx\u3001y\u3001z\u8F74\u7684\u65CB\u8F6C\u3002"\r\n    },\r\n    "collide_between_parts": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "\u8FDE\u63A5\u70B9\u662F\u5426\u5141\u8BB8\u90E8\u4EF6\u95F4\u78B0\u649E\u3002\u901A\u5E38\u8BBE\u7F6E\u4E3Afalse\u4EE5\u907F\u514D\u8FDE\u63A5\u70B9\u4E4B\u95F4\u7684\u7A7F\u900F\u95EE\u9898\u3002"\r\n    }\r\n  },\r\n  "required": ["type"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "type": "Simple",\r\n      "description": "\u6700\u7B80\u8FDE\u63A5\u70B9\u793A\u4F8B\uFF0C\u4EC5\u5305\u542B\u5FC5\u9700\u5B57\u6BB5"\r\n    },\r\n    {\r\n      "type": "Advanced",\r\n      "required_tags": ["machine_max:direction/left"],\r\n      "impact_absorption": 0.1,\r\n      "impact_reduction": 3.0,\r\n      "impact_multiplier": 0.5,\r\n      "joint_attrs": {\r\n        "y": {\r\n          "lower_limit": -0.5,\r\n          "upper_limit": 1.0,\r\n          "stiffness": 28000,\r\n          "damping": 1500\r\n        },\r\n        "yr": {\r\n          "lower_limit": -45.0,\r\n          "upper_limit": 45.0,\r\n          "stiffness": 4000,\r\n          "damping": 20\r\n        }\r\n      },\r\n      "description": "\u5DE6\u524D\u8F6E\u8FDE\u63A5\u70B9\uFF0C\u4EC5\u5141\u8BB8\u5DE6\u53D8\u4F53\uFF0C\u5177\u6709\u5782\u76F4\u7F13\u51B2\u548C\u8F6C\u5411\u80FD\u529B\uFF0C\u51B2\u51FB\u5438\u6536\u7387\u8F83\u4F4E\uFF0C\u51B2\u51FB\u51CF\u514D\u8F83\u9AD8"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/connector/joint_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/joint/joint_attr.schema.json",\r\n  "title": "\u5173\u8282\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u5173\u8282\u7684\u7269\u7406\u5C5E\u6027\uFF0C\u5305\u62EC\u9650\u5236\u3001\u521A\u5EA6\u3001\u963B\u5C3C\u7B49\u3002\u6BCF\u4E2A\u5173\u8282\u5C5E\u6027\u5BF9\u5E94\u4E00\u4E2A\u81EA\u7531\u5EA6\uFF08\u5E73\u52A8\u6216\u65CB\u8F6C\uFF09\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "lower_limit": {\r\n      "type": "number",\r\n      "description": "\u5173\u8282\u4F4D\u7F6E\u4E0B\u9650\uFF0C\u5BF9\u4E8E\u5E73\u52A8\u8F74\u5355\u4F4D\u4E3Am\uFF0C\u5BF9\u4E8E\u65CB\u8F6C\u8F74\u5355\u4F4D\u4E3A\u5EA6\u3002\u5F53\u4E0B\u9650\u9AD8\u4E8E\u4E0A\u9650\u65F6\uFF0C\u6307\u5B9A\u7684\u8F74\u81EA\u7531\u6D3B\u52A8\uFF1B\u4E0B\u9650\u4F4E\u4E8E\u4E0A\u9650\u65F6\uFF0C\u6307\u5B9A\u7684\u8F74\u88AB\u9650\u5B9A\u4E8E\u533A\u95F4\u5185\u6D3B\u52A8\uFF1B\u4E0B\u9650\u7B49\u4E8E\u4E0A\u9650\u65F6\uFF0C\u6307\u5B9A\u7684\u8F74\u88AB\u56FA\u5B9A\u6B7B\u3002"\r\n    },\r\n    "upper_limit": {\r\n      "type": "number",\r\n      "description": "\u5173\u8282\u4F4D\u7F6E\u4E0A\u9650\uFF0C\u5BF9\u4E8E\u5E73\u52A8\u8F74\u5355\u4F4D\u4E3Am\uFF0C\u5BF9\u4E8E\u65CB\u8F6C\u8F74\u5355\u4F4D\u4E3A\u5EA6\u3002\u5F53\u4E0B\u9650\u9AD8\u4E8E\u4E0A\u9650\u65F6\uFF0C\u6307\u5B9A\u7684\u8F74\u81EA\u7531\u6D3B\u52A8\uFF1B\u4E0B\u9650\u4F4E\u4E8E\u4E0A\u9650\u65F6\uFF0C\u6307\u5B9A\u7684\u8F74\u88AB\u9650\u5B9A\u4E8E\u533A\u95F4\u5185\u6D3B\u52A8\uFF1B\u4E0B\u9650\u7B49\u4E8E\u4E0A\u9650\u65F6\uFF0C\u6307\u5B9A\u7684\u8F74\u88AB\u56FA\u5B9A\u6B7B\u3002"\r\n    },\r\n    "equilibrium": {\r\n      "type": "number",\r\n      "description": "\u5E73\u8861\u4F4D\u7F6E\uFF0C\u5173\u8282\u5728\u65E0\u5916\u529B\u4F5C\u7528\u65F6\u8D8B\u5411\u7684\u4F4D\u7F6E\u3002"\r\n    },\r\n    "stiffness": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "description": "\u521A\u5EA6\u7CFB\u6570(N/m\u6216N\xB7m/\u5EA6)\uFF0C\u8868\u793A\u5173\u8282\u62B5\u6297\u53D8\u5F62\u7684\u80FD\u529B\u3002"\r\n    },\r\n    "damping": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "description": "\u963B\u5C3C\u7CFB\u6570(N/(m/s)\u6216N\xB7m\xB7s/\u5EA6)\uFF0C\u8868\u793A\u5173\u8282\u8FD0\u52A8\u65F6\u7684\u80FD\u91CF\u8017\u6563\u3002"\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "lower_limit": -45.0,\r\n      "upper_limit": 45.0,\r\n      "stiffness": 229000,\r\n      "damping": 1150,\r\n      "description": "\u65CB\u8F6C\u5173\u8282\uFF0C\u9650\u5236\u5728-45\xB0\u523045\xB0\u4E4B\u95F4\uFF0C\u5177\u6709\u4E2D\u7B49\u521A\u5EA6\u548C\u963B\u5C3C"\r\n    },\r\n    {\r\n      "lower_limit": 1.0,\r\n      "upper_limit": -1.0,\r\n      "description": "\u81EA\u7531\u6D3B\u52A8\u7684\u5173\u8282\uFF08\u4E0B\u9650\u9AD8\u4E8E\u4E0A\u9650\uFF09"\r\n    },\r\n    {\r\n      "lower_limit": 0.0,\r\n      "upper_limit": 0.0,\r\n      "stiffness": 5730000,\r\n      "damping": 57300,\r\n      "description": "\u56FA\u5B9A\u5173\u8282\uFF08\u4E0A\u4E0B\u9650\u76F8\u540C\uFF09"\r\n    },\r\n    {\r\n      "lower_limit": -0.2,\r\n      "upper_limit": 0.2,\r\n      "stiffness": 2865000,\r\n      "damping": 11500,\r\n      "description": "\u7F13\u51B2\u5173\u8282\uFF0C\u5141\u8BB8\u5C0F\u8303\u56F4\u4F4D\u79FB\uFF0C\u7528\u4E8E\u51CF\u9707\u5668"\r\n    },\r\n    {\r\n      "lower_limit": -90.0,\r\n      "upper_limit": 90.0,\r\n      "equilibrium": 0.0,\r\n      "stiffness": 57000,\r\n      "damping": 2900,\r\n      "description": "\u94F0\u94FE\u5173\u8282\uFF0C\u5141\u8BB8\u5927\u89D2\u5EA6\u65CB\u8F6C\uFF0C\u7528\u4E8E\u95E8\u6216\u8231\u76D6"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/hit_box/hit_box_attr.schema.json": `{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/hit_box_attr.json",
+  "title": "\u78B0\u649E\u7BB1\u5C5E\u6027",
+  "description": "\u5B9A\u4E49\u90E8\u4EF6\u7684\u5355\u4E2A\u78B0\u649E\u7BB1\uFF1A\u78B0\u649E\u5F62\u72B6\u3001\u62A4\u7532\u539A\u5EA6\u3001\u5F15\u7528\u7684\u78B0\u649E\u7BB1\u6750\u8D28\uFF0C\u4EE5\u53CA\u9010\u78B0\u649E\u7BB1\u7684\u6750\u8D28\u8986\u5199\u3002\u8986\u5199\u6CBF\u7528\u6750\u8D28\u5B9A\u4E49\u7684 physics / armor / sounds \u4E09\u7EC4\u7ED3\u6784\uFF0C\u6BCF\u4E2A\u8986\u5199\u5B57\u6BB5\u90FD\u662F\u53EF\u9009\u7684\uFF0C\u672A\u586B\u5199\u7684\u5B57\u6BB5\u6CBF\u7528\u6750\u8D28\u503C\u3002",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "default": "",
+      "description": "\u78B0\u649E\u7BB1id\uFF0C\u540Cid\u7684\u78B0\u649E\u4F53\u79EF\u4E0D\u4F1A\u88AB\u540C\u4E00\u6B21\u653B\u51FB\u91CD\u590D\u547D\u4E2D\u3002"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["box", "sphere", "cylinder", "capsule", "wheel"],
+      "description": "\u78B0\u649E\u5F62\u72B6\u7C7B\u578B\u3002\u5404\u7C7B\u578B\u751F\u6548\u65B9\u5F0F\u5982\u4E0B\uFF1A\\n- box\uFF1A\u957F\u65B9\u4F53\u78B0\u649E\u5F62\u72B6\uFF0C\u53D6\u65B9\u5757\u4F4D\u59FF\u548C\u534A\u957F\u751F\u6210\u3002\\n- sphere\uFF1A\u7403\u4F53\u78B0\u649E\u5F62\u72B6\uFF0C\u53D6\u65B9\u5757y\u65B9\u5411\u534A\u957F\u4F5C\u4E3A\u534A\u5F84\u3002\\n- cylinder\uFF1A\u5706\u67F1\u4F53\u78B0\u649E\u5F62\u72B6\uFF0C\u53D6\u65B9\u5757\u4F4D\u59FF\u548C\u534A\u957F\u751F\u6210\uFF0C\u5706\u67F1\u8F74\u5411\u4E3Az\u8F74\u3002\\n- capsule\uFF1A\u80F6\u56CA\u4F53\u78B0\u649E\u5F62\u72B6\uFF0C\u53D6\u65B9\u5757\u4F4D\u59FF\u548C\u534A\u957F\u751F\u6210\uFF0C\u80F6\u56CA\u8F74\u5411\u4E3Ay\u8F74\u3002\\n- wheel\uFF1A\u7279\u6B8A\u7403\u4F53\u78B0\u649E\u5F62\u72B6\uFF0C\u53D6\u65B9\u5757y\u65B9\u5411\u534A\u957F\u4F5C\u4E3A\u534A\u5F84\uFF0Cx\u65B9\u5411\u5C3A\u5BF8\u4F5C\u4E3A\u5BBD\u5EA6\u3002\u78B0\u649E\u65F6\u68C0\u6D4B\u78B0\u649E\u70B9\u7684\u76F8\u5BF9\u4F4D\u7F6E\uFF0C\u82E5x\u503C\u8D85\u51FA\u8F6E\u80CE\u534A\u5BBD\u5219\u5FFD\u7565\u6B64\u6B21\u78B0\u649E\u3002\u6B64\u7C7B\u578B\u78B0\u649E\u4F53\u79EF\u4F1A\u6839\u636E\u65B9\u5757\u5C3A\u5BF8\u4EE5\u5706\u67F1\u4F53\u8F6C\u52A8\u60EF\u91CF\u516C\u5F0F\u8C03\u6574\u6574\u4E2A\u521A\u4F53\u7684\u8F6C\u52A8\u60EF\u91CF\uFF0C\u5EFA\u8BAE\u5355\u4E2Asubpart\u4EC5\u5305\u542B\u4E00\u4E2A\u7C7B\u578B\u4E3Awheel\u7684hitbox\uFF0C\u4E14\u5185\u90E8\u4EC5\u5305\u542B\u4E00\u4E2Acube\u3002"
+    },
+    "subsystem": {
+      "type": "string",
+      "default": "",
+      "description": "\u5B50\u7CFB\u7EDF\u540D\u79F0\uFF0C\u7528\u4E8E\u5C06\u6B64\u78B0\u649E\u7BB1\u4E0E\u7279\u5B9A\u5B50\u7CFB\u7EDF\u5173\u8054\uFF0C\u5F53\u6B64\u78B0\u649E\u7BB1\u53D7\u5230\u4F24\u5BB3\u65F6\uFF0C\u5173\u8054\u7684\u5B50\u7CFB\u7EDF\u4F1A\u53D7\u5230\u7B49\u91CF\u4F24\u5BB3\u3002"
+    },
+    "module": {
+      "type": "string",
+      "default": "",
+      "description": "\u5B50\u7CFB\u7EDF\u5185\u90E8\u6A21\u5757\u540D\uFF0C\u4F8B\u5982 \\"barrel\\"\u3001\\"breech\\"\u3001\\"radiator\\"\u3002\u7A7A\u5B57\u7B26\u4E32\u8868\u793A\u4F5C\u7528\u4E8E\u5B50\u7CFB\u7EDF\u6574\u4F53\u3002"
+    },
+    "material": {
+      "allOf": [
+        { "$ref": "../../../base/resource_location.schema.json" }
+      ],
+      "default": "machine_max:default",
+      "description": "\u6750\u6599\u6CE8\u518Cid\uFF0C\u7528\u4E8E\u83B7\u53D6\u6469\u64E6\u7CFB\u6570\u3001\u51CF\u4F24\u5C5E\u6027\u3001\u97F3\u6548\u7B49\u7269\u7406\u5C5E\u6027\u3002"
+    },
+    "thickness": {
+      "type": "number",
+      "minimum": 0.0,
+      "default": 1.0,
+      "description": "\u7B49\u6548\u62A4\u7532\u539A\u5EA6\uFF0C\u5355\u4F4D mm\uFF0C\u7528\u4E8E\u51CF\u4F24\u8BA1\u7B97\u5E76\u63A7\u5236\u78B0\u649E\u65F6\u7684\u80FD\u91CF\u5206\u914D\u3002"
+    },
+    "condition": {
+      "type": "string",
+      "default": "true",
+      "description": "\u751F\u6548\u6761\u4EF6\uFF0C\u4F7F\u7528 molang \u8868\u8FBE\u5F0F\u63A7\u5236\u78B0\u649E\u7BB1\u662F\u5426\u751F\u6548\u3002\u53EF\u7528\u4E8E\u5B9E\u73B0\u73BB\u7483\u88AB\u51FB\u788E\u540E\u5931\u53BB\u547D\u4E2D\u5224\u5B9A\u3001\u62D6\u8F66\u6491\u811A\u653E\u4E0B\u540E\u624D\u6709\u78B0\u649E\u7B49\u529F\u80FD\u3002"
+    },
+    "overwrite": {
+      "type": "object",
+      "description": "\u5728\u5F15\u7528\u6750\u8D28\u4E4B\u4E0A\u53E0\u52A0\u7684\u6750\u8D28\u8986\u5199\u3002",
+      "properties": {
+        "physics": {
+          "type": "object",
+          "description": "\u7269\u7406\u5C5E\u6027\u8986\u5199\uFF1A\u6469\u64E6\u3001\u6ED1\u79FB\u3001\u5F39\u6027\u4E0E\u7834\u574F\u65B9\u5757\u80FD\u529B\u3002",
+          "properties": {
+            "friction": {
+              "allOf": [
+                { "$ref": "../../../base/vector_3d.schema.json" }
+              ],
+              "description": "\u6469\u64E6\u7CFB\u6570\u5411\u91CF [x, y, z]\u3002x = \u4FA7\u5411\uFF0Cy = \u524D\u8FDB\u65B9\u5411\uFF0Cz = \u672A\u4F7F\u7528\u3002"
+            },
+            "slip_adaptation": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "\u6ED1\u79FB\u9002\u914D\u7CFB\u6570\uFF0C\u7528\u4E8E\u8C03\u6574\u6ED1\u52A8\u65F6\u7684\u6469\u64E6\u8868\u73B0\u3002"
+            },
+            "slip_curve": {
+              "type": "object",
+              "description": "\u8F6E\u80CE\u6ED1\u79FB\u6469\u64E6\u66F2\u7EBF\u53C2\u6570\u3002",
+              "properties": {
+                "longitudinal": {
+                  "type": "object",
+                  "description": "\u7EB5\u5411\u6ED1\u79FB\u7387\u66F2\u7EBF\u3002",
+                  "properties": {
+                    "peak_slip_ratio": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "description": "\u5CF0\u503C\u6469\u64E6\u5BF9\u5E94\u7684\u6ED1\u79FB\u7387\u3002"
+                    },
+                    "base_scale": {
+                      "type": "number",
+                      "description": "\u96F6\u6ED1\u79FB\u65F6\u7684\u6469\u64E6\u500D\u7387\u3002"
+                    },
+                    "peak_scale": {
+                      "type": "number",
+                      "description": "peak_slip_ratio \u5904\u7684\u6469\u64E6\u500D\u7387\u3002"
+                    },
+                    "kinetic_scale": {
+                      "type": "number",
+                      "description": "\u9AD8\u6ED1\u79FB\u52A8\u529B\u5B66\u533A\u7684\u6469\u64E6\u500D\u7387\u3002"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "lateral": {
+                  "type": "object",
+                  "description": "\u4FA7\u5411\u6ED1\u79FB\u89D2\u66F2\u7EBF\uFF0C\u89D2\u5EA6\u5355\u4F4D\u4E3A\u5EA6\u3002",
+                  "properties": {
+                    "peak_angle_deg": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "description": "\u5CF0\u503C\u6469\u64E6\u5BF9\u5E94\u7684\u6ED1\u79FB\u89D2\u3002"
+                    },
+                    "kinetic_angle_deg": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "description": "\u52A8\u529B\u5B66\u5E73\u53F0\u533A\u8D77\u70B9\u7684\u6ED1\u79FB\u89D2\u3002"
+                    },
+                    "base_scale": {
+                      "type": "number",
+                      "description": "\u96F6\u6ED1\u79FB\u89D2\u65F6\u7684\u6469\u64E6\u500D\u7387\u3002"
+                    },
+                    "peak_scale": {
+                      "type": "number",
+                      "description": "peak_angle_deg \u5904\u7684\u6469\u64E6\u500D\u7387\u3002"
+                    },
+                    "kinetic_scale": {
+                      "type": "number",
+                      "description": "\u9AD8\u89D2\u5EA6\u52A8\u529B\u5B66\u533A\u7684\u6469\u64E6\u500D\u7387\u3002"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "rolling_friction": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "\u6EDA\u52A8\u6469\u64E6\u7CFB\u6570\u3002"
+            },
+            "spinning_friction": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "\u81EA\u65CB\u6469\u64E6\u7CFB\u6570\u3002"
+            },
+            "restitution": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "\u6062\u590D\u7CFB\u6570\uFF08\u5F39\u6027\uFF09\uFF0C0 = \u5B8C\u5168\u975E\u5F39\u6027\uFF0C1 = \u5B8C\u5168\u5F39\u6027\u3002"
+            },
+            "block_damage_factor": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "\u7834\u574F\u65B9\u5757\u7CFB\u6570\uFF0C0 = \u65E0\u6CD5\u7834\u574F\u65B9\u5757\u3002"
+            }
+          },
+          "additionalProperties": false
+        },
+        "armor": {
+          "type": "object",
+          "description": "\u62A4\u7532\u5C5E\u6027\u8986\u5199\uFF1A\u6297\u7A7F\u3001\u51CF\u4F24\u3001\u8010\u4E45\u8870\u51CF\u4E0E\u6761\u4EF6\u4FEE\u6B63\u3002\u7ED3\u7B97\u987A\u5E8F\uFF1Adamage_modifiers -> (\u4F24\u5BB3 - dmg_resist) * dmg_mult\u3002",
+          "properties": {
+            "rha": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "\u76F8\u5BF9 RHA\uFF08\u5747\u8D28\u8F67\u5236\u88C5\u7532\uFF09\u7684\u6297\u7A7F\u7CFB\u6570\u3002"
+            },
+            "angle_effect": {
+              "type": "boolean",
+              "description": "\u7B49\u6548\u62A4\u7532\u539A\u5EA6\u662F\u5426\u53D7\u547D\u4E2D\u89D2\u5EA6\u5F71\u54CD\u3002"
+            },
+            "dmg_resist": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "\u5728 dmg_mult \u4E4B\u524D\u751F\u6548\u7684\u7EBF\u6027\u51CF\u4F24\u503C\uFF0C\u968F\u8010\u4E45\u8870\u51CF\u3002"
+            },
+            "dmg_mult": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "\u5728 dmg_resist \u4E4B\u540E\u751F\u6548\u7684\u4F24\u5BB3\u500D\u7387\uFF0C\u968F\u8010\u4E45\u8870\u51CF\u3002"
+            },
+            "decay_rha": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "\u8010\u4E45\u5F52\u96F6\u540E\u6B8B\u7559\u7684 RHA \u7CFB\u6570\u3002"
+            },
+            "decay_dmg_resist": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "\u8010\u4E45\u5F52\u96F6\u540E\u6B8B\u7559\u7684\u7EBF\u6027\u51CF\u4F24\u503C\u3002"
+            },
+            "decay_dmg_mult": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "\u8010\u4E45\u5F52\u96F6\u540E\u6B8B\u7559\u7684\u4F24\u5BB3\u500D\u7387\u3002"
+            },
+            "decay_power": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "\u62A4\u7532\u9000\u5316\u66F2\u7EBF\u6307\u6570\uFF1B\u5927\u4E8E 1 \u8868\u793A\u524D\u671F\u9000\u5316\u6162\u3001\u4E34\u8FD1\u5931\u6548\u65F6\u5FEB\uFF0C1 \u8868\u793A\u7EBF\u6027\u9000\u5316\u3002"
+            },
+            "unpen_power": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "\u672A\u5B8C\u5168\u51FB\u7A7F\u65F6\u4F7F\u7528\u7684\u4F24\u5BB3\u6307\u6570\uFF1A\u4F24\u5BB3 * (\u7A7F\u6DF1 / \u7B49\u6548\u62A4\u7532) ^ unpen_power\u3002"
+            },
+            "impact_modifiers": {
+              "allOf": [
+                { "$ref": "modifier/damage_modifier.schema.json" }
+              ],
+              "description": "\u51B2\u51FB\u4FEE\u6B63\uFF0C\u628A\u53D7\u5230\u7684\u4F24\u5BB3\u6309\u89C4\u5219\u6298\u7B97\u4E3A\u4F5C\u7528\u4E8E\u8FDE\u63A5\u70B9\u7684\u51B2\u51FB\u3002"
+            },
+            "penetration_modifiers": {
+              "allOf": [
+                { "$ref": "modifier/damage_modifier.schema.json" }
+              ],
+              "description": "\u7A7F\u6DF1\u4FEE\u6B63\uFF0C\u6309\u53D7\u5230\u7684\u4F24\u5BB3\u8C03\u6574\u7A7F\u6DF1\u3002"
+            },
+            "damage_modifiers": {
+              "allOf": [
+                { "$ref": "modifier/damage_modifier.schema.json" }
+              ],
+              "description": "\u4F24\u5BB3\u4FEE\u6B63\uFF0C\u6309\u4F24\u5BB3\u7C7B\u578B\u8C03\u6574\u6700\u7EC8\u4F24\u5BB3\u3002"
+            }
+          },
+          "additionalProperties": false
+        },
+        "sounds": {
+          "type": "object",
+          "description": "\u547D\u4E2D\u97F3\u6548\u8986\u5199\u3002",
+          "properties": {
+            "hit_un_pen": {
+              "allOf": [
+                { "$ref": "../../../base/sound_event.schema.json" }
+              ],
+              "description": "\u672A\u51FB\u7A7F\u65F6\u7684\u97F3\u6548\u3002"
+            },
+            "hit_pen": {
+              "allOf": [
+                { "$ref": "../../../base/sound_event.schema.json" }
+              ],
+              "description": "\u51FB\u7A7F\u65F6\u7684\u97F3\u6548\u3002"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["type"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "type": "box",
+      "description": "\u6700\u7B80\u78B0\u649E\u7BB1\u793A\u4F8B\uFF0C\u53EA\u5199\u5FC5\u9700\u7684\u5F62\u72B6\u7C7B\u578B"
+    },
+    {
+      "id": "chassis",
+      "type": "box",
+      "subsystem": "subsystem.machine_max.engine",
+      "module": "radiator",
+      "material": "machine_max:heavy_armor",
+      "thickness": 10.0,
+      "overwrite": {
+        "physics": {
+          "block_damage_factor": 1.2,
+          "slip_curve": {
+            "lateral": {
+              "peak_angle_deg": 9.0
+            }
+          }
+        },
+        "armor": {
+          "rha": 1.35,
+          "angle_effect": true,
+          "dmg_mult": 0.9,
+          "impact_modifiers": [
+            {
+              "operation": "multiply",
+              "value": 0.8,
+              "condition": {
+                "type": "always"
+              }
+            }
+          ],
+          "penetration_modifiers": [
+            {
+              "operation": "multiply",
+              "value": 0.9,
+              "condition": {
+                "type": "always"
+              }
+            }
+          ],
+          "damage_modifiers": [
+            {
+              "operation": "add",
+              "value": -1.0,
+              "condition": {
+                "type": "always"
+              }
+            }
+          ],
+          "decay_rha": 0.6,
+          "decay_power": 2.0,
+          "unpen_power": 0.15
+        },
+        "sounds": {
+          "hit_un_pen": {
+            "sound_id": "machine_max:hit_box.hit.up_pen.metal",
+            "range": 64
+          },
+          "hit_pen": {
+            "sound_id": "machine_max:hit_box.hit.pen.metal",
+            "range": 64
+          }
+        }
+      },
+      "condition": "!local.has_connector('connector.machine_max.chassis_connection')",
+      "description": "\u5E26\u6750\u8D28\u8986\u5199\u7684\u78B0\u649E\u7BB1\u793A\u4F8B\uFF1Aphysics / armor / sounds \u4E09\u7EC4\u5206\u522B\u6309\u9700\u8986\u5199"
+    }
+  ]
 }`, "zh_cn/schemas/part/subpart/hit_box/modifier/condition/condition.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/modifier/condition/condition.json",\r\n  "title": "\u6761\u4EF6",\r\n  "description": "\u7528\u4E8E\u4F24\u5BB3\u4FEE\u6539\u5668\u7684\u6761\u4EF6\u5224\u65AD\u7CFB\u7EDF\u3002\u652F\u6301\u5D4C\u5957\u903B\u8F91\u8FD0\u7B97\u3002",\r\n  "allOf": [\r\n    { "$ref": "condition_base.schema.json"}\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/hit_box/modifier/condition/condition_base.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/part/subpart/hit_box/modifier/condition/condition_base.json",\r
@@ -5156,7 +5613,9 @@
       "properties": {\r
         "type": { "const": "damage_type" },\r
         "id": {\r
-          "$ref": "../../../../../base/resource_location.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../../../../base/resource_location.schema.json" }\r
+          ],\r
           "description": "\u4F24\u5BB3\u7C7B\u578B\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u4F8B\u5982\uFF1A'minecraft:fly_into_wall'\u3002"\r
         }\r
       },\r
@@ -5168,7 +5627,9 @@
       "properties": {\r
         "type": { "const": "damage_tag" },\r
         "id": {\r
-          "$ref": "../../../../../base/resource_location.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../../../../base/resource_location.schema.json" }\r
+          ],\r
           "description": "\u4F24\u5BB3\u6807\u7B7E\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u4F8B\u5982\uFF1A'machine_max:has_pen_depth'\u3002"\r
         }\r
       },\r
@@ -5180,7 +5641,9 @@
       "properties": {\r
         "type": { "const": "entity_type" },\r
         "id": {\r
-          "$ref": "../../../../../base/resource_location.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../../../../base/resource_location.schema.json" }\r
+          ],\r
           "description": "\u5B9E\u4F53\u7C7B\u578B\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u4F8B\u5982\uFF1A'minecraft:slime'\u3002"\r
         }\r
       },\r
@@ -5192,7 +5655,9 @@
       "properties": {\r
         "type": { "const": "entity_tag" },\r
         "id": {\r
-          "$ref": "../../../../../base/resource_location.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../../../../base/resource_location.schema.json" }\r
+          ],\r
           "description": "\u5B9E\u4F53\u6807\u7B7E\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u4F8B\u5982\uFF1A'minecraft:skeletons'\u3002"\r
         }\r
       },\r
@@ -5232,7 +5697,9 @@
       "properties": {\r
         "type": { "const": "not" },\r
         "condition": {\r
-          "$ref": "condition.schema.json",\r
+          "allOf": [\r
+            { "$ref": "condition.schema.json" }\r
+          ],\r
           "description": "\u5B50\u6761\u4EF6\uFF0C\u4E0D\u6EE1\u8DB3\u6B64\u6761\u4EF6\u65F6\u8FD4\u56DEtrue\u3002"\r
         }\r
       },\r
@@ -5241,7 +5708,7 @@
       "description": "\u903B\u8F91\u975E\u6761\u4EF6\uFF0C\u53CD\u8F6C\u5B50\u6761\u4EF6\u7684\u7ED3\u679C\u3002"\r
     }\r
   }\r
-}`, "zh_cn/schemas/part/subpart/hit_box/modifier/damage_modifier.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/modifier/damage_modifier.json",\r\n  "title": "\u4F24\u5BB3\u4FEE\u6539\u5668",\r\n  "description": "\u5305\u542B\u591A\u4E2A\u4FEE\u6539\u5668\u6761\u76EE\u7684\u5217\u8868\uFF0C\u6309\u987A\u5E8F\u5E94\u7528\u3002\u6BCF\u4E2A\u4FEE\u6539\u5668\u6761\u76EE\u6839\u636E\u6761\u4EF6\u51B3\u5B9A\u662F\u5426\u751F\u6548\u3002",\r\n  "type": "array",\r\n  "items": {\r\n    "$ref": "modifier_entry.schema.json"\r\n  },\r\n  "default": [],\r\n  "examples": [\r\n    [\r\n      {\r\n        "operation": "add",\r\n        "value": -5.0,\r\n        "condition": {\r\n          "type": "damage_type",\r\n          "id": "minecraft:fly_into_wall"\r\n        }\r\n      },\r\n      {\r\n        "operation": "multiply",\r\n        "value": 0.05,\r\n        "condition": {\r\n          "type": "damage_type",\r\n          "id": "minecraft:sweet_berry_bush"\r\n        }\r\n      }\r\n    ]\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/hit_box/modifier/modifier_entry.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/modifier/modifier_entry.json",\r\n  "title": "\u4FEE\u6539\u5668\u6761\u76EE",\r\n  "description": "\u4F24\u5BB3\u4FEE\u6539\u5668\u7684\u5355\u4E2A\u6761\u76EE\uFF0C\u5305\u542B\u64CD\u4F5C\u7B26\u3001\u6570\u503C\u548C\u751F\u6548\u6761\u4EF6\u3002\u591A\u4E2A\u4FEE\u6539\u5668\u6309\u987A\u5E8F\u5E94\u7528\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "operation": {\r\n      "$ref": "../../../../base/operation.schema.json",\r\n      "description": "\u64CD\u4F5C\u7C7B\u578B\u3002add\uFF1A\u5C06\u503C\u52A0\u5230\u57FA\u7840\u503C\u4E0A\uFF1Bmultiply\uFF1A\u5C06\u57FA\u7840\u503C\u4E58\u4EE5\u8BE5\u503C\u3002"\r\n    },\r\n    "value": {\r\n      "type": "number",\r\n      "description": "\u64CD\u4F5C\u7684\u503C\u3002\u5BF9\u4E8Eadd\u64CD\u4F5C\uFF0C\u53EF\u4EE5\u662F\u6B63\u6570\u6216\u8D1F\u6570\uFF08\u5982-5\u8868\u793A\u51CF\u4F24\uFF09\uFF1B\u5BF9\u4E8Emultiply\u64CD\u4F5C\uFF0C\u901A\u5E38\u662F\u6B63\u6570\uFF08\u59820.05\u8868\u793A\u524A\u51CF\u81F35%\uFF09\u3002"\r\n    },\r\n    "condition": {\r\n      "$ref": "condition/condition.schema.json",\r\n      "description": "\u6761\u4EF6\uFF0C\u5F53\u6761\u4EF6\u6EE1\u8DB3\u65F6\u5E94\u7528\u6B64\u4FEE\u6539\u5668\u3002"\r\n    }\r\n  },\r\n  "required": ["operation", "value", "condition"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "operation": "add",\r\n      "value": -5.0,\r\n      "condition": {\r\n        "type": "damage_type",\r\n        "id": "minecraft:fly_into_wall"\r\n      },\r\n      "description": "\u5C06\u649E\u51FB\u4F24\u5BB3\u524A\u51CF5\u70B9\uFF08\u4E0D\u5C0F\u4E8E0\uFF09"\r\n    },\r\n    {\r\n      "operation": "multiply",\r\n      "value": 0.05,\r\n      "condition": {\r\n        "type": "entity_type",\r\n        "id": "minecraft:slime"\r\n      },\r\n      "description": "\u5C06\u53F2\u83B1\u59C6\u9020\u6210\u7684\u4F24\u5BB3\u524A\u51CF\u81F35%"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/hydrodynamic_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subpart/hydrodynamic_attr.schema.json",\r\n  "title": "\u6D41\u4F53\u52A8\u529B\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u90E8\u4EF6\u5728\u6D41\u4F53\uFF08\u7A7A\u6C14\u3001\u6C34\uFF09\u4E2D\u7684\u52A8\u529B\u5C5E\u6027\uFF0C\u5305\u62EC\u963B\u529B\u3001\u5347\u529B\u7B49\u3002\u7528\u4E8E\u6A21\u62DF\u7A7A\u6C14\u52A8\u529B\u5B66\u548C\u6C34\u52A8\u529B\u5B66\u6548\u679C\u3002\\n\\n## \u6C14\u52A8\u8BA1\u7B97\u6A21\u578B\\n\\n\u6D41\u4F53\u52A8\u529B\u8BA1\u7B97\u57FA\u4E8E\u4EE5\u4E0B\u7269\u7406\u6A21\u578B\uFF1A\\n\\n### \u9ED8\u8BA4\u6A21\u5F0F\uFF08advanced = false\uFF09\\n- **\u963B\u529B\u8BA1\u7B97**\uFF1A\u5404\u65B9\u5411\u4F7F\u7528\u4E00\u9636\uFF08\u7C98\u6027\uFF09+ \u4E8C\u9636\uFF08\u60EF\u6027\uFF09\u6A21\u578B\\n- **\u5347\u529B\u8BA1\u7B97**\uFF1A\u7B80\u5355\u901F\u5EA6\u5E73\u65B9\u6A21\u578B\uFF08x/y/z_lift\uFF09\\n\\n### \u9AD8\u7EA7\u6C14\u52A8\u6A21\u5F0F\uFF08advanced = true\uFF09\\n- **\u5728\u9AD8\u7EA7\u6C14\u52A8\u7EA6\u5B9A\u65B9\u5411\u4E0A**\uFF1A\u4F7F\u7528\u5347\u529B\u7EBF\u6A21\u578B\u8BA1\u7B97\u5347\u529B\u4E0E\u4E8C\u9636\u963B\u529B\\n- **\u4E00\u9636\u963B\u529B\uFF08\u7C98\u6027\uFF09**\uFF1A\u4ECD\u7136\u4FDD\u7559\u5E76\u53E0\u52A0\\n- **\u975E\u5347\u529B\u65B9\u5411**\uFF1A\u4ECD\u4F7F\u7528\u539F\u6709\u963B\u529B\u6A21\u578B\\n\\n**\u6CE8\u610F\uFF1A\u9AD8\u7EA7\u6C14\u52A8\u6A21\u5F0F\u76EE\u524D\u4ECD\u4E3AWIP\u3002\u5B83\u5DF2\u63A5\u5165\u5B9E\u9645\u53D7\u529B\u8BA1\u7B97\uFF0C\u4F46\u5C1A\u7F3A\u5C11\u5145\u5206\u7684\u5B98\u65B9\u5B9E\u88C5\u4E0E\u957F\u671F\u8C03\u6821\u9A8C\u8BC1\u3002**\\n\\n## \u5750\u6807\u7EA6\u5B9A\\n- **\u6D41\u4F53\u52A8\u529B\u8BA1\u7B97\u70B9\u672C\u5730\u5750\u6807\u7CFB**\uFF1A\\n  - y+ \uFF1A\u5347\u529B\u6CD5\u7EBF\u65B9\u5411\\n  - z- \uFF1A\u6765\u6D41\u65B9\u5411\uFF08\u524D\u5411\uFF09\\n\\n## \u8BE6\u7EC6\u8BA1\u7B97\u6A21\u578B\\n\\n### \u963B\u529B\u8BA1\u7B97\\n- **\u4E00\u9636\u963B\u529B\uFF08\u7C98\u6027\u963B\u529B\uFF09**\uFF1A\u4E0E\u6D41\u4F53\u7C98\u5EA6\u76F8\u5173\uFF0C\u4F7F\u7528\u6E7F\u8868\u9762\u79EF\u8BA1\u7B97\\n  - \u516C\u5F0F\uFF1A`F_viscous = viscosity \xD7 C_d1 \xD7 v \xD7 wettedArea`\\n  - \u9002\u7528\u4E8E\u4F4E\u901F\u6D41\u52A8\uFF0C\u4E0E\u901F\u5EA6\u7EBF\u6027\u76F8\u5173\\n- **\u4E8C\u9636\u963B\u529B\uFF08\u538B\u5DEE\u963B\u529B\uFF09**\uFF1A\u4E0E\u6D41\u4F53\u5BC6\u5EA6\u76F8\u5173\uFF0C\u4F7F\u7528\u6295\u5F71\u9762\u79EF\u8BA1\u7B97\\n  - \u516C\u5F0F\uFF1A`F_pressure = 0.5 \xD7 density \xD7 C_d2 \xD7 v\xB2 \xD7 projectedArea`\\n  - \u9002\u7528\u4E8E\u9AD8\u901F\u6D41\u52A8\uFF0C\u4E0E\u901F\u5EA6\u5E73\u65B9\u76F8\u5173\\n\\n### \u5347\u529B\u8BA1\u7B97\\n- **\u5347\u529B**\uFF1A\u4E0E\u6D41\u4F53\u5BC6\u5EA6\u76F8\u5173\uFF0C\u4F7F\u7528\u6295\u5F71\u9762\u79EF\u8BA1\u7B97\\n  - \u516C\u5F0F\uFF1A`F_lift = 0.5 \xD7 density \xD7 C_L \xD7 v \xD7 projectedArea`\\n  - \u57FA\u4E8E\u5782\u76F4\u4E8E\u6D41\u52A8\u65B9\u5411\u7684\u901F\u5EA6\u5206\u91CF\\n\\n### \u9762\u79EF\u5B9A\u4E49\\n- **\u6295\u5F71\u9762\u79EF**\uFF1A\u5782\u76F4\u4E8E\u6D41\u52A8\u65B9\u5411\u7684\u9762\u79EF\\n- **\u6E7F\u8868\u9762\u79EF**\uFF1A\u4E0E\u6D41\u4F53\u63A5\u89E6\u7684\u603B\u8868\u9762\u79EF\uFF0C\u8FD1\u4F3C\u4E3A\u6295\u5F71\u9762\u79EF\u4E4B\u548C \xD7 2\\n\\n## \u53C2\u6570\u8BF4\u660E\\n\u963B\u529B\u7CFB\u6570\u5217\u8868\u5FC5\u987B\u5305\u542B2\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\uFF0C\u5347\u529B\u7CFB\u6570\u4E3A\u5355\u4E2A\u6570\u503C\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "scale": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "\u7F29\u653E\u7CFB\u6570\uFF0C\u7528\u4E8E\u6574\u4F53\u8C03\u6574\u6D41\u4F53\u52A8\u529B\u6548\u679C\u3002"\r\n    },\r\n    "effective_range": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "\u6709\u6548\u8BA1\u7B97\u8303\u56F4\uFF0C\u5355\u4F4D\u4E3Am\uFF0C\u5F53\u5728\u6765\u6D41\u65B9\u5411\u4E0A\u7684\u6B64\u8DDD\u79BB\u5185\u68C0\u6D4B\u5230\u906E\u6321\u65F6\u5C06\u4F1A\u964D\u4F4E\u90E8\u4EF6\u7684\u5B9E\u9645\u7A7A\u6C14\u963B\u529B\u7CFB\u6570\uFF0C\u4EE5\u6A21\u62DF\u5982\u8F66\u58F3\u906E\u6321\u6574\u6D41\u5E26\u6765\u7684\u51CF\u963B\u6548\u679C\u3002"\r\n    },\r\n    "transonic_amplifier": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 5.0,\r\n      "description": "\u8DE8\u97F3\u901F\u653E\u5927\u7CFB\u6570\uFF0C\u7528\u4E8E\u6A21\u62DF\u8DE8\u97F3\u901F\u65F6\u7684\u963B\u529B\u53D8\u5316\u3002\u5F53\u901F\u5EA6\u63A5\u8FD1\u97F3\u901F\u65F6\uFF0C\u963B\u529B\u4F1A\u6025\u5267\u589E\u52A0\u3002"\r\n    },\r\n    "front_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "\u524D\u5411\u963B\u529B\u7CFB\u6570\u5217\u8868\uFF0C\u5FC5\u987B\u5305\u542B\u4E24\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\u3002\u4E00\u9636\u7CFB\u6570\u7528\u4E8E\u4F4E\u901F\u7C98\u6027\u963B\u529B\u8BA1\u7B97\uFF0C\u4E8C\u9636\u7CFB\u6570\u7528\u4E8E\u9AD8\u901F\u538B\u5DEE\u963B\u529B\u8BA1\u7B97\u3002"\r\n    },\r\n    "back_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "\u540E\u5411\u963B\u529B\u7CFB\u6570\u5217\u8868\uFF0C\u5FC5\u987B\u5305\u542B\u4E24\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\u3002"\r\n    },\r\n    "left_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "\u5DE6\u5411\u963B\u529B\u7CFB\u6570\u5217\u8868\uFF0C\u5FC5\u987B\u5305\u542B\u4E24\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\u3002"\r\n    },\r\n    "right_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "\u53F3\u5411\u963B\u529B\u7CFB\u6570\u5217\u8868\uFF0C\u5FC5\u987B\u5305\u542B\u4E24\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\u3002"\r\n    },\r\n    "up_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "\u4E0A\u5411\u963B\u529B\u7CFB\u6570\u5217\u8868\uFF0C\u5FC5\u987B\u5305\u542B\u4E24\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\u3002"\r\n    },\r\n    "down_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "\u4E0B\u5411\u963B\u529B\u7CFB\u6570\u5217\u8868\uFF0C\u5FC5\u987B\u5305\u542B\u4E24\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\u3002"\r\n    },\r\n    "x_lift": {\r\n      "type": "number",\r\n      "default": 0.0,\r\n      "description": "X\u8F74\u5347\u529B\u7CFB\u6570\u3002\u57FA\u4E8EY-Z\u5E73\u9762\u901F\u5EA6\u5206\u91CF\u8BA1\u7B97\u5347\u529B\uFF0C\u901A\u5E38\u4E3A0\u8868\u793A\u4E0D\u4EA7\u751FX\u8F74\u5347\u529B\u3002"\r\n    },\r\n    "y_lift": {\r\n      "type": "number",\r\n      "default": 0.0,\r\n      "description": "Y\u8F74\u5347\u529B\u7CFB\u6570\u3002\u57FA\u4E8EX-Z\u5E73\u9762\u901F\u5EA6\u5206\u91CF\u8BA1\u7B97\u5347\u529B\uFF0C\u901A\u5E38\u4E3A0\u8868\u793A\u4E0D\u4EA7\u751FY\u8F74\u5347\u529B\u3002"\r\n    },\r\n    "z_lift": {\r\n      "type": "number",\r\n      "default": 0.0,\r\n      "description": "Z\u8F74\u5347\u529B\u7CFB\u6570\u3002\u57FA\u4E8EX-Y\u5E73\u9762\u901F\u5EA6\u5206\u91CF\u8BA1\u7B97\u5347\u529B\uFF0C\u901A\u5E38\u4E3A0\u8868\u793A\u4E0D\u4EA7\u751FZ\u8F74\u5347\u529B\u3002"\r\n    },\r\n    "advanced": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "\u662F\u5426\u542F\u7528\u9AD8\u7EA7\u6C14\u52A8\u6A21\u5F0F\u3002\u542F\u7528\u540E\u5C06\u5728\u9AD8\u7EA7\u6C14\u52A8\u7EA6\u5B9A\u65B9\u5411\u4E0A\u4F7F\u7528\u5347\u529B\u7EBF\u6A21\u578B\u8BA1\u7B97\u5347\u529B\u4E0E\u4E8C\u9636\u963B\u529B\u3002\u6CE8\u610F\uFF1A\u8BE5\u6A21\u5F0F\u76EE\u524D\u4ECD\u4E3AWIP\uFF0C\u4F46\u5DF2\u63A5\u5165\u5B9E\u9645\u53D7\u529B\u8BA1\u7B97\uFF0C\u5C1A\u7F3A\u5C11\u5145\u5206\u7684\u5B98\u65B9\u5B9E\u88C5\u4E0E\u957F\u671F\u8C03\u6821\u9A8C\u8BC1\u3002"\r\n    },\r\n    "advanced_aero": {\r\n      "type": "object",\r\n      "properties": {\r\n        "lift_slope": {\r\n          "type": "number",\r\n          "default": 6.28,\r\n          "description": "\u5347\u529B\u7EBF\u659C\u7387 dCl/d\u03B1\uFF08\u5355\u4F4D\uFF1A1/rad\uFF09\uFF0C\u8584\u7FFC\u7406\u8BBA\u9ED8\u8BA4\u503C\u4E3A2\u03C0"\r\n        },\r\n        "alpha0": {\r\n          "type": "number",\r\n          "default": 0.0,\r\n          "description": "\u96F6\u5347\u653B\u89D2\uFF08\u5355\u4F4D\uFF1Arad\uFF09\uFF0C\u6B64\u653B\u89D2\u4E0B\u65E0\u5347\u529B"\r\n        },\r\n        "alpha_stall": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "default": 0.52,\r\n          "description": "\u5931\u901F\u653B\u89D2\uFF08\u5355\u4F4D\uFF1Arad\uFF0C\u53D6\u6B63\u503C\uFF0C\u5BF9\u79F0\u5931\u901F\uFF09\uFF0C\u7EA630\xB0"\r\n        },\r\n        "cd0": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "default": 0.02,\r\n          "description": "\u96F6\u5347\u963B\u529B\u7CFB\u6570"\r\n        },\r\n        "k_induced": {\r\n          "type": "number",\r\n          "default": 0.05,\r\n          "description": "\u8BF1\u5BFC\u963B\u529B\u7CFB\u6570\uFF08\u2248 1 / (\u03C0 * AR * e)\uFF09"\r\n        }\r\n      },\r\n      "default": {\r\n        "lift_slope": 6.28,\r\n        "alpha0": 0.0,\r\n        "alpha_stall": 0.52,\r\n        "cd0": 0.02,\r\n        "k_induced": 0.05\r\n      },\r\n      "description": "\u9AD8\u7EA7\u6C14\u52A8\u53C2\u6570\u914D\u7F6E\uFF0C\u4EC5\u5728advanced = true\u65F6\u751F\u6548\u3002\u57FA\u4E8E\u7B80\u5316\u5347\u529B\u7EBF\u7406\u8BBA\uFF1A\u5347\u529B\u7CFB\u6570 Cl = liftSlope * (\u03B1 - alpha0)\uFF0C\u963B\u529B\u7CFB\u6570 Cd = cd0 + kInduced * Cl\xB2\u3002"\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "scale": 1.0,\r\n      "effective_range": 5.0,\r\n      "transonic_amplifier": 5.0,\r\n      "front_drag": [0.2, 1.5],\r\n      "back_drag": [0.3, 1.8],\r\n      "left_drag": [0.15, 1.2],\r\n      "right_drag": [0.15, 1.2],\r\n      "up_drag": [0.1, 0.8],\r\n      "down_drag": [0.1, 0.8],\r\n      "x_lift": 0.0,\r\n      "y_lift": 0.0,\r\n      "z_lift": 0.0,\r\n      "advanced": false,\r\n      "description": "\u5178\u578B\u7684\u8F66\u8F86\u7A7A\u6C14\u52A8\u529B\u5B66\u914D\u7F6E\uFF0C\u524D\u5411\u963B\u529B\u8F83\u5927\uFF0C\u4FA7\u5411\u548C\u5782\u76F4\u65B9\u5411\u963B\u529B\u8F83\u5C0F"\r\n    },\r\n    {\r\n      "scale": 1.2,\r\n      "effective_range": 4.0,\r\n      "transonic_amplifier": 4.0,\r\n      "front_drag": [0.15, 0.5],\r\n      "back_drag": [0.25, 0.8],\r\n      "left_drag": [0.1, 0.6],\r\n      "right_drag": [0.1, 0.6],\r\n      "up_drag": [0.08, 0.4],\r\n      "down_drag": [0.08, 0.4],\r\n      "x_lift": 0.0,\r\n      "y_lift": 0.0,\r\n      "z_lift": 0.0,\r\n      "advanced": true,\r\n      "advanced_aero": {\r\n        "lift_slope": 5.5,\r\n        "alpha0": -0.05,\r\n        "alpha_stall": 0.45,\r\n        "cd0": 0.015,\r\n        "k_induced": 0.04\r\n      },\r\n      "description": "\u9AD8\u7EA7\u6C14\u52A8\u6A21\u5F0F\u914D\u7F6E\u793A\u4F8B\uFF0C\u4F7F\u7528\u5347\u529B\u7EBF\u7406\u8BBA\u8BA1\u7B97\u5347\u529B\u548C\u963B\u529B\u3002\u6CE8\u610F\uFF1A\u8BE5\u6A21\u5F0F\u76EE\u524D\u4ECD\u4E3AWIP\uFF0C\u4F46\u5DF2\u63A5\u5165\u5B9E\u9645\u53D7\u529B\u8BA1\u7B97\uFF0C\u5C1A\u7F3A\u5C11\u5145\u5206\u7684\u5B98\u65B9\u5B9E\u88C5\u4E0E\u957F\u671F\u8C03\u6821\u9A8C\u8BC1\u3002"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/interact_box_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/interact_box_attr.schema.json",\r\n  "title": "\u4EA4\u4E92\u7BB1\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u4EA4\u4E92\u7BB1\u7684\u5C5E\u6027\uFF0C\u7528\u4E8E\u73A9\u5BB6\u4E0E\u90E8\u4EF6\u7684\u4EA4\u4E92\u3002\u4EA4\u4E92\u7BB1\u901A\u5E38\u5BF9\u5E94\u6A21\u578B\u4E2D\u7684\u9AA8\u9ABC\uFF0C\u5F53\u73A9\u5BB6\u70B9\u51FB\u65F6\u89E6\u53D1\u4FE1\u53F7\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "bone": {\r\n      "type": "string",\r\n      "description": "\u4EA4\u4E92\u533A\u5BF9\u5E94\u7684\u9AA8\u9ABC\u540D\u79F0\uFF0C\u6A21\u578B\u4E2D\u7684\u9AA8\u9ABC\u5C06\u4F5C\u4E3A\u4EA4\u4E92\u533A\u57DF\u3002"\r\n    },\r\n    "signal_targets": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "type": "array",\r\n        "items": { "type": "string" }\r\n      },\r\n      "description": "\u4FE1\u53F7\u4F20\u8F93\u76EE\u6807\uFF0C\u952E\u4E3A\u4FE1\u53F7\u9891\u9053\uFF0C\u503C\u4E3A\u76EE\u6807\u5217\u8868\uFF08\u5B50\u7CFB\u7EDF/\u8FDE\u63A5\u70B9\u540D/part/global\uFF09\u3002\u4F8B\u5982\uFF1A{\\"door_interact\\": [\\"door_controller\\"]}\u3002"\r\n    },\r\n    "interact_mode": {\r\n      "type": "string",\r\n      "enum": ["fast", "accurate"],\r\n      "default": "fast",\r\n      "description": "\u4EA4\u4E92\u6A21\u5F0F\u3002fast\uFF1A\u5FEB\u901F\u4EA4\u4E92\uFF0C\u4EC5\u9700\u8981\u73A9\u5BB6\u4E0E\u4EA4\u4E92\u533A\u76F8\u4EA4\uFF1Baccurate\uFF1A\u9700\u8981\u73A9\u5BB6\u7784\u51C6\u4EA4\u4E92\u533A\u3002\u4E8C\u8005\u4E2Daccurate\u4F18\u5148\u7EA7\u9AD8\u4E8Efast\u3002"\r\n    },\r\n    "condition": {\r\n      "type": "string",\r\n      "enum": ["AND", "OR", "NAND", "NOR", "XOR", "XNOR"],\r\n      "default": "NOR",\r\n      "description": "\u4EA4\u4E92\u533A\u53EF\u7528\u7684\u6761\u4EF6\uFF0CAND: \u6240\u6709\u8F93\u5165\u4FE1\u53F7\u90FD\u4E0D\u4E3A0\uFF1BOR: \u4EFB\u610F\u4E00\u4E2A\u8F93\u5165\u4FE1\u53F7\u4E0D\u4E3A0\uFF1BNAND: \u6240\u6709\u8F93\u5165\u4FE1\u53F7\u90FD\u4E3A0\uFF1BNOR: \u4EFB\u610F\u4E00\u4E2A\u8F93\u5165\u4FE1\u53F7\u4E3A0\uFF1BXOR: \u53EA\u6709\u4E00\u4E2A\u8F93\u5165\u4FE1\u53F7\u4E3A1\uFF1BXNOR: \u53EA\u6709\u4E00\u4E2A\u8F93\u5165\u4FE1\u53F7\u4E3A0\u3002"\r\n    }\r\n  },\r\n  "required": ["bone", "signal_targets"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "bone": "DoorHandle",\r\n      "signal_targets": {\r\n        "door_interact": ["door_controller"]\r\n      },\r\n      "condition": "NOR",\r\n      "description": "\u95E8\u628A\u624B\u4EA4\u4E92\u7BB1\uFF0C\u89E6\u53D1\u95E8\u63A7\u5236\u5668"\r\n    },\r\n    {\r\n      "bone": "Lever",\r\n      "signal_targets": {\r\n        "lever_pull": ["engine_start", "lights"]\r\n      },\r\n      "interact_mode": "toggle",\r\n      "condition": "OR",\r\n      "description": "\u63A7\u5236\u6746\u4EA4\u4E92\u7BB1\uFF0C\u5207\u6362\u5F15\u64CE\u548C\u706F\u5149\u72B6\u6001"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/sub_part_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/sub_part_attr.schema.json",\r\n  "title": "\u5B50\u90E8\u4EF6\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u8F7D\u5177\u90E8\u4EF6\u4E2D\u7684\u4E00\u4E2A\u5B50\u90E8\u4EF6\uFF08\u6700\u5C0F\u8FD0\u52A8\u5355\u5143\uFF09\u7684\u5C5E\u6027\uFF0C\u5305\u542B\u7269\u7406\u7279\u6027\u3001\u78B0\u649E\u68C0\u6D4B\u3001\u8FDE\u63A5\u70B9\u548C\u5B50\u7CFB\u7EDF\u7B49",\r\n  "type": "object",\r\n  "properties": {\r\n    "start_bone": {\r\n      "type": "string",\r\n      "default": "",\r\n      "description": "\u5B50\u90E8\u4EF6\u7684\u8D77\u59CB\u9AA8\u9ABC\u540D\u79F0\uFF0C\u7528\u4E8E\u4ECE\u6A21\u578B\u4E2D\u9009\u62E9\u8981\u6E32\u67D3\u548C\u8BA1\u7B97\u78B0\u649E\u7684\u9AA8\u9ABC\u96C6\u5408\u3002\u82E5\u4E3A\u7A7A\uFF0C\u5219\u4F7F\u7528\u6574\u4E2A\u6A21\u578B\u7684\u6240\u6709\u9AA8\u9ABC"\r\n    },\r\n    "end_bones": {\r\n      "type": "array",\r\n      "items": {\r\n        "type": "string"\r\n      },\r\n      "default": [],\r\n      "description": "\u7ED3\u675F\u9AA8\u9ABC\u540D\u79F0\u5217\u8868\uFF0C\u5728\u8D77\u59CB\u9AA8\u9ABC\u548C\u7ED3\u675F\u9AA8\u9ABC\u4E4B\u95F4\u7684\u9AA8\u9ABC\u5C06\u88AB\u5305\u542B\u5728\u5B50\u90E8\u4EF6\u4E2D\u3002\u7528\u4E8E\u6392\u9664\u4E0D\u9700\u8981\u7684\u90E8\u5206"\r\n    },\r\n    "durability": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 20.0,\r\n      "description": "\u5B50\u90E8\u4EF6\u57FA\u7840\u751F\u547D\u503C\uFF0C\u964D\u81F30\u65F6\u8BE5\u5B50\u90E8\u4EF6\u7684\u6240\u6709\u5B50\u7CFB\u7EDF\u4F1A\u762B\u75EA\u3002\u6CE8\u610F\uFF1A\u591A\u4E2A\u5B50\u90E8\u4EF6\u53EF\u5171\u4EAB\u8010\u4E45\u5EA6\uFF08\u7531\u90E8\u4EF6\u5B9A\u4E49\u4E2D\u7684share_durability\u63A7\u5236\uFF09"\r\n    },\r\n    "mass": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 25.0,\r\n      "description": "\u5B50\u90E8\u4EF6\u8D28\u91CF(kg)\uFF0C\u5FC5\u987B\u5927\u4E8E0\uFF0C\u7528\u4E8E\u7269\u7406\u8BA1\u7B97"\r\n    },\r\n    "mass_center": {\r\n      "type": "string",\r\n      "default": "mass_center",\r\n      "description": "\u8D28\u5FC3\u5B9A\u4F4D\u5668\u540D\u79F0\uFF0C\u7528\u4E8E\u6307\u5B9A\u6A21\u578B\u4E2D\u7684\u540C\u540D\u5B9A\u4F4D\u5668\u4F5C\u4E3A\u8D28\u5FC3\u4F4D\u7F6E\u3002\u82E5\u672A\u6307\u5B9A\u6216\u672A\u627E\u5230\u5B9A\u4F4D\u5668\uFF0C\u5219\u4F1A\u4EE5\u78B0\u649E\u4F53\u79EF\u7684\u51E0\u4F55\u4E2D\u5FC3\u4F5C\u4E3A\u8D28\u5FC3\u3002"\r\n    },\r\n    "projected_area": {\r\n      "$ref": "../../base/vector_3d.schema.json",\r\n      "default": {"x": 0, "y": 0, "z": 0},\r\n      "description": "\u5B50\u90E8\u4EF6\u5728\u4E09\u4E2A\u8F74\u5411\u4E0A\u7684\u6295\u5F71\u9762\u79EF(m\xB2)\uFF0C\u7528\u4E8E\u8BA1\u7B97\u7A7A\u6C14\u963B\u529B"\r\n    },\r\n    "block_collision": {\r\n      "type": "string",\r\n      "enum": ["true", "false", "ground"],\r\n      "default": "true",\r\n      "description": "\u5730\u5F62\u78B0\u649E\u6A21\u5F0F\uFF1Atrue\uFF08\u9ED8\u8BA4\uFF0C\u4E0E\u6240\u6709\u65B9\u5757\u78B0\u649E\uFF09\uFF0Cground\uFF08\u4EC5\u4E0E\u90E8\u4EF6\u4E4B\u4E0B\u7684\u5730\u9762\u65B9\u5757\u78B0\u649E\uFF09\uFF0Cfalse\uFF08\u4E0D\u4E0E\u4EFB\u4F55\u65B9\u5757\u78B0\u649E\uFF09"\r\n    },\r\n    "collision_height": {\r\n      "type": "number",\r\n      "default": -1.0,\r\n      "description": "\u78B0\u649E\u68C0\u6D4B\u9AD8\u5EA6(m)\uFF0C\u906D\u9047\u7684\u969C\u788D\u5C0F\u4E8E\u6B64\u9AD8\u5EA6\u65F6\u4E0D\u4E0E\u969C\u788D\u53D1\u751F\u78B0\u649E\uFF08\u65B9\u5757\u78B0\u649E\u6A21\u5F0F\u9700\u8981\u4E3Aground\uFF09\u3002\u9ED8\u8BA4-1.0\u8868\u793A\u6240\u6709\u969C\u788D\u5747\u78B0\u649E"\r\n    },\r\n    "climb_assist": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "\u6500\u722C\u8F85\u52A9\uFF0C\u662F\u5426\u542F\u7528\u6500\u722C\u8F85\u52A9\u529F\u80FD"\r\n    },\r\n    "hit_boxes": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "hit_box/hit_box_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "minProperties": 1,\r\n      "description": "\u78B0\u649E\u7BB1\u5B9A\u4E49\uFF0C\u952E\u4E3A\u9AA8\u9ABC\u540D\u79F0\uFF0C\u4F1A\u5BFB\u627E\u540D\u79F0\u5339\u914D\u7684\u9AA8\u9ABC\uFF0C\u5E76\u6839\u636E\u5176\u4E2D\u7684\u65B9\u5757\u521B\u5EFA\u4E0D\u540C\u5F62\u72B6\u7684\u78B0\u649E\u4F53\u3002\u6BCF\u4E2A\u5B50\u90E8\u4EF6\u81F3\u5C11\u9700\u8981\u4E00\u4E2A\u78B0\u649E\u7BB1"\r\n    },\r\n    "interact_boxes": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "interact_box_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "description": "\u4EA4\u4E92\u7BB1\u5B9A\u4E49\uFF0C\u952E\u4E3A\u4EA4\u4E92\u7BB1\u540D\u79F0\uFF0C\u503C\u4E3A\u4EA4\u4E92\u7BB1\u5C5E\u6027\u3002\u7528\u4E8E\u5B9A\u4E49\u73A9\u5BB6\u53EF\u4EE5\u4EA4\u4E92\u7684\u533A\u57DF"\r\n    },\r\n    "connectors": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "connector/connector_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "description": "\u8FDE\u63A5\u70B9\u5217\u8868\uFF0C\u5B50\u90E8\u4EF6\u7528\u4E8E\u4E0E\u5176\u4ED6\u90E8\u4EF6\u8FDE\u63A5\u7684\u63A5\u53E3\u5B9A\u4E49"\r\n    },\r\n    "subsystems": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "../../subsystem/subsystem_dynamic_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "description": "\u5B50\u7CFB\u7EDF\u5B9A\u4E49\uFF0C\u952E\u4E3A\u5B50\u7CFB\u7EDF\u540D\u79F0\uFF0C\u503C\u4E3A\u5B50\u7CFB\u7EDF\u52A8\u6001\u5C5E\u6027\u3002\u5B9A\u4E49\u5B50\u90E8\u4EF6\u4E0E\u8FDE\u63A5\u70B9\u3001\u5176\u4ED6\u5B50\u7CFB\u7EDF\u7684\u4EA4\u4E92\u5173\u7CFB"\r\n    },\r\n    "hydro_priority": {\r\n      "type": "integer",\r\n      "default": 0,\r\n      "description": "\u7A7A\u6C14\u963B\u529B\u8BA1\u7B97\u4F18\u5148\u7EA7\uFF0C\u503C\u8D8A\u5927\u4F18\u5148\u7EA7\u8D8A\u9AD8\u3002\u4F18\u5148\u7EA7\u9AD8\u6216\u76F8\u7B49\u7684\u90E8\u4EF6\u4F1A\u906E\u6321\u4F18\u5148\u7EA7\u4F4E\u6216\u76F8\u7B49\u7684\u90E8\u4EF6\uFF0C\u5BFC\u81F4\u963B\u529B\u7CFB\u6570\u53D1\u751F\u53D8\u5316"\r\n    },\r\n    "hydrodynamics": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "hydrodynamic_attr.schema.json"\r\n      },\r\n      "default": {\r\n        "": {}\r\n      },\r\n      "description": "\u6D41\u4F53\u52A8\u529B\u8BA1\u7B97\u5B9A\u4F4D\u70B9\u5217\u8868\uFF0C\u952E\u503C\u5BF9\u7684\u952E\u540D\u4F18\u5148\u4F5C\u4E3A\u9AA8\u9ABC\u540D\u79F0\u67E5\u627E\uFF0C\u82E5\u627E\u5230\u5BF9\u5E94\u9AA8\u9ABC\u5219\u4F7F\u7528\u8BE5\u9AA8\u9ABC\u5185\u7684\u6240\u6709\u5B9A\u4F4D\u5668\u4F5C\u4E3A\u6C14\u52A8\u8BA1\u7B97\u70B9\uFF1B\u82E5\u672A\u627E\u5230\u5BF9\u5E94\u9AA8\u9ABC\uFF0C\u5219\u4F5C\u4E3A\u5B9A\u4F4D\u5668\u540D\u79F0\u67E5\u627E\u3002\u7A7A\u5B57\u7B26\u4E32\u8868\u793A\u4EE5\u8D28\u5FC3\u4F4D\u7F6E\u8BA1\u7B97\u3002\u6BCF\u4E2A\u5B9A\u4F4D\u70B9\u7684\u5C5E\u6027\u5B9A\u4E49\u53C2\u8003hydrodynamic_attr.schema.json\u3002"\r\n    }\r\n  },\r\n  "required": ["hit_boxes"],\r\n  "examples": [\r\n    {\r\n      "hit_boxes": {\r\n        "mmCollision_Box_Chassis": {\r\n          "name": "chassis",\r\n          "type": "box"\r\n        }\r\n      },\r\n      "description": "\u6700\u7B80\u5B50\u90E8\u4EF6\u793A\u4F8B\uFF0C\u4EC5\u5305\u542B\u5FC5\u9700\u7684\u78B0\u649E\u7BB1\u5B9A\u4E49"\r\n    },\r\n    {\r\n      "start_bone": "chassis",\r\n      "end_bones": ["engine"],\r\n      "mass_center": "hull_mass_center",\r\n      "durability": 550.0,\r\n      "mass": 1200.0,\r\n      "projected_area": {\r\n        "x": 1.5,\r\n        "y": 0.8,\r\n        "z": 3.2\r\n      },\r\n      "block_collision": "ground",\r\n      "collision_height": 2.5,\r\n      "climb_assist": true,\r\n      "hit_boxes": {\r\n        "mmCollision_Box_Chassis": {\r\n          "name": "chassis",\r\n          "type": "box",\r\n          "block_damage_factor": 1.5,\r\n          "angle_effect": true,\r\n          "thickness": 10\r\n        },\r\n        "mmCollision_Box_Engine": {\r\n          "name": "engine",\r\n          "type": "box",\r\n          "subsystem": "engine",\r\n          "block_damage_factor": 0.95,\r\n          "angle_effect": true,\r\n          "thickness": 3\r\n        }\r\n      },\r\n      "interact_boxes": {\r\n        "driver_seat": {\r\n          "bone_name": "driver_seat",\r\n          "interact_type": "seat"\r\n        }\r\n      },\r\n      "connectors": {\r\n        "wheel_front_left": {\r\n          "locator": "wheel_front_left",\r\n          "type": "Advanced"\r\n        },\r\n        "wheel_front_right": {\r\n          "locator": "wheel_front_right",\r\n          "type": "Advanced"\r\n        }\r\n      },\r\n      "subsystems": {\r\n        "driver_seat": {\r\n          "type": "machine_max:seat",\r\n          "definition": "machine_max:default_seat",\r\n          "locator": "driver_seat_point",\r\n          "move_outputs": {\r\n            "move_input": ["car_controller"]\r\n          },\r\n          "regular_outputs": {\r\n            "regular_input": ["car_controller"]\r\n          },\r\n          "aim_outputs": {\r\n            "aim_input": ["car_controller"]\r\n          }\r\n        },\r\n        "passenger_seat": {\r\n          "type": "machine_max:seat",\r\n          "definition": "machine_max:default_passenger_seat",\r\n          "locator": "passenger_seat_point"\r\n        },\r\n        "car_controller": {\r\n          "type": "machine_max:car_controller",\r\n          "definition": "machine_max:default_car_controller"\r\n        },\r\n        "engine": {\r\n          "type": "machine_max:engine",\r\n          "definition": "machine_max:default_engine"\r\n        },\r\n        "gearbox": {\r\n          "type": "machine_max:gearbox",\r\n          "definition": "machine_max:default_gearbox"\r\n        },\r\n        "trunk_storage": {\r\n          "type": "machine_max:item_storage",\r\n          "definition": "machine_max:default_trunk"\r\n        },\r\n        "glove_box": {\r\n          "type": "machine_max:item_storage",\r\n          "definition": "machine_max:glove_box"\r\n        },\r\n        "left_front_wheel_driver": {\r\n          "type": "machine_max:wheel_driver",\r\n          "definition": "machine_max:default_wheel_driver",\r\n          "connector": "wheel_front_left"\r\n        },\r\n        "right_front_wheel_driver": {\r\n          "type": "machine_max:wheel_driver",\r\n          "definition": "machine_max:default_wheel_driver",\r\n          "connector": "wheel_front_right"\r\n        }\r\n      },\r\n      "hydro_priority": 0,\r\n      "hydrodynamics": {\r\n        "hull_aero": {\r\n          "drag_coefficient": 0.3,\r\n          "lift_coefficient": 0.1\r\n        }\r\n      },\r\n      "description": "\u5B8C\u6574\u5B50\u90E8\u4EF6\u793A\u4F8B\uFF0C\u5305\u542B\u8D28\u5FC3\u5B9A\u4F4D\u5668\u3001\u6D41\u4F53\u52A8\u529B\u3001\u8FDE\u63A5\u70B9\u53CA\u5B8C\u6574\u7684\u5B50\u7CFB\u7EDF\u914D\u7F6E\uFF08\u5EA7\u4F4D\u3001\u50A8\u7269\u3001\u63A7\u5236\u5668\u3001\u53D1\u52A8\u673A\u3001\u53D8\u901F\u7BB1\u7B49\uFF09"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/variant_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/variant_attr.json",\r\n  "title": "\u90E8\u4EF6\u53D8\u4F53\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u8F7D\u5177\u90E8\u4EF6\u7684\u4E00\u4E2A\u53D8\u4F53\uFF08Variant\uFF09\uFF0C\u5305\u542B\u8BE5\u53D8\u4F53\u7684\u5916\u89C2\u3001\u6A21\u578B\u3001\u5B50\u90E8\u4EF6\u7B49\u914D\u7F6E\u3002\u652F\u6301\u591A\u72B6\u6001\uFF08state\uFF09\u6620\u5C04\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "tags": {\r\n      "type": "array",\r\n      "items": {\r\n        "$ref": "../base/resource_location.schema.json"\r\n      },\r\n      "default": [],\r\n      "description": "\u90E8\u4EF6\u6807\u7B7E\u5217\u8868\uFF0C\u7528\u4E8E\u8FDE\u63A5\u70B9\u5339\u914D\u548C\u529F\u80FD\u5206\u7C7B"\r\n    },\r\n    "model": {\r\n      "$ref": "../base/resource_location.schema.json",\r\n      "description": "\u6A21\u578B\u8DEF\u5F84\uFF0C\u65E0\u89C6\u5185\u5C42\u6587\u4EF6\u5939\u67B6\u6784\uFF0C\u4F8B\u5982machine_max:ae86_chassis.geo\u4F1A\u5728\u6240\u6709\u5185\u5BB9\u5305\u7684models/machine_max/part\u7684\u6240\u6709\u5B50\u76EE\u5F55\u4E2D\u4E2D\u5BFB\u627Eae86_chassis.geo.json"\r\n    },\r\n    "textures": {\r\n      "oneOf": [\r\n        {\r\n          "$ref": "../base/resource_location.schema.json",\r\n          "default": "minecraft:missingno",\r\n          "description": "\u5355\u4E00\u7EB9\u7406\uFF0C\u4F8B\u5982\\"machine_max:textures/part/ae86/ae86_armor.png\\"\u4F1A\u5C06\u5185\u5BB9\u5305\u76F8\u5E94\u8DEF\u5F84\u7684\u56FE\u50CF\u4F5C\u4E3A\u90E8\u4EF6\u7684\\"default\\"\u7EB9\u7406"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "additionalProperties": {\r\n            "$ref": "../base/resource_location.schema.json"\r\n          },\r\n          "default": {\r\n            "default": "minecraft:missingno"\r\n          },\r\n          "description": "\u540D\u79F0\u5230\u7EB9\u7406\u5217\u8868\u7684\u6620\u5C04\uFF0C\u952E\u4E3A\u7EB9\u7406\u540D\u79F0\uFF0C\u503C\u4E3A\u7EB9\u7406\u8DEF\u5F84\u3002\u4F8B\u5982\uFF1A\\"textures\\": {\\n            \\"example_2\\": \\"machine_max:textures/part/texture_2.png\\"\\n          }\u5219\u4F1A\u5C06\u76F8\u5E94\u8DEF\u5F84\u7684\u56FE\u50CF\u4F5C\u4E3A\u90E8\u4EF6\u7684\\"example_2\\"\u7EB9\u7406\u3002"\r\n        }\r\n      ],\r\n      "default": {},\r\n      "description": "\u7EB9\u7406\u8DEF\u5F84\u914D\u7F6E\u3002"\r\n    },\r\n    "animations": {\r\n      "$ref": "../base/resource_location.schema.json",\r\n      "default": {},\r\n      "description": "\u52A8\u753B\u8DEF\u5F84\uFF0C\u65E0\u89C6\u5185\u5C42\u6587\u4EF6\u5939\u67B6\u6784\uFF0C\u4F8B\u5982machine_max:ae86\u4F1A\u5728\u6240\u6709\u5185\u5BB9\u5305\u7684animations/machine_max/part/ae86\u4E2D\u7684\u6240\u6709\u52A8\u753Bjson\u4F5C\u4E3A\u6A21\u578B\u7684\u53EF\u7528\u52A8\u753B"\r\n    },\r\n    "sub_parts": {\r\n      "oneOf": [\r\n        {\r\n          "$ref": "subpart/sub_part_attr.schema.json",\r\n          "description": "\u5355\u4E00\u96F6\u4EF6\u5B9A\u4E49\uFF0C\u4F7F\u7528\u9ED8\u8BA4\u96F6\u4EF6\u540D\uFF08\\"sub_part.machine_max.main\\"\uFF09"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "additionalProperties": {\r\n            "$ref": "subpart/sub_part_attr.schema.json"\r\n          },\r\n          "minProperties": 1,\r\n          "description": "\u591A\u96F6\u4EF6\u5B9A\u4E49\uFF0C\u952E\u4E3A\u96F6\u4EF6\u540D\u79F0\uFF0C\u503C\u4E3A\u96F6\u4EF6\u914D\u7F6E"\r\n        }\r\n      ],\r\n      "description": "\u5B50\u90E8\u4EF6\uFF08\u96F6\u4EF6\uFF09\u5B9A\u4E49\uFF0C\u652F\u6301\u5355\u4E00\u96F6\u4EF6\uFF08\u7B80\u5199\uFF09\u6216\u591A\u4E2A\u96F6\u4EF6\uFF08\u952E\u503C\u5BF9\uFF09\u4E24\u79CD\u5199\u6CD5\u3002\u8FD9\u662F\u90E8\u4EF6\u8FD0\u52A8\u7684\u6700\u5C0F\u5355\u5143\uFF0C\u90E8\u4EF6\u7684\u6BCF\u4E2A\u53EF\u52A8\u90E8\u5206\u90FD\u5E94\u5F53\u662F\u4E00\u4E2A\u5B50\u90E8\u4EF6"\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "required": ["model", "sub_parts"],\r\n  "examples": [\r\n    {\r\n      "model": "machine_max:ae86_chassis_all_terrain.geo",\r\n      "textures": [\r\n        "machine_max:textures/part/ae86_all_terrain_1.png",\r\n        "machine_max:textures/part/ae86_all_terrain_2.png"\r\n      ],\r\n      "animations": "machine_max:ae86",\r\n      "tags": [],\r\n      "sub_parts": {\r\n        "ae86_chassis_all_terrain": {\r\n          "durability": 550.0,\r\n          "mass": 1200.0,\r\n          "hit_boxes": {\r\n            "mmCollision_Box_Chassis": {\r\n              "name": "chassis",\r\n              "type": "box",\r\n              "thickness": 10\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    {\r\n      "model": {\r\n        "default": "machine_max:tank_turret_normal.geo",\r\n        "broken": "machine_max:tank_turret_damaged.geo"\r\n      },\r\n      "textures": {\r\n        "default": [\r\n          "machine_max:textures/part/tank_turret_1.png",\r\n          "machine_max:textures/part/tank_turret_2.png"\r\n        ],\r\n        "broken": [\r\n          "machine_max:textures/part/tank_turret_damaged_1.png",\r\n          "machine_max:textures/part/tank_turret_damaged_2.png"\r\n        ]\r\n      },\r\n      "animations": {\r\n        "default": "machine_max:tank_turret_rotation",\r\n        "broken": "machine_max:tank_turret_broken"\r\n      },\r\n      "tags": ["machine_max:turret", "machine_max:rotatable"],\r\n      "sub_parts": {\r\n        "turret_base": {\r\n          "durability": 300.0,\r\n          "mass": 800.0,\r\n          "hit_boxes": {\r\n            "mmCollision_Turret": {\r\n              "name": "turret",\r\n              "type": "cylinder",\r\n              "thickness": 50\r\n            }\r\n          }\r\n        }\r\n      }\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part_definition_schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part_definition_schema.json",\r\n  "title": "\u90E8\u4EF6\u5B9A\u4E49",\r\n  "description": "MachineMax\u8F7D\u5177\u90E8\u4EF6\u7684\u5B8C\u6574\u5B9A\u4E49\u6587\u4EF6\uFF0C\u8FD9\u662F\u521B\u5EFA\u81EA\u5B9A\u4E49\u8F7D\u5177\u90E8\u4EF6\u7684\u9876\u5C42\u914D\u7F6E",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "JSON Schema\u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u667A\u80FD\u63D0\u793A\u548C\u9A8C\u8BC1",\r\n      "default": "../../docs/zh_cn/schemas/part_definition_schema.json"\r\n    },\r\n    "icon": {\r\n      "$ref": "base/resource_location.schema.json",\r\n      "description": "\u90E8\u4EF6\u56FE\u6807\u8DEF\u5F84\uFF0C\u7528\u4E8EUI\u663E\u793A\u3002\u82E5\u7559\u7A7A\u4F1A\u4F7F\u7528\u7D2B\u9ED1\u7F3A\u7701\u56FE\u6807\u4F5C\u4E3A\u56FE\u6807",\r\n      "default": "minecraft:missingno"\r\n    },\r\n    "vehicle_durability_rate": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "maximum": 1.0,\r\n      "default": 0.8,\r\n      "description": "\u8F7D\u5177\u8010\u4E45\u8D21\u732E\u7CFB\u6570\uFF0C\u90E8\u4EF6\u8010\u4E45\u5EA6\u6309\u6B64\u6BD4\u4F8B\u8D21\u732E\u7ED9\u8F7D\u5177\u603B\u8010\u4E45\u5EA6\u3002\u4F8B\u59820.8\u8868\u793A\u90E8\u4EF6\u768480%\u8010\u4E45\u5EA6\u8D21\u732E\u7ED9\u8F7D\u5177"\r\n    },\r\n    "vehicle_damage_rate": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "\u5E38\u6001\u8F7D\u5177\u4F24\u5BB3\u4F20\u5BFC\u7CFB\u6570\uFF0C\u90E8\u4EF6\u53D7\u5230\u4F24\u5BB3\u65F6\u6309\u6B64\u6BD4\u4F8B\u4F20\u5BFC\u7ED9\u8F7D\u5177\u3002\u4F8B\u59821.0\u8868\u793A100%\u4F24\u5BB3\u4F20\u5BFC"\r\n    },\r\n    "vehicle_damage_rate_destroyed": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 0.1,\r\n      "description": "\u90E8\u4EF6\u88AB\u6467\u6BC1\u540E\u7684\u8F7D\u5177\u4F24\u5BB3\u4F20\u5BFC\u7CFB\u6570\uFF0C\u90E8\u4EF6\u88AB\u6467\u6BC1\u540E\u53D7\u5230\u4F24\u5BB3\u65F6\u6309\u6B64\u6BD4\u4F8B\u4F20\u5BFC\u7ED9\u8F7D\u5177\u3002\u901A\u5E38\u8BBE\u7F6E\u8F83\u4F4E\u4EE5\u9632\u6B62\u97AD\u5C38"\r\n    },\r\n    "functional_threshold": {\r\n      "type": "number",\r\n      "minimum": 0.0,\r\n      "maximum": 1.0,\r\n      "default": 0.3,\r\n      "description": "\u90E8\u4EF6\u529F\u80FD\u9608\u503C\u3002\u5F53\u7EC4\u88C5\u8FDB\u5EA6\u8FBE\u5230\u8BE5\u503C\u540E\uFF0C\u5B50\u7CFB\u7EDF\u53EF\u5DE5\u4F5C\uFF0C\u4E14\u7EBF\u6846\u7EC4\u88C5\u6E32\u67D3\u53EF\u81EA\u52A8\u5173\u95ED\u3002"\r\n    },\r\n    "share_durability": {\r\n      "type": "boolean",\r\n      "default": true,\r\n      "description": "\u90E8\u4EF6\u5185\u96F6\u4EF6\u662F\u5426\u5171\u4EAB\u8010\u4E45\u5EA6\u3002\u5982\u679C\u4E3Atrue\uFF0C\u6240\u6709\u5B50\u90E8\u4EF6\u5171\u4EAB\u540C\u4E00\u8010\u4E45\u5EA6\u6C60\uFF1B\u5982\u679C\u4E3Afalse\uFF0C\u6BCF\u4E2A\u5B50\u90E8\u4EF6\u6709\u72EC\u7ACB\u8010\u4E45\u5EA6"\r\n    },\r\n    "max_stack_size": {\r\n      "type": "integer",\r\n      "minimum": 1,\r\n      "maximum": 64,\r\n      "default": 1,\r\n      "description": "\u90E8\u4EF6\u7269\u54C1\u7684\u6700\u5927\u5806\u53E0\u6570\u91CF\u3002\u51B3\u5B9A\u6B64\u90E8\u4EF6\u5728\u7269\u54C1\u680F\u4E2D\u53EF\u4EE5\u5806\u53E0\u591A\u5C11\u4E2A\u3002\u9ED8\u8BA4\u503C\u4E3A1\uFF08\u4E0D\u53EF\u5806\u53E0\uFF09"\r\n    },\r\n    "variants": {\r\n      "oneOf": [\r\n        {\r\n          "$ref": "part/variant_attr.schema.json",\r\n          "description": "\u5355\u4E00\u53D8\u4F53\u5B9A\u4E49\uFF0C\u4F7F\u7528\u9ED8\u8BA4\u53D8\u4F53\u540D\uFF08\\"default\\"\uFF09"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "additionalProperties": {\r\n            "$ref": "part/variant_attr.schema.json"\r\n          },\r\n          "minProperties": 1,\r\n          "description": "\u591A\u53D8\u4F53\u5B9A\u4E49\uFF0C\u952E\u4E3A\u53D8\u4F53\u540D\u79F0\uFF08\u5982\\"red\\"\u3001\\"blue\\"\u3001\\"camouflage\\"\u7B49\uFF09\uFF0C\u503C\u4E3A\u53D8\u4F53\u914D\u7F6E"\r\n        }\r\n      ],\r\n      "description": "\u90E8\u4EF6\u53D8\u4F53\u5217\u8868\uFF0C\u5E38\u7528\u4F5C\u533A\u5206\u5DE6\u53F3\u5BF9\u79F0\u7684\u90E8\u4EF6\u5982\u8F6E\u80CE\u6216\u624B\u81C2\uFF0C\u652F\u6301\u5355\u4E00\u53D8\u4F53\uFF08\u9ED8\u8BA4\uFF09\u6216\u591A\u4E2A\u53D8\u4F53\u914D\u7F6E\u3002\u6BCF\u4E2A\u53D8\u4F53\u53EF\u4EE5\u6709\u4E0D\u540C\u7684\u5916\u89C2\u548C\u7279\u6027"\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "required": ["variants"],\r\n  "examples": [\r\n    {\r\n      "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",\r\n      "icon": "machine_max:textures/icon/ae86_chassis_all_terrain_icon.png",\r\n      "vehicle_durability_rate": 1.0,\r\n      "vehicle_damage_rate": 1.0,\r\n      "vehicle_damage_rate_destroyed": 0.1,\r\n      "functional_threshold": 0.6,\r\n      "share_durability": true,\r\n      "variants": {\r\n        "models": "machine_max:ae86_chassis_all_terrain.geo",\r\n        "textures": [\r\n          "machine_max:textures/part/ae86_all_terrain_1.png",\r\n          "machine_max:textures/part/ae86_all_terrain_2.png"\r\n        ],\r\n        "animations": "machine_max:ae86",\r\n        "tags": [],\r\n        "sub_parts": {\r\n          "ae86_chassis_all_terrain": {\r\n            "durability": 550.0,\r\n            "mass": 1200.0,\r\n            "hit_boxes": {\r\n              "mmCollision_Box_Chassis": {\r\n                "name": "chassis",\r\n                "type": "box",\r\n                "thickness": 10\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    {\r\n      "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",\r\n      "icon": "machine_max:textures/icon/car_chassis_icon.png",\r\n      "vehicle_durability_rate": 0.9,\r\n      "variants": {\r\n        "red": {\r\n          "models": "machine_max:car_chassis.geo",\r\n          "textures": ["machine_max:textures/part/car_chassis_red.png"],\r\n          "sub_parts": {\r\n            "chassis": {\r\n              "durability": 400.0,\r\n              "mass": 800.0,\r\n              "hit_boxes": {\r\n                "collision_box": {\r\n                  "type": "box",\r\n                  "thickness": 8\r\n                }\r\n              }\r\n            }\r\n          }\r\n        },\r\n        "blue": {\r\n          "models": "machine_max:car_chassis.geo",\r\n          "textures": ["machine_max:textures/part/car_chassis_blue.png"],\r\n          "sub_parts": {\r\n            "chassis": {\r\n              "durability": 400.0,\r\n              "mass": 800.0,\r\n              "hit_boxes": {\r\n                "collision_box": {\r\n                  "type": "box",\r\n                  "thickness": 8\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/recipe/blueprint_research_recipe.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/recipe/blueprint_research_recipe.schema.json",\r\n  "title": "Machine-Max Blueprint Research Recipe",\r\n  "description": "Schema for machine_max:blueprint_research recipe.",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": { "type": "string" },\r\n    "type": { "type": "string", "const": "machine_max:blueprint_research" },\r\n    "research_cost": { "type": "integer", "minimum": 0 },\r\n    "research_ingredients": {\r\n      "type": "array",\r\n      "items": { "$ref": "#/definitions/ingredient_count_pair" },\r\n      "default": []\r\n    },\r\n    "groups": {\r\n      "type": "array",\r\n      "items": { "type": "string" },\r\n      "description": "\u7814\u53D1\u6761\u76EE\u6240\u5C5E\u7684\u7EC4 id \u5217\u8868\uFF0C\u7F3A\u7701\u8868\u793A\u4E0D\u5F52\u5C5E\u4EFB\u4F55\u7EC4",\r\n      "default": []\r\n    },\r\n    "prerequisites": {\r\n      "type": "array",\r\n      "items": { "type": "string" },\r\n      "description": "\u524D\u7F6E\u7814\u53D1\u914D\u65B9 id \u5217\u8868\u3002\u6BCF\u9879\u4E3A\u53E6\u4E00\u6761\u7814\u53D1\u914D\u65B9\u7684\u5B8C\u6574\u6CE8\u518C\u540D\uFF0C\u5373\u8BE5\u914D\u65B9\u6587\u4EF6\u5728 recipe/ \u4E0B\u7684\u76F8\u5BF9\u8DEF\u5F84\uFF0C\u4F8B\u5982 research/ae86_chassis \u5199\u4F5C machine_max:research/ae86_chassis",\r\n      "default": []\r\n    },\r\n    "icon": { "$ref": "#/definitions/resource_location" },\r\n    "description": { "type": "string", "default": "" },\r\n    "unlock_recipe": { "type": "string" }\r\n  },\r\n  "required": ["type", "research_cost", "unlock_recipe"],\r\n  "additionalProperties": false,\r\n  "definitions": {\r\n    "ingredient_selector": {\r\n      "anyOf": [\r\n        {\r\n          "type": "string",\r\n          "pattern": "^#?[a-z0-9_.-]+:[a-z0-9_./-]+$"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "item": { "type": "string" },\r\n            "tag": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["item"] }, { "required": ["tag"] }],\r\n          "additionalProperties": false\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "type": { "type": "string" },\r\n            "neoforge:ingredient_type": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["type"] }, { "required": ["neoforge:ingredient_type"] }],\r\n          "additionalProperties": true\r\n        }\r\n      ]\r\n    },    "ingredient_count_pair": {\r\n      "type": "object",\r\n      "properties": {\r\n        "ingredient": { "$ref": "#/definitions/ingredient_selector" },\r\n        "count": { "type": "integer", "minimum": 0 }\r\n      },\r\n      "required": ["ingredient", "count"],\r\n      "additionalProperties": false\r\n    },\r\n    "resource_location": {\r\n      "type": "string",\r\n      "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"\r\n    }\r\n  }\r\n}', "zh_cn/schemas/recipe/fabricating_recipe.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/recipe/fabricating_recipe.schema.json",\r\n  "title": "Machine-Max Fabricating Recipe",\r\n  "description": "Schema for machine_max:fabricating recipe.",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "JSON Schema reference path for editor validation."\r\n    },\r\n    "type": {\r\n      "type": "string",\r\n      "const": "machine_max:fabricating"\r\n    },\r\n    "ingredients": {\r\n      "type": "array",\r\n      "items": {\r\n        "$ref": "#/definitions/ingredient_count_pair"\r\n      }\r\n    },\r\n    "result": {\r\n      "$ref": "#/definitions/result_item"\r\n    },\r\n    "time": {\r\n      "type": "integer",\r\n      "minimum": 1,\r\n      "default": 100\r\n    },\r\n    "description": {\r\n      "type": "string",\r\n      "default": ""\r\n    }\r\n  },\r\n  "required": [\r\n    "type",\r\n    "ingredients",\r\n    "result"\r\n  ],\r\n  "additionalProperties": false,\r\n  "definitions": {\r\n    "ingredient_selector": {\r\n      "anyOf": [\r\n        {\r\n          "type": "string",\r\n          "pattern": "^#?[a-z0-9_.-]+:[a-z0-9_./-]+$"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "item": { "type": "string" },\r\n            "tag": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["item"] }, { "required": ["tag"] }],\r\n          "additionalProperties": false\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "type": { "type": "string" },\r\n            "neoforge:ingredient_type": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["type"] }, { "required": ["neoforge:ingredient_type"] }],\r\n          "additionalProperties": true\r\n        }\r\n      ]\r\n    },    "ingredient_count_pair": {\r\n      "type": "object",\r\n      "properties": {\r\n        "ingredient": {\r\n          "$ref": "#/definitions/ingredient_selector"\r\n        },\r\n        "count": {\r\n          "type": "integer",\r\n          "minimum": 0\r\n        }\r\n      },\r\n      "required": [\r\n        "ingredient",\r\n        "count"\r\n      ],\r\n      "additionalProperties": false\r\n    },\r\n    "result_item": {\r\n      "type": "object",\r\n      "properties": {\r\n        "id": {\r\n          "type": "string"\r\n        },\r\n        "count": {\r\n          "type": "integer",\r\n          "minimum": 1,\r\n          "maximum": 99,\r\n          "default": 1\r\n        },\r\n        "components": {\r\n          "type": "object"\r\n        }\r\n      },\r\n      "required": [\r\n        "id"\r\n      ],\r\n      "additionalProperties": true\r\n    }\r\n  }\r\n}', "zh_cn/schemas/recipe/part_fabricating_recipe.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/recipe/part_fabricating_recipe.schema.json",\r\n  "title": "Machine-Max Part Fabricating Recipe",\r\n  "description": "machine_max:part_fabricating \u914D\u65B9\u7684 schema\u3002\u96F6\u4EF6\u914D\u65B9\u5FC5\u987B\u4F4D\u4E8E\u5185\u5BB9\u5305\u7684 recipe/part_fabricating/ \u76EE\u5F55\u4E0B\uFF08\u5141\u8BB8\u518D\u5206\u5B50\u76EE\u5F55\uFF09\uFF0C\u6587\u4EF6\u540D\u53EA\u53D6\u6700\u540E\u4E00\u6BB5\u5E76\u7B49\u4E8E\u96F6\u4EF6 id \u7684 path\uFF0C\u6587\u4EF6\u6240\u5728 namespace \u7B49\u4E8E\u96F6\u4EF6 id \u7684 namespace\u3002\u4EA7\u7269\u96F6\u4EF6\u7531\u6587\u4EF6\u540D\u63A8\u5BFC\uFF0CJSON \u53EA\u58F0\u660E\u4EA7\u7269\u6570\u91CF\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "\u7528\u4E8E\u7F16\u8F91\u5668\u6821\u9A8C\u7684 JSON Schema \u5F15\u7528\u8DEF\u5F84\u3002"\r\n    },\r\n    "type": {\r\n      "type": "string",\r\n      "const": "machine_max:part_fabricating"\r\n    },\r\n    "manual": {\r\n      "type": "boolean",\r\n      "default": true,\r\n      "description": "\u9009\u586B\uFF0C\u7F3A\u7701 true\u3002true \u8868\u793A\u88C5\u914D\u65F6\u6D88\u8017\u914D\u65B9\u539F\u6599\uFF08\u7EC4\u88C5\u6E05\u5355\u6309 ceil(\u539F\u6599\u6570\u91CF / result.count) \u6298\u7B97\u3001\u62C6\u5378\u6E05\u5355\u6309 floor \u6298\u7B97\uFF09\uFF1Bfalse \u8868\u793A\u88C5\u914D\u65F6\u6D88\u8017\u672C\u914D\u65B9\u7684\u4EA7\u7269\u6574\u4EF6\uFF0C\u6750\u6599\u6570\u91CF\u6052\u4E3A 1 \u4EF6\u3002"\r\n    },\r\n    "ingredients": {\r\n      "type": "array",\r\n      "items": {\r\n        "$ref": "#/definitions/ingredient_count_pair"\r\n      }\r\n    },\r\n    "result": {\r\n      "$ref": "#/definitions/result_count"\r\n    },\r\n    "time": {\r\n      "type": "integer",\r\n      "minimum": 1,\r\n      "default": 100,\r\n      "description": "\u624B\u52A8\u7EC4\u88C5\u6216\u5236\u9020\u673A\u7684\u5236\u4F5C\u65F6\u95F4\uFF0C\u5355\u4F4D\u4E3A tick\uFF0C1 \u79D2 = 20 tick\u3002"\r\n    },\r\n    "description": {\r\n      "type": "string",\r\n      "default": ""\r\n    }\r\n  },\r\n  "required": [\r\n    "type",\r\n    "ingredients"\r\n  ],\r\n  "additionalProperties": false,\r\n  "definitions": {\r\n    "ingredient_selector": {\r\n      "anyOf": [\r\n        {\r\n          "type": "string",\r\n          "pattern": "^#?[a-z0-9_.-]+:[a-z0-9_./-]+$"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "item": { "type": "string" },\r\n            "tag": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["item"] }, { "required": ["tag"] }],\r\n          "additionalProperties": false\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "type": { "type": "string" },\r\n            "neoforge:ingredient_type": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["type"] }, { "required": ["neoforge:ingredient_type"] }],\r\n          "additionalProperties": true\r\n        }\r\n      ]\r\n    },\r\n    "ingredient_count_pair": {\r\n      "type": "object",\r\n      "properties": {\r\n        "ingredient": {\r\n          "$ref": "#/definitions/ingredient_selector"\r\n        },\r\n        "count": {\r\n          "type": "integer",\r\n          "minimum": 0\r\n        }\r\n      },\r\n      "required": [\r\n        "ingredient",\r\n        "count"\r\n      ],\r\n      "additionalProperties": false\r\n    },\r\n    "result_count": {\r\n      "type": "object",\r\n      "properties": {\r\n        "count": {\r\n          "type": "integer",\r\n          "minimum": 1,\r\n          "default": 1\r\n        }\r\n      },\r\n      "additionalProperties": false,\r\n      "description": "\u4EA7\u7269\u6570\u91CF\uFF0C\u9009\u586B\uFF0C\u7F3A\u7701 1\u3002\u4EA7\u7269\u96F6\u4EF6\u7531\u914D\u65B9\u6587\u4EF6\u540D\u63A8\u5BFC\uFF0C\u6B64\u5904\u53EA\u58F0\u660E\u6570\u91CF\uFF1B\u6570\u91CF\u5FC5\u987B\u5927\u4E8E 0 \u4E14\u4E0D\u8D85\u8FC7\u8BE5\u96F6\u4EF6\u7684\u5806\u53E0\u4E0A\u9650\u3002"\r\n    }\r\n  }\r\n}', "zh_cn/schemas/recipe/research_recipe.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/recipe/research_recipe.schema.json",\r\n  "title": "Machine-Max Research Recipe",\r\n  "description": "Schema for machine_max:research recipe.",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": { "type": "string" },\r\n    "type": { "type": "string", "const": "machine_max:research" },\r\n    "research_cost": { "type": "integer", "minimum": 0 },\r\n    "research_ingredients": {\r\n      "type": "array",\r\n      "items": { "$ref": "#/definitions/ingredient_count_pair" },\r\n      "default": []\r\n    },\r\n    "groups": {\r\n      "type": "array",\r\n      "items": { "type": "string" },\r\n      "description": "\u7814\u53D1\u6761\u76EE\u6240\u5C5E\u7684\u7EC4 id \u5217\u8868\uFF0C\u7F3A\u7701\u8868\u793A\u4E0D\u5F52\u5C5E\u4EFB\u4F55\u7EC4",\r\n      "default": []\r\n    },\r\n    "prerequisites": {\r\n      "type": "array",\r\n      "items": { "type": "string" },\r\n      "description": "\u524D\u7F6E\u7814\u53D1\u914D\u65B9 id \u5217\u8868\u3002\u6BCF\u9879\u4E3A\u53E6\u4E00\u6761\u7814\u53D1\u914D\u65B9\u7684\u5B8C\u6574\u6CE8\u518C\u540D\uFF0C\u5373\u8BE5\u914D\u65B9\u6587\u4EF6\u5728 recipe/ \u4E0B\u7684\u76F8\u5BF9\u8DEF\u5F84\uFF0C\u4F8B\u5982 research/ae86_chassis \u5199\u4F5C machine_max:research/ae86_chassis",\r\n      "default": []\r\n    },\r\n    "icon": { "$ref": "#/definitions/resource_location" },\r\n    "description": { "type": "string", "default": "" }\r\n  },\r\n  "required": ["type", "research_cost"],\r\n  "additionalProperties": false,\r\n  "definitions": {\r\n    "ingredient_selector": {\r\n      "anyOf": [\r\n        {\r\n          "type": "string",\r\n          "pattern": "^#?[a-z0-9_.-]+:[a-z0-9_./-]+$"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "item": { "type": "string" },\r\n            "tag": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["item"] }, { "required": ["tag"] }],\r\n          "additionalProperties": false\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "type": { "type": "string" },\r\n            "neoforge:ingredient_type": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["type"] }, { "required": ["neoforge:ingredient_type"] }],\r\n          "additionalProperties": true\r\n        }\r\n      ]\r\n    },    "ingredient_count_pair": {\r\n      "type": "object",\r\n      "properties": {\r\n        "ingredient": { "$ref": "#/definitions/ingredient_selector" },\r\n        "count": { "type": "integer", "minimum": 0 }\r\n      },\r\n      "required": ["ingredient", "count"],\r\n      "additionalProperties": false\r\n    },\r\n    "resource_location": {\r\n      "type": "string",\r\n      "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"\r\n    }\r\n  }\r\n}', "zh_cn/schemas/subsystem/base/power_outputs.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subsystem/base/power_outputs.json",\r\n  "title": "\u529F\u7387\u8F93\u51FA\u6620\u5C04",\r\n  "description": "\u529F\u7387\u8F93\u51FA\u76EE\u6807\u53CA\u51CF\u901F\u6BD4\u7684\u6620\u5C04\uFF0C\u7528\u4E8E\u4F20\u52A8\u7CFB\u7EDF\u7B49\u9700\u8981\u5206\u914D\u529F\u7387\u7684\u5B50\u7CFB\u7EDF\u3002",\r\n  "type": "object",\r\n  "additionalProperties": {\r\n    "type": "number",\r\n    "description": "\u51CF\u901F\u6BD4\u6216\u6743\u91CD\uFF0C\u6B63\u6570\u8868\u793A\u51CF\u901F\uFF0C\u8D1F\u6570\u8868\u793A\u589E\u901F\uFF0C0\u8868\u793A\u56FA\u5B9A\u8FDE\u63A5\u3002"\r\n  },\r\n  "default": {},\r\n  "examples": [\r\n    {\r\n      "left_front_wheel_driver": 1.0,\r\n      "right_front_wheel_driver": 1.0,\r\n      "left_back_wheel_driver": 1.0,\r\n      "right_back_wheel_driver": 1.0\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/subsystem/base/signal_targets.json": `{\r
+}`, "zh_cn/schemas/part/subpart/hit_box/modifier/damage_modifier.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/modifier/damage_modifier.json",\r\n  "title": "\u4F24\u5BB3\u4FEE\u6539\u5668",\r\n  "description": "\u5305\u542B\u591A\u4E2A\u4FEE\u6539\u5668\u6761\u76EE\u7684\u5217\u8868\uFF0C\u6309\u987A\u5E8F\u5E94\u7528\u3002\u6BCF\u4E2A\u4FEE\u6539\u5668\u6761\u76EE\u6839\u636E\u6761\u4EF6\u51B3\u5B9A\u662F\u5426\u751F\u6548\u3002",\r\n  "type": "array",\r\n  "items": {\r\n    "$ref": "modifier_entry.schema.json"\r\n  },\r\n  "default": [],\r\n  "examples": [\r\n    [\r\n      {\r\n        "operation": "add",\r\n        "value": -5.0,\r\n        "condition": {\r\n          "type": "damage_type",\r\n          "id": "minecraft:fly_into_wall"\r\n        }\r\n      },\r\n      {\r\n        "operation": "multiply",\r\n        "value": 0.05,\r\n        "condition": {\r\n          "type": "damage_type",\r\n          "id": "minecraft:sweet_berry_bush"\r\n        }\r\n      }\r\n    ]\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/hit_box/modifier/modifier_entry.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/hit_box/modifier/modifier_entry.json",\r\n  "title": "\u4FEE\u6539\u5668\u6761\u76EE",\r\n  "description": "\u4F24\u5BB3\u4FEE\u6539\u5668\u7684\u5355\u4E2A\u6761\u76EE\uFF0C\u5305\u542B\u64CD\u4F5C\u7B26\u3001\u6570\u503C\u548C\u751F\u6548\u6761\u4EF6\u3002\u591A\u4E2A\u4FEE\u6539\u5668\u6309\u987A\u5E8F\u5E94\u7528\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "operation": {\r\n      "allOf": [\r\n        { "$ref": "../../../../base/operation.schema.json" }\r\n      ],\r\n      "description": "\u64CD\u4F5C\u7C7B\u578B\u3002add\uFF1A\u5C06\u503C\u52A0\u5230\u57FA\u7840\u503C\u4E0A\uFF1Bmultiply\uFF1A\u5C06\u57FA\u7840\u503C\u4E58\u4EE5\u8BE5\u503C\u3002"\r\n    },\r\n    "value": {\r\n      "type": "number",\r\n      "description": "\u64CD\u4F5C\u7684\u503C\u3002\u5BF9\u4E8Eadd\u64CD\u4F5C\uFF0C\u53EF\u4EE5\u662F\u6B63\u6570\u6216\u8D1F\u6570\uFF08\u5982-5\u8868\u793A\u51CF\u4F24\uFF09\uFF1B\u5BF9\u4E8Emultiply\u64CD\u4F5C\uFF0C\u901A\u5E38\u662F\u6B63\u6570\uFF08\u59820.05\u8868\u793A\u524A\u51CF\u81F35%\uFF09\u3002"\r\n    },\r\n    "condition": {\r\n      "allOf": [\r\n        { "$ref": "condition/condition.schema.json" }\r\n      ],\r\n      "description": "\u6761\u4EF6\uFF0C\u5F53\u6761\u4EF6\u6EE1\u8DB3\u65F6\u5E94\u7528\u6B64\u4FEE\u6539\u5668\u3002"\r\n    }\r\n  },\r\n  "required": ["operation", "value", "condition"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "operation": "add",\r\n      "value": -5.0,\r\n      "condition": {\r\n        "type": "damage_type",\r\n        "id": "minecraft:fly_into_wall"\r\n      },\r\n      "description": "\u5C06\u649E\u51FB\u4F24\u5BB3\u524A\u51CF5\u70B9\uFF08\u4E0D\u5C0F\u4E8E0\uFF09"\r\n    },\r\n    {\r\n      "operation": "multiply",\r\n      "value": 0.05,\r\n      "condition": {\r\n        "type": "entity_type",\r\n        "id": "minecraft:slime"\r\n      },\r\n      "description": "\u5C06\u53F2\u83B1\u59C6\u9020\u6210\u7684\u4F24\u5BB3\u524A\u51CF\u81F35%"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/hydrodynamic_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subpart/hydrodynamic_attr.schema.json",\r\n  "title": "\u6D41\u4F53\u52A8\u529B\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u90E8\u4EF6\u5728\u6D41\u4F53\uFF08\u7A7A\u6C14\u3001\u6C34\uFF09\u4E2D\u7684\u52A8\u529B\u5C5E\u6027\uFF0C\u5305\u62EC\u963B\u529B\u3001\u5347\u529B\u7B49\u3002\u7528\u4E8E\u6A21\u62DF\u7A7A\u6C14\u52A8\u529B\u5B66\u548C\u6C34\u52A8\u529B\u5B66\u6548\u679C\u3002\\n\\n## \u6C14\u52A8\u8BA1\u7B97\u6A21\u578B\\n\\n\u6D41\u4F53\u52A8\u529B\u8BA1\u7B97\u57FA\u4E8E\u4EE5\u4E0B\u7269\u7406\u6A21\u578B\uFF1A\\n\\n### \u9ED8\u8BA4\u6A21\u5F0F\uFF08advanced = false\uFF09\\n- **\u963B\u529B\u8BA1\u7B97**\uFF1A\u5404\u65B9\u5411\u4F7F\u7528\u4E00\u9636\uFF08\u7C98\u6027\uFF09+ \u4E8C\u9636\uFF08\u60EF\u6027\uFF09\u6A21\u578B\\n- **\u5347\u529B\u8BA1\u7B97**\uFF1A\u7B80\u5355\u901F\u5EA6\u5E73\u65B9\u6A21\u578B\uFF08x/y/z_lift\uFF09\\n\\n### \u9AD8\u7EA7\u6C14\u52A8\u6A21\u5F0F\uFF08advanced = true\uFF09\\n- **\u5728\u9AD8\u7EA7\u6C14\u52A8\u7EA6\u5B9A\u65B9\u5411\u4E0A**\uFF1A\u4F7F\u7528\u5347\u529B\u7EBF\u6A21\u578B\u8BA1\u7B97\u5347\u529B\u4E0E\u4E8C\u9636\u963B\u529B\\n- **\u4E00\u9636\u963B\u529B\uFF08\u7C98\u6027\uFF09**\uFF1A\u4ECD\u7136\u4FDD\u7559\u5E76\u53E0\u52A0\\n- **\u975E\u5347\u529B\u65B9\u5411**\uFF1A\u4ECD\u4F7F\u7528\u539F\u6709\u963B\u529B\u6A21\u578B\\n\\n**\u6CE8\u610F\uFF1A\u9AD8\u7EA7\u6C14\u52A8\u6A21\u5F0F\u76EE\u524D\u4ECD\u4E3AWIP\u3002\u5B83\u5DF2\u63A5\u5165\u5B9E\u9645\u53D7\u529B\u8BA1\u7B97\uFF0C\u4F46\u5C1A\u7F3A\u5C11\u5145\u5206\u7684\u5B98\u65B9\u5B9E\u88C5\u4E0E\u957F\u671F\u8C03\u6821\u9A8C\u8BC1\u3002**\\n\\n## \u5750\u6807\u7EA6\u5B9A\\n- **\u6D41\u4F53\u52A8\u529B\u8BA1\u7B97\u70B9\u672C\u5730\u5750\u6807\u7CFB**\uFF1A\\n  - y+ \uFF1A\u5347\u529B\u6CD5\u7EBF\u65B9\u5411\\n  - z- \uFF1A\u6765\u6D41\u65B9\u5411\uFF08\u524D\u5411\uFF09\\n\\n## \u8BE6\u7EC6\u8BA1\u7B97\u6A21\u578B\\n\\n### \u963B\u529B\u8BA1\u7B97\\n- **\u4E00\u9636\u963B\u529B\uFF08\u7C98\u6027\u963B\u529B\uFF09**\uFF1A\u4E0E\u6D41\u4F53\u7C98\u5EA6\u76F8\u5173\uFF0C\u4F7F\u7528\u6E7F\u8868\u9762\u79EF\u8BA1\u7B97\\n  - \u516C\u5F0F\uFF1A`F_viscous = viscosity \xD7 C_d1 \xD7 v \xD7 wettedArea`\\n  - \u9002\u7528\u4E8E\u4F4E\u901F\u6D41\u52A8\uFF0C\u4E0E\u901F\u5EA6\u7EBF\u6027\u76F8\u5173\\n- **\u4E8C\u9636\u963B\u529B\uFF08\u538B\u5DEE\u963B\u529B\uFF09**\uFF1A\u4E0E\u6D41\u4F53\u5BC6\u5EA6\u76F8\u5173\uFF0C\u4F7F\u7528\u6295\u5F71\u9762\u79EF\u8BA1\u7B97\\n  - \u516C\u5F0F\uFF1A`F_pressure = 0.5 \xD7 density \xD7 C_d2 \xD7 v\xB2 \xD7 projectedArea`\\n  - \u9002\u7528\u4E8E\u9AD8\u901F\u6D41\u52A8\uFF0C\u4E0E\u901F\u5EA6\u5E73\u65B9\u76F8\u5173\\n\\n### \u5347\u529B\u8BA1\u7B97\\n- **\u5347\u529B**\uFF1A\u4E0E\u6D41\u4F53\u5BC6\u5EA6\u76F8\u5173\uFF0C\u4F7F\u7528\u6295\u5F71\u9762\u79EF\u8BA1\u7B97\\n  - \u516C\u5F0F\uFF1A`F_lift = 0.5 \xD7 density \xD7 C_L \xD7 v \xD7 projectedArea`\\n  - \u57FA\u4E8E\u5782\u76F4\u4E8E\u6D41\u52A8\u65B9\u5411\u7684\u901F\u5EA6\u5206\u91CF\\n\\n### \u9762\u79EF\u5B9A\u4E49\\n- **\u6295\u5F71\u9762\u79EF**\uFF1A\u5782\u76F4\u4E8E\u6D41\u52A8\u65B9\u5411\u7684\u9762\u79EF\\n- **\u6E7F\u8868\u9762\u79EF**\uFF1A\u4E0E\u6D41\u4F53\u63A5\u89E6\u7684\u603B\u8868\u9762\u79EF\uFF0C\u8FD1\u4F3C\u4E3A\u6295\u5F71\u9762\u79EF\u4E4B\u548C \xD7 2\\n\\n## \u53C2\u6570\u8BF4\u660E\\n\u963B\u529B\u7CFB\u6570\u5217\u8868\u5FC5\u987B\u5305\u542B2\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\uFF0C\u5347\u529B\u7CFB\u6570\u4E3A\u5355\u4E2A\u6570\u503C\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "scale": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "\u7F29\u653E\u7CFB\u6570\uFF0C\u7528\u4E8E\u6574\u4F53\u8C03\u6574\u6D41\u4F53\u52A8\u529B\u6548\u679C\u3002"\r\n    },\r\n    "effective_range": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "\u6709\u6548\u8BA1\u7B97\u8303\u56F4\uFF0C\u5355\u4F4D\u4E3Am\uFF0C\u5F53\u5728\u6765\u6D41\u65B9\u5411\u4E0A\u7684\u6B64\u8DDD\u79BB\u5185\u68C0\u6D4B\u5230\u906E\u6321\u65F6\u5C06\u4F1A\u964D\u4F4E\u90E8\u4EF6\u7684\u5B9E\u9645\u7A7A\u6C14\u963B\u529B\u7CFB\u6570\uFF0C\u4EE5\u6A21\u62DF\u5982\u8F66\u58F3\u906E\u6321\u6574\u6D41\u5E26\u6765\u7684\u51CF\u963B\u6548\u679C\u3002"\r\n    },\r\n    "transonic_amplifier": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 5.0,\r\n      "description": "\u8DE8\u97F3\u901F\u653E\u5927\u7CFB\u6570\uFF0C\u7528\u4E8E\u6A21\u62DF\u8DE8\u97F3\u901F\u65F6\u7684\u963B\u529B\u53D8\u5316\u3002\u5F53\u901F\u5EA6\u63A5\u8FD1\u97F3\u901F\u65F6\uFF0C\u963B\u529B\u4F1A\u6025\u5267\u589E\u52A0\u3002"\r\n    },\r\n    "front_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "\u524D\u5411\u963B\u529B\u7CFB\u6570\u5217\u8868\uFF0C\u5FC5\u987B\u5305\u542B\u4E24\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\u3002\u4E00\u9636\u7CFB\u6570\u7528\u4E8E\u4F4E\u901F\u7C98\u6027\u963B\u529B\u8BA1\u7B97\uFF0C\u4E8C\u9636\u7CFB\u6570\u7528\u4E8E\u9AD8\u901F\u538B\u5DEE\u963B\u529B\u8BA1\u7B97\u3002"\r\n    },\r\n    "back_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "\u540E\u5411\u963B\u529B\u7CFB\u6570\u5217\u8868\uFF0C\u5FC5\u987B\u5305\u542B\u4E24\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\u3002"\r\n    },\r\n    "left_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "\u5DE6\u5411\u963B\u529B\u7CFB\u6570\u5217\u8868\uFF0C\u5FC5\u987B\u5305\u542B\u4E24\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\u3002"\r\n    },\r\n    "right_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "\u53F3\u5411\u963B\u529B\u7CFB\u6570\u5217\u8868\uFF0C\u5FC5\u987B\u5305\u542B\u4E24\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\u3002"\r\n    },\r\n    "up_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "\u4E0A\u5411\u963B\u529B\u7CFB\u6570\u5217\u8868\uFF0C\u5FC5\u987B\u5305\u542B\u4E24\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\u3002"\r\n    },\r\n    "down_drag": {\r\n      "type": "array",\r\n      "items": { "type": "number" },\r\n      "minItems": 2,\r\n      "maxItems": 2,\r\n      "default": [0.1, 1.0],\r\n      "description": "\u4E0B\u5411\u963B\u529B\u7CFB\u6570\u5217\u8868\uFF0C\u5FC5\u987B\u5305\u542B\u4E24\u4E2A\u503C\uFF1A[\u4E00\u9636\u7CFB\u6570, \u4E8C\u9636\u7CFB\u6570]\u3002"\r\n    },\r\n    "x_lift": {\r\n      "type": "number",\r\n      "default": 0.0,\r\n      "description": "X\u8F74\u5347\u529B\u7CFB\u6570\u3002\u57FA\u4E8EY-Z\u5E73\u9762\u901F\u5EA6\u5206\u91CF\u8BA1\u7B97\u5347\u529B\uFF0C\u901A\u5E38\u4E3A0\u8868\u793A\u4E0D\u4EA7\u751FX\u8F74\u5347\u529B\u3002"\r\n    },\r\n    "y_lift": {\r\n      "type": "number",\r\n      "default": 0.0,\r\n      "description": "Y\u8F74\u5347\u529B\u7CFB\u6570\u3002\u57FA\u4E8EX-Z\u5E73\u9762\u901F\u5EA6\u5206\u91CF\u8BA1\u7B97\u5347\u529B\uFF0C\u901A\u5E38\u4E3A0\u8868\u793A\u4E0D\u4EA7\u751FY\u8F74\u5347\u529B\u3002"\r\n    },\r\n    "z_lift": {\r\n      "type": "number",\r\n      "default": 0.0,\r\n      "description": "Z\u8F74\u5347\u529B\u7CFB\u6570\u3002\u57FA\u4E8EX-Y\u5E73\u9762\u901F\u5EA6\u5206\u91CF\u8BA1\u7B97\u5347\u529B\uFF0C\u901A\u5E38\u4E3A0\u8868\u793A\u4E0D\u4EA7\u751FZ\u8F74\u5347\u529B\u3002"\r\n    },\r\n    "advanced": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "\u662F\u5426\u542F\u7528\u9AD8\u7EA7\u6C14\u52A8\u6A21\u5F0F\u3002\u542F\u7528\u540E\u5C06\u5728\u9AD8\u7EA7\u6C14\u52A8\u7EA6\u5B9A\u65B9\u5411\u4E0A\u4F7F\u7528\u5347\u529B\u7EBF\u6A21\u578B\u8BA1\u7B97\u5347\u529B\u4E0E\u4E8C\u9636\u963B\u529B\u3002\u6CE8\u610F\uFF1A\u8BE5\u6A21\u5F0F\u76EE\u524D\u4ECD\u4E3AWIP\uFF0C\u4F46\u5DF2\u63A5\u5165\u5B9E\u9645\u53D7\u529B\u8BA1\u7B97\uFF0C\u5C1A\u7F3A\u5C11\u5145\u5206\u7684\u5B98\u65B9\u5B9E\u88C5\u4E0E\u957F\u671F\u8C03\u6821\u9A8C\u8BC1\u3002"\r\n    },\r\n    "advanced_aero": {\r\n      "type": "object",\r\n      "properties": {\r\n        "lift_slope": {\r\n          "type": "number",\r\n          "default": 6.28,\r\n          "description": "\u5347\u529B\u7EBF\u659C\u7387 dCl/d\u03B1\uFF08\u5355\u4F4D\uFF1A1/rad\uFF09\uFF0C\u8584\u7FFC\u7406\u8BBA\u9ED8\u8BA4\u503C\u4E3A2\u03C0"\r\n        },\r\n        "alpha0": {\r\n          "type": "number",\r\n          "default": 0.0,\r\n          "description": "\u96F6\u5347\u653B\u89D2\uFF08\u5355\u4F4D\uFF1Arad\uFF09\uFF0C\u6B64\u653B\u89D2\u4E0B\u65E0\u5347\u529B"\r\n        },\r\n        "alpha_stall": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "default": 0.52,\r\n          "description": "\u5931\u901F\u653B\u89D2\uFF08\u5355\u4F4D\uFF1Arad\uFF0C\u53D6\u6B63\u503C\uFF0C\u5BF9\u79F0\u5931\u901F\uFF09\uFF0C\u7EA630\xB0"\r\n        },\r\n        "cd0": {\r\n          "type": "number",\r\n          "minimum": 0.0,\r\n          "default": 0.02,\r\n          "description": "\u96F6\u5347\u963B\u529B\u7CFB\u6570"\r\n        },\r\n        "k_induced": {\r\n          "type": "number",\r\n          "default": 0.05,\r\n          "description": "\u8BF1\u5BFC\u963B\u529B\u7CFB\u6570\uFF08\u2248 1 / (\u03C0 * AR * e)\uFF09"\r\n        }\r\n      },\r\n      "default": {\r\n        "lift_slope": 6.28,\r\n        "alpha0": 0.0,\r\n        "alpha_stall": 0.52,\r\n        "cd0": 0.02,\r\n        "k_induced": 0.05\r\n      },\r\n      "description": "\u9AD8\u7EA7\u6C14\u52A8\u53C2\u6570\u914D\u7F6E\uFF0C\u4EC5\u5728advanced = true\u65F6\u751F\u6548\u3002\u57FA\u4E8E\u7B80\u5316\u5347\u529B\u7EBF\u7406\u8BBA\uFF1A\u5347\u529B\u7CFB\u6570 Cl = liftSlope * (\u03B1 - alpha0)\uFF0C\u963B\u529B\u7CFB\u6570 Cd = cd0 + kInduced * Cl\xB2\u3002"\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "scale": 1.0,\r\n      "effective_range": 5.0,\r\n      "transonic_amplifier": 5.0,\r\n      "front_drag": [0.2, 1.5],\r\n      "back_drag": [0.3, 1.8],\r\n      "left_drag": [0.15, 1.2],\r\n      "right_drag": [0.15, 1.2],\r\n      "up_drag": [0.1, 0.8],\r\n      "down_drag": [0.1, 0.8],\r\n      "x_lift": 0.0,\r\n      "y_lift": 0.0,\r\n      "z_lift": 0.0,\r\n      "advanced": false,\r\n      "description": "\u5178\u578B\u7684\u8F66\u8F86\u7A7A\u6C14\u52A8\u529B\u5B66\u914D\u7F6E\uFF0C\u524D\u5411\u963B\u529B\u8F83\u5927\uFF0C\u4FA7\u5411\u548C\u5782\u76F4\u65B9\u5411\u963B\u529B\u8F83\u5C0F"\r\n    },\r\n    {\r\n      "scale": 1.2,\r\n      "effective_range": 4.0,\r\n      "transonic_amplifier": 4.0,\r\n      "front_drag": [0.15, 0.5],\r\n      "back_drag": [0.25, 0.8],\r\n      "left_drag": [0.1, 0.6],\r\n      "right_drag": [0.1, 0.6],\r\n      "up_drag": [0.08, 0.4],\r\n      "down_drag": [0.08, 0.4],\r\n      "x_lift": 0.0,\r\n      "y_lift": 0.0,\r\n      "z_lift": 0.0,\r\n      "advanced": true,\r\n      "advanced_aero": {\r\n        "lift_slope": 5.5,\r\n        "alpha0": -0.05,\r\n        "alpha_stall": 0.45,\r\n        "cd0": 0.015,\r\n        "k_induced": 0.04\r\n      },\r\n      "description": "\u9AD8\u7EA7\u6C14\u52A8\u6A21\u5F0F\u914D\u7F6E\u793A\u4F8B\uFF0C\u4F7F\u7528\u5347\u529B\u7EBF\u7406\u8BBA\u8BA1\u7B97\u5347\u529B\u548C\u963B\u529B\u3002\u6CE8\u610F\uFF1A\u8BE5\u6A21\u5F0F\u76EE\u524D\u4ECD\u4E3AWIP\uFF0C\u4F46\u5DF2\u63A5\u5165\u5B9E\u9645\u53D7\u529B\u8BA1\u7B97\uFF0C\u5C1A\u7F3A\u5C11\u5145\u5206\u7684\u5B98\u65B9\u5B9E\u88C5\u4E0E\u957F\u671F\u8C03\u6821\u9A8C\u8BC1\u3002"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/interact_box_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/interact_box_attr.schema.json",\r\n  "title": "\u4EA4\u4E92\u7BB1\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u4EA4\u4E92\u7BB1\u7684\u5C5E\u6027\uFF0C\u7528\u4E8E\u73A9\u5BB6\u4E0E\u90E8\u4EF6\u7684\u4EA4\u4E92\u3002\u4EA4\u4E92\u7BB1\u901A\u5E38\u5BF9\u5E94\u6A21\u578B\u4E2D\u7684\u9AA8\u9ABC\uFF0C\u5F53\u73A9\u5BB6\u70B9\u51FB\u65F6\u89E6\u53D1\u4FE1\u53F7\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "bone": {\r\n      "type": "string",\r\n      "description": "\u4EA4\u4E92\u533A\u5BF9\u5E94\u7684\u9AA8\u9ABC\u540D\u79F0\uFF0C\u6A21\u578B\u4E2D\u7684\u9AA8\u9ABC\u5C06\u4F5C\u4E3A\u4EA4\u4E92\u533A\u57DF\u3002"\r\n    },\r\n    "signal_targets": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "type": "array",\r\n        "items": { "type": "string" }\r\n      },\r\n      "description": "\u4FE1\u53F7\u4F20\u8F93\u76EE\u6807\uFF0C\u952E\u4E3A\u4FE1\u53F7\u9891\u9053\uFF0C\u503C\u4E3A\u76EE\u6807\u5217\u8868\uFF08\u5B50\u7CFB\u7EDF/\u8FDE\u63A5\u70B9\u540D/part/global\uFF09\u3002\u4F8B\u5982\uFF1A{\\"door_interact\\": [\\"door_controller\\"]}\u3002"\r\n    },\r\n    "interact_mode": {\r\n      "type": "string",\r\n      "enum": ["fast", "accurate"],\r\n      "default": "fast",\r\n      "description": "\u4EA4\u4E92\u6A21\u5F0F\u3002fast\uFF1A\u5FEB\u901F\u4EA4\u4E92\uFF0C\u4EC5\u9700\u8981\u73A9\u5BB6\u4E0E\u4EA4\u4E92\u533A\u76F8\u4EA4\uFF1Baccurate\uFF1A\u9700\u8981\u73A9\u5BB6\u7784\u51C6\u4EA4\u4E92\u533A\u3002\u4E8C\u8005\u4E2Daccurate\u4F18\u5148\u7EA7\u9AD8\u4E8Efast\u3002"\r\n    },\r\n    "condition": {\r\n      "type": "string",\r\n      "enum": ["AND", "OR", "NAND", "NOR", "XOR", "XNOR"],\r\n      "default": "NOR",\r\n      "description": "\u4EA4\u4E92\u533A\u53EF\u7528\u7684\u6761\u4EF6\uFF0CAND: \u6240\u6709\u8F93\u5165\u4FE1\u53F7\u90FD\u4E0D\u4E3A0\uFF1BOR: \u4EFB\u610F\u4E00\u4E2A\u8F93\u5165\u4FE1\u53F7\u4E0D\u4E3A0\uFF1BNAND: \u6240\u6709\u8F93\u5165\u4FE1\u53F7\u90FD\u4E3A0\uFF1BNOR: \u4EFB\u610F\u4E00\u4E2A\u8F93\u5165\u4FE1\u53F7\u4E3A0\uFF1BXOR: \u53EA\u6709\u4E00\u4E2A\u8F93\u5165\u4FE1\u53F7\u4E3A1\uFF1BXNOR: \u53EA\u6709\u4E00\u4E2A\u8F93\u5165\u4FE1\u53F7\u4E3A0\u3002"\r\n    }\r\n  },\r\n  "required": ["bone", "signal_targets"],\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "bone": "DoorHandle",\r\n      "signal_targets": {\r\n        "door_interact": ["door_controller"]\r\n      },\r\n      "condition": "NOR",\r\n      "description": "\u95E8\u628A\u624B\u4EA4\u4E92\u7BB1\uFF0C\u89E6\u53D1\u95E8\u63A7\u5236\u5668"\r\n    },\r\n    {\r\n      "bone": "Lever",\r\n      "signal_targets": {\r\n        "lever_pull": ["engine_start", "lights"]\r\n      },\r\n      "interact_mode": "accurate",\r\n      "condition": "OR",\r\n      "description": "\u63A7\u5236\u6746\u4EA4\u4E92\u7BB1\uFF0C\u5207\u6362\u5F15\u64CE\u548C\u706F\u5149\u72B6\u6001"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/subpart/sub_part_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/subpart/sub_part_attr.schema.json",\r\n  "title": "\u5B50\u90E8\u4EF6\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u8F7D\u5177\u90E8\u4EF6\u4E2D\u7684\u4E00\u4E2A\u5B50\u90E8\u4EF6\uFF08\u6700\u5C0F\u8FD0\u52A8\u5355\u5143\uFF09\u7684\u5C5E\u6027\uFF0C\u5305\u542B\u7269\u7406\u7279\u6027\u3001\u78B0\u649E\u68C0\u6D4B\u3001\u8FDE\u63A5\u70B9\u548C\u5B50\u7CFB\u7EDF\u7B49",\r\n  "type": "object",\r\n  "properties": {\r\n    "start_bone": {\r\n      "type": "string",\r\n      "default": "",\r\n      "description": "\u5B50\u90E8\u4EF6\u7684\u8D77\u59CB\u9AA8\u9ABC\u540D\u79F0\uFF0C\u7528\u4E8E\u4ECE\u6A21\u578B\u4E2D\u9009\u62E9\u8981\u6E32\u67D3\u548C\u8BA1\u7B97\u78B0\u649E\u7684\u9AA8\u9ABC\u96C6\u5408\u3002\u82E5\u4E3A\u7A7A\uFF0C\u5219\u4F7F\u7528\u6574\u4E2A\u6A21\u578B\u7684\u6240\u6709\u9AA8\u9ABC"\r\n    },\r\n    "end_bones": {\r\n      "type": "array",\r\n      "items": {\r\n        "type": "string"\r\n      },\r\n      "default": [],\r\n      "description": "\u7ED3\u675F\u9AA8\u9ABC\u540D\u79F0\u5217\u8868\uFF0C\u5728\u8D77\u59CB\u9AA8\u9ABC\u548C\u7ED3\u675F\u9AA8\u9ABC\u4E4B\u95F4\u7684\u9AA8\u9ABC\u5C06\u88AB\u5305\u542B\u5728\u5B50\u90E8\u4EF6\u4E2D\u3002\u7528\u4E8E\u6392\u9664\u4E0D\u9700\u8981\u7684\u90E8\u5206"\r\n    },\r\n    "durability": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 20.0,\r\n      "description": "\u5B50\u90E8\u4EF6\u57FA\u7840\u751F\u547D\u503C\uFF0C\u964D\u81F30\u65F6\u8BE5\u5B50\u90E8\u4EF6\u7684\u6240\u6709\u5B50\u7CFB\u7EDF\u4F1A\u762B\u75EA\u3002\u6CE8\u610F\uFF1A\u591A\u4E2A\u5B50\u90E8\u4EF6\u53EF\u5171\u4EAB\u8010\u4E45\u5EA6\uFF08\u7531\u90E8\u4EF6\u5B9A\u4E49\u4E2D\u7684share_durability\u63A7\u5236\uFF09"\r\n    },\r\n    "mass": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 25.0,\r\n      "description": "\u5B50\u90E8\u4EF6\u8D28\u91CF(kg)\uFF0C\u5FC5\u987B\u5927\u4E8E0\uFF0C\u7528\u4E8E\u7269\u7406\u8BA1\u7B97"\r\n    },\r\n    "mass_center": {\r\n      "type": "string",\r\n      "default": "mass_center",\r\n      "description": "\u8D28\u5FC3\u5B9A\u4F4D\u5668\u540D\u79F0\uFF0C\u7528\u4E8E\u6307\u5B9A\u6A21\u578B\u4E2D\u7684\u540C\u540D\u5B9A\u4F4D\u5668\u4F5C\u4E3A\u8D28\u5FC3\u4F4D\u7F6E\u3002\u82E5\u672A\u6307\u5B9A\u6216\u672A\u627E\u5230\u5B9A\u4F4D\u5668\uFF0C\u5219\u4F1A\u4EE5\u78B0\u649E\u4F53\u79EF\u7684\u51E0\u4F55\u4E2D\u5FC3\u4F5C\u4E3A\u8D28\u5FC3\u3002"\r\n    },\r\n    "projected_area": {\r\n      "allOf": [\r\n        { "$ref": "../../base/vector_3d.schema.json" }\r\n      ],\r\n      "default": {"x": 0, "y": 0, "z": 0},\r\n      "description": "\u5B50\u90E8\u4EF6\u5728\u4E09\u4E2A\u8F74\u5411\u4E0A\u7684\u6295\u5F71\u9762\u79EF(m\xB2)\uFF0C\u7528\u4E8E\u8BA1\u7B97\u7A7A\u6C14\u963B\u529B"\r\n    },\r\n    "block_collision": {\r\n      "type": "string",\r\n      "enum": ["true", "false", "ground"],\r\n      "default": "true",\r\n      "description": "\u5730\u5F62\u78B0\u649E\u6A21\u5F0F\uFF1Atrue\uFF08\u9ED8\u8BA4\uFF0C\u4E0E\u6240\u6709\u65B9\u5757\u78B0\u649E\uFF09\uFF0Cground\uFF08\u4EC5\u4E0E\u90E8\u4EF6\u4E4B\u4E0B\u7684\u5730\u9762\u65B9\u5757\u78B0\u649E\uFF09\uFF0Cfalse\uFF08\u4E0D\u4E0E\u4EFB\u4F55\u65B9\u5757\u78B0\u649E\uFF09"\r\n    },\r\n    "collision_height": {\r\n      "type": "number",\r\n      "default": -1.0,\r\n      "description": "\u78B0\u649E\u68C0\u6D4B\u9AD8\u5EA6(m)\uFF0C\u906D\u9047\u7684\u969C\u788D\u5C0F\u4E8E\u6B64\u9AD8\u5EA6\u65F6\u4E0D\u4E0E\u969C\u788D\u53D1\u751F\u78B0\u649E\uFF08\u65B9\u5757\u78B0\u649E\u6A21\u5F0F\u9700\u8981\u4E3Aground\uFF09\u3002\u9ED8\u8BA4-1.0\u8868\u793A\u6240\u6709\u969C\u788D\u5747\u78B0\u649E"\r\n    },\r\n    "climb_assist": {\r\n      "type": "boolean",\r\n      "default": false,\r\n      "description": "\u6500\u722C\u8F85\u52A9\uFF0C\u662F\u5426\u542F\u7528\u6500\u722C\u8F85\u52A9\u529F\u80FD"\r\n    },\r\n    "hit_boxes": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "hit_box/hit_box_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "minProperties": 1,\r\n      "description": "\u78B0\u649E\u7BB1\u5B9A\u4E49\uFF0C\u952E\u4E3A\u9AA8\u9ABC\u540D\u79F0\uFF0C\u4F1A\u5BFB\u627E\u540D\u79F0\u5339\u914D\u7684\u9AA8\u9ABC\uFF0C\u5E76\u6839\u636E\u5176\u4E2D\u7684\u65B9\u5757\u521B\u5EFA\u4E0D\u540C\u5F62\u72B6\u7684\u78B0\u649E\u4F53\u3002\u6BCF\u4E2A\u5B50\u90E8\u4EF6\u81F3\u5C11\u9700\u8981\u4E00\u4E2A\u78B0\u649E\u7BB1"\r\n    },\r\n    "interact_boxes": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "interact_box_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "description": "\u4EA4\u4E92\u7BB1\u5B9A\u4E49\uFF0C\u952E\u4E3A\u4EA4\u4E92\u7BB1\u540D\u79F0\uFF0C\u503C\u4E3A\u4EA4\u4E92\u7BB1\u5C5E\u6027\u3002\u7528\u4E8E\u5B9A\u4E49\u73A9\u5BB6\u53EF\u4EE5\u4EA4\u4E92\u7684\u533A\u57DF"\r\n    },\r\n    "connectors": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "connector/connector_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "description": "\u8FDE\u63A5\u70B9\u5217\u8868\uFF0C\u5B50\u90E8\u4EF6\u7528\u4E8E\u4E0E\u5176\u4ED6\u90E8\u4EF6\u8FDE\u63A5\u7684\u63A5\u53E3\u5B9A\u4E49"\r\n    },\r\n    "subsystems": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "../../subsystem/subsystem_dynamic_attr.schema.json"\r\n      },\r\n      "default": {},\r\n      "description": "\u5B50\u7CFB\u7EDF\u5B9A\u4E49\uFF0C\u952E\u4E3A\u5B50\u7CFB\u7EDF\u540D\u79F0\uFF0C\u503C\u4E3A\u5B50\u7CFB\u7EDF\u52A8\u6001\u5C5E\u6027\u3002\u5B9A\u4E49\u5B50\u90E8\u4EF6\u4E0E\u8FDE\u63A5\u70B9\u3001\u5176\u4ED6\u5B50\u7CFB\u7EDF\u7684\u4EA4\u4E92\u5173\u7CFB"\r\n    },\r\n    "hydro_priority": {\r\n      "type": "integer",\r\n      "default": 0,\r\n      "description": "\u7A7A\u6C14\u963B\u529B\u8BA1\u7B97\u4F18\u5148\u7EA7\uFF0C\u503C\u8D8A\u5927\u4F18\u5148\u7EA7\u8D8A\u9AD8\u3002\u4F18\u5148\u7EA7\u9AD8\u6216\u76F8\u7B49\u7684\u90E8\u4EF6\u4F1A\u906E\u6321\u4F18\u5148\u7EA7\u4F4E\u6216\u76F8\u7B49\u7684\u90E8\u4EF6\uFF0C\u5BFC\u81F4\u963B\u529B\u7CFB\u6570\u53D1\u751F\u53D8\u5316"\r\n    },\r\n    "hydrodynamics": {\r\n      "type": "object",\r\n      "additionalProperties": {\r\n        "$ref": "hydrodynamic_attr.schema.json"\r\n      },\r\n      "default": {\r\n        "": {}\r\n      },\r\n      "description": "\u6D41\u4F53\u52A8\u529B\u8BA1\u7B97\u5B9A\u4F4D\u70B9\u5217\u8868\uFF0C\u952E\u503C\u5BF9\u7684\u952E\u540D\u4F18\u5148\u4F5C\u4E3A\u9AA8\u9ABC\u540D\u79F0\u67E5\u627E\uFF0C\u82E5\u627E\u5230\u5BF9\u5E94\u9AA8\u9ABC\u5219\u4F7F\u7528\u8BE5\u9AA8\u9ABC\u5185\u7684\u6240\u6709\u5B9A\u4F4D\u5668\u4F5C\u4E3A\u6C14\u52A8\u8BA1\u7B97\u70B9\uFF1B\u82E5\u672A\u627E\u5230\u5BF9\u5E94\u9AA8\u9ABC\uFF0C\u5219\u4F5C\u4E3A\u5B9A\u4F4D\u5668\u540D\u79F0\u67E5\u627E\u3002\u7A7A\u5B57\u7B26\u4E32\u8868\u793A\u4EE5\u8D28\u5FC3\u4F4D\u7F6E\u8BA1\u7B97\u3002\u6BCF\u4E2A\u5B9A\u4F4D\u70B9\u7684\u5C5E\u6027\u5B9A\u4E49\u53C2\u8003hydrodynamic_attr.schema.json\u3002"\r\n    }\r\n  },\r\n  "required": ["hit_boxes"],\r\n  "examples": [\r\n    {\r\n      "hit_boxes": {\r\n        "mmCollision_Box_Chassis": {\r\n          "id": "chassis",\r\n          "type": "box"\r\n        }\r\n      },\r\n      "description": "\u6700\u7B80\u5B50\u90E8\u4EF6\u793A\u4F8B\uFF0C\u4EC5\u5305\u542B\u5FC5\u9700\u7684\u78B0\u649E\u7BB1\u5B9A\u4E49"\r\n    },\r\n    {\r\n      "start_bone": "chassis",\r\n      "end_bones": ["engine"],\r\n      "mass_center": "hull_mass_center",\r\n      "durability": 550.0,\r\n      "mass": 1200.0,\r\n      "projected_area": [1.5, 0.8, 3.2],\r\n      "block_collision": "ground",\r\n      "collision_height": 2.5,\r\n      "climb_assist": true,\r\n      "hit_boxes": {\r\n        "mmCollision_Box_Chassis": {\r\n          "id": "chassis",\r\n          "type": "box",\r\n          "thickness": 10\r\n        },\r\n        "mmCollision_Box_Engine": {\r\n          "type": "box",\r\n          "subsystem": "engine",\r\n          "thickness": 3\r\n        }\r\n      },\r\n      "interact_boxes": {\r\n        "driver_seat": {\r\n          "bone": "driver_seat",\r\n          "signal_targets": {\r\n            "seat_interact": ["driver_seat"]\r\n          }\r\n        }\r\n      },\r\n      "connectors": {\r\n        "wheel_front_left": {\r\n          "locator": "wheel_front_left",\r\n          "definition": "machine_max:light_left_wheel"\r\n        },\r\n        "wheel_front_right": {\r\n          "locator": "wheel_front_right",\r\n          "definition": "machine_max:light_right_wheel"\r\n        }\r\n      },\r\n      "subsystems": {\r\n        "driver_seat": {\r\n          "type": "machine_max:seat",\r\n          "definition": "machine_max:default_seat",\r\n          "locator": "driver_seat_point",\r\n          "move_outputs": {\r\n            "move_input": ["car_controller"]\r\n          },\r\n          "regular_outputs": {\r\n            "regular_input": ["car_controller"]\r\n          },\r\n          "aim_outputs": {\r\n            "aim_input": ["car_controller"]\r\n          }\r\n        },\r\n        "passenger_seat": {\r\n          "type": "machine_max:seat",\r\n          "definition": "machine_max:default_passenger_seat",\r\n          "locator": "passenger_seat_point"\r\n        },\r\n        "car_controller": {\r\n          "type": "machine_max:car_controller",\r\n          "definition": "machine_max:default_car_controller",\r\n          "control_outputs": {\r\n            "car_control": ["engine", "gearbox"]\r\n          }\r\n        },\r\n        "engine": {\r\n          "type": "machine_max:engine",\r\n          "definition": "machine_max:default_engine",\r\n          "power_output": "gearbox"\r\n        },\r\n        "gearbox": {\r\n          "type": "machine_max:gearbox",\r\n          "definition": "machine_max:default_gearbox",\r\n          "power_output": "wheel_front_left"\r\n        },\r\n        "trunk_storage": {\r\n          "type": "machine_max:item_storage",\r\n          "definition": "machine_max:default_trunk"\r\n        },\r\n        "glove_box": {\r\n          "type": "machine_max:item_storage",\r\n          "definition": "machine_max:glove_box"\r\n        },\r\n        "left_front_wheel_driver": {\r\n          "type": "machine_max:wheel_driver",\r\n          "definition": "machine_max:default_wheel_driver",\r\n          "connector": "wheel_front_left"\r\n        },\r\n        "right_front_wheel_driver": {\r\n          "type": "machine_max:wheel_driver",\r\n          "definition": "machine_max:default_wheel_driver",\r\n          "connector": "wheel_front_right"\r\n        }\r\n      },\r\n      "hydro_priority": 0,\r\n      "hydrodynamics": {\r\n        "hull_aero": {\r\n          "front_drag": [0.05, 0.6],\r\n          "back_drag": [0.1, 0.8],\r\n          "y_lift": 0.2\r\n        }\r\n      },\r\n      "description": "\u5B8C\u6574\u5B50\u90E8\u4EF6\u793A\u4F8B\uFF0C\u5305\u542B\u8D28\u5FC3\u5B9A\u4F4D\u5668\u3001\u6D41\u4F53\u52A8\u529B\u3001\u8FDE\u63A5\u70B9\u53CA\u5B8C\u6574\u7684\u5B50\u7CFB\u7EDF\u914D\u7F6E\uFF08\u5EA7\u4F4D\u3001\u50A8\u7269\u3001\u63A7\u5236\u5668\u3001\u53D1\u52A8\u673A\u3001\u53D8\u901F\u7BB1\u7B49\uFF09"\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part/variant_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part/variant_attr.json",\r\n  "title": "\u90E8\u4EF6\u53D8\u4F53\u5C5E\u6027",\r\n  "description": "\u5B9A\u4E49\u8F7D\u5177\u90E8\u4EF6\u7684\u4E00\u4E2A\u53D8\u4F53\uFF08Variant\uFF09\uFF0C\u5305\u542B\u8BE5\u53D8\u4F53\u7684\u6A21\u578B\u3001\u7EB9\u7406\u3001\u52A8\u753B\u3001\u6807\u7B7E\u4E0E\u5B50\u90E8\u4EF6\u3002\u90E8\u4EF6\u5B9A\u4E49\u65E2\u53EF\u4EE5\u5185\u8054\u5355\u4E2A\u53D8\u4F53\uFF0C\u4E5F\u53EF\u4EE5\u5199\u6210\u53D8\u4F53\u540D\u5230\u53D8\u4F53\u7684\u6620\u5C04\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "tags": {\r\n      "type": "array",\r\n      "items": {\r\n        "$ref": "../base/resource_location.schema.json"\r\n      },\r\n      "default": [],\r\n      "description": "\u90E8\u4EF6\u6807\u7B7E\uFF0C\u7528\u4E8E\u8FDE\u63A5\u70B9\u5339\u914D\uFF08\u5BF9\u4FA7\u8FDE\u63A5\u70B9\u7684 required_tags / acceptable_tags / forbidden_tags\uFF09\u548C\u529F\u80FD\u5206\u7C7B\u3002"\r\n    },\r\n    "model": {\r\n      "allOf": [\r\n        { "$ref": "../base/resource_location.schema.json" }\r\n      ],\r\n      "description": "\u6A21\u578B\u8DEF\u5F84\u3002\u5FFD\u7565\u524D\u5BFC\u6587\u4EF6\u5939\uFF1Amachine_max:ae86_chassis.geo \u4F1A\u5339\u914D\u5185\u5BB9\u5305 models/ \u76EE\u5F55\u4E0B\u4EFB\u610F\u5C42\u7EA7\u7684 ae86_chassis.geo.json\u3002"\r\n    },\r\n    "textures": {\r\n      "oneOf": [\r\n        {\r\n          "allOf": [\r\n            { "$ref": "../base/resource_location.schema.json" }\r\n          ],\r\n          "description": "\u5355\u4E00\u7EB9\u7406\uFF0C\u4EE5\u540D\u5B57 \\"default\\" \u6CE8\u518C\u3002\u4F8B\u5982 \\"machine_max:textures/part/ae86/ae86_armor.png\\" \u4F1A\u6210\u4E3A\u90E8\u4EF6\u7684 \\"default\\" \u7EB9\u7406\u3002"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "additionalProperties": {\r\n            "$ref": "../base/resource_location.schema.json"\r\n          },\r\n          "minProperties": 1,\r\n          "description": "\u540D\u5B57\u5230\u56FE\u50CF\u8DEF\u5F84\u7684\u6620\u5C04\u3002\u7B2C\u4E00\u4E2A\u6761\u76EE\u662F\u90E8\u4EF6\u521D\u59CB\u4F7F\u7528\u7684\u7EB9\u7406\uFF0C\u6309\u60EF\u4F8B\u547D\u540D\u4E3A \\"default\\"\uFF1B\u5176\u4F59\u6761\u76EE\u53EF\u6309\u540D\u5B57\u5207\u6362\uFF0C\u4F8B\u5982\u7531\u55B7\u7F50\u6D82\u88C5\u3002"\r\n        }\r\n      ],\r\n      "default": {\r\n        "default": "minecraft:missingno"\r\n      },\r\n      "description": "\u7EB9\u7406\u914D\u7F6E\u3002\u6700\u7EC8\u7EB9\u7406\u6620\u5C04\u4E3A\u7A7A\u65F6\u90E8\u4EF6\u52A0\u8F7D\u5931\u8D25\u3002"\r\n    },\r\n    "animations": {\r\n      "allOf": [\r\n        { "$ref": "../base/resource_location.schema.json" }\r\n      ],\r\n      "default": "machine_max:empty",\r\n      "description": "\u52A8\u753B\u8DEF\u5F84\u3002\u5FFD\u7565\u524D\u5BFC\u6587\u4EF6\u5939\uFF1Amachine_max:ae86 \u4F1A\u5339\u914D\u5185\u5BB9\u5305 animations/ \u4E0B\u6587\u4EF6\u5939\u540D\u4E3A ae86 \u7684\u6240\u6709\u52A8\u753B json\uFF0C\u4F5C\u4E3A\u8BE5\u6A21\u578B\u7684\u53EF\u7528\u52A8\u753B\u3002"\r\n    },\r\n    "sub_parts": {\r\n      "oneOf": [\r\n        {\r\n          "allOf": [\r\n            { "$ref": "subpart/sub_part_attr.schema.json" }\r\n          ],\r\n          "description": "\u5355\u4E00\u96F6\u4EF6\uFF0C\u4EE5\u9ED8\u8BA4\u540D\u5B57 \\"sub_part.machine_max.main\\" \u6CE8\u518C\u3002"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "additionalProperties": {\r\n            "$ref": "subpart/sub_part_attr.schema.json"\r\n          },\r\n          "minProperties": 1,\r\n          "description": "\u96F6\u4EF6\u540D\u5230\u96F6\u4EF6\u914D\u7F6E\u7684\u6620\u5C04\u3002"\r\n        }\r\n      ],\r\n      "description": "\u5B50\u90E8\u4EF6\uFF08\u96F6\u4EF6\uFF09\u5B9A\u4E49\u3002\u96F6\u4EF6\u662F\u90E8\u4EF6\u8FD0\u52A8\u7684\u6700\u5C0F\u5355\u5143\uFF0C\u90E8\u4EF6\u7684\u6BCF\u4E2A\u53EF\u52A8\u90E8\u5206\u90FD\u5E94\u5F53\u662F\u4E00\u4E2A\u96F6\u4EF6\u3002"\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "required": ["model", "sub_parts"],\r\n  "examples": [\r\n    {\r\n      "model": "machine_max:ae86_chassis_all_terrain.geo",\r\n      "textures": "machine_max:textures/part/ae86_all_terrain.png",\r\n      "animations": "machine_max:ae86",\r\n      "tags": [],\r\n      "sub_parts": {\r\n        "ae86_chassis_all_terrain": {\r\n          "durability": 550.0,\r\n          "mass": 1200.0,\r\n          "hit_boxes": {\r\n            "mmCollision_Box_Chassis": {\r\n              "type": "box",\r\n              "material": "machine_max:structural_steel",\r\n              "thickness": 10\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    {\r\n      "model": "machine_max:tank_turret_normal.geo",\r\n      "textures": {\r\n        "default": "machine_max:textures/part/tank_turret_1.png",\r\n        "desert": "machine_max:textures/part/tank_turret_desert.png"\r\n      },\r\n      "animations": "machine_max:tank_turret_rotation",\r\n      "tags": ["machine_max:turret", "machine_max:rotatable"],\r\n      "sub_parts": {\r\n        "turret_base": {\r\n          "durability": 300.0,\r\n          "mass": 800.0,\r\n          "hit_boxes": {\r\n            "mmCollision_Turret": {\r\n              "type": "cylinder",\r\n              "material": "machine_max:rha",\r\n              "thickness": 50\r\n            }\r\n          }\r\n        }\r\n      }\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/part_definition_schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/part_definition_schema.json",\r\n  "title": "\u90E8\u4EF6\u5B9A\u4E49",\r\n  "description": "MachineMax\u8F7D\u5177\u90E8\u4EF6\u7684\u5B8C\u6574\u5B9A\u4E49\u6587\u4EF6\uFF0C\u8FD9\u662F\u521B\u5EFA\u81EA\u5B9A\u4E49\u8F7D\u5177\u90E8\u4EF6\u7684\u9876\u5C42\u914D\u7F6E",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "JSON Schema\u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u667A\u80FD\u63D0\u793A\u548C\u9A8C\u8BC1",\r\n      "default": "../../docs/zh_cn/schemas/part_definition_schema.json"\r\n    },\r\n    "icon": {\r\n      "$ref": "base/resource_location.schema.json",\r\n      "description": "\u90E8\u4EF6\u56FE\u6807\u8DEF\u5F84\uFF0C\u7528\u4E8EUI\u663E\u793A\u3002\u82E5\u7559\u7A7A\u4F1A\u4F7F\u7528\u7D2B\u9ED1\u7F3A\u7701\u56FE\u6807\u4F5C\u4E3A\u56FE\u6807",\r\n      "default": "minecraft:missingno"\r\n    },\r\n    "vehicle_durability_rate": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "maximum": 1.0,\r\n      "default": 0.8,\r\n      "description": "\u8F7D\u5177\u8010\u4E45\u8D21\u732E\u7CFB\u6570\uFF0C\u90E8\u4EF6\u8010\u4E45\u5EA6\u6309\u6B64\u6BD4\u4F8B\u8D21\u732E\u7ED9\u8F7D\u5177\u603B\u8010\u4E45\u5EA6\u3002\u4F8B\u59820.8\u8868\u793A\u90E8\u4EF6\u768480%\u8010\u4E45\u5EA6\u8D21\u732E\u7ED9\u8F7D\u5177"\r\n    },\r\n    "vehicle_damage_rate": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.0,\r\n      "description": "\u5E38\u6001\u8F7D\u5177\u4F24\u5BB3\u4F20\u5BFC\u7CFB\u6570\uFF0C\u90E8\u4EF6\u53D7\u5230\u4F24\u5BB3\u65F6\u6309\u6B64\u6BD4\u4F8B\u4F20\u5BFC\u7ED9\u8F7D\u5177\u3002\u4F8B\u59821.0\u8868\u793A100%\u4F24\u5BB3\u4F20\u5BFC"\r\n    },\r\n    "vehicle_damage_rate_destroyed": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 0.1,\r\n      "description": "\u90E8\u4EF6\u88AB\u6467\u6BC1\u540E\u7684\u8F7D\u5177\u4F24\u5BB3\u4F20\u5BFC\u7CFB\u6570\uFF0C\u90E8\u4EF6\u88AB\u6467\u6BC1\u540E\u53D7\u5230\u4F24\u5BB3\u65F6\u6309\u6B64\u6BD4\u4F8B\u4F20\u5BFC\u7ED9\u8F7D\u5177\u3002\u901A\u5E38\u8BBE\u7F6E\u8F83\u4F4E\u4EE5\u9632\u6B62\u97AD\u5C38"\r\n    },\r\n    "functional_threshold": {\r\n      "type": "number",\r\n      "minimum": 0.0,\r\n      "maximum": 1.0,\r\n      "default": 0.3,\r\n      "description": "\u90E8\u4EF6\u529F\u80FD\u9608\u503C\u3002\u5F53\u7EC4\u88C5\u8FDB\u5EA6\u8FBE\u5230\u8BE5\u503C\u540E\uFF0C\u5B50\u7CFB\u7EDF\u53EF\u5DE5\u4F5C\uFF0C\u4E14\u7EBF\u6846\u7EC4\u88C5\u6E32\u67D3\u53EF\u81EA\u52A8\u5173\u95ED\u3002"\r\n    },\r\n    "share_durability": {\r\n      "type": "boolean",\r\n      "default": true,\r\n      "description": "\u90E8\u4EF6\u5185\u96F6\u4EF6\u662F\u5426\u5171\u4EAB\u8010\u4E45\u5EA6\u3002\u5982\u679C\u4E3Atrue\uFF0C\u6240\u6709\u5B50\u90E8\u4EF6\u5171\u4EAB\u540C\u4E00\u8010\u4E45\u5EA6\u6C60\uFF1B\u5982\u679C\u4E3Afalse\uFF0C\u6BCF\u4E2A\u5B50\u90E8\u4EF6\u6709\u72EC\u7ACB\u8010\u4E45\u5EA6"\r\n    },\r\n    "max_stack_size": {\r\n      "type": "integer",\r\n      "minimum": 1,\r\n      "maximum": 64,\r\n      "default": 1,\r\n      "description": "\u90E8\u4EF6\u7269\u54C1\u7684\u6700\u5927\u5806\u53E0\u6570\u91CF\u3002\u51B3\u5B9A\u6B64\u90E8\u4EF6\u5728\u7269\u54C1\u680F\u4E2D\u53EF\u4EE5\u5806\u53E0\u591A\u5C11\u4E2A\u3002\u9ED8\u8BA4\u503C\u4E3A1\uFF08\u4E0D\u53EF\u5806\u53E0\uFF09"\r\n    },\r\n    "variants": {\r\n      "oneOf": [\r\n        {\r\n          "$ref": "part/variant_attr.schema.json",\r\n          "description": "\u5355\u4E00\u53D8\u4F53\u5B9A\u4E49\uFF0C\u4F7F\u7528\u9ED8\u8BA4\u53D8\u4F53\u540D\uFF08\\"default\\"\uFF09"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "additionalProperties": {\r\n            "$ref": "part/variant_attr.schema.json"\r\n          },\r\n          "minProperties": 1,\r\n          "description": "\u591A\u53D8\u4F53\u5B9A\u4E49\uFF0C\u952E\u4E3A\u53D8\u4F53\u540D\u79F0\uFF08\u5982\\"red\\"\u3001\\"blue\\"\u3001\\"camouflage\\"\u7B49\uFF09\uFF0C\u503C\u4E3A\u53D8\u4F53\u914D\u7F6E"\r\n        }\r\n      ],\r\n      "description": "\u90E8\u4EF6\u53D8\u4F53\u5217\u8868\uFF0C\u5E38\u7528\u4F5C\u533A\u5206\u5DE6\u53F3\u5BF9\u79F0\u7684\u90E8\u4EF6\u5982\u8F6E\u80CE\u6216\u624B\u81C2\uFF0C\u652F\u6301\u5355\u4E00\u53D8\u4F53\uFF08\u9ED8\u8BA4\uFF09\u6216\u591A\u4E2A\u53D8\u4F53\u914D\u7F6E\u3002\u6BCF\u4E2A\u53D8\u4F53\u53EF\u4EE5\u6709\u4E0D\u540C\u7684\u5916\u89C2\u548C\u7279\u6027"\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "required": ["variants"],\r\n  "examples": [\r\n    {\r\n      "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",\r\n      "icon": "machine_max:textures/icon/ae86_chassis_all_terrain_icon.png",\r\n      "vehicle_durability_rate": 1.0,\r\n      "vehicle_damage_rate": 1.0,\r\n      "vehicle_damage_rate_destroyed": 0.1,\r\n      "functional_threshold": 0.6,\r\n      "share_durability": true,\r\n      "variants": {\r\n        "model": "machine_max:ae86_chassis_all_terrain.geo",\r\n        "textures": "machine_max:textures/part/ae86_all_terrain.png",\r\n        "animations": "machine_max:ae86",\r\n        "tags": [],\r\n        "sub_parts": {\r\n          "ae86_chassis_all_terrain": {\r\n            "durability": 550.0,\r\n            "mass": 1200.0,\r\n            "hit_boxes": {\r\n              "mmCollision_Box_Chassis": {\r\n                "name": "chassis",\r\n                "type": "box",\r\n                "thickness": 10\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    },\r\n    {\r\n      "$schema": "../../docs/zh_cn/schemas/part_definition_schema.json",\r\n      "icon": "machine_max:textures/icon/car_chassis_icon.png",\r\n      "vehicle_durability_rate": 0.9,\r\n      "variants": {\r\n        "red": {\r\n          "model": "machine_max:car_chassis.geo",\r\n          "textures": "machine_max:textures/part/car_chassis_red.png",\r\n          "sub_parts": {\r\n            "chassis": {\r\n              "durability": 400.0,\r\n              "mass": 800.0,\r\n              "hit_boxes": {\r\n                "collision_box": {\r\n                  "type": "box",\r\n                  "thickness": 8\r\n                }\r\n              }\r\n            }\r\n          }\r\n        },\r\n        "blue": {\r\n          "model": "machine_max:car_chassis.geo",\r\n          "textures": "machine_max:textures/part/car_chassis_blue.png",\r\n          "sub_parts": {\r\n            "chassis": {\r\n              "durability": 400.0,\r\n              "mass": 800.0,\r\n              "hit_boxes": {\r\n                "collision_box": {\r\n                  "type": "box",\r\n                  "thickness": 8\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/recipe/blueprint_research_recipe.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/recipe/blueprint_research_recipe.schema.json",\r\n  "title": "Machine-Max Blueprint Research Recipe",\r\n  "description": "Schema for machine_max:blueprint_research recipe.",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": { "type": "string" },\r\n    "type": { "type": "string", "const": "machine_max:blueprint_research" },\r\n    "research_cost": { "type": "integer", "minimum": 0 },\r\n    "research_ingredients": {\r\n      "type": "array",\r\n      "items": { "$ref": "#/definitions/ingredient_count_pair" },\r\n      "default": []\r\n    },\r\n    "groups": {\r\n      "type": "array",\r\n      "items": { "type": "string" },\r\n      "description": "\u7814\u53D1\u6761\u76EE\u6240\u5C5E\u7684\u7EC4 id \u5217\u8868\uFF0C\u7F3A\u7701\u8868\u793A\u4E0D\u5F52\u5C5E\u4EFB\u4F55\u7EC4",\r\n      "default": []\r\n    },\r\n    "prerequisites": {\r\n      "type": "array",\r\n      "items": { "type": "string" },\r\n      "description": "\u524D\u7F6E\u7814\u53D1\u914D\u65B9 id \u5217\u8868\u3002\u6BCF\u9879\u4E3A\u53E6\u4E00\u6761\u7814\u53D1\u914D\u65B9\u7684\u5B8C\u6574\u6CE8\u518C\u540D\uFF0C\u5373\u8BE5\u914D\u65B9\u6587\u4EF6\u5728 recipe/ \u4E0B\u7684\u76F8\u5BF9\u8DEF\u5F84\uFF0C\u4F8B\u5982 research/ae86_chassis \u5199\u4F5C machine_max:research/ae86_chassis",\r\n      "default": []\r\n    },\r\n    "icon": { "$ref": "#/definitions/resource_location" },\r\n    "description": { "type": "string", "default": "" },\r\n    "unlock_recipe": { "type": "string" }\r\n  },\r\n  "required": ["type", "research_cost", "unlock_recipe"],\r\n  "additionalProperties": false,\r\n  "definitions": {\r\n    "ingredient_selector": {\r\n      "anyOf": [\r\n        {\r\n          "type": "string",\r\n          "pattern": "^#?[a-z0-9_.-]+:[a-z0-9_./-]+$"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "item": { "type": "string" },\r\n            "tag": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["item"] }, { "required": ["tag"] }],\r\n          "additionalProperties": false\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "type": { "type": "string" },\r\n            "neoforge:ingredient_type": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["type"] }, { "required": ["neoforge:ingredient_type"] }],\r\n          "additionalProperties": true\r\n        }\r\n      ]\r\n    },    "ingredient_count_pair": {\r\n      "type": "object",\r\n      "properties": {\r\n        "ingredient": { "$ref": "#/definitions/ingredient_selector" },\r\n        "count": { "type": "integer", "minimum": 0 }\r\n      },\r\n      "required": ["ingredient", "count"],\r\n      "additionalProperties": false\r\n    },\r\n    "resource_location": {\r\n      "type": "string",\r\n      "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"\r\n    }\r\n  }\r\n}', "zh_cn/schemas/recipe/fabricating_recipe.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/recipe/fabricating_recipe.schema.json",\r\n  "title": "Machine-Max Fabricating Recipe",\r\n  "description": "Schema for machine_max:fabricating recipe.",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "JSON Schema reference path for editor validation."\r\n    },\r\n    "type": {\r\n      "type": "string",\r\n      "const": "machine_max:fabricating"\r\n    },\r\n    "ingredients": {\r\n      "type": "array",\r\n      "items": {\r\n        "$ref": "#/definitions/ingredient_count_pair"\r\n      }\r\n    },\r\n    "result": {\r\n      "$ref": "#/definitions/result_item"\r\n    },\r\n    "time": {\r\n      "type": "integer",\r\n      "minimum": 1,\r\n      "default": 100\r\n    },\r\n    "description": {\r\n      "type": "string",\r\n      "default": ""\r\n    }\r\n  },\r\n  "required": [\r\n    "type",\r\n    "ingredients",\r\n    "result"\r\n  ],\r\n  "additionalProperties": false,\r\n  "definitions": {\r\n    "ingredient_selector": {\r\n      "anyOf": [\r\n        {\r\n          "type": "string",\r\n          "pattern": "^#?[a-z0-9_.-]+:[a-z0-9_./-]+$"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "item": { "type": "string" },\r\n            "tag": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["item"] }, { "required": ["tag"] }],\r\n          "additionalProperties": false\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "type": { "type": "string" },\r\n            "neoforge:ingredient_type": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["type"] }, { "required": ["neoforge:ingredient_type"] }],\r\n          "additionalProperties": true\r\n        }\r\n      ]\r\n    },    "ingredient_count_pair": {\r\n      "type": "object",\r\n      "properties": {\r\n        "ingredient": {\r\n          "$ref": "#/definitions/ingredient_selector"\r\n        },\r\n        "count": {\r\n          "type": "integer",\r\n          "minimum": 0\r\n        }\r\n      },\r\n      "required": [\r\n        "ingredient",\r\n        "count"\r\n      ],\r\n      "additionalProperties": false\r\n    },\r\n    "result_item": {\r\n      "type": "object",\r\n      "properties": {\r\n        "id": {\r\n          "type": "string"\r\n        },\r\n        "count": {\r\n          "type": "integer",\r\n          "minimum": 1,\r\n          "maximum": 99,\r\n          "default": 1\r\n        },\r\n        "components": {\r\n          "type": "object"\r\n        }\r\n      },\r\n      "required": [\r\n        "id"\r\n      ],\r\n      "additionalProperties": true\r\n    }\r\n  }\r\n}', "zh_cn/schemas/recipe/part_fabricating_recipe.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/recipe/part_fabricating_recipe.schema.json",\r\n  "title": "Machine-Max Part Fabricating Recipe",\r\n  "description": "machine_max:part_fabricating \u914D\u65B9\u7684 schema\u3002\u96F6\u4EF6\u914D\u65B9\u5FC5\u987B\u4F4D\u4E8E\u5185\u5BB9\u5305\u7684 recipe/part_fabricating/ \u76EE\u5F55\u4E0B\uFF08\u5141\u8BB8\u518D\u5206\u5B50\u76EE\u5F55\uFF09\uFF0C\u6587\u4EF6\u540D\u53EA\u53D6\u6700\u540E\u4E00\u6BB5\u5E76\u7B49\u4E8E\u96F6\u4EF6 id \u7684 path\uFF0C\u6587\u4EF6\u6240\u5728 namespace \u7B49\u4E8E\u96F6\u4EF6 id \u7684 namespace\u3002\u4EA7\u7269\u96F6\u4EF6\u7531\u6587\u4EF6\u540D\u63A8\u5BFC\uFF0CJSON \u53EA\u58F0\u660E\u4EA7\u7269\u6570\u91CF\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": {\r\n      "type": "string",\r\n      "description": "\u7528\u4E8E\u7F16\u8F91\u5668\u6821\u9A8C\u7684 JSON Schema \u5F15\u7528\u8DEF\u5F84\u3002"\r\n    },\r\n    "type": {\r\n      "type": "string",\r\n      "const": "machine_max:part_fabricating"\r\n    },\r\n    "manual": {\r\n      "type": "boolean",\r\n      "default": true,\r\n      "description": "\u9009\u586B\uFF0C\u7F3A\u7701 true\u3002true \u8868\u793A\u88C5\u914D\u65F6\u6D88\u8017\u914D\u65B9\u539F\u6599\uFF08\u7EC4\u88C5\u6E05\u5355\u6309 ceil(\u539F\u6599\u6570\u91CF / result.count) \u6298\u7B97\u3001\u62C6\u5378\u6E05\u5355\u6309 floor \u6298\u7B97\uFF09\uFF1Bfalse \u8868\u793A\u88C5\u914D\u65F6\u6D88\u8017\u672C\u914D\u65B9\u7684\u4EA7\u7269\u6574\u4EF6\uFF0C\u6750\u6599\u6570\u91CF\u6052\u4E3A 1 \u4EF6\u3002"\r\n    },\r\n    "ingredients": {\r\n      "type": "array",\r\n      "items": {\r\n        "$ref": "#/definitions/ingredient_count_pair"\r\n      }\r\n    },\r\n    "result": {\r\n      "$ref": "#/definitions/result_count"\r\n    },\r\n    "time": {\r\n      "type": "integer",\r\n      "minimum": 1,\r\n      "default": 100,\r\n      "description": "\u624B\u52A8\u7EC4\u88C5\u6216\u5236\u9020\u673A\u7684\u5236\u4F5C\u65F6\u95F4\uFF0C\u5355\u4F4D\u4E3A tick\uFF0C1 \u79D2 = 20 tick\u3002"\r\n    },\r\n    "description": {\r\n      "type": "string",\r\n      "default": ""\r\n    }\r\n  },\r\n  "required": [\r\n    "type",\r\n    "ingredients"\r\n  ],\r\n  "additionalProperties": false,\r\n  "definitions": {\r\n    "ingredient_selector": {\r\n      "anyOf": [\r\n        {\r\n          "type": "string",\r\n          "pattern": "^#?[a-z0-9_.-]+:[a-z0-9_./-]+$"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "item": { "type": "string" },\r\n            "tag": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["item"] }, { "required": ["tag"] }],\r\n          "additionalProperties": false\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "type": { "type": "string" },\r\n            "neoforge:ingredient_type": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["type"] }, { "required": ["neoforge:ingredient_type"] }],\r\n          "additionalProperties": true\r\n        }\r\n      ]\r\n    },\r\n    "ingredient_count_pair": {\r\n      "type": "object",\r\n      "properties": {\r\n        "ingredient": {\r\n          "$ref": "#/definitions/ingredient_selector"\r\n        },\r\n        "count": {\r\n          "type": "integer",\r\n          "minimum": 0\r\n        }\r\n      },\r\n      "required": [\r\n        "ingredient",\r\n        "count"\r\n      ],\r\n      "additionalProperties": false\r\n    },\r\n    "result_count": {\r\n      "type": "object",\r\n      "properties": {\r\n        "count": {\r\n          "type": "integer",\r\n          "minimum": 1,\r\n          "default": 1\r\n        }\r\n      },\r\n      "additionalProperties": false,\r\n      "description": "\u4EA7\u7269\u6570\u91CF\uFF0C\u9009\u586B\uFF0C\u7F3A\u7701 1\u3002\u4EA7\u7269\u96F6\u4EF6\u7531\u914D\u65B9\u6587\u4EF6\u540D\u63A8\u5BFC\uFF0C\u6B64\u5904\u53EA\u58F0\u660E\u6570\u91CF\uFF1B\u6570\u91CF\u5FC5\u987B\u5927\u4E8E 0 \u4E14\u4E0D\u8D85\u8FC7\u8BE5\u96F6\u4EF6\u7684\u5806\u53E0\u4E0A\u9650\u3002"\r\n    }\r\n  }\r\n}', "zh_cn/schemas/recipe/research_recipe.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/recipe/research_recipe.schema.json",\r\n  "title": "Machine-Max Research Recipe",\r\n  "description": "Schema for machine_max:research recipe.",\r\n  "type": "object",\r\n  "properties": {\r\n    "$schema": { "type": "string" },\r\n    "type": { "type": "string", "const": "machine_max:research" },\r\n    "research_cost": { "type": "integer", "minimum": 0 },\r\n    "research_ingredients": {\r\n      "type": "array",\r\n      "items": { "$ref": "#/definitions/ingredient_count_pair" },\r\n      "default": []\r\n    },\r\n    "groups": {\r\n      "type": "array",\r\n      "items": { "type": "string" },\r\n      "description": "\u7814\u53D1\u6761\u76EE\u6240\u5C5E\u7684\u7EC4 id \u5217\u8868\uFF0C\u7F3A\u7701\u8868\u793A\u4E0D\u5F52\u5C5E\u4EFB\u4F55\u7EC4",\r\n      "default": []\r\n    },\r\n    "prerequisites": {\r\n      "type": "array",\r\n      "items": { "type": "string" },\r\n      "description": "\u524D\u7F6E\u7814\u53D1\u914D\u65B9 id \u5217\u8868\u3002\u6BCF\u9879\u4E3A\u53E6\u4E00\u6761\u7814\u53D1\u914D\u65B9\u7684\u5B8C\u6574\u6CE8\u518C\u540D\uFF0C\u5373\u8BE5\u914D\u65B9\u6587\u4EF6\u5728 recipe/ \u4E0B\u7684\u76F8\u5BF9\u8DEF\u5F84\uFF0C\u4F8B\u5982 research/ae86_chassis \u5199\u4F5C machine_max:research/ae86_chassis",\r\n      "default": []\r\n    },\r\n    "icon": { "$ref": "#/definitions/resource_location" },\r\n    "description": { "type": "string", "default": "" }\r\n  },\r\n  "required": ["type", "research_cost"],\r\n  "additionalProperties": false,\r\n  "definitions": {\r\n    "ingredient_selector": {\r\n      "anyOf": [\r\n        {\r\n          "type": "string",\r\n          "pattern": "^#?[a-z0-9_.-]+:[a-z0-9_./-]+$"\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "item": { "type": "string" },\r\n            "tag": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["item"] }, { "required": ["tag"] }],\r\n          "additionalProperties": false\r\n        },\r\n        {\r\n          "type": "object",\r\n          "properties": {\r\n            "type": { "type": "string" },\r\n            "neoforge:ingredient_type": { "type": "string" }\r\n          },\r\n          "anyOf": [{ "required": ["type"] }, { "required": ["neoforge:ingredient_type"] }],\r\n          "additionalProperties": true\r\n        }\r\n      ]\r\n    },    "ingredient_count_pair": {\r\n      "type": "object",\r\n      "properties": {\r\n        "ingredient": { "$ref": "#/definitions/ingredient_selector" },\r\n        "count": { "type": "integer", "minimum": 0 }\r\n      },\r\n      "required": ["ingredient", "count"],\r\n      "additionalProperties": false\r\n    },\r\n    "resource_location": {\r\n      "type": "string",\r\n      "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"\r\n    }\r\n  }\r\n}', "zh_cn/schemas/subsystem/base/power_outputs.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subsystem/base/power_outputs.json",\r\n  "title": "\u529F\u7387\u8F93\u51FA\u6620\u5C04",\r\n  "description": "\u529F\u7387\u8F93\u51FA\u76EE\u6807\u53CA\u51CF\u901F\u6BD4\u7684\u6620\u5C04\uFF0C\u7528\u4E8E\u4F20\u52A8\u7CFB\u7EDF\u7B49\u9700\u8981\u5206\u914D\u529F\u7387\u7684\u5B50\u7CFB\u7EDF\u3002",\r\n  "type": "object",\r\n  "additionalProperties": {\r\n    "type": "number",\r\n    "description": "\u51CF\u901F\u6BD4\u6216\u6743\u91CD\uFF0C\u6B63\u6570\u8868\u793A\u51CF\u901F\uFF0C\u8D1F\u6570\u8868\u793A\u589E\u901F\uFF0C0\u8868\u793A\u56FA\u5B9A\u8FDE\u63A5\u3002"\r\n  },\r\n  "default": {},\r\n  "examples": [\r\n    {\r\n      "left_front_wheel_driver": 1.0,\r\n      "right_front_wheel_driver": 1.0,\r\n      "left_back_wheel_driver": 1.0,\r\n      "right_back_wheel_driver": 1.0\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/subsystem/base/signal_targets.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/base/signal_targets.json",\r
   "title": "\u4FE1\u53F7\u76EE\u6807\u6620\u5C04",\r
@@ -5327,31 +5794,43 @@
       "description": "\u5B50\u7CFB\u7EDF\u578B\u53F7\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u6307\u5411\u5BF9\u5E94\u7684\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027\u5B9A\u4E49\u6587\u4EF6\u3002"\r
     },\r
     "control_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "description": "\u7EDF\u4E00\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u5F15\u64CE/\u7535\u52A8\u673A/\u53D8\u901F\u7BB1/\u8F66\u8F6E\u7B49\u53D7\u63A7\u5B50\u7CFB\u7EDF\u5747\u901A\u8FC7\u6B64\u901A\u9053\u8FDB\u884C\u63E1\u624B\u548C\u4FE1\u53F7\u4F20\u8F93\u3002"\r
     },\r
     "speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "vehicle_speed": ["local", "global"] },\r
       "description": "\u79FB\u52A8\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u79FB\u52A8\u901F\u5EA6(m/s)\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684vehicle_speed\u9891\u9053\u3002"\r
     },\r
     "throttle_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "throttle": ["local", "global"] },\r
       "description": "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u6CB9\u95E8[0,1]\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684throttle\u9891\u9053\u3002"\r
     },\r
     "brake_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "brake": ["local", "global"] },\r
       "description": "\u5236\u52A8\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u5236\u52A8\u7A0B\u5EA6[0,1]\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684brake\u9891\u9053\u3002"\r
     },\r
     "steering_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "steering": ["local", "global"] },\r
       "description": "\u8F6C\u5411\u89D2\u5EA6\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u8F6C\u5411\u7A0B\u5EA6[-1,1]\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684steering\u9891\u9053\u3002"\r
     },\r
     "handbrake_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "handbrake": ["local", "global"] },\r
       "description": "\u624B\u5239\u5668\u5F00\u5173\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u624B\u5239\u7A0B\u5EA6[0,1]\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684handbrake\u9891\u9053\u3002"\r
     }\r
@@ -5393,7 +5872,9 @@
       "description": "\u529F\u7387\u8F93\u51FA\u76EE\u6807\uFF0C\u53EF\u586B\u5199\u4EFB\u610F\u672C\u90E8\u4EF6\u5185\u5176\u4ED6\u5B50\u7CFB\u7EDF\u540D\u79F0\u3001\u90E8\u4EF6\u8FDE\u63A5\u70B9\u540D\u79F0\uFF0C\u6216'part'\uFF0C\u6216'global'\u3002"\r
     },\r
     "speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "\u5F15\u64CE\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u5F15\u64CE\u8F6C\u901F(rad/s)\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684engine_speed\u9891\u9053\u3002"\r
     }\r
@@ -5427,7 +5908,9 @@
       "description": "\u529F\u7387\u8F93\u51FA\u76EE\u6807\uFF0C\u5B50\u7CFB\u7EDF\u6216\u90E8\u4EF6\u63A5\u53E3\u540D\u3002"\r
     },\r
     "gear_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "gear": ["part", "global"] },\r
       "description": "\u6321\u4F4D\u540D\u79F0\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u5F53\u524D\u6321\u4F4D\u540D\u79F0\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684gear\u9891\u9053\u3002"\r
     }\r
@@ -5464,46 +5947,48 @@
       "definition": "machine_max:default_trunk"\r
     }\r
   ]\r
-}`, "zh_cn/schemas/subsystem/dynamic/launcher_dynamic_attr.schema.json": `{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://machine_max.io/schemas/subsystem/dynamic/launcher_dynamic_attr.json",
-  "title": "\u53D1\u5C04\u5668\u5B50\u7CFB\u7EDF\u52A8\u6001\u5C5E\u6027",
-  "description": "\u53D1\u5C04\u5668\u5B50\u7CFB\u7EDF\u5B9E\u4F8B\u5C5E\u6027\uFF0C\u5B9A\u4E49\u53D1\u5C04\u70B9\u5B9A\u4F4D\u5668\u3001\u5F00\u706B\u52A8\u753B\u4E0E\u5269\u4F59\u5F39\u836F\u53CD\u9988\u8F93\u51FA\u3002",
-  "properties": {
-    "type": {
-      "type": "string",
-      "const": "machine_max:launcher",
-      "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u5FC5\u987B\u4E3A 'machine_max:launcher'\u3002"
-    },
-    "definition": {
-      "type": "string",
-      "description": "\u5B50\u7CFB\u7EDF\u578B\u53F7\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u6307\u5411\u5BF9\u5E94\u7684\u53D1\u5C04\u5668\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027\u5B9A\u4E49\u6587\u4EF6\u3002"
-    },
-    "locator": {
-      "type": "string",
-      "description": "\u53D1\u5C04\u70B9\u5B9A\u4F4D\u5668\u540D\u79F0\u3002\u6295\u5C04\u7269\u4ECE\u6B64\u5B9A\u4F4D\u5668\u7684\u4E16\u754C\u4F4D\u59FF\u5C04\u51FA\u3002"
-    },
-    "fire_animation": {
-      "type": "string",
-      "default": "fire",
-      "description": "\u5F00\u706B\u65F6\u64AD\u653E\u7684\u52A8\u753B\u540D\uFF0C\u5BF9\u5E94\u96F6\u4EF6\u52A8\u753B\u96C6\u4E2D\u7684\u952E\u3002\u7F3A\u7701\u4E3A 'fire'\u3002\u540C\u540D\u52A8\u753B\u4F1A\u4ECE 0 \u91CD\u542F\uFF1B\u540C\u4E00\u96F6\u4EF6\u4E0A\u7684\u591A\u4E2A\u53D1\u5C04\u5668\u9700\u6307\u5B9A\u4E0D\u540C\u540D\u79F0\u624D\u80FD\u4E92\u4E0D\u6253\u65AD\u3002\u52A8\u753B\u7F3A\u5931\u65F6\u544A\u8B66\u4E00\u6B21\u5E76\u7981\u7528\u5F00\u706B\u52A8\u753B\u3002"
-    },
-    "ammo_outputs": {
-      "$ref": "../base/signal_targets.json",
-      "default": {},
-      "description": "\u5269\u4F59\u5F39\u836F\u53CD\u9988\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\u3002"
-    }
-  },
-  "required": ["type", "definition", "locator"],
-  "additionalProperties": false,
-  "examples": [
-    {
-      "type": "machine_max:launcher",
-      "definition": "machine_max:2a42_launcher",
-      "locator": "2a42_launch_point",
-      "fire_animation": "recoil_2a42"
-    }
-  ]
+}`, "zh_cn/schemas/subsystem/dynamic/launcher_dynamic_attr.schema.json": `{\r
+  "$schema": "http://json-schema.org/draft-07/schema#",\r
+  "$id": "https://machine_max.io/schemas/subsystem/dynamic/launcher_dynamic_attr.json",\r
+  "title": "\u53D1\u5C04\u5668\u5B50\u7CFB\u7EDF\u52A8\u6001\u5C5E\u6027",\r
+  "description": "\u53D1\u5C04\u5668\u5B50\u7CFB\u7EDF\u5B9E\u4F8B\u5C5E\u6027\uFF0C\u5B9A\u4E49\u53D1\u5C04\u70B9\u5B9A\u4F4D\u5668\u3001\u5F00\u706B\u52A8\u753B\u4E0E\u5269\u4F59\u5F39\u836F\u53CD\u9988\u8F93\u51FA\u3002",\r
+  "properties": {\r
+    "type": {\r
+      "type": "string",\r
+      "const": "machine_max:launcher",\r
+      "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u5FC5\u987B\u4E3A 'machine_max:launcher'\u3002"\r
+    },\r
+    "definition": {\r
+      "type": "string",\r
+      "description": "\u5B50\u7CFB\u7EDF\u578B\u53F7\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u6307\u5411\u5BF9\u5E94\u7684\u53D1\u5C04\u5668\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027\u5B9A\u4E49\u6587\u4EF6\u3002"\r
+    },\r
+    "locator": {\r
+      "type": "string",\r
+      "description": "\u53D1\u5C04\u70B9\u5B9A\u4F4D\u5668\u540D\u79F0\u3002\u6295\u5C04\u7269\u4ECE\u6B64\u5B9A\u4F4D\u5668\u7684\u4E16\u754C\u4F4D\u59FF\u5C04\u51FA\u3002"\r
+    },\r
+    "fire_animation": {\r
+      "type": "string",\r
+      "default": "fire",\r
+      "description": "\u5F00\u706B\u65F6\u64AD\u653E\u7684\u52A8\u753B\u540D\uFF0C\u5BF9\u5E94\u96F6\u4EF6\u52A8\u753B\u96C6\u4E2D\u7684\u952E\u3002\u7F3A\u7701\u4E3A 'fire'\u3002\u540C\u540D\u52A8\u753B\u4F1A\u4ECE 0 \u91CD\u542F\uFF1B\u540C\u4E00\u96F6\u4EF6\u4E0A\u7684\u591A\u4E2A\u53D1\u5C04\u5668\u9700\u6307\u5B9A\u4E0D\u540C\u540D\u79F0\u624D\u80FD\u4E92\u4E0D\u6253\u65AD\u3002\u52A8\u753B\u7F3A\u5931\u65F6\u544A\u8B66\u4E00\u6B21\u5E76\u7981\u7528\u5F00\u706B\u52A8\u753B\u3002"\r
+    },\r
+    "ammo_outputs": {\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
+      "default": {},\r
+      "description": "\u5269\u4F59\u5F39\u836F\u53CD\u9988\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\u3002"\r
+    }\r
+  },\r
+  "required": ["type", "definition", "locator"],\r
+  "additionalProperties": false,\r
+  "examples": [\r
+    {\r
+      "type": "machine_max:launcher",\r
+      "definition": "machine_max:2a42_launcher",\r
+      "locator": "2a42_launch_point",\r
+      "fire_animation": "recoil_2a42"\r
+    }\r
+  ]\r
 }`, "zh_cn/schemas/subsystem/dynamic/lighting_dynamic_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/dynamic/lighting_dynamic_attr.json",\r
@@ -5549,31 +6034,43 @@
       "description": "\u5B50\u7CFB\u7EDF\u578B\u53F7\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u6307\u5411\u5BF9\u5E94\u7684\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027\u5B9A\u4E49\u6587\u4EF6\u3002"\r
     },\r
     "control_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "description": "\u7EDF\u4E00\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u5F15\u64CE/\u7535\u52A8\u673A/\u53D8\u901F\u7BB1/\u8F66\u8F6E\u7B49\u53D7\u63A7\u5B50\u7CFB\u7EDF\u5747\u901A\u8FC7\u6B64\u901A\u9053\u8FDB\u884C\u63E1\u624B\u548C\u4FE1\u53F7\u4F20\u8F93\u3002"\r
     },\r
     "speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "vehicle_speed": ["local", "global"] },\r
       "description": "\u79FB\u52A8\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u79FB\u52A8\u901F\u5EA6(m/s)\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684vehicle_speed\u9891\u9053\u3002"\r
     },\r
     "throttle_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "throttle": ["local", "global"] },\r
       "description": "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u6CB9\u95E8[0,1]\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684throttle\u9891\u9053\u3002"\r
     },\r
     "brake_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "brake": ["local", "global"] },\r
       "description": "\u5236\u52A8\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u5236\u52A8\u7A0B\u5EA6[0,1]\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684brake\u9891\u9053\u3002"\r
     },\r
     "steering_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "steering": ["local", "global"] },\r
       "description": "\u8F6C\u5411\u89D2\u5EA6\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u8F6C\u5411\u7A0B\u5EA6[-1,1]\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684steering\u9891\u9053\u3002"\r
     },\r
     "handbrake_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": { "handbrake": ["local", "global"] },\r
       "description": "\u624B\u5239\u5668\u5F00\u5173\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u624B\u5239\u7A0B\u5EA6[0,1]\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684handbrake\u9891\u9053\u3002"\r
     }\r
@@ -5613,7 +6110,9 @@
       "description": "\u529F\u7387\u8F93\u51FA\u76EE\u6807\uFF0C\u53EF\u586B\u5199\u4EFB\u610F\u672C\u90E8\u4EF6\u5185\u5176\u4ED6\u5B50\u7CFB\u7EDF\u540D\u79F0\u3001\u90E8\u4EF6\u8FDE\u63A5\u70B9\u540D\u79F0\uFF0C\u6216'part'\uFF0C\u6216'global'\u3002"\r
     },\r
     "speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "\u7535\u673A\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u7535\u673A\u8F6C\u901F(rad/s)\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684motor_speed\u9891\u9053\u3002"\r
     }\r
@@ -5627,54 +6126,56 @@
       "speed_outputs": { "motor_speed": ["part", "global"] }\r
     }\r
   ]\r
-}`, "zh_cn/schemas/subsystem/dynamic/regen_loader_dynamic_attr.schema.json": `{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://machine_max.io/schemas/subsystem/dynamic/regen_loader_dynamic_attr.json",
-  "title": "\u518D\u751F\u88C5\u5F39\u673A\u5B50\u7CFB\u7EDF\u52A8\u6001\u5C5E\u6027",
-  "description": "\u518D\u751F\u88C5\u5F39\u673A\u5B50\u7CFB\u7EDF\u7684\u5B9E\u4F8B\u5C5E\u6027\uFF0C\u63CF\u8FF0\u5199\u5728\u90E8\u4EF6 JSON \u7684 subsystems \u5757\u91CC\u7684\u9010\u5B9E\u4F8B\u5B57\u6BB5\uFF1A\u5F39\u94FE\u6784\u6210\u3001\u5F39\u94FE\u540D\u4E0E\u5F39\u836F\u53D1\u73B0\u9891\u9053\u3002\u5F39\u4ED3\u5BB9\u91CF\u3001\u518D\u751F\u901F\u7387\u7B49\u6309\u578B\u53F7\u5171\u4EAB\u7684\u5B57\u6BB5\u5199\u5728 definition \u6307\u5411\u7684\u9759\u6001\u5C5E\u6027\u6587\u4EF6\u91CC\uFF0C\u4E0D\u5728\u672C\u6587\u4EF6\u63CF\u8FF0\u8303\u56F4\u5185\u3002",
-  "properties": {
-    "type": {
-      "type": "string",
-      "const": "machine_max:regen_loader",
-      "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u5FC5\u987B\u4E3A 'machine_max:regen_loader'\u3002"
-    },
-    "definition": {
-      "type": "string",
-      "description": "\u5B50\u7CFB\u7EDF\u578B\u53F7\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u6307\u5411\u5BF9\u5E94\u7684\u518D\u751F\u88C5\u5F39\u673A\u9759\u6001\u5C5E\u6027\u5B9A\u4E49\u6587\u4EF6\u3002"
-    },
-    "projectile_types": {
-      "type": "object",
-      "minProperties": 1,
-      "additionalProperties": { "type": "integer", "minimum": 1 },
-      "description": "\u5F39\u94FE\u6784\u6210\uFF1A\u952E\u4E3A\u6295\u5C04\u7269\u8D44\u6E90\u5730\u5740\uFF0C\u503C\u4E3A\u8BE5\u5F39\u79CD\u5728\u5F39\u94FE\u4E2D\u91CD\u590D\u7684\u53D1\u6570\u3002\u9010\u9879\u6309\u53D1\u6570\u5C55\u5F00\u4E3A\u6709\u5E8F\u5F39\u94FE\uFF08\u5982 {\\"machine_max:7_62mm_ap\\": 3, \\"machine_max:7_62mm_tracer\\": 1} \u5C55\u5F00\u4E3A AP\u3001AP\u3001AP\u3001\u66F3\u5149\uFF09\uFF0C\u53D1\u5C04\u65F6\u6309\u8BE5\u987A\u5E8F\u5FAA\u73AF\u53D6\u7528\u3002\u952E\u7684\u4E66\u5199\u987A\u5E8F\u5C31\u662F\u5F39\u94FE\u987A\u5E8F\uFF0C\u56E0\u6B64\u7B2C\u4E00\u6761\u5F39\u79CD\u51B3\u5B9A\u672A\u586B\u5199 belt_label \u65F6\u7684\u5F39\u94FE\u540D\u3002\u5F39\u79CD\u5728\u754C\u9762\u4E0A\u663E\u793A\u7684\u6587\u672C\u53D6\u81EA\u8BE5\u5F39\u79CD\u81EA\u5DF1\u7684\u8BED\u8A00\u952E\uFF08\u6295\u5C04\u7269\u6CE8\u518C\u952E\u6309 <\u547D\u540D\u7A7A\u95F4>.<\u8DEF\u5F84> \u62FC\u5199\uFF0C\u8DEF\u5F84\u4E2D\u7684\u659C\u6760\u539F\u6837\u4FDD\u7559\uFF09\uFF0C\u952E\u5199\u5728\u8BE5\u5F39\u79CD\u6240\u5C5E\u5185\u5BB9\u5305\u7684 lang/<locale>.json \u91CC\uFF1B\u8BED\u8A00\u952E\u7F3A\u5931\u65F6\u754C\u9762\u663E\u793A\u952E\u540D\u672C\u8EAB\uFF0C\u7528\u4E8E\u66B4\u9732\u6F0F\u5199\u3002"
-    },
-    "belt_label": {
-      "type": "string",
-      "default": "",
-      "description": "\u5F39\u94FE\u540D\uFF0C\u663E\u793A\u5728\u6B66\u5668\u72B6\u6001 HUD \u7684\u5F39\u94FE\u9009\u9879\u5361\u4E0A\u3002\u7559\u7A7A\u65F6\u53D6\u5F39\u94FE\u9996\u53D1\u5F39\u79CD\u7684\u5C55\u793A\u6587\u672C\uFF1B\u586B\u5199\u65F6\u6309\u5B57\u9762\u4F7F\u7528\u6240\u586B\u5B57\u7B26\u4E32\u3001\u4E0D\u67E5\u8BED\u8A00\u6587\u4EF6\uFF0C\u56E0\u6B64\u540C\u4E00\u4EFD\u5185\u5BB9\u5305\u5728\u5404\u8BED\u8A00\u4E0B\u663E\u793A\u540C\u4E00\u4E2A\u540D\u5B57\u3002\u5F39\u94FE\u4E0D\u6B62\u4E00\u79CD\u5F39\u3001\u6216\u81EA\u52A8\u53D6\u503C\u4E0D\u591F\u51C6\u786E\u65F6\u586B\u5199\u3002\u8BE5\u5B57\u6BB5\u53EA\u5F71\u54CD\u5F39\u94FE\u540D\uFF0C\u4E0D\u5F71\u54CD\u5F39\u79CD\u69FD\uFF08\u5F39\u79CD\u69FD\u59CB\u7EC8\u62A5\u544A\u6307\u9488\u5F53\u524D\u6307\u5411\u7684\u771F\u5B9E\u5F39\u79CD\uFF09\uFF0C\u4E5F\u4E0D\u53C2\u4E0E\u5F39\u836F\u6C60\u5206\u7EC4\uFF0C\u56E0\u6B64\u6539\u52A8\u5B83\u4E0D\u5F71\u54CD\u5F39\u836F\u8DEF\u7531\u4E0E\u5DF2\u88C5\u586B\u8F7D\u5177\u7684\u72B6\u6001\u3002"
-    },
-    "discovery_outputs": {
-      "$ref": "../base/signal_targets.json",
-      "default": {},
-      "description": "\u5F39\u836F\u53D1\u73B0\u9891\u9053\u53CA\u76EE\u6807\uFF0C\u88C5\u5F39\u673A\u636E\u6B64\u53D1\u73B0\u540C\u8F7D\u5177\u5185\u7684\u5F39\u836F\u6D88\u8D39\u8005\u3002\u53EF\u9009\u3002"
-    }
-  },
-  "required": ["type", "definition", "projectile_types"],
-  "additionalProperties": false,
-  "examples": [
-    {
-      "type": "machine_max:regen_loader",
-      "definition": "machine_max:2a42_regen_loader",
-      "projectile_types": {
-        "machine_max:30mm_ap": 1,
-        "machine_max:30mm_he": 1
-      },
-      "belt_label": "AP/HE",
-      "discovery_outputs": {
-        "ammo_2a42": ["global"]
-      }
-    }
-  ]
+}`, "zh_cn/schemas/subsystem/dynamic/regen_loader_dynamic_attr.schema.json": `{\r
+  "$schema": "http://json-schema.org/draft-07/schema#",\r
+  "$id": "https://machine_max.io/schemas/subsystem/dynamic/regen_loader_dynamic_attr.json",\r
+  "title": "\u518D\u751F\u88C5\u5F39\u673A\u5B50\u7CFB\u7EDF\u52A8\u6001\u5C5E\u6027",\r
+  "description": "\u518D\u751F\u88C5\u5F39\u673A\u5B50\u7CFB\u7EDF\u7684\u5B9E\u4F8B\u5C5E\u6027\uFF0C\u63CF\u8FF0\u5199\u5728\u90E8\u4EF6 JSON \u7684 subsystems \u5757\u91CC\u7684\u9010\u5B9E\u4F8B\u5B57\u6BB5\uFF1A\u5F39\u94FE\u6784\u6210\u3001\u5F39\u94FE\u540D\u4E0E\u5F39\u836F\u53D1\u73B0\u9891\u9053\u3002\u5F39\u4ED3\u5BB9\u91CF\u3001\u518D\u751F\u901F\u7387\u7B49\u6309\u578B\u53F7\u5171\u4EAB\u7684\u5B57\u6BB5\u5199\u5728 definition \u6307\u5411\u7684\u9759\u6001\u5C5E\u6027\u6587\u4EF6\u91CC\uFF0C\u4E0D\u5728\u672C\u6587\u4EF6\u63CF\u8FF0\u8303\u56F4\u5185\u3002",\r
+  "properties": {\r
+    "type": {\r
+      "type": "string",\r
+      "const": "machine_max:regen_loader",\r
+      "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u5FC5\u987B\u4E3A 'machine_max:regen_loader'\u3002"\r
+    },\r
+    "definition": {\r
+      "type": "string",\r
+      "description": "\u5B50\u7CFB\u7EDF\u578B\u53F7\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u6307\u5411\u5BF9\u5E94\u7684\u518D\u751F\u88C5\u5F39\u673A\u9759\u6001\u5C5E\u6027\u5B9A\u4E49\u6587\u4EF6\u3002"\r
+    },\r
+    "projectile_types": {\r
+      "type": "object",\r
+      "minProperties": 1,\r
+      "additionalProperties": { "type": "integer", "minimum": 1 },\r
+      "description": "\u5F39\u94FE\u6784\u6210\uFF1A\u952E\u4E3A\u6295\u5C04\u7269\u8D44\u6E90\u5730\u5740\uFF0C\u503C\u4E3A\u8BE5\u5F39\u79CD\u5728\u5F39\u94FE\u4E2D\u91CD\u590D\u7684\u53D1\u6570\u3002\u9010\u9879\u6309\u53D1\u6570\u5C55\u5F00\u4E3A\u6709\u5E8F\u5F39\u94FE\uFF08\u5982 {\\"machine_max:7_62mm_ap\\": 3, \\"machine_max:7_62mm_tracer\\": 1} \u5C55\u5F00\u4E3A AP\u3001AP\u3001AP\u3001\u66F3\u5149\uFF09\uFF0C\u53D1\u5C04\u65F6\u6309\u8BE5\u987A\u5E8F\u5FAA\u73AF\u53D6\u7528\u3002\u952E\u7684\u4E66\u5199\u987A\u5E8F\u5C31\u662F\u5F39\u94FE\u987A\u5E8F\uFF0C\u56E0\u6B64\u7B2C\u4E00\u6761\u5F39\u79CD\u51B3\u5B9A\u672A\u586B\u5199 belt_label \u65F6\u7684\u5F39\u94FE\u540D\u3002\u5F39\u79CD\u5728\u754C\u9762\u4E0A\u663E\u793A\u7684\u6587\u672C\u53D6\u81EA\u8BE5\u5F39\u79CD\u81EA\u5DF1\u7684\u8BED\u8A00\u952E\uFF08\u6295\u5C04\u7269\u6CE8\u518C\u952E\u6309 <\u547D\u540D\u7A7A\u95F4>.<\u8DEF\u5F84> \u62FC\u5199\uFF0C\u8DEF\u5F84\u4E2D\u7684\u659C\u6760\u539F\u6837\u4FDD\u7559\uFF09\uFF0C\u952E\u5199\u5728\u8BE5\u5F39\u79CD\u6240\u5C5E\u5185\u5BB9\u5305\u7684 lang/<locale>.json \u91CC\uFF1B\u8BED\u8A00\u952E\u7F3A\u5931\u65F6\u754C\u9762\u663E\u793A\u952E\u540D\u672C\u8EAB\uFF0C\u7528\u4E8E\u66B4\u9732\u6F0F\u5199\u3002"\r
+    },\r
+    "belt_label": {\r
+      "type": "string",\r
+      "default": "",\r
+      "description": "\u5F39\u94FE\u540D\uFF0C\u663E\u793A\u5728\u6B66\u5668\u72B6\u6001 HUD \u7684\u5F39\u94FE\u9009\u9879\u5361\u4E0A\u3002\u7559\u7A7A\u65F6\u53D6\u5F39\u94FE\u9996\u53D1\u5F39\u79CD\u7684\u5C55\u793A\u6587\u672C\uFF1B\u586B\u5199\u65F6\u6309\u5B57\u9762\u4F7F\u7528\u6240\u586B\u5B57\u7B26\u4E32\u3001\u4E0D\u67E5\u8BED\u8A00\u6587\u4EF6\uFF0C\u56E0\u6B64\u540C\u4E00\u4EFD\u5185\u5BB9\u5305\u5728\u5404\u8BED\u8A00\u4E0B\u663E\u793A\u540C\u4E00\u4E2A\u540D\u5B57\u3002\u5F39\u94FE\u4E0D\u6B62\u4E00\u79CD\u5F39\u3001\u6216\u81EA\u52A8\u53D6\u503C\u4E0D\u591F\u51C6\u786E\u65F6\u586B\u5199\u3002\u8BE5\u5B57\u6BB5\u53EA\u5F71\u54CD\u5F39\u94FE\u540D\uFF0C\u4E0D\u5F71\u54CD\u5F39\u79CD\u69FD\uFF08\u5F39\u79CD\u69FD\u59CB\u7EC8\u62A5\u544A\u6307\u9488\u5F53\u524D\u6307\u5411\u7684\u771F\u5B9E\u5F39\u79CD\uFF09\uFF0C\u4E5F\u4E0D\u53C2\u4E0E\u5F39\u836F\u6C60\u5206\u7EC4\uFF0C\u56E0\u6B64\u6539\u52A8\u5B83\u4E0D\u5F71\u54CD\u5F39\u836F\u8DEF\u7531\u4E0E\u5DF2\u88C5\u586B\u8F7D\u5177\u7684\u72B6\u6001\u3002"\r
+    },\r
+    "discovery_outputs": {\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
+      "default": {},\r
+      "description": "\u5F39\u836F\u53D1\u73B0\u9891\u9053\u53CA\u76EE\u6807\uFF0C\u88C5\u5F39\u673A\u636E\u6B64\u53D1\u73B0\u540C\u8F7D\u5177\u5185\u7684\u5F39\u836F\u6D88\u8D39\u8005\u3002\u53EF\u9009\u3002"\r
+    }\r
+  },\r
+  "required": ["type", "definition", "projectile_types"],\r
+  "additionalProperties": false,\r
+  "examples": [\r
+    {\r
+      "type": "machine_max:regen_loader",\r
+      "definition": "machine_max:2a42_regen_loader",\r
+      "projectile_types": {\r
+        "machine_max:30mm_ap": 1,\r
+        "machine_max:30mm_he": 1\r
+      },\r
+      "belt_label": "AP/HE",\r
+      "discovery_outputs": {\r
+        "ammo_2a42": ["global"]\r
+      }\r
+    }\r
+  ]\r
 }`, "zh_cn/schemas/subsystem/dynamic/seat_dynamic_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/dynamic/seat_dynamic_attr.json",\r
@@ -5701,12 +6202,16 @@
       "description": "\u63A7\u5236\u7EC4\u9884\u8BBE\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u5B9A\u4E49\u6B64\u5EA7\u6905\u53EF\u7528\u7684\u63A7\u5236\u9891\u9053\u6620\u5C04\u5173\u7CFB\u3002\u4F8B\u5982 machine_max:default_driver\u3002"\r
     },\r
     "passenger_num_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "\u4E58\u5BA2\u6570\u91CF\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002"\r
     },\r
     "camera_discovery_targets": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "\u6444\u50CF\u673A\u53D1\u73B0\u63E1\u624B\u914D\u7F6E\u3002\u5728\u8FD9\u4E9B\u9891\u9053\u4E0A\u53D1\u9001\u63E1\u624B\u4FE1\u53F7\u5373\u53EF\u53D1\u73B0\u672C\u8F7D\u5177\u4E0A\u53EF\u7528\u7684\u6444\u50CF\u673A\u3002\u4F8B\u5982 {\\"gunner_optics\\": [\\"gunner_primary_sight\\"]}"\r
     },\r
@@ -5774,11 +6279,15 @@
       "description": "\u5B50\u7CFB\u7EDF\u578B\u53F7\u7684\u8D44\u6E90\u4F4D\u7F6E\uFF0C\u6307\u5411\u5BF9\u5E94\u7684\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027\u5B9A\u4E49\u6587\u4EF6\u3002"\r
     },\r
     "control_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "description": "\u7EDF\u4E00\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u4E0E\u76EE\u6807\u3002\u53D1\u52A8\u673A\u3001\u7535\u52A8\u673A\u3001\u53D8\u901F\u7BB1\u4E0E\u5C65\u5E26\u9A71\u52A8\u90FD\u901A\u8FC7\u8BE5\u6620\u5C04\u53D1\u73B0\u3002"\r
     },\r
     "speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {\r
         "vehicle_speed": [\r
           "local",\r
@@ -5832,7 +6341,9 @@
       "description": "\u8F66\u4F53\u4FA7\u3001\u8FDE\u63A5\u88AB\u9A71\u52A8\u8F6E\u7684\u8FDE\u63A5\u70B9\u540D\u3002"\r
     },\r
     "speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {\r
         "track_speed": [\r
           "local",\r
@@ -5842,7 +6353,9 @@
       "description": "\u5C65\u5E26\u7EBF\u901F\u5EA6\u8F93\u51FA\uFF08m/s\uFF0C\u524D\u8FDB\u4E3A\u6B63\uFF09\u3002\u53EF\u9009\u3002"\r
     },\r
     "force_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {\r
         "track_force": [\r
           "local",\r
@@ -5892,7 +6405,9 @@
       "description": "\u5B50\u7CFB\u7EDF\u578B\u53F7\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u6307\u5411\u5BF9\u5E94\u7684\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027\u5B9A\u4E49\u6587\u4EF6\u3002"\r
     },\r
     "power_outputs": {\r
-      "$ref": "../base/power_outputs.schema.json",\r
+      "allOf": [\r
+        { "$ref": "../base/power_outputs.schema.json" }\r
+      ],\r
       "description": "\u52A8\u529B\u8F93\u51FA\u76EE\u6807\u53CA\u51CF\u901F\u6BD4\u3002"\r
     }\r
   },\r
@@ -5929,7 +6444,9 @@
       "description": "\u53D7\u63A7\u7684\u9AD8\u7EA7\u8FDE\u63A5\u5668\u540D\u79F0\uFF0C\u70AE\u5854\u9A71\u52A8\u901A\u8FC7\u6B64\u8FDE\u63A5\u5668\u7684New6Dof\u5173\u8282\u63A7\u5236\u70AE\u5854\u65CB\u8F6C\u3002"\r
     },\r
     "rotation_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "\u5F53\u524D\u5173\u8282\u89D2\u5EA6\u53CD\u9988\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u5C06\u5F53\u524D\u504F\u822A/\u4FEF\u4EF0\u89D2\uFF08\u5F27\u5EA6\uFF09\u53D1\u9001\u81F3\u6307\u5B9A\u9891\u9053\u3002"\r
     }\r
@@ -5961,9 +6478,32 @@
       "description": "\u5B50\u7CFB\u7EDF\u578B\u53F7\u7684\u8D44\u6E90\u5730\u5740\uFF0C\u6307\u5411\u5BF9\u5E94\u7684\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027\u5B9A\u4E49\u6587\u4EF6\u3002"\r
     },\r
     "control_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u5217\u8868\u3002\u6B66\u5668\u63A7\u5236\u5668\u901A\u8FC7\u8FD9\u4E9B\u9891\u9053\u5411\u70AE\u5854\u9A71\u52A8\u548C\u53D1\u5C04\u5668\u53D1\u9001\u63A7\u5236\u4FE1\u53F7\uFF0C\u540C\u65F6\u7528\u4E8E\u63E1\u624B\u53D1\u73B0\u5E76\u7ED1\u5B9A\u540C\u8F7D\u5177\u5185\u7684\u4E0B\u5C5E\u5B50\u7CFB\u7EDF\u3002"\r
+    },\r
+    "first_hud_layout": {\r
+      "allOf": [\r
+        { "$ref": "../../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
+      "description": "\u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\uFF1Bmachine_max:empty \u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\u3002"\r
+    },\r
+    "third_hud_layout": {\r
+      "allOf": [\r
+        { "$ref": "../../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
+      "description": "\u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\uFF1Bmachine_max:empty \u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\u3002"\r
+    },\r
+    "scope_hud_layout": {\r
+      "allOf": [\r
+        { "$ref": "../../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
+      "description": "\u70AE\u955C\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\uFF1Bmachine_max:empty \u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\u3002"\r
     }\r
   },\r
   "required": ["type", "definition"],\r
@@ -6000,12 +6540,16 @@
       "description": "\u63A7\u5236\u7684\u8FDE\u63A5\u70B9\u540D\u79F0\u3002"\r
     },\r
     "roll_speed_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "\u6EDA\u52A8\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002"\r
     },\r
     "steering_angle_outputs": {\r
-      "$ref": "../base/signal_targets.json",\r
+      "allOf": [\r
+        { "$ref": "../base/signal_targets.json" }\r
+      ],\r
       "default": {},\r
       "description": "\u8F6C\u5411\u89D2\u5EA6\u4FE1\u53F7\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002"\r
     }\r
@@ -6060,8 +6604,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6069,7 +6625,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6143,11 +6701,6 @@
       "default": false,\r
       "description": "\u662F\u5426\u542F\u7528\u6C34\u5E73\u7A33\u5B9A\uFF08\u8865\u507F\u8F66\u4F53\u504F\u822A\u6643\u52A8\uFF09\u3002"\r
     },\r
-    "base_fov": {\r
-      "type": "number",\r
-      "default": 40.0,\r
-      "description": "\u57FA\u51C6\u89C6\u573A\u89D2\uFF08\u5EA6\uFF09\uFF0C\u5373 1\xD7 \u53D8\u7126\u65F6\u7684 FOV\u3002"\r
-    },\r
     "base_zoom": {\r
       "type": "number",\r
       "default": 1.0,\r
@@ -6174,7 +6727,10 @@
       "description": "\u504F\u822A\u89D2\u5F20\u89D2\u9650\u5236\uFF08\u5EA6\uFF09\uFF0C\u5B9E\u9645\u8303\u56F4 [center - limit/2, center + limit/2]\u3002"\r
     },\r
     "scope_hud_layout": {\r
-      "$ref": "../../base/resource_location.schema.json",\r
+      "allOf": [\r
+        { "$ref": "../../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
       "description": "\u70AE\u955C\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u70AE\u955C\u4E0D\u663E\u793A\u8BE5\u5E03\u5C40\u63D0\u4F9B\u7684 HUD\u3002"\r
     },\r
     "tracking_target_inputs": {\r
@@ -6206,7 +6762,9 @@
       "type": "object",\r
       "properties": {\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u6444\u50CF\u673A\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6214,7 +6772,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u6444\u50CF\u673A\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6222,7 +6782,9 @@
           }\r
         },\r
         "on_deactivate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u6444\u50CF\u673A\u88AB\u7981\u7528\u65F6\u7684\u97F3\u6548\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6241,7 +6803,6 @@
     {\r
       "type": "machine_max:camera",\r
       "basic_durability": 15.0,\r
-      "base_fov": 40.0,\r
       "base_zoom": 1.0,\r
       "max_zoom": 5.0,\r
       "discovery_inputs": [\r
@@ -6387,8 +6948,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6396,7 +6969,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6404,7 +6979,9 @@
           }\r
         },\r
         "handbrake_on": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u624B\u5239\u5F00\u542F\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.car_controller.handbrake_on",\r
@@ -6412,7 +6989,9 @@
           }\r
         },\r
         "handbrake_off": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u624B\u5239\u5173\u95ED\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.car_controller.handbrake_off",\r
@@ -6582,7 +7161,9 @@
       "type": "object",\r
       "properties": {\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6590,7 +7171,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6598,7 +7181,9 @@
           }\r
         },\r
         "on_deactivate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u5173\u95ED\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6698,8 +7283,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6707,7 +7304,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6715,7 +7314,9 @@
           }\r
         },\r
         "clutch_in": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u79BB\u5408\u8E29\u4E0B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.gearbox.clutch_in",\r
@@ -6723,7 +7324,9 @@
           }\r
         },\r
         "clutch_out": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u79BB\u5408\u677E\u5F00\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.gearbox.clutch_out",\r
@@ -6731,7 +7334,9 @@
           }\r
         },\r
         "gear_up": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5347\u6321\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.gearbox.up.light",\r
@@ -6739,7 +7344,9 @@
           }\r
         },\r
         "gear_down": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u964D\u6321\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.gearbox.down.light",\r
@@ -6845,8 +7452,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6854,7 +7473,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -6876,259 +7497,275 @@
       "columns": 9\r
     }\r
   ]\r
-}`, "zh_cn/schemas/subsystem/static/launcher_static_attr.schema.json": `{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://machine_max.io/schemas/subsystem/static/launcher_static_attr.json",
-  "title": "\u53D1\u5C04\u5668\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027",
-  "description": "\u53D1\u5C04\u5668\u5B50\u7CFB\u7EDF\u7684\u9759\u6001\u5C5E\u6027\uFF0C\u5305\u542B\u70AE\u7BA1\u3001\u70AE\u95E9\u3001\u7535\u5BB9\u4E09\u4E2A\u6A21\u5757\u7684\u914D\u7F6E\u3002",
-  "properties": {
-    "$schema": {
-      "type": "string",
-      "description": "JSON Schema \u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u7684\u667A\u80FD\u63D0\u793A\u548C\u6821\u9A8C",
-      "default": "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json"
-    },
-    "type": {
-      "type": "string",
-      "const": "machine_max:launcher",
-      "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u5FC5\u987B\u4E3A 'machine_max:launcher'\u3002"
-    },
-    "basic_durability": {
-      "type": "number",
-      "minimum": 0,
-      "default": 20.0,
-      "description": "\u5B50\u7CFB\u7EDF\u57FA\u7840\u8010\u4E45\u5EA6\u3002\u964D\u4E3A 0 \u65F6\u762B\u75EA\uFF0C\u4FEE\u590D\u81F3 30% \u65F6\u6062\u590D\u529F\u80FD\u3002"
-    },
-    "pass_damage": {
-      "type": "boolean",
-      "default": true,
-      "description": "\u662F\u5426\u5C06\u4F24\u5BB3\u4F20\u9012\u7ED9\u5B50\u7CFB\u7EDF\u6301\u6709\u8005\u3002\u4E3A true \u65F6\u5B50\u7CFB\u7EDF\u53D7\u5230\u7684\u4F24\u5BB3\u4F1A\u4F20\u9012\u7ED9\u96F6\u4EF6\u3002"
-    },
-    "limit_damage": {
-      "type": "boolean",
-      "default": false,
-      "description": "\u662F\u5426\u9650\u5236\u4F24\u5BB3\u4F20\u9012\u503C\u4E0D\u8D85\u8FC7\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6\u3002\u4F8B\u5982 40 \u4F24\u5BB3\u3001\u5269\u4F59 20\uFF0C\u5219\u53EA\u4F20\u9012 20\u3002"
-    },
-    "hidden": {
-      "type": "boolean",
-      "default": false,
-      "description": "\u662F\u5426\u5728 HUD \u4E2D\u9690\u85CF\u8BE5\u5B50\u7CFB\u7EDF\uFF0C\u5E38\u7528\u4E8E\u4EC5\u63D0\u4F9B\u6A21\u578B\u96F6\u4EF6\u4F24\u5BB3\u533A\u5206\u7684\u975E\u529F\u80FD\u5B50\u7CFB\u7EDF\u3002"
-    },
-    "control_inputs": {
-      "type": "array",
-      "items": { "type": "string" },
-      "default": ["weapon_control"],
-      "description": "\u5F00\u706B\u4FE1\u53F7\u8F93\u5165\u9891\u9053\u5217\u8868\uFF0C\u4F18\u5148\u7EA7\u4ECE\u9AD8\u5230\u4F4E\u3002"
-    },
-    "ammo_inputs": {
-      "type": "array",
-      "items": { "type": "string" },
-      "default": [],
-      "description": "\u5F39\u836F\u4F9B\u7ED9\u53D1\u73B0\u9891\u9053\u5217\u8868\u3002\u7A7A\u5217\u8868\u8868\u793A\u4E07\u80FD\u63A5\u6536\u6A21\u5F0F\uFF08\u63A5\u53D7\u4EFB\u610F\u9891\u9053\u4FE1\u53F7\uFF09\u3002"
-    },
-    "sounds": {
-      "type": "object",
-      "properties": {
-        "on_destroyed": {
-          "$ref": "../../base/sound_event.schema.json",
-          "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u3002",
-          "default": {
-            "sound_id": "machine_max:empty_sound",
-            "range": 16
-          }
-        },
-        "on_activate": {
-          "$ref": "../../base/sound_event.schema.json",
-          "description": "\u5B50\u7CFB\u7EDF\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u3002",
-          "default": {
-            "sound_id": "machine_max:empty_sound",
-            "range": 16
-          }
-        },
-        "dry_fire": {
-          "$ref": "../../base/sound_event.schema.json",
-          "description": "\u7A7A\u819B\u51FB\u53D1\u97F3\u6548\uFF08\u6263\u6273\u673A\u4F46\u65E0\u5F39\u836F\u65F6\u64AD\u653E\uFF09\u3002",
-          "default": {
-            "sound_id": "machine_max:subsystem.launcher.dry_fire",
-            "range": 16
-          }
-        }
-      },
-      "additionalProperties": false,
-      "description": "\u53D1\u5C04\u5668\u97F3\u6548\u5C5E\u6027\uFF0C\u5305\u542B\u57FA\u7840\u97F3\u6548\u548C\u7A7A\u819B\u51FB\u53D1\u97F3\u6548\u3002"
-    },
-    "barrel": {
-      "type": "object",
-      "properties": {
-        "durability_weight": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "\u6A21\u5757\u8010\u4E45\u6743\u91CD\u3002\u5B50\u7CFB\u7EDF\u603B\u8010\u4E45\u6309\u5404\u6A21\u5757\u6743\u91CD\u6BD4\u4F8B\u5206\u914D\u3002"
-        },
-        "decay_power": {
-          "type": "number",
-          "minimum": 0,
-          "default": 2.0,
-          "description": "\u70AE\u7BA1\u8870\u51CF\u66F2\u7EBF\u6307\u6570\u3002\u503C\u8D8A\u5927\uFF0C\u6218\u635F\u521D\u671F\u6027\u80FD\u4E0B\u964D\u8D8A\u5E73\u7F13\u3001\u540E\u671F\u4E0B\u964D\u8D8A\u9661\u5CED\u3002"
-        },
-        "damaged_spread": {
-          "type": "number",
-          "minimum": 0,
-          "default": 2.0,
-          "description": "\u6218\u635F\u6781\u9650\u6563\u5E03\u4E58\u6570\u3002\u8010\u4E45\u21920 \u4F46\u672A\u5F52\u96F6\u65F6\u7684\u7CBE\u5EA6\u635F\u5931\u500D\u7387\u3002"
-        },
-        "destroyed_spread": {
-          "type": "number",
-          "minimum": 0,
-          "default": 8.0,
-          "description": "\u6467\u6BC1\u6563\u5E03\u4E58\u6570\u3002\u8010\u4E45\u5F52\u96F6\u540E\u7684\u7CBE\u5EA6\u635F\u5931\u500D\u7387\uFF08\u8D28\u53D8\u60AC\u5D16\uFF09\u3002"
-        },
-        "damaged_muzzle_velocity": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1.0,
-          "default": 0.7,
-          "description": "\u6218\u635F\u6781\u9650\u521D\u901F\u4E58\u6570\u3002\u8010\u4E45\u21920 \u4F46\u672A\u5F52\u96F6\u65F6\u7684\u521D\u901F\u6BD4\u4F8B\u3002"
-        },
-        "destroyed_muzzle_velocity": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1.0,
-          "default": 0.1,
-          "description": "\u6467\u6BC1\u521D\u901F\u4E58\u6570\u3002\u8010\u4E45\u5F52\u96F6\u540E\u7684\u521D\u901F\u6BD4\u4F8B\u3002"
-        },
-        "velocity_multiplier": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "\u521D\u901F\u4E58\u6570\uFF0C\u5148\u5E94\u7528\u6B64\uFF08\u70AE\u7BA1\u957F\u5EA6/\u819B\u7EBF\u51B3\u5B9A\uFF09\u3002"
-        },
-        "velocity_bonus": {
-          "type": "number",
-          "default": 0,
-          "description": "\u521D\u901F\u7EBF\u6027\u52A0\u6210 (m/s)\u3002"
-        },
-        "horizontal_accuracy_multiplier": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "\u6C34\u5E73\u7CBE\u5EA6\u4E58\u5B50\u30021.0 = \u4E0D\u6539\u53D8\u5F39\u4E38\u9ED8\u8BA4\u6C34\u5E73\u7CBE\u5EA6\u3002"
-        },
-        "vertical_accuracy_multiplier": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "\u5782\u76F4\u7CBE\u5EA6\u4E58\u5B50\u30021.0 = \u4E0D\u6539\u53D8\u5F39\u4E38\u9ED8\u8BA4\u5782\u76F4\u7CBE\u5EA6\u3002"
-        },
-        "recoil_multiplier": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.5,
-          "description": "\u540E\u5750\u529B\u500D\u7387\u3002\u603B\u540E\u5750\u51B2\u91CF = \u5F39\u4E38\u603B\u52A8\u91CF \xD7 \u6B64\u503C\u30021.0 = \u4EC5\u5F39\u4E38\u52A8\u91CF\uFF1B\u9ED8\u8BA4 1.5 \u2248 \u5F39\u4E38+\u706B\u836F\u71C3\u6C14\uFF08\u70AE\u53E3\u66B4\u98CE\uFF09\uFF1B\u70AE\u53E3\u5236\u9000\u5668 < 1.0\uFF1B\u65E0\u540E\u5750\u529B\u8BBE\u8BA1 \u2248 0\u3002"
-        }
-      },
-      "additionalProperties": false,
-      "description": "\u70AE\u7BA1\u6A21\u5757\u5C5E\u6027\u2014\u2014\u5B9A\u4E49\u7CBE\u5EA6\u3001\u521D\u901F\u3001\u540E\u5750\u529B\u7684\u57FA\u51C6\u503C\u53CA\u6218\u635F/\u6467\u6BC1\u8870\u51CF\u3002"
-    },
-    "breech": {
-      "type": "object",
-      "properties": {
-        "durability_weight": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "\u6A21\u5757\u8010\u4E45\u6743\u91CD\u3002\u5B50\u7CFB\u7EDF\u603B\u8010\u4E45\u6309\u5404\u6A21\u5757\u6743\u91CD\u6BD4\u4F8B\u5206\u914D\u3002"
-        },
-        "fire_rate": {
-          "type": "number",
-          "minimum": 0,
-          "description": "\u5C04\u901F (RPM)\u3002"
-        },
-        "required_tags": {
-          "type": "array",
-          "items": { "type": "string" },
-          "default": [],
-          "description": "\u5F39\u836F\u5FC5\u987B\u5168\u90E8\u5177\u5907\u7684 tag\u3002\u7A7A\u5217\u8868\u8868\u793A\u4E0D\u8981\u6C42\u3002"
-        },
-        "acceptable_tags": {
-          "type": "array",
-          "items": { "type": "string" },
-          "default": [],
-          "description": "\u5F39\u836F\u81F3\u5C11\u5177\u5907\u5176\u4E00\u5373\u53EF\u7684 tag\u3002\u7A7A\u5217\u8868\u8868\u793A\u63A5\u53D7\u4EFB\u610F\u3002"
-        },
-        "forbidden_tags": {
-          "type": "array",
-          "items": { "type": "string" },
-          "default": [],
-          "description": "\u5F39\u836F\u4E0D\u80FD\u5305\u542B\u7684 tag\u3002\u7A7A\u5217\u8868\u8868\u793A\u4E0D\u7981\u6B62\u3002"
-        }
-      },
-      "additionalProperties": false,
-      "description": "\u70AE\u95E9\u6A21\u5757\u5C5E\u6027\u2014\u2014\u5B9A\u4E49\u5C04\u901F\u548C\u5F39\u836F\u517C\u5BB9\u6027\u7EA6\u675F\u3002"
-    },
-    "capacitor": {
-      "type": "object",
-      "properties": {
-        "durability_weight": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "\u6A21\u5757\u8010\u4E45\u6743\u91CD\u3002\u5B50\u7CFB\u7EDF\u603B\u8010\u4E45\u6309\u5404\u6A21\u5757\u6743\u91CD\u6BD4\u4F8B\u5206\u914D\u3002"
-        },
-        "decay_power": {
-          "type": "number",
-          "minimum": 0,
-          "default": 2.0,
-          "description": "\u7535\u5BB9\u8870\u51CF\u66F2\u7EBF\u6307\u6570\u3002"
-        },
-        "damaged_charge_rate": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1.0,
-          "default": 0.5,
-          "description": "\u6218\u635F\u6781\u9650\u84C4\u529B\u901F\u7387\u4E58\u6570\u3002"
-        },
-        "destroyed_charge_rate": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1.0,
-          "default": 0.0,
-          "description": "\u6467\u6BC1\u84C4\u529B\u901F\u7387\u4E58\u6570\u3002"
-        },
-        "damaged_max_power": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1.0,
-          "default": 0.7,
-          "description": "\u6218\u635F\u6781\u9650\u6700\u5927\u529F\u7387\u4E58\u6570\u3002"
-        },
-        "destroyed_max_power": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1.0,
-          "default": 0.0,
-          "description": "\u6467\u6BC1\u6700\u5927\u529F\u7387\u4E58\u6570\u3002"
-        }
-      },
-      "additionalProperties": false,
-      "description": "\u7535\u5BB9\u6A21\u5757\u5C5E\u6027\uFF08\u53EF\u9009\uFF0C\u7528\u4E8E\u78C1\u8F68\u70AE\u7B49\u84C4\u529B\u6B66\u5668\uFF09\u3002"
-    }
-  },
-  "required": ["type"],
-  "additionalProperties": false,
-  "examples": [
-    {
-      "type": "machine_max:launcher",
-      "description": "\u6700\u7B80\u793A\u4F8B\u2014\u2014\u4EC5\u5FC5\u9700\u5B57\u6BB5\uFF0C\u4F7F\u7528\u6240\u6709\u9ED8\u8BA4\u503C"
-    },
-    {
-      "type": "machine_max:launcher",
-      "basic_durability": 80,
-      "control_inputs": ["weapon.autocannon"],
-      "ammo_inputs": ["ammo_main"],
-      "description": "\u6807\u51C6\u793A\u4F8B\u2014\u2014\u57FA\u7840\u53D1\u5C04\u5668\u914D\u7F6E\uFF08\u7C7B\u578B\u7EA7\u706B\u63A7\u9891\u9053\uFF09"
-    }
-  ]
+}`, "zh_cn/schemas/subsystem/static/launcher_static_attr.schema.json": `{\r
+  "$schema": "http://json-schema.org/draft-07/schema#",\r
+  "$id": "https://machine_max.io/schemas/subsystem/static/launcher_static_attr.json",\r
+  "title": "\u53D1\u5C04\u5668\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027",\r
+  "description": "\u53D1\u5C04\u5668\u5B50\u7CFB\u7EDF\u7684\u9759\u6001\u5C5E\u6027\uFF0C\u5305\u542B\u70AE\u7BA1\u3001\u70AE\u95E9\u3001\u7535\u5BB9\u4E09\u4E2A\u6A21\u5757\u7684\u914D\u7F6E\u3002",\r
+  "properties": {\r
+    "$schema": {\r
+      "type": "string",\r
+      "description": "JSON Schema \u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u7684\u667A\u80FD\u63D0\u793A\u548C\u6821\u9A8C",\r
+      "default": "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json"\r
+    },\r
+    "type": {\r
+      "type": "string",\r
+      "const": "machine_max:launcher",\r
+      "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u5FC5\u987B\u4E3A 'machine_max:launcher'\u3002"\r
+    },\r
+    "basic_durability": {\r
+      "type": "number",\r
+      "minimum": 0,\r
+      "default": 20.0,\r
+      "description": "\u5B50\u7CFB\u7EDF\u57FA\u7840\u8010\u4E45\u5EA6\u3002\u964D\u4E3A 0 \u65F6\u762B\u75EA\uFF0C\u4FEE\u590D\u81F3 30% \u65F6\u6062\u590D\u529F\u80FD\u3002"\r
+    },\r
+    "pass_damage": {\r
+      "type": "boolean",\r
+      "default": true,\r
+      "description": "\u662F\u5426\u5C06\u4F24\u5BB3\u4F20\u9012\u7ED9\u5B50\u7CFB\u7EDF\u6301\u6709\u8005\u3002\u4E3A true \u65F6\u5B50\u7CFB\u7EDF\u53D7\u5230\u7684\u4F24\u5BB3\u4F1A\u4F20\u9012\u7ED9\u96F6\u4EF6\u3002"\r
+    },\r
+    "limit_damage": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "\u662F\u5426\u9650\u5236\u4F24\u5BB3\u4F20\u9012\u503C\u4E0D\u8D85\u8FC7\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6\u3002\u4F8B\u5982 40 \u4F24\u5BB3\u3001\u5269\u4F59 20\uFF0C\u5219\u53EA\u4F20\u9012 20\u3002"\r
+    },\r
+    "hidden": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "\u662F\u5426\u5728 HUD \u4E2D\u9690\u85CF\u8BE5\u5B50\u7CFB\u7EDF\uFF0C\u5E38\u7528\u4E8E\u4EC5\u63D0\u4F9B\u6A21\u578B\u96F6\u4EF6\u4F24\u5BB3\u533A\u5206\u7684\u975E\u529F\u80FD\u5B50\u7CFB\u7EDF\u3002"\r
+    },\r
+    "control_inputs": {\r
+      "type": "array",\r
+      "items": { "type": "string" },\r
+      "default": ["weapon_control"],\r
+      "description": "\u5F00\u706B\u4FE1\u53F7\u8F93\u5165\u9891\u9053\u5217\u8868\uFF0C\u4F18\u5148\u7EA7\u4ECE\u9AD8\u5230\u4F4E\u3002"\r
+    },\r
+    "ammo_inputs": {\r
+      "type": "array",\r
+      "items": { "type": "string" },\r
+      "default": [],\r
+      "description": "\u5F39\u836F\u4F9B\u7ED9\u53D1\u73B0\u9891\u9053\u5217\u8868\u3002\u7A7A\u5217\u8868\u8868\u793A\u4E07\u80FD\u63A5\u6536\u6A21\u5F0F\uFF08\u63A5\u53D7\u4EFB\u610F\u9891\u9053\u4FE1\u53F7\uFF09\u3002"\r
+    },\r
+    "sounds": {\r
+      "type": "object",\r
+      "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
+        "on_destroyed": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
+        "on_activate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
+        "dry_fire": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u7A7A\u819B\u51FB\u53D1\u97F3\u6548\uFF08\u6263\u6273\u673A\u4F46\u65E0\u5F39\u836F\u65F6\u64AD\u653E\uFF09\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:subsystem.launcher.dry_fire",\r
+            "range": 16\r
+          }\r
+        }\r
+      },\r
+      "additionalProperties": false,\r
+      "description": "\u53D1\u5C04\u5668\u97F3\u6548\u5C5E\u6027\uFF0C\u5305\u542B\u57FA\u7840\u97F3\u6548\u548C\u7A7A\u819B\u51FB\u53D1\u97F3\u6548\u3002"\r
+    },\r
+    "barrel": {\r
+      "type": "object",\r
+      "properties": {\r
+        "durability_weight": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.0,\r
+          "description": "\u6A21\u5757\u8010\u4E45\u6743\u91CD\u3002\u5B50\u7CFB\u7EDF\u603B\u8010\u4E45\u6309\u5404\u6A21\u5757\u6743\u91CD\u6BD4\u4F8B\u5206\u914D\u3002"\r
+        },\r
+        "decay_power": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 2.0,\r
+          "description": "\u70AE\u7BA1\u8870\u51CF\u66F2\u7EBF\u6307\u6570\u3002\u503C\u8D8A\u5927\uFF0C\u6218\u635F\u521D\u671F\u6027\u80FD\u4E0B\u964D\u8D8A\u5E73\u7F13\u3001\u540E\u671F\u4E0B\u964D\u8D8A\u9661\u5CED\u3002"\r
+        },\r
+        "damaged_spread": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 2.0,\r
+          "description": "\u6218\u635F\u6781\u9650\u6563\u5E03\u4E58\u6570\u3002\u8010\u4E45\u21920 \u4F46\u672A\u5F52\u96F6\u65F6\u7684\u7CBE\u5EA6\u635F\u5931\u500D\u7387\u3002"\r
+        },\r
+        "destroyed_spread": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 8.0,\r
+          "description": "\u6467\u6BC1\u6563\u5E03\u4E58\u6570\u3002\u8010\u4E45\u5F52\u96F6\u540E\u7684\u7CBE\u5EA6\u635F\u5931\u500D\u7387\uFF08\u8D28\u53D8\u60AC\u5D16\uFF09\u3002"\r
+        },\r
+        "damaged_muzzle_velocity": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "maximum": 1.0,\r
+          "default": 0.7,\r
+          "description": "\u6218\u635F\u6781\u9650\u521D\u901F\u4E58\u6570\u3002\u8010\u4E45\u21920 \u4F46\u672A\u5F52\u96F6\u65F6\u7684\u521D\u901F\u6BD4\u4F8B\u3002"\r
+        },\r
+        "destroyed_muzzle_velocity": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "maximum": 1.0,\r
+          "default": 0.1,\r
+          "description": "\u6467\u6BC1\u521D\u901F\u4E58\u6570\u3002\u8010\u4E45\u5F52\u96F6\u540E\u7684\u521D\u901F\u6BD4\u4F8B\u3002"\r
+        },\r
+        "velocity_multiplier": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.0,\r
+          "description": "\u521D\u901F\u4E58\u6570\uFF0C\u5148\u5E94\u7528\u6B64\uFF08\u70AE\u7BA1\u957F\u5EA6/\u819B\u7EBF\u51B3\u5B9A\uFF09\u3002"\r
+        },\r
+        "velocity_bonus": {\r
+          "type": "number",\r
+          "default": 0,\r
+          "description": "\u521D\u901F\u7EBF\u6027\u52A0\u6210 (m/s)\u3002"\r
+        },\r
+        "horizontal_accuracy_multiplier": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.0,\r
+          "description": "\u6C34\u5E73\u7CBE\u5EA6\u4E58\u5B50\u30021.0 = \u4E0D\u6539\u53D8\u5F39\u4E38\u9ED8\u8BA4\u6C34\u5E73\u7CBE\u5EA6\u3002"\r
+        },\r
+        "vertical_accuracy_multiplier": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.0,\r
+          "description": "\u5782\u76F4\u7CBE\u5EA6\u4E58\u5B50\u30021.0 = \u4E0D\u6539\u53D8\u5F39\u4E38\u9ED8\u8BA4\u5782\u76F4\u7CBE\u5EA6\u3002"\r
+        },\r
+        "recoil_multiplier": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.5,\r
+          "description": "\u540E\u5750\u529B\u500D\u7387\u3002\u603B\u540E\u5750\u51B2\u91CF = \u5F39\u4E38\u603B\u52A8\u91CF \xD7 \u6B64\u503C\u30021.0 = \u4EC5\u5F39\u4E38\u52A8\u91CF\uFF1B\u9ED8\u8BA4 1.5 \u2248 \u5F39\u4E38+\u706B\u836F\u71C3\u6C14\uFF08\u70AE\u53E3\u66B4\u98CE\uFF09\uFF1B\u70AE\u53E3\u5236\u9000\u5668 < 1.0\uFF1B\u65E0\u540E\u5750\u529B\u8BBE\u8BA1 \u2248 0\u3002"\r
+        }\r
+      },\r
+      "additionalProperties": false,\r
+      "description": "\u70AE\u7BA1\u6A21\u5757\u5C5E\u6027\u2014\u2014\u5B9A\u4E49\u7CBE\u5EA6\u3001\u521D\u901F\u3001\u540E\u5750\u529B\u7684\u57FA\u51C6\u503C\u53CA\u6218\u635F/\u6467\u6BC1\u8870\u51CF\u3002"\r
+    },\r
+    "breech": {\r
+      "type": "object",\r
+      "properties": {\r
+        "durability_weight": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.0,\r
+          "description": "\u6A21\u5757\u8010\u4E45\u6743\u91CD\u3002\u5B50\u7CFB\u7EDF\u603B\u8010\u4E45\u6309\u5404\u6A21\u5757\u6743\u91CD\u6BD4\u4F8B\u5206\u914D\u3002"\r
+        },\r
+        "fire_rate": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "description": "\u5C04\u901F (RPM)\u3002"\r
+        },\r
+        "required_tags": {\r
+          "type": "array",\r
+          "items": { "type": "string" },\r
+          "default": [],\r
+          "description": "\u5F39\u836F\u5FC5\u987B\u5168\u90E8\u5177\u5907\u7684 tag\u3002\u7A7A\u5217\u8868\u8868\u793A\u4E0D\u8981\u6C42\u3002"\r
+        },\r
+        "acceptable_tags": {\r
+          "type": "array",\r
+          "items": { "type": "string" },\r
+          "default": [],\r
+          "description": "\u5F39\u836F\u81F3\u5C11\u5177\u5907\u5176\u4E00\u5373\u53EF\u7684 tag\u3002\u7A7A\u5217\u8868\u8868\u793A\u63A5\u53D7\u4EFB\u610F\u3002"\r
+        },\r
+        "forbidden_tags": {\r
+          "type": "array",\r
+          "items": { "type": "string" },\r
+          "default": [],\r
+          "description": "\u5F39\u836F\u4E0D\u80FD\u5305\u542B\u7684 tag\u3002\u7A7A\u5217\u8868\u8868\u793A\u4E0D\u7981\u6B62\u3002"\r
+        }\r
+      },\r
+      "additionalProperties": false,\r
+      "description": "\u70AE\u95E9\u6A21\u5757\u5C5E\u6027\u2014\u2014\u5B9A\u4E49\u5C04\u901F\u548C\u5F39\u836F\u517C\u5BB9\u6027\u7EA6\u675F\u3002"\r
+    },\r
+    "capacitor": {\r
+      "type": "object",\r
+      "properties": {\r
+        "durability_weight": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 1.0,\r
+          "description": "\u6A21\u5757\u8010\u4E45\u6743\u91CD\u3002\u5B50\u7CFB\u7EDF\u603B\u8010\u4E45\u6309\u5404\u6A21\u5757\u6743\u91CD\u6BD4\u4F8B\u5206\u914D\u3002"\r
+        },\r
+        "decay_power": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "default": 2.0,\r
+          "description": "\u7535\u5BB9\u8870\u51CF\u66F2\u7EBF\u6307\u6570\u3002"\r
+        },\r
+        "damaged_charge_rate": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "maximum": 1.0,\r
+          "default": 0.5,\r
+          "description": "\u6218\u635F\u6781\u9650\u84C4\u529B\u901F\u7387\u4E58\u6570\u3002"\r
+        },\r
+        "destroyed_charge_rate": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "maximum": 1.0,\r
+          "default": 0.0,\r
+          "description": "\u6467\u6BC1\u84C4\u529B\u901F\u7387\u4E58\u6570\u3002"\r
+        },\r
+        "damaged_max_power": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "maximum": 1.0,\r
+          "default": 0.7,\r
+          "description": "\u6218\u635F\u6781\u9650\u6700\u5927\u529F\u7387\u4E58\u6570\u3002"\r
+        },\r
+        "destroyed_max_power": {\r
+          "type": "number",\r
+          "minimum": 0,\r
+          "maximum": 1.0,\r
+          "default": 0.0,\r
+          "description": "\u6467\u6BC1\u6700\u5927\u529F\u7387\u4E58\u6570\u3002"\r
+        }\r
+      },\r
+      "additionalProperties": false,\r
+      "description": "\u7535\u5BB9\u6A21\u5757\u5C5E\u6027\uFF08\u53EF\u9009\uFF0C\u7528\u4E8E\u78C1\u8F68\u70AE\u7B49\u84C4\u529B\u6B66\u5668\uFF09\u3002"\r
+    }\r
+  },\r
+  "required": ["type"],\r
+  "additionalProperties": false,\r
+  "examples": [\r
+    {\r
+      "type": "machine_max:launcher",\r
+      "description": "\u6700\u7B80\u793A\u4F8B\u2014\u2014\u4EC5\u5FC5\u9700\u5B57\u6BB5\uFF0C\u4F7F\u7528\u6240\u6709\u9ED8\u8BA4\u503C"\r
+    },\r
+    {\r
+      "type": "machine_max:launcher",\r
+      "basic_durability": 80,\r
+      "control_inputs": ["weapon.autocannon"],\r
+      "ammo_inputs": ["ammo_main"],\r
+      "description": "\u6807\u51C6\u793A\u4F8B\u2014\u2014\u57FA\u7840\u53D1\u5C04\u5668\u914D\u7F6E\uFF08\u7C7B\u578B\u7EA7\u706B\u63A7\u9891\u9053\uFF09"\r
+    }\r
+  ]\r
 }`, "zh_cn/schemas/subsystem/static/lighting_static_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/static/lighting_static_attr.json",\r
@@ -7199,6 +7836,43 @@
       "maximum": 179,\r
       "default": 24,\r
       "description": "\u5B9A\u5411\u5149\u675F\u5B8C\u6574\u9525\u89D2\uFF0C\u5355\u4F4D\u4E3A\u5EA6\u3002"\r
+    },\r
+    "sounds": {\r
+      "type": "object",\r
+      "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
+        "on_destroyed": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
+        "on_activate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        }\r
+      },\r
+      "additionalProperties": false,\r
+      "description": "\u5B50\u7CFB\u7EDF\u97F3\u6548\u914D\u7F6E\u3002"\r
     }\r
   },\r
   "required": ["type"],\r
@@ -7255,7 +7929,7 @@
     "min_steering_radius": {\r
       "type": "number",\r
       "minimum": 0,\r
-      "default": 3.0,\r
+      "default": 5.0,\r
       "description": "\u6700\u5C0F\u8F6C\u5411\u534A\u5F84\uFF0C\u5355\u4F4D\u7C73\u3002\u7528\u4E8E\u4F4E\u901F\u548C\u624B\u5239\u65F6\u7684\u8F6C\u5411\u9650\u5236\u3002"\r
     },\r
     "lateral_acceleration": {\r
@@ -7327,7 +8001,7 @@
     "control_inputs": {\r
       "type": "array",\r
       "items": { "type": "string" },\r
-      "default": ["move_input"],\r
+      "default": ["move_input_p0", "move_input_p1", "move_input_p2", "move_input_p3", "move_input"],\r
       "description": "\u63A7\u5236\u8F93\u5165\u4FE1\u53F7\u952E\u5217\u8868\uFF0C\u4F18\u5148\u7EA7\u4ECE\u9AD8\u5230\u4F4E\u3002"\r
     },\r
     "max_angle": {\r
@@ -7354,8 +8028,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -7363,7 +8049,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -7407,9 +8095,6 @@
         "100": 3.0\r
       },\r
       "manual_gear_shift": true,\r
-      "abs_enabled": true,\r
-      "abs_target_slip_ratio": 0.15,\r
-      "abs_wheel_radius": 0.3,\r
       "max_angle": 35.0,\r
       "parking_angle": -3.0,\r
       "correction_force_multiplier": 0.8\r
@@ -7510,7 +8195,9 @@
       "type": "object",\r
       "properties": {\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -7518,7 +8205,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -7526,7 +8215,9 @@
           }\r
         },\r
         "on_deactivate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u5173\u95ED\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -7561,44 +8252,51 @@
       "generator_efficiency": 0.9\r
     }\r
   ]\r
-}`, "zh_cn/schemas/subsystem/static/regen_loader_static_attr.schema.json": `{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://machine_max.io/schemas/subsystem/static/regen_loader_static_attr.json",
-  "title": "\u518D\u751F\u88C5\u5F39\u673A\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027",
-  "description": "\u518D\u751F\u88C5\u5F39\u673A\u5B50\u7CFB\u7EDF\u7684\u9759\u6001\u5C5E\u6027\uFF0C\u5B9A\u4E49\u5F39\u4ED3\u5BB9\u91CF\u3001\u518D\u751F\u901F\u7387\u3001\u6BCF\u53D1\u80FD\u8017\u548C\u5F39\u836F\u4F9B\u7ED9\u884C\u4E3A\u3002\u7528\u4E8E\u80FD\u91CF\u6B66\u5668\uFF08\u6FC0\u5149\u3001\u7206\u80FD\u675F\uFF09\u548C\u8857\u673A\u98CE\u683C\u518D\u751F\u6B66\u5668\uFF08\u5BFC\u5F39\u51B7\u5374\u518D\u751F\uFF09\u3002\u5F39\u94FE\u6784\u6210\uFF08projectile_types\uFF09\u4E0E\u5F39\u94FE\u540D\uFF08belt_label\uFF09\u662F\u9010\u5B9E\u4F8B\u5B57\u6BB5\uFF0C\u5199\u5728\u90E8\u4EF6 JSON \u7684\u5B50\u7CFB\u7EDF\u5B9E\u4F8B\u5757\u91CC\uFF0C\u89C1 subsystem/dynamic/regen_loader_dynamic_attr.schema.json\uFF0C\u4E0D\u5199\u5728\u672C\u6587\u4EF6\u3002",
-  "properties": {
-    "$schema": { "type": "string", "description": "JSON Schema \u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u7684\u667A\u80FD\u63D0\u793A\u548C\u6821\u9A8C", "default": "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json" },
-    "type": { "type": "string", "const": "machine_max:regen_loader", "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u5FC5\u987B\u4E3A 'machine_max:regen_loader'\u3002" },
-    "basic_durability": { "type": "number", "minimum": 0, "default": 20.0, "description": "\u5B50\u7CFB\u7EDF\u57FA\u7840\u8010\u4E45\u5EA6\u3002\u964D\u4E3A 0 \u65F6\u762B\u75EA\uFF0C\u4FEE\u590D\u81F3 30% \u65F6\u6062\u590D\u529F\u80FD\u3002" },
-    "pass_damage": { "type": "boolean", "default": true, "description": "\u662F\u5426\u5C06\u4F24\u5BB3\u4F20\u9012\u7ED9\u5B50\u7CFB\u7EDF\u6301\u6709\u8005\u3002\u4E3A true \u65F6\u5B50\u7CFB\u7EDF\u53D7\u5230\u7684\u4F24\u5BB3\u4F1A\u4F20\u9012\u7ED9\u96F6\u4EF6\u3002" },
-    "limit_damage": { "type": "boolean", "default": false, "description": "\u662F\u5426\u9650\u5236\u4F24\u5BB3\u4F20\u9012\u503C\u4E0D\u8D85\u8FC7\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6\u3002\u4F8B\u5982 40 \u4F24\u5BB3\u3001\u5269\u4F59 20\uFF0C\u5219\u53EA\u4F20\u9012 20\u3002" },
-    "hidden": { "type": "boolean", "default": false, "description": "\u662F\u5426\u5728 HUD \u4E2D\u9690\u85CF\u8BE5\u5B50\u7CFB\u7EDF\uFF0C\u5E38\u7528\u4E8E\u4EC5\u63D0\u4F9B\u6A21\u578B\u96F6\u4EF6\u4F24\u5BB3\u533A\u5206\u7684\u975E\u529F\u80FD\u5B50\u7CFB\u7EDF\u3002" },
-    "magazine_capacity": { "type": "integer", "minimum": 1, "description": "\u5F39\u4ED3\u5BB9\u91CF\uFF0C\u6700\u5927\u53EF\u5B58\u50A8\u7684\u5F39\u836F\u6570\u91CF\u3002" },
-    "regen_per_minute": { "type": "number", "minimum": 0, "default": 0, "description": "\u6BCF\u5206\u949F\u518D\u751F\u6570\u91CF\u3002regenRoundByRound=true \u65F6\u4E3A\u5F39\u836F\u6062\u590D\u901F\u7387\uFF08\u53D1/\u5206\u949F\uFF09\uFF1Bfalse \u65F6\u4E3A\u5B8C\u6574\u88C5\u586B\u6B21\u6570\uFF08\u6B21/\u5206\u949F\uFF09\u30020 = \u65E0\u81EA\u52A8\u518D\u751F\uFF08\u9759\u6001\u5F39\u4ED3\uFF09\u3002" },
-    "regen_round_by_round": { "type": "boolean", "default": true, "description": "\u518D\u751F\u6A21\u5F0F\u3002true = \u968F\u6253\u968F\u4EA7\uFF08\u6BCF\u6D88\u8017\u4E00\u53D1\u5373\u5F00\u59CB\u518D\u751F\u4E0B\u4E00\u53D1\uFF09\uFF1Bfalse = \u6279\u91CF\u4EA7\u51FA\uFF08\u5F39\u4ED3\u5168\u7A7A\u540E\u4E00\u6B21\u6027\u56DE\u6EE1\uFF09\u3002" },
-    "energy_cost_per_round": { "type": "number", "minimum": 0, "default": 0, "description": "\u6BCF\u53D1\u518D\u751F\u6D88\u8017\u7684\u80FD\u91CF\uFF08\u7126\u8033\uFF09\u30020 = \u514D\u8D39\u518D\u751F\u3002" },
-    "reload_time": { "type": "number", "minimum": 0, "description": "\u8F93\u9001\u4E00\u53D1\u5F39\u836F\u7ED9\u6D88\u8D39\u8005\u6240\u9700\u65F6\u95F4\uFF08\u79D2\uFF09\u3002\u518D\u751F\u6A21\u5F0F\u4E0B\u4E3A\u5F39\u836F\u8BDE\u751F\u5230\u53EF\u7528\u7684\u5EF6\u8FDF\u3002" },
-    "can_supply_multiple": { "type": "boolean", "default": false, "description": "\u662F\u5426\u5141\u8BB8\u591A\u4E2A\u6D88\u8D39\u8005\u540C\u65F6\u4ECE\u6B64\u88C5\u5F39\u673A\u63A5\u6536\u5F39\u836F\u3002" },
-    "regen_delay": { "type": "number", "minimum": 0, "default": 0, "description": "\u8F93\u9001\u5F39\u836F\u540E\u7684\u518D\u751F\u542F\u52A8\u5EF6\u8FDF\uFF08\u79D2\uFF09\u30020 = \u8FB9\u4EA7\u8FB9\u4F9B\uFF0C\u65E0\u5EF6\u8FDF\u3002" },
-    "sounds": {
-      "type": "object",
-      "properties": {
-        "on_destroyed": { "$ref": "../../base/sound_event.schema.json", "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u3002", "default": { "sound_id": "machine_max:empty_sound", "range": 16 } },
-        "on_activate": { "$ref": "../../base/sound_event.schema.json", "description": "\u5B50\u7CFB\u7EDF\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u3002", "default": { "sound_id": "machine_max:empty_sound", "range": 16 } }
-      },
-      "additionalProperties": false,
-      "description": "\u518D\u751F\u88C5\u5F39\u673A\u5B50\u7CFB\u7EDF\u7684\u97F3\u6548\u914D\u7F6E\u3002"
-    }
-  },
-  "required": ["type", "magazine_capacity", "reload_time"],
-  "additionalProperties": false,
-  "examples": [
-    { "type": "machine_max:regen_loader", "magazine_capacity": 100, "reload_time": 0,
-      "description": "\u6700\u7B80\u793A\u4F8B\u2014\u2014\u4EC5\u5FC5\u9700\u5B57\u6BB5"
-    },
-    { "type": "machine_max:regen_loader", "basic_durability": 40, "magazine_capacity": 150, "regen_per_minute": 800, "regen_round_by_round": true, "energy_cost_per_round": 0, "reload_time": 0, "can_supply_multiple": false, "regen_delay": 0.5, "description": "\u968F\u6253\u968F\u4EA7\u793A\u4F8B\u2014\u2014MG34 \u673A\u67AA\uFF0C150 \u53D1\u5F39\u4ED3\uFF0C800 \u53D1/\u5206\u949F\uFF0C0.5 \u79D2\u518D\u751F\u5EF6\u8FDF" },
-    { "type": "machine_max:regen_loader", "basic_durability": 80, "magazine_capacity": 40, "regen_per_minute": 10, "regen_round_by_round": true, "energy_cost_per_round": 0, "reload_time": 2.0, "can_supply_multiple": false, "description": "\u6162\u901F\u518D\u751F\u793A\u4F8B\u2014\u201450mm \u706B\u70AE\uFF0C40 \u53D1\uFF0C10 \u53D1/\u5206\u949F\uFF0C\u5E26\u8F93\u9001\u5EF6\u8FDF" }
-  ]
+}`, "zh_cn/schemas/subsystem/static/regen_loader_static_attr.schema.json": `{\r
+  "$schema": "http://json-schema.org/draft-07/schema#",\r
+  "$id": "https://machine_max.io/schemas/subsystem/static/regen_loader_static_attr.json",\r
+  "title": "\u518D\u751F\u88C5\u5F39\u673A\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027",\r
+  "description": "\u518D\u751F\u88C5\u5F39\u673A\u5B50\u7CFB\u7EDF\u7684\u9759\u6001\u5C5E\u6027\uFF0C\u5B9A\u4E49\u5F39\u4ED3\u5BB9\u91CF\u3001\u518D\u751F\u901F\u7387\u3001\u6BCF\u53D1\u80FD\u8017\u548C\u5F39\u836F\u4F9B\u7ED9\u884C\u4E3A\u3002\u7528\u4E8E\u80FD\u91CF\u6B66\u5668\uFF08\u6FC0\u5149\u3001\u7206\u80FD\u675F\uFF09\u548C\u8857\u673A\u98CE\u683C\u518D\u751F\u6B66\u5668\uFF08\u5BFC\u5F39\u51B7\u5374\u518D\u751F\uFF09\u3002\u5F39\u94FE\u6784\u6210\uFF08projectile_types\uFF09\u4E0E\u5F39\u94FE\u540D\uFF08belt_label\uFF09\u662F\u9010\u5B9E\u4F8B\u5B57\u6BB5\uFF0C\u5199\u5728\u90E8\u4EF6 JSON \u7684\u5B50\u7CFB\u7EDF\u5B9E\u4F8B\u5757\u91CC\uFF0C\u89C1 subsystem/dynamic/regen_loader_dynamic_attr.schema.json\uFF0C\u4E0D\u5199\u5728\u672C\u6587\u4EF6\u3002",\r
+  "properties": {\r
+    "$schema": { "type": "string", "description": "JSON Schema \u5F15\u7528\u8DEF\u5F84\uFF0C\u7528\u4E8E\u7F16\u8F91\u5668\u7684\u667A\u80FD\u63D0\u793A\u548C\u6821\u9A8C", "default": "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json" },\r
+    "type": { "type": "string", "const": "machine_max:regen_loader", "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u5FC5\u987B\u4E3A 'machine_max:regen_loader'\u3002" },\r
+    "basic_durability": { "type": "number", "minimum": 0, "default": 20.0, "description": "\u5B50\u7CFB\u7EDF\u57FA\u7840\u8010\u4E45\u5EA6\u3002\u964D\u4E3A 0 \u65F6\u762B\u75EA\uFF0C\u4FEE\u590D\u81F3 30% \u65F6\u6062\u590D\u529F\u80FD\u3002" },\r
+    "pass_damage": { "type": "boolean", "default": true, "description": "\u662F\u5426\u5C06\u4F24\u5BB3\u4F20\u9012\u7ED9\u5B50\u7CFB\u7EDF\u6301\u6709\u8005\u3002\u4E3A true \u65F6\u5B50\u7CFB\u7EDF\u53D7\u5230\u7684\u4F24\u5BB3\u4F1A\u4F20\u9012\u7ED9\u96F6\u4EF6\u3002" },\r
+    "limit_damage": { "type": "boolean", "default": false, "description": "\u662F\u5426\u9650\u5236\u4F24\u5BB3\u4F20\u9012\u503C\u4E0D\u8D85\u8FC7\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6\u3002\u4F8B\u5982 40 \u4F24\u5BB3\u3001\u5269\u4F59 20\uFF0C\u5219\u53EA\u4F20\u9012 20\u3002" },\r
+    "hidden": { "type": "boolean", "default": false, "description": "\u662F\u5426\u5728 HUD \u4E2D\u9690\u85CF\u8BE5\u5B50\u7CFB\u7EDF\uFF0C\u5E38\u7528\u4E8E\u4EC5\u63D0\u4F9B\u6A21\u578B\u96F6\u4EF6\u4F24\u5BB3\u533A\u5206\u7684\u975E\u529F\u80FD\u5B50\u7CFB\u7EDF\u3002" },\r
+    "magazine_capacity": { "type": "integer", "minimum": 1, "description": "\u5F39\u4ED3\u5BB9\u91CF\uFF0C\u6700\u5927\u53EF\u5B58\u50A8\u7684\u5F39\u836F\u6570\u91CF\u3002" },\r
+    "regen_per_minute": { "type": "number", "minimum": 0, "default": 0, "description": "\u6BCF\u5206\u949F\u518D\u751F\u6570\u91CF\u3002regenRoundByRound=true \u65F6\u4E3A\u5F39\u836F\u6062\u590D\u901F\u7387\uFF08\u53D1/\u5206\u949F\uFF09\uFF1Bfalse \u65F6\u4E3A\u5B8C\u6574\u88C5\u586B\u6B21\u6570\uFF08\u6B21/\u5206\u949F\uFF09\u30020 = \u65E0\u81EA\u52A8\u518D\u751F\uFF08\u9759\u6001\u5F39\u4ED3\uFF09\u3002" },\r
+    "regen_round_by_round": { "type": "boolean", "default": true, "description": "\u518D\u751F\u6A21\u5F0F\u3002true = \u968F\u6253\u968F\u4EA7\uFF08\u6BCF\u6D88\u8017\u4E00\u53D1\u5373\u5F00\u59CB\u518D\u751F\u4E0B\u4E00\u53D1\uFF09\uFF1Bfalse = \u6279\u91CF\u4EA7\u51FA\uFF08\u5F39\u4ED3\u5168\u7A7A\u540E\u4E00\u6B21\u6027\u56DE\u6EE1\uFF09\u3002" },\r
+    "energy_cost_per_round": { "type": "number", "minimum": 0, "default": 0, "description": "\u6BCF\u53D1\u518D\u751F\u6D88\u8017\u7684\u80FD\u91CF\uFF08\u7126\u8033\uFF09\u30020 = \u514D\u8D39\u518D\u751F\u3002" },\r
+    "reload_time": { "type": "number", "minimum": 0, "description": "\u8F93\u9001\u4E00\u53D1\u5F39\u836F\u7ED9\u6D88\u8D39\u8005\u6240\u9700\u65F6\u95F4\uFF08\u79D2\uFF09\u3002\u518D\u751F\u6A21\u5F0F\u4E0B\u4E3A\u5F39\u836F\u8BDE\u751F\u5230\u53EF\u7528\u7684\u5EF6\u8FDF\u3002" },\r
+    "can_supply_multiple": { "type": "boolean", "default": false, "description": "\u662F\u5426\u5141\u8BB8\u591A\u4E2A\u6D88\u8D39\u8005\u540C\u65F6\u4ECE\u6B64\u88C5\u5F39\u673A\u63A5\u6536\u5F39\u836F\u3002" },\r
+    "regen_delay": { "type": "number", "minimum": 0, "default": 0, "description": "\u8F93\u9001\u5F39\u836F\u540E\u7684\u518D\u751F\u542F\u52A8\u5EF6\u8FDF\uFF08\u79D2\uFF09\u30020 = \u8FB9\u4EA7\u8FB9\u4F9B\uFF0C\u65E0\u5EF6\u8FDF\u3002" },\r
+    "sounds": {\r
+      "type": "object",\r
+      "properties": {\r
+        "on_destroyed": { "allOf": [\r
+   { "$ref": "../../base/sound_event.schema.json" }\r
+ ], "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u3002", "default": { "sound_id": "machine_max:empty_sound", "range": 16 } },\r
+        "on_activate": { "allOf": [\r
+   { "$ref": "../../base/sound_event.schema.json" }\r
+ ], "description": "\u5B50\u7CFB\u7EDF\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u3002", "default": { "sound_id": "machine_max:empty_sound", "range": 16 } },\r
+        "on_deactivate": { "allOf": [\r
+   { "$ref": "../../base/sound_event.schema.json" }\r
+ ], "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002", "default": { "sound_id": "machine_max:empty_sound", "range": 16 } }\r
+      },\r
+      "additionalProperties": false,\r
+      "description": "\u518D\u751F\u88C5\u5F39\u673A\u5B50\u7CFB\u7EDF\u7684\u97F3\u6548\u914D\u7F6E\u3002"\r
+    }\r
+  },\r
+  "required": ["type", "magazine_capacity", "reload_time"],\r
+  "additionalProperties": false,\r
+  "examples": [\r
+    { "type": "machine_max:regen_loader", "magazine_capacity": 100, "reload_time": 0,\r
+      "description": "\u6700\u7B80\u793A\u4F8B\u2014\u2014\u4EC5\u5FC5\u9700\u5B57\u6BB5"\r
+    },\r
+    { "type": "machine_max:regen_loader", "basic_durability": 40, "magazine_capacity": 150, "regen_per_minute": 800, "regen_round_by_round": true, "energy_cost_per_round": 0, "reload_time": 0, "can_supply_multiple": false, "regen_delay": 0.5, "description": "\u968F\u6253\u968F\u4EA7\u793A\u4F8B\u2014\u2014MG34 \u673A\u67AA\uFF0C150 \u53D1\u5F39\u4ED3\uFF0C800 \u53D1/\u5206\u949F\uFF0C0.5 \u79D2\u518D\u751F\u5EF6\u8FDF" },\r
+    { "type": "machine_max:regen_loader", "basic_durability": 80, "magazine_capacity": 40, "regen_per_minute": 10, "regen_round_by_round": true, "energy_cost_per_round": 0, "reload_time": 2.0, "can_supply_multiple": false, "description": "\u6162\u901F\u518D\u751F\u793A\u4F8B\u2014\u201450mm \u706B\u70AE\uFF0C40 \u53D1\uFF0C10 \u53D1/\u5206\u949F\uFF0C\u5E26\u8F93\u9001\u5EF6\u8FDF" }\r
+  ]\r
 }`, "zh_cn/schemas/subsystem/static/seat_static_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/static/seat_static_attr.json",\r
@@ -7647,7 +8345,9 @@
       "description": "\u662F\u5426\u6E32\u67D3\u4E58\u5BA2\u6A21\u578B\u3002"\r
     },\r
     "passenger_scale": {\r
-      "$ref": "../../base/vector_3d.schema.json",\r
+      "allOf": [\r
+        { "$ref": "../../base/vector_3d.schema.json" }\r
+      ],\r
       "default": [\r
         1,\r
         1,\r
@@ -7656,7 +8356,9 @@
       "description": "\u4E58\u5BA2\u6A21\u578B\u7684\u7F29\u653E\u6BD4\u4F8B\u3002"\r
     },\r
     "views": {\r
-      "$ref": "view_attr.schema.json",\r
+      "allOf": [\r
+        { "$ref": "view_attr.schema.json" }\r
+      ],\r
       "default": {\r
         "enable_first_person": true,\r
         "first_person_offset": 0.0,\r
@@ -7694,8 +8396,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -7703,7 +8417,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -7797,11 +8513,6 @@
       "default": false,\r
       "description": "Whether horizontal stabilization is enabled (compensates for vehicle yaw)."\r
     },\r
-    "base_fov": {\r
-      "type": "number",\r
-      "default": 40.0,\r
-      "description": "Base field of view in degrees, i.e., the FOV at 1x zoom."\r
-    },\r
     "base_zoom": {\r
       "type": "number",\r
       "default": 1.0,\r
@@ -7828,7 +8539,10 @@
       "description": "Yaw angle span limit in degrees, the actual range is [center - limit/2, center + limit/2]."\r
     },\r
     "scope_hud_layout": {\r
-      "$ref": "../../base/resource_location.schema.json",\r
+      "allOf": [\r
+        { "$ref": "../../base/resource_location.schema.json" }\r
+      ],\r
+      "default": "machine_max:empty",\r
       "description": "\u70AE\u955C\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u70AE\u955C\u4E0D\u663E\u793A\u8BE5\u5E03\u5C40\u63D0\u4F9B\u7684 HUD\u3002"\r
     },\r
     "tracking_target_inputs": {\r
@@ -7860,7 +8574,9 @@
       "type": "object",\r
       "properties": {\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the sight is destroyed.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -7868,7 +8584,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the sight is activated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -7876,7 +8594,9 @@
           }\r
         },\r
         "on_deactivate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "Sound event when the sight is deactivated.",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -7895,7 +8615,6 @@
     {\r
       "type": "machine_max:sight",\r
       "basic_durability": 15.0,\r
-      "base_fov": 40.0,\r
       "base_zoom": 1.0,\r
       "max_zoom": 5.0,\r
       "discovery_inputs": [\r
@@ -7922,6 +8641,21 @@
       "type": "number",\r
       "minimum": 0,\r
       "default": 40.0\r
+    },\r
+    "pass_damage": {\r
+      "type": "boolean",\r
+      "default": true,\r
+      "description": "\u662F\u5426\u5C06\u53D7\u5230\u7684\u4F24\u5BB3\u4F20\u9012\u7ED9\u6240\u5C5E\u96F6\u4EF6\u3002"\r
+    },\r
+    "limit_damage": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "\u662F\u5426\u628A\u4F20\u9012\u7684\u4F24\u5BB3\u9650\u5236\u5728\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6\u4EE5\u5185\u3002"\r
+    },\r
+    "hidden": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "\u662F\u5426\u5728 HUD \u7B49\u754C\u9762\u9690\u85CF\u8BE5\u5B50\u7CFB\u7EDF\u3002"\r
     },\r
     "sounds": {\r
       "type": "object",\r
@@ -8068,6 +8802,21 @@
       "minimum": 0,\r
       "default": 40.0\r
     },\r
+    "pass_damage": {\r
+      "type": "boolean",\r
+      "default": true,\r
+      "description": "\u662F\u5426\u5C06\u53D7\u5230\u7684\u4F24\u5BB3\u4F20\u9012\u7ED9\u6240\u5C5E\u96F6\u4EF6\u3002"\r
+    },\r
+    "limit_damage": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "\u662F\u5426\u628A\u4F20\u9012\u7684\u4F24\u5BB3\u9650\u5236\u5728\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6\u4EE5\u5185\u3002"\r
+    },\r
+    "hidden": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "\u662F\u5426\u5728 HUD \u7B49\u754C\u9762\u9690\u85CF\u8BE5\u5B50\u7CFB\u7EDF\u3002"\r
+    },\r
     "sounds": {\r
       "type": "object",\r
       "additionalProperties": true\r
@@ -8185,8 +8934,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -8194,7 +8955,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -8274,11 +9037,15 @@
       "description": "\u662F\u5426\u9690\u85CF\u5B50\u7CFB\u7EDF\u5728HUD\u7B49\u5904\u7684\u663E\u793A\uFF0C\u5E38\u7528\u4E8E\u7EAF\u7CB9\u63D0\u4F9B\u6A21\u578B\u90E8\u4F4D\u635F\u574F\u5DEE\u5206\u7684\u65E0\u529F\u80FD\u5B50\u7CFB\u7EDF"\r
     },\r
     "yaw": {\r
-      "$ref": "#/definitions/TurretAxisAttr",\r
+      "allOf": [\r
+        { "$ref": "#/definitions/TurretAxisAttr" }\r
+      ],\r
       "description": "\u504F\u822A\u8F74\uFF08\u65B9\u5411\u673A\uFF09\u914D\u7F6E\u3002\u914D\u7F6E\u6B64\u8F74\u540E\u70AE\u5854\u53EF\u8FDB\u884C\u6C34\u5E73\u65B9\u5411\u56DE\u8F6C\u3002\u82E5\u7701\u7565\u5219\u4E0D\u542F\u7528\u504F\u822A\u63A7\u5236\u3002"\r
     },\r
     "pitch": {\r
-      "$ref": "#/definitions/TurretAxisAttr",\r
+      "allOf": [\r
+        { "$ref": "#/definitions/TurretAxisAttr" }\r
+      ],\r
       "description": "\u4FEF\u4EF0\u8F74\uFF08\u9AD8\u4F4E\u673A\uFF09\u914D\u7F6E\u3002\u914D\u7F6E\u6B64\u8F74\u540E\u70AE\u5854\u53EF\u8FDB\u884C\u5782\u76F4\u65B9\u5411\u4FEF\u4EF0\u3002\u82E5\u7701\u7565\u5219\u4E0D\u542F\u7528\u4FEF\u4EF0\u63A7\u5236\u3002"\r
     },\r
     "control_inputs": {\r
@@ -8290,8 +9057,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -8299,7 +9078,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -8353,7 +9134,7 @@
       "description": "\u5B8C\u6574\u793A\u4F8B - \u53CC\u8F74\u914D\u7F6E\uFF0C\u652F\u6301\u591A\u4E2A\u63A7\u5236\u4FE1\u53F7\u6E90"\r
     }\r
   ]\r
-}`, "zh_cn/schemas/subsystem/static/view_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subsystem/static/view_attr.json",\r\n  "title": "\u89C6\u56FE\u5C5E\u6027",\r\n  "description": "\u5EA7\u6905\u5B50\u7CFB\u7EDF\u7684\u89C6\u56FE\u5C5E\u6027\uFF0C\u5B9A\u4E49\u7B2C\u4E00\u4EBA\u79F0\u548C\u7B2C\u4E09\u4EBA\u79F0\u6444\u50CF\u673A\u8BBE\u7F6E\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "enable_first_person": {\r\n      "type": "boolean",\r\n      "default": true,\r\n      "description": "\u662F\u5426\u542F\u7528\u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u3002"\r\n    },\r\n    "first_hud_layout": {\r\n      "$ref": "../../base/resource_location.schema.json",\r\n      "description": "HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\u3002"\r\n    },\r\n    "first_person_offset": {\r\n      "$ref": "../../base/vector_3d.schema.json",\r\n      "default": [\r\n        0.0,\r\n        0.0,\r\n        0.0\r\n      ],\r\n      "description": "\u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u7684\u4E09\u7EF4\u504F\u79FB\uFF0C\u4EE5\u5B50\u7CFB\u7EDF\u9644\u7740\u7684\u96F6\u4EF6\u59FF\u6001\u4E3A\u57FA\u51C6\uFF0Cx+\u53F3\uFF0Cy+\u4E0A\uFF0Cz+\u540E\uFF0C\u5355\u4F4D\u7C73\u3002"\r\n    },\r\n    "enable_third_person": {\r\n      "type": "boolean",\r\n      "default": true,\r\n      "description": "\u662F\u5426\u542F\u7528\u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u3002"\r\n    },\r\n    "third_hud_layout": {\r\n      "$ref": "../../base/resource_location.schema.json",\r\n      "description": "HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\u3002"\r\n    },\r\n    "third_person_offset": {\r\n      "$ref": "../../base/vector_3d.schema.json",\r\n      "default": [\r\n        0.0,\r\n        0.75,\r\n        0.0\r\n      ],\r\n      "description": "\u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u7684\u4E09\u7EF4\u504F\u79FB\uFF0C\u4EE5\u5B50\u7CFB\u7EDF\u9644\u7740\u7684\u96F6\u4EF6\u59FF\u6001\u4E3A\u57FA\u51C6\uFF0Cx+\u53F3\uFF0Cy+\u4E0A\uFF0Cz+\u540E\uFF0C\u5355\u4F4D\u7C73\u3002"\r\n    },\r\n    "follow_vehicle": {\r\n      "type": "boolean",\r\n      "default": true,\r\n      "description": "\u6444\u50CF\u673A\u662F\u5426\u8DDF\u968F\u8F66\u8F86\u8FD0\u52A8\u3002"\r\n    },\r\n    "focus_on_center": {\r\n      "type": "boolean",\r\n      "default": true,\r\n      "description": "\u662F\u5426\u805A\u7126\u4E8E\u8F66\u8F86\u4E2D\u5FC3\u3002"\r\n    },\r\n    "distance_scale": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.1,\r\n      "description": "\u6444\u50CF\u673A\u8DDD\u79BB\u7F29\u653E\u7CFB\u6570\u3002"\r\n    },\r\n    "min_pitch": {\r\n      "type": "number",\r\n      "minimum": -90,\r\n      "maximum": 90,\r\n      "default": -70,\r\n      "description": "\u6700\u5C0F\u4FEF\u4EF0\u89D2\u9650\u5236\uFF08\u5355\u4F4D\uFF1A\u5EA6\uFF09\u3002\u96F6\u5EA6\u5BF9\u5E94\u6C34\u5E73\u65B9\u5411\u3002\u4F8B\u5982\uFF0Cmin_pitch=-30\u8868\u793A\u6700\u591A\u5411\u4E0B\u770B30\u5EA6\u3002"\r\n    },\r\n    "max_pitch": {\r\n      "type": "number",\r\n      "minimum": -90,\r\n      "maximum": 90,\r\n      "default": 45,\r\n      "description": "\u6700\u5927\u4FEF\u4EF0\u89D2\u9650\u5236\uFF08\u5355\u4F4D\uFF1A\u5EA6\uFF09\u3002\u96F6\u5EA6\u5BF9\u5E94\u6C34\u5E73\u65B9\u5411\u3002\u4F8B\u5982\uFF0Cmax_pitch=60\u8868\u793A\u6700\u591A\u5411\u4E0A\u770B60\u5EA6\u3002"\r\n    },\r\n    "yaw_limit": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "maximum": 360,\r\n      "default": 90,\r\n      "description": "\u504F\u822A\u89D2\u9650\u5236\uFF08\u5355\u4F4D\uFF1A\u5EA6\uFF09\u3002\u6B64\u503C\u8868\u793A\u603B\u89D2\u5EA6\u8303\u56F4\uFF0C\u56E0\u6B64\u5B9E\u9645\u504F\u822A\u89D2\u8303\u56F4\u4E3A[180 - yaw_limit/2, 180 + yaw_limit/2]\u3002\u4F8B\u5982\uFF0Cyaw_limit=90\u8868\u793A\u6C34\u5E73\u65B9\u5411\xB145\u5EA6\u7684\u79FB\u52A8\u8303\u56F4\u3002"\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "enable_first_person": true,\r\n      "first_person_offset": [\r\n        0.0,\r\n        0.3,\r\n        0.0\r\n      ],\r\n      "enable_third_person": true,\r\n      "distance_scale": 1.2,\r\n      "first_hud_layout": "machine_max:seat_dashboard"\r\n    },\r\n    {\r\n      "enable_first_person": true,\r\n      "first_person_offset": [\r\n        0.0,\r\n        0.2,\r\n        0.0\r\n      ],\r\n      "enable_third_person": false,\r\n      "min_pitch": -30,\r\n      "max_pitch": 60,\r\n      "yaw_limit": 120\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/subsystem/static/weapon_controller_static_attr.schema.json": `{\r
+}`, "zh_cn/schemas/subsystem/static/view_attr.schema.json": '{\r\n  "$schema": "http://json-schema.org/draft-07/schema#",\r\n  "$id": "https://machine_max.io/schemas/subsystem/static/view_attr.json",\r\n  "title": "\u89C6\u56FE\u5C5E\u6027",\r\n  "description": "\u5EA7\u6905\u5B50\u7CFB\u7EDF\u7684\u89C6\u56FE\u5C5E\u6027\uFF0C\u5B9A\u4E49\u7B2C\u4E00\u4EBA\u79F0\u548C\u7B2C\u4E09\u4EBA\u79F0\u6444\u50CF\u673A\u8BBE\u7F6E\u3002",\r\n  "type": "object",\r\n  "properties": {\r\n    "enable_first_person": {\r\n      "type": "boolean",\r\n      "default": true,\r\n      "description": "\u662F\u5426\u542F\u7528\u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u3002"\r\n    },\r\n    "first_hud_layout": {\r\n      "allOf": [\r\n        { "$ref": "../../base/resource_location.schema.json" }\r\n      ],\r\n      "default": "machine_max:empty",\r\n      "description": "HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\u3002"\r\n    },\r\n    "first_person_offset": {\r\n      "allOf": [\r\n        { "$ref": "../../base/vector_3d.schema.json" }\r\n      ],\r\n      "default": [\r\n        0.0,\r\n        0.0,\r\n        0.0\r\n      ],\r\n      "description": "\u7B2C\u4E00\u4EBA\u79F0\u89C6\u89D2\u7684\u4E09\u7EF4\u504F\u79FB\uFF0C\u4EE5\u5B50\u7CFB\u7EDF\u9644\u7740\u7684\u96F6\u4EF6\u59FF\u6001\u4E3A\u57FA\u51C6\uFF0Cx+\u53F3\uFF0Cy+\u4E0A\uFF0Cz+\u540E\uFF0C\u5355\u4F4D\u7C73\u3002"\r\n    },\r\n    "enable_third_person": {\r\n      "type": "boolean",\r\n      "default": true,\r\n      "description": "\u662F\u5426\u542F\u7528\u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u3002"\r\n    },\r\n    "third_hud_layout": {\r\n      "allOf": [\r\n        { "$ref": "../../base/resource_location.schema.json" }\r\n      ],\r\n      "default": "machine_max:empty",\r\n      "description": "HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u8BE5\u89C6\u89D2\u4E0D\u663E\u793A HUD\u3002"\r\n    },\r\n    "third_person_offset": {\r\n      "allOf": [\r\n        { "$ref": "../../base/vector_3d.schema.json" }\r\n      ],\r\n      "default": [\r\n        0.0,\r\n        0.75,\r\n        0.0\r\n      ],\r\n      "description": "\u7B2C\u4E09\u4EBA\u79F0\u89C6\u89D2\u7684\u4E09\u7EF4\u504F\u79FB\uFF0C\u4EE5\u5B50\u7CFB\u7EDF\u9644\u7740\u7684\u96F6\u4EF6\u59FF\u6001\u4E3A\u57FA\u51C6\uFF0Cx+\u53F3\uFF0Cy+\u4E0A\uFF0Cz+\u540E\uFF0C\u5355\u4F4D\u7C73\u3002"\r\n    },\r\n    "follow_vehicle": {\r\n      "type": "boolean",\r\n      "default": true,\r\n      "description": "\u6444\u50CF\u673A\u662F\u5426\u8DDF\u968F\u8F66\u8F86\u8FD0\u52A8\u3002"\r\n    },\r\n    "focus_on_center": {\r\n      "type": "boolean",\r\n      "default": true,\r\n      "description": "\u662F\u5426\u805A\u7126\u4E8E\u8F66\u8F86\u4E2D\u5FC3\u3002"\r\n    },\r\n    "distance_scale": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "default": 1.1,\r\n      "description": "\u6444\u50CF\u673A\u8DDD\u79BB\u7F29\u653E\u7CFB\u6570\u3002"\r\n    },\r\n    "min_pitch": {\r\n      "type": "number",\r\n      "minimum": -90,\r\n      "maximum": 90,\r\n      "default": -70,\r\n      "description": "\u6700\u5C0F\u4FEF\u4EF0\u89D2\u9650\u5236\uFF08\u5355\u4F4D\uFF1A\u5EA6\uFF09\u3002\u96F6\u5EA6\u5BF9\u5E94\u6C34\u5E73\u65B9\u5411\u3002\u4F8B\u5982\uFF0Cmin_pitch=-30\u8868\u793A\u6700\u591A\u5411\u4E0B\u770B30\u5EA6\u3002"\r\n    },\r\n    "max_pitch": {\r\n      "type": "number",\r\n      "minimum": -90,\r\n      "maximum": 90,\r\n      "default": 45,\r\n      "description": "\u6700\u5927\u4FEF\u4EF0\u89D2\u9650\u5236\uFF08\u5355\u4F4D\uFF1A\u5EA6\uFF09\u3002\u96F6\u5EA6\u5BF9\u5E94\u6C34\u5E73\u65B9\u5411\u3002\u4F8B\u5982\uFF0Cmax_pitch=60\u8868\u793A\u6700\u591A\u5411\u4E0A\u770B60\u5EA6\u3002"\r\n    },\r\n    "yaw_limit": {\r\n      "type": "number",\r\n      "minimum": 0,\r\n      "maximum": 360,\r\n      "default": 90,\r\n      "description": "\u504F\u822A\u89D2\u9650\u5236\uFF08\u5355\u4F4D\uFF1A\u5EA6\uFF09\u3002\u6B64\u503C\u8868\u793A\u603B\u89D2\u5EA6\u8303\u56F4\uFF0C\u56E0\u6B64\u5B9E\u9645\u504F\u822A\u89D2\u8303\u56F4\u4E3A[180 - yaw_limit/2, 180 + yaw_limit/2]\u3002\u4F8B\u5982\uFF0Cyaw_limit=90\u8868\u793A\u6C34\u5E73\u65B9\u5411\xB145\u5EA6\u7684\u79FB\u52A8\u8303\u56F4\u3002"\r\n    }\r\n  },\r\n  "additionalProperties": false,\r\n  "examples": [\r\n    {\r\n      "enable_first_person": true,\r\n      "first_person_offset": [\r\n        0.0,\r\n        0.3,\r\n        0.0\r\n      ],\r\n      "enable_third_person": true,\r\n      "distance_scale": 1.2,\r\n      "first_hud_layout": "machine_max:seat_dashboard"\r\n    },\r\n    {\r\n      "enable_first_person": true,\r\n      "first_person_offset": [\r\n        0.0,\r\n        0.2,\r\n        0.0\r\n      ],\r\n      "enable_third_person": false,\r\n      "min_pitch": -30,\r\n      "max_pitch": 60,\r\n      "yaw_limit": 120\r\n    }\r\n  ]\r\n}', "zh_cn/schemas/subsystem/static/weapon_controller_static_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/static/weapon_controller_static_attr.json",\r
   "title": "\u6B66\u5668\u63A7\u5236\u5668\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027",\r
@@ -8398,7 +9179,7 @@
     },\r
     "ripple_interval": {\r
       "type": "number",\r
-      "minimum": 1,\r
+      "minimum": 0,\r
       "default": 0.1,\r
       "description": "\u8F6E\u5C04\u6A21\u5F0F\u4E0B\u6BCF\u4E24\u6B21\u53D1\u5C04\u4E4B\u95F4\u7684\u95F4\u9694\uFF08\u79D2\uFF09\u3002\u4EC5\u5728fire_mode\u4E3ARIPPLE\u65F6\u751F\u6548\u3002"\r
     },\r
@@ -8420,11 +9201,29 @@
       "default": [],\r
       "description": "\u5F00\u706B\u6307\u4EE4\u8F93\u5165\u9891\u9053\u5217\u8868\uFF0C\u4EFB\u4E00\u9891\u9053\u91CC\u51FA\u73B0\u5F00\u706B\u4FE1\u53F7\u5373\u89C6\u4E3A\u5F00\u706B\u6307\u4EE4\u3002\u4FE1\u53F7\u6309\u8BED\u4E49\u5224\u5B9A\uFF1A\u4E3B/\u526F\u6B66\u5668\u5F00\u706B\u6307\u4EE4\u3001\u503C\u4E3A true \u7684\u5E03\u5C14\u3001\u975E 0 \u7684\u6570\u503C\u7B97\u5F00\u706B\uFF1B\u5F39\u79CD\u5207\u6362\u6307\u4EE4\u4E0E\u5F00\u706B\u6307\u4EE4\u5171\u7528\u8FD9\u4E9B\u9891\u9053\uFF0C\u4E0D\u4F1A\u88AB\u5F53\u4F5C\u5F00\u706B\u3002\u901A\u5E38\u63A5\u6536\u6309\u952E\u89E6\u53D1\u7684\u5F00\u706B\u4FE1\u53F7\u3002"\r
     },\r
+    "fire_correction_angle_deg": {\r
+      "type": "number",\r
+      "minimum": 0,\r
+      "default": 1.0,\r
+      "description": "\u706B\u63A7\u5F39\u9053\u4FEE\u6B63\u89D2\u5EA6\uFF08\u5EA6\uFF09\u30020 = \u4E25\u683C\u6CBF locator \u65B9\u5411\u53D1\u5C04\uFF08\u8F7D\u5177\u6A21\u5F0F\uFF09\uFF1B\u5927\u4E8E 0 \u65F6\u5141\u8BB8\u53D1\u5C04\u65B9\u5411\u671D\u76EE\u6807\u4FEE\u6B63\u81F3\u591A\u8BE5\u89D2\u5EA6\u3002\u5224\u5B9A\u662F\u5426\u7784\u51C6\u65F6\u4F1A\u8BA1\u5165\u6709\u6548\u7784\u51C6\u5BB9\u5DEE\u3002"\r
+    },\r
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -8432,7 +9231,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -8491,27 +9292,6 @@
           "default": 10000.0,\r
           "description": "\u6700\u5927\u9A71\u52A8\u529B\uFF0C\u5355\u4F4D\u725B\u987F(N)\u3002"\r
         },\r
-        "basic_durability": {\r
-          "type": "number",\r
-          "minimum": 0,\r
-          "default": 20.0,\r
-          "description": "\u5B50\u7CFB\u7EDF\u57FA\u7840\u8010\u4E45\u5EA6\uFF0C\u964D\u81F30\u65F6\u4F1A\u762B\u75EA\uFF0C\u4FEE\u590D\u81F330%\u8010\u4E45\u5EA6\u65F6\u6062\u590D\u529F\u80FD\u3002"\r
-        },\r
-        "pass_damage": {\r
-          "type": "boolean",\r
-          "default": true,\r
-          "description": "\u662F\u5426\u4F20\u9012\u4F24\u5BB3\u81F3\u5B50\u7CFB\u7EDF\u6301\u6709\u8005\u3002\u82E5\u4E3Atrue\uFF0C\u5B50\u7CFB\u7EDF\u53D7\u5230\u7684\u4F24\u5BB3\u4F1A\u4F20\u9012\u7ED9\u96F6\u4EF6\u3002"\r
-        },\r
-        "limit_damage": {\r
-          "type": "boolean",\r
-          "default": false,\r
-          "description": "\u662F\u5426\u9650\u5236\u4F24\u5BB3\u4F20\u9012\u503C\u81F3\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6\u3002\u4F8B\u598240\u4F24\u5BB3\uFF0C\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6\u4E3A20\uFF0C\u5219\u53EA\u4F1A\u4F20\u901220\u4F24\u5BB3\u7ED9\u6301\u6709\u8005\u3002"\r
-        },\r
-        "hidden": {\r
-          "type": "boolean",\r
-          "default": false,\r
-          "description": "\u662F\u5426\u9690\u85CF\u5B50\u7CFB\u7EDF\u5728HUD\u7B49\u5904\u7684\u663E\u793A\uFF0C\u5E38\u7528\u4E8E\u7EAF\u7CB9\u63D0\u4F9B\u6A21\u578B\u90E8\u4F4D\u635F\u574F\u5DEE\u5206\u7684\u65E0\u529F\u80FD\u5B50\u7CFB\u7EDF"\r
-        },\r
         "max_brake_force": {\r
           "type": "number",\r
           "minimum": 0,\r
@@ -8558,6 +9338,27 @@
       "const": "machine_max:wheel_driver",\r
       "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u5FC5\u987B\u4E3A'machine_max:wheel_driver'\u3002"\r
     },\r
+    "basic_durability": {\r
+      "type": "number",\r
+      "minimum": 0,\r
+      "default": 20.0,\r
+      "description": "\u5B50\u7CFB\u7EDF\u57FA\u7840\u8010\u4E45\u5EA6\uFF0C\u964D\u81F30\u65F6\u4F1A\u762B\u75EA\uFF0C\u4FEE\u590D\u81F330%\u8010\u4E45\u5EA6\u65F6\u6062\u590D\u529F\u80FD\u3002"\r
+    },\r
+    "pass_damage": {\r
+      "type": "boolean",\r
+      "default": true,\r
+      "description": "\u662F\u5426\u4F20\u9012\u4F24\u5BB3\u81F3\u5B50\u7CFB\u7EDF\u6301\u6709\u8005\u3002\u82E5\u4E3Atrue\uFF0C\u5B50\u7CFB\u7EDF\u53D7\u5230\u7684\u4F24\u5BB3\u4F1A\u4F20\u9012\u7ED9\u96F6\u4EF6\u3002"\r
+    },\r
+    "limit_damage": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "\u662F\u5426\u9650\u5236\u4F24\u5BB3\u4F20\u9012\u503C\u81F3\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6\u3002\u4F8B\u598240\u4F24\u5BB3\uFF0C\u5B50\u7CFB\u7EDF\u5269\u4F59\u8010\u4E45\u5EA6\u4E3A20\uFF0C\u5219\u53EA\u4F1A\u4F20\u901220\u4F24\u5BB3\u7ED9\u6301\u6709\u8005\u3002"\r
+    },\r
+    "hidden": {\r
+      "type": "boolean",\r
+      "default": false,\r
+      "description": "\u662F\u5426\u9690\u85CF\u5B50\u7CFB\u7EDF\u5728HUD\u7B49\u5904\u7684\u663E\u793A\uFF0C\u5E38\u7528\u4E8E\u7EAF\u7CB9\u63D0\u4F9B\u6A21\u578B\u90E8\u4F4D\u635F\u574F\u5DEE\u5206\u7684\u65E0\u529F\u80FD\u5B50\u7CFB\u7EDF"\r
+    },\r
     "control_inputs": {\r
       "type": "array",\r
       "items": { "type": "string" },\r
@@ -8565,19 +9366,23 @@
       "description": "\u63A7\u5236\u8F93\u5165\u4FE1\u53F7\u952E\u5217\u8868\u3002"\r
     },\r
     "roll": {\r
-      "$ref": "#/definitions/StaticWheelRollingAxisAttr",\r
+      "allOf": [\r
+        { "$ref": "#/definitions/StaticWheelRollingAxisAttr" }\r
+      ],\r
       "default": {\r
         "max_drive_force": 10000.0,\r
-        "max_brake_force": 1500.0,\r
+        "max_brake_force": 3500.0,\r
         "max_hand_brake_force": 0.0,\r
         "max_rpm": 30000.0\r
       },\r
       "description": "\u6EDA\u52A8\u8F74\u5C5E\u6027\u3002"\r
     },\r
     "steering": {\r
-      "$ref": "#/definitions/StaticWheelSteeringAxisAttr",\r
+      "allOf": [\r
+        { "$ref": "#/definitions/StaticWheelSteeringAxisAttr" }\r
+      ],\r
       "default": {\r
-        "max_force": 4000.0,\r
+        "max_force": 2000.0,\r
         "max_speed": 180\r
       },\r
       "description": "\u8F6C\u5411\u8F74\u5C5E\u6027\u3002"\r
@@ -8603,8 +9408,20 @@
     "sounds": {\r
       "type": "object",\r
       "properties": {\r
+        "on_deactivate": {\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
+          "description": "\u5B50\u7CFB\u7EDF\u5931\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
+          "default": {\r
+            "sound_id": "machine_max:empty_sound",\r
+            "range": 16\r
+          }\r
+        },\r
         "on_destroyed": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -8612,7 +9429,9 @@
           }\r
         },\r
         "on_activate": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5B50\u7CFB\u7EDF\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:empty_sound",\r
@@ -8620,7 +9439,9 @@
           }\r
         },\r
         "brake_on": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5239\u8F66\u5F00\u542F\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.wheel_driver.brake_on",\r
@@ -8628,7 +9449,9 @@
           }\r
         },\r
         "brake_off": {\r
-          "$ref": "../../base/sound_event.schema.json",\r
+          "allOf": [\r
+            { "$ref": "../../base/sound_event.schema.json" }\r
+          ],\r
           "description": "\u5239\u8F66\u5173\u95ED\u65F6\u7684\u97F3\u6548\u4E8B\u4EF6\u3002",\r
           "default": {\r
             "sound_id": "machine_max:subsystem.wheel_driver.brake_off",\r
@@ -8649,11 +9472,11 @@
       "roll": {\r
         "max_drive_force": 12000.0,\r
         "max_brake_force": 4000.0,\r
-        "max_speed": 2800.0\r
+        "max_rpm": 2800.0\r
       },\r
       "steering": {\r
         "max_force": 3000.0,\r
-        "max_speed": 2.5\r
+        "max_speed": 120.0\r
       }\r
     },\r
     {\r
@@ -8663,11 +9486,11 @@
       "roll": {\r
         "max_drive_force": 10000.0,\r
         "max_brake_force": 3500.0,\r
-        "max_speed": 3000.0\r
+        "max_rpm": 3000.0\r
       },\r
       "steering": {\r
         "max_force": 2500.0,\r
-        "max_speed": 3.0\r
+        "max_speed": 150.0\r
       },\r
       "abs_enabled": true,\r
       "abs_target_slip_ratio": 0.15,\r
@@ -9105,7 +9928,7 @@
             return result;
           }
         };
-        return withFieldMethods(codec);
+        return Object.assign(withFieldMethods(codec), { schema });
       }
       function dispatch(key, codecMap) {
         var codec = {
@@ -9155,7 +9978,7 @@
             return decoded;
           }
         };
-        return withFieldMethods(codec);
+        return Object.assign(withFieldMethods(codec), { codecs: codecMap });
       }
       function either(singleCodec, mapCodec) {
         var WRAP_KEY = "default";
@@ -9247,7 +10070,9 @@
         condition: Codec.STRING.default("true"),
         subsystem: Codec.STRING.default(""),
         // 关联子系统
-        // overwrite：透传对象（对应 Java HitBoxAttr.OverwriteAttr — 16 个可选覆写字段）
+        module: Codec.STRING.default(""),
+        // 子系统内模块名（空串表示整个子系统）
+        // overwrite：透传对象（对应 Java HitBoxAttr.OverwriteAttr — physics/armor/sounds 三组）
         // 使用 ANY.nullable() 宽松传递，encode 时 null/undefined/空对象跳过
         overwrite: Codec.ANY.nullable()
       });
@@ -9408,11 +10233,15 @@
       });
       var WeaponControllerCodec = Codec.record({
         definition: Codec.STRING.field(),
-        control_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+        control_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        first_hud_layout: Codec.STRING.default("machine_max:empty"),
+        third_hud_layout: Codec.STRING.default("machine_max:empty"),
+        scope_hud_layout: Codec.STRING.default("machine_max:empty")
       });
       var LauncherCodec = Codec.record({
         definition: Codec.STRING.field(),
         locator: Codec.STRING.field(),
+        fire_animation: Codec.STRING.default("fire"),
         ammo_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
       });
       var SightCodec = Codec.record({
@@ -9426,6 +10255,7 @@
       var RegenLoaderCodec = Codec.record({
         definition: Codec.STRING.field(),
         projectile_types: Codec.map(Codec.STRING, Codec.INT).default({}),
+        belt_label: Codec.STRING.default(""),
         discovery_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
       });
       var SubsystemDispatchCodec = Codec.dispatch("type", {
@@ -11653,7 +12483,10 @@
           category: "experimental",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { weapon_control: [] } }
+            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { weapon_control: [] } },
+            { field: "first_hud_layout", label: "\u7B2C\u4E00\u4EBA\u79F0 HUD \u5E03\u5C40", editor: "text_input", required: false, defaultValue: "machine_max:empty" },
+            { field: "third_hud_layout", label: "\u7B2C\u4E09\u4EBA\u79F0 HUD \u5E03\u5C40", editor: "text_input", required: false, defaultValue: "machine_max:empty" },
+            { field: "scope_hud_layout", label: "\u7784\u51C6\u955C HUD \u5E03\u5C40", editor: "text_input", required: false, defaultValue: "machine_max:empty" }
           ]
         },
         {
@@ -11663,6 +12496,7 @@
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
             { field: "locator", label: "\u53D1\u5C04\u70B9\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: null },
+            { field: "fire_animation", label: "\u5F00\u706B\u52A8\u753B\u540D", editor: "text_input", required: false, defaultValue: "fire" },
             { field: "ammo_outputs", label: "\u5F39\u836F\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
           ]
         },
@@ -11691,6 +12525,7 @@
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
             { field: "projectile_types", label: "\u5F39\u94FE\u6784\u6210", editor: "projectile_belt_editor", required: true, defaultValue: [] },
+            { field: "belt_label", label: "\u5F39\u94FE\u6807\u7B7E", editor: "text_input", required: false, defaultValue: "" },
             { field: "discovery_outputs", label: "\u5F39\u836F\u53D1\u73B0\u9891\u9053", editor: "signal_targets", required: false, defaultValue: {} }
           ]
         }
@@ -18263,6 +19098,10 @@
             <select class="mm-select" :value="config.subsystem || ''" @change="onFieldChange('subsystem', $event.target.value || '')">
                 <option v-for="(label, key) in subsystemOptions" :key="key" :value="key">{{ label }}</option>
             </select>
+        </div>
+        <div class="mm-field">
+            <label title="\u5B50\u7CFB\u7EDF\u5185\u6A21\u5757\u540D\uFF0C\u4F8B\u5982 barrel / breech / radiator\uFF1B\u4E3A\u7A7A\u8868\u793A\u6574\u4E2A\u5B50\u7CFB\u7EDF">\u6A21\u5757\u540D</label>
+            <input type="text" class="mm-input" :value="config.module || ''" @change="onFieldChange('module', $event.target.value)" placeholder="\uFF08\u6574\u4E2A\u5B50\u7CFB\u7EDF\uFF09" />
         </div>
         <div class="mm-field">
             <label title="Molang\u6761\u4EF6\u8868\u8FBE\u5F0F\uFF0C\u4E3A\u7A7A\u5219\u59CB\u7EC8\u751F\u6548">\u6761\u4EF6\u8868\u8FBE\u5F0F</label>

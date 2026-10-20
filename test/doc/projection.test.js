@@ -375,12 +375,14 @@ describe('doc/projection.out / round-trip', () => {
                 type: 'machine_max:regen_loader',
                 definition: '',
                 projectile_types: {},
+                belt_label: '',
                 discovery_outputs: {},
             },
             'subsystem.machine_max.launcher': {
                 type: 'machine_max:launcher',
                 definition: '',
                 locator: '',
+                fire_animation: 'fire',
                 ammo_outputs: {},
             },
         };

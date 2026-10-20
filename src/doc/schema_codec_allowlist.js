@@ -27,15 +27,9 @@ module.exports = {
     ],
 
     // 3) 字段集合缺口：Codec 缺字段（D12 修完后都应为空）
-    //    上游把 hit_box 的 physics / armor / sounds 移入 overwrite，顶层新增 module。
-    missing_fields: [
-        { kind: 'hit_box', field: 'module', owner: 'D12' },
-        { kind: 'subsystem', type: 'machine_max:launcher', field: 'fire_animation', owner: 'D12' },
-        { kind: 'subsystem', type: 'machine_max:regen_loader', field: 'belt_label', owner: 'D12' },
-        { kind: 'subsystem', type: 'machine_max:weapon_controller', field: 'first_hud_layout', owner: 'D12' },
-        { kind: 'subsystem', type: 'machine_max:weapon_controller', field: 'third_hud_layout', owner: 'D12' },
-        { kind: 'subsystem', type: 'machine_max:weapon_controller', field: 'scope_hud_layout', owner: 'D12' },
-    ],
+    //    D12 已补 hit_box.module、launcher.fire_animation、regen_loader.belt_label
+    //    与 weapon_controller 的 3 个 HUD layout 字段；字段集合差异应为 0。
+    missing_fields: [],
 
     // 4) 字段集合多余：Codec 有、schema 没有的运行时字段（容器除外）
     extra_fields: [],

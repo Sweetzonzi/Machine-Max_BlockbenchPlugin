@@ -57,6 +57,10 @@
             </select>
         </div>
         <div class="mm-field">
+            <label title="子系统内模块名，例如 barrel / breech / radiator；为空表示整个子系统">模块名</label>
+            <input type="text" class="mm-input" :value="config.module || ''" @change="onFieldChange('module', $event.target.value)" placeholder="（整个子系统）" />
+        </div>
+        <div class="mm-field">
             <label title="Molang条件表达式，为空则始终生效">条件表达式</label>
             <input type="text" class="mm-input" :value="config.condition" @change="onFieldChange('condition', $event.target.value)" placeholder="true" />
         </div>

@@ -10,6 +10,7 @@ const { HitBoxCodec } = require('../../src/codec/codecs/hit_box_codec.js');
 const { InteractBoxCodec } = require('../../src/codec/codecs/interact_box_codec.js');
 const { ConnectorCodec } = require('../../src/codec/codecs/connector_codec.js');
 const { SubsystemDispatchCodec } = require('../../src/codec/codecs/subsystem_codec.js');
+const ssTypes = require('../../src/core/subsystem_types.js');
 
 const CODECS = {
     part: PartCodec,
@@ -89,6 +90,51 @@ describe('schema ↔ Codec 差异登记', () => {
             for (const field of extra) {
                 expect(allowedExtra('subsystem', type, field)).toBe(true);
             }
+        }
+    });
+
+    test('D12 字段已补齐：Codec / registry / 默认值一致', () => {
+        expect(allow.missing_fields).toEqual([]);
+
+        expect(HitBoxCodec.schema.module.defaultValue).toBe('');
+        const hitBox = HitBoxCodec.decode({ id: 'part', type: 'box' });
+        expect(hitBox.module).toBe('');
+        expect(HitBoxCodec.encode(Object.assign({}, hitBox, { module: 'barrel' })).module)
+            .toBe('barrel');
+        expect(HitBoxCodec.encode(hitBox)).not.toHaveProperty('module');
+
+        const weapon = SubsystemDispatchCodec.decode({
+            type: 'machine_max:weapon_controller',
+            definition: 'machine_max:basic_weapon_controller',
+        });
+        expect(weapon.first_hud_layout).toBe('machine_max:empty');
+        expect(weapon.third_hud_layout).toBe('machine_max:empty');
+        expect(weapon.scope_hud_layout).toBe('machine_max:empty');
+
+        const launcher = SubsystemDispatchCodec.decode({
+            type: 'machine_max:launcher',
+            definition: 'machine_max:2a42_launcher',
+            locator: '2a42_launch_point',
+        });
+        expect(launcher.fire_animation).toBe('fire');
+
+        const regenLoader = SubsystemDispatchCodec.decode({
+            type: 'machine_max:regen_loader',
+            definition: 'machine_max:2a42_regen_loader',
+            projectile_types: { 'machine_max:30mm_ap': 1 },
+        });
+        expect(regenLoader.belt_label).toBe('');
+
+        const registryFields = [
+            ['machine_max:launcher', 'fire_animation'],
+            ['machine_max:regen_loader', 'belt_label'],
+            ['machine_max:weapon_controller', 'first_hud_layout'],
+            ['machine_max:weapon_controller', 'third_hud_layout'],
+            ['machine_max:weapon_controller', 'scope_hud_layout'],
+        ];
+        for (const [type, field] of registryFields) {
+            const names = ssTypes.getDynamicFields(type).map((f) => f.field);
+            expect(names).toContain(field);
         }
     });
 
