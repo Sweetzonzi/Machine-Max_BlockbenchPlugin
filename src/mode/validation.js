@@ -123,6 +123,55 @@ function _collectMarkerIssues(config, partId, vName, problems) {
     }
 }
 
+/** 信号保留地址：不得用作连接点 / 子系统 / 交互区名 */
+var RESERVED_SIGNAL_NAMES = ['local', 'global', 'subpart', 'vehicle'];
+
+/**
+ * 单变体内「连接点 / 子系统 / 交互区」名称唯一性 + 信号保留地址校验。
+ * 与模组侧 VariantAttr.validateUniqueNames 保持一致：作用域为单个变体（跨子零件），
+ * 因为 Molang `local.*` 在 Part 内按名寻址，重名会产生歧义。
+ *
+ * @param {string} partId
+ * @param {string} vName
+ * @param {Object} subParts
+ * @param {Array} problems
+ */
+function _collectNameConflicts(partId, vName, subParts, problems) {
+    var seen = {}; // name -> { subPartKey, scope }
+    var scopes = [
+        { field: 'connectors', scope: 'connector' },
+        { field: 'subsystems', scope: 'subsystem' },
+        { field: 'interact_boxes', scope: 'interact_box' },
+    ];
+    Object.keys(subParts || {}).forEach(function (spKey) {
+        var sp = subParts[spKey] || {};
+        scopes.forEach(function (s) {
+            var map = sp[s.field] || {};
+            Object.keys(map).forEach(function (name) {
+                if (RESERVED_SIGNAL_NAMES.indexOf(name) >= 0) {
+                    problems.push(_makeProblem(
+                        'error', CODES.RESERVED_NAME,
+                        s.scope + ' "' + name + '" 在零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：为信号保留地址（local/global），不得用作连接点/子系统/交互区名',
+                        _mkPath(s.scope, partId, vName, spKey, name)
+                    ));
+                }
+                var prev = seen[name];
+                if (prev) {
+                    problems.push(_makeProblem(
+                        'error', CODES.DUPLICATE_NAME,
+                        '名称 "' + name + '" 在零件 "' + partId + '"/' + vName + ' 内重复：'
+                        + prev.scope + '（子零件 "' + prev.subPartKey + '"）与 '
+                        + s.scope + '（子零件 "' + spKey + '"）冲突',
+                        _mkPath(s.scope, partId, vName, spKey, name)
+                    ));
+                } else {
+                    seen[name] = { subPartKey: spKey, scope: s.scope };
+                }
+            });
+        });
+    });
+}
+
 /**
  * 唯一校验实现：收集所有问题的结构化 Problem 数组
  * @param {Object} config - MM 项目配置
@@ -258,6 +307,9 @@ function collectIssues(config) {
                     }
                 }
             }
+
+            // 单变体内名称唯一性 + 信号保留地址（Part 级按名寻址）
+            _collectNameConflicts(partId, vName, subParts, problems);
 
             // 游离标记 / 幽灵标记
             _collectMarkerIssues(config, partId, vName, problems);

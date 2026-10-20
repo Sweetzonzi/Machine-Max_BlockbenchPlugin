@@ -55,18 +55,29 @@ function generateDefaultName(entityType, context) {
     }
 }
 
+/** 信号保留地址：不得用作连接点 / 子系统 / 交互区名（Part 级按名寻址） */
+var RESERVED_SIGNAL_NAMES = ['local', 'global', 'subpart', 'vehicle'];
+
 /**
  * 校验名称在当前作用域下是否唯一
  *
+ * 注意：connector / interact_box / subsystem 的唯一性作用域已提升到**单个变体**
+ * （跨所有子零件），因为模组侧 Molang 的 `local.*` 按名在 Part 内寻址，重名会产生歧义。
+ *
  * @param {Object} variant - 当前变体配置
  * @param {'sub_part'|'connector'|'interact_box'|'subsystem'} scope - 校验作用域
- * @param {string} subPartKey - 当前子零件 key（connector/subsystem/interact_box 需此参数）
+ * @param {string} subPartKey - 当前子零件 key（用于编辑时排除自身）
  * @param {string} name - 要校验的名称
  * @param {string} [excludeKey] - 排除的 key（用于编辑已有项时，不与自己冲突）
  * @returns {{ valid: boolean, message: string }}
  */
 function validateNameUniqueness(variant, scope, subPartKey, name, excludeKey) {
     if (!variant || !name) return { valid: false, message: '名称为空' };
+
+    // 信号保留地址不得作为连接点 / 子系统 / 交互区名（子零件名不在信号命名空间内）
+    if (scope !== 'sub_part' && RESERVED_SIGNAL_NAMES.indexOf(name) >= 0) {
+        return { valid: false, message: '"' + name + '" 为信号保留地址（local/global），请换一个名称' };
+    }
 
     var existingKeys = [];
 
@@ -75,23 +86,28 @@ function validateNameUniqueness(variant, scope, subPartKey, name, excludeKey) {
             existingKeys = Object.keys(variant.sub_parts || {});
             break;
         case 'connector':
-            var spConns = (variant.sub_parts && variant.sub_parts[subPartKey] && variant.sub_parts[subPartKey].connectors) || {};
-            existingKeys = Object.keys(spConns);
-            break;
         case 'interact_box':
-            var spIbs = (variant.sub_parts && variant.sub_parts[subPartKey] && variant.sub_parts[subPartKey].interact_boxes) || {};
-            existingKeys = Object.keys(spIbs);
-            break;
         case 'subsystem':
-            var spSubs = (variant.sub_parts && variant.sub_parts[subPartKey] && variant.sub_parts[subPartKey].subsystems) || {};
-            existingKeys = Object.keys(spSubs);
+            // 唯一性作用域提升到单变体：遍历所有子零件收集同名条目
+            var field = scope === 'connector' ? 'connectors'
+                : scope === 'interact_box' ? 'interact_boxes'
+                    : 'subsystems';
+            var subParts = variant.sub_parts || {};
+            Object.keys(subParts).forEach(function (key) {
+                var map = (subParts[key] && subParts[key][field]) || {};
+                Object.keys(map).forEach(function (k) {
+                    // 编辑当前子零件的当前项时排除自身
+                    if (key === subPartKey && k === excludeKey) return;
+                    existingKeys.push(k);
+                });
+            });
             break;
         default:
             return { valid: false, message: '未知作用域' };
     }
 
     for (var i = 0; i < existingKeys.length; i++) {
-        if (existingKeys[i] === name && name !== excludeKey) {
+        if (existingKeys[i] === name) {
             return { valid: false, message: '"' + name + '" 已存在，请换一个名称' };
         }
     }

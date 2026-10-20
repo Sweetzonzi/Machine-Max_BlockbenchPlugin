@@ -33,6 +33,8 @@ var CODES = {
     ORPHAN_ELEMENT: 'orphan_element',                     // 连接点/碰撞箱/交互区游离（无归属 subpart）
     GHOST_MARKER: 'ghost_marker',                         // 幽灵标记（UUID 对应元素已删除）
     MISSING_REQUIRED: 'missing_required',                 // 其余零件/变体/子零件级必填项（占位）
+    DUPLICATE_NAME: 'duplicate_name',                     // 连接点/子系统/交互区名在单变体内重复（Part 级按名寻址歧义）
+    RESERVED_NAME: 'reserved_name',                       // 使用了信号保留地址（local/global 等）
 };
 
 /** scope → byItem 桶名映射（仅对"可归属到某个 subpart 条目"的 scope 有意义） */
