@@ -46,7 +46,7 @@ Vue.component('mm-hit-box-panel', {
             return options;
         },
         /**
-         * 材质缺失 / 引用了不存在的材质时给出行内提示。
+         * 材质缺失 / 引用了不存在的材质时标红下拉框（不显示原因文案）。
          * `machine_max:default` 是模组内置兜底，不在内容包列表里也算合法。
          */
         materialWarning: function () {

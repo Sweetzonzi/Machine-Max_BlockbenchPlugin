@@ -8,14 +8,14 @@ Vue 2 属性面板 + BarMenu + 导出对话框。重构前 `App.vue.js` 为 1035
 
 ```
 src/ui/
-├── App.vue.js              # 主 Vue 2 面板（约 1845 行，mm-main-panel；字段编辑统一走 ops.setField，计算属性只读）
+├── App.vue.js              # 主 Vue 2 面板（约 1836 行，mm-main-panel；字段编辑统一走 ops.setField，计算属性只读）
 ├── SubPartPanel.vue.js     # 子零件属性子组件（289行）
 ├── HitBoxPanel.vue.js      # 碰撞箱属性子组件（118行）
 ├── SignalFlowPanel.vue.js  # 信号流图可视化面板（579行）
 ├── tag_dialog_helper.js    # 标签对话框辅助模块（222行）
 ├── menu.js                 # BarMenu 注册与菜单入口（319行）
 ├── components/             # 共享 Vue 组件 / mixin
-│   ├── field_issues.js             # 终端字段校验标注 mixin（fieldClass / fieldIssueMessage / fieldIssueTitle）
+│   ├── field_issues.js             # 终端字段校验标注 mixin（fieldClass / fieldLevel，只标红不显示原因）
 │   ├── definition_viewer.js        # 通用只读定义查看器（5 个"查看定义"入口共用）
 │   ├── SignalTargetEditor.vue.js   # 信号目标编辑器（三面板复用）
 │   ├── LocatorPicker.vue.js        # 定位器选择（输入框 + datalist + 自由文本）
@@ -59,7 +59,7 @@ src/ui/
 | 新建零件 / 项目管理对话框 | `dialogs/part_dialogs.js` | 工具栏·面板·右键菜单共用；只调 `ops.createPart` / `ops.setContentPackPath` |
 | 定义查看对话框 | `components/definition_viewer.js` | `showDefinitionViewer()` — 5 个"查看定义"入口共用；列表 + 来源徽标 + 只读标记 + 统计条 |
 | 信号目标编辑器 | `components/SignalTargetEditor.vue.js` | SubsystemPanel / ConnectorPanel / InteractBoxPanel 复用；频道增删改、目标过滤去重 |
-| 终端字段校验标注 | `components/field_issues.js` | App 按 `byItem` / `bySubPart` / `byPartVariant` 切片传 `issue-list`；面板用 `fieldClass(field)` + `fieldIssueMessage(field)` 标红 |
+| 终端字段校验标注 | `components/field_issues.js` | App 按 `byItem` / `bySubPart` / `byPartVariant` 切片传 `issue-list`；面板用 `fieldClass(field)` 标红，不显示原因文案 |
 | 定位器选择 | `components/LocatorPicker.vue.js` | 输入框 + datalist 提示 + 自由文本；不存在的值标红/黄但不拦截输入 |
 | 修改面板样式 | `../styles/mm_mode.css` | 所有类以 `mm-` 为前缀；CSS 自定义属性用于主题 |
 | 修复 Vue 响应式错误 | `App.vue.js` | 使用 `this.$set(obj, key, val)` 处理嵌套变更 |

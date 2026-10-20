@@ -20,7 +20,6 @@ const nameUtils = require('../utils/name_utils.js');
 const { buildSignalTargetOptions } = require('../utils/signal_target_options.js');
 const { collectIssues } = require('../services/validate.js');
 const { aggregate, resolveIssueLevel, filterFieldIssues } = require('../core/validation_types.js');
-const fieldIssueHelpers = require('./components/field_issues.js');
 var { showAddTagDialog, _hashTagColor } = require('./tag_dialog_helper.js');
 var undo = require('../core/undo.js');
 
@@ -1107,14 +1106,6 @@ const MM_MAIN_PANEL_OPTIONS = {
         partVariantFieldClass: function (field) {
             var level = this.partVariantFieldLevel(field);
             return level === 'none' ? '' : 'mm-field-' + level;
-        },
-        /** 零件/变体字段行内提示 */
-        partVariantIssueMessage: function (field) {
-            return fieldIssueHelpers.fieldIssueMessage(this.partVariantIssues, field);
-        },
-        /** 零件/变体字段悬浮提示 */
-        partVariantIssueTitle: function (field, base) {
-            return fieldIssueHelpers.fieldIssueTitle(this.partVariantIssues, field, base);
         },
         /**
          * 导航统一入口 selectByIssue(problem)：

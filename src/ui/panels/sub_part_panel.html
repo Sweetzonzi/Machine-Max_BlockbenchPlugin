@@ -63,9 +63,6 @@
         <div class="mm-field" :class="fieldClass('mass')">
             <label title="子部件质量(kg)，必须大于0，用于物理计算">质量 (kg)</label>
             <input type="number" class="mm-input" :value="config.mass" @change="onFieldChange('mass', parseFloat($event.target.value) || 0)" step="0.5" min="0" />
-            <p v-if="fieldIssueMessage('mass')" class="mm-field-issue" :title="fieldIssueTitle('mass', '')">
-                {{ fieldIssueMessage('mass') }}
-            </p>
         </div>
         <div class="mm-field">
             <label title="质心定位器名称，输入关键字搜索并选择">质心</label>
@@ -131,9 +128,6 @@
 
     <div class="mm-section" :class="fieldClass('hit_boxes')">
         <h4 class="mm-section-title">碰撞箱 ({{ hitBoxCount }})</h4>
-        <p v-if="fieldIssueMessage('hit_boxes')" class="mm-field-issue" :title="fieldIssueTitle('hit_boxes', '')">
-            {{ fieldIssueMessage('hit_boxes') }}
-        </p>
         <div v-if="hitBoxCount === 0" class="mm-element-info" style="color:#888">
             暂无碰撞箱 — 在 Outliner 中右键骨骼并选择"标记为碰撞箱"
         </div>

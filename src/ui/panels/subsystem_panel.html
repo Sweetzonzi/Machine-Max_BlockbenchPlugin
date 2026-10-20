@@ -42,9 +42,6 @@
                 <option v-for="(def, defId) in filteredSubsystemDefs" :key="defId" :value="defId">{{ defId }}</option>
             </select>
             <span class="mm-element-info" v-if="filteredSubsystemDefsCount === 0" style="font-size:10px;color:#ff6b6b">无匹配的<span style="color:#888">{{ typeDisplayName }}</span>型号定义</span>
-            <p v-if="fieldIssueMessage('definition')" class="mm-field-issue" :title="fieldIssueTitle('definition', '')">
-                {{ fieldIssueMessage('definition') }}
-            </p>
         </div>
     </div>
 
@@ -178,10 +175,6 @@
                 :value="config[field.field]"
                 @change="onFieldChange(field.field, $event.target.value)"
                 :placeholder="'(' + field.editor + ')'" />
-
-            <p v-if="fieldIssueMessage(field.field)" class="mm-field-issue" :title="fieldIssueTitle(field.field, '')">
-                {{ fieldIssueMessage(field.field) }}
-            </p>
         </div>
     </div>
 

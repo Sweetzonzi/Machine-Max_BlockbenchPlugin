@@ -49,9 +49,6 @@
                     {{ matKey }}
                 </option>
             </select>
-            <p v-if="fieldIssueMessage('material') || materialWarning" class="mm-field-issue" :title="fieldIssueTitle('material', '') || materialWarning">
-                {{ fieldIssueMessage('material') || materialWarning }}
-            </p>
         </div>
         <div class="mm-field">
             <label title="护甲厚度(mm)，减免伤害并控制碰撞时的能量分配">厚度 (mm)</label>
@@ -62,9 +59,6 @@
             <select class="mm-select" :value="config.subsystem || ''" @change="onFieldChange('subsystem', $event.target.value || '')">
                 <option v-for="(label, key) in subsystemOptions" :key="key" :value="key">{{ label }}</option>
             </select>
-            <p v-if="fieldIssueMessage('subsystem')" class="mm-field-issue" :title="fieldIssueTitle('subsystem', '')">
-                {{ fieldIssueMessage('subsystem') }}
-            </p>
         </div>
         <div class="mm-field">
             <label title="子系统内模块名，例如 barrel / breech / radiator；为空表示整个子系统">模块名</label>

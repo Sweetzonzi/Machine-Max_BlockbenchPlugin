@@ -47,7 +47,7 @@ plugin.js                      # 插件入口（103行）
   │     ├── mode/patches.js      # 原型猴子补丁 + 右键菜单（623行）
   │     ├── mode/validation_check.js # Problems → 原生清单适配
   │     ├── mode/toolbar.js      # 工具栏 Action 注册（185行）
-  │     └── ui/App.vue.js        # Vue 属性面板（懒加载，1845行；计算属性只读）
+  │     └── ui/App.vue.js        # Vue 属性面板（懒加载，1836行；计算属性只读）
   │           ├── ui/SubPartPanel.vue.js
   │           ├── ui/HitBoxPanel.vue.js
   │           ├── ui/SignalFlowPanel.vue.js  # 信号流图面板（579行）

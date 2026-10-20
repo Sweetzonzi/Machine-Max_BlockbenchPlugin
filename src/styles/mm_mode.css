@@ -324,18 +324,7 @@
 .mm-field.mm-field-warning locator-picker {
     border-color: #e2b93b;
 }
-.mm-field-issue {
-    margin: 2px 0 0 0;
-    font-size: 10px;
-    line-height: 1.4;
-    color: #ff6b6b;
-    white-space: normal;
-    word-break: break-word;
-}
-.mm-field.mm-field-warning .mm-field-issue,
-.mm-section.mm-field-warning .mm-field-issue {
-    color: #e2b93b;
-}
+/* 字段级只标红/琥珀，不显示原因文案 */
 
 /* 可点击的归属标签 */
 .mm-clickable-tag:hover {
