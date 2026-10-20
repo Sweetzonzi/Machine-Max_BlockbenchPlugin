@@ -303,6 +303,40 @@
     background: #e2b93b;
 }
 
+/* ── 终端字段级红框 / 琥珀框（error 红 / warning 琥珀） ── */
+.mm-field.mm-field-error > label,
+.mm-section.mm-field-error > .mm-section-title {
+    color: #ff6b6b;
+}
+.mm-field.mm-field-warning > label,
+.mm-section.mm-field-warning > .mm-section-title {
+    color: #e2b93b;
+}
+.mm-field.mm-field-error .mm-input,
+.mm-field.mm-field-error .mm-select,
+.mm-field.mm-field-error .mm-textarea,
+.mm-field.mm-field-error locator-picker {
+    border-color: #ff6b6b;
+}
+.mm-field.mm-field-warning .mm-input,
+.mm-field.mm-field-warning .mm-select,
+.mm-field.mm-field-warning .mm-textarea,
+.mm-field.mm-field-warning locator-picker {
+    border-color: #e2b93b;
+}
+.mm-field-issue {
+    margin: 2px 0 0 0;
+    font-size: 10px;
+    line-height: 1.4;
+    color: #ff6b6b;
+    white-space: normal;
+    word-break: break-word;
+}
+.mm-field.mm-field-warning .mm-field-issue,
+.mm-section.mm-field-warning .mm-field-issue {
+    color: #e2b93b;
+}
+
 /* 可点击的归属标签 */
 .mm-clickable-tag:hover {
     filter: brightness(1.3);

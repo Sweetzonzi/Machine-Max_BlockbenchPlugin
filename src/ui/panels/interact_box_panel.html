@@ -10,6 +10,7 @@
                 @change="onNameChange($event.target.value)"
                 placeholder="seat"
                 title="交互区名称短名，保存后自动补全为完整键" />
+            <span v-if="itemIssueLevel !== 'none'" class="mm-issue-badge" :class="itemIssueLevel">{{ itemIssueCount }}</span>
         </h3>
     </div>
 
@@ -70,7 +71,7 @@
     </div>
 
     <!-- === 信号目标 (signal_targets) === -->
-    <div class="mm-section">
+    <div class="mm-section" :class="fieldClass('signal_targets')">
         <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
             <span>信号目标</span>
         </h4>
@@ -82,6 +83,9 @@
             :target-options="signalTargetHints"
             :channel-hints="channelHints"
             @change="onSignalTargetsChange($event)" />
+        <p v-if="fieldIssueMessage('signal_targets')" class="mm-field-issue" :title="fieldIssueTitle('signal_targets', '')">
+            {{ fieldIssueMessage('signal_targets') }}
+        </p>
     </div>
 
     <div class="mm-section">

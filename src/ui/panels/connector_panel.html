@@ -10,6 +10,7 @@
                 @change="onNameChange($event.target.value)"
                 placeholder="front_wheel"
                 title="连接点名称短名，保存后自动补全为完整键" />
+            <span v-if="itemIssueLevel !== 'none'" class="mm-issue-badge" :class="itemIssueLevel">{{ itemIssueCount }}</span>
         </h3>
     </div>
 
@@ -42,7 +43,7 @@
 
     <div class="mm-section">
         <h4 class="mm-section-title">连接点定义</h4>
-        <div class="mm-field">
+        <div class="mm-field" :class="fieldClass('definition')">
             <label title="连接点定义ID，决定连接点的类型和物理属性">定义</label>
             <select class="mm-select" :value="config.definition" @change="onDefinitionChange($event.target.value)">
                 <option value="" disabled>— 请选择连接点定义 —</option>
@@ -50,14 +51,17 @@
                     {{ defKey }}
                 </option>
             </select>
-            <p v-if="!config.definition" class="mm-element-info" style="color:#e74c3c;font-size:11px;margin-top:2px">
+            <p v-if="fieldIssueMessage('definition')" class="mm-field-issue" :title="fieldIssueTitle('definition', '')">
+                {{ fieldIssueMessage('definition') }}
+            </p>
+            <p v-else-if="!config.definition" class="mm-element-info" style="color:#e74c3c;font-size:11px;margin-top:2px">
                 ⚠ 请选择一个连接点定义
             </p>
         </div>
     </div>
 
     <!-- === 信号目标 (signal_targets) === -->
-    <div class="mm-section">
+    <div class="mm-section" :class="fieldClass('signal_targets')">
         <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
             <span>信号目标</span>
         </h4>
@@ -69,6 +73,9 @@
             :target-options="signalTargetHints"
             :channel-hints="channelHints"
             @change="onSignalTargetsChange($event)" />
+        <p v-if="fieldIssueMessage('signal_targets')" class="mm-field-issue" :title="fieldIssueTitle('signal_targets', '')">
+            {{ fieldIssueMessage('signal_targets') }}
+        </p>
     </div>
 
     <!-- === 信号转译 (signal_translations) === -->
@@ -101,12 +108,15 @@
     <!-- === 机械能与内部 === -->
     <div class="mm-section">
         <h4 class="mm-section-title">机械能与内部</h4>
-        <div class="mm-field">
+        <div class="mm-field" :class="fieldClass('power_target')">
             <label title="机械能输出目标：选择本子零件内的子系统，或留空表示无输出">机械能输出目标</label>
             <select class="mm-select" :value="config.power_target" @change="onFieldChange('power_target', $event.target.value)">
                 <option value="">（无）</option>
                 <option v-for="(ss, ssKey) in subsystemKeys" :key="ssKey" :value="ssKey">{{ displayLabel(ssKey) }}</option>
             </select>
+            <p v-if="fieldIssueMessage('power_target')" class="mm-field-issue" :title="fieldIssueTitle('power_target', '')">
+                {{ fieldIssueMessage('power_target') }}
+            </p>
         </div>
         <div class="mm-field mm-field-row" style="margin-top:4px">
             <label title="内部连接点：勾选后该连接点仅用于内部信号路由，不参与外部连接">内部连接点</label>

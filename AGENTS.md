@@ -47,11 +47,12 @@ plugin.js                      # 插件入口（103行）
   │     ├── mode/patches.js      # 原型猴子补丁 + 右键菜单（623行）
   │     ├── mode/validation_check.js # Problems → 原生清单适配
   │     ├── mode/toolbar.js      # 工具栏 Action 注册（185行）
-  │     └── ui/App.vue.js        # Vue 属性面板（懒加载，1786行；计算属性只读）
+  │     └── ui/App.vue.js        # Vue 属性面板（懒加载，1845行；计算属性只读）
   │           ├── ui/SubPartPanel.vue.js
   │           ├── ui/HitBoxPanel.vue.js
   │           ├── ui/SignalFlowPanel.vue.js  # 信号流图面板（579行）
   │           │     └── lib/signal_graph.js  # 信号拓扑图数据模型（445行）
+  │           ├── ui/components/field_issues.js # 终端字段校验标注 mixin
   │           ├── ui/tag_dialog_helper.js
   │           └── ui/dialogs/    # 对话框子组件
   │                 ├── pack_setup_dialog.js    (805行)

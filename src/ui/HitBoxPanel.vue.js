@@ -2,6 +2,7 @@
  * 碰撞箱属性面板子组件
  * 选中标记为 hit_box 的 Group 时在属性面板中显示
  */
+var fieldIssues = require('./components/field_issues.js');
 
 /** 旧版顶层 overwrite 字段 → schema 分组（docs/13 §5.2.2） */
 var OVERWRITE_GROUPS = {
@@ -15,6 +16,7 @@ var OVERWRITE_GROUPS = {
 
 Vue.component('mm-hit-box-panel', {
     template: typeof TEMPLATE_HIT_BOX_PANEL !== 'undefined' ? TEMPLATE_HIT_BOX_PANEL : '<p>碰撞箱面板加载中...</p>',
+    mixins: [fieldIssues.mixin],
     props: {
         config: { type: Object, required: true },
         elementName: { type: String, default: '' },

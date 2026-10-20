@@ -10,6 +10,7 @@
  */
 var nameUtils = require('../utils/name_utils.js');
 var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
+var fieldIssues = require('./components/field_issues.js');
 
 /**
  * 组件选项。所有写配置的方法只构造新对象并通过 field-change 上抛，
@@ -17,6 +18,7 @@ var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
  */
 var MM_CONNECTOR_PANEL_OPTIONS = {
     template: typeof TEMPLATE_CONNECTOR_PANEL !== 'undefined' ? TEMPLATE_CONNECTOR_PANEL : '<p>连接点面板加载中...</p>',
+    mixins: [fieldIssues.mixin],
     props: {
         config: { type: Object, required: true },
         elementName: { type: String, default: '' },

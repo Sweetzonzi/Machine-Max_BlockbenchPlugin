@@ -9,10 +9,12 @@
 var nameUtils = require('../utils/name_utils.js');
 var { createLogger } = require('../utils/logger.js');
 var { resolveIssueLevel } = require('../core/validation_types.js');
+var fieldIssues = require('./components/field_issues.js');
 var log = createLogger('SubPartPanel');
 
 Vue.component('mm-sub-part-panel', {
     template: typeof TEMPLATE_SUB_PART_PANEL !== 'undefined' ? TEMPLATE_SUB_PART_PANEL : '<p>子零件面板加载中...</p>',
+    mixins: [fieldIssues.mixin],
     props: {
         config: { type: Object, required: true },
         elementName: { type: String, default: '' },

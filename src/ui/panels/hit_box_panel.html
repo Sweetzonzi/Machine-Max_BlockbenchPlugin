@@ -1,8 +1,9 @@
 <div class="mm-section">
     <div class="mm-sticky-title">
-        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">
+        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
             <span class="mm-marker-badge" :style="{ background: badgeColor }">{{ badgeLabel }}</span>
             {{ elementName }}
+            <span v-if="itemIssueLevel !== 'none'" class="mm-issue-badge" :class="itemIssueLevel">{{ itemIssueCount }}</span>
         </h3>
     </div>
 
@@ -38,9 +39,9 @@
                 <option value="wheel">wheel（轮胎）</option>
             </select>
         </div>
-        <div class="mm-field">
+        <div class="mm-field" :class="fieldClass('material') || (materialWarning ? 'mm-field-error' : '')">
             <label title="材料注册ID，控制摩擦、减伤、音效等">材质</label>
-            <select class="mm-select" :class="{ 'mm-locator-invalid': materialWarning }"
+            <select class="mm-select" :class="{ 'mm-locator-invalid': materialWarning || fieldLevel('material') === 'error' }"
                     :value="config.material" @change="onFieldChange('material', $event.target.value)">
                 <option value="">（未选择）</option>
                 <option v-if="!materialDefs['machine_max:default']" value="machine_max:default">默认材质（machine_max:default）</option>
@@ -48,17 +49,22 @@
                     {{ matKey }}
                 </option>
             </select>
-            <p v-if="materialWarning" class="mm-panel-hint" style="color:#e74c3c">{{ materialWarning }}</p>
+            <p v-if="fieldIssueMessage('material') || materialWarning" class="mm-field-issue" :title="fieldIssueTitle('material', '') || materialWarning">
+                {{ fieldIssueMessage('material') || materialWarning }}
+            </p>
         </div>
         <div class="mm-field">
             <label title="护甲厚度(mm)，减免伤害并控制碰撞时的能量分配">厚度 (mm)</label>
             <input type="number" class="mm-input" :value="config.thickness" @change="onFieldChange('thickness', parseFloat($event.target.value) || 1)" step="1" min="0" />
         </div>
-        <div class="mm-field">
+        <div class="mm-field" :class="fieldClass('subsystem')">
             <label title="关联子系统名称，碰撞箱受伤时该子系统同步受伤">关联子系统</label>
             <select class="mm-select" :value="config.subsystem || ''" @change="onFieldChange('subsystem', $event.target.value || '')">
                 <option v-for="(label, key) in subsystemOptions" :key="key" :value="key">{{ label }}</option>
             </select>
+            <p v-if="fieldIssueMessage('subsystem')" class="mm-field-issue" :title="fieldIssueTitle('subsystem', '')">
+                {{ fieldIssueMessage('subsystem') }}
+            </p>
         </div>
         <div class="mm-field">
             <label title="子系统内模块名，例如 barrel / breech / radiator；为空表示整个子系统">模块名</label>

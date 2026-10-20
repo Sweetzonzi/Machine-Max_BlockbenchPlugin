@@ -111,6 +111,39 @@ function aggregate(problems) {
 }
 
 /**
+ * 判断 Problem 是否命中某个字段。
+ *
+ * `path.field` 既可能是顶层字段（definition），也可能是嵌套字段
+ * （signal_targets.engine_speed.0）。面板按顶层字段标注时，嵌套问题也应
+ * 归到该字段的输入控件上，因此这里同时匹配 `field` 与 `field.` 前缀。
+ *
+ * @param {Object} problem
+ * @param {string} field
+ * @returns {boolean}
+ */
+function matchesField(problem, field) {
+    if (!field) return false;
+    var f = problem && problem.path && problem.path.field;
+    if (typeof f !== 'string' || f === '') return false;
+    return f === field || f.indexOf(field + '.') === 0;
+}
+
+/**
+ * 取 Problem[] 中属于指定字段的子集。
+ * @param {Array} problems - Problem[]
+ * @param {string} field
+ * @returns {Array} Problem[]
+ */
+function filterFieldIssues(problems, field) {
+    if (!Array.isArray(problems) || !field) return [];
+    var out = [];
+    for (var i = 0; i < problems.length; i++) {
+        if (matchesField(problems[i], field)) out.push(problems[i]);
+    }
+    return out;
+}
+
+/**
  * 根据范围数组计算每条 problem 的级别：error > warning > none。
  * 供面板判定行级 class 与计数。
  * @param {Array} issues - Problem[]
@@ -133,6 +166,8 @@ if (typeof module !== 'undefined' && module.exports) {
         CODES: CODES,
         SCOPE_ITEM_BUCKET: SCOPE_ITEM_BUCKET,
         isMissingValue: isMissingValue,
+        matchesField: matchesField,
+        filterFieldIssues: filterFieldIssues,
         aggregate: aggregate,
         resolveIssueLevel: resolveIssueLevel,
     };

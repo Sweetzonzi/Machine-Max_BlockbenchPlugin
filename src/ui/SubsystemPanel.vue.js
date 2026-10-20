@@ -14,6 +14,7 @@ var ssTypes = require('../core/subsystem_types.js');
 var nameUtils = require('../utils/name_utils.js');
 var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
 var { createLogger } = require('../utils/logger.js');
+var fieldIssues = require('./components/field_issues.js');
 
 var log = createLogger('SubsystemPanel');
 
@@ -28,6 +29,7 @@ var MAX_PLACEHOLDER_ITERATIONS = 1000;
  */
 var MM_SUBSYSTEM_PANEL_OPTIONS = {
     template: typeof TEMPLATE_SUBSYSTEM_PANEL !== 'undefined' ? TEMPLATE_SUBSYSTEM_PANEL : '<p>子系统面板加载中...</p>',
+    mixins: [fieldIssues.mixin],
     props: {
         config: { type: Object, required: true },
         subsystemKey: { type: String, default: '' },

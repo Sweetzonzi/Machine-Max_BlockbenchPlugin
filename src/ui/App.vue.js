@@ -19,7 +19,8 @@ const content_pack_manager = require('../core/content_pack_manager.js');
 const nameUtils = require('../utils/name_utils.js');
 const { buildSignalTargetOptions } = require('../utils/signal_target_options.js');
 const { collectIssues } = require('../services/validate.js');
-const { aggregate, resolveIssueLevel } = require('../core/validation_types.js');
+const { aggregate, resolveIssueLevel, filterFieldIssues } = require('../core/validation_types.js');
+const fieldIssueHelpers = require('./components/field_issues.js');
 var { showAddTagDialog, _hashTagColor } = require('./tag_dialog_helper.js');
 var undo = require('../core/undo.js');
 
@@ -161,6 +162,43 @@ const MM_MAIN_PANEL_OPTIONS = {
                 return p.path && p.path.partId === self.activePartId && p.path.variantName === self.activeVariantName;
             });
             return aggregate(scoped);
+        },
+        /** 零件/变体级问题（面板字段级标注用；游离元素 warning 也会在这里） */
+        partVariantIssues: function () {
+            return this.subPartIssues.byPartVariant;
+        },
+        /** 当前选中子零件「自身字段」的问题（不含后代条目问题） */
+        selectedSubPartFieldIssues: function () {
+            var spKey = this.selectedMarker ? this.selectedMarker.config_ref : '';
+            if (!spKey) return [];
+            var list = this.subPartIssues.bySubPart[spKey] || [];
+            return list.filter(function (p) {
+                return p.path && p.path.scope === 'subpart';
+            });
+        },
+        /** 当前虚拟选中子系统的问题 */
+        selectedSubsystemIssues: function () {
+            var key = this.selectedSubsystemKey;
+            if (!key) return [];
+            return this.subPartIssues.byItem.subsystems[key] || [];
+        },
+        /** 当前选中碰撞箱的问题（byItem 以碰撞箱 UUID 为键） */
+        selectedHitBoxIssues: function () {
+            var el = this.selectedElement;
+            if (!el || !el.uuid) return [];
+            return this.subPartIssues.byItem.hitBoxes[el.uuid] || [];
+        },
+        /** 当前选中连接点的问题 */
+        selectedConnectorIssues: function () {
+            var key = this.connectorKeyName;
+            if (!key) return [];
+            return this.subPartIssues.byItem.connectors[key] || [];
+        },
+        /** 当前选中交互区的问题 */
+        selectedInteractBoxIssues: function () {
+            var key = this.interactBoxName;
+            if (!key) return [];
+            return this.subPartIssues.byItem.interactBoxes[key] || [];
         },
         /**
          * 当前变体下的所有子零件条目（含短名、起始骨骼、子系统数）
@@ -1056,6 +1094,27 @@ const MM_MAIN_PANEL_OPTIONS = {
                 lines.push('[' + (p.severity === 'error' ? '错误' : '警告') + '] ' + p.message);
             }
             return lines.join('\n');
+        },
+        /** 零件/变体字段的问题列表（用于根面板字段级标注） */
+        partVariantFieldIssues: function (field) {
+            return filterFieldIssues(this.partVariantIssues, field);
+        },
+        /** 零件/变体字段的问题级别 */
+        partVariantFieldLevel: function (field) {
+            return resolveIssueLevel(this.partVariantFieldIssues(field));
+        },
+        /** 零件/变体字段包装 class：mm-field-error / mm-field-warning */
+        partVariantFieldClass: function (field) {
+            var level = this.partVariantFieldLevel(field);
+            return level === 'none' ? '' : 'mm-field-' + level;
+        },
+        /** 零件/变体字段行内提示 */
+        partVariantIssueMessage: function (field) {
+            return fieldIssueHelpers.fieldIssueMessage(this.partVariantIssues, field);
+        },
+        /** 零件/变体字段悬浮提示 */
+        partVariantIssueTitle: function (field, base) {
+            return fieldIssueHelpers.fieldIssueTitle(this.partVariantIssues, field, base);
         },
         /**
          * 导航统一入口 selectByIssue(problem)：

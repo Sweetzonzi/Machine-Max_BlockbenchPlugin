@@ -13445,6 +13445,20 @@
         }
         return { bySubPart, byItem, byPartVariant };
       }
+      function matchesField(problem, field) {
+        if (!field) return false;
+        var f = problem && problem.path && problem.path.field;
+        if (typeof f !== "string" || f === "") return false;
+        return f === field || f.indexOf(field + ".") === 0;
+      }
+      function filterFieldIssues(problems, field) {
+        if (!Array.isArray(problems) || !field) return [];
+        var out = [];
+        for (var i = 0; i < problems.length; i++) {
+          if (matchesField(problems[i], field)) out.push(problems[i]);
+        }
+        return out;
+      }
       function resolveIssueLevel(issues) {
         if (!issues || !Array.isArray(issues) || issues.length === 0) return "none";
         var hasError = false;
@@ -13461,6 +13475,8 @@
           CODES,
           SCOPE_ITEM_BUCKET,
           isMissingValue,
+          matchesField,
+          filterFieldIssues,
           aggregate,
           resolveIssueLevel
         };
@@ -24991,6 +25007,90 @@
     }
   });
 
+  // src/ui/components/field_issues.js
+  var require_field_issues = __commonJS({
+    "src/ui/components/field_issues.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var {
+        resolveIssueLevel,
+        filterFieldIssues
+      } = require_validation_types();
+      function _messageOf(issues) {
+        if (!issues || issues.length === 0) return "";
+        var first = issues[0] && issues[0].message;
+        if (!first) return "";
+        if (issues.length === 1) return first;
+        return first + "\uFF08\u53E6\u6709 " + (issues.length - 1) + " \u6761\u95EE\u9898\uFF09";
+      }
+      function _titleOf(issues, base) {
+        var lines = [];
+        if (base) lines.push(base);
+        if (issues && issues.length > 0) {
+          if (base) lines.push("\u2014\u2014 \u5B58\u5728\u95EE\u9898 \u2014\u2014");
+          for (var i = 0; i < issues.length; i++) {
+            var p = issues[i];
+            lines.push("[" + (p.severity === "error" ? "\u9519\u8BEF" : "\u8B66\u544A") + "] " + p.message);
+          }
+        }
+        return lines.join("\n");
+      }
+      var fieldIssueMixin = {
+        props: {
+          /** 当前条目的全部校验问题（Problem[]） */
+          issueList: { type: Array, default: function() {
+            return [];
+          } }
+        },
+        computed: {
+          /** 当前条目总体问题级别（驱动标题徽标） */
+          itemIssueLevel: function() {
+            return resolveIssueLevel(this.issueList);
+          },
+          itemIssueCount: function() {
+            return (this.issueList || []).length;
+          }
+        },
+        methods: {
+          /** 指定字段的问题列表（含嵌套字段） */
+          fieldIssues: function(field) {
+            return filterFieldIssues(this.issueList, field);
+          },
+          /** 指定字段的问题级别 */
+          fieldLevel: function(field) {
+            return resolveIssueLevel(this.fieldIssues(field));
+          },
+          /** 字段包装元素的 class：mm-field-error / mm-field-warning */
+          fieldClass: function(field) {
+            var level = this.fieldLevel(field);
+            return level === "none" ? "" : "mm-field-" + level;
+          },
+          /** 字段行内提示文案（无问题返回空串） */
+          fieldIssueMessage: function(field) {
+            return _messageOf(this.fieldIssues(field));
+          },
+          /** 字段悬浮提示：默认提示 + 问题清单 */
+          fieldIssueTitle: function(field, base) {
+            return _titleOf(this.fieldIssues(field), base);
+          }
+        }
+      };
+      module.exports = {
+        mixin: fieldIssueMixin,
+        fieldIssueMessage: function(problems, field) {
+          return _messageOf(filterFieldIssues(problems, field));
+        },
+        fieldIssueTitle: function(problems, field, base) {
+          return _titleOf(filterFieldIssues(problems, field), base);
+        }
+      };
+    }
+  });
+
   // src/ui/tag_dialog_helper.js
   var require_tag_dialog_helper = __commonJS({
     "src/ui/tag_dialog_helper.js"(exports, module) {
@@ -25199,6 +25299,7 @@
       var nameUtils = require_name_utils();
       var { createLogger: createLogger2 } = require_logger();
       var { resolveIssueLevel } = require_validation_types();
+      var fieldIssues = require_field_issues();
       var log2 = createLogger2("SubPartPanel");
       Vue.component("mm-sub-part-panel", {
         template: true ? `<div class="mm-section">
@@ -25263,9 +25364,12 @@
             <label title="\u5B50\u90E8\u4EF6\u57FA\u7840\u751F\u547D\u503C\uFF0C\u964D\u81F30\u65F6\u8BE5\u5B50\u90E8\u4EF6\u7684\u6240\u6709\u5B50\u7CFB\u7EDF\u4F1A\u762B\u75EA">\u8010\u4E45\u5EA6</label>
             <input type="number" class="mm-input" :value="config.durability" @change="onFieldChange('durability', parseFloat($event.target.value) || 0)" step="1" min="0" />
         </div>
-        <div class="mm-field">
+        <div class="mm-field" :class="fieldClass('mass')">
             <label title="\u5B50\u90E8\u4EF6\u8D28\u91CF(kg)\uFF0C\u5FC5\u987B\u5927\u4E8E0\uFF0C\u7528\u4E8E\u7269\u7406\u8BA1\u7B97">\u8D28\u91CF (kg)</label>
             <input type="number" class="mm-input" :value="config.mass" @change="onFieldChange('mass', parseFloat($event.target.value) || 0)" step="0.5" min="0" />
+            <p v-if="fieldIssueMessage('mass')" class="mm-field-issue" :title="fieldIssueTitle('mass', '')">
+                {{ fieldIssueMessage('mass') }}
+            </p>
         </div>
         <div class="mm-field">
             <label title="\u8D28\u5FC3\u5B9A\u4F4D\u5668\u540D\u79F0\uFF0C\u8F93\u5165\u5173\u952E\u5B57\u641C\u7D22\u5E76\u9009\u62E9">\u8D28\u5FC3</label>
@@ -25329,8 +25433,11 @@
         </div>
     </div>
 
-    <div class="mm-section">
+    <div class="mm-section" :class="fieldClass('hit_boxes')">
         <h4 class="mm-section-title">\u78B0\u649E\u7BB1 ({{ hitBoxCount }})</h4>
+        <p v-if="fieldIssueMessage('hit_boxes')" class="mm-field-issue" :title="fieldIssueTitle('hit_boxes', '')">
+            {{ fieldIssueMessage('hit_boxes') }}
+        </p>
         <div v-if="hitBoxCount === 0" class="mm-element-info" style="color:#888">
             \u6682\u65E0\u78B0\u649E\u7BB1 \u2014 \u5728 Outliner \u4E2D\u53F3\u952E\u9AA8\u9ABC\u5E76\u9009\u62E9"\u6807\u8BB0\u4E3A\u78B0\u649E\u7BB1"
         </div>
@@ -25407,6 +25514,7 @@
         </div>
     </div>
 </div>` : "<p>\u5B50\u96F6\u4EF6\u9762\u677F\u52A0\u8F7D\u4E2D...</p>",
+        mixins: [fieldIssues.mixin],
         props: {
           config: { type: Object, required: true },
           elementName: { type: String, default: "" },
@@ -25708,6 +25816,7 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
+      var fieldIssues = require_field_issues();
       var OVERWRITE_GROUPS = {
         block_damage_factor: "physics",
         rha: "armor",
@@ -25719,9 +25828,10 @@
       Vue.component("mm-hit-box-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
-        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;">
+        <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
             <span class="mm-marker-badge" :style="{ background: badgeColor }">{{ badgeLabel }}</span>
             {{ elementName }}
+            <span v-if="itemIssueLevel !== 'none'" class="mm-issue-badge" :class="itemIssueLevel">{{ itemIssueCount }}</span>
         </h3>
     </div>
 
@@ -25757,9 +25867,9 @@
                 <option value="wheel">wheel\uFF08\u8F6E\u80CE\uFF09</option>
             </select>
         </div>
-        <div class="mm-field">
+        <div class="mm-field" :class="fieldClass('material') || (materialWarning ? 'mm-field-error' : '')">
             <label title="\u6750\u6599\u6CE8\u518CID\uFF0C\u63A7\u5236\u6469\u64E6\u3001\u51CF\u4F24\u3001\u97F3\u6548\u7B49">\u6750\u8D28</label>
-            <select class="mm-select" :class="{ 'mm-locator-invalid': materialWarning }"
+            <select class="mm-select" :class="{ 'mm-locator-invalid': materialWarning || fieldLevel('material') === 'error' }"
                     :value="config.material" @change="onFieldChange('material', $event.target.value)">
                 <option value="">\uFF08\u672A\u9009\u62E9\uFF09</option>
                 <option v-if="!materialDefs['machine_max:default']" value="machine_max:default">\u9ED8\u8BA4\u6750\u8D28\uFF08machine_max:default\uFF09</option>
@@ -25767,17 +25877,22 @@
                     {{ matKey }}
                 </option>
             </select>
-            <p v-if="materialWarning" class="mm-panel-hint" style="color:#e74c3c">{{ materialWarning }}</p>
+            <p v-if="fieldIssueMessage('material') || materialWarning" class="mm-field-issue" :title="fieldIssueTitle('material', '') || materialWarning">
+                {{ fieldIssueMessage('material') || materialWarning }}
+            </p>
         </div>
         <div class="mm-field">
             <label title="\u62A4\u7532\u539A\u5EA6(mm)\uFF0C\u51CF\u514D\u4F24\u5BB3\u5E76\u63A7\u5236\u78B0\u649E\u65F6\u7684\u80FD\u91CF\u5206\u914D">\u539A\u5EA6 (mm)</label>
             <input type="number" class="mm-input" :value="config.thickness" @change="onFieldChange('thickness', parseFloat($event.target.value) || 1)" step="1" min="0" />
         </div>
-        <div class="mm-field">
+        <div class="mm-field" :class="fieldClass('subsystem')">
             <label title="\u5173\u8054\u5B50\u7CFB\u7EDF\u540D\u79F0\uFF0C\u78B0\u649E\u7BB1\u53D7\u4F24\u65F6\u8BE5\u5B50\u7CFB\u7EDF\u540C\u6B65\u53D7\u4F24">\u5173\u8054\u5B50\u7CFB\u7EDF</label>
             <select class="mm-select" :value="config.subsystem || ''" @change="onFieldChange('subsystem', $event.target.value || '')">
                 <option v-for="(label, key) in subsystemOptions" :key="key" :value="key">{{ label }}</option>
             </select>
+            <p v-if="fieldIssueMessage('subsystem')" class="mm-field-issue" :title="fieldIssueTitle('subsystem', '')">
+                {{ fieldIssueMessage('subsystem') }}
+            </p>
         </div>
         <div class="mm-field">
             <label title="\u5B50\u7CFB\u7EDF\u5185\u6A21\u5757\u540D\uFF0C\u4F8B\u5982 barrel / breech / radiator\uFF1B\u4E3A\u7A7A\u8868\u793A\u6574\u4E2A\u5B50\u7CFB\u7EDF">\u6A21\u5757\u540D</label>
@@ -25829,6 +25944,7 @@
         <p class="mm-element-info" v-if="cubePosition">\u4F4D\u7F6E: {{ cubePosition }}</p>
     </div>
 </div>` : "<p>\u78B0\u649E\u7BB1\u9762\u677F\u52A0\u8F7D\u4E2D...</p>",
+        mixins: [fieldIssues.mixin],
         props: {
           config: { type: Object, required: true },
           elementName: { type: String, default: "" },
@@ -25953,6 +26069,7 @@
       init_define_SCHEMAS();
       var nameUtils = require_name_utils();
       var { SIGNAL_CHANNEL_HINTS } = require_constants();
+      var fieldIssues = require_field_issues();
       Vue.component("mm-interact-box-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -25966,6 +26083,7 @@
                 @change="onNameChange($event.target.value)"
                 placeholder="seat"
                 title="\u4EA4\u4E92\u533A\u540D\u79F0\u77ED\u540D\uFF0C\u4FDD\u5B58\u540E\u81EA\u52A8\u8865\u5168\u4E3A\u5B8C\u6574\u952E" />
+            <span v-if="itemIssueLevel !== 'none'" class="mm-issue-badge" :class="itemIssueLevel">{{ itemIssueCount }}</span>
         </h3>
     </div>
 
@@ -26026,7 +26144,7 @@
     </div>
 
     <!-- === \u4FE1\u53F7\u76EE\u6807 (signal_targets) === -->
-    <div class="mm-section">
+    <div class="mm-section" :class="fieldClass('signal_targets')">
         <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
             <span>\u4FE1\u53F7\u76EE\u6807</span>
         </h4>
@@ -26038,6 +26156,9 @@
             :target-options="signalTargetHints"
             :channel-hints="channelHints"
             @change="onSignalTargetsChange($event)" />
+        <p v-if="fieldIssueMessage('signal_targets')" class="mm-field-issue" :title="fieldIssueTitle('signal_targets', '')">
+            {{ fieldIssueMessage('signal_targets') }}
+        </p>
     </div>
 
     <div class="mm-section">
@@ -26046,6 +26167,7 @@
         <p class="mm-element-info" v-if="config.bone">\u7ED1\u5B9A\u9AA8\u9ABC: {{ config.bone }}</p>
     </div>
 </div>` : "<p>\u4EA4\u4E92\u533A\u9762\u677F\u52A0\u8F7D\u4E2D...</p>",
+        mixins: [fieldIssues.mixin],
         props: {
           config: { type: Object, required: true },
           elementName: { type: String, default: "" },
@@ -26170,6 +26292,7 @@
       init_define_SCHEMAS();
       var nameUtils = require_name_utils();
       var { SIGNAL_CHANNEL_HINTS } = require_constants();
+      var fieldIssues = require_field_issues();
       var MM_CONNECTOR_PANEL_OPTIONS = {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -26183,6 +26306,7 @@
                 @change="onNameChange($event.target.value)"
                 placeholder="front_wheel"
                 title="\u8FDE\u63A5\u70B9\u540D\u79F0\u77ED\u540D\uFF0C\u4FDD\u5B58\u540E\u81EA\u52A8\u8865\u5168\u4E3A\u5B8C\u6574\u952E" />
+            <span v-if="itemIssueLevel !== 'none'" class="mm-issue-badge" :class="itemIssueLevel">{{ itemIssueCount }}</span>
         </h3>
     </div>
 
@@ -26215,7 +26339,7 @@
 
     <div class="mm-section">
         <h4 class="mm-section-title">\u8FDE\u63A5\u70B9\u5B9A\u4E49</h4>
-        <div class="mm-field">
+        <div class="mm-field" :class="fieldClass('definition')">
             <label title="\u8FDE\u63A5\u70B9\u5B9A\u4E49ID\uFF0C\u51B3\u5B9A\u8FDE\u63A5\u70B9\u7684\u7C7B\u578B\u548C\u7269\u7406\u5C5E\u6027">\u5B9A\u4E49</label>
             <select class="mm-select" :value="config.definition" @change="onDefinitionChange($event.target.value)">
                 <option value="" disabled>\u2014 \u8BF7\u9009\u62E9\u8FDE\u63A5\u70B9\u5B9A\u4E49 \u2014</option>
@@ -26223,14 +26347,17 @@
                     {{ defKey }}
                 </option>
             </select>
-            <p v-if="!config.definition" class="mm-element-info" style="color:#e74c3c;font-size:11px;margin-top:2px">
+            <p v-if="fieldIssueMessage('definition')" class="mm-field-issue" :title="fieldIssueTitle('definition', '')">
+                {{ fieldIssueMessage('definition') }}
+            </p>
+            <p v-else-if="!config.definition" class="mm-element-info" style="color:#e74c3c;font-size:11px;margin-top:2px">
                 \u26A0 \u8BF7\u9009\u62E9\u4E00\u4E2A\u8FDE\u63A5\u70B9\u5B9A\u4E49
             </p>
         </div>
     </div>
 
     <!-- === \u4FE1\u53F7\u76EE\u6807 (signal_targets) === -->
-    <div class="mm-section">
+    <div class="mm-section" :class="fieldClass('signal_targets')">
         <h4 class="mm-section-title" style="display:flex;align-items:center;justify-content:space-between">
             <span>\u4FE1\u53F7\u76EE\u6807</span>
         </h4>
@@ -26242,6 +26369,9 @@
             :target-options="signalTargetHints"
             :channel-hints="channelHints"
             @change="onSignalTargetsChange($event)" />
+        <p v-if="fieldIssueMessage('signal_targets')" class="mm-field-issue" :title="fieldIssueTitle('signal_targets', '')">
+            {{ fieldIssueMessage('signal_targets') }}
+        </p>
     </div>
 
     <!-- === \u4FE1\u53F7\u8F6C\u8BD1 (signal_translations) === -->
@@ -26274,12 +26404,15 @@
     <!-- === \u673A\u68B0\u80FD\u4E0E\u5185\u90E8 === -->
     <div class="mm-section">
         <h4 class="mm-section-title">\u673A\u68B0\u80FD\u4E0E\u5185\u90E8</h4>
-        <div class="mm-field">
+        <div class="mm-field" :class="fieldClass('power_target')">
             <label title="\u673A\u68B0\u80FD\u8F93\u51FA\u76EE\u6807\uFF1A\u9009\u62E9\u672C\u5B50\u96F6\u4EF6\u5185\u7684\u5B50\u7CFB\u7EDF\uFF0C\u6216\u7559\u7A7A\u8868\u793A\u65E0\u8F93\u51FA">\u673A\u68B0\u80FD\u8F93\u51FA\u76EE\u6807</label>
             <select class="mm-select" :value="config.power_target" @change="onFieldChange('power_target', $event.target.value)">
                 <option value="">\uFF08\u65E0\uFF09</option>
                 <option v-for="(ss, ssKey) in subsystemKeys" :key="ssKey" :value="ssKey">{{ displayLabel(ssKey) }}</option>
             </select>
+            <p v-if="fieldIssueMessage('power_target')" class="mm-field-issue" :title="fieldIssueTitle('power_target', '')">
+                {{ fieldIssueMessage('power_target') }}
+            </p>
         </div>
         <div class="mm-field mm-field-row" style="margin-top:4px">
             <label title="\u5185\u90E8\u8FDE\u63A5\u70B9\uFF1A\u52FE\u9009\u540E\u8BE5\u8FDE\u63A5\u70B9\u4EC5\u7528\u4E8E\u5185\u90E8\u4FE1\u53F7\u8DEF\u7531\uFF0C\u4E0D\u53C2\u4E0E\u5916\u90E8\u8FDE\u63A5">\u5185\u90E8\u8FDE\u63A5\u70B9</label>
@@ -26305,6 +26438,7 @@
         </div>
     </div>
 </div>` : "<p>\u8FDE\u63A5\u70B9\u9762\u677F\u52A0\u8F7D\u4E2D...</p>",
+        mixins: [fieldIssues.mixin],
         props: {
           config: { type: Object, required: true },
           elementName: { type: String, default: "" },
@@ -26554,6 +26688,7 @@
       var nameUtils = require_name_utils();
       var { SIGNAL_CHANNEL_HINTS } = require_constants();
       var { createLogger: createLogger2 } = require_logger();
+      var fieldIssues = require_field_issues();
       var log2 = createLogger2("SubsystemPanel");
       var PLACEHOLDER_PREFIX = "__new_p_";
       var MAX_PLACEHOLDER_ITERATIONS = 1e3;
@@ -26570,6 +26705,7 @@
                 @change="onNameChange($event.target.value)"
                 placeholder="engine"
                 title="\u5B50\u7CFB\u7EDF\u540D\u79F0\u77ED\u540D\uFF0C\u4FDD\u5B58\u540E\u81EA\u52A8\u8865\u5168\u4E3A\u5B8C\u6574\u952E" />
+            <span v-if="itemIssueLevel !== 'none'" class="mm-issue-badge" :class="itemIssueLevel">{{ itemIssueCount }}</span>
         </h3>
     </div>
 
@@ -26594,20 +26730,23 @@
                 <span style="font-size:12px;color:#ccc">{{ typeDisplayName }} ({{ typeId }})</span>
             </div>
         </div>
-        <div class="mm-field">
+        <div class="mm-field" :class="fieldClass('definition')">
             <label title="\u4ECE subsystem_defs \u4E2D\u9009\u62E9\u578B\u53F7\u5B9A\u4E49">\u578B\u53F7\u5B9A\u4E49</label>
             <select class="mm-select" :value="config.definition" @change="onFieldChange('definition', $event.target.value)">
                 <option value="">\uFF08\u65E0\uFF09</option>
                 <option v-for="(def, defId) in filteredSubsystemDefs" :key="defId" :value="defId">{{ defId }}</option>
             </select>
             <span class="mm-element-info" v-if="filteredSubsystemDefsCount === 0" style="font-size:10px;color:#ff6b6b">\u65E0\u5339\u914D\u7684<span style="color:#888">{{ typeDisplayName }}</span>\u578B\u53F7\u5B9A\u4E49</span>
+            <p v-if="fieldIssueMessage('definition')" class="mm-field-issue" :title="fieldIssueTitle('definition', '')">
+                {{ fieldIssueMessage('definition') }}
+            </p>
         </div>
     </div>
 
     <!-- \u52A8\u6001\u5C5E\u6027\u5B57\u6BB5\uFF1A\u7531 subsystem_types.js \u7684 dynamicFields \u6CE8\u518C\u8868\u9A71\u52A8 -->
     <div class="mm-section" v-if="nonDefFields.length > 0">
         <h4 class="mm-section-title">{{ dynamicAttrsTitle }}</h4>
-        <div v-for="field in nonDefFields" :key="field.field" class="mm-field">
+        <div v-for="field in nonDefFields" :key="field.field" class="mm-field" :class="fieldClass(field.field)">
             <label :title="field.field">{{ field.label }}</label>
 
             <!-- \u5B9A\u4F4D\u5668\u9009\u62E9\u5668\uFF08\u8F93\u5165\u6846 + datalist \u63D0\u793A + \u81EA\u7531\u6587\u672C\uFF0C\u8303\u56F4\u9650\u5236\u5728\u5F53\u524D\u5B50\u96F6\u4EF6\u9AA8\u9ABC\u6811\u4E0B\uFF09 -->
@@ -26734,6 +26873,10 @@
                 :value="config[field.field]"
                 @change="onFieldChange(field.field, $event.target.value)"
                 :placeholder="'(' + field.editor + ')'" />
+
+            <p v-if="fieldIssueMessage(field.field)" class="mm-field-issue" :title="fieldIssueTitle(field.field, '')">
+                {{ fieldIssueMessage(field.field) }}
+            </p>
         </div>
     </div>
 
@@ -26743,6 +26886,7 @@
         </button>
     </div>
 </div>` : "<p>\u5B50\u7CFB\u7EDF\u9762\u677F\u52A0\u8F7D\u4E2D...</p>",
+        mixins: [fieldIssues.mixin],
         props: {
           config: { type: Object, required: true },
           subsystemKey: { type: String, default: "" },
@@ -27443,7 +27587,8 @@
       var nameUtils = require_name_utils();
       var { buildSignalTargetOptions } = require_signal_target_options();
       var { collectIssues } = require_validate();
-      var { aggregate, resolveIssueLevel } = require_validation_types();
+      var { aggregate, resolveIssueLevel, filterFieldIssues } = require_validation_types();
+      var fieldIssueHelpers = require_field_issues();
       var { showAddTagDialog, _hashTagColor } = require_tag_dialog_helper();
       var undo = require_undo();
       var log2 = createLogger2("UI");
@@ -27491,6 +27636,7 @@
             :signal-target-options="currentSignalTargetOptions"
             :control-group-presets="availableControlGroupPresets"
             :projectile-types="availableProjectileTypes"
+            :issue-list="selectedSubsystemIssues"
             @field-change="updateSubsystemField"
             @name-change="renameSubsystem"
             @delete-subsystem="deleteSubsystem($event.spKey, $event.ssKey)"
@@ -27499,11 +27645,14 @@
 
     <!-- \u96F6\u4EF6/\u53D8\u4F53\u5C5E\u6027\u9762\u677F -->
     <div v-show="!isSubsystemSelected && !selectedElement" class="mm-panel-body">
-        <div class="mm-section" v-if="currentPart">
+        <div class="mm-section" v-if="currentPart" :class="partVariantFieldClass('variants')">
             <h3 class="mm-section-title">
                 <span class="mm-marker-badge" style="background:#D97E4A">\u96F6\u4EF6</span>
                 {{ activePartId }}
             </h3>
+            <p v-if="partVariantIssueMessage('variants')" class="mm-field-issue" :title="partVariantIssueTitle('variants', '')">
+                {{ partVariantIssueMessage('variants') }}
+            </p>
             <div class="mm-field">
                 <label title="\u96F6\u4EF6\u5728\u7269\u54C1\u680F\u548C UI \u4E2D\u663E\u793A\u7684\u56FE\u6807\uFF0C\u683C\u5F0F\u4E3A namespace:path">\u56FE\u6807</label>
                 <input type="text" :value="currentPart.icon" @change="updatePartField('icon', $event.target.value)" class="mm-input" placeholder="machine_max:textures/icon/..." title="\u96F6\u4EF6\u5728\u7269\u54C1\u680F\u548C UI \u4E2D\u663E\u793A\u7684\u56FE\u6807\u8DEF\u5F84\uFF0C\u5982 machine_max:textures/icon/my_part.png" />
@@ -27539,9 +27688,12 @@
                 <span class="mm-marker-badge" style="background:#6A9A9A">\u53D8\u4F53</span>
                 {{ activeVariantName }}
             </h3>
-            <div class="mm-field">
+            <div class="mm-field" :class="partVariantFieldClass('model')">
                 <label title="\u57FA\u5CA9\u7248\u51E0\u4F55\u6A21\u578B\u8DEF\u5F84\uFF0C\u683C\u5F0F\u4E3A namespace:name.geo\u3002\u5982 machine_max:my_part.geo">\u6A21\u578B</label>
                 <input type="text" :value="currentVariant.model" @change="updateVariantField('model', $event.target.value)" class="mm-input" placeholder="machine_max:..." title="\u51E0\u4F55\u6A21\u578B\u8DEF\u5F84\uFF0C\u683C\u5F0F namespace:name.geo\uFF0C\u5982 machine_max:wine_fox.geo" />
+                <p v-if="partVariantIssueMessage('model')" class="mm-field-issue" :title="partVariantIssueTitle('model', '')">
+                    {{ partVariantIssueMessage('model') }}
+                </p>
             </div>
             <div class="mm-field">
                 <label title="\u52A8\u753B\u8DEF\u5F84\u3002\u5982 machine_max:my_anim\u3002\u7559\u7A7A\u5219\u4E0D\u64AD\u653E\u52A8\u753B">\u52A8\u753B</label>
@@ -27575,8 +27727,11 @@
         </div>
 
         <!-- \u5B50\u96F6\u4EF6\u5217\u8868\uFF08\u98CE\u683C\u4E0E\u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u5217\u8868\u4E00\u81F4\uFF09 -->
-        <div class="mm-section">
+        <div class="mm-section" :class="partVariantFieldClass('sub_parts')">
             <h4 class="mm-section-title">\u5B50\u96F6\u4EF6 ({{ subPartEntries.length }})</h4>
+            <p v-if="partVariantIssueMessage('sub_parts')" class="mm-field-issue" :title="partVariantIssueTitle('sub_parts', '')">
+                {{ partVariantIssueMessage('sub_parts') }}
+            </p>
             <div v-if="subPartEntries.length === 0" class="mm-element-info" style="color:#888">
                 \u6682\u65E0\u5B50\u96F6\u4EF6 \u2014 \u5728 Outliner \u4E2D\u53F3\u952E\u9AA8\u9ABC\u5E76\u9009\u62E9"\u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6"
             </div>
@@ -27612,6 +27767,7 @@
             :refresh-key="markerVersion.v"
             :issues="subPartIssues.byItem"
             :sp-issues="subPartIssues.bySubPart[selectedMarker ? selectedMarker.config_ref : '']"
+            :issue-list="selectedSubPartFieldIssues"
             @field-change="updateSubPartField"
             @add-end-bone="addEndBone"
             @remove-end-bone="removeEndBone"
@@ -27636,6 +27792,7 @@
             :parent-sub-part-key="hitBoxParentSubPartKey"
             :material-defs="availableMaterials"
             :parent-subsystems="hitBoxParentSubsystems"
+            :issue-list="selectedHitBoxIssues"
             @field-change="updateHitBoxField"
             @overwrite-change="updateHitBoxOverwrite"
             @navigate-to-sub-part="navigateToSubPart" />
@@ -27656,6 +27813,7 @@
             :parent-subsystems="interactBoxParentSubsystems"
             :signal-target-hints="interactBoxParentSignalTargetHints"
             :all-bone-names="allBoneNames"
+            :issue-list="selectedInteractBoxIssues"
             @field-change="updateInteractBoxField"
             @name-change="renameInteractBox"
             @bone-change="migrateInteractBoxBone"
@@ -27678,6 +27836,7 @@
             :all-locator-names="allLocatorNames"
             :subsystem-keys="connectorParentSubsystems"
             :signal-target-hints="connectorParentSignalTargetHints"
+            :issue-list="selectedConnectorIssues"
             @field-change="updateConnectorField"
             @locator-change="migrateConnectorLocator"
             @name-change="renameConnector"
@@ -27817,6 +27976,43 @@
               return p.path && p.path.partId === self.activePartId && p.path.variantName === self.activeVariantName;
             });
             return aggregate(scoped);
+          },
+          /** 零件/变体级问题（面板字段级标注用；游离元素 warning 也会在这里） */
+          partVariantIssues: function() {
+            return this.subPartIssues.byPartVariant;
+          },
+          /** 当前选中子零件「自身字段」的问题（不含后代条目问题） */
+          selectedSubPartFieldIssues: function() {
+            var spKey = this.selectedMarker ? this.selectedMarker.config_ref : "";
+            if (!spKey) return [];
+            var list = this.subPartIssues.bySubPart[spKey] || [];
+            return list.filter(function(p) {
+              return p.path && p.path.scope === "subpart";
+            });
+          },
+          /** 当前虚拟选中子系统的问题 */
+          selectedSubsystemIssues: function() {
+            var key = this.selectedSubsystemKey;
+            if (!key) return [];
+            return this.subPartIssues.byItem.subsystems[key] || [];
+          },
+          /** 当前选中碰撞箱的问题（byItem 以碰撞箱 UUID 为键） */
+          selectedHitBoxIssues: function() {
+            var el = this.selectedElement;
+            if (!el || !el.uuid) return [];
+            return this.subPartIssues.byItem.hitBoxes[el.uuid] || [];
+          },
+          /** 当前选中连接点的问题 */
+          selectedConnectorIssues: function() {
+            var key = this.connectorKeyName;
+            if (!key) return [];
+            return this.subPartIssues.byItem.connectors[key] || [];
+          },
+          /** 当前选中交互区的问题 */
+          selectedInteractBoxIssues: function() {
+            var key = this.interactBoxName;
+            if (!key) return [];
+            return this.subPartIssues.byItem.interactBoxes[key] || [];
           },
           /**
            * 当前变体下的所有子零件条目（含短名、起始骨骼、子系统数）
@@ -28676,6 +28872,27 @@
               lines.push("[" + (p.severity === "error" ? "\u9519\u8BEF" : "\u8B66\u544A") + "] " + p.message);
             }
             return lines.join("\n");
+          },
+          /** 零件/变体字段的问题列表（用于根面板字段级标注） */
+          partVariantFieldIssues: function(field) {
+            return filterFieldIssues(this.partVariantIssues, field);
+          },
+          /** 零件/变体字段的问题级别 */
+          partVariantFieldLevel: function(field) {
+            return resolveIssueLevel(this.partVariantFieldIssues(field));
+          },
+          /** 零件/变体字段包装 class：mm-field-error / mm-field-warning */
+          partVariantFieldClass: function(field) {
+            var level = this.partVariantFieldLevel(field);
+            return level === "none" ? "" : "mm-field-" + level;
+          },
+          /** 零件/变体字段行内提示 */
+          partVariantIssueMessage: function(field) {
+            return fieldIssueHelpers.fieldIssueMessage(this.partVariantIssues, field);
+          },
+          /** 零件/变体字段悬浮提示 */
+          partVariantIssueTitle: function(field, base) {
+            return fieldIssueHelpers.fieldIssueTitle(this.partVariantIssues, field, base);
           },
           /**
            * 导航统一入口 selectByIssue(problem)：
@@ -30653,7 +30870,7 @@
         }
         if (!_mmCssInserted) {
           try {
-            const mmCss = ".mm-panel {\n    padding: 12px;\n    height: 100%;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n}\n\n.mm-panel-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n}\n\n.mm-panel-header {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n.mm-nav-row {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    margin-bottom: 6px;\n}\n\n.mm-label {\n    font-size: 12px;\n    color: #aaa;\n    min-width: 32px;\n    flex-shrink: 0;\n}\n\n.mm-select {\n    flex: 1;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    cursor: pointer;\n}\n\n.mm-input {\n    width: 100%;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    box-sizing: border-box;\n}\n\n.mm-input:focus {\n    border-color: #4A90D9;\n    outline: none;\n}\n\n.mm-btn {\n    background: var(--btn-bg, #3a3a3a);\n    border: 1px solid var(--border-color, #555);\n    color: var(--text-color, #ddd);\n    border-radius: 3px;\n    cursor: pointer;\n    font-size: 12px;\n    white-space: nowrap;\n}\n\n.mm-btn:hover {\n    background: var(--btn-hover-bg, #4a4a4a);\n}\n\n.mm-btn-sm {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    padding: 0;\n    font-size: 14px;\n    line-height: 1;\n    width: 30px;\n    height: 30px;\n    min-width: 30px;\n    min-height: 30px;\n    box-sizing: border-box;\n}\n\n.mm-btn-danger {\n    background: var(--btn-danger-bg, #5a2a2a);\n    border-color: var(--btn-danger-border, #8a3a3a);\n    color: #ff6b6b;\n}\n\n.mm-btn-danger:hover:not(:disabled) {\n    background: var(--btn-danger-hover-bg, #7a3a3a);\n    color: #ff9999;\n}\n\n.mm-btn-danger:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n\n.mm-section {\n    margin-bottom: 16px;\n}\n\n.mm-section-title {\n    font-size: 13px;\n    font-weight: 600;\n    margin: 0 0 8px 0;\n    padding-bottom: 4px;\n    border-bottom: 1px solid var(--border-color, #333);\n    color: var(--heading-color, #eee);\n}\n\n.mm-field {\n    margin-bottom: 8px;\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n\n.mm-field label {\n    font-size: 11px;\n    color: #999;\n    margin-bottom: 1px;\n}\n\n.mm-field-row {\n    flex-direction: row;\n    align-items: center;\n    gap: 8px;\n}\n\n.mm-field-row label {\n    margin-bottom: 0;\n}\n\n.mm-tags {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-tag {\n    background: var(--tag-bg, #3a6a9a);\n    color: white;\n    padding: 2px 8px;\n    border-radius: 3px;\n    font-size: 11px;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n\n.mm-tag-remove {\n    cursor: pointer;\n    font-weight: bold;\n    font-size: 14px;\n    line-height: 1;\n}\n\n.mm-tag-remove:hover {\n    color: #ff6b6b;\n}\n\n.mm-variant-list {\n    list-style: none;\n    padding: 0;\n    margin: 0;\n}\n\n.mm-variant-list li {\n    padding: 4px 8px;\n    cursor: pointer;\n    font-size: 12px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    border-radius: 3px;\n}\n\n.mm-variant-list li:hover {\n    background: var(--hover-bg, #333);\n}\n\n.mm-variant-list li.active {\n    background: var(--active-bg, #2a4a6a);\n    color: white;\n}\n\n.mm-variant-remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-weight: bold;\n}\n\n.mm-element-info {\n    font-size: 11px;\n    color: #888;\n    margin: 2px 0;\n}\n\n.mm-marker-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: white;\n    margin-left: 6px;\n    vertical-align: middle;\n}\n\n.mm-panel-hint {\n    color: #666;\n    font-size: 12px;\n    text-align: center;\n    padding: 20px;\n}\n\n.mm-panel-body {\n    flex: 1;\n    overflow-y: auto;\n}\n\n/* \u56FA\u5B9A\u5728\u9762\u677F\u9876\u90E8\u7684\u6807\u9898\u680F\uFF0C\u6EDA\u52A8\u65F6\u59CB\u7EC8\u53EF\u89C1 */\n.mm-sticky-title {\n    position: sticky;\n    top: 0;\n    z-index: 1;\n    background: var(--panel-bg, #1e1e1e);\n    padding: 8px 0 4px 0;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u6761\u76EE\u884C */\n.mm-sub-item-row {\n    display: flex;\n    flex-direction: column;\n    padding: 4px 8px;\n    border-radius: 3px;\n    margin-bottom: 2px;\n}\n.mm-sub-item-row.mm-clickable {\n    cursor: pointer;\n}\n.mm-sub-item-row.mm-clickable:hover {\n    background: var(--hover-bg, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u540D\u79F0\u884C */\n.mm-sub-item-name {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 12px;\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u5143\u4FE1\u606F\u884C */\n.mm-sub-item-meta {\n    font-size: 10px;\n    color: #888;\n    margin-left: 4px;\n}\n\n/* \u2500\u2500 \u6821\u9A8C\u95EE\u9898\u884C\u7EA7\u7EA2\u6846 / \u7425\u73C0\u6846\uFF08error \u7EA2 / warning \u7425\u73C0\uFF09 \u2500\u2500 */\n.mm-sub-item-row.mm-item-error {\n    outline: 1px solid #ff6b6b;\n    background: rgba(255, 107, 107, 0.08);\n}\n.mm-sub-item-row.mm-item-warning {\n    outline: 1px solid #e2b93b;\n    background: rgba(226, 185, 59, 0.08);\n}\n\n/* \u95EE\u9898\u8BA1\u6570\u5FBD\u6807\uFF08error / warning \u5171\u7528\uFF0C\u989C\u8272\u968F\u7EA7\u522B\uFF09 */\n.mm-issue-badge {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    min-width: 16px;\n    height: 16px;\n    padding: 0 4px;\n    margin-left: 6px;\n    border-radius: 8px;\n    font-size: 10px;\n    line-height: 16px;\n    font-weight: bold;\n    color: #fff;\n}\n.mm-issue-badge.error {\n    background: #ff6b6b;\n}\n.mm-issue-badge.warning {\n    background: #e2b93b;\n}\n\n/* \u53EF\u70B9\u51FB\u7684\u5F52\u5C5E\u6807\u7B7E */\n.mm-clickable-tag:hover {\n    filter: brightness(1.3);\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5361\u7247 */\n.mm-signal-card {\n    margin-bottom: 4px;\n    padding: 4px;\n    background: #252525;\n    border-radius: 3px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5934\u90E8 */\n.mm-signal-header {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n    margin-bottom: 2px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u5220\u9664\u6309\u94AE */\n.mm-btn-sm.mm-btn-danger-light {\n    color: #ff6b6b;\n}\n\n.mm-btn-sm.mm-btn-danger-light:hover {\n    color: #ff9999;\n}\n\n/* ===== \u4FE1\u53F7\u6D41\u56FE\u9762\u677F ===== */\n.mm-signal-flow {\n    padding: 8px 12px;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n}\n\n.mm-signal-flow-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n    font-size: 12px;\n}\n\n.mm-signal-flow-header {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding-bottom: 8px;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n}\n\n.mm-signal-flow-title {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 14px;\n    font-weight: 600;\n    color: var(--heading-color, #eee);\n}\n\n.mm-flow-icon {\n    font-size: 16px;\n    color: #4A90D9;\n}\n\n.mm-signal-flow-meta {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 11px;\n    color: #888;\n}\n\n.mm-flow-meta-item {\n    background: #2a2a2a;\n    padding: 1px 6px;\n    border-radius: 3px;\n    color: #aaa;\n}\n\n.mm-flow-meta-sep {\n    color: #555;\n}\n\n.mm-signal-flow-body {\n    flex: 1;\n    display: flex;\n    overflow: auto;\n}\n\n.mm-signal-flow-placeholder {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    width: 100%;\n    gap: 12px;\n}\n\n.mm-flow-placeholder-icon {\n    font-size: 36px;\n    color: #4a4a4a;\n    opacity: 0.5;\n}\n\n.mm-flow-placeholder-text {\n    font-size: 13px;\n    color: #666;\n}\n\n.mm-flow-placeholder-hint {\n    font-size: 11px;\n    color: #555;\n    text-align: center;\n}\n\n.mm-flow-stats {\n    display: flex;\n    gap: 24px;\n    margin: 8px 0;\n}\n\n.mm-flow-stat {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    gap: 2px;\n}\n\n.mm-flow-stat-value {\n    font-size: 18px;\n    font-weight: 600;\n    color: #4A90D9;\n}\n\n.mm-flow-stat-label {\n    font-size: 10px;\n    color: #888;\n    text-transform: uppercase;\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u753B\u5E03 */\n.mm-flow-canvas {\n    flex: 1;\n    overflow: hidden;\n    background: #1a1a1a;\n    border-radius: 4px;\n    border: 1px solid var(--border-color, #333);\n    min-height: 200px;\n}\n\n.mm-flow-canvas svg {\n    display: block;\n    width: 100%;\n    height: 100%;\n}\n\n/* \u8FDE\u7EBF\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-edge-hovered {\n    stroke-opacity: 1 !important;\n}\n\n/* \u8282\u70B9\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-node-hovered {\n    stroke: #fff !important;\n    stroke-width: 1.5 !important;\n    filter: brightness(1.2);\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u64CD\u4F5C\u6309\u94AE */\n.mm-signal-flow-actions {\n    margin-left: auto;\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n/* \u56FE\u4F8B */\n.mm-signal-flow-legend {\n    display: flex;\n    gap: 12px;\n    padding-top: 6px;\n    margin-top: 4px;\n    border-top: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n    flex-wrap: wrap;\n}\n\n.mm-flow-legend-item {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 10px;\n    color: #999;\n    cursor: default;\n}\n\n.mm-flow-legend-item:hover {\n    color: #ccc;\n}\n\n.mm-flow-legend-dot {\n    width: 8px;\n    height: 8px;\n    border-radius: 2px;\n    flex-shrink: 0;\n}\n\n.mm-flow-legend-line {\n    width: 14px;\n    height: 3px;\n    border-radius: 1px;\n    flex-shrink: 0;\n}\n\n/* ==================== \u952E\u503C\u5BF9\u7F16\u8F91\u5668 ==================== */\n\n.mm-kv-editor {\n    display: flex;\n    flex-direction: column;\n    gap: 4px;\n}\n\n.mm-kv-row {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-kv-key {\n    flex: 1 1 30%;\n    min-width: 60px;\n}\n\n.mm-kv-value {\n    flex: 2 1 70%;\n    min-width: 100px;\n}\n\n.mm-kv-add {\n    border-top: 1px solid #373a40;\n    padding-top: 4px;\n}\n\n.mm-btn-danger {\n    color: #D94A4A;\n    border: 1px solid #D94A4A;\n    background: transparent;\n}\n.mm-btn-danger:hover {\n    background: #D94A4A;\n    color: #fff;\n}\n\n/* ==================== \u901A\u7528\u5B9A\u4E49\u67E5\u770B\u5668\uFF08\u53EA\u8BFB\u5217\u8868\uFF09 ==================== */\n\n/* \u6765\u6E90\u7EDF\u8BA1\u6761 */\n.mm-def-stats {\n    display: flex;\n    gap: 14px;\n    align-items: center;\n    font-size: 11px;\n    color: #aaa;\n    margin-bottom: 6px;\n}\n\n.mm-def-stat {\n    display: inline-flex;\n    align-items: center;\n    gap: 4px;\n}\n\n/* \u7EDF\u8BA1\u6761\u5F69\u8272\u5706\u70B9 */\n.mm-dot {\n    display: inline-block;\n    width: 8px;\n    height: 8px;\n    border-radius: 50%;\n}\n\n.mm-dot-builtin {\n    background: #888;\n}\n\n.mm-dot-dependency {\n    background: #2196F3;\n}\n\n.mm-dot-current {\n    background: #4CAF50;\n}\n\n/* \u5B9A\u4E49\u5217\u8868\u6EDA\u52A8\u5BB9\u5668 */\n.mm-def-list {\n    max-height: 320px;\n    overflow-y: auto;\n    border: 1px solid var(--border-color, #333);\n    border-radius: 3px;\n}\n\n/* \u5B9A\u4E49\u8868\u683C */\n.mm-def-table {\n    width: 100%;\n    border-collapse: collapse;\n    font-size: 12px;\n}\n\n.mm-def-th {\n    padding: 6px 8px;\n    text-align: left;\n    font-size: 11px;\n    color: #aaa;\n    font-weight: normal;\n    border-bottom: 2px solid #555;\n    position: sticky;\n    top: 0;\n    background: var(--panel-bg, #1e1e1e);\n    z-index: 1;\n}\n\n.mm-def-table td {\n    padding: 6px 8px;\n    border-bottom: 1px solid #333;\n}\n\n.mm-def-id {\n    font-family: monospace;\n    font-size: 13px;\n}\n\n.mm-def-sublabel {\n    margin-left: 8px;\n    font-size: 11px;\n    color: #888;\n}\n\n/* \u53EA\u8BFB\u6807\u8BB0 */\n.mm-def-readonly {\n    display: inline-block;\n    margin-left: 8px;\n    padding: 0 5px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: #999;\n    border: 1px solid #555;\n}\n\n/* \u7A7A\u5217\u8868\u63D0\u793A */\n.mm-def-empty {\n    color: #888;\n    font-style: italic;\n    text-align: center;\n    padding: 20px;\n}\n\n/* \u5E95\u90E8\u63D0\u793A\u6587\u6848 */\n.mm-def-hint {\n    font-size: 11px;\n    color: #888;\n    margin: 8px 0 0 0;\n}\n\n/* \u6765\u6E90\u5FBD\u6807\uFF08\u4E09\u8272\uFF09 */\n.mm-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 11px;\n    white-space: nowrap;\n}\n\n.mm-badge-builtin {\n    color: #888;\n    border: 1px solid #888;\n}\n\n.mm-badge-dependency {\n    color: #2196F3;\n    border: 1px solid #2196F3;\n}\n\n.mm-badge-current {\n    color: #4CAF50;\n    border: 1px solid #4CAF50;\n}\n\n.mm-badge-unknown {\n    color: #888;\n    border: 1px solid #888;\n}\n\n/* ==================== LocatorPicker\uFF08\u5B9A\u4F4D\u5668\u9009\u62E9\uFF09 ==================== */\n\n/* \u672A\u627E\u5230\u7684 locator \u8F93\u5165\u6846\uFF1A\u7EA2\u8272\u8FB9\u6846\u6807\u8BB0\uFF08\u4E0D\u62E6\u622A\u8F93\u5165\uFF09 */\n.mm-locator-invalid {\n    border-color: #e74c3c !important;\n    color: #e74c3c;\n}\n\n/* \u672A\u627E\u5230\u63D0\u793A\u6587\u6848 */\n.mm-locator-warn {\n    display: block;\n    margin-top: 2px;\n    font-size: 10px;\n    color: #f39c12;\n}";
+            const mmCss = ".mm-panel {\n    padding: 12px;\n    height: 100%;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n}\n\n.mm-panel-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n}\n\n.mm-panel-header {\n    margin-bottom: 12px;\n    padding-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n.mm-nav-row {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    margin-bottom: 6px;\n}\n\n.mm-label {\n    font-size: 12px;\n    color: #aaa;\n    min-width: 32px;\n    flex-shrink: 0;\n}\n\n.mm-select {\n    flex: 1;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    cursor: pointer;\n}\n\n.mm-input {\n    width: 100%;\n    background: var(--input-bg, #2a2a2a);\n    border: 1px solid var(--border-color, #444);\n    color: var(--text-color, #ddd);\n    padding: 4px 8px;\n    border-radius: 3px;\n    font-size: 12px;\n    box-sizing: border-box;\n}\n\n.mm-input:focus {\n    border-color: #4A90D9;\n    outline: none;\n}\n\n.mm-btn {\n    background: var(--btn-bg, #3a3a3a);\n    border: 1px solid var(--border-color, #555);\n    color: var(--text-color, #ddd);\n    border-radius: 3px;\n    cursor: pointer;\n    font-size: 12px;\n    white-space: nowrap;\n}\n\n.mm-btn:hover {\n    background: var(--btn-hover-bg, #4a4a4a);\n}\n\n.mm-btn-sm {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    padding: 0;\n    font-size: 14px;\n    line-height: 1;\n    width: 30px;\n    height: 30px;\n    min-width: 30px;\n    min-height: 30px;\n    box-sizing: border-box;\n}\n\n.mm-btn-danger {\n    background: var(--btn-danger-bg, #5a2a2a);\n    border-color: var(--btn-danger-border, #8a3a3a);\n    color: #ff6b6b;\n}\n\n.mm-btn-danger:hover:not(:disabled) {\n    background: var(--btn-danger-hover-bg, #7a3a3a);\n    color: #ff9999;\n}\n\n.mm-btn-danger:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n\n.mm-section {\n    margin-bottom: 16px;\n}\n\n.mm-section-title {\n    font-size: 13px;\n    font-weight: 600;\n    margin: 0 0 8px 0;\n    padding-bottom: 4px;\n    border-bottom: 1px solid var(--border-color, #333);\n    color: var(--heading-color, #eee);\n}\n\n.mm-field {\n    margin-bottom: 8px;\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n\n.mm-field label {\n    font-size: 11px;\n    color: #999;\n    margin-bottom: 1px;\n}\n\n.mm-field-row {\n    flex-direction: row;\n    align-items: center;\n    gap: 8px;\n}\n\n.mm-field-row label {\n    margin-bottom: 0;\n}\n\n.mm-tags {\n    display: flex;\n    flex-wrap: wrap;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-tag {\n    background: var(--tag-bg, #3a6a9a);\n    color: white;\n    padding: 2px 8px;\n    border-radius: 3px;\n    font-size: 11px;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n\n.mm-tag-remove {\n    cursor: pointer;\n    font-weight: bold;\n    font-size: 14px;\n    line-height: 1;\n}\n\n.mm-tag-remove:hover {\n    color: #ff6b6b;\n}\n\n.mm-variant-list {\n    list-style: none;\n    padding: 0;\n    margin: 0;\n}\n\n.mm-variant-list li {\n    padding: 4px 8px;\n    cursor: pointer;\n    font-size: 12px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    border-radius: 3px;\n}\n\n.mm-variant-list li:hover {\n    background: var(--hover-bg, #333);\n}\n\n.mm-variant-list li.active {\n    background: var(--active-bg, #2a4a6a);\n    color: white;\n}\n\n.mm-variant-remove {\n    cursor: pointer;\n    color: #ff6b6b;\n    font-weight: bold;\n}\n\n.mm-element-info {\n    font-size: 11px;\n    color: #888;\n    margin: 2px 0;\n}\n\n.mm-marker-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: white;\n    margin-left: 6px;\n    vertical-align: middle;\n}\n\n.mm-panel-hint {\n    color: #666;\n    font-size: 12px;\n    text-align: center;\n    padding: 20px;\n}\n\n.mm-panel-body {\n    flex: 1;\n    overflow-y: auto;\n}\n\n/* \u56FA\u5B9A\u5728\u9762\u677F\u9876\u90E8\u7684\u6807\u9898\u680F\uFF0C\u6EDA\u52A8\u65F6\u59CB\u7EC8\u53EF\u89C1 */\n.mm-sticky-title {\n    position: sticky;\n    top: 0;\n    z-index: 1;\n    background: var(--panel-bg, #1e1e1e);\n    padding: 8px 0 4px 0;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u9762\u677F\u4E2D\u7684\u78B0\u649E\u7BB1/\u8FDE\u63A5\u70B9\u6761\u76EE\u884C */\n.mm-sub-item-row {\n    display: flex;\n    flex-direction: column;\n    padding: 4px 8px;\n    border-radius: 3px;\n    margin-bottom: 2px;\n}\n.mm-sub-item-row.mm-clickable {\n    cursor: pointer;\n}\n.mm-sub-item-row.mm-clickable:hover {\n    background: var(--hover-bg, #333);\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u540D\u79F0\u884C */\n.mm-sub-item-name {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 12px;\n}\n\n/* \u5B50\u96F6\u4EF6\u6761\u76EE\u5143\u4FE1\u606F\u884C */\n.mm-sub-item-meta {\n    font-size: 10px;\n    color: #888;\n    margin-left: 4px;\n}\n\n/* \u2500\u2500 \u6821\u9A8C\u95EE\u9898\u884C\u7EA7\u7EA2\u6846 / \u7425\u73C0\u6846\uFF08error \u7EA2 / warning \u7425\u73C0\uFF09 \u2500\u2500 */\n.mm-sub-item-row.mm-item-error {\n    outline: 1px solid #ff6b6b;\n    background: rgba(255, 107, 107, 0.08);\n}\n.mm-sub-item-row.mm-item-warning {\n    outline: 1px solid #e2b93b;\n    background: rgba(226, 185, 59, 0.08);\n}\n\n/* \u95EE\u9898\u8BA1\u6570\u5FBD\u6807\uFF08error / warning \u5171\u7528\uFF0C\u989C\u8272\u968F\u7EA7\u522B\uFF09 */\n.mm-issue-badge {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    min-width: 16px;\n    height: 16px;\n    padding: 0 4px;\n    margin-left: 6px;\n    border-radius: 8px;\n    font-size: 10px;\n    line-height: 16px;\n    font-weight: bold;\n    color: #fff;\n}\n.mm-issue-badge.error {\n    background: #ff6b6b;\n}\n.mm-issue-badge.warning {\n    background: #e2b93b;\n}\n\n/* \u2500\u2500 \u7EC8\u7AEF\u5B57\u6BB5\u7EA7\u7EA2\u6846 / \u7425\u73C0\u6846\uFF08error \u7EA2 / warning \u7425\u73C0\uFF09 \u2500\u2500 */\n.mm-field.mm-field-error > label,\n.mm-section.mm-field-error > .mm-section-title {\n    color: #ff6b6b;\n}\n.mm-field.mm-field-warning > label,\n.mm-section.mm-field-warning > .mm-section-title {\n    color: #e2b93b;\n}\n.mm-field.mm-field-error .mm-input,\n.mm-field.mm-field-error .mm-select,\n.mm-field.mm-field-error .mm-textarea,\n.mm-field.mm-field-error locator-picker {\n    border-color: #ff6b6b;\n}\n.mm-field.mm-field-warning .mm-input,\n.mm-field.mm-field-warning .mm-select,\n.mm-field.mm-field-warning .mm-textarea,\n.mm-field.mm-field-warning locator-picker {\n    border-color: #e2b93b;\n}\n.mm-field-issue {\n    margin: 2px 0 0 0;\n    font-size: 10px;\n    line-height: 1.4;\n    color: #ff6b6b;\n    white-space: normal;\n    word-break: break-word;\n}\n.mm-field.mm-field-warning .mm-field-issue,\n.mm-section.mm-field-warning .mm-field-issue {\n    color: #e2b93b;\n}\n\n/* \u53EF\u70B9\u51FB\u7684\u5F52\u5C5E\u6807\u7B7E */\n.mm-clickable-tag:hover {\n    filter: brightness(1.3);\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5361\u7247 */\n.mm-signal-card {\n    margin-bottom: 4px;\n    padding: 4px;\n    background: #252525;\n    border-radius: 3px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u4FE1\u53F7\u9891\u9053\u5934\u90E8 */\n.mm-signal-header {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n    margin-bottom: 2px;\n}\n\n/* \u5B50\u7CFB\u7EDF\u9762\u677F\u4E2D\u7684\u5220\u9664\u6309\u94AE */\n.mm-btn-sm.mm-btn-danger-light {\n    color: #ff6b6b;\n}\n\n.mm-btn-sm.mm-btn-danger-light:hover {\n    color: #ff9999;\n}\n\n/* ===== \u4FE1\u53F7\u6D41\u56FE\u9762\u677F ===== */\n.mm-signal-flow {\n    padding: 8px 12px;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    font-size: 13px;\n    color: var(--text-color, #ddd);\n}\n\n.mm-signal-flow-empty {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: #888;\n    font-size: 12px;\n}\n\n.mm-signal-flow-header {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    padding-bottom: 8px;\n    margin-bottom: 8px;\n    border-bottom: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n}\n\n.mm-signal-flow-title {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    font-size: 14px;\n    font-weight: 600;\n    color: var(--heading-color, #eee);\n}\n\n.mm-flow-icon {\n    font-size: 16px;\n    color: #4A90D9;\n}\n\n.mm-signal-flow-meta {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 11px;\n    color: #888;\n}\n\n.mm-flow-meta-item {\n    background: #2a2a2a;\n    padding: 1px 6px;\n    border-radius: 3px;\n    color: #aaa;\n}\n\n.mm-flow-meta-sep {\n    color: #555;\n}\n\n.mm-signal-flow-body {\n    flex: 1;\n    display: flex;\n    overflow: auto;\n}\n\n.mm-signal-flow-placeholder {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    width: 100%;\n    gap: 12px;\n}\n\n.mm-flow-placeholder-icon {\n    font-size: 36px;\n    color: #4a4a4a;\n    opacity: 0.5;\n}\n\n.mm-flow-placeholder-text {\n    font-size: 13px;\n    color: #666;\n}\n\n.mm-flow-placeholder-hint {\n    font-size: 11px;\n    color: #555;\n    text-align: center;\n}\n\n.mm-flow-stats {\n    display: flex;\n    gap: 24px;\n    margin: 8px 0;\n}\n\n.mm-flow-stat {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    gap: 2px;\n}\n\n.mm-flow-stat-value {\n    font-size: 18px;\n    font-weight: 600;\n    color: #4A90D9;\n}\n\n.mm-flow-stat-label {\n    font-size: 10px;\n    color: #888;\n    text-transform: uppercase;\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u753B\u5E03 */\n.mm-flow-canvas {\n    flex: 1;\n    overflow: hidden;\n    background: #1a1a1a;\n    border-radius: 4px;\n    border: 1px solid var(--border-color, #333);\n    min-height: 200px;\n}\n\n.mm-flow-canvas svg {\n    display: block;\n    width: 100%;\n    height: 100%;\n}\n\n/* \u8FDE\u7EBF\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-edge-hovered {\n    stroke-opacity: 1 !important;\n}\n\n/* \u8282\u70B9\u60AC\u505C\u9AD8\u4EAE */\n.mm-flow-node-hovered {\n    stroke: #fff !important;\n    stroke-width: 1.5 !important;\n    filter: brightness(1.2);\n}\n\n/* \u4FE1\u53F7\u6D41\u56FE\u64CD\u4F5C\u6309\u94AE */\n.mm-signal-flow-actions {\n    margin-left: auto;\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n/* \u56FE\u4F8B */\n.mm-signal-flow-legend {\n    display: flex;\n    gap: 12px;\n    padding-top: 6px;\n    margin-top: 4px;\n    border-top: 1px solid var(--border-color, #333);\n    flex-shrink: 0;\n    flex-wrap: wrap;\n}\n\n.mm-flow-legend-item {\n    display: flex;\n    align-items: center;\n    gap: 4px;\n    font-size: 10px;\n    color: #999;\n    cursor: default;\n}\n\n.mm-flow-legend-item:hover {\n    color: #ccc;\n}\n\n.mm-flow-legend-dot {\n    width: 8px;\n    height: 8px;\n    border-radius: 2px;\n    flex-shrink: 0;\n}\n\n.mm-flow-legend-line {\n    width: 14px;\n    height: 3px;\n    border-radius: 1px;\n    flex-shrink: 0;\n}\n\n/* ==================== \u952E\u503C\u5BF9\u7F16\u8F91\u5668 ==================== */\n\n.mm-kv-editor {\n    display: flex;\n    flex-direction: column;\n    gap: 4px;\n}\n\n.mm-kv-row {\n    display: flex;\n    gap: 4px;\n    align-items: center;\n}\n\n.mm-kv-key {\n    flex: 1 1 30%;\n    min-width: 60px;\n}\n\n.mm-kv-value {\n    flex: 2 1 70%;\n    min-width: 100px;\n}\n\n.mm-kv-add {\n    border-top: 1px solid #373a40;\n    padding-top: 4px;\n}\n\n.mm-btn-danger {\n    color: #D94A4A;\n    border: 1px solid #D94A4A;\n    background: transparent;\n}\n.mm-btn-danger:hover {\n    background: #D94A4A;\n    color: #fff;\n}\n\n/* ==================== \u901A\u7528\u5B9A\u4E49\u67E5\u770B\u5668\uFF08\u53EA\u8BFB\u5217\u8868\uFF09 ==================== */\n\n/* \u6765\u6E90\u7EDF\u8BA1\u6761 */\n.mm-def-stats {\n    display: flex;\n    gap: 14px;\n    align-items: center;\n    font-size: 11px;\n    color: #aaa;\n    margin-bottom: 6px;\n}\n\n.mm-def-stat {\n    display: inline-flex;\n    align-items: center;\n    gap: 4px;\n}\n\n/* \u7EDF\u8BA1\u6761\u5F69\u8272\u5706\u70B9 */\n.mm-dot {\n    display: inline-block;\n    width: 8px;\n    height: 8px;\n    border-radius: 50%;\n}\n\n.mm-dot-builtin {\n    background: #888;\n}\n\n.mm-dot-dependency {\n    background: #2196F3;\n}\n\n.mm-dot-current {\n    background: #4CAF50;\n}\n\n/* \u5B9A\u4E49\u5217\u8868\u6EDA\u52A8\u5BB9\u5668 */\n.mm-def-list {\n    max-height: 320px;\n    overflow-y: auto;\n    border: 1px solid var(--border-color, #333);\n    border-radius: 3px;\n}\n\n/* \u5B9A\u4E49\u8868\u683C */\n.mm-def-table {\n    width: 100%;\n    border-collapse: collapse;\n    font-size: 12px;\n}\n\n.mm-def-th {\n    padding: 6px 8px;\n    text-align: left;\n    font-size: 11px;\n    color: #aaa;\n    font-weight: normal;\n    border-bottom: 2px solid #555;\n    position: sticky;\n    top: 0;\n    background: var(--panel-bg, #1e1e1e);\n    z-index: 1;\n}\n\n.mm-def-table td {\n    padding: 6px 8px;\n    border-bottom: 1px solid #333;\n}\n\n.mm-def-id {\n    font-family: monospace;\n    font-size: 13px;\n}\n\n.mm-def-sublabel {\n    margin-left: 8px;\n    font-size: 11px;\n    color: #888;\n}\n\n/* \u53EA\u8BFB\u6807\u8BB0 */\n.mm-def-readonly {\n    display: inline-block;\n    margin-left: 8px;\n    padding: 0 5px;\n    border-radius: 3px;\n    font-size: 10px;\n    color: #999;\n    border: 1px solid #555;\n}\n\n/* \u7A7A\u5217\u8868\u63D0\u793A */\n.mm-def-empty {\n    color: #888;\n    font-style: italic;\n    text-align: center;\n    padding: 20px;\n}\n\n/* \u5E95\u90E8\u63D0\u793A\u6587\u6848 */\n.mm-def-hint {\n    font-size: 11px;\n    color: #888;\n    margin: 8px 0 0 0;\n}\n\n/* \u6765\u6E90\u5FBD\u6807\uFF08\u4E09\u8272\uFF09 */\n.mm-badge {\n    display: inline-block;\n    padding: 1px 6px;\n    border-radius: 3px;\n    font-size: 11px;\n    white-space: nowrap;\n}\n\n.mm-badge-builtin {\n    color: #888;\n    border: 1px solid #888;\n}\n\n.mm-badge-dependency {\n    color: #2196F3;\n    border: 1px solid #2196F3;\n}\n\n.mm-badge-current {\n    color: #4CAF50;\n    border: 1px solid #4CAF50;\n}\n\n.mm-badge-unknown {\n    color: #888;\n    border: 1px solid #888;\n}\n\n/* ==================== LocatorPicker\uFF08\u5B9A\u4F4D\u5668\u9009\u62E9\uFF09 ==================== */\n\n/* \u672A\u627E\u5230\u7684 locator \u8F93\u5165\u6846\uFF1A\u7EA2\u8272\u8FB9\u6846\u6807\u8BB0\uFF08\u4E0D\u62E6\u622A\u8F93\u5165\uFF09 */\n.mm-locator-invalid {\n    border-color: #e74c3c !important;\n    color: #e74c3c;\n}\n\n/* \u672A\u627E\u5230\u63D0\u793A\u6587\u6848 */\n.mm-locator-warn {\n    display: block;\n    margin-top: 2px;\n    font-size: 10px;\n    color: #f39c12;\n}";
             if (mmCss) {
               const style = document.createElement("style");
               style.setAttribute("data-mm-plugin", "true");

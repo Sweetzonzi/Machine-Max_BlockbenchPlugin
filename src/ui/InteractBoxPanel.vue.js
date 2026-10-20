@@ -11,9 +11,11 @@
  */
 var nameUtils = require('../utils/name_utils.js');
 var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
+var fieldIssues = require('./components/field_issues.js');
 
 Vue.component('mm-interact-box-panel', {
     template: typeof TEMPLATE_INTERACT_BOX_PANEL !== 'undefined' ? TEMPLATE_INTERACT_BOX_PANEL : '<p>交互区面板加载中...</p>',
+    mixins: [fieldIssues.mixin],
     props: {
         config: { type: Object, required: true },
         elementName: { type: String, default: '' },

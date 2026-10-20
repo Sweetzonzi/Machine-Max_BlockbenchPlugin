@@ -99,9 +99,9 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 
 | 目录 | 文件 | 行数 |
 |---|---|---|
-| `src/ui/` | 26 JS + 7 模板 | 6,321 + 1,142 |
+| `src/ui/` | 27 JS + 7 模板 | 6,479 + 1,190 |
 | `src/mode/` | 5 | 1,155 |
-| `src/core/` | 12 | 4,392 |
+| `src/core/` | 12 | 4,427 |
 | `src/codec/` | 10 JS（11 含 AGENTS.md） | 1,271 |
 | `src/ops/` | 10（含 `shared.js` / `AGENTS.md`） | — |
 | `src/services/` | 6（export / export_pipeline / safe_part_ids / import / pack / validate） | 1,062 |
@@ -283,6 +283,9 @@ src/doc/field_specs.generated.js（含 provenance）
 | 导出值扫描 | 枚举 / 数值范围 / 对象结构 / key 格式 / required | `doc.validate.validateTree(config, {completeness:true})` | 编辑期：不跑；导出期：**阻断** |
 | 信号目标完整性 | `signal_targets[*][]` / `power_output` / `power_target` / `power_outputs` 的 key 指向同变体节点或 `local`/`global` | `collectIssues`（`DANGLING_SIGNAL_TARGET`，P2 新增一条规则） | 编辑期：提示；导出期：**阻断** |
 | 碰撞箱材质 | `hit_box.material` 非空；非 `machine_max:default` 时必须存在于可用材质表 | `services/validate.collectIssues`（`material_required` / `material_ref_missing`） | 编辑期：提示；导出期：**阻断** |
+| 面板标注 | `Problem.path.field` → 具体输入控件；条目级问题 → 条目行 | `ui/components/field_issues.js` + 各面板 `issue-list` | 字段红框 + 行内提示（error 红 / warning 琥珀） |
+
+> 面板标注与原生清单共用同一份 `collectIssues`：`App.vue.js` 把 `aggregate()` 的 `byPartVariant` / `bySubPart` / `byItem` 按当前选中条目切片，作为 `issue-list` 传给子面板；子面板用 `fieldClass(field)` / `fieldIssueMessage(field)` 把 `path.field` 落到具体控件（嵌套字段如 `signal_targets.engine_speed.0` 归到 `signal_targets`）。这样“子系统型号未选”既会让 SubPart 列表的子系统行变红，也会让子系统面板的“型号定义”下拉变红并显示原因。
 
 > D19 之后 `part` / `subpart` / `vehicle` 没有特殊处理：它们和任意未知目标一样走「信号目标完整性」，不再有单独的告警或迁移。
 
@@ -1162,8 +1165,9 @@ bun test test/schema/field_specs.test.js
 - `collectIssues` 从 `mode/validation.js` **移动**到 `services/validate.js`；`mode/validation.js` 删除，`mode/validation_check.js` 只做原生清单适配。**没有**下沉到 `core/validation.js`，因为那会让 core 反向依赖 `doc/refs.js`（用户 2026-10-21 确认改放 services）。
 - 所有 require 更新：`App.vue.js`、`plugin.js`、`services/export.js`、`mode/validation_check.js`、`test/ops/ops.test.js`。
 - P4 后补（用户实测）：碰撞箱 `material` 原为语义必填但无人校验，`''` 会直接进入导出。`collectIssues` 新增 `material_required` / `material_ref_missing`，`machine_max:default`（Java `MaterialAttr.DEFAULT` 兜底）放行；碰撞箱面板下拉补「（未选择）」/「默认材质」并显示红框提示。
+- P4 后补（用户实测 2）：新增终端字段级标注。`core/validation_types.js` 提供 `matchesField` / `filterFieldIssues`（嵌套 `path.field` 归到顶层字段）；`ui/components/field_issues.js` 提供 `fieldClass` / `fieldIssueMessage` / `fieldIssueTitle`；App 把 `byPartVariant` / `bySubPart` / `byItem` 按当前条目切片为 `issue-list`，子系统 / 连接点 / 交互区 / 碰撞箱 / 子零件面板与零件-变体面板对型号定义、必填动态字段、材质、信号目标、质量、模型、子零件列表等终端字段标红并显示原因。
 
-验收：同一工程导出产物逐字节一致（纯搬移，无逻辑改动）；`bun test` 138 pass / 536 expect；`audit-stats` 47/47；`gen-field-specs --check` 与 `sync-schemas --check` 通过；`npm run build` 成功。
+验收：同一工程导出产物逐字节一致（纯搬移，无逻辑改动）；`bun test` 144 pass / 554 expect；`audit-stats` 47/47；`gen-field-specs --check` 与 `sync-schemas --check` 通过；`npm run build` 成功。
 
 ### P5 — MCP（见 docs/12）
 
@@ -1211,6 +1215,7 @@ test/
 24. **计算属性只读**：选中缺失配置的 sub_part / hit_box / interact_box / connector 时，渲染不新增 `$set` / `delete`；「创建配置」按钮走 `ops.mark*` 并产生一条撤销记录；`loadConfig` 的 `repairMarkerConfigs` 补建四类条目且幂等。
 25. **碰撞箱默认值单源**：`createHitBoxConfig().material === 'machine_max:default'`，与 `HitBoxCodec.decode({type:'box'})` 一致；内联 `HIT_BOX_DEFAULTS` 已删除。
 26. **碰撞箱材质**：`material:''` 报 `material_required`，`machine_max:not_a_material` 报 `material_ref_missing`，两者都进 `canExport.errors` 并阻断；`machine_max:default` 放行（Java 兜底，不查内容包表）；面板下拉同时展示「（未选择）」与「默认材质」，空值/未知值显示红框与提示。
+27. **终端字段标注**：`subsystem.definition:''` 的 `path.field` 为 `definition`，`filterFieldIssues` 能命中且不误命中 `power_output`；`signal_targets.engine_speed.0` 这类嵌套字段归到 `signal_targets`；面板 `fieldClass` 返回 `mm-field-error` / `mm-field-warning`，行内提示与 `title` 均列出问题。
 
 ---
 

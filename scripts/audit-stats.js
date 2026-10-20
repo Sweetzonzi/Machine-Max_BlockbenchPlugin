@@ -23,14 +23,14 @@ const SRC = path.join(REPO_ROOT, 'src');
 
 // docs/13 §2（2026-10-21）。这些是审计基线，不是运行时数据。
 const BASELINE = {
-    '2.1.ui.js_files': 26,
+    '2.1.ui.js_files': 27,
     '2.1.ui.template_files': 7,
-    '2.1.ui.js_lines': 6321,
-    '2.1.ui.template_lines': 1142,
+    '2.1.ui.js_lines': 6479,
+    '2.1.ui.template_lines': 1190,
     '2.1.mode.files': 5,
     '2.1.mode.lines': 1155,
     '2.1.core.files': 12,
-    '2.1.core.lines': 4392,
+    '2.1.core.lines': 4427,
     '2.1.codec.files': 10,
     '2.1.codec.lines': 1271,
     '2.1.managers.files': 5,
