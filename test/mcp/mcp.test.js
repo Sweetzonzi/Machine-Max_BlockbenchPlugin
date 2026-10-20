@@ -85,6 +85,7 @@ function clearGlobals() {
     delete global.Blockbench;
     delete global.Outliner;
     delete globalThis.MCP_QUEUE;
+    delete globalThis.MCP;
 }
 
 function run(name, args) {
@@ -611,6 +612,8 @@ describe('MCP 注册生命周期', () => {
 
         expect(registered).toHaveLength(12);
         expect(registered[0].name).toBe('machine_max_bb_plugin_get_context');
+        expect(registered[0].parameters).toBeTruthy();
+        expect(registered[0].params).toBeUndefined();
         expect(registered.every(function (s) {
             return s.condition.project === true
                 && s.condition.modes[0] === 'machine_max_part';
@@ -627,6 +630,27 @@ describe('MCP 注册生命周期', () => {
         mcpIndex.registerMcpTools();
         mcpIndex.registerMcpTools();
         expect(globalThis.MCP_QUEUE).toHaveLength(1);
+        mcpIndex.unregisterMcpTools();
+    });
+
+    test('MCP 已先加载时立即注册，不依赖队列再次 drain', () => {
+        globalThis.MCP_QUEUE = [];
+        const registered = [];
+        globalThis.MCP = {
+            z: schema(),
+            registerTool: function (spec) { registered.push(spec); return function () {}; },
+            unregisterTool: function () {},
+            createJsonResult: function (obj) { return obj; },
+        };
+
+        mcpIndex.registerMcpTools();
+        expect(registered).toHaveLength(12);
+        expect(registered[0].name).toBe('machine_max_bb_plugin_get_context');
+
+        // 队列条目仍在；MCP 后续 drain 时会幂等重注册
+        expect(globalThis.MCP_QUEUE).toHaveLength(1);
+        globalThis.MCP_QUEUE[0].setup(globalThis.MCP);
+        expect(registered).toHaveLength(24);
         mcpIndex.unregisterMcpTools();
     });
 });

@@ -3,6 +3,7 @@
 // 所属模块: MachineMax Blockbench 插件
 //
 // zod 实例由 MCP 插件注入（MCP.z），所以这里导出 build(z) 而不是常量。
+// MCP 1.10.1 的 registerTool 读取 `parameters`（zod schema），不是 `params`。
 
 'use strict';
 

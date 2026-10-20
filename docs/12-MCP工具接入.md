@@ -5,7 +5,8 @@
 > 参照：[docs/11-接入Blockbench原生撤销.md](./11-接入Blockbench原生撤销.md) / [docs/08-序列化反序列化-Codec体系重构.md](./08-序列化反序列化-Codec体系重构.md) / [docs/10-校验与错误提示重构实现计划.md](./10-校验与错误提示重构实现计划.md)
 >
 > **实现备注（与设计稿的差异）**
-> - `src/mcp/` 四文件与工具矩阵按本文落地；`bun test` 覆盖只读、`set_node`、`remove_node`、`bind_marker`、`set_active`、四个 `import_*`、`add_instance`、`validate`、注册/注销，共 34 例（`test/mcp/mcp.test.js`）。
+> - `src/mcp/` 四文件与工具矩阵按本文落地；`bun test` 覆盖只读、`set_node`、`remove_node`、`bind_marker`、`set_active`、四个 `import_*`、`add_instance`、`validate`、注册/注销，共 35 例（`test/mcp/mcp.test.js`）。
+> - MCP 插件可能先于本插件加载。`registerMcpTools()` 除了推进 `MCP_QUEUE`，在 `globalThis.MCP` 已存在时会立即 `setup` 一次；队列条目保留，后续 drain 会幂等重注册。
 > - 为满足 §5.3，本轮补齐了 ops：`persist:false` / `strict:true` 透传、`import_*` 的 `duplicate_name` 与 `mode:'rename'`、`add_instance` 的 key（配置键）与元素名（`definition.bone` / `definition.locator`）分离。
 > - `introduced_issues` 在 MCP 工具层用 `collectIssues` 前后 diff（正文 §7.2 的“同一撤销记录内”表述按实现收敛；不改变撤销粒度）。
 > - MCP 插件未安装时 `registerMcpTools()` 只创建一个空的 `MCP_QUEUE` 条目，插件其它功能不受影响。
@@ -73,7 +74,7 @@ src/core/undo.js         # 已实现：撤销桥 + runConfigEdit / withUndoEdit 
 
 src/mcp/
 ├── index.js             # registerMcpTools() / unregisterMcpTools()：从 MCP_QUEUE 挂载
-├── tools.js             # 工具注册表：{name, description, params, condition, execute}
+├── tools.js             # 工具注册表：{name, description, parameters, condition, execute}
 ├── params.js            # zod 参数形状（每个工具一段），与 tools.js 一一对应
 └── result.js            # 统一返回信封：ops 结果 → MCP.createJsonResult
 ```
@@ -297,7 +298,7 @@ condition: { project: true, modes: ['machine_max_part'] }
 
 四层，顺序固定（全部下沉到 doc 层，工具层只做第一层）：
 
-1. **形状**（工具层）：`MCP.z.object({...})` 声明参数类型与必填项，MCP 插件在调用 `execute` 前完成解析（含默认值）。
+1. **形状**（工具层）：`MCP.z.object({...})` 通过 `registerTool({ parameters })` 声明参数类型与必填项，MCP 插件在调用 `execute` 前完成解析（含默认值）。注意字段名是 `parameters`，不是 `params`（MCP 1.10.1 实测）。
 2. **路径**（`doc/address`）：按位置逐段校验（docs/13 §5.1.1）——map 层的下一段永远是 key，record 层的下一段必须是字段名；`*` 至多一个且只在 map 层；数组下标不越界；`_uiState`/`element_markers` 拒写。`set_node` 允许最后一段是 map 的新 key（`allowMissingLeaf`），但 record 的未知字段一律 `unknown_field`。
 3. **值**（`doc/validate`）：白名单与类型来自 `src/doc/field_specs.generated.js`——由 builtin schema codegen 得到（docs/13 §5.2、§3），**不从 `Codec.decode` 派生**（宽松 decode 会带出 `element_markers` / `_uuid` 等内部字段）。枚举直接取 schema，例如 `block_collision ∈ {'true','false','ground'}`、`interact_box.condition ∈ {AND,OR,NAND,NOR,XOR,XNOR}`、`hit_box.type ∈ {box,sphere,cylinder,capsule,wheel}`。**默认 strict，不做隐式转换**：`mass: "12.5"` 返回 `type_mismatch`，不自动转数字（UI 输入框在调用前自行归一化）。**`set_node` 与四个 `import_*` 走同一份 `validateValues`**：`import_sub_part` 里 `hit_box.type:"banana"` 返回 `invalid_enum`，`projectile_types` 的值 `0` 返回 `out_of_range`；`canExport` 用 `validateTree(completeness:true)` 对存量数据做同样的扫描（docs/13 §5.2.5）。
 4. **结构 key**（`doc/keys`）：`part_id` / `variant` / sub_part key / 嵌套 map key 走 docs/13 §5.1.3 的分类；`part_id` 额外走 `isSafePartId`（`.` / `..` / 首尾点 / Windows 设备名，且完整值与 `split('_')[0]` 都查）。工具层的 `z.string()` 只保证是字符串，不能替代这一层。
@@ -405,7 +406,7 @@ AI 的正确用法是「`read_node(path, as='definition')` 拿全量 → 改 →
 
 1. Blockbench 加载 `dist/machine_max_bb_plugin.js` → `onload`。
 2. `registerProperty()` → `registerUndoBridge()`（挂两个 undo 事件，docs/11 已实现）→ `registerMode()` → `registerMcpTools()`。
-3. `registerMcpTools()` 把 `{ plugin: 'machine_max_bb_plugin', setup(mcp) {...} }` 推进 `globalThis.MCP_QUEUE`，并记下每个工具的 disposer。
+3. `registerMcpTools()` 把 `{ plugin: 'machine_max_bb_plugin', setup(mcp) {...} }` 推进 `globalThis.MCP_QUEUE`，并记下每个工具的 disposer；若 `globalThis.MCP` 已存在，再立即 `setup` 一次。
 4. MCP 插件（无论先加载还是后加载）会 drain `MCP_QUEUE` 并调 `setup(mcp)`；之后已连接的客户端收到 `tools/list_changed`，新工具即刻可用，不需要重启 Blockbench。
 5. 插件卸载 → `onunload` 调 disposer 注销工具；撤销桥监听由 `unregisterUndoBridge()` 单独清理。
 
@@ -422,6 +423,8 @@ npm run build      # scripts/build.js → dist/machine_max_bb_plugin.js（esbuil
 ```
 
 Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
+
+> **实测注意（2026-10-21）**：Blockbench 5.0.7 的 Reload Plugins 会复用已注册的 Plugin 对象；当 `onload` 本身发生变化时，重载后可能继续执行旧 `onload`，表现为「模式/菜单已更新，但 MCP 工具不出现」。修改 `plugin.js onload` 或 `src/mcp/index.js` 后建议**重启 Blockbench**；仅改面板/工具实现时 Reload Plugins 足够。
 
 ### 11.2 探针
 

@@ -32070,11 +32070,15 @@
         }
         queueEntry = {
           plugin: "machine_max_bb_plugin",
-          setup: function(mcp) {
-            setupTools(mcp);
+          setup: function(mcp2) {
+            setupTools(mcp2);
           }
         };
         globalThis.MCP_QUEUE.push(queueEntry);
+        var mcp = globalThis.MCP;
+        if (mcp && typeof mcp.registerTool === "function" && mcp.z) {
+          setupTools(mcp);
+        }
         log2.info("registerMcpTools: \u5DF2\u52A0\u5165 MCP_QUEUE\uFF08" + tools.all().length + " \u4E2A\u5DE5\u5177\uFF09");
         return true;
       }
@@ -32102,7 +32106,8 @@
           var dispose = mcp.registerTool({
             name,
             description: tool.description,
-            params: schemas[tool.name],
+            // MCP 1.10.1 读取的是 `parameters`（zod schema），不是 `params`
+            parameters: schemas[tool.name],
             condition: CONDITION,
             execute: function(args) {
               return tools.execute(tool.name, args, mcp);

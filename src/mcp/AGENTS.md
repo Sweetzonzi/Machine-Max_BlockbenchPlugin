@@ -15,7 +15,7 @@ src/mcp/
 │              #   set_node / remove_node / bind_marker / set_active /
 │              #   import_part / import_variant / import_sub_part /
 │              #   import_subsystem / add_instance
-├── params.js  # build(z)，用 MCP.z 构造参数形状
+├── params.js  # build(z)，用 MCP.z 构造参数形状；注册时字段名是 parameters
 └── result.js  # OpResult → {ok,path,before,after,...}；MCP.createJsonResult 包装
 ```
 
@@ -47,10 +47,11 @@ src/mcp/
 ## 注册时序
 
 1. `plugin.js onload` 调 `registerMcpTools()`，把 `{plugin, setup}` 推进 `globalThis.MCP_QUEUE`。
-2. MCP 插件 drain 队列并调 `setup(mcp)`；`setup` 先按名字 `unregisterTool` 再 `registerTool`。
-3. `plugin.js onunload` 调 `unregisterMcpTools()`；同时清理 disposer 与队列条目。
+2. 若 `globalThis.MCP` 已存在（MCP 插件先加载），立即 `setup` 一次；队列条目保留，后续 drain 会幂等重注册。
+3. MCP 插件 drain 队列并调 `setup(mcp)`；`setup` 先按名字 `unregisterTool` 再 `registerTool`。
+4. `plugin.js onunload` 调 `unregisterMcpTools()`；同时清理 disposer 与队列条目。
 
-MCP 插件未安装时只创建一个空队列，插件其它功能不受影响。
+MCP 插件未安装时只创建一个空队列，插件其它功能不受影响。修改 `onload` 后请重启 Blockbench（Reload Plugins 会复用旧 Plugin 对象的 `onload`）。
 
 ## 反模式
 

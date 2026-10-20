@@ -45,6 +45,14 @@ function registerMcpTools() {
         },
     };
     globalThis.MCP_QUEUE.push(queueEntry);
+
+    // MCP 插件可能已经先加载并 drain 过队列；仅入队会让工具一直不可见。
+    // 已加载时立即 setup 一次；之后 MCP 再 drain 队列会幂等重注册。
+    var mcp = globalThis.MCP;
+    if (mcp && typeof mcp.registerTool === 'function' && mcp.z) {
+        setupTools(mcp);
+    }
+
     log.info('registerMcpTools: 已加入 MCP_QUEUE（' + tools.all().length + ' 个工具）');
     return true;
 }
@@ -78,7 +86,8 @@ function setupTools(mcp) {
         var dispose = mcp.registerTool({
             name: name,
             description: tool.description,
-            params: schemas[tool.name],
+            // MCP 1.10.1 读取的是 `parameters`（zod schema），不是 `params`
+            parameters: schemas[tool.name],
             condition: CONDITION,
             execute: function (args) {
                 return tools.execute(tool.name, args, mcp);
