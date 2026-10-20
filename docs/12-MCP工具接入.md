@@ -143,11 +143,12 @@ config
 ["sub_parts", "sub_part.machine_max.chassis", "subsystems", "subsystem.machine_max.engine", "definition"]
 ```
 
-**三处协议级约束**：
+**协议级约束**：
 
 - `_uiState` 与 `element_markers` 不可寻址写 → 返回 `unknown_field`；切上下文用 `set_active`。
 - `hit_boxes` 的 key 在对外格式里是**骨骼名**、内存里是 **UUID**：`read_node` / `set_node` 两种写法都接受，内部归一化为 UUID 并回写为骨骼名；解析不到元素时只记 `unresolved_bones` warning。
 - 含点的 key（`sub_part.machine_max.main`）是**默认情况**，不是例外：任何字符串形式的拆分都不得按 `.` 切分。段数组与 JSON Pointer 都按 `/`/段位置解析，不存在「猜切分」。
+- 所有翻译键（子零件/连接点/子系统/交互区）只允许 ASCII：中文、空白返回 `invalid_format`；前缀形态不合规范只告警（docs/13 §5.1.3，D17）。
 
 ---
 
@@ -158,12 +159,12 @@ config
 | `part` | `PartCodec` | `read_node` | `import_part` | `remove_node` |
 | `variant` | `VariantCodec` | `read_node` | `import_variant` | `remove_node` |
 | `sub_part` | `SubPartCodec` | `read_node` | `import_sub_part` | `remove_node` |
-| `subsystem` | `SubsystemDispatchCodec`（22 种类型，`type` 形如 `machine_max:engine`；上游 builtin 为 **19** 种，Codec 缺 `track_controller`/`track_drive` 且多 5 个 WIP 类型，见 docs/13 §3.2） | `read_node` | `import_subsystem` / `add_instance` | `remove_node` |
+| `subsystem` | `SubsystemDispatchCodec`（当前 22 种，`type` 形如 `machine_max:engine`；D18 删除 5 个 WIP 后 17，D13 补 `track_controller`/`track_drive` 后 19；上游 builtin 为 **19**，见 docs/13 §3.2） | `read_node` | `import_subsystem` / `add_instance` | `remove_node` |
 | `hit_box` | `HitBoxCodec` | `read_node` | `add_instance` | `remove_node` |
 | `interact_box` | `InteractBoxCodec` | `read_node` | `add_instance` | `remove_node` |
 | `connector` | `ConnectorCodec` | `read_node` | `add_instance` | `remove_node` |
 
-- 5 个 WIP 类型（`battery`/`signal_convert`/`joint`/`javascript`/`ammo_loader`）**只读**：`import_subsystem`（`create` 与 `replace`）返回 `unsupported_type`，`set_node` 因无字段规格同样拒绝（D18）。
+- 5 个 WIP 类型（`battery`/`signal_convert`/`joint`/`javascript`/`ammo_loader`）已按 D18 **删除**：不在 `SubsystemDispatchCodec` / `subsystem_types.js` / 面板中，`import_subsystem` 返回 `unknown_type`，`set_node` 同样拒绝；无兼容层。
 - `read_node` 读 `subsystems` / `connectors` / `interact_boxes` 时，返回的映射**以完整翻译键为键**，不是短名。
 - `hit_box` / `interact_box` / `connector` **没有整件通道**（决策 D9）：字段少（4–7 个）、key 与骨骼 UUID 纠缠，整件替换收益低于风险，用 `add_instance` + `set_node` 组合即可。
 
@@ -194,7 +195,7 @@ condition: { project: true, modes: ['machine_max_part'] }
 | 工具 | 参数 | 行为 |
 |---|---|---|
 | `set_node` | `path`, `value` | 写标量/数组/对象。走 `ops.setField`：字段白名单、**严格类型（不做隐式转换）**、副作用（如 `start_bone` 迁移标记）、一条撤销记录。返回 `before`/`after` 与本次引入的问题 |
-| `remove_node` | `path`, `cascade?: bool` | 删除节点，清理指向它的引用：4 类 `element_markers[*][uuid].config_ref`、`signal_targets[*][]`（子系统/连接点/交互区三处）、`connectors[*].power_target`、`subsystems[*].power_output`、`hit_boxes[*].subsystem`、`subsystems[*].connector / locator / dismount_locators[]`。**不清理** `signal_translations`（频道→频道，不是节点引用）与 `definition`（资源位置）。返回 `cleaned_references` |
+| `remove_node` | `path`, `cascade?: bool` | 删除节点，清理指向它的引用：4 类 `element_markers[*][uuid].config_ref`、`signal_targets[*][]`（子系统/连接点/交互区三处，`local`/`global` 不动）、`connectors[*].power_target`、`subsystems[*].power_output`、`hit_boxes[*].subsystem`、`subsystems[*].connector / locator / dismount_locators[]`。**不清理** `signal_translations`（频道→频道，不是节点引用）与 `definition`（资源位置）。返回 `cleaned_references` |
 | `bind_marker` | `uuid`, `type`, `config_ref?` | 把元素绑成 `sub_part` / `hit_box` / `interact_box` / `connector`，内部走 `ops.bindMarker`（`setMarker` + `recalcAutoEndBones`）。`hit_box`/`interact_box`/`connector` 的 `config_ref` 由上下文推导 |
 | `set_active` | `part`, `variant?` | 切 active 上下文（等价于 UI 里点一下）。**不进撤销栈**：这是视图状态，不是工程内容 |
 
@@ -213,6 +214,7 @@ condition: { project: true, modes: ['machine_max_part'] }
 // key 规范（docs/13 §5.1.3）
 "sub_part.machine_max.chassis"        // ✅
 "chassis"                             // ❌ invalid_format（import_sub_part，docs/13 D16）
+"sub_part.machine_max.底盘"            // ❌ invalid_format（非 ASCII，docs/13 D17）
 ```
 
 `part_id` / `variant` 不是翻译键，只校验非空与保留字符；`key`（sub_part）必须是规范 key，`mode:'create'` 省略 `key` 时由 `ensureUniqueName` 生成规范默认名（`sub_part.<ns>.main`）。`import_subsystem` 的 `key` 建议写成 `subsystem.<ns>.<name>`：完整 key 是模组侧信号目标的匹配依据（docs/13 §5.4）。
@@ -365,7 +367,7 @@ AI 的正确用法是「`read_node(path, as='definition')` 拿全量 → 改 →
 | `hit_box`/`interact_box`/`connector` 的整件通道 | 字段少、key 与 UUID 纠缠（决策 D9） | `add_instance` + `set_node` |
 | 改 `_uiState` 之外的视图状态（相机、模式） | 与工程内容无关 | 用内置的 `set_mode` / `set_camera_angle` |
 | 内容包定义 JSON 的读写 | 定义文件由作者直接编辑；写盘不可撤销（决策 Q1） | 人在编辑器外改；工具只读合并视图 |
-| 5 个 WIP 子系统类型的创建 | 上游 schema 未收录，导出后模组读不懂（文档 §3.2、D18） | 用 19 种正式类型；或人力打开插件源码临时放开 |
+| 5 个 WIP 子系统类型 | D18 已删除（不在 Codec / registry / 面板），调用返回 `unknown_type` | 用 19 种正式类型；需要旧类型只能停留旧版本 |
 
 > 与旧版差异：`import_part` 由「不做」改为「做」，但边界从「按文件路径」收紧为「内联 JSON」——不触达 fs，仍落在原来的安全模型内。
 
@@ -447,8 +449,8 @@ Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 | 21 | `read_node(as='definition')` 读出的定义整件回传给 `import_*` | 结构等价（round-trip 无损），`reset_fields` 为空；覆盖含 `hit_boxes`、单变体、未解析骨骼、`definition:null` 的输入 |
 | 22 | `import_sub_part` 建一个没有 hit_boxes 的子零件 | `ok:true`（合法中间态），`introduced_issues` 含「碰撞箱为空」；此时**导出被拦** |
 | 23 | 子系统未选型号就导出 | 导出被阻断，对话框列出该问题并可点击定位 |
-| 24 | `import_subsystem` 用 `machine_max:battery`（WIP） | `ok:false`，`code:unsupported_type`（D18） |
-| 25 | 存量数据里 `signal_targets` 用 `subpart` / `vehicle` | 写入成功但 `warnings[]` 含 `legacy_signal_target`；读出不改值 |
+| 24 | `import_subsystem` 用 `machine_max:battery`（已删除） | `ok:false`，`code:unknown_type`（D18） |
+| 25 | `signal_targets` 写 `subpart` / `vehicle` | `ok:false`，`code:unresolved_config_ref`（D19：旧值不存在，不告警） |
 
 ---
 
@@ -509,8 +511,7 @@ validate   { only_introduced: true }
 | `signal_graph` | 导出信号拓扑（nodes/edges），审查 SignalChannel 路由 | 复用 `extractSignalGraph`（[src/lib/signal_graph.js:23](../src/lib/signal_graph.js)） |
 | `list_defs` | 列出可用的 subsystems/connectors/materials/control_groups/projectiles 及其来源（builtin/dependency/current） | 复用 `getAvailableDefsForType` / `resolveDefSource`（[src/core/content_pack_manager.js:56](../src/core/content_pack_manager.js)） |
 | `hit_box`/`interact_box`/`connector` 整件通道 | 三小件也能整件替换 | 先解决 key↔UUID 投影的易用性（决策 D9 的回访点） |
-| `track_controller` / `track_drive` 支持 | 与上游 builtin 对齐（19 种；现缺 2 种） | 独立立项（D13）：补 Codec、`subsystem_types.js` 与面板动态字段；同时决定 5 个 WIP 类型（`battery`/`signal_convert`/`joint`/`javascript`/`ammo_loader`）的去留；D18 已先按「只读遗留」落地 |
-| 旧哨兵值迁移 | `subpart`/`vehicle` → `local`/`global`，消除 `legacy_signal_target` 告警 | 与上游确认语义映射（D19），再提供一次性迁移工具 |
+| `track_controller` / `track_drive` 支持 | 与上游 builtin 对齐（19 种；现缺 2 种） | 独立立项（D13）：补 Codec、`subsystem_types.js` 与面板动态字段；D18 已删除 5 个 WIP 类型（Codec 22→17），补完 `track_*` 后回到 19 |
 | 修改前快照对比 | 编辑前后整树 diff，供 AI 自查 | 复用 `doc/projection` + diff |
 
 ---

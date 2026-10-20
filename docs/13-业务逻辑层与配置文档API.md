@@ -11,11 +11,11 @@
 
 | # | v2 的问题（第二轮审阅） | v3 的处理 |
 |---|---|---|
-| 1 | key 策略同时承诺「格式必须匹配」「存量原样保留」「中文可写回」，三者互斥 | **严格规范 key**（D16）：`rename*` / `import*` 只接受规范 key，`loadConfig` 一次性迁移；字符集明确为 Unicode（D17）；见 §5.1、§15 |
+| 1 | key 策略同时承诺「格式必须匹配」「存量原样保留」「中文可写回」，三者互斥 | **严格规范 key**（D16）：字符集为 **ASCII**（D17，中文 key 也拒绝），子零件还强制 `sub_part.<ns>.<name>` 形态；`loadConfig` 一次性迁移子零件 key；见 §5.1、§15 |
 | 2 | `projection` 只写了 `in`，且缺骨骼名↔UUID、`_uuid`、`_marker_uuid`、简写、part_id 等变换 | 给出 `in` / `out` 两个**有序**算法与 round-trip 保证（§5.3）；`read(as='definition')` 走 `out('read')` |
-| 3 | 引用矩阵漏 `hit_box` marker 与 `subsystems[*].power_output`，target 写成「名」 | 扩为 **12 行**，target 一律写「完整配置 key」；哨兵改为 `local`/`global`（§5.4，D19） |
+| 3 | 引用矩阵漏 `hit_box` marker 与 `subsystems[*].power_output`，target 写成「名」 | 扩为 **12 行**，target 一律写「完整配置 key」；哨兵只保留 `local`/`global`，`part`/`subpart`/`vehicle` 彻底移除（§5.4，D19） |
 | 4 | 路径语法「固定段名优先 / 最长 key 前缀 / ambiguous_path / `..`」自相矛盾 | 改为**按位置解析**（map 层下一段必为 key），删除相对语法与 `ambiguous_path`，新增 `allowMissingLeaf`（§5.1） |
-| 5 | 19 / 22 / 24 三种类型数混用 | schema **19** 为真值；Codec 22 进 allowlist；5 个 WIP 类型只读（§3.2、§5.2，D18） |
+| 5 | 19 / 22 / 24 三种类型数混用 | schema **19** 为真值；5 个 WIP 类型**删除**（Codec 22→17）；D13 补 `track_*` 后回到 19（§3.2、§5.2，D18） |
 | 6 | `field_specs` 表达不了 `oneOf` / object / tuple / nullable | 扩展字段规格类型模型，并列出 9 个关键字段的生成结果（§5.2） |
 | 7 | §4.1「引用必须可解析」与 §5.3「未解析不阻塞」相反 | 拆成 `unresolved_config_ref`（error，拒绝）与 `unresolved_bone`（warning，放行）（§4.5） |
 | 8 | `OpResult` 缺 docs/12 已使用的 `path`，也缺 `dropped_fields` | 补齐字段与错误码（§12） |
@@ -28,7 +28,7 @@
 |---|---|---|
 | `PartCodec` 的 `id` 是必填，`importPart` 要注入 `part_id` | **`PartCodec` 没有 `id` 字段**；零件 ID 只由 `parts` 的 map key / 文件名承载，注入步骤取消 | [part_codec.js:37](../src/codec/codecs/part_codec.js) |
 | `hit_box.overwrite` 有 18+ 字段 | **16** 个字段 | `hit_box_attr.schema.json` 的 `properties.overwrite` |
-| 哨兵是 `part` / `subpart` / `vehicle` | 模组当前只解析 **`local` / `global`**；`part`/`subpart`/`vehicle` 只是保留名，已无法解析 | [ISignalSender.java:207](../../Machine-Max/src/main/java/io/github/sweetzonzi/machine_max/common/mech/signal/ISignalSender.java)（兄弟仓库） |
+| 哨兵是 `part` / `subpart` / `vehicle` | 模组只解析 **`local` / `global`**；这三个值不存在（D19：不保留、不告警、不迁移） | [ISignalSender.java:207](../../Machine-Max/src/main/java/io/github/sweetzonzi/machine_max/common/mech/signal/ISignalSender.java)（兄弟仓库） |
 | `interact_box.signal_targets` 无额外约束 | schema **required**，Codec 默认 `{}`，属已知漂移 | `interact_box_attr.schema.json:33` |
 
 > 另：schema 的 `examples` 大量使用短 key（`sub_parts` 写 `"ae86_chassis_all_terrain"`、`power_output` 写 `"transmission"`、`signal_targets` 写 `["car_controller","engine"]`），与插件实际写的完整翻译键不一致。**examples 不是契约**，v3 只以 `properties/required/enum/$ref` 为准，并在 §5.4 说明完整 key 的依据。
@@ -84,14 +84,15 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 
 ### 2.4 校验现状
 
-`mode/validation.js → collectIssues(config)` 是唯一实现（`validation_check.js` 调的也是它）：**14 个 error 产生点 / 3 个 warning 产生点**，但 warning **只有 1 个 code**：`ORPHAN_ELEMENT`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
+`mode/validation.js → collectIssues(config)` 是唯一实现（`validation_check.js` 调的也是它）：**14 个 error 产生点 / 3 个 warning 产生点**（P2 增加 `DANGLING_SIGNAL_TARGET` 后为 15 条 error 规则），但 warning **只有 1 个 code**：`ORPHAN_ELEMENT`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
 
 重复的只有名称唯一性两套：`naming.validateNameUniqueness`（UI rename 调用）与 `validation._collectNameConflicts`；外加 `operations.js` 内的存在性检查。
 
 ### 2.5 已确认的其它债务
 
 - **默认值双源**：`config.js` 内联 `HIT_BOX_DEFAULTS`（`material: ''`）vs `HitBoxCodec`（`machine_max:default`）；`config_defaults.js` 已 `@deprecated` 且无人引用。
-- **子系统类型数**：上游 builtin schema **19** 种（权威）；插件 Codec 22 种（缺 `track_controller`/`track_drive`，多 5 个 WIP）；Java 枚举 24 种（19 + 5 个 WIP，不作依据）。见 §3.2。
+- **子系统类型数**：上游 builtin schema **19** 种（权威）；插件 Codec 22 种（缺 `track_controller`/`track_drive`，多 5 个 WIP）；D18 删除 5 个 WIP 后为 17，D13 补 `track_*` 后回到 19；Java 枚举 24 种（19 + 5 个 WIP，不作依据）。见 §3.2。
+- **旧的信号默认值**：`subsystem_types.js` 的 `speed_outputs` / `gear_outputs` 默认值仍是 `['subpart','vehicle']`，而这两种目标已不存在（D19）；P2 必须改为 `['local','global']`，否则新建子系统即产生无效目标。
 - **单子零件简写的落点错误**：`VariantCodec.sub_parts` 用 `Codec.either`，单对象会包成 `{ default: sp }`，而 schema 规定单子零件应落到 `sub_part.<ns>.main`；导出时 `default` 又满足 unwrap 条件，形成「内存 key 非法、文件形态却正确」的隐性错误（§5.3）。
 - **默认名硬编码命名空间**：`generateDefaultName('sub_part', …)` 忽略 `context.namespace`，始终返回 `sub_part.machine_max.main`（[naming.js:39](../src/core/naming.js)）。P2 一并修。
 - **版本**：`package.json` / `bbplugin.json` 仍 0.4.0。
@@ -134,15 +135,15 @@ src/doc/field_specs.generated.js（含 provenance）
 | 来源 | 数量 | 相对上游的差异 |
 |---|---|---|
 | **上游 builtin schema**（`docs/{zh_cn,en_us}/schemas/subsystem/`，权威） | **19** | —（dynamic 与 static 枚举一致） |
-| 插件 `SubsystemDispatchCodec` | 22 | 多 5 个上游未收录：`battery`、`signal_convert`、`joint`、`javascript`、`ammo_loader`；缺 `track_controller`、`track_drive` |
+| 插件 `SubsystemDispatchCodec` | 22（**D18 后 17**） | 多 5 个上游未收录的 WIP（`battery`、`signal_convert`、`joint`、`javascript`、`ammo_loader`，将被删除）；缺 `track_controller`、`track_drive` |
 | Java `SubsystemTypes` 枚举 | 24 | 上游 19 + 上述 5 个 WIP 占位；**不能作为类型清单依据** |
 
 结论：
 
 - 履带子系统在插件里无法创建/校验（`Unknown dispatch type`）：Codec 缺 `track_controller` / `track_drive`；
 - 插件反而暴露了 5 个上游未发布的 WIP 类型，会产出上游读不懂的配置；
-- **D18**：`field_specs` 只生成 19 种；5 个 WIP 类型保留 decode/read（存量可见），但 `createSubsystem` / `importSubsystem` 一律返回 `unsupported_type`，`setField` 因无字段规格而拒绝写入——它们成为「只读遗留」；
-- D13 立项范围：补 2 个正式类型（Codec + `subsystem_types.js` + 面板），再决定 5 个 WIP 是删除还是继续保留为实验类型。
+- **D18**：5 个 WIP 类型**删除**（`SubsystemDispatchCodec` 22→17、`subsystem_types.js`、面板与类型清单同步移除）；不保留 decode/read、不告警、不提供兼容层，遇到这些 type 一律 `unknown_type`；
+- D13 立项范围：补 2 个正式类型（Codec + `subsystem_types.js` + 面板），补完后 Codec 与 schema 都是 19；5 个 WIP 已按 D18 删除，不再讨论去留。
 
 顺带修掉的上游缺陷（`Machine-Max@9450a0f4`，已同步）：`motor_controller` 是 `motorbike_controller` 的错写——枚举中两种拼写并存，而 `if/then` 分支只用了错写那个且 `$ref` 指向 `motorbike_controller_*_attr.schema.json`，导致**正确的 `motorbike_controller` 匹配不到任何分支**（字段完全不校验）；此外 `subsystem_static_attr` 的枚举整体漏了 `motorbike_controller`。修复后 dynamic 与 static 枚举一致为 19 种。
 
@@ -189,6 +190,9 @@ src/doc/field_specs.generated.js（含 provenance）
 | 引用合法性 | 配置引用必须指向同变体内的子系统 / 连接点 / 交互区 | `doc.refs.resolveConfigRefs` | `ok:false`（`unresolved_config_ref`） |
 | 骨骼可解析性 | 骨骼 / Locator 名能否命中 `Group` / `Locator` | `doc.refs.resolveBones` + `ports.bones` | warning（`unresolved_bone`），照常写入 |
 | 完整性 | required / minProperties / 名称唯一 / 保留名 / 型号存在 | `collectIssues` | 编辑期：仅提示；导出期：**阻断** |
+| 信号目标完整性 | `signal_targets[*][]` / `power_output` / `power_target` 指向同变体节点或 `local`/`global` | `collectIssues`（`DANGLING_SIGNAL_TARGET`，P2 新增一条规则） | 编辑期：提示；导出期：**阻断** |
+
+> D19 之后 `part` / `subpart` / `vehicle` 没有特殊处理：它们和任意未知目标一样走「信号目标完整性」，不再有单独的告警或迁移。
 
 ### 4.3 导出闸门
 
@@ -253,7 +257,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 '/parts/hull/variants/default/sub_parts/sub_part.machine_max.chassis/mass'
 ```
 
-- 分隔符是 `/`，所以含 `.`、`:`、中文的 key **天然是一段**；
+- 分隔符是 `/`，所以含 `.`、`:` 的 key，以及零件/变体的中文名，**天然是一段**（子零件名不允许中文，见 §5.1.3）；
 - 转义：`~0` → `~`，`~1` → `/`；空段表示空字符串 key（`hydrodynamics` 允许 `""`）。
 
 #### 5.1.1 解析规则：按位置，不按名字
@@ -283,15 +287,16 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 **子零件（强制）**：
 
 ```
-^sub_part\.<namespace>\.[\p{L}\p{N}_.-]+$        // 正则带 u 标志
+^sub_part\.<namespace>\.[A-Za-z0-9_.-]+$        // 纯 ASCII
 ```
 
 - `<namespace>` = `config.namespace`（缺省 `machine_max`），字符集 `[A-Za-z0-9_-]+`，**不含点**（点是分隔符）；
-- 名称段允许 Unicode 字母/数字（含中文）、`_`、`-`、`.`；
-- 名称段禁止：空白、`*`、`/`、`~`、`:` 与控制字符；不得为空，长度 ≤ 128；
-- 名称段以 `.` 开头或结尾 → `invalid_format`。
+- 名称段只允许 ASCII 字母/数字、`_`、`-`、`.`；**中文与非 ASCII 一律拒绝**（`invalid_format`，`hint` 提示改用英文名）；
+- 名称段禁止：非 ASCII、空白、`*`、`/`、`~`、`:` 与控制字符；不得为空，长度 ≤ 128；
+- 名称段以 `.` 开头或结尾 → `invalid_format`；
+- 名称就是翻译键，没有独立的显示名：需要中文展示时写 `lang` 文案，不要把中文放进 key（D17）。
 
-**其它翻译键（约定，v3 只告警不拒绝）**：
+**其它翻译键（前缀形态只告警，字符集同样强制 ASCII）**：
 
 | kind | 规范形态 |
 |---|---|
@@ -299,11 +304,13 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 | `connector` | `connector.<ns>.<name>` |
 | `subsystem` | `subsystem.<ns>.<name>` |
 
+`<name>` 与子零件同名规则：纯 ASCII、无空白与 `* / ~ :`；中文一律 `invalid_format`（D17）。前缀/namespace 不合规范只记 warning `non_canonical_key`，但字符集违规是硬错误。
+
 `createPart` / `createVariant` 的 `partId` / `variantName` 不是翻译键，只要求：非空、无 `*` `/` `~` 与控制字符。
 
-**为什么子零件强制、其它只告警**：`sub_parts` 有整件通道（`import_sub_part`）和 `read_node(as='definition')` 的 round-trip 验收，key 必须可逆；连接点/子系统/交互区的整件通道在 D9 里已排除，先不强推，避免一次迁移改动过多引用面。
+**为什么子零件连格式一起强制、其它只强制字符集**：`sub_parts` 有整件通道（`import_sub_part`）和 `read_node(as='definition')` 的 round-trip 验收，key 必须可逆；连接点/子系统/交互区的整件通道在 D9 里已排除，v3 只强制 ASCII 字符集，前缀形态暂只告警；它们的存量非 ASCII key 记 `KEY_RESERVED` error，但不在 `loadConfig` 里自动改名（改名要同步第 5~11 行引用，留到后续）。
 
-**强制点**：`ops.renameSubPart`（新 key）、`ops.importSubPart`（`key` 参数）、`ops.markSubPart`（自动生成）、`loadConfig`（存量迁移，§15）。违规返回 `invalid_format`，`errors[]` 带 `expected` 与 `hint`（提示完整形态）。
+**强制点**：`ops.rename*`（4 个）与 `ops.importSubPart` / `ops.importSubsystem` 的 key、`ops.mark*` 的自动命名、`loadConfig`（仅子零件迁移，§15）。字符集违规返回 `invalid_format`，`errors[]` 带 `expected` 与 `hint`（提示完整形态）。
 
 #### 5.1.4 读写差异与 `allowMissingLeaf`
 
@@ -321,7 +328,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 |---|---|---|
 | 1 | `['parts','hull','variants','default','sub_parts','sub_part.machine_max.main','mass']` | 命中 |
 | 2 | `'/parts/hull/variants/default/sub_parts/sub_part.machine_max.main/mass'` | 命中 |
-| 3 | `['parts','中文零件','variants','默认','sub_parts','sub_part.machine_max.底盘','mass']` | 命中（规范 key + Unicode） |
+| 3 | `['parts','中文零件','variants','默认','sub_parts','sub_part.machine_max.chassis','mass']`（零件/变体名可为中文，子零件名必须 ASCII） | 命中 |
 | 4 | `['parts','a.b.c','variants','default','sub_parts','sub_part.machine_max.x','mass']`（零件 id 含点） | 命中（段数组） |
 | 5 | `['parts','hull','variants','default','sub_parts','*','mass']` | `{ <spKey>: number }` |
 | 6 | `['parts','hull','variants','default','sub_parts','chassis']`（非规范 key） | `not_found`（迁移后不可能存在；写入侧 `invalid_format`） |
@@ -329,6 +336,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 | 8 | `['parts','hull','variants','default','sub_parts','sub_part.machine_max.x','connectors','connector.machine_max.c','signal_targets','door']`（写，末段新 key） | 命中（`allowMissingLeaf`） |
 | 9 | 同 8 但父级 `connectors` 不存在 | `not_found` |
 | 10 | `['parts','hull','variants','default','sub_parts','*','projected_area','*']`（数组层通配） | `invalid_format` |
+| 11 | 写入 key `sub_part.machine_max.底盘` / `sub_part.machine_max.前 底盘` | `invalid_format`（非 ASCII / 空白） |
 
 **`hit_boxes` 双形 key**：对外是骨骼名、内存是 UUID；解析时先按 UUID 命中 `ports.bones.findByUuid`，再按骨骼名查 `Group.all`。两者都不中时，**只有读取允许**按原字符串命中（未解析的存量条目），写入需先建元素或显式给 UUID。
 
@@ -356,7 +364,6 @@ v2 只有 `type: 'number'` + `items/minItems/maxItems`，表达不了 `textures`
   tuple: null,               // tuple 的逐位规格，如 projected_area: [number, number, number]
   references: null,          // 'bone' | 'locator' | 'subsystem' | 'connector' | 'signal' | 'resource'
   required: false,           // 仅用于展示与校验提示，不在写入时阻断
-  experimental: false,       // 5 个 WIP 子系统类型为 true（D18）
   sideEffect: null,          // 见下表
 }
 ```
@@ -382,7 +389,8 @@ v2 只有 `type: 'number'` + `items/minItems/maxItems`，表达不了 `textures`
 
 - 普通 kind 的规格来自对应 schema；
 - `subsystem` 按 `typeId` 分组，**只生成上游 19 种**（由 `subsystem_dynamic_attr.schema.json` 的 `if/then` + 各类型 schema 展开）；
-- Codec 的 22 种进 `schema_codec_allowlist.js`；对 5 个 WIP 类型：`field_specs` 无条目 → `setField` 返回 `unsupported_type`，`createSubsystem` / `importSubsystem` 直接拒绝（D18）。
+- **D18**：5 个 WIP 类型从 `SubsystemDispatchCodec` 与 `subsystem_types.js` 删除（22→17）；不保留 decode/read、不告警、不提供兼容层，遇到这些 type 一律 `unknown_type`；
+- `schema_codec_allowlist.js` 只登记 `track_controller` / `track_drive` 两个缺口；D13 补齐后 Codec 与 schema 都是 19，allowlist 归零。
 
 #### 5.2.3 副作用表（唯一手写部分：8 个字段 / 6 条规则）
 
@@ -433,7 +441,7 @@ v2 只有 `type: 'number'` + `items/minItems/maxItems`，表达不了 `textures`
    - 所有层级：`_uiState`（不属于任何导出节点）。
 3. **校验 key**（`validateKeys`）
    - `sub_parts` 逐 key 匹配 §5.1.3 正则且 namespace 等于 `ctx.namespace`；违规 → `invalid_format`（一次返回全部违规 key，不写半截）；
-   - 其它**翻译键** map（`interact_boxes` / `connectors` / `subsystems`）：非空、无 `*` `/` `~` 与控制字符；前缀不合规范只记 warning `non_canonical_key`，不拒绝；
+   - 其它**翻译键** map（`interact_boxes` / `connectors` / `subsystems`）：非空、纯 ASCII、无 `*` `/` `~` `:` 与控制字符；字符集违规 → `invalid_format`；前缀不合规范只记 warning `non_canonical_key`；
    - `hit_boxes` / `hydrodynamics` 的 key 是模型元素名：只拒绝空串与 `*`。
 4. **严格解码**（`decodeStrict`）
    - 用 `doc/shapes.js` 的 `PartShape` / `VariantShape` 显式 `Codec.map` 组合（`VariantShape.sub_parts = Codec.map(Codec.STRING, SubPartCodec)`）；
@@ -447,7 +455,7 @@ v2 只有 `type: 'number'` + `items/minItems/maxItems`，表达不了 `textures`
    - `connectors[*].locator` 命中 Locator → 写 `_marker_uuid`；未命中 → 记 `unresolved_bone`。
 7. **校验配置引用**（`resolveConfigRefs`，§4.5）
    - `power_output`、`hit_boxes[*].subsystem`、`connectors[*].power_target`、`subsystems[*].connector`、`signal_targets[*][]` 必须指向**同一子零件内**的 subsystems / connectors / interact_boxes 条目，或哨兵 `local`/`global`；
-   - 未命中 → `unresolved_config_ref`（error，整体拒绝）；旧哨兵 `part`/`subpart`/`vehicle` → warning `legacy_signal_target`（保留原值，不删除）。
+   - 未命中 → `unresolved_config_ref`（error，整体拒绝）；只有 `local`/`global` 是例外，`part`/`subpart`/`vehicle` 按普通未知目标处理（不存在、不告警、不迁移）。
 8. **生成标记计划**（`markerPlan`，不执行）
    - `sub_part`：`start_bone` 命中 → `{type:'sub_part', uuid, config_ref: key}`；
    - `hit_box`：每个命中骨骼 → `{type:'hit_box', uuid, config_ref: 所属子零件 key}`；
@@ -505,7 +513,7 @@ in(out(node, 'read'), { existing: node }) ≡ node   （结构等价，reset_fie
 | 2 | `marker.config_ref`（`hit_box`） | 所属子零件 key | 删标记 | 改写（**现状缺失，见下**） |
 | 3 | `marker.config_ref`（`interact_box`） | 交互区 key | 删标记 | 改写 |
 | 4 | `marker.config_ref`（`connector`） | 连接点 key | 删标记 | 改写（先统一语义，见下） |
-| 5 | `subsystems[*].signal_targets[*][]` | 子系统 / 连接点 / 交互区完整 key | 移除该项 | 改写 |
+| 5 | `subsystems[*].signal_targets[*][]` | 子系统 / 连接点 / 交互区完整 key（或 `local`/`global`） | 移除该项 | 改写 |
 | 6 | `connectors[*].signal_targets[*][]` | 同上 | 移除该项 | 改写 |
 | 7 | `interact_boxes[*].signal_targets[*][]` | 同上 | 移除该项 | 改写 |
 | 8 | `connectors[*].power_target` | 子系统 / 连接点完整 key | 置空 | 改写 |
@@ -520,15 +528,16 @@ in(out(node, 'read'), { existing: node }) ≡ node   （结构等价，reset_fie
 
 **第 4 行语义统一**：`connector` marker 的 `config_ref` 现在写的是 `definition` 值（[App.vue.js:1475](../src/ui/App.vue.js)），而 `sub_part`/`interact_box`/`hit_box` 写的是 key。统一为「marker → 被标记配置条目的 key」，`definition` 单独存于配置条目；迁移见 §15。
 
-**哨兵值**：
+**哨兵值（只有两个）**：
 
 | 值 | 含义 | 处置 |
 |---|---|---|
 | `local` | 当前 Part（`Part.getSignalAddress()`） | 保留，永不删除 |
 | `global` | 装配体总线（`SubsystemController.getSignalAddress()`） | 保留，永不删除 |
-| `part` / `subpart` / `vehicle` | 旧别名（schema examples、旧版插件默认值） | **保留但告警** `legacy_signal_target`，不自动改写；新数据由 P2 把 `subsystem_types.js` 默认值改为 `local`/`global` |
 
-> 依据：模组只解析 `local` / `global`（`ISignalSender.getReceiversFromNames`），`subpart` / `vehicle` 仅出现在 `VariantAttr.RESERVED_SIGNAL_NAMES` 里作为**禁用名**。插件的 `buildSignalTargetOptions` 仍输出 `subpart` / `vehicle`（[signal_target_options.js:24](../src/utils/signal_target_options.js)），属于遗留缺陷，P2 一并改（不改存量数据）。另：该函数只列连接点与子系统，未列交互区；第 5~7 行按模组能力描述，P2 补齐选项。
+`part` / `subpart` / `vehicle` **不是哨兵**（D19）：它们按普通未知目标处理，写入/导入返回 `unresolved_config_ref`，不告警、不迁移。数据里若还留着这三个值，就当作错误目标，由用户改成 `local` / `global` 或真实节点 key。
+
+> 依据：模组只解析 `local` / `global`（`ISignalSender.getReceiversFromNames`），`subpart` / `vehicle` 只出现在 `VariantAttr.RESERVED_SIGNAL_NAMES` 里作为**禁用名**。但 `subsystem_types.js` 的 `speed_outputs` / `gear_outputs` 默认值仍是 `['subpart','vehicle']`，`buildSignalTargetOptions` 也仍输出这两个值（[signal_target_options.js:24](../src/utils/signal_target_options.js)）——**P2 必须同步改为 `local`/`global`**，否则新建子系统即产生无效目标。另：该函数只列连接点与子系统，未列交互区；第 5~7 行按模组能力描述，P2 补齐选项。
 
 **不计入引用**：`signal_translations` 是「频道名 → 频道名」映射，与配置节点无关（v1 误列）；`definition` 是资源位置（内容包定义 id），由 `collectIssues` 的 `DEFINITION_REF_MISSING` 管，不做删除清理。
 
@@ -721,7 +730,7 @@ src/services/
 
 ### P2 — 操作层（1.5–2 会话）
 
-`src/ops/*`（9 文件）；删除 `core/operations.js`（9 处 require 改写）；UI 44 个方法改薄；§4.4 三项修复；§6.4 合并开关；`renameSubPart` 的 key 校验 + `hit_box` marker 修复；`generateDefaultName('sub_part')` 用 `context.namespace`；`signal_target_options.js` 改 `local`/`global`。
+`src/ops/*`（9 文件）；删除 `core/operations.js`（9 处 require 改写）；UI 44 个方法改薄；§4.4 三项修复；§6.4 合并开关；`renameSubPart` 的 ASCII key 校验 + `hit_box` marker 修复；`generateDefaultName('sub_part')` 用 `context.namespace`；**删除 5 个 WIP 类型**（Codec 22→17、`subsystem_types.js`、面板）；`signal_target_options.js` 改 `local`/`global` 并补交互区；`subsystem_types.js` 默认值改 `['local','global']`；`collectIssues` 增加 `DANGLING_SIGNAL_TARGET`。
 
 验收：每字段改一次 = 一条撤销记录；四个 `import*` 可用且返回 `reset_fields`；拖拽导入回归；`coalesce:false` 下三次 `set_node` = 三条；子零件改名后碰撞箱标记归属正确；非规范 key 的 import 返回 `invalid_format`。
 
@@ -757,16 +766,16 @@ test/
 
 1. 含点/中文/namespace 带点的路径；`*` 在中间 map 层；数组层 `*` 报 `invalid_format`；
 2. `sub_parts` 单 key 反例（`{chassis:{…}}`）必须 `invalid_format`，不得被吞成 `{default:…}`；
-3. `read_node` → `import_*` **round-trip**：规范中文 key、含 `hit_boxes`、单变体、未解析骨骼、`definition:null` 五种输入均 `reset_fields` 为空；
+3. `read_node` → `import_*` **round-trip**：ASCII 规范 key、含 `hit_boxes`、单变体、未解析骨骼、`definition:null` 五种输入均 `reset_fields` 为空；
 4. `field_specs` 不暴露 `id` / `element_markers`；`textures` / `overwrite` / `projected_area` 的类型校验生效；
 5. `power_output` / `hit_box.subsystem` / `signal_targets` 的清理与重命名；`signal_translations` 不被清理；
 6. `coalesce:false`：不同目标不合并、结构动作不合并；
 7. 投影剥离内部字段（注入 `element_markers` / `_uuid` / `_marker_uuid` 后不可见）；
 8. `"null"` 清洗（`definition: null` 不出现在导出结果里）；
 9. 导出闸门：空 `hit_boxes` 拦截、`ORPHAN_ELEMENT` 放行；
-10. `schema` 漂移：manifest ↔ schema、dispatch map ⊇ schema 类型集合；
-11. 严格 key：非规范 `import_sub_part` 返回 `invalid_format`；`loadConfig` 迁移后旧 key 全部规范化，marker 同步；
-12. 哨兵：`local`/`global` 放行；`subpart`/`vehicle` 产生 `legacy_signal_target` warning 且不被删除。
+10. `schema` 漂移：manifest ↔ schema、dispatch map ⊇ schema 类型集合（D18 删除后到 D13 前，因缺 `track_*` 该项为已知红灯）；
+11. 严格 key：非规范 `import_sub_part` 返回 `invalid_format`；中文/空白 key 同样 `invalid_format`；`loadConfig` 迁移后**子零件**旧 key 全部规范化（非 ASCII 名改为 `legacy_<n>`），marker 同步；
+12. 哨兵：只有 `local`/`global` 放行；`part`/`subpart`/`vehicle` 一律 `unresolved_config_ref`（不告警、不迁移）。
 
 ---
 
@@ -797,9 +806,9 @@ test/
 
 **产生者**：`before/after` ← `doc` 原语；`reset_fields` ← `projection.in`；`dropped_fields` ← `setField` 的 `sideEffect`；`cleaned_references` ← `refs`；`introduced_issues` ← `ops` 通过 `ports.validation.collectIssues` 在**同一撤销记录内**做前后 diff（不 `require` `mode/validation`，保持分层）。
 
-错误码：`no_project` / `not_found` / `missing_required` / `type_mismatch` / `invalid_enum` / `invalid_format` / `duplicate_name` / `unknown_field` / `unknown_type` / `unsupported_type` / `unresolved_config_ref` / `key_reserved` / `edit_in_progress` / `snapshot_too_large` / `io_error`。
+错误码：`no_project` / `not_found` / `missing_required` / `type_mismatch` / `invalid_enum` / `invalid_format` / `duplicate_name` / `unknown_field` / `unknown_type` / `unresolved_config_ref` / `key_reserved` / `edit_in_progress` / `snapshot_too_large` / `io_error`。
 
-> v2 的 `ambiguous_path` 已删除（§5.1.1）；新增 `unsupported_type`（WIP 子系统类型）、`unresolved_config_ref`（配置引用断裂）、`key_reserved`（key 含 `*` 等保留字符）。
+> v2 的 `ambiguous_path` 已删除（§5.1.1）；新增 `unresolved_config_ref`（配置引用断裂）与 `key_reserved`（key 含 `*` 等保留字符）；WIP 类型删除后不再有 `unsupported_type`，未知类型统一 `unknown_type`。
 
 ---
 
@@ -822,10 +831,10 @@ test/
 | D13 | `track_*` 两种类型 | **单独立项**（不阻塞 P1，但测试留红灯） | 用户 |
 | D14 | 可空字段清单 | **撤销**——一套规则集，编辑不拦、导出阻断 | 用户（§4） |
 | D15 | 导出闸门 | `severity==='error'` 阻断导出 | 用户 |
-| D16 | key 策略 | **严格规范 key**：`renameSubPart` / `importSubPart` / `markSubPart` / `loadConfig` 迁移；其它 kind 暂只告警 | **用户**（第二轮） |
-| D17 | 名称字符集 | Unicode 字母/数字 + `_-.`；禁空白 `* / ~ :`；namespace 不含点 | 推荐（配套 D16） |
-| D18 | 5 个 WIP 子系统类型 | 保留 decode/read，禁止 create/import，`field_specs` 不生成 | 推荐（配套 §3.2） |
-| D19 | 信号哨兵 | `local`/`global` 为准；`part`/`subpart`/`vehicle` 保留但告警，不自动改写 | 推荐（§5.4） |
+| D16 | key 策略 | **严格规范 key**：ASCII 字符集对所有翻译键强制；子零件 `sub_part.<ns>.<name>` 形态强制并迁移；其它 kind 前缀形态只告警 | **用户**（第二轮） |
+| D17 | 名称字符集 | **纯 ASCII** 字母/数字 + `_-.`；中文与非 ASCII 拒绝；禁空白 `* / ~ :`；namespace 不含点 | **用户**（第二轮） |
+| D18 | 5 个 WIP 子系统类型 | **删除**（Codec 22→17、registry、面板、类型清单）；不保留 decode/read，不提供兼容层 | **用户**（第二轮） |
+| D19 | 信号哨兵 | 只有 `local`/`global`；`part`/`subpart`/`vehicle` **不存在**：不保留、不告警、不迁移，按普通未知目标报错 | **用户**（第二轮） |
 | Q1 | 内容包定义 JSON | 只读，不纳入业务层 | 用户 |
 | Q2 | 交付形态 | 拆两串 commit | 用户 |
 
@@ -844,7 +853,6 @@ test/
 | 收紧 `additionalProperties` | 会牵连现有导入逻辑，单独排期 |
 | `track_controller` / `track_drive` 支持 | 独立立项（D13） |
 | 内容包定义 JSON 的编辑通道 | Q1 |
-| 旧哨兵值的自动改写 | 语义映射（`subpart`→`local`/`vehicle`→`global`）未经上游确认，先告警（D19） |
 
 ---
 
@@ -869,14 +877,15 @@ for each part, variant:
 
 `canonicalSubPartKey(key, ns)`：
 
-1. 已匹配 `^sub_part\.<ns>\.[…]+$` → 原样返回；
+1. 已匹配 `^sub_part\.<ns>\.[A-Za-z0-9_.-]+$` → 原样返回；
 2. 含 `.<ns>.` → 取其后部分作为名称段；
 3. 以 `sub_part.` 开头但 namespace 不同 → 去掉 `sub_part.<其它ns>.`；
-4. 其余 → 整串作为名称段（例如 `chassis`、`底盘`）；
-5. 名称段净化：空白 / `*` / `/` / `~` / `:` / 控制字符 → `_`；空或仅剩 `.` → `main`；
-6. 返回 `sub_part.<ns>.<名称段>`。
+4. 其余 → 整串作为名称段（例如 `chassis`）；
+5. 名称段若含非 ASCII（含中文）或禁止字符（空白 / `*` / `/` / `~` / `:` / 控制字符）→ **无法无损保留**，改用 `legacy_<n>`（n 按变体内递增，跳过已占用名），原名记入迁移记录；纯 ASCII 名称原样保留；
+6. 名称为空或仅剩 `.` → `main`；
+7. 返回 `sub_part.<ns>.<名称段>`。
 
-> 改写会改变翻译键与模组侧可见名称。由于默认创建路径本来就产出规范 key，只有手工改过或旧版本数据会被改写；`_lastMigration` 会逐条列出，P2 还要在加载后弹出一次确认列表。风险见 §16。
+> 改写会改变翻译键与模组侧可见名称。中文名（如 `底盘`）迁移后变成 `legacy_1`，用户需要按迁移报告手动改成英文名（D17：key 不允许中文）。`_lastMigration` 逐条列出 old→new，P2 在加载后弹出一次确认列表；迁移前备份。风险见 §16。
 
 ### 15.2 其它归一化
 
@@ -890,7 +899,8 @@ for each part, variant:
 | `_uuid` / `_marker_uuid` 缺失或失效 | 按骨骼名 / Locator 名重建 |
 | 悬空 marker | `cleanGhostMarkers`（已有） |
 | 孤儿子零件（无标记） | **不再在渲染期删除**；改为 `loadConfig` 报告 + 面板「创建配置」按钮 |
-| 旧哨兵 `part`/`subpart`/`vehicle` | 不改写，导出期产生 `legacy_signal_target` warning |
+| 5 个 WIP 子系统实例（`battery`/`signal_convert`/`joint`/`javascript`/`ammo_loader`） | D18 删除类型：`loadConfig` 在 decode 前从 raw JSON 剔除对应条目，记入 `_lastMigration.removed`，备份保留；不提供兼容层 |
+| 连接点/子系统/交互区的非 ASCII key | 不改名，记 `KEY_RESERVED`（导出期 error），由用户手动重建/重命名；子零件之外不做自动迁移 |
 | key 含 `*`（任意 map），或翻译键含 `/` `~` | 记 `KEY_RESERVED`，导出期 error；不自动改写；`hit_boxes` / `hydrodynamics` 的元素名不受 `/` `~` 限制 |
 
 ---
@@ -899,7 +909,9 @@ for each part, variant:
 
 | 风险 | 对策 |
 |---|---|
-| 子零件 key 迁移改变模组侧可见名称（存档/引用可能按名匹配） | 仅迁移非规范 key；`_lastMigration` 明细 + 加载后确认；迁移前自动生成一份 `.mm_project.json.bak`（`services/pack` 提供） |
+| 子零件 key 迁移改变模组侧可见名称（存档/引用可能按名匹配） | 仅迁移非规范 key；中文名改 `legacy_<n>` 并在迁移报告中保留原名；`_lastMigration` 明细 + 加载后确认；迁移前自动生成一份 `.mm_project.json.bak`（`services/pack` 提供） |
+| 删除 WIP 类型后，含这些类型的存量工程在 decode 时失败 | §15.2 的 raw 层剔除 + 备份；若必须保留这些数据，只能停留在旧插件版本（D18 明确不做兼容层） |
+| 旧哨兵 `part`/`subpart`/`vehicle` 变成未知目标错误 | D19 的明确选择：不告警、不迁移；导出闸门拦住，用户改成 `local`/`global` 或真实节点 key |
 | 严格配置引用会拒绝手工写的悬空目标 | `errors[]` 带完整 path 与候选值；`mode:'replace'` 可先修引用再导入；MCP 返回 `unresolved_config_ref` 提示 |
 | 删除计算属性写入后，存量「标记有、配置无」不再自动补建 | §15 的 load-time repair + 面板显式按钮 + `setField` 的 `ensure` |
 | 整件替换丢字段 | `reset_fields` / `dropped_fields` 回传 + 工具描述明示 |
