@@ -653,4 +653,31 @@ describe('MCP 注册生命周期', () => {
         expect(registered).toHaveLength(24);
         mcpIndex.unregisterMcpTools();
     });
+
+    test('MCP 后加载时由 loaded_plugin 事件补注册', () => {
+        globalThis.MCP_QUEUE = [];
+        let loadedHandler = null;
+        global.Blockbench = {
+            on: function (name, fn) {
+                if (name === 'loaded_plugin') loadedHandler = fn;
+                return function () {};
+            },
+            dispatchEvent: function () {},
+        };
+        const registered = [];
+        globalThis.MCP = null;
+        mcpIndex.registerMcpTools();
+        expect(registered).toHaveLength(0);
+        expect(typeof loadedHandler).toBe('function');
+
+        globalThis.MCP = {
+            z: schema(),
+            registerTool: function (spec) { registered.push(spec); return function () {}; },
+            unregisterTool: function () {},
+            createJsonResult: function (obj) { return obj; },
+        };
+        loadedHandler({ plugin: { id: 'mcp' } });
+        expect(registered).toHaveLength(12);
+        mcpIndex.unregisterMcpTools();
+    });
 });

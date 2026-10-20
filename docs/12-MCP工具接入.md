@@ -5,8 +5,8 @@
 > 参照：[docs/11-接入Blockbench原生撤销.md](./11-接入Blockbench原生撤销.md) / [docs/08-序列化反序列化-Codec体系重构.md](./08-序列化反序列化-Codec体系重构.md) / [docs/10-校验与错误提示重构实现计划.md](./10-校验与错误提示重构实现计划.md)
 >
 > **实现备注（与设计稿的差异）**
-> - `src/mcp/` 四文件与工具矩阵按本文落地；`bun test` 覆盖只读、`set_node`、`remove_node`、`bind_marker`、`set_active`、四个 `import_*`、`add_instance`、`validate`、注册/注销，共 35 例（`test/mcp/mcp.test.js`）。
-> - MCP 插件可能先于本插件加载。`registerMcpTools()` 除了推进 `MCP_QUEUE`，在 `globalThis.MCP` 已存在时会立即 `setup` 一次；队列条目保留，后续 drain 会幂等重注册。
+> - `src/mcp/` 四文件与工具矩阵按本文落地；`bun test` 覆盖只读、`set_node`、`remove_node`、`bind_marker`、`set_active`、四个 `import_*`、`add_instance`、`validate`、注册/注销，共 36 例（`test/mcp/mcp.test.js`）。
+> - MCP 插件可能先于本插件加载。`registerMcpTools()` 除了推进 `MCP_QUEUE`，在 `globalThis.MCP` 已存在时会立即 `setup` 一次；若 MCP 后加载，则监听 `loaded_plugin` 事件补注册。队列条目保留，后续 drain 会幂等重注册。
 > - 为满足 §5.3，本轮补齐了 ops：`persist:false` / `strict:true` 透传、`import_*` 的 `duplicate_name` 与 `mode:'rename'`、`add_instance` 的 key（配置键）与元素名（`definition.bone` / `definition.locator`）分离。
 > - `introduced_issues` 在 MCP 工具层用 `collectIssues` 前后 diff（正文 §7.2 的“同一撤销记录内”表述按实现收敛；不改变撤销粒度）。
 > - MCP 插件未安装时 `registerMcpTools()` 只创建一个空的 `MCP_QUEUE` 条目，插件其它功能不受影响。
@@ -407,7 +407,7 @@ AI 的正确用法是「`read_node(path, as='definition')` 拿全量 → 改 →
 1. Blockbench 加载 `dist/machine_max_bb_plugin.js` → `onload`。
 2. `registerProperty()` → `registerUndoBridge()`（挂两个 undo 事件，docs/11 已实现）→ `registerMode()` → `registerMcpTools()`。
 3. `registerMcpTools()` 把 `{ plugin: 'machine_max_bb_plugin', setup(mcp) {...} }` 推进 `globalThis.MCP_QUEUE`，并记下每个工具的 disposer；若 `globalThis.MCP` 已存在，再立即 `setup` 一次。
-4. MCP 插件（无论先加载还是后加载）会 drain `MCP_QUEUE` 并调 `setup(mcp)`；之后已连接的客户端收到 `tools/list_changed`，新工具即刻可用，不需要重启 Blockbench。
+4. MCP 插件（无论先加载还是后加载）会 drain `MCP_QUEUE` 并调 `setup(mcp)`；若 MCP 后加载，本插件还监听 `loaded_plugin` 事件补一次 `ensureMcpReady()`。之后已连接的客户端收到 `tools/list_changed`，新工具即刻可用，不需要重启 Blockbench。
 5. 插件卸载 → `onunload` 调 disposer 注销工具；撤销桥监听由 `unregisterUndoBridge()` 单独清理。
 
 幂等：MCP 插件重载会重跑队列；工具注册以名字为键，重复 `setup` 前先 `unregisterTool` 同名工具，避免「duplicate name」抛错。

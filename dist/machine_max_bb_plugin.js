@@ -32056,28 +32056,43 @@
       var queueEntry = null;
       var disposers = [];
       var activeMcp = null;
+      var loadedPluginListener = null;
       function toolName(name) {
         return PREFIX + name;
       }
+      function ensureMcpReady() {
+        var mcp = typeof globalThis !== "undefined" ? globalThis.MCP : null;
+        if (mcp && typeof mcp.registerTool === "function" && mcp.z) {
+          setupTools(mcp);
+          return true;
+        }
+        return false;
+      }
       function registerMcpTools() {
-        if (queueEntry) return true;
         if (typeof globalThis === "undefined") {
           log2.warn("registerMcpTools: \u5F53\u524D\u73AF\u5883\u6CA1\u6709 globalThis");
           return false;
         }
-        if (!Array.isArray(globalThis.MCP_QUEUE)) {
-          globalThis.MCP_QUEUE = [];
-        }
-        queueEntry = {
-          plugin: "machine_max_bb_plugin",
-          setup: function(mcp2) {
-            setupTools(mcp2);
+        if (!queueEntry) {
+          if (!Array.isArray(globalThis.MCP_QUEUE)) {
+            globalThis.MCP_QUEUE = [];
           }
-        };
-        globalThis.MCP_QUEUE.push(queueEntry);
-        var mcp = globalThis.MCP;
-        if (mcp && typeof mcp.registerTool === "function" && mcp.z) {
-          setupTools(mcp);
+          queueEntry = {
+            plugin: "machine_max_bb_plugin",
+            setup: function(mcp) {
+              setupTools(mcp);
+            }
+          };
+          globalThis.MCP_QUEUE.push(queueEntry);
+        }
+        ensureMcpReady();
+        if (!loadedPluginListener && typeof Blockbench !== "undefined" && typeof Blockbench.on === "function") {
+          loadedPluginListener = Blockbench.on("loaded_plugin", function(data) {
+            var id = data && data.plugin && data.plugin.id;
+            if (id === "mcp" || typeof globalThis !== "undefined" && globalThis.MCP) {
+              ensureMcpReady();
+            }
+          });
         }
         log2.info("registerMcpTools: \u5DF2\u52A0\u5165 MCP_QUEUE\uFF08" + tools.all().length + " \u4E2A\u5DE5\u5177\uFF09");
         return true;
@@ -32124,6 +32139,14 @@
         log2.info("setupTools: \u5DF2\u6CE8\u518C " + tools.all().length + " \u4E2A MCP \u5DE5\u5177");
       }
       function unregisterMcpTools() {
+        if (loadedPluginListener) {
+          try {
+            loadedPluginListener();
+          } catch (e) {
+            log2.debug("unregisterMcpTools: \u79FB\u9664 loaded_plugin \u76D1\u542C\u5931\u8D25\uFF08\u5FFD\u7565\uFF09");
+          }
+          loadedPluginListener = null;
+        }
         if (activeMcp && typeof activeMcp.unregisterTool === "function") {
           tools.all().forEach(function(tool) {
             try {

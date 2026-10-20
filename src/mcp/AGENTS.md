@@ -47,7 +47,7 @@ src/mcp/
 ## 注册时序
 
 1. `plugin.js onload` 调 `registerMcpTools()`，把 `{plugin, setup}` 推进 `globalThis.MCP_QUEUE`。
-2. 若 `globalThis.MCP` 已存在（MCP 插件先加载），立即 `setup` 一次；队列条目保留，后续 drain 会幂等重注册。
+2. 若 `globalThis.MCP` 已存在（MCP 插件先加载），立即 `setup` 一次；若 MCP 后加载，监听 `loaded_plugin` 事件补一次 `ensureMcpReady()`。队列条目保留，后续 drain 会幂等重注册。
 3. MCP 插件 drain 队列并调 `setup(mcp)`；`setup` 先按名字 `unregisterTool` 再 `registerTool`。
 4. `plugin.js onunload` 调 `unregisterMcpTools()`；同时清理 disposer 与队列条目。
 

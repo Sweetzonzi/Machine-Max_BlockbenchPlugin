@@ -19,9 +19,20 @@ var CONDITION = { project: true, modes: ['machine_max_part'] };
 var queueEntry = null;
 var disposers = [];
 var activeMcp = null;
+var loadedPluginListener = null;
 
 function toolName(name) {
     return PREFIX + name;
+}
+
+/** MCP 已就绪时立即注册；未就绪时由 loaded_plugin 事件或队列 setup 触发。 */
+function ensureMcpReady() {
+    var mcp = (typeof globalThis !== 'undefined') ? globalThis.MCP : null;
+    if (mcp && typeof mcp.registerTool === 'function' && mcp.z) {
+        setupTools(mcp);
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -29,28 +40,36 @@ function toolName(name) {
  * @returns {boolean}
  */
 function registerMcpTools() {
-    if (queueEntry) return true;
     if (typeof globalThis === 'undefined') {
         log.warn('registerMcpTools: 当前环境没有 globalThis');
         return false;
     }
-    if (!Array.isArray(globalThis.MCP_QUEUE)) {
-        globalThis.MCP_QUEUE = [];
+
+    if (!queueEntry) {
+        if (!Array.isArray(globalThis.MCP_QUEUE)) {
+            globalThis.MCP_QUEUE = [];
+        }
+
+        queueEntry = {
+            plugin: 'machine_max_bb_plugin',
+            setup: function (mcp) {
+                setupTools(mcp);
+            },
+        };
+        globalThis.MCP_QUEUE.push(queueEntry);
     }
 
-    queueEntry = {
-        plugin: 'machine_max_bb_plugin',
-        setup: function (mcp) {
-            setupTools(mcp);
-        },
-    };
-    globalThis.MCP_QUEUE.push(queueEntry);
-
-    // MCP 插件可能已经先加载并 drain 过队列；仅入队会让工具一直不可见。
-    // 已加载时立即 setup 一次；之后 MCP 再 drain 队列会幂等重注册。
-    var mcp = globalThis.MCP;
-    if (mcp && typeof mcp.registerTool === 'function' && mcp.z) {
-        setupTools(mcp);
+    // MCP 插件可能先于本插件加载；也可能后加载并替换/清空 MCP_QUEUE。
+    // 已就绪时立即注册；后加载时靠 loaded_plugin 事件补一次。
+    ensureMcpReady();
+    if (!loadedPluginListener && typeof Blockbench !== 'undefined'
+        && typeof Blockbench.on === 'function') {
+        loadedPluginListener = Blockbench.on('loaded_plugin', function (data) {
+            var id = data && data.plugin && data.plugin.id;
+            if (id === 'mcp' || (typeof globalThis !== 'undefined' && globalThis.MCP)) {
+                ensureMcpReady();
+            }
+        });
     }
 
     log.info('registerMcpTools: 已加入 MCP_QUEUE（' + tools.all().length + ' 个工具）');
@@ -104,6 +123,15 @@ function setupTools(mcp) {
 }
 
 function unregisterMcpTools() {
+    if (loadedPluginListener) {
+        try {
+            loadedPluginListener();
+        } catch (e) {
+            log.debug('unregisterMcpTools: 移除 loaded_plugin 监听失败（忽略）');
+        }
+        loadedPluginListener = null;
+    }
+
     if (activeMcp && typeof activeMcp.unregisterTool === 'function') {
         tools.all().forEach(function (tool) {
             try {
