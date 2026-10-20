@@ -1,7 +1,7 @@
-# 业务逻辑层与配置文档 API（v3.1）
+# 业务逻辑层与配置文档 API（v3.2）
 
-> 状态：**设计稿（待实现）** · 日期：2026-10-21 · v3.1 依据：第三轮审阅（required 容器、值校验、key 迁移、投影边界）逐条核对代码后收口
-> v3 的第二轮收口见 §0；本轮新增/修正见 §0.2
+> 状态：**设计稿（待实现）** · 日期：2026-10-21 · v3.2 依据：第四轮审阅（replace 旧 marker、connector 迁移算法、partId 路径安全、闸门去重）逐条核对代码后收口
+> v3 的第二轮收口见 §0；第三轮收口见 §0.2；本轮新增/修正见 §0.3
 > 范围：`src/doc/`（新增）+ `src/ops/`（由 `src/core/operations.js` 拆出）+ `src/services/`（新增）+ `src/ui/`、`src/mode/`（改薄）
 > 目标版本：v0.5.0（当前 0.4.0） · 前置：[docs/11](./11-接入Blockbench原生撤销.md) · 下游：[docs/12](./12-MCP工具接入.md)
 > 参照：[docs/08](./08-序列化反序列化-Codec体系重构.md) / [docs/10](./10-校验与错误提示重构实现计划.md)
@@ -61,6 +61,19 @@
 
 `optionalFieldOf` 的语义是「**键可以缺失**」：缺失时用默认值（或 `Optional.empty`），**不是**「JSON 值可以是 `null`」。显式 `null` 仍会交给底层 `Codec.STRING` / `ResourceLocation.CODEC` / map codec，通常直接报错。因此插件内部不能把 `null` 当作 required 字段的通用占位；`null` 只适合 `Optional` 型字段（`overwrite`）。
 
+### 0.3 v3.2 第四轮收口
+
+| # | 第四轮问题 | 实测 | v3.2 处理 |
+|---|---|---|---|
+| 1 | `import_*` 的 `replace` 只产出 `markerPlan`（新增），没有旧 marker 清理；旧 `start_bone` / `hit_boxes` / `interact_boxes` / `connectors` 的 marker 会在配置被替换后残留，`cleanGhostMarkers` 只清元素已不存在的标记，清不到「元素还在、配置已换」的旧标记 | **确认**。`projection.in` 第 9 步只生成新增计划；`clearAllMarkers` 只有 part / variant 两级，没有 sub_part 级；`cleanGhostMarkers` 的判据是 UUID 是否存在，不读 `config_ref` | 返回 `markerCleanup`（part / variant / sub_part 三级 scope）；`ops.import*` 在**同一笔撤销**里按「清理旧 marker → 替换节点 → 落 `markerPlan`」执行；sub_part 级用旧条目的 `config_refs` 精确清理；补「replace 后旧 marker 不残留、同形替换不重复、Ctrl+Z 恢复」测试（§5.3.1、§6.3、§11 #18） |
+| 2 | connector marker 的 `config_ref` 从 `definition` 迁移到连接点 key 没有可执行算法：同一 `definition` 可被多个 connector 共用；同名 Locator 可跨子零件；匹配不到时保留 / 置空 / 报错未定 | **确认**。§15.2 只有一句「统一为连接点 key」；`connectors[*]._marker_uuid` 已存在，可作为首选精确匹配；marker 的 UUID 就是 Locator 的 UUID | 定序匹配：**已迁移 key → `_marker_uuid` → Locator 名（唯一）→ 所属子零件内 Locator 名唯一**；`definition` **不参与匹配**。匹配不到时保留旧值到 `legacy_config_ref`、`config_ref` 置 `null`、记 `unresolved_config_ref` warning，不猜测、不删 marker；补「同 definition 多 connector」测试（§15.2.1、§11 #19） |
+| 3 | `partId` 允许 `.` / `..`，会进入 `parts/<partId>.json`、纹理资源路径和 `path.join`；`import_part` 可传任意 `part_id`，存在路径穿越 | **确认**。设计规则只校验 `^[a-z0-9_.-]+$`，当前 `createPart` 仅查非空（`importPart` 尚未实现）；`export_pipeline._resolveTargetDir` 在 `flat_export:false` 时把 `partId.split('_')[0]` 直接 `path.join`；`import_part` 是规划中的 MCP 入口 | `partId` 增加路径安全判据：拒绝 `.` / `..` / 首尾点 / Windows 设备名，且**完整值与 `split('_')[0]` 目录段都查**；`createPart`、`importPart`、拖拽导入统一 `invalid_format`；导出管线在 `path.join` 前**再次**断言，绕过闸门直接调 generator 也失败；存量非法 `partId` 不自动改名，记 `key_reserved` 导出 error（§5.1.3、§15.2） |
+| 4 | `canExport` 的 `path + code` 去重不成立：`collectIssues` 报 `definition_required` / `subsystem_required_field`，`validateTree` 报 `missing_required`，同一路径两条不同 code，去重不生效 | **确认**。两层错误码本就不同；`collectIssues` 的 `Problem.path` 还缺字段名，无法与 `validateTree` 的段数组对齐 | 统一 `Problem.path` 为对象并补 `field`；`canExport` 把 `validateTree` 的段数组规范化为同一对象；去重键改为 **`scope|partId|variantName|subPartKey|itemKey|field`**，`collectIssues` 优先，`validateTree` 只补空缺；同一字段只留一条，不同字段各自保留（§4.3、§5.2.5、§12） |
+| 5 | `reset_fields` 只算顶层字段，docs/12 却把它描述成「整件语义唯一的安全网」；`import_part` 省略 `variant.tags` / `sub_part.hit_boxes` 时不会列出嵌套路径 | **确认**。§5.3.1 第 4 步明确写「顶层字段」；docs/12 的措辞过度承诺 | 保留**顶层字段**语义（递归 diff 成本高且无法区分「省略」与「默认值」）；docs/12 明说只保证顶层容器，嵌套字段整体丢弃、不逐项列出；补「省略嵌套字段不产生 reset_fields 条目」测试（§5.3.1、docs/12 §5.3） |
+| 6 | `schema_codec_allowlist.missing_fields` 为空，但 D12 尚未补 `launcher.fire_animation` / `regen_loader.belt_label`；P1 的字段集合测试会先红 | **确认**。两个 schema 字段存在、Codec 缺失（见 §0.2 #13）；D12 是 P2 项 | 把两条以 `owner: 'D12'` 放进 `missing_fields`，P1 按 owner 放行；D12 修完后条目必须删除，否则按过期条目失败（§5.2.2） |
+| 7 | `hit_box.block_collision` 是笔误，实际字段在 `sub_part.block_collision`（`hit_box` 没有这个字段） | **确认**。`sub_part_codec.js` 的 `block_collision`；`hit_box_codec.js` 无此字段 | 修正 §5.2.5 的枚举示例；测试按 `sub_part.block_collision` 构造（§5.2.5、§11 #15） |
+| 8 | `KEY_RESERVED` 大小写/级别不统一：§15 / §12 用大写，§5.1.3 的错误码与 `_lastMigration.key_reserved` 用小写 | **确认**。仓库没有 `KEY_RESERVED` 常量；稳定 code 应统一小写 snake_case | 全部改为 `key_reserved`；顺带把同类的 `ORPHAN_ELEMENT` 改为 `orphan_element`。大写只保留为规则名 / `CODES` 常量名，不再作为 `Problem.code`（§12） |
+
 ---
 
 ## 1. 背景与目标
@@ -112,7 +125,7 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 
 ### 2.4 校验现状
 
-`mode/validation.js → collectIssues(config)` 是唯一实现（`validation_check.js` 调的也是它）：**14 个 error 产生点 / 3 个 warning 产生点**（P2 增加 `DANGLING_SIGNAL_TARGET` 后为 15 条 error 规则），但 warning **只有 1 个 code**：`ORPHAN_ELEMENT`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
+`mode/validation.js → collectIssues(config)` 是唯一实现（`validation_check.js` 调的也是它）：**14 个 error 产生点 / 3 个 warning 产生点**（P2 增加 `DANGLING_SIGNAL_TARGET` 后为 15 条 error 规则），但 warning **只有 1 个 code**：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
 
 重复的只有名称唯一性两套：`naming.validateNameUniqueness`（UI rename 调用）与 `validation._collectNameConflicts`；外加 `operations.js` 内的存在性检查。
 
@@ -264,9 +277,10 @@ src/doc/field_specs.generated.js（含 provenance）
 ```js
 // services/export.js
 function canExport(config) {
-    var issues = collectIssues(config).concat(
-        validateTree(config, { completeness: true })   // §5.2.5：枚举/范围/结构/key + required
-    );
+    var primary = collectIssues(config);                  // 业务规则，path 已是 Problem 对象
+    var schema = validateTree(config, { completeness: true })
+        .map(function (e) { return toProblem(e, config); }); // 段数组 → 同一 path 口径 + severity
+    var issues = dedupeIssues(primary, schema);           // 同一字段只留一条
     var errors = issues.filter(function (p) { return p.severity === 'error'; });
     return { ok: errors.length === 0, errors: errors, warnings: issues.filter(isWarning) };
 }
@@ -274,9 +288,10 @@ function canExport(config) {
 
 - `export_dialog.onConfirm`：`canExport` 失败 → `showToast` + 列出问题（复用现有 `buildValidationInfo` 的按 path 分组渲染，改为接收 `canExport` 返回的合并数组，每条挂 `__mmNavigator.selectByIssue` 定位按钮），`return false` 不关对话框。
 - 现状是「仅提示不拦截」（[export_dialog.js:307](../src/ui/export/export_dialog.js)），本期改为阻断。
-- `collectIssues` 的 14 个 error 产生点逐条确认可定位（都带 `path`）；`ORPHAN_ELEMENT` 放行；`validateTree` 的每条错误也带同样的 `path` 口径。
+- `collectIssues` 的 14 个 error 产生点逐条确认可定位（都带 `path`）；`orphan_element` 放行；`validateTree` 的每条错误也带同样的 `path` 口径。
 - **两条闸门缺一不可**：`collectIssues` 负责业务完整性（型号是否存在、名称冲突、信号目标断裂），`validateTree` 负责 schema 值与 key。第三轮审阅的 `"banana"` / `condition:"WHATEVER"` 属于后者；`projectile_types:{}` 的 `minProperties` 也由后者报。
-- 同一路径可能同时被两层报（例如 `definition:''`）：输出前按 `path + code` 去重，保留信息更具体的一条。
+- **去重按字段，不按 code**：同一路径可能同时被两层报（例如 `definition:''`：`collectIssues` 报 `definition_required`，`validateTree` 报 `missing_required`）。输出前统一 `Problem.path` 为对象并补 `field`，去重键为 `scope|partId|variantName|subPartKey|itemKey|field`；`collectIssues` 优先，`validateTree` 只补空缺。同一字段只留一条；不同字段（如 `definition` 与 `locator`）各自保留，不能因为路径相同就合并。
+- `Problem.path.field` 是本次新增的可选字段；不带字段的条目（名称冲突、孤立元素等）用空串作 key，仍参与去重。`collectIssues` 的字段级问题必须补上 `field`（`definition` / `locator` / `hit_boxes` / `mass` 等），entry 级问题留空；`validateTree` 的段数组在 `toProblem` 里按 `parts / variants / sub_parts / subsystems|connectors|interact_boxes|hit_boxes` 固定层级转成同一对象，不靠猜 key。
 
 ### 4.4 占位符不得变成脏数据（前置修复）
 
@@ -363,7 +378,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 #### 5.1.2 通配符与保留字符
 
 - `*` 是**整段 token**，至多一个；只允许出现在 **map 层**（数组层用 `*` 返回 `invalid_format`，因为数组没有 key 语义）；结果按该层 key 收起。
-- **`*` 不能作为字面 key**：插件创建的 map key（partId / variant / 子零件 / 连接点 / 子系统 / 交互区 / 纹理名 / 频道名 / 弹种资源地址）在创建、重命名、导入时拒绝 `*`，存量数据迁移时报 `KEY_RESERVED`。`hit_boxes` / `hydrodynamics` 的 key 是模型元素名，只禁止 `*`，其余字符原样保留；`hydrodynamics` 额外允许空字符串（`""` 表示质心），`hit_boxes` 不允许空串。这样「字面量 `*`」不需要转义规则，也不会与通配符冲突。
+- **`*` 不能作为字面 key**：插件创建的 map key（partId / variant / 子零件 / 连接点 / 子系统 / 交互区 / 纹理名 / 频道名 / 弹种资源地址）在创建、重命名、导入时拒绝 `*`，存量数据迁移时报 `key_reserved`。`hit_boxes` / `hydrodynamics` 的 key 是模型元素名，只禁止 `*`，其余字符原样保留；`hydrodynamics` 额外允许空字符串（`""` 表示质心），`hit_boxes` 不允许空串。这样「字面量 `*`」不需要转义规则，也不会与通配符冲突。
 - `~` 与 `/` 只影响 JSON Pointer 形式：它们由 `~0` / `~1` 转义；段数组形式不需要转义。翻译键（子零件/连接点/子系统/交互区）额外禁止这两个字符，元素名不受限（Pointer 里照常转义即可）。`projectile_types` 的 key 是资源地址，允许 `/`，但在 Pointer 里仍按 `~1` 转义。
 
 #### 5.1.3 key 规范（D16 / D17）
@@ -394,7 +409,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 
 | key 类别 | 出现位置 | 字符集 / 形态 | 小写 | 失败码 |
 |---|---|---|---|---|
-| `partId` | `parts` 的 key；`importPart` 的 `part_id` | `^[a-z0-9_.-]+$`，非空，长度 ≤ 128 | 是 | `invalid_format` |
+| `partId` | `parts` 的 key；`importPart` 的 `part_id` | `^[a-z0-9_.-]{1,128}$` + **路径安全判据**（见下），非空 | 是 | `invalid_format` |
 | `variantName` | `variants` 的 key | `^[A-Za-z0-9_.-]+$`，非空，长度 ≤ 128 | 否 | `invalid_format` |
 | 子零件 key | `sub_parts` 的 key | `^sub_part\.<ns>\.[A-Za-z0-9_.-]+$`；名称段 1–128、不以 `.` 开头/结尾 | 否 | `invalid_format` |
 | 翻译键（连接点/交互区/子系统） | `connectors` / `interact_boxes` / `subsystems` 的 key | 名称段 `^[A-Za-z0-9_.-]+$`、1–128、不以 `.` 开头/结尾；**前缀形态只告警** `non_canonical_key` | 否 | `invalid_format`（字符集）/ warning（前缀） |
@@ -407,15 +422,27 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 
 **`projectile_types` 是唯一允许 `:` `/` 的配置 key**：它的 key 本身就是资源地址（如 `machine_max:7_62mm_ap`），不是翻译键；值才是整数。`textures` 的 **value** 也是资源地址（`machine_max:textures/...`），但 key 是纹理名，仍用上一行的规则。
 
-`config.namespace` 自身必须是 `[a-z0-9_-]+`（进 resource location），在内容包设置入口校验；`loadConfig` 发现非法 namespace 时不改 key，记 `KEY_RESERVED`，导出闸门阻断。
+`config.namespace` 自身必须是 `[a-z0-9_-]+`（进 resource location），在内容包设置入口校验；`loadConfig` 发现非法 namespace 时不改 key，记 `key_reserved`，导出闸门阻断。
 
-**为什么子零件连格式一起强制、其它只强制字符集**：`sub_parts` 有整件通道（`import_sub_part`）和 `read_node(as='definition')` 的 round-trip 验收，key 必须可逆；连接点/子系统/交互区的整件通道在 D9 里已排除，v3 只强制 ASCII 字符集，前缀形态暂只告警；它们的存量非 ASCII key 记 `KEY_RESERVED` error，但不在 `loadConfig` 里自动改名（改名要同步第 5~13 行引用，留到后续）。
+**`partId` 的路径安全（不能只用字符集）**：`partId` 直接进入 `parts/<partId>.json`、`machine_max:textures/part/<partId>/...`，并在 `flat_export:false` 时进入 `path.join(partsBaseDir, partId.split('_')[0])`。字符集允许 `.`，因此以下值必须在写入前拒绝，不能靠“用户不会这么填”：
 
-**强制入口矩阵（D17 闭合）**：
+- 精确的 `.` / `..`；
+- 以 `.` 开头或结尾（`.hull` / `hull.`）；
+- Windows 设备名（大小写不敏感，取**第一个点之前**的段）：`con` / `prn` / `aux` / `nul` / `com1`–`com9` / `lpt1`–`lpt9`；`con.1` 也算，因为 `con.1.json` 仍是设备名；
+- **两个值都要跑同一判据**：完整 `partId`（文件名）与 `partId.split('_')[0]`（`flat_export:false` 的目录段）。`.._hull` 的目录段是 `..`、`a._b` 的目录段是 `a.`，都必须拒绝；
+- 不禁止内部点：`a.b.c` 仍是合法 `partId`（§5.1.5 #4 继续通过）；`a..b` 也可，文件系统不会把它解释为父目录。
+
+`doc/keys` 暴露 `isValidPartId`（字符集 + 长度）与 `isSafePartId`（前者 + 路径安全）；写入口只调 `isSafePartId`，`createPart` / `importPart` / `drag_import` 共用；违规返回 `invalid_format`，`hint` 说明是路径安全而非字符集问题。**导出侧必须再断言一次**：`services/export.js` 在 `path.join` 前对每个 `partId` 调用同一函数，失败直接 `io_error` 终止，不写任何文件。这样即使测试或未来入口绕过 `canExport` 直接调 generator，也不会把文件写到 `parts/..`。
+
+存量工程里已有不安全 `partId` 时，`loadConfig` **不自动改名**（会牵动文件名、resource location 与存档），记 `key_reserved`（导出期 error），由用户重建；与 §15.2 的“非 ASCII / 非小写 `partId` 不迁移”同一处理。
+
+**为什么子零件连格式一起强制、其它只强制字符集**：`sub_parts` 有整件通道（`import_sub_part`）和 `read_node(as='definition')` 的 round-trip 验收，key 必须可逆；连接点/子系统/交互区的整件通道在 D9 里已排除，v3 只强制 ASCII 字符集，前缀形态暂只告警；它们的存量非 ASCII key 记 `key_reserved` error，但不在 `loadConfig` 里自动改名（改名要同步第 5~13 行引用，留到后续）。
+
+#### 5.1.3.1 强制入口矩阵（D17 闭合）
 
 | 入口 | 受控 key | 规则 | 失败 / 处置 |
 |---|---|---|---|
-| `ops.createPart` / `ops.importPart` | `partId` / `part_id` | 上表第 1 行 | `invalid_format`；不做自动改写 |
+| `ops.createPart` / `ops.importPart` / `drag_import` | `partId` / `part_id` | 上表第 1 行 + `isSafePartId`（`.` / `..` / 首尾点 / Windows 设备名） | `invalid_format`；不做自动改写 |
 | `ops.createVariant` / `ops.importVariant` / `ops.renameVariant` | `variantName` / `variant` | 上表第 2 行 | `invalid_format` |
 | `ops.importSubPart` / `ops.renameSubPart` / `ops.markSubPart` | 子零件 key | 上表第 3 行；`markSubPart` 的默认名由 `generateDefaultName('sub_part', {namespace})` 生成后再校验 | `invalid_format`；`mark*` 的自动名不合法时降级为 `sub_part.<ns>.legacy_<n>` |
 | `ops.createSubsystem` / `ops.importSubsystem` / `ops.renameSubsystem` | 子系统实例 key | 上表第 4 行（允许完整 `subsystem.<ns>.<name>` 形态；前缀不规范仅 warning） | `invalid_format` |
@@ -425,7 +452,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 | `ops.setField` / `ops.import*` | `hit_boxes.*` / `hydrodynamics.*` | 元素名规则（`hydrodynamics` 允许 `""`） | `key_reserved` / `invalid_format` |
 | `ops.setContentPack` / `setContentPackPath` | `namespace` | 上表最后一行 | `invalid_format`；不落盘 |
 | `ops.importPart` / `importVariant` / `importSubPart` / `importSubsystem` 的嵌套 map | 上述全部 | `projection.in` 的 `validateKeys` 递归执行 | 一次返回全部违规 key，不写半截 |
-| `loadConfig` | 既有全部 key | 只自动迁移**子零件 key**；其余非 ASCII / 非法 key 记 `KEY_RESERVED`，不改写 | 导出期 error；`_lastMigration.key_reserved` 列表 |
+| `loadConfig` | 既有全部 key | 只自动迁移**子零件 key**；其余非 ASCII / 非法 key（含 `.`/`..`/设备名等不安全 `partId`）记 `key_reserved`，不改写 | 导出期 error；`_lastMigration.key_reserved` 列表 |
 
 > 入口不按「谁调用」区分：UI、右键菜单、MCP、文件导入都走同一批 `ops`，所以校验只实现一次。`validateKeys` 是 `doc` 层的纯函数，`setField` 与 `projection.in` 共用；`ops` 只在 key 不进入 `projection` 时（如 `part_id`）单独调用 `doc.keys`。
 
@@ -533,7 +560,11 @@ module.exports = {
   ],
 
   // 2) 字段集合缺口：Codec 缺字段 / 多字段（D12 修完后都应为空）
-  missing_fields: [],   // 例：D12 前的 { kind:'subsystem', type:'launcher', field:'fire_animation' }
+  // P1 先按 owner 放行真实缺口；D12 补齐后必须删条目，否则按过期条目失败
+  missing_fields: [
+    { kind: 'subsystem', type: 'launcher',     field: 'fire_animation', owner: 'D12' },
+    { kind: 'subsystem', type: 'regen_loader', field: 'belt_label',     owner: 'D12' },
+  ],
   extra_fields:   [],   // 例：Codec 有、schema 没有的运行时字段（目前无）
 
   // 3) 同一字段的约束差异：字段存在，但类型/required/enum/结构不同
@@ -564,7 +595,7 @@ module.exports = {
 
 1. **类型集合**：`SubsystemDispatchCodec` 的 key 集合 ∪ `missing_types` = schema 19 种；`missing_types` 在 D13 完成后必须为空（当前是已知红灯）。
 2. **字段集合**：对 Codec 现存的 17 种类型逐类型比较 schema `properties`（去掉 `type`）与 Codec record 字段；差异只能来自 `missing_fields` / `extra_fields`（缺失的 `track_*` 两种由 `missing_types` 解释，不参与字段比较）。`constraint_diffs` **不能**用来掩盖字段缺失——字段不存在时，配置它只会得到 `unknown_field`。
-3. **约束条目有效性**：每条 `constraint_diffs` / `decode_tolerance` 必须同时指向真实存在的 schema 字段与 Codec 字段；D13 补齐后仍留在 `missing_types`、或 D12 修完后仍留在 `missing_fields` 的条目视为**过期条目**，测试失败。
+3. **约束条目有效性**：每条 `constraint_diffs` / `decode_tolerance` 必须同时指向真实存在的 schema 字段与 Codec 字段；`missing_fields` 必须带 `owner`，P1 只放行 `owner:'D12'` 的两条真实缺口，D12 修完后仍留在 `missing_fields` 的条目视为**过期条目**，测试失败；D13 补齐后仍留在 `missing_types` 的条目同样失败。
 4. **encode 合规**：对 `decode_tolerance` 的字段，构造「缺失输入」，断言 `encode(decode(x))` 要么满足 schema，要么被 `canExport` 阻断；不能出现「既不满足 schema、闸门又放行」。
 5. **`unknown_fields`** 是唯一允许的全局例外，不按字段登记；导出时由 Codec 剥离未知字段，`field_specs` 不把未知字段当错误。
 
@@ -600,8 +631,8 @@ validateValues(node, {
   completeness: false,  // false：只查类型/枚举/范围/结构/key；true：额外查 required/minProperties
 }) → { ok, errors: [{ path, code, expected, got, hint }] }
 
-// 整棵树：给 canExport 用
-validateTree(config, { completeness: true }) → Problem[]
+// 整棵树：给 canExport 用；path 仍是规范化段数组，由 canExport 的 toProblem 统一成 Problem
+validateTree(config, { completeness: true }) → [{ path, code, expected, got, hint }]
 ```
 
 **分工**：
@@ -617,7 +648,7 @@ validateTree(config, { completeness: true }) → Problem[]
 1. `nullable`：`null` 只对 schema nullable 或上游 `Optional` 字段（`overwrite`）放行；required 字符串收到 `null` 报 `type_mismatch`。`projection.in` 在 decode 前先把旧数据的 `null`/`"null"` 归一化为 `''`/`{}`，所以正常导入不会走到这条错误；
 2. `oneOf`：逐个尝试，全失败报 `type_mismatch`，`expected` 列出分支；
 3. `type` 基础校验：`string` / `number` / `integer` / `boolean` / `array` / `object` / `tuple` / `any`；
-4. `enum`：`hit_box.type`、`interact_box.condition`、`hit_box.block_collision` 等；报 `invalid_enum`，`expected` 给完整枚举；
+4. `enum`：`hit_box.type`、`interact_box.condition`、`sub_part.block_collision` 等；报 `invalid_enum`，`expected` 给完整枚举；
 5. `minimum` / `maximum`：`thickness`、`mass`、`projectile_types` 的值等；报 `out_of_range`；
 6. `tuple` / `items` / `minItems` / `maxItems`：`projected_area`、`end_bones`、`dismount_locators`；
 7. `properties` / `additionalProperties`：`overwrite`（16/12 字段、`additionalProperties:false`）；
@@ -630,7 +661,7 @@ validateTree(config, { completeness: true }) → Problem[]
 
 **为什么不让 Codec 直接做枚举**：Codec 的 `decode` 也用于 `loadConfig`。若把 `hit_box.type` / `interact_box.condition` 改成 `Codec.ENUM`，存量工程里一个历史非法值就会让整个工程在加载阶段抛错，用户连修复界面都进不去。v3.1 的选择是：**Codec 只保证结构可解，值合法性由 `validateValues` 在写入/导入/导出三处报告**；`loadConfig` 仍用宽松 Codec 打开工程，打开后用 `collectIssues` + 面板提示引导修复。
 
-**错误码**：新增 `out_of_range`（数值越界）；沿用 `type_mismatch` / `invalid_enum` / `invalid_format` / `missing_required` / `key_reserved`。`errors[]` 的 `path` 一律是规范化段数组；`canExport` 产出的 `Problem` 用 `path: { scope, partId, variantName, subPartKey, itemKey }` 供面板定位。
+**错误码**：新增 `out_of_range`（数值越界）；沿用 `type_mismatch` / `invalid_enum` / `invalid_format` / `missing_required` / `key_reserved`。`errors[]` 的 `path` 一律是规范化段数组；`canExport` 产出的 `Problem` 用 `path: { scope, partId, variantName, subPartKey, itemKey, field? }` 供面板定位与去重（`field` 见 §4.3）。
 
 ### 5.3 投影（`doc/projection.js`）
 
@@ -648,7 +679,7 @@ validateTree(config, { completeness: true }) → Problem[]
 
 #### 5.3.1 `projection.in(definition, ctx)` — 顺序不可乱
 
-`ctx = { kind, namespace, partId, variantName, parentPath, existing }`；返回 `{ node, reset_fields, unresolved, markerPlan }`，**不写全局对象**。
+`ctx = { kind, mode, oldKey?, namespace, partId, variantName, parentPath, existing }`；返回 `{ node, reset_fields, unresolved, markerPlan, markerCleanup }`，**不写全局对象**。`oldKey` 只在 `mode:'rename'` 出现，分别是旧 `partId` / 旧 `variantName` / 旧子零件 key。
 
 1. **形状归一化**（`normalizeShorthand`）
    - `variant.textures`: `string` → `{ default: string }`；
@@ -680,7 +711,7 @@ validateTree(config, { completeness: true }) → Problem[]
    - 用 `doc/shapes.js` 的 `PartShape` / `VariantShape` 显式 `Codec.map` 组合（`VariantShape.sub_parts = Codec.map(Codec.STRING, SubPartCodec)`）；
    - **不使用 `either`**：`either.decode` 用「key 里有没有 `.` 或 `:`」猜简写（[Codec.js:561-586](../src/codec/Codec.js)），`{chassis:{…}}` 会被 `SubPartCodec` 全默认解码吞成 `{default:{…,chassis:{…}}}`；`Codec.either` 仅保留给导出/旧加载路径；
    - Codec 抛出的类型错误在此捕获，映射为 `errors[]` 的 `type_mismatch` / `not_found`，带回当前 `path`；
-   - `reset_fields`：`existing` 中存在、但本次输入（归一化后）没有的**顶层字段**；结构动作的 `reset_fields` 为空。
+   - `reset_fields`：`existing` 中存在、但本次输入（归一化后）没有的**顶层字段**；结构动作的 `reset_fields` 为空。它**不是递归 diff**：`import_part` 省略 `variants.default.tags`、`import_sub_part` 省略 `hit_boxes` 时，不会列出嵌套路径（见 docs/12 §5.3）。
 5. **校验值**（`validateValues`，§5.2.5）
    - `completeness:false`：只查枚举 / 范围 / 结构 / 数组长度；`''` / `{}` 是合法占位（required 缺失由导出闸门负责）；`null` 只对 `overwrite` 这类 upstream `Optional` 字段放行；
    - 发生在 decode 之后，因此看到的是补齐默认值后的节点；失败返回 `invalid_enum` / `type_mismatch` / `out_of_range`，带 `path` 与 `expected/got`；
@@ -695,12 +726,32 @@ validateTree(config, { completeness: true }) → Problem[]
    - `power_output`、`power_outputs` 的 key、`hit_boxes[*].subsystem`、`connectors[*].power_target`、`subsystems[*].connector`、`signal_targets[*][]` 必须指向**同一子零件内**的 subsystems / connectors / interact_boxes 条目，或哨兵 `local`/`global`；
    - `null` / `''`（未配置占位）**跳过**，不当作「指向空目标」；否则新建子系统会被自己的 placeholder 判成断裂引用；
    - 未命中 → `unresolved_config_ref`（error，整体拒绝）；只有 `local`/`global` 是例外，`part`/`subpart`/`vehicle` 按普通未知目标处理（不存在、不告警、不迁移）。
-9. **生成标记计划**（`markerPlan`，不执行）
-   - `sub_part`：`start_bone` 命中 → `{type:'sub_part', uuid, config_ref: key}`；
-   - `hit_box`：每个命中骨骼 → `{type:'hit_box', uuid, config_ref: 所属子零件 key}`；
-   - `interact_box` / `connector` 同理（`config_ref` 为条目 key）；
-   - `ops` 在**同一笔撤销**里通过 `ports.markers` 落地（§7.1）。
-10. **返回** `{ node, reset_fields, unresolved: { config_refs: [], bones: [] }, markerPlan }`。
+9. **生成标记计划与清理计划**（`markerPlan` / `markerCleanup`，都不执行）
+   - `markerPlan` 每项：`{ partId, variantName, type, uuid, config_ref }`
+     - `sub_part`：`start_bone` 命中 → `{type:'sub_part', uuid, config_ref: key}`；
+     - `hit_box`：每个命中骨骼 → `{type:'hit_box', uuid, config_ref: 所属子零件 key}`；
+     - `interact_box` / `connector` 同理（`config_ref` 为条目 key）；
+     - 按 `(variantName, uuid)` 去重；同一 UUID 落在多个类型是数据异常，按 `sub_part > interact_box > connector > hit_box` 保留一条并记 warning `marker_conflict`，不静默覆盖。
+   - `markerCleanup` 只在目标已存在时生成（`mode:'create'` 无旧状态）：
+     - `importPart` → `{ scope:'part', partId: oldKey || partId }`（清该零件所有变体）；
+     - `importVariant` → `{ scope:'variant', partId, variantName: oldKey || variantName }`；
+     - `importSubPart` → `{ scope:'sub_part', partId, variantName, subPartKey: oldKey || 目标 key, config_refs:[oldKey || 目标 key, ...旧 interact_boxes key, ...旧 connectors key], uuids:[...旧 hit_boxes 的 UUID key, ...旧 interact_boxes[*]._uuid, ...旧 connectors[*]._marker_uuid] }`；`config_refs` / `uuids` 都从 `ctx.existing` 计算。`config_refs` 覆盖子零件 / 碰撞箱（两者的 `config_ref` 都是 `subPartKey`）与旧交互区 / 连接点；`uuids` 兜住旧 marker 的 `config_ref` 还是 `definition`（迁移未完成）或为 `null` 的情况。
+     - `importSubsystem` → `null`（子系统没有 marker）。
+   - `markerCleanup` 是**策略**，不是已删除的 UUID 列表；`ops` 用 `ports.markers.clearScope` 落地：`part` / `variant` 清整个标记字典，`sub_part` 按 `uuid ∈ uuids` **或** `config_ref ∈ config_refs` 删除。`clearScope` 只删 marker 条目，**不**调用 `clearMarker` 的下游配置清理——旧子树马上由整件写入替换，提前删配置只会制造中间态。
+   - `mode:'rename'` 时，`markerCleanup` 的定位键用 `ctx.oldKey`（旧 partId / 旧 variantName / 旧子零件 key），`markerPlan` 用新 key；`ops` 在调用 `projection.in` 前填好 `oldKey`，不能让 projection 从新 key 反推旧位置。
+10. **返回** `{ node, reset_fields, unresolved: { config_refs: [], bones: [] }, markerPlan, markerCleanup }`。
+
+**整件写入的执行顺序（`ops.import*`，同一笔 `runConfigEdit`）**：
+
+```
+1. clearScope(markerCleanup)      // 旧 marker 先消失，避免与计划新增的并存
+2. 替换 / 改名目标节点            // 配置树写入
+3. set(markerPlan)                // 新增 marker；元素已不在时跳过并记 warning
+4. recalc auto_end_bones          // 只在涉及 sub_part 时
+```
+
+顺序不能反：先写节点再清理时，`config_refs` 已随旧子树消失，无法判断哪些 marker 属于旧条目；先 set 再 clear 会把刚生成的 marker 一起删掉。`markerPlan` 里的 UUID 必须仍能命中元素，否则 `set` 跳过该条，不阻塞整件写入。
+
 
 **关于 `part_id`**：`PartCodec` 没有 `id` 字段（[part_codec.js:37](../src/codec/codecs/part_codec.js)），`importPart` 的 `part_id` 只作为 `parts` 的 map key / 文件名，**不注入到节点里**。审阅中「注入 part_id」的步骤取消；若输入带了 `id`，按未知字段原样保留（宽松 decode），导出时由 schema 剥离。
 
@@ -738,7 +789,7 @@ in(out(node, 'read'), { existing: node }) ≡ node   （结构等价，reset_fie
 - 单变体 / 单子零件简写、缺失 `hit_boxes` 容器 → 归一化为 map；
 - `definition: null` / `power_output: null` / `connector: null` / `locator: null` → **归一化为 `''`**（required 字段）；`seat/camera` 等 optional `locator: null` → 删除，让默认值生效；
 - `definition: "null"`（字符串）→ `''`；`projectile_types: []` → `{}`；`interact_box.signal_targets` 缺失 → 补 `{}`；
-- `connector` marker 的 `config_ref` 存着 definition → 统一为连接点 key；
+- `connector` marker 的 `config_ref` 存着 definition → 按 §15.2.1 的定序匹配统一为连接点 key；无法唯一匹配时保留 `legacy_config_ref`、`config_ref:null` 并记 warning；
 - `_uuid` / `_marker_uuid` 缺失或指向不存在元素 → 按骨骼名 / Locator 名重建；
 - 悬空 marker → `cleanGhostMarkers`（已有）；
 - 孤儿子零件（无标记）→ 不再在渲染期删除；`loadConfig` 报告 + 面板「创建配置」按钮。
@@ -800,7 +851,7 @@ doc.read(config, path, opts)             // → {ok, kind, value}
 doc.write(config, path, value, opts)     // 标量/数组/对象；返回写入计划，不执行副作用
 doc.insert(config, path, key, node)      // map 层新增条目
 doc.remove(config, path, opts)           // → {ok, removed, cleaned_references}
-doc.apply(config, path, definition, opts)// 整件替换；返回 {node, reset_fields, unresolved, markerPlan}
+doc.apply(config, path, definition, opts)// 整件替换；返回 {node, reset_fields, unresolved, markerPlan, markerCleanup}
 ```
 
 `opts` 公共项：`{ allowMissingLeaf, createParents, source, strict }`。原语**不开撤销记录、不发事件、不碰全局对象**；由 `ops` 用 `runConfigEdit` 包住并执行 §7 的副作用。
@@ -829,7 +880,7 @@ src/ops/
 
 **`createXxx` 与 `importXxx` 不是特例关系**：`createPart` 必须给 `partId`、`createSubsystem` 必须给 `instanceName`；自动命名（`ensureUniqueName`）只发生在 `markSubPart` / `markInteractBox` / `markConnector`。
 
-**key 入口**：全部入口统一走 §5.1.3.1 的矩阵，不再按工具分别描述。`renameSubPart` / `importSubPart` 要求规范子零件 key；`importPart` 的 `part_id` 必须 `[a-z0-9_.-]+`、`importVariant` 的 `variant` 必须 `[A-Za-z0-9_.-]+`；`createSubsystem` / `importSubsystem` / `renameSubsystem` 的实例 key 必须 `[A-Za-z0-9_.-]+`；其余 `rename*` 接受完整 key，非规范**前缀**只记 warning `non_canonical_key`，字符集违规仍是 `invalid_format`。`validateKeys` 与 `doc.keys` 是唯一实现，`ops` 不得自行写正则。
+**key 入口**：全部入口统一走 §5.1.3.1 的矩阵，不再按工具分别描述。`renameSubPart` / `importSubPart` 要求规范子零件 key；`importPart` 的 `part_id` 必须通过 `isSafePartId`（小写字符集 + 路径安全，见 §5.1.3）、`importVariant` 的 `variant` 必须 `[A-Za-z0-9_.-]+`；`createSubsystem` / `importSubsystem` / `renameSubsystem` 的实例 key 必须 `[A-Za-z0-9_.-]+`；其余 `rename*` 接受完整 key，非规范**前缀**只记 warning `non_canonical_key`，字符集违规仍是 `invalid_format`。`validateKeys` 与 `doc.keys` 是唯一实现，`ops` 不得自行写正则。
 
 ### 6.2 契约
 
@@ -848,6 +899,8 @@ src/ops/
 | 整件 | `importPart` / `importVariant` / `importSubPart` / `importSubsystem` | 整体替换子树；省略字段 = 重置默认 | 一条 |
 
 `addInstance(parentPath, kind, key?, definition?)`：内部**一次** `runConfigEdit` 完成「建条目 + 解析引用 + 写 definition」，对应 MCP 的 `add_instance`（只服务 `hit_box` / `interact_box` / `connector`，其余走 `import*`）。
+
+**整件通道的 marker 顺序**：`importPart` / `importVariant` / `importSubPart` 在同一个 `runConfigEdit` 内固定执行 `clearScope(markerCleanup)` → 替换节点 → `set(markerPlan)` → `recalc auto_end_bones`（§5.3.1）。三个 `import*` 都必须带 cleanup；`importSubsystem` 没有 marker，传 `null`。缺任一步的测试按 docs/12 §11.3 #33 判失败。
 
 ### 6.4 撤销粒度与合并
 
@@ -872,7 +925,7 @@ src/ops/
 // src/doc/ports.js
 var ports = {
     bones:      { findByName: null, findNameByUuid: null, findByUuid: null, listAll: null }, // Group / Locator
-    markers:    { set: null, clear: null, recalc: null }, // element_markers
+    markers:    { set: null, clear: null, clearScope: null, recalc: null }, // element_markers
     validation: { collectIssues: null },                  // mode/validation
     events:     { emit: null },                            // Blockbench.dispatchEvent
     reactivity: { set: null, del: null },                  // Vue.set / Vue.delete
@@ -883,6 +936,8 @@ function install(p) { /* 逐项覆盖 */ }
 接线位置：**`plugin.js onload`（最早）**，而不是面板 mounted——工具栏/右键菜单可能早于面板。默认实现：`reactivity` 若全局 `Vue` 存在则用 `Vue.set`，否则普通赋值；`events` 若 `Blockbench` 存在则派发，否则空实现（Node 测试可用）。
 
 `doc/address` 解析 `hit_boxes` 骨骼名路径、`doc/refs` 反查 UUID，都走 `ports.bones`。
+
+`ports.markers.clearScope(cleanup)` 只服务 §5.3.1 的整件替换：`part` / `variant` 两级直接删标记字典，`sub_part` 级按 `cleanup.uuids` 或 `cleanup.config_refs` 删除匹配条目；**不做** `clearMarker` 的下游配置清理，也不重算 `auto_end_bones`（由 `ops` 在写入后统一调用 `recalc`）。
 
 ### 7.2 变更事件
 
@@ -969,19 +1024,19 @@ src/services/
 
 `doc/{address,field_specs.generated,shapes,projection,refs,ports,validate,keys,index}.js` + `test/` 骨架。`keys.js` 是 §5.1.3 的唯一正则实现，`validate.js` 是 §5.2.5 的值校验。
 
-验收：`bun test` 覆盖 §5.1.5 全部 17 个测试向量 + §5.3.1/§5.3.2 的 in/out 顺序 + §5.4 全部 13 行；round-trip（含 `hit_boxes`、单变体/单子零件、未解析骨骼、`definition:''`、required 空 map）通过；`require` 全部 `doc` 模块的测试通过（P1 无调用方，dist 不增量，故不以体积为验收）；零行为变更。
+验收：`bun test` 覆盖 §5.1.5 全部 17 个测试向量 + §5.3.1/§5.3.2 的 in/out 顺序 + §5.4 全部 13 行；round-trip（含 `hit_boxes`、单变体/单子零件、未解析骨骼、`definition:''`、required 空 map）通过；`keys.js` 的 `isSafePartId` 覆盖 §11 #20；`schema` 字段集合测试按 `missing_fields` 的 `owner:'D12'` 放行两条真实缺口；`require` 全部 `doc` 模块的测试通过（P1 无调用方，dist 不增量，故不以体积为验收）；零行为变更。
 
 ### P2 — 操作层（1.5–2 会话）
 
-`src/ops/*`（9 文件）；删除 `core/operations.js`（9 处 require 改写）；UI 44 个方法改薄；§4.4 **五项修复**（required 字符串 `''` / required map `emitEmpty`、`STRING.encode` 严格化、`projectile_types` 默认值与缺失字段、闸门兜底）；`subsystem_types.js` 的 `defaultValue: null → ''`；§5.2.5 的 `doc/validate.js`；§6.4 合并开关；`renameSubPart` 的 ASCII key 校验 + `hit_box` marker 修复；`generateDefaultName('sub_part')` 用 `context.namespace`；**删除 5 个 WIP 类型**（Codec 22→17、`subsystem_types.js`、面板）；`signal_target_options.js` 改 `local`/`global` 并补交互区；`subsystem_types.js` 默认值改 `['local','global']`；`validation.js` / `naming.js` 的 `RESERVED_SIGNAL_NAMES` 收为 `['local','global']`；`collectIssues` 增加 `DANGLING_SIGNAL_TARGET`；`subsystem_types.js` 补 `fire_animation` / `belt_label`、`projectile_types` 默认改 `{}`。
+`src/ops/*`（9 文件）；删除 `core/operations.js`（9 处 require 改写）；UI 44 个方法改薄；§4.4 **五项修复**（required 字符串 `''` / required map `emitEmpty`、`STRING.encode` 严格化、`projectile_types` 默认值与缺失字段、闸门兜底）；`subsystem_types.js` 的 `defaultValue: null → ''`；§5.2.5 的 `doc/validate.js`；§6.4 合并开关；§5.3.1 的 `markerCleanup` + `ports.markers.clearScope`（三个 `import*`）；§15.2.1 的 connector marker 迁移；`isSafePartId` 接入 `createPart` / `importPart` / `drag_import`；`renameSubPart` 的 ASCII key 校验 + `hit_box` marker 修复；`generateDefaultName('sub_part')` 用 `context.namespace`；**删除 5 个 WIP 类型**（Codec 22→17、`subsystem_types.js`、面板）；`signal_target_options.js` 改 `local`/`global` 并补交互区；`subsystem_types.js` 默认值改 `['local','global']`；`validation.js` / `naming.js` 的 `RESERVED_SIGNAL_NAMES` 收为 `['local','global']`；`collectIssues` 增加 `DANGLING_SIGNAL_TARGET`；`subsystem_types.js` 补 `fire_animation` / `belt_label`、`projectile_types` 默认改 `{}`，并删除 `schema_codec_allowlist.missing_fields` 的两条 D12 占位。
 
-验收：每字段改一次 = 一条撤销记录；四个 `import*` 可用且返回 `reset_fields`；拖拽导入回归；`coalesce:false` 下三次 `set_node` = 三条；子零件改名后碰撞箱标记归属正确；非规范 key 的 import 返回 `invalid_format`；**新建 basic / transmission / interact_box / regen_loader 的 round-trip 通过**（`definition:''`、`power_outputs:{}`、`signal_targets:{}`、`projectile_types:{}`）；`import_sub_part` 传 `hit_box.type:"banana"` 返回 `invalid_enum`。
+验收：每字段改一次 = 一条撤销记录；四个 `import*` 可用且返回 `reset_fields`；拖拽导入回归；`coalesce:false` 下三次 `set_node` = 三条；子零件改名后碰撞箱标记归属正确；非规范 key 的 import 返回 `invalid_format`；**整件替换后旧 marker 不残留、同形替换不重复、Ctrl+Z 同时恢复配置与 marker**（§11 #18）；connector marker 迁移按 §11 #19 通过；`partId` 路径安全按 §11 #20 通过；`reset_fields` 顶层语义按 §11 #22 通过；**新建 basic / transmission / interact_box / regen_loader 的 round-trip 通过**（`definition:''`、`power_outputs:{}`、`signal_targets:{}`、`projectile_types:{}`）；`import_sub_part` 传 `hit_box.type:"banana"` 返回 `invalid_enum`；D12 修完后 `missing_fields` 为空、字段集合测试转绿。
 
 ### P3 — 事件总线 + 导出闸门（1 会话）
 
-端口接线（`plugin.js`）、17 处落盘收敛、9 处计算属性写入删除、`canExport` 阻断（`collectIssues` + `validateTree(completeness:true)`）、默认值双源清理。
+端口接线（`plugin.js`）、17 处落盘收敛、9 处计算属性写入删除、`collectIssues` 的 `Problem.path` 补 `field`、`canExport` 阻断（`collectIssues` + `validateTree(completeness:true)` + `dedupeIssues`）、`services/export.js` 的 `isSafePartId` 出口断言、默认值双源清理。
 
-验收：`Ctrl+S` 内容不变；未选中元素时渲染不改配置；空碰撞箱的子零件**可正常编辑**但**导出被拦**；新建碰撞箱 `material` 与导入默认一致；**存量 `hit_box.type:"banana"` / `interact_box.condition:"WHATEVER"` 不阻断打开，但导出被 `invalid_enum` 拦截**；`projectile_types:{}` 的 `minProperties` 被拦。
+验收：`Ctrl+S` 内容不变；未选中元素时渲染不改配置；空碰撞箱的子零件**可正常编辑**但**导出被拦**；新建碰撞箱 `material` 与导入默认一致；**存量 `hit_box.type:"banana"` / `interact_box.condition:"WHATEVER"` 不阻断打开，但导出被 `invalid_enum` 拦截**；`projectile_types:{}` 的 `minProperties` 被拦；`definition:''` 只出一条 required 错误（§11 #21）；不安全 `partId` 在导出管线 `path.join` 前被拦，不写任何文件（§11 #20）。
 
 ### P4 — `services/` 抽离（1 会话）
 
@@ -1005,7 +1060,7 @@ test/
 └── services/{export,validate}.test.js
 ```
 
-必测清单（对应 §0 的十条改动、§0.2 的十四条收口与 §5 的约束；最后五项是 v3/v3.1 新增）：
+必测清单（对应 §0 的十条改动、§0.2 的十四条收口、§0.3 的八条收口与 §5 的约束；#18–#22 是 v3.2 新增）：
 
 1. 含点/中文/namespace 带点的路径；`*` 在中间 map 层；数组层 `*` 报 `invalid_format`；
 2. `sub_parts` 单 key 反例（`{chassis:{…}}`）必须 `invalid_format`，不得被吞成 `{default:…}`；
@@ -1015,7 +1070,7 @@ test/
 6. `coalesce:false`：不同目标不合并、结构动作不合并；
 7. 投影剥离内部字段（注入 `element_markers` / `_uuid` / `_marker_uuid` 后不可见）；
 8. `"null"` 清洗（`definition:null` / `"null"` 归一化为 `''`，不出现字符串 `"null"`；required 字符串导出时允许 `""` 但被闸门拦）；
-9. 导出闸门：空 `hit_boxes` 拦截、`ORPHAN_ELEMENT` 放行、`invalid_enum` 拦截、`projectile_types:{}` 的 `minProperties` 拦截；
+9. 导出闸门：空 `hit_boxes` 拦截、`orphan_element` 放行、`invalid_enum` 拦截、`projectile_types:{}` 的 `minProperties` 拦截；
 10. `schema` 漂移：manifest ↔ schema、dispatch map ⊇ schema 类型集合（D18 删除后到 D13 前，因缺 `track_*` 该项为已知红灯）；`missing_types` / `missing_fields` / `extra_fields` / `constraint_diffs` / `decode_tolerance` 各自校验，过期条目失败；
 11. 严格 key：非规范 `import_sub_part` 返回 `invalid_format`；中文/空白 key、中文或大写 `partId` 同样 `invalid_format`；`loadConfig` 迁移后**子零件**旧 key 全部规范化（`default` → `main`；`.main` / `main.` / `chassis!` / 中文 / 超长 → `legacy_<n>`），marker 同步；
 12. 哨兵：只有 `local`/`global` 放行；`part`/`subpart`/`vehicle` 一律 `unresolved_config_ref`（不告警、不迁移）；
@@ -1024,6 +1079,11 @@ test/
 15. **值校验**：`import_*` 传 `hit_box.type:"banana"` / `interact_box.condition:"WHATEVER"` 返回 `invalid_enum`；`projectile_types` 的值 `0` 返回 `out_of_range`；已有非法值的工程 `canExport` 返回 `ok:false`，但 `loadConfig` 能打开；
 16. **key 矩阵**：`import_part` 的 `part_id:"Hull"` / `import_variant` 的 `variant:"门"` / `createSubsystem` 的 `instanceName:"引擎"` / `setField` 新建 `textures.纹理` 全部 `invalid_format`；`projectile_types` 的 `machine_max:30mm_ap` 合法，`Machine_Max:30mm_ap` 非法（大写）；
 17. **投影边界**：`variants` 的 key 恰好是 `model` 时不得被简写吞掉；`hydrodynamics[""]` 可读可写、`hit_boxes[""]` 报 `invalid_format`；`_uiState` 在根、`element_markers` 在 part，均返回 `unknown_field`；`projectile_types` 里残留 `__new_p_*` 时 `validateTree` 不报错（内部占位键）。
+18. **replace 的 marker 清理**：`import_part` / `import_variant` / `import_sub_part` 替换成更少的 `sub_parts` / `hit_boxes` / `interact_boxes` / `connectors` 后，旧 marker 不残留、`config_ref` 不指向旧 key；同形替换后每个元素仍只有一个 marker；旧 connector marker 的 `config_ref` 仍是 `definition`（迁移未完成）时，也要靠 `uuids` 被清掉；`Ctrl+Z` 同时恢复配置与 marker。测试至少覆盖一个“骨骼还在、配置条目被删”的场景，证明 `cleanGhostMarkers` 单独拦不住。
+19. **connector marker 迁移**：两个 connector 共用同一 `definition` 但 Locator 不同，各自 marker 迁到自己的 key；同名 Locator 跨子零件时用祖先子零件唯一化；`_marker_uuid` 缺失且无法唯一化时走 `legacy_config_ref` + `unresolved_config_ref` warning，不猜、不删 marker；重复加载幂等。
+20. **`partId` 路径安全**：`createPart` / `import_part` / 拖拽导入对 `.`、`..`、`.hull`、`hull.`、`con`、`con.1`、`lpt9`、`.._hull`、`a._b` 返回 `invalid_format`；`a.b.c` 仍合法；绕过 `canExport` 直接调导出管线也在 `path.join` 前失败且不写文件；存量非法 `partId` 由 `loadConfig` 记 `key_reserved`，不自动改名。
+21. **闸门去重**：`subsystems.<key>.definition:''` 只产生一条 required 错误（`collectIssues` 优先），`definition` 与 `locator` 同时为空时仍是两条（不同 `path.field`）；`validateTree` 的段数组与 `collectIssues` 的对象路径能对齐到同一 `scope/partId/variantName/subPartKey/itemKey`。
+22. **`reset_fields` 顶层语义**：`import_part` 省略 `variants.default.tags` / `sub_part.hit_boxes` 时，`reset_fields` 不包含嵌套路径；`read_node` 显示默认值，AI 必须靠“先读全量再改”而不是靠 `reset_fields` 发现嵌套丢失。
 
 ---
 
@@ -1038,7 +1098,7 @@ test/
   data: { … },                  // 操作特有结果（partId / instanceName / key / action / …）
   changed: true,                // 是否真的写了（false 时无撤销记录）
   before: any, after: any,      // 字段级操作
-  reset_fields: string[],       // import*：被重置为默认值的字段
+  reset_fields: string[],       // import*：被重置的**顶层**字段（不是递归 diff）
   dropped_fields: string[],     // subsystem.type 切换：被丢弃的旧类型字段
   cleaned_references: [...],    // remove*/import*：被清理的引用
   unresolved_references: [...], // 兼容字段：= unresolved_bones + unresolved_config_refs 的合并视图
@@ -1050,11 +1110,13 @@ test/
 { ok: false, error: '…', errors: [{ path, code, expected, got, hint }] }
 ```
 
-**`path` 用规范化后的段数组**回传，工具层直接透传，不再从 `data` 里猜。
+**`path` 用规范化后的段数组**回传，工具层直接透传，不再从 `data` 里猜。`collectIssues` / `canExport` 的 `Problem.path` 是对象（`{scope, partId, variantName, subPartKey?, itemKey?, field?}`），与 `OpResult.path` 的段数组是两种口径：前者供面板定位和去重，后者供工具调用方使用，不要混用。
 
 **产生者**：`before/after` ← `doc` 原语；`reset_fields` ← `projection.in`；`dropped_fields` ← `setField` 的 `sideEffect`；`cleaned_references` ← `refs`；`introduced_issues` ← `ops` 通过 `ports.validation.collectIssues` 在**同一撤销记录内**做前后 diff（不 `require` `mode/validation`，保持分层）。
 
-错误码：`no_project` / `not_found` / `missing_required` / `type_mismatch` / `invalid_enum` / `invalid_format` / `out_of_range` / `duplicate_name` / `unknown_field` / `unknown_type` / `unresolved_config_ref` / `key_reserved` / `edit_in_progress` / `snapshot_too_large` / `io_error`。warning code：`non_canonical_key`（前缀不规范，不阻断）、`unresolved_bone`、`ORPHAN_ELEMENT`、`KEY_RESERVED`（存量非法 key，导出期转 error）。
+错误码：`no_project` / `not_found` / `missing_required` / `type_mismatch` / `invalid_enum` / `invalid_format` / `out_of_range` / `duplicate_name` / `unknown_field` / `unknown_type` / `unresolved_config_ref` / `key_reserved` / `edit_in_progress` / `snapshot_too_large` / `io_error`。warning code：`non_canonical_key`（前缀不规范，不阻断）、`unresolved_bone`、`orphan_element`、`key_reserved`（存量非法 key，导出期转 error）。
+
+> **大小写与级别约定**：`Problem.code` / `OpResult.errors[].code` 一律小写 snake_case；`DEFINITION_REF_MISSING` / `DANGLING_SIGNAL_TARGET` 这类大写标识只是规则名或 `CODES` 常量名，不是线上 code。v3.2 把 `KEY_RESERVED` / `ORPHAN_ELEMENT` 统一为 `key_reserved` / `orphan_element`。`key_reserved` 的 `code` 不变，加载期是 warning（`_lastMigration.key_reserved`），导出期由 `canExport` 提升为 error；不要用大小写区分级别。
 
 > v2 的 `ambiguous_path` 已删除（§5.1.1）；新增 `unresolved_config_ref`（配置引用断裂）、`key_reserved`（key 含 `*` 等保留字符）与 `out_of_range`（v3.1 数值越界）；WIP 类型删除后不再有 `unsupported_type`，未知类型统一 `unknown_type`。
 
@@ -1080,12 +1142,16 @@ test/
 | D14 | 可空字段清单 | **撤销「用户可选清单」**；固定内部占位：required 字符串 `''`、required map `{}`；`null` 只用于 upstream `Optional` 字段（`overwrite`）；编辑不拦、导出阻断 | 用户（§4） |
 | D15 | 导出闸门 | `severity==='error'` 阻断导出 | 用户 |
 | D16 | key 策略 | **严格规范 key**：ASCII 字符集对所有翻译键强制；子零件 `sub_part.<ns>.<name>` 形态强制并迁移；其它 kind 前缀形态只告警 | **用户**（第二轮） |
-| D17 | key 字符集 | **所有配置 key 纯 ASCII**（模型元素名除外）；`partId` 与 namespace 小写 `[a-z0-9_.-]+` / `[a-z0-9_-]+`（进 resource location），其余 `[A-Za-z0-9_.-]+`；中文/空白拒绝 | **用户**（第二轮） |
+| D17 | key 字符集 | **所有配置 key 纯 ASCII**（模型元素名除外）；`partId` 与 namespace 小写 `[a-z0-9_.-]+` / `[a-z0-9_-]+`（进 resource location），`partId` 还须通过 `isSafePartId`（D25）；其余 `[A-Za-z0-9_.-]+`；中文/空白拒绝 | **用户**（第二轮） |
 | D18 | 5 个 WIP 子系统类型 | **删除**（Codec 22→17、registry、面板、类型清单）；不保留 decode/read，不提供兼容层 | **用户**（第二轮） |
 | D19 | 信号哨兵 | 只有 `local`/`global`；`part`/`subpart`/`vehicle` **不存在**：不保留、不告警、不迁移，按普通未知目标报错 | **用户**（第二轮） |
 | D20 | required 占位与空容器 | required 字符串保持 `.field()`，内部未配置用 `''`（不用 `null`/nullable）；required map 用 `Codec.map(..., {emitEmpty:true})`，`{}` 也输出；optional 字段用 `.default(...)`；`null` 只用于 upstream `Optional` 字段（`overwrite`）。导出闸门阻断空 required / 空 `minProperties` | **第三轮审阅** + 上游复核（§3.4、§4.4） |
 | D21 | 值校验边界 | Codec 只保证结构可解；枚举/范围/结构/key 由 `doc.field_specs` + `doc.validate` 在 `setField` / `projection.in` / `canExport` 三处执行；**不把枚举塞进 Codec**，避免存量脏值让工程无法打开 | **第三轮审阅**（§5.2.5） |
 | D22 | required / optional 判定 | 以上游 `fieldOf` / `optionalFieldOf` 为准：`optionalFieldOf` 是「键可缺失 → 默认值」，不是「值可为 null」；required 字段不 nullable；只有 `optionalFieldOf` 无默认（`Optional` → Java null）的 `overwrite` 用 nullable | **用户追问**（2026-10-21） |
+| D23 | 整件替换的旧 marker | `projection.in` 返回 `markerCleanup`（part / variant / sub_part 三级）；`ops.import*` 在同一撤销内按「清旧 marker → 替换节点 → set 新 marker」执行，`sub_part` 级用旧条目 `config_refs` / `uuids` 精确清理 | **第四轮审阅**（§5.3.1） |
+| D24 | connector marker 迁移 | 定序匹配 `config_ref` 已是 key → `_marker_uuid` → Locator 名全局唯一 → 祖先子零件内唯一；`definition` 不参与匹配；失败保留 `legacy_config_ref`、`config_ref:null`、warning，不猜 | **第四轮审阅**（§15.2.1） |
+| D25 | `partId` 路径安全 | 字符集之外拒绝 `.` / `..` / 首尾点 / Windows 设备名，完整值与 `split('_')[0]` 目录段都查；写入口 `invalid_format`，导出管线二次断言，存量记 `key_reserved` | **第四轮审阅**（§5.1.3） |
+| D26 | 闸门问题去重 | 统一 `Problem.path.field`，按 `scope/partId/variantName/subPartKey/itemKey/field` 去重；`collectIssues` 优先，`validateTree` 补空缺；不同字段不合并 | **第四轮审阅**（§4.3） |
 | Q1 | 内容包定义 JSON | 只读，不纳入业务层 | 用户 |
 | Q2 | 交付形态 | 拆两串 commit | 用户 |
 
@@ -1121,7 +1187,7 @@ B. decode（用 `doc/shapes` 的 `PartShape` 显式 map；若暂时仍用 `PartC
 C. key / marker 迁移（子零件 key 规范化、marker.config_ref 改写、容器补全、幽灵清理）
 ```
 
-结果写入 `config._lastMigration`（瞬态，不进导出），UI 在加载完成后 toast 汇总。
+结果写入 `config._lastMigration`（瞬态，不进导出），UI 在加载完成后 toast 汇总。除 `removed` / `key_reserved` 外，connector marker 的迁移结果单独放 `marker_refs`（成功也记 `{uuid, from, to}`，失败记 `legacy_config_ref` + `reason`）；它是 warning，不是 error，不阻塞加载。
 
 > **第三轮审阅指出的顺序错误**：原文写「迁移在解码之后」，但 WIP 剔除必须在 decode 之前——`SubsystemDispatchCodec` 遇到已删除类型会先抛 `Unknown dispatch type`，根本走不到迁移。A 段因此是独立的 raw 层；B 段之后才允许做任何依赖解码结构的迁移。
 
@@ -1180,7 +1246,7 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 
 `nextLegacyName(usedNames)`：从 `legacy_1` 开始递增，跳过 `usedNames` 中已有的名称；`uniqueSubPartKey(candidate, usedKeys)` 对碰撞追加 `_2`、`_3`…，若追加后超过 128 字符则**截短名称段到 128 − 前缀长度 − 后缀长度**，再去除末尾 `.`；仍为空则改用下一个 `legacy_<n>`。`usedKeys` / `usedNames` 在每次迁移后同步追加，保证同一变体内不产生重复。
 
-**namespace**：`ns = isValidNamespace(config.namespace) ? config.namespace : 'machine_max'`；发生回退时记录 `reason: 'namespace_fallback'`，`config.namespace` 本身不改（导出闸门按 `KEY_RESERVED` 拦截）。
+**namespace**：`ns = isValidNamespace(config.namespace) ? config.namespace : 'machine_max'`；发生回退时记录 `reason: 'namespace_fallback'`，`config.namespace` 本身不改（导出闸门按 `key_reserved` 拦截）。
 
 > 改写会改变翻译键与模组侧可见名称。中文名（如 `底盘`）迁移后变成 `legacy_1`，用户需要按迁移报告手动改成英文名（D17：key 不允许中文）。`_lastMigration` 逐条列出 old→new，P2 在加载后弹出一次确认列表；迁移前备份。风险见 §16。
 
@@ -1194,15 +1260,35 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 | `subsystems[*].definition === null` / `power_output: null` / `connector: null` / `locator: null` | **归一到 `''`**（required 字段；`definition` 对所有类型，`power_output/connector` 仅 required 类型）；optional `locator` 直接删除，让 `.default('')` 生效 |
 | `subsystems[*].definition === "null"`（字符串） | raw 阶段转 `''`，避免被当成合法资源地址 |
 | `subsystems[*].regen_loader.projectile_types === []` | raw 阶段转 `{}`；空 map 由 `minProperties` 闸门拦截 |
-| `connector` marker 的 `config_ref` 存着 definition | 统一为连接点 key（§5.4） |
+| `connector` marker 的 `config_ref` 存着 definition | 统一为连接点 key；按 §15.2.1 的定序匹配，匹配不到保留 `legacy_config_ref` + `config_ref:null` 并记 warning，不猜测 |
 | `_uuid` / `_marker_uuid` 缺失或失效 | 按骨骼名 / Locator 名重建 |
 | 悬空 marker | `cleanGhostMarkers`（已有） |
 | 孤儿子零件（无标记） | **不再在渲染期删除**；改为 `loadConfig` 报告 + 面板「创建配置」按钮 |
 | 5 个 WIP 子系统实例（`battery`/`signal_convert`/`joint`/`javascript`/`ammo_loader`） | **raw 阶段**从 JSON 剔除对应条目，记入 `_lastMigration.removed`，备份保留；不提供兼容层。必须在 decode 前完成 |
-| 连接点/子系统/交互区的非 ASCII key | 不改名，记 `KEY_RESERVED`（导出期 error），由用户手动重建/重命名；子零件之外不做自动迁移 |
-| 零件 / 变体 / 纹理 / 频道名 / `projectile_types` 的非 ASCII key，或非小写 `partId` | **不自动改名**（`partId` 会牵动文件名、resource location 与存档），记 `KEY_RESERVED`（导出期 error），由用户手动重建 |
-| key 含 `*`（任意 map），或翻译键含 `/` `~` | 记 `KEY_RESERVED`，导出期 error；不自动改写；`hit_boxes` / `hydrodynamics` 的元素名不受 `/` `~` 限制 |
+| 连接点/子系统/交互区的非 ASCII key | 不改名，记 `key_reserved`（导出期 error），由用户手动重建/重命名；子零件之外不做自动迁移 |
+| 零件 / 变体 / 纹理 / 频道名 / `projectile_types` 的非 ASCII key，或非小写 `partId` | **不自动改名**（`partId` 会牵动文件名、resource location 与存档），记 `key_reserved`（导出期 error），由用户手动重建 |
+| `partId` 为 `.` / `..` / 首尾点 / Windows 设备名 | **不自动改名**；记 `key_reserved`（导出期 error），提示用户重建；导出管线另有 `isSafePartId` 断言（§5.1.3） |
+| key 含 `*`（任意 map），或翻译键含 `/` `~` | 记 `key_reserved`，导出期 error；不自动改写；`hit_boxes` / `hydrodynamics` 的元素名不受 `/` `~` 限制 |
 | `config.namespace` 非法 | 不自动改；子零件 key 迁移用 `machine_max` 兜底并记录 `namespace_fallback`；导出期 error |
+
+#### 15.2.1 connector marker 的 `config_ref` 迁移
+
+目标：把 `marker.config_ref` 从 `definition`（资源地址）改成连接点 key；幂等，重复加载不改变已迁移结果。
+
+输入：`part.element_markers[variant]` 与 `variant.sub_parts[*].connectors[*]`。按以下顺序匹配，**任一环节唯一命中即停止**：
+
+1. **已经是 key**：`config_ref` 是字符串，且等于某个 `sub_parts[*].connectors` 的 key（在同变体内唯一）→ 保留，不改。
+2. **`_marker_uuid` 精确匹配**：`connector._marker_uuid === markerUuid` 的条目恰好一个 → 取该条目的 key。`_marker_uuid` 是 `markConnector` / `bone_resolver` 写入的 Locator UUID，优先级最高。
+3. **Locator 名全局唯一**：用 `ports.bones.findNameByUuid(markerUuid)` 取 marker 元素的 Locator 名；`connector.locator === 该名` 的条目恰好一个（跨全部子零件）→ 取该 key。
+4. **所属子零件内唯一**：第 3 步命中多个时，用 `detectOwnerSubPart(config, partId, variantName, locatorElement)` 找最近的祖先 `sub_part` marker，得到 `spKey`；再按 `connector.locator === 名 && 所属 spKey` 过滤。恰好一个 → 取该 key。
+5. **仍未唯一**：不猜。把旧值保存到 `marker.legacy_config_ref`，`marker.config_ref = null`，在 `_lastMigration.marker_refs` 记
+   `{ partId, variantName, uuid, reason: 'connector_not_found' | 'ambiguous_connector', legacy_config_ref }`，
+   并产生 warning `unresolved_config_ref`。marker 保留，不删除；`cleanGhostMarkers` 只按元素 UUID 判断幽灵，不会因为 `config_ref:null` 删它。
+6. **成功写回**：`marker.config_ref = connKey`；若该 connector 的 `_marker_uuid` 缺失，补成 `markerUuid`。一个 connector 最多对应一个 marker，反向也最多一个 key。
+
+**`definition` 不参与匹配**：同一个 definition 可以被多个 connector 共用（不同 Locator），按 definition 找条目必然多解；它只作为第 5 步的 `legacy_config_ref` 保留。也**不允许**“取第一个匹配”或“按数组顺序猜”。
+
+测试：两个 connector 共用同一 `definition`、分别挂在两个 Locator 上，各自 marker 必须迁到自己的 key；删掉其中一个 Locator 后加载，另一个仍正确，缺失的那个走 `legacy_config_ref` + warning；同名 Locator 跨两个子零件且 `_marker_uuid` 缺失时，用祖先子零件唯一化，祖先也缺失则 warning（§11 #19）。
 
 ---
 
@@ -1222,8 +1308,11 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 | required 空串/空 map 在导出时仍是 `''`/`{}`，若绕过 `canExport` 直接调 generator，会产出空 required 值（`definition:''` 不是合法 ResourceLocation） | 导出只有一个入口 `services/export.js`；generator 不在 `ui/menu` 直接调用；P3 验收里加「直接调用 generator 的测试必须失败」 |
 | required map `emitEmpty` 让输出从「省略」变成 `{}`，可能与旧内容包逐字节不同 | 语义等价（schema required）；P3 用「旧工程导出 → 再导入 → 再导出」做 round-trip 对比，不要求与旧版本逐字节一致 |
 | `power_outputs` 的 key 清理/改名新增引用面 | 先补测试（删除/重命名 transmission 的目标），再改 `refs`；第 13 行单独 review |
+| 整件替换先清 marker，后续写入异常导致 marker 丢失 | 所有校验 / 引用解析在 `runConfigEdit` 之前完成；`clearScope` + 节点写入 + `set(plan)` 同步执行，异常由 `runConfigEdit` 的快照回滚一起恢复 |
+| connector marker 迁移多解产生大量 warning | `_lastMigration.marker_refs` 按 `(partId, variantName, uuid)` 去重，加载后汇总一次 toast；warning 不阻塞加载 |
+| 存量不安全 `partId` 被 `key_reserved` 阻断导出 | 不静默改名；导出前给出明确 path 与 hint，用户重建零件；`isSafePartId` 在导出管线二次断言，避免绕过闸门写文件 |
 | 子零件 key 迁移在 128 字符边界截短，可能产生新的碰撞 | `uniqueSubPartKey` 截短后再查 `used`；迁移报告记录 `reason:'collision'`，加载后一次性确认 |
-| 第三轮新增的 `validateTree` 与 `collectIssues` 重复报同一问题 | 输出前按 `path + code` 去重；P1 测试断言无重复条目 |
+| 第三轮新增的 `validateTree` 与 `collectIssues` 重复报同一问题 | 统一 `Problem.path.field` 后按 **scope / partId / variantName / subPartKey / itemKey / field** 去重（§4.3），不再按 `path + code`；P3 测试断言 `definition:''` 只出一条 |
 | P2/P3 交叉改动同一批文件 | P2 只碰「写配置」，P3 只碰「副作用」 |
 
 ---

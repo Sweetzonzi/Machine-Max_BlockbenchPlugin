@@ -1,7 +1,7 @@
 # MCP 工具接入（Blockbench MCP Tools）
 
-> 状态：**设计稿（待实现）** · 日期：2026-10-20 · 范围：`src/mcp/`（新增）+ `src/plugin.js`（两行接入）
-> 目标版本：v0.5.0 · 前置依赖：[docs/13-业务逻辑层与配置文档API.md](./13-业务逻辑层与配置文档API.md) **v3**（P1–P4 必须先落地）
+> 状态：**设计稿（待实现）** · 日期：2026-10-21 · 范围：`src/mcp/`（新增）+ `src/plugin.js`（两行接入）
+> 目标版本：v0.5.0 · 前置依赖：[docs/13-业务逻辑层与配置文档API.md](./13-业务逻辑层与配置文档API.md) **v3.2**（P1–P4 必须先落地）
 > 参照：[docs/11-接入Blockbench原生撤销.md](./11-接入Blockbench原生撤销.md) / [docs/08-序列化反序列化-Codec体系重构.md](./08-序列化反序列化-Codec体系重构.md) / [docs/10-校验与错误提示重构实现计划.md](./10-校验与错误提示重构实现计划.md)
 
 ---
@@ -108,7 +108,7 @@ config
 ├─ _uiState { activePartId, activeVariantName }        ← 不可寻址写（用 set_active）
 └─ parts { <partId> → PartConfig
      ├─ icon, vehicle_durability_rate, …, max_stack_size
-     ├─ element_markers { <variant> → { <uuid> → { type, config_ref } } }   ← 编辑器内部，不可寻址
+     ├─ element_markers { <variant> → { <uuid> → { type, config_ref, legacy_config_ref? } } }   ← 编辑器内部，不可寻址
      └─ variants { <variant> → VariantConfig
           ├─ model, textures, animations, tags[]
           └─ sub_parts { <spKey> → SubPartConfig
@@ -148,7 +148,7 @@ config
 - `_uiState` 与 `element_markers` 不可寻址写 → 返回 `unknown_field`；切上下文用 `set_active`。
 - `hit_boxes` 的 key 在对外格式里是**骨骼名**、内存里是 **UUID**：`read_node` / `set_node` 两种写法都接受，内部归一化为 UUID 并回写为骨骼名；解析不到元素时只记 `unresolved_bones` warning。
 - 含点的 key（`sub_part.machine_max.main`）是**默认情况**，不是例外：任何字符串形式的拆分都不得按 `.` 切分。段数组与 JSON Pointer 都按 `/`/段位置解析，不存在「猜切分」。
-- 所有配置 key 只允许 ASCII，且按类别区分（完整表见 docs/13 §5.1.3.1）：`partId` 必须小写 `[a-z0-9_.-]+`；`variant` / 翻译键 / 纹理名 / 频道名 / `power_outputs` 的 key 为 `[A-Za-z0-9_.-]+`；子零件 key 必须是 `sub_part.<ns>.<name>`；`projectile_types` 的 key 是**资源地址**，允许 `:` `/` 但必须小写；模型元素名（`hit_boxes` / `hydrodynamics` 的 key）是唯一例外（`hydrodynamics` 还允许空串 `""`）。中文、空白、大写 `partId` 返回 `invalid_format`；翻译键前缀形态不合规范只告警（docs/13 D17）。
+- 所有配置 key 只允许 ASCII，且按类别区分（完整表见 docs/13 §5.1.3.1）：`partId` 必须小写 `[a-z0-9_.-]{1,128}`，**并额外拒绝 `.` / `..` / 首尾点 / Windows 设备名（如 `con`、`lpt9`）**；`variant` / 翻译键 / 纹理名 / 频道名 / `power_outputs` 的 key 为 `[A-Za-z0-9_.-]+`；子零件 key 必须是 `sub_part.<ns>.<name>`；`projectile_types` 的 key 是**资源地址**，允许 `:` `/` 但必须小写；模型元素名（`hit_boxes` / `hydrodynamics` 的 key）是唯一例外（`hydrodynamics` 还允许空串 `""`）。中文、空白、大写 `partId` 返回 `invalid_format`；翻译键前缀形态不合规范只告警（docs/13 D17/D25）。
 
 ---
 
@@ -218,7 +218,7 @@ condition: { project: true, modes: ['machine_max_part'] }
 "sub_part.machine_max.default"        // ✅ 规范形态；裸 "default" 才会迁移为 main
 ```
 
-`part_id` 必须是 `[a-z0-9_.-]+`（它会进入 resource location 与文件名，必须小写）；`variant` 为 `[A-Za-z0-9_.-]+`；`import_subsystem` 的 `key` 为 `[A-Za-z0-9_.-]+`，建议写成 `subsystem.<ns>.<name>`（完整 key 是模组侧信号目标的匹配依据，docs/13 §5.4）。`key`（sub_part）必须是规范 key，`mode:'create'` 省略 `key` 时由 `ensureUniqueName` 生成规范默认名（`sub_part.<ns>.main`）。
+`part_id` 必须通过 `isSafePartId`：小写 `[a-z0-9_.-]{1,128}`，并拒绝 `.` / `..` / 首尾点 / Windows 设备名（`con` / `prn` / `aux` / `nul` / `com1`–`com9` / `lpt1`–`lpt9`，含 `con.1` 这种带扩展的形态）；**完整 `part_id` 与 `part_id.split('_')[0]` 两个值都检查**，所以 `.._hull` / `a._b` 也要拒绝。它会进入 resource location 与文件名，路径安全不是可选项，`a.b.c` 仍合法。`variant` 为 `[A-Za-z0-9_.-]+`；`import_subsystem` 的 `key` 为 `[A-Za-z0-9_.-]+`，建议写成 `subsystem.<ns>.<name>`（完整 key 是模组侧信号目标的匹配依据，docs/13 §5.4）。`key`（sub_part）必须是规范 key，`mode:'create'` 省略 `key` 时由 `ensureUniqueName` 生成规范默认名（`sub_part.<ns>.main`）。
 
 `import_*` 的**嵌套 map key** 同样校验：`textures` / `signal_targets` / `signal_translations` / `power_outputs` 用 `[A-Za-z0-9_.-]+`；`projectile_types` 用**资源地址** `[a-z0-9_.-]+:[a-z0-9_./-]+`；`hit_boxes` / `hydrodynamics` 用元素名规则（后者允许 `""`）。任何违规返回 `invalid_format` / `key_reserved`，不写半截。
 
@@ -229,8 +229,8 @@ condition: { project: true, modes: ['machine_max_part'] }
 | mode | 已存在时 | 形态 |
 |---|---|---|
 | `create` | `ok:false, code:duplicate_name` | `key` 可省略 → 自动命名（`ensureUniqueName`） |
-| `replace` | 整体替换，返回 `reset_fields` | 必须给 `key` |
-| `rename` | 替换并改用 `key`（旧节点的引用同步改写） | 必须给 `key` 与已存在的旧 key |
+| `replace` | 整体替换（先清旧 marker 再重建），返回 `reset_fields` | 必须给 `key` |
+| `rename` | 替换并改用 `key`（旧节点的引用同步改写；旧 marker 也按旧 key 清理） | 必须给 `key` 与已存在的旧 key |
 | `reject` | 与 `create` 同义（默认值） | — |
 
 `mode:'rename'` 额外需要 `old_key`（已存在的旧 key）；`key` 为新 key，旧 key 的全部引用由 `doc.refs.renameRefs` 同步改写。
@@ -244,7 +244,7 @@ condition: { project: true, modes: ['machine_max_part'] }
   "introduced_issues": [] }
 ```
 
-`reset_fields` 列出「替换前存在、本次未提供、被重置为默认值」的字段——这是整件语义唯一的安全网，AI 与人都能看出漏了什么。
+`reset_fields` 只列**顶层字段**（目标节点自身的直接字段）：替换前存在、本次未提供、被重置为默认值的那些。它**不递归**：`import_part` 省略 `variants.default.tags`、`import_sub_part` 省略 `hit_boxes` / `connectors` / `subsystems` 时，嵌套字段随子树整体丢弃，**不会**逐项列出。因此它只保证顶层容器，不是完整 diff；AI 必须先用 `read_node(as='definition')` 拿全量再改，不能把 `reset_fields: []` 当成“什么都没丢”。（docs/13 §5.3.1 第 4 步、§11 #22）
 
 ### 5.4 剩余创建通道（1）
 
@@ -279,7 +279,7 @@ condition: { project: true, modes: ['machine_max_part'] }
                "expected": "number", "got": "\"abc\"", "hint": "去掉引号" }] }
 ```
 
-整件通道额外返回 `reset_fields`（被重置为默认值的字段）、`cleaned_references`（被清理的引用）；`subsystem.type` 切换额外返回 `dropped_fields`。
+整件通道额外返回 `reset_fields`（被重置的**顶层**字段，不递归）、`cleaned_references`（被清理的引用）；`subsystem.type` 切换额外返回 `dropped_fields`。
 
 失败一律 `ok: false` 且**不抛异常**（工具层捕获后转成结构化错误），避免 MCP 客户端把一次参数错误渲染成协议失败。错误码全集见 docs/13 §12。
 
@@ -289,11 +289,12 @@ condition: { project: true, modes: ['machine_max_part'] }
 
 ## 6. 参数校验
 
-三层，顺序固定（全部下沉到 doc 层，工具层只做第一层）：
+四层，顺序固定（全部下沉到 doc 层，工具层只做第一层）：
 
 1. **形状**（工具层）：`MCP.z.object({...})` 声明参数类型与必填项，MCP 插件在调用 `execute` 前完成解析（含默认值）。
 2. **路径**（`doc/address`）：按位置逐段校验（docs/13 §5.1.1）——map 层的下一段永远是 key，record 层的下一段必须是字段名；`*` 至多一个且只在 map 层；数组下标不越界；`_uiState`/`element_markers` 拒写。`set_node` 允许最后一段是 map 的新 key（`allowMissingLeaf`），但 record 的未知字段一律 `unknown_field`。
 3. **值**（`doc/validate`）：白名单与类型来自 `src/doc/field_specs.generated.js`——由 builtin schema codegen 得到（docs/13 §5.2、§3），**不从 `Codec.decode` 派生**（宽松 decode 会带出 `element_markers` / `_uuid` 等内部字段）。枚举直接取 schema，例如 `block_collision ∈ {'true','false','ground'}`、`interact_box.condition ∈ {AND,OR,NAND,NOR,XOR,XNOR}`、`hit_box.type ∈ {box,sphere,cylinder,capsule,wheel}`。**默认 strict，不做隐式转换**：`mass: "12.5"` 返回 `type_mismatch`，不自动转数字（UI 输入框在调用前自行归一化）。**`set_node` 与四个 `import_*` 走同一份 `validateValues`**：`import_sub_part` 里 `hit_box.type:"banana"` 返回 `invalid_enum`，`projectile_types` 的值 `0` 返回 `out_of_range`；`canExport` 用 `validateTree(completeness:true)` 对存量数据做同样的扫描（docs/13 §5.2.5）。
+4. **结构 key**（`doc/keys`）：`part_id` / `variant` / sub_part key / 嵌套 map key 走 docs/13 §5.1.3 的分类；`part_id` 额外走 `isSafePartId`（`.` / `..` / 首尾点 / Windows 设备名，且完整值与 `split('_')[0]` 都查）。工具层的 `z.string()` 只保证是字符串，不能替代这一层。
 
 完整性（`required`、`hit_boxes` 非空、型号必选）**不在写入期校验**：新建子零件没有碰撞箱是合法中间态，由 `validate` 与导出闸门处理（docs/13 §4）。
 
@@ -337,10 +338,11 @@ async execute({ path, value }) {
 
 `import_*` 是**整体替换**，不是「合并」：
 
-- 省略的字段 → 重置为该 kind 的 Codec 默认值（`reset_fields` 会列出来）；
+- 省略的字段 → 重置为该 kind 的 Codec 默认值（`reset_fields` 只列**顶层**字段，嵌套字段不列）；
 - 被替换节点的子树整体丢弃（例如替换一个 variant 会丢掉它下面所有 sub_parts）；
+- **旧 marker 一并清理**：替换前属于目标子树的 `sub_part` / `hit_box` / `interact_box` / `connector` marker 先移除，再按新定义重建；旧 `config_ref` 不会残留，元素还在但配置条目已删时也不会变成“半新半旧”（docs/13 §5.3.1、D23）；
 - 替换后重新解析引用：**配置引用**（`power_output` / `hit_box.subsystem` / `power_target` / `signal_targets`）指向不存在的节点 → `ok:false`、`code:unresolved_config_ref`；**骨骼引用**（`start_bone` 等）未解析 → `unresolved_bones` warning，照常写入；
-- 一条撤销记录退掉整次替换。
+- 一条撤销记录退掉整次替换（配置与 marker 一起回退）。
 
 AI 的正确用法是「`read_node(path, as='definition')` 拿全量 → 改 → 整件回传」，而不是「只给要改的部分」。工具描述里必须写清这条，否则它会用整件通道做局部修改，把字段重置成默认值。
 
@@ -387,6 +389,7 @@ AI 的正确用法是「`read_node(path, as='definition')` 拿全量 → 改 →
 - **`risky_eval`**：MCP 插件默认把它暴露给客户端。若不需要，在 Settings → General 清除 Enable risky_eval，客户端会看不到该工具。本插件的工具不依赖它。
 - **范围限制**：`condition` 限定在 `machine_max_part` 模式且必须有打开的项目，模式外调用不会被路由到执行体。
 - **写盘边界**：工具层与 `ops` 层都不含 fs 调用；`services/` 的写盘能力不注册为工具（docs/13 §8）。
+- **路径穿越**：`part_id` 是 AI 可直接传的参数，`../` 不在字符集里，但 `.` / `..` 在，`part_id.split('_')[0]` 还会成为目录段；`isSafePartId` 在写入口拒绝（完整值与目录段都查），导出管线在 `path.join` 前再断言一次。工具侧不能只依赖客户端校验或 `canExport`（docs/13 §5.1.3、D25）。
 
 ---
 
@@ -440,7 +443,7 @@ Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 | 9 | `import_part` 传一个完整定义 | `ok:true`，`reset_fields` 为空，一次 `Ctrl+Z` 退回整个零件 |
 | 10 | `import_sub_part` 的 key 不含前缀（`"chassis"`） | `ok:false`，`code:invalid_format`（严格规范 key，不是 `either` 启发式） |
 | 11 | `import_part` 的定义里塞入 `element_markers` | `ok:true` 且 marker 未被写入（投影剥离），`read_node` 看不到该字段 |
-| 12 | `import_part` 省略若干已知字段 | `ok:true`，`reset_fields` 列出被重置的字段 |
+| 12 | `import_part` 省略若干已知顶层字段 | `ok:true`，`reset_fields` 列出被重置的顶层字段；嵌套字段不列（#34） |
 | 13 | `import_subsystem` 的 `type` 写 `engine`（缺前缀） | `ok:false`，`code:unknown_type`，`hint` 提示 `machine_max:engine` |
 | 14 | `add_instance` 建 subsystem | 工具不存在该 kind（只服务三个小件）→ 参数校验失败 |
 | 15 | `remove_node` 删一个被 marker 引用的 sub_part | `ok:true`，`cleaned_references` 列出被清掉的 4 类 marker 与各处目标；`signal_translations` 不变 |
@@ -461,6 +464,10 @@ Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 | 30 | `read_node` / `set_node` 用 `hydrodynamics` 的空字符串 key | `ok:true`（空串 = 质心）；`hit_boxes` 的空串 key 返回 `invalid_format` |
 | 31 | 存量工程含 `hit_box.type:"banana"` | 工程能打开；`validate` 报 `invalid_enum`，导出被阻断（Codec 不在 load 阶段拒绝，docs/13 D21） |
 | 32 | `import_subsystem` 的 key 为 `"子系统"` / `import_part` 的 `part_id` 为 `"Hull"` | `ok:false`，`code:invalid_format`（ASCII / 小写规则） |
+| 33 | `import_part` / `import_variant` / `import_sub_part` 用 `mode:'replace'` 替换成更少的 `sub_parts` / `hit_boxes` / `interact_boxes` / `connectors` | 旧 marker 不残留，`config_ref` 不指向旧 key；同形替换后每个元素仍只有一个 marker；旧 connector marker 的 `config_ref` 仍是 `definition` 时也靠 `_marker_uuid` 清掉；`Ctrl+Z` 同时恢复配置与 marker（docs/13 §11 #18） |
+| 34 | `import_part` 省略 `variants.default.tags` / `sub_part.hit_boxes` | `reset_fields` 只列顶层字段，不出现嵌套路径；`read_node` 显示默认值（docs/13 §11 #22） |
+| 35 | `import_part` 的 `part_id` 为 `".."` / `"."` / `".hull"` / `"hull."` / `"con"` / `"con.1"` / `"lpt9"` / `".._hull"` / `"a._b"` | `ok:false`，`code:invalid_format`；不写任何文件；`a.b.c` 仍 `ok:true`（docs/13 D25） |
+| 36 | 子系统 `machine_max:launcher` 的 `definition:''` 且 `locator:''` 的工程导出 | `canExport` 返回两条不同字段的 required 错误，`definition` 只出现一次（`collectIssues` 优先）；不因同一路径合并成一条（docs/13 §11 #21） |
 
 ---
 
