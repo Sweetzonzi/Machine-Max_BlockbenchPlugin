@@ -5,6 +5,7 @@ const { registerMachineMaxMenu, unregisterMachineMaxMenu } = require('./ui/menu.
 const { registerDragImport, unregisterDragImport } = require('./import/drag_import.js');
 const { registerUndoBridge, unregisterUndoBridge } = require('./core/undo.js');
 const { showToast } = require('./utils/notify.js');
+const docPorts = require('./doc/ports.js');
 
 /** 插件版本号（构建时由 esbuild 从 package.json 注入） */
 const PLUGIN_VERSION = __PLUGIN_VERSION__;
@@ -40,6 +41,34 @@ Plugin.register('machine_max_bb_plugin', {
 
         console.log('[MM][Plugin] 阶段1: registerProperty');
         registerProperty();
+
+        console.log('[MM][Plugin] 阶段1a: installDocPorts');
+        // doc/ops 的外部能力端口必须在面板/工具栏之前就绪（docs/13 §7.1）
+        docPorts.install({
+            markers: {
+                set: function (config, partId, variantName, uuid, type, configRef) {
+                    return require('./core/element_markers.js')
+                        .setMarker(config, partId, variantName, uuid, type, configRef);
+                },
+                clear: function (config, partId, variantName, uuid) {
+                    return require('./core/element_markers.js')
+                        .clearMarker(config, partId, variantName, uuid);
+                },
+                clearScope: function (config, cleanup) {
+                    return require('./core/element_markers.js')
+                        .clearMarkerScope(config, cleanup);
+                },
+                recalc: function (config, partId, variantName) {
+                    return require('./core/element_markers.js')
+                        .recalcAutoEndBones(config, partId, variantName);
+                },
+            },
+            validation: {
+                collectIssues: function (config) {
+                    return require('./mode/validation.js').collectIssues(config);
+                },
+            },
+        });
 
         console.log('[MM][Plugin] 阶段1b: registerUndoBridge');
         // 接入 Blockbench 原生撤销：让配置变更进入 Undo.history（docs/11）

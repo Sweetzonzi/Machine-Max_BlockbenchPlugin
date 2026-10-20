@@ -53,7 +53,7 @@ describe('schema ↔ Codec 差异登记', () => {
 
         expect([...new Set(schemaTypes.concat(extra))].sort())
             .toEqual([...new Set(dispatchTypes.concat(missing))].sort());
-        expect(allow.missing_types.every((e) => e.owner === 'D13')).toBe(true);
+        expect(allow.missing_types).toEqual([]);
         expect(allow.extra_types).toEqual([]);
     });
 
@@ -147,13 +147,39 @@ describe('schema ↔ Codec 差异登记', () => {
             'machine_max:ammo_loader',
         ];
         expect(allow.extra_types).toEqual([]);
-        expect(Object.keys(SubsystemDispatchCodec.codecs)).toHaveLength(17);
-        expect(ssTypes.getAllTypes()).toHaveLength(17);
+        expect(Object.keys(SubsystemDispatchCodec.codecs)).toHaveLength(19);
+        expect(ssTypes.getAllTypes()).toHaveLength(19);
         for (const type of removed) {
             expect(SubsystemDispatchCodec.codecs[type]).toBeUndefined();
             expect(ssTypes.getTypeMeta(type)).toBeNull();
             expect(() => SubsystemDispatchCodec.decode({ type: type })).toThrow();
         }
+    });
+
+    test('D13：track_controller / track_drive 已补齐', () => {
+        expect(allow.missing_types).toEqual([]);
+        expect(generated.SPECS.subsystem['machine_max:track_controller']).toBeTruthy();
+        expect(generated.SPECS.subsystem['machine_max:track_drive']).toBeTruthy();
+
+        const controller = SubsystemDispatchCodec.decode({
+            type: 'machine_max:track_controller',
+            definition: 'machine_max:track_controller_standard',
+        });
+        expect(controller.control_outputs).toEqual({});
+        expect(controller.speed_outputs).toEqual({});
+
+        const drive = SubsystemDispatchCodec.decode({
+            type: 'machine_max:track_drive',
+            definition: 'machine_max:track_drive_heavy',
+            connector: 'connector.machine_max.left_sprocket',
+        });
+        expect(drive.speed_outputs).toEqual({});
+        expect(drive.force_outputs).toEqual({});
+
+        expect(ssTypes.getTypeDefaults('machine_max:track_controller').control_outputs)
+            .toEqual({ track_control: [] });
+        expect(ssTypes.getTypeDefaults('machine_max:track_drive').force_outputs)
+            .toEqual({ track_force: ['local', 'global'] });
     });
 
     test('D19：registry 默认信号目标是 local / global', () => {

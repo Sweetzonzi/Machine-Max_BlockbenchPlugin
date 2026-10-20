@@ -10,12 +10,10 @@
  */
 var nameUtils = require('../utils/name_utils.js');
 var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
-var undo = require('../core/undo.js');
 
 /**
- * 组件选项。methods 定义完后先包撤销（wrapMethodMap），再注册到 Vue。
- * 注意：本组件的信号转译 / 属性覆写方法直接改 config 上的字典，
- * 因此必须在组件层包（父组件的 updateConnectorField 拿到的是改完之后的状态）。
+ * 组件选项。所有写配置的方法只构造新对象并通过 field-change 上抛，
+ * 由父组件统一走 ops.setField，因此不需要 wrapMethodMap。
  */
 var MM_CONNECTOR_PANEL_OPTIONS = {
     template: typeof TEMPLATE_CONNECTOR_PANEL !== 'undefined' ? TEMPLATE_CONNECTOR_PANEL : '<p>连接点面板加载中...</p>',
@@ -146,22 +144,22 @@ var MM_CONNECTOR_PANEL_OPTIONS = {
          * 添加新的转译规则
          */
         addTranslation: function () {
-            var entries = this.translationEntries;
+            var entries = Object.assign({}, this.translationEntries);
             var newSrc = 'new_source';
             var idx = 1;
             while (entries[newSrc]) {
                 newSrc = 'new_source_' + idx;
                 idx++;
             }
-            this.$set(entries, newSrc, 'new_target');
+            entries[newSrc] = 'new_target';
             this.emitTranslations(entries);
         },
         /**
          * 删除转译规则
          */
         removeTranslation: function (sourceChan) {
-            var entries = this.translationEntries;
-            this.$delete(entries, sourceChan);
+            var entries = Object.assign({}, this.translationEntries);
+            delete entries[sourceChan];
             this.emitTranslations(entries);
         },
         /**
@@ -169,22 +167,21 @@ var MM_CONNECTOR_PANEL_OPTIONS = {
          */
         onTranslationSourceChange: function (oldSource, newSource) {
             if (!newSource || oldSource === newSource) return;
-            var entries = this.translationEntries;
+            var entries = Object.assign({}, this.translationEntries);
             var target = entries[oldSource];
             if (target === undefined) return;
-            this.$delete(entries, oldSource);
-            this.$set(entries, newSource, target);
+            delete entries[oldSource];
+            entries[newSource] = target;
             this.emitTranslations(entries);
         },
         /**
          * 修改转译规则的目标频道值
          */
         onTranslationTargetChange: function (sourceChan, newTarget) {
-            var entries = this.translationEntries;
-            if (entries[sourceChan] !== undefined) {
-                this.$set(entries, sourceChan, newTarget);
-                this.emitTranslations(entries);
-            }
+            var entries = Object.assign({}, this.translationEntries);
+            if (entries[sourceChan] === undefined) return;
+            entries[sourceChan] = newTarget;
+            this.emitTranslations(entries);
         },
         /**
          * 触发 signal_translations 字段变更事件
@@ -198,22 +195,22 @@ var MM_CONNECTOR_PANEL_OPTIONS = {
          * 添加新的覆写字段
          */
         addOverwriteField: function () {
-            var entries = this.overwriteEntries;
+            var entries = Object.assign({}, this.overwriteEntries);
             var newField = 'new_field';
             var idx = 1;
             while (entries[newField] !== undefined) {
                 newField = 'new_field_' + idx;
                 idx++;
             }
-            this.$set(entries, newField, '');
+            entries[newField] = '';
             this.emitOverwrite(entries);
         },
         /**
          * 删除覆写字段
          */
         removeOverwriteField: function (field) {
-            var entries = this.overwriteEntries;
-            this.$delete(entries, field);
+            var entries = Object.assign({}, this.overwriteEntries);
+            delete entries[field];
             this.emitOverwrite(entries);
         },
         /**
@@ -221,22 +218,21 @@ var MM_CONNECTOR_PANEL_OPTIONS = {
          */
         onOverwriteFieldChange: function (oldField, newField, currentVal) {
             if (!newField || oldField === newField) return;
-            var entries = this.overwriteEntries;
+            var entries = Object.assign({}, this.overwriteEntries);
             var val = entries[oldField];
             if (val === undefined) return;
-            this.$delete(entries, oldField);
-            this.$set(entries, newField, val);
+            delete entries[oldField];
+            entries[newField] = val;
             this.emitOverwrite(entries);
         },
         /**
          * 修改覆写字段的值
          */
         onOverwriteValueChange: function (field, value) {
-            var entries = this.overwriteEntries;
-            if (entries[field] !== undefined) {
-                this.$set(entries, field, value);
-                this.emitOverwrite(entries);
-            }
+            var entries = Object.assign({}, this.overwriteEntries);
+            if (entries[field] === undefined) return;
+            entries[field] = value;
+            this.emitOverwrite(entries);
         },
         /**
          * 触发 overwrite 字段变更事件
@@ -247,18 +243,7 @@ var MM_CONNECTOR_PANEL_OPTIONS = {
     },
 };
 
-// 撤销接入：这些方法直接改 this.config 的 signal_translations / overwrite 字典
-undo.wrapMethodMap(MM_CONNECTOR_PANEL_OPTIONS.methods, {
-    onSignalTargetsChange: '修改连接点信号目标',
-    addTranslation: '添加信号转译',
-    removeTranslation: '删除信号转译',
-    onTranslationSourceChange: '重命名信号转译源频道',
-    onTranslationTargetChange: '修改信号转译目标频道',
-    addOverwriteField: '添加属性覆写',
-    removeOverwriteField: '删除属性覆写',
-    onOverwriteFieldChange: '重命名属性覆写字段',
-    onOverwriteValueChange: '修改属性覆写值',
-});
+// 写配置统一经 field-change → App → ops.setField，本组件不直接改 this.config。
 
 Vue.component('mm-connector-panel', MM_CONNECTOR_PANEL_OPTIONS);
 

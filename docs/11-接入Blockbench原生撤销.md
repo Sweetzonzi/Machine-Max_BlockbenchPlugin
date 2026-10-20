@@ -5,6 +5,11 @@
 >
 > 实现落点：`src/core/undo.js`（撤销桥 + 统一编辑入口），`src/plugin.js` 注册/注销，
 > 各变更入口见 §4。与设计稿的差异见 §10。
+>
+> **P2 更新（2026-10-21）**：领域操作层已从 `src/core/operations.js` 拆到 `src/ops/*`
+> （29 个动作，`ops/index.js` 聚合）；字段编辑统一走 `ops.setField`，面板只 emit
+> `field-change`。本文 §4/§10 中的 `core/operations.js` 路径为历史记录，当前实现以
+> [docs/13](./13-业务逻辑层与配置文档API.md) 与 [src/ops/AGENTS.md](../src/ops/AGENTS.md) 为准。
 
 ---
 

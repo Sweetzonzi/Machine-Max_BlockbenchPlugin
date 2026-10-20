@@ -12,7 +12,7 @@
 const { getConfig, loadConfig, saveConfig } = require('../utils/persistence.js');
 const { getMarkerInfo, detectOwnerSubPart } = require('../core/element_markers.js');
 const { createSubPartConfig } = require('../core/config.js');
-const ops = require('../core/operations.js');
+const ops = require('../ops/index.js');
 const { createLogger } = require('../utils/logger.js');
 const { refreshOutlinerIcons } = require('../mode/icons.js');
 const { showToast } = require('../utils/notify.js');
@@ -1182,95 +1182,75 @@ const MM_MAIN_PANEL_OPTIONS = {
          * 模板改为 :value + @change 绑定，提交时才写入配置，从而每次提交产生一条撤销记录
          */
         updatePartField: function (field, value) {
-            var part = this.currentPart;
-            if (!part) {
+            if (!this.currentPart) {
                 log.warn('updatePartField: currentPart 为空', { field: field });
                 return;
             }
-            this.$set(part, field, value);
-            log.debug('updatePartField: 已更新', { field: field, value: value });
+            var result = ops.setField(this.config, {
+                path: ['parts', this.activePartId, field],
+                value: value,
+                label: '修改零件字段 ' + field,
+                source: 'ui',
+            });
+            if (!result.ok) showToast(result.error, 'error');
+            log.debug('updatePartField: 已提交', { field: field, value: value, ok: result.ok });
         },
         /**
          * 更新变体级字段（模型、动画路径等）
          */
         updateVariantField: function (field, value) {
-            var variant = this.currentVariant;
-            if (!variant) {
+            if (!this.currentVariant) {
                 log.warn('updateVariantField: currentVariant 为空', { field: field });
                 return;
             }
-            this.$set(variant, field, value);
-            log.debug('updateVariantField: 已更新', { field: field, value: value });
+            var result = ops.setField(this.config, {
+                path: ['parts', this.activePartId, 'variants', this.activeVariantName, field],
+                value: value,
+                label: '修改变体字段 ' + field,
+                source: 'ui',
+            });
+            if (!result.ok) showToast(result.error, 'error');
+            log.debug('updateVariantField: 已提交', { field: field, value: value, ok: result.ok });
         },
         /**
          * 更新子零件配置中的单个字段。
-         * start_bone 变动时需连带迁移子零件标记。
+         * start_bone 的标记迁移由 ops.setField 的 sideEffect 统一处理。
          */
         updateSubPartField: function (field, value) {
-            const config = this.selectedSubPartConfig;
-            if (!config) {
+            var spKey = this.selectedMarker && this.selectedMarker.config_ref;
+            if (!spKey || !this.selectedSubPartConfig) {
                 log.warn('updateSubPartField: selectedSubPartConfig 为空');
                 return;
             }
-            if (field === 'start_bone' && config.start_bone !== value) {
-                this.migrateSubPartStartBone(config.start_bone, value);
-            }
-            this.$set(config, field, value);
-            log.debug('updateSubPartField: 已更新', { field: field, value: value });
+            var result = ops.setField(this.config, {
+                path: ['parts', this.activePartId, 'variants', this.activeVariantName,
+                    'sub_parts', spKey, field],
+                value: value,
+                label: '修改子零件字段 ' + field,
+                source: 'ui',
+            });
+            if (!result.ok) showToast(result.error, 'error');
+            log.debug('updateSubPartField: 已提交', { field: field, value: value, ok: result.ok });
         },
         /**
-         * 重命名子零件：修改 sub_parts 字典的 key
-         * 同时更新 element_markers 中的 config_ref
+         * 重命名子零件：key 迁移 + 全部引用 / 4 类 marker 改写，由 ops.renameSubPart 统一完成。
          */
         renameSubPart: function (oldKey, newKey) {
             if (!oldKey || !newKey || oldKey === newKey) return;
-            var variant = this.currentVariant;
-            var part = this.currentPart;
-            var variantName = this.activeVariantName;
-            if (!variant || !variant.sub_parts || !part) return;
-
-            var spConfig = variant.sub_parts[oldKey];
-            if (!spConfig) {
-                log.warn('renameSubPart: 未找到子零件', { oldKey: oldKey });
+            var result = ops.renameSubPart(this.config, {
+                partId: this.activePartId,
+                variantName: this.activeVariantName,
+                oldKey: oldKey,
+                newKey: newKey,
+            });
+            if (!result.ok) {
+                showToast(result.error, 'error');
                 return;
             }
-
-            // 校验唯一性
-            var ns = (this.config && this.config.namespace) || 'machine_max';
-            var { validateNameUniqueness } = require('../core/naming.js');
-            var check = validateNameUniqueness(variant, 'sub_part', null, newKey, oldKey);
-            if (!check.valid) {
-                showToast(check.message, 'error');
-                return;
-            }
-
-            log.info('renameSubPart: 重命名', { from: oldKey, to: newKey });
-
-            // 迁移字典 key
-            this.$set(variant.sub_parts, newKey, spConfig);
-            this.$delete(variant.sub_parts, oldKey);
-
-            // 更新 element_markers 中的 config_ref
-            var markers = part.element_markers && part.element_markers[variantName];
-            if (markers) {
-                for (var uuid in markers) {
-                    if (markers[uuid].type === 'sub_part' && markers[uuid].config_ref === oldKey) {
-                        this.$set(markers, uuid, { type: 'sub_part', config_ref: newKey });
-                    }
-                }
-            }
-
-            // 重算 auto_end_bones（子零件 key 变了）
-            var em = require('../core/element_markers.js');
-            var cfg = getConfig();
-            if (cfg) {
-                em.recalcAutoEndBones(cfg, this.activePartId, variantName);
-            }
-
             refreshOutlinerIcons();
-            Blockbench.dispatchEvent('update_selection');
+            this.markerVersion.v++;
             showToast('子零件已重命名为 "' + newKey + '"', 'positive');
-            log.info('renameSubPart: 完成');
+            log.info('renameSubPart: 完成', { from: oldKey, to: newKey });
         },
         /**
          * 迁移子零件标记：start_bone 从旧骨骼名变更为新骨骼名时，
@@ -1279,39 +1259,19 @@ const MM_MAIN_PANEL_OPTIONS = {
          * @param {string} newBoneName - 新的起始骨骼名称
          */
         migrateSubPartStartBone: function (oldBoneName, newBoneName) {
-            var variant = this.currentVariant;
-            var part = this.currentPart;
-            var variantName = this.activeVariantName;
-            if (!variant || !variant.sub_parts || !part) return;
-
             var spKey = this.selectedMarker ? this.selectedMarker.config_ref : null;
-            if (!spKey || !variant.sub_parts[spKey]) return;
-
-            log.info('migrateSubPartStartBone: start_bone 变更', { from: oldBoneName, to: newBoneName, spKey: spKey });
-
-            // 子零件 key 是翻译键（不与 start_bone 绑定），仅迁移 element_marker 到新骨骼
-            var markers = part.element_markers && part.element_markers[variantName];
-            var oldGroup = Group.all.find(function (g) { return g.name === oldBoneName; });
-            var newGroup = Group.all.find(function (g) { return g.name === newBoneName; });
-
-            if (markers && oldGroup && newGroup && oldGroup !== newGroup) {
-                var markerData = markers[oldGroup.uuid];
-                if (markerData && markerData.type === 'sub_part') {
-                    markerData.config_ref = spKey;
-                    this.$set(markers, newGroup.uuid, markerData);
-                    this.$delete(markers, oldGroup.uuid);
-                    log.debug('migrateSubPartStartBone: 标记已迁移', { from: oldGroup.uuid, to: newGroup.uuid });
-                }
-            }
-
+            if (!spKey || !this.selectedSubPartConfig) return;
+            var result = ops.setField(this.config, {
+                path: ['parts', this.activePartId, 'variants', this.activeVariantName,
+                    'sub_parts', spKey, 'start_bone'],
+                value: newBoneName,
+                label: '迁移子零件起始骨骼',
+                source: 'ui',
+            });
+            if (!result.ok) showToast(result.error, 'error');
             refreshOutlinerIcons();
-            var em = require('../core/element_markers.js');
-            var cfg = getConfig();
-            if (cfg) {
-                em.recalcAutoEndBones(cfg, this.activePartId, variantName);
-            }
-            Blockbench.dispatchEvent('update_selection');
-            log.info('migrateSubPartStartBone: 完成');
+            this.markerVersion.v++;
+            log.info('migrateSubPartStartBone: 完成', { from: oldBoneName, to: newBoneName });
         },
         /**
          * 迁移连接点定位器：locator 从旧名称变更为新名称时，
@@ -1321,20 +1281,16 @@ const MM_MAIN_PANEL_OPTIONS = {
          */
         migrateConnectorLocator: function (oldLocName, newLocName) {
             if (!oldLocName || !newLocName || oldLocName === newLocName) return;
-            var part = this.currentPart;
             var variant = this.currentVariant;
             var variantName = this.activeVariantName;
-            if (!variant || !variant.sub_parts || !part) return;
+            if (!variant || !variant.sub_parts) return;
 
             var owner = this.selectedElement ? detectOwnerSubPart(this.config, this.activePartId, variantName, this.selectedElement) : null;
             var spKey = owner ? owner.spKey : null;
             if (!spKey || !variant.sub_parts[spKey]) return;
-
             var sp = variant.sub_parts[spKey];
             if (!sp.connectors) return;
-
-            // 查找当前连接点条目（通过旧 locator 名匹配）
-            var connKey = Object.keys(sp.connectors).find(function(k) {
+            var connKey = Object.keys(sp.connectors).find(function (k) {
                 return sp.connectors[k].locator === oldLocName;
             });
             if (!connKey) {
@@ -1342,64 +1298,82 @@ const MM_MAIN_PANEL_OPTIONS = {
                 return;
             }
 
-            log.info('migrateConnectorLocator: 变更定位器绑定', { from: oldLocName, to: newLocName, connKey: connKey, spKey: spKey });
-
-            // 更新 locator 字段（key 不变，key 是翻译键名称）
-            sp.connectors[connKey].locator = newLocName;
-
-            // 迁移 element_marker — 从旧 Locator 到新 Locator
-            var markers = part.element_markers && part.element_markers[variantName];
-            var oldLoc = typeof Locator !== 'undefined' ? Locator.all.find(function (l) { return l.name === oldLocName; }) : null;
-            var newLoc = typeof Locator !== 'undefined' ? Locator.all.find(function (l) { return l.name === newLocName; }) : null;
-
-            if (markers && oldLoc && newLoc && oldLoc !== newLoc) {
-                var markerData = markers[oldLoc.uuid];
-                if (markerData && markerData.type === 'connector') {
-                    this.$set(markers, newLoc.uuid, markerData);
-                    this.$delete(markers, oldLoc.uuid);
-                    log.debug('migrateConnectorLocator: 标记已迁移', { from: oldLoc.uuid, to: newLoc.uuid });
-                }
-            }
-
+            var result = ops.setField(this.config, {
+                path: ['parts', this.activePartId, 'variants', variantName,
+                    'sub_parts', spKey, 'connectors', connKey, 'locator'],
+                value: newLocName,
+                label: '迁移连接点定位器',
+                source: 'ui',
+            });
+            if (!result.ok) showToast(result.error, 'error');
             refreshOutlinerIcons();
-            Blockbench.dispatchEvent('update_selection');
-            log.info('migrateConnectorLocator: 完成');
+            this.markerVersion.v++;
+            log.info('migrateConnectorLocator: 完成', { from: oldLocName, to: newLocName });
         },
         /**
          * 添加排除骨骼到 end_bones 列表
          */
         addEndBone: function (boneName) {
-            const config = this.selectedSubPartConfig;
-            if (!config) {
+            var config = this.selectedSubPartConfig;
+            var spKey = this.selectedMarker && this.selectedMarker.config_ref;
+            if (!config || !spKey) {
                 log.warn('addEndBone: selectedSubPartConfig 为空');
                 return;
             }
-            if (!config.end_bones) {
-                this.$set(config, 'end_bones', []);
-            }
-            if (config.end_bones.indexOf(boneName) === -1) {
-                config.end_bones.push(boneName);
-                log.debug('addEndBone: 已添加', { bone: boneName });
-            }
+            var list = (config.end_bones || []).slice();
+            if (list.indexOf(boneName) < 0) list.push(boneName);
+            this._setSubPartField(spKey, 'end_bones', list, '添加排除骨骼');
         },
         /**
          * 移除排除骨骼
          */
         removeEndBone: function (index) {
-            const config = this.selectedSubPartConfig;
-            if (!config || !config.end_bones) {
+            var config = this.selectedSubPartConfig;
+            var spKey = this.selectedMarker && this.selectedMarker.config_ref;
+            if (!config || !spKey || !config.end_bones) {
                 log.warn('removeEndBone: selectedSubPartConfig 为空或无 end_bones');
                 return;
             }
-            config.end_bones.splice(index, 1);
-            log.debug('removeEndBone: 已移除', { index: index });
+            var list = config.end_bones.slice();
+            list.splice(index, 1);
+            this._setSubPartField(spKey, 'end_bones', list, '移除排除骨骼');
+        },
+        /** 统一的子零件字段提交（数组/对象整体提交，一条撤销记录） */
+        _setSubPartField: function (spKey, field, value, label) {
+            var result = ops.setField(this.config, {
+                path: ['parts', this.activePartId, 'variants', this.activeVariantName,
+                    'sub_parts', spKey, field],
+                value: value,
+                label: label || ('修改子零件字段 ' + field),
+                source: 'ui',
+            });
+            if (!result.ok) showToast(result.error, 'error');
+            return result;
+        },
+        _setItemField: function (container, key, field, value, label) {
+            var spKey = container === 'subsystems'
+                ? this.subsystemSelection.spKey
+                : (container === 'hit_boxes' ? this.hitBoxParentSubPartKey
+                    : (container === 'interact_boxes' ? this.interactBoxParentSubPartKey
+                        : this.connectorParentSubPartKey));
+            if (!spKey || !key) return { ok: false, error: '缺少上下文' };
+            var suffix = Array.isArray(field) ? field : [field];
+            var result = ops.setField(this.config, {
+                path: ['parts', this.activePartId, 'variants', this.activeVariantName,
+                    'sub_parts', spKey, container, key].concat(suffix),
+                value: value,
+                label: label || ('修改 ' + suffix.join('.')),
+                source: 'ui',
+            });
+            if (!result.ok) showToast(result.error, 'error');
+            return result;
         },
         /**
          * 更新碰撞箱配置中的单个字段
          * 游离碰撞箱（无归属）可编辑但不会持久化
          */
         updateHitBoxField: function (field, value) {
-            const config = this.selectedHitBoxConfig;
+            var config = this.selectedHitBoxConfig;
             if (!config) {
                 log.warn('updateHitBoxField: selectedHitBoxConfig 为空');
                 return;
@@ -1408,14 +1382,14 @@ const MM_MAIN_PANEL_OPTIONS = {
                 log.warn('updateHitBoxField: 游离碰撞箱不可持久化', { field: field, value: value });
                 return;
             }
-            this.$set(config, field, value);
-            log.debug('updateHitBoxField: 已更新', { field: field, value: value });
+            this._setItemField('hit_boxes', this.selectedElement.uuid, field, value,
+                '修改碰撞箱字段 ' + field);
         },
         /**
          * 更新碰撞箱材质覆写字段
          */
         updateHitBoxOverwrite: function (field, value) {
-            const config = this.selectedHitBoxConfig;
+            var config = this.selectedHitBoxConfig;
             if (!config) {
                 log.warn('updateHitBoxOverwrite: selectedHitBoxConfig 为空');
                 return;
@@ -1424,19 +1398,16 @@ const MM_MAIN_PANEL_OPTIONS = {
                 log.warn('updateHitBoxOverwrite: 游离碰撞箱不可持久化', { field: field, value: value });
                 return;
             }
-            if (!config.overwrite) {
-                this.$set(config, 'overwrite', {});
-            }
-            this.$set(config.overwrite, field, value);
-            log.debug('updateHitBoxOverwrite: 已更新', { field: field, value: value });
+            this._setItemField('hit_boxes', this.selectedElement.uuid,
+                ['overwrite'].concat(String(field).split('.')), value,
+                '修改碰撞箱覆写 ' + field);
         },
         /**
          * 更新交互区配置中的单个字段
          * 游离交互区（无归属）可编辑但不会持久化
-         * bone 变更后增量 markerVersion 强制所有计算属性重新求值
          */
         updateInteractBoxField: function (field, value) {
-            const config = this.selectedInteractBoxConfig;
+            var config = this.selectedInteractBoxConfig;
             if (!config) {
                 log.warn('updateInteractBoxField: selectedInteractBoxConfig 为空');
                 return;
@@ -1445,15 +1416,12 @@ const MM_MAIN_PANEL_OPTIONS = {
                 log.warn('updateInteractBoxField: 游离交互区不可持久化', { field: field, value: value });
                 return;
             }
-            this.$set(config, field, value);
-            // bone 变更后强制刷新，触发子零件面板列表和归属重新计算
-            if (field === 'bone') {
-                this.markerVersion.v++;
-            }
-            log.debug('updateInteractBoxField: 已更新', { field: field, value: value });
+            this._setItemField('interact_boxes', this.interactBoxName, field, value,
+                '修改交互区字段 ' + field);
+            if (field === 'bone') this.markerVersion.v++;
         },
         /**
-         * 更新连接点配置字段，同时同步到标记的 config_ref
+         * 更新连接点配置字段（marker.config_ref 始终指向连接点 key，不再随 definition 变化）
          */
         updateConnectorField: function (field, value) {
             var config = this.selectedConnectorConfig;
@@ -1465,18 +1433,8 @@ const MM_MAIN_PANEL_OPTIONS = {
                 log.warn('updateConnectorField: 游离连接点不可持久化', { field: field, value: value });
                 return;
             }
-            this.$set(config, field, value);
-            if (field === 'definition') {
-                var marker = this.selectedMarker;
-                var part = this.currentPart;
-                if (marker && part && part.element_markers && this.activeVariantName) {
-                    var vMarkers = part.element_markers[this.activeVariantName];
-                    if (vMarkers && vMarkers[this.selectedElement.uuid]) {
-                        vMarkers[this.selectedElement.uuid].config_ref = value;
-                    }
-                }
-            }
-            log.debug('updateConnectorField: 已更新', { field: field, value: value });
+            this._setItemField('connectors', this.connectorKeyName, field, value,
+                '修改连接点字段 ' + field);
         },
         /**
          * 添加子系统：弹出类型选择对话框，用户选择类型并输入名称后在指定子零件下创建子系统实例
@@ -1568,21 +1526,17 @@ const MM_MAIN_PANEL_OPTIONS = {
             if (!oldKey || !newKey || oldKey === newKey) return;
             var spKey = this.subsystemSelection.spKey;
             if (!spKey) return;
-            var variant = this.currentVariant;
-            if (!variant || !variant.sub_parts) return;
-            var sp = variant.sub_parts[spKey];
-            if (!sp || !sp.subsystems) return;
-            if (!sp.subsystems[oldKey]) {
-                log.warn('renameSubsystem: 未找到子系统', { oldKey: oldKey });
+            var result = ops.renameSubsystem(this.config, {
+                partId: this.activePartId,
+                variantName: this.activeVariantName,
+                spKey: spKey,
+                oldKey: oldKey,
+                newKey: newKey,
+            });
+            if (!result.ok) {
+                showToast(result.error, 'error');
                 return;
             }
-            if (sp.subsystems[newKey]) {
-                showToast('子系统 "' + newKey + '" 已存在', 'error');
-                return;
-            }
-            log.info('renameSubsystem: 重命名', { from: oldKey, to: newKey });
-            this.$set(sp.subsystems, newKey, sp.subsystems[oldKey]);
-            this.$delete(sp.subsystems, oldKey);
             this.subsystemSelection.subsystemKey = newKey;
             showToast('子系统已重命名为 "' + newKey + '"', 'positive');
         },
@@ -1591,14 +1545,7 @@ const MM_MAIN_PANEL_OPTIONS = {
          */
         updateSubsystemField: function (ssKey, field, value) {
             if (!ssKey || !field) return;
-            var spKey = this.subsystemSelection.spKey;
-            if (!spKey) return;
-            var variant = this.currentVariant;
-            if (!variant || !variant.sub_parts) return;
-            var sp = variant.sub_parts[spKey];
-            if (!sp || !sp.subsystems || !sp.subsystems[ssKey]) return;
-            this.$set(sp.subsystems[ssKey], field, value);
-            log.debug('updateSubsystemField: 已更新', { ssKey: ssKey, field: field, value: value });
+            this._setItemField('subsystems', ssKey, field, value, '修改子系统字段 ' + field);
         },
         /**
          * 重命名连接点：修改 connectors 字典的 key
@@ -1606,71 +1553,44 @@ const MM_MAIN_PANEL_OPTIONS = {
          */
         renameConnector: function (oldKey, newKey) {
             if (!oldKey || !newKey || oldKey === newKey) return;
-            var variant = this.currentVariant;
-            if (!variant) return;
-
-            var owner = this.connectorOwner;
-            var spKey = owner ? owner.spKey : null;
-            if (!spKey || !variant.sub_parts[spKey]) return;
-            var sp = variant.sub_parts[spKey];
-            if (!sp.connectors || !sp.connectors[oldKey]) {
-                log.warn('renameConnector: 未找到连接点', { oldKey: oldKey });
+            var spKey = this.connectorParentSubPartKey;
+            if (!spKey) return;
+            var result = ops.renameConnector(this.config, {
+                partId: this.activePartId,
+                variantName: this.activeVariantName,
+                spKey: spKey,
+                oldKey: oldKey,
+                newKey: newKey,
+            });
+            if (!result.ok) {
+                showToast(result.error, 'error');
                 return;
             }
-
-            // 校验唯一性
-            var { validateNameUniqueness } = require('../core/naming.js');
-            var check = validateNameUniqueness(variant, 'connector', spKey, newKey, oldKey);
-            if (!check.valid) {
-                showToast(check.message, 'error');
-                return;
-            }
-
-            log.info('renameConnector: 重命名', { from: oldKey, to: newKey });
-
-            // 迁移字典 key
-            this.$set(sp.connectors, newKey, sp.connectors[oldKey]);
-            this.$delete(sp.connectors, oldKey);
-
             refreshOutlinerIcons();
-            Blockbench.dispatchEvent('update_selection');
+            this.markerVersion.v++;
             showToast('连接点已重命名为 "' + newKey + '"', 'positive');
-            log.info('renameConnector: 完成');
         },
         /**
          * 重命名交互区：修改 interact_boxes 字典的 key
          */
         renameInteractBox: function (oldKey, newKey) {
             if (!oldKey || !newKey || oldKey === newKey) return;
-            var variant = this.currentVariant;
-            if (!variant) return;
-
             var spKey = this.interactBoxParentSubPartKey;
-            if (!spKey || !variant.sub_parts) return;
-            var sp = variant.sub_parts[spKey];
-            if (!sp || !sp.interact_boxes || !sp.interact_boxes[oldKey]) {
-                log.warn('renameInteractBox: 未找到交互区', { oldKey: oldKey });
+            if (!spKey) return;
+            var result = ops.renameInteractBox(this.config, {
+                partId: this.activePartId,
+                variantName: this.activeVariantName,
+                spKey: spKey,
+                oldKey: oldKey,
+                newKey: newKey,
+            });
+            if (!result.ok) {
+                showToast(result.error, 'error');
                 return;
             }
-
-            // 校验唯一性
-            var { validateNameUniqueness } = require('../core/naming.js');
-            var check = validateNameUniqueness(variant, 'interact_box', spKey, newKey, oldKey);
-            if (!check.valid) {
-                showToast(check.message, 'error');
-                return;
-            }
-
-            log.info('renameInteractBox: 重命名', { from: oldKey, to: newKey });
-
-            // 迁移字典 key
-            this.$set(sp.interact_boxes, newKey, sp.interact_boxes[oldKey]);
-            this.$delete(sp.interact_boxes, oldKey);
-
             refreshOutlinerIcons();
-            Blockbench.dispatchEvent('update_selection');
+            this.markerVersion.v++;
             showToast('交互区已重命名为 "' + newKey + '"', 'positive');
-            log.info('renameInteractBox: 完成');
         },
         /**
          * 迁移交互区骨骼绑定：bone 从旧骨骼变更为新骨骼时，
@@ -1678,50 +1598,34 @@ const MM_MAIN_PANEL_OPTIONS = {
          */
         migrateInteractBoxBone: function (field, newBoneName) {
             var config = this.selectedInteractBoxConfig;
-            if (!config || config._orphan) {
+            var ibKey = this.interactBoxName;
+            if (!config || config._orphan || !ibKey) {
                 log.warn('migrateInteractBoxBone: 交互区不可迁移');
                 return;
             }
             var oldBoneName = config.bone || '';
             if (oldBoneName === newBoneName) return;
 
-            var part = this.currentPart;
-            var variant = this.currentVariant;
-            var variantName = this.activeVariantName;
-            if (!part || !variant) return;
+            var result = ops.setField(this.config, {
+                path: ['parts', this.activePartId, 'variants', this.activeVariantName,
+                    'sub_parts', this.interactBoxParentSubPartKey, 'interact_boxes', ibKey, 'bone'],
+                value: newBoneName,
+                label: '迁移交互区骨骼',
+                source: 'ui',
+            });
+            if (!result.ok) {
+                showToast(result.error, 'error');
+                return;
+            }
 
-            // 更新 bone 字段
-            this.$set(config, 'bone', newBoneName);
-
-            // 找到新旧骨骼 Group
-            var oldGroup = typeof Group !== 'undefined' ? Group.all.find(function(g) { return g.name === oldBoneName; }) : null;
-            var newGroup = typeof Group !== 'undefined' ? Group.all.find(function(g) { return g.name === newBoneName; }) : null;
-
-            if (oldGroup && newGroup && oldGroup !== newGroup) {
-                // 更新 _uuid 指向新骨骼
-                config._uuid = newGroup.uuid;
-
-                // 迁移 element_marker 到新骨骼的 UUID
-                var markers = part.element_markers && part.element_markers[variantName];
-                if (markers) {
-                    var markerData = markers[oldGroup.uuid];
-                    if (markerData && markerData.type === 'interact_box') {
-                        this.$set(markers, newGroup.uuid, markerData);
-                        this.$delete(markers, oldGroup.uuid);
-                        log.debug('migrateInteractBoxBone: 标记已迁移', {
-                            from: oldGroup.uuid, to: newGroup.uuid,
-                        });
-                    }
-                }
-
-                // 自动选中新骨骼
+            var newGroup = typeof Group !== 'undefined'
+                ? Group.all.find(function (g) { return g.name === newBoneName; }) : null;
+            if (newGroup) {
                 newGroup.select();
                 newGroup.showInOutliner();
             }
-
             this.markerVersion.v++;
             refreshOutlinerIcons();
-            Blockbench.dispatchEvent('update_selection');
             log.info('migrateInteractBoxBone: 骨骼迁移完成', { from: oldBoneName, to: newBoneName });
         },
 
@@ -1729,29 +1633,42 @@ const MM_MAIN_PANEL_OPTIONS = {
         handleTexturesKvAdd: function (payload) {
             var v = this.currentVariant;
             if (!v) return;
-            if (typeof v.textures !== 'object' || Array.isArray(v.textures)) {
-                this.$set(v, 'textures', {});
-            }
-            this.$set(v.textures, payload.key, payload.value);
+            var next = Object.assign({}, (typeof v.textures === 'object' && !Array.isArray(v.textures)) ? v.textures : {});
+            next[payload.key] = payload.value;
+            this._setVariantTextures(next, '添加贴图涂装');
         },
         handleTexturesKvRemove: function (payload) {
             var v = this.currentVariant;
             if (!v || !v.textures || typeof v.textures !== 'object') return;
-            this.$delete(v.textures, payload.key);
+            var next = Object.assign({}, v.textures);
+            delete next[payload.key];
+            this._setVariantTextures(next, '删除贴图涂装');
         },
         handleTexturesKvUpdateKey: function (payload) {
             var v = this.currentVariant;
             if (!v || !v.textures || typeof v.textures !== 'object') return;
-            var val = v.textures[payload.oldKey];
-            this.$delete(v.textures, payload.oldKey);
-            if (val !== undefined) {
-                this.$set(v.textures, payload.newKey, val);
-            }
+            var next = Object.assign({}, v.textures);
+            var val = next[payload.oldKey];
+            delete next[payload.oldKey];
+            if (val !== undefined) next[payload.newKey] = val;
+            this._setVariantTextures(next, '重命名贴图涂装');
         },
         handleTexturesKvUpdateValue: function (payload) {
             var v = this.currentVariant;
             if (!v || !v.textures || typeof v.textures !== 'object') return;
-            this.$set(v.textures, payload.key, payload.newValue);
+            var next = Object.assign({}, v.textures);
+            next[payload.key] = payload.newValue;
+            this._setVariantTextures(next, '修改贴图路径');
+        },
+        _setVariantTextures: function (textures, label) {
+            var result = ops.setField(this.config, {
+                path: ['parts', this.activePartId, 'variants', this.activeVariantName, 'textures'],
+                value: textures,
+                label: label,
+                source: 'ui',
+            });
+            if (!result.ok) showToast(result.error, 'error');
+            return result;
         },
     },
     mounted: function () {
@@ -1849,28 +1766,7 @@ const MM_MAIN_PANEL_OPTIONS = {
 //
 // 标签用函数形式时按入参生成，撤销历史里能直接看出改了哪个字段。
 var MM_UNDO_LABELS = {
-    updatePartField: function (field) { return '修改零件字段 ' + field; },
-    updateVariantField: function (field) { return '修改变体字段 ' + field; },
-    updateSubPartField: function (field) { return '修改子零件字段 ' + field; },
-    updateHitBoxField: function (field) { return '修改碰撞箱字段 ' + field; },
-    updateHitBoxOverwrite: function (field) { return '修改碰撞箱覆写 ' + field; },
-    updateInteractBoxField: function (field) { return '修改交互区字段 ' + field; },
-    updateConnectorField: function (field) { return '修改连接点字段 ' + field; },
-    updateSubsystemField: function (ssKey, field) { return '修改子系统字段 ' + field; },
-    addEndBone: '添加排除骨骼',
-    removeEndBone: '移除排除骨骼',
     removeTag: '删除标签',
-    handleTexturesKvAdd: '添加贴图涂装',
-    handleTexturesKvRemove: '删除贴图涂装',
-    handleTexturesKvUpdateKey: '重命名贴图涂装',
-    handleTexturesKvUpdateValue: '修改贴图路径',
-    renameSubPart: '重命名子零件',
-    renameConnector: '重命名连接点',
-    renameInteractBox: '重命名交互区',
-    renameSubsystem: '重命名子系统',
-    migrateSubPartStartBone: '迁移子零件起始骨骼',
-    migrateConnectorLocator: '迁移连接点定位器',
-    migrateInteractBoxBone: '迁移交互区骨骼',
     handleCleanGhostEntry: '清理幽灵条目',
 };
 

@@ -35,6 +35,7 @@ var CODES = {
     MISSING_REQUIRED: 'missing_required',                 // 其余零件/变体/子零件级必填项（占位）
     DUPLICATE_NAME: 'duplicate_name',                     // 连接点/子系统/交互区名在单变体内重复（Part 级按名寻址歧义）
     RESERVED_NAME: 'reserved_name',                       // 使用了信号保留地址（local/global 等）
+    DANGLING_SIGNAL_TARGET: 'dangling_signal_target',     // 信号/功率目标指向不存在的节点（含 power_outputs 的 key）
 };
 
 /** scope → byItem 桶名映射（仅对"可归属到某个 subpart 条目"的 scope 有意义） */

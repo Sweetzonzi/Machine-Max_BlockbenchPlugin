@@ -14,7 +14,6 @@ var ssTypes = require('../core/subsystem_types.js');
 var nameUtils = require('../utils/name_utils.js');
 var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
 var { createLogger } = require('../utils/logger.js');
-var undo = require('../core/undo.js');
 
 var log = createLogger('SubsystemPanel');
 
@@ -178,7 +177,7 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
                 var candidate = this.ownedLocatorNames[i];
                 if (!used[candidate]) {
                     next.push(candidate);
-                    this.$set(this.config, field, next);
+                    this.onFieldChange(field, next);
                     return;
                 }
             }
@@ -192,7 +191,7 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
         removeLocatorListEntry: function (field, index) {
             var next = this.getLocatorListEntries(field).slice();
             next.splice(index, 1);
-            this.$set(this.config, field, next);
+            this.onFieldChange(field, next);
         },
         /**
          * 改写列表中的第 index 项；改成空名视为删除该行
@@ -204,7 +203,7 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
             var next = this.getLocatorListEntries(field).slice();
             if (!value) next.splice(index, 1);
             else next[index] = value;
-            this.$set(this.config, field, next);
+            this.onFieldChange(field, next);
         },
 
         // ─── 信号频道编辑器（signal_targets） ─────────────────────────────
@@ -222,7 +221,7 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
          * @param {Object} entries - 变更后的 { channel: [target, ...] } 映射
          */
         onSignalTargetsChange: function (sigField, entries) {
-            this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
+            this.onFieldChange(sigField, JSON.parse(JSON.stringify(entries)));
         },
 
         // ─── 功率输出映射编辑器（power_outputs_map，Map<string, number>） ──
@@ -258,7 +257,7 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
             return {};
         },
         addPowerOutput: function (field) {
-            var entries = this.getPowerOutputEntries(field);
+            var entries = Object.assign({}, this.getPowerOutputEntries(field));
             var newName = 'new_target';
             var idx = 1;
             while (entries[newName] !== undefined) {
@@ -266,28 +265,27 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
                 idx++;
             }
             entries[newName] = 1.0;
-            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            this.onFieldChange(field, entries);
         },
         removePowerOutput: function (field, targetName) {
-            var entries = this.getPowerOutputEntries(field);
-            this.$delete(entries, targetName);
-            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            var entries = Object.assign({}, this.getPowerOutputEntries(field));
+            delete entries[targetName];
+            this.onFieldChange(field, entries);
         },
         onPowerOutputTargetChange: function (field, oldName, newName) {
             if (!newName || oldName === newName) return;
-            var entries = this.getPowerOutputEntries(field);
+            var entries = Object.assign({}, this.getPowerOutputEntries(field));
             var ratio = entries[oldName];
             if (ratio === undefined) return;
-            this.$delete(entries, oldName);
-            this.$set(entries, newName, ratio);
-            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            delete entries[oldName];
+            entries[newName] = ratio;
+            this.onFieldChange(field, entries);
         },
         onPowerOutputRatioChange: function (field, targetName, ratio) {
-            var entries = this.getPowerOutputEntries(field);
-            if (entries[targetName] !== undefined) {
-                this.$set(entries, targetName, ratio);
-                this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
-            }
+            var entries = Object.assign({}, this.getPowerOutputEntries(field));
+            if (entries[targetName] === undefined) return;
+            entries[targetName] = ratio;
+            this.onFieldChange(field, entries);
         },
 
         // ─── 弹链编辑器（projectile_belt_editor，Map<projectileId, count>） ─
@@ -353,15 +351,16 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
 
             log.debug('[addProjectileEntry] 生成新占位键=' + newKey + ', counter=' + counter + ', 迭代次数=' + watchdog);
             this.projectilePlaceholderCounter = counter;
-            this.$set(entries, newKey, 1);
-            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            var next = Object.assign({}, entries);
+            next[newKey] = 1;
+            this.onFieldChange(field, next);
             log.debug('[addProjectileEntry] 完成');
         },
         removeProjectileEntry: function (field, projectileId) {
             log.debug('[removeProjectileEntry] field=' + field + ', id=' + projectileId);
-            var entries = this.getProjectileEntries(field);
-            this.$delete(entries, projectileId);
-            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            var entries = Object.assign({}, this.getProjectileEntries(field));
+            delete entries[projectileId];
+            this.onFieldChange(field, entries);
         },
         /**
          * 弹链条目切换投射物。
@@ -387,9 +386,10 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
             } else if (entries.hasOwnProperty(newId)) {
                 // 合并到已存在的同ID条目（保留已存在条目的位置）
                 log.debug('[onProjectileIdChange] 合并数量：' + entries[newId] + ' + ' + count);
-                this.$set(entries, newId, entries[newId] + count);
-                this.$delete(entries, oldId);
-                this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+                var merged = Object.assign({}, entries);
+                merged[newId] = entries[newId] + count;
+                delete merged[oldId];
+                this.onFieldChange(field, merged);
                 return;
             }
 
@@ -404,14 +404,13 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
                     rebuilt[k] = entries[k];
                 }
             }
-            this.$set(this.config, field, rebuilt);
+            this.onFieldChange(field, rebuilt);
         },
         onProjectileCountChange: function (field, projectileId, count) {
-            var entries = this.getProjectileEntries(field);
-            if (entries[projectileId] !== undefined) {
-                this.$set(entries, projectileId, count);
-                this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
-            }
+            var entries = Object.assign({}, this.getProjectileEntries(field));
+            if (entries[projectileId] === undefined) return;
+            entries[projectileId] = count;
+            this.onFieldChange(field, entries);
         },
 
         // ─── JSON 编辑框（json_textarea） ────────────────────────────────
@@ -440,22 +439,8 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
     },
 };
 
-// 撤销接入：这些方法直接改 this.config（子系统实例配置），每次提交一条撤销记录。
-// 字段值频繁变化的输入框由 undo.js 的"同类连续编辑合并"收敛为一条。
-undo.wrapMethodMap(MM_SUBSYSTEM_PANEL_OPTIONS.methods, {
-    addLocatorListEntry: '添加定位器条目',
-    removeLocatorListEntry: '删除定位器条目',
-    onLocatorListChange: '修改定位器条目',
-    onSignalTargetsChange: function (sigField) { return '修改信号目标 ' + sigField; },
-    addPowerOutput: '添加功率输出',
-    removePowerOutput: '删除功率输出',
-    onPowerOutputTargetChange: '重命名功率输出目标',
-    onPowerOutputRatioChange: '修改功率输出倍率',
-    addProjectileEntry: '添加弹链条目',
-    removeProjectileEntry: '删除弹链条目',
-    onProjectileIdChange: '修改弹链弹种',
-    onProjectileCountChange: '修改弹链数量',
-});
+// 所有写配置的入口都通过 field-change 上抛给 App → ops.setField，
+// 本组件不再直接改 this.config，因此不需要 wrapMethodMap。
 
 Vue.component('mm-subsystem-panel', MM_SUBSYSTEM_PANEL_OPTIONS);
 

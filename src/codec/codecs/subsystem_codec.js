@@ -1,5 +1,5 @@
 // 文件: src/codec/codecs/subsystem_codec.js
-// 用途: 17 种正式子系统类型的独立 codec + SubsystemDispatchCodec（按 type 字段路由）
+// 用途: 19 种正式子系统类型的独立 codec + SubsystemDispatchCodec（按 type 字段路由）
 // 所属模块: MachineMax Blockbench 插件
 //
 // 字段定义与 src/core/subsystem_types.js 中 dynamicFields 一一对应。
@@ -198,6 +198,27 @@ const RegenLoaderCodec = Codec.record({
     discovery_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
 });
 
+/**
+ * TrackControllerCodec — 履带控制器
+ * 字段: definition, control_outputs, speed_outputs
+ */
+const TrackControllerCodec = Codec.record({
+    definition:       Codec.STRING.field(),
+    control_outputs:  Codec.map(Codec.STRING, Codec.STRING.list(), { emitEmpty: true }).default({}),
+    speed_outputs:    Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+});
+
+/**
+ * TrackDriveCodec — 履带驱动
+ * 字段: definition, connector, speed_outputs, force_outputs
+ */
+const TrackDriveCodec = Codec.record({
+    definition:     Codec.STRING.field(),
+    connector:      Codec.STRING.field(),
+    speed_outputs:  Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    force_outputs:  Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+});
+
 // ==================== Dispatch Codec ====================
 
 /**
@@ -224,6 +245,8 @@ const SubsystemDispatchCodec = Codec.dispatch('type', {
     'machine_max:launcher':             LauncherCodec,
     'machine_max:sight':                SightCodec,
     'machine_max:regen_loader':         RegenLoaderCodec,
+    'machine_max:track_controller':     TrackControllerCodec,
+    'machine_max:track_drive':          TrackDriveCodec,
 });
 
 // ==================== 导出 ====================
@@ -248,5 +271,7 @@ if (typeof module !== 'undefined' && module.exports) {
         LauncherCodec,
         SightCodec,
         RegenLoaderCodec,
+        TrackControllerCodec,
+        TrackDriveCodec,
     };
 }

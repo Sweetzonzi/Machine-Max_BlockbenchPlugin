@@ -388,7 +388,7 @@ function _runUnrecorded(opts, label, mutate, reason) {
  * @param {Object} undo - UndoSystem 实例
  * @param {string} label - 本次编辑标签
  */
-function _coalesceWithPrevious(undo, label) {
+function _coalesceWithPrevious(undo, label, mergeKey) {
     try {
         var history = undo.history;
         if (!Array.isArray(history) || history.length < 2) return;
@@ -398,6 +398,7 @@ function _coalesceWithPrevious(undo, label) {
         if (!current || !previous) return;
         if (previous.type !== 'edit' || current.type !== 'edit') return;
         if (previous.action !== label) return;
+        if (previous._mmMergeKey !== mergeKey) return;
         if (!(Date.now() - (previous.time || 0) < COALESCE_WINDOW_MS)) return;
 
         var prevPost = previous.post && previous.post[SNAPSHOT_KEY];
@@ -527,7 +528,11 @@ function runConfigEdit(label, mutate, options) {
     try {
         undo.finishEdit(text, aspects);
         discarded = _discardEmptyEntry(undo, wasSaved);
-        if (!discarded) _coalesceWithPrevious(undo, text);
+        if (!discarded && opts.coalesce === true && opts.mergeKey) {
+            var entry = undo.history && undo.history[undo.history.length - 1];
+            if (entry) entry._mmMergeKey = opts.mergeKey;
+            _coalesceWithPrevious(undo, text, opts.mergeKey);
+        }
     } catch (e) {
         log.error('runConfigEdit: finishEdit 失败', e);
     }

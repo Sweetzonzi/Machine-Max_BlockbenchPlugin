@@ -11,6 +11,7 @@ var { getMarkersForVariant, detectOwnerSubPart } = require('../core/element_mark
 var ssTypes = require('../core/subsystem_types.js');
 var cp = require('../core/content_pack_manager.js');
 var { CODES, isMissingValue } = require('../core/validation_types.js');
+var docRefs = require('../doc/refs.js');
 
 var log = createLogger('Validation');
 
@@ -173,6 +174,49 @@ function _collectNameConflicts(partId, vName, subParts, problems) {
 }
 
 /**
+ * 配置引用完整性（docs/13 §5.4 / §4.3）：signal_targets / power_output /
+ * power_target / power_outputs 的 key / hit_box.subsystem / connector 等
+ * 必须指向同子零件内真实条目或 local/global。
+ *
+ * @param {Object} config
+ * @param {string} partId
+ * @param {string} vName
+ * @param {string} spKey
+ * @param {Array} problems
+ */
+function _collectDanglingRefs(config, partId, vName, spKey, problems) {
+    var result = docRefs.resolveConfigRefs(config, {
+        partId: partId,
+        variantName: vName,
+        subPartKey: spKey,
+    });
+    (result.dangling || []).forEach(function (ref) {
+        var p = ref.path || [];
+        var baseLen = 6; // parts/<id>/variants/<v>/sub_parts/<sp>
+        var container = p[baseLen];
+        var itemKey = p[baseLen + 1];
+        var scope = 'subpart';
+        if (container === 'subsystems') scope = 'subsystem';
+        else if (container === 'connectors') scope = 'connector';
+        else if (container === 'interact_boxes') scope = 'interact_box';
+        else if (container === 'hit_boxes') scope = 'hit_box';
+
+        var what = ref.kind === 'power_output_key'
+            ? '功率输出目标（power_outputs 的 key）'
+            : (ref.kind === 'hit_box_subsystem' ? '碰撞箱子系统'
+                : (ref.kind === 'power_target' ? '连接点功率目标'
+                    : (ref.kind === 'power_output' ? '子系统功率输出'
+                        : (ref.kind === 'connector' ? '子系统关联连接点' : '信号目标'))));
+        problems.push(_makeProblem(
+            'error', CODES.DANGLING_SIGNAL_TARGET,
+            '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：' + what
+            + ' "' + ref.target + '" 指向不存在的节点（只允许同子零件条目或 local/global）',
+            _mkPath(scope, partId, vName, spKey, itemKey)
+        ));
+    });
+}
+
+/**
  * 唯一校验实现：收集所有问题的结构化 Problem 数组
  * @param {Object} config - MM 项目配置
  * @returns {Array} Problem[]
@@ -246,6 +290,9 @@ function collectIssues(config) {
                         _mkPath('subpart', partId, vName, spKey)
                     ));
                 }
+
+                // 信号 / 功率引用完整性（DANGLING_SIGNAL_TARGET）
+                _collectDanglingRefs(config, partId, vName, spKey, problems);
 
                 // 子系统实例必填字段 + definition 引用存在性
                 var subsystems = sp.subsystems || {};

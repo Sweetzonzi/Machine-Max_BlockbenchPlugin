@@ -19,12 +19,17 @@ plugin.js                      # 插件入口（52行）
   │     │     └── core/config_defaults.js  # 默认值 + 预设（410行，纯数据）
   │     └── core/content_pack.js  # 内容包目录 I/O（548行）
   │           └── utils/file_writer.js  # 文件写入封装
-  ├── core/undo.js              # 原生撤销桥 + runConfigEdit/withUndoEdit（约600行）
-  ├── core/operations.js        # 领域操作层：业务动作 + 撤销边界（约700行）
-  │     ├── core/config.js      # 零件/变体/子零件等工厂
-  │     ├── core/element_markers.js
-  │     ├── core/naming.js
-  │     └── core/undo.js        # 每个操作内部 runConfigEdit
+  ├── core/undo.js              # 原生撤销桥 + runConfigEdit/withUndoEdit（约620行）
+  ├── ops/                      # 业务操作层：29 个动作 + 撤销边界
+  │     ├── index.js            # 聚合导出（ops.createPart / ops.setField …）
+  │     ├── field.js            # setField + 字段级副作用
+  │     ├── part.js / variant.js / sub_part.js / subsystem.js / element.js
+  │     └── pack.js / session.js / shared.js
+  │           ├── core/config.js      # 零件/变体/子零件等工厂
+  │           ├── core/element_markers.js
+  │           ├── core/naming.js
+  │           ├── doc/                # 路径 / 投影 / 引用 / 值校验
+  │           └── core/undo.js        # 每个操作内部 runConfigEdit
   ├── utils/notify.js            # 用户通知（Toast）
   ├── mode.js                    # 模式生命周期 + 注册（341行）
   │     ├── core/element_markers.js  # 标记类型系统（301行）
@@ -79,20 +84,24 @@ if (typeof module !== 'undefined' && module.exports) {
 - `log.debug()` 在生产构建中被 `DEBUG_ENABLED=false` 守卫短路
 
 ### 撤销（Blockbench 原生）
-- **结构性动作**（新建/删除零件、变体、子系统、标记、内容包路径/元数据/依赖）一律写成
-  `src/core/operations.js` 的操作函数：校验前置 → 内部 `runConfigEdit(label, ...)` → 返回 `{ok, error}`。
-  对话框 / 菜单 / 工具栏**只调用操作函数**，不要在自己的 `onConfirm`/`click` 上再包撤销。
-- **字段编辑**走组件 methods，在 `Vue.component()` **之前**用
-  `undo.wrapMethodMap(methods, labels)` 批量包装（`Vue.extend` 会复制方法表）。
+- **结构性动作**（新建/删除零件、变体、子系统、标记、内容包路径/元数据/依赖）与
+  **字段编辑**一律写成 `src/ops/` 的操作函数：校验前置 → 内部 `runConfigEdit(label, ...)`
+  → 返回 `OpResult`。对话框 / 菜单 / 工具栏 / 面板**只调用操作函数**，不要在自己的
+  `onConfirm`/`click` 上再包撤销。
+- 面板字段编辑统一走 `ops.setField`（`SubsystemPanel` / `ConnectorPanel` 只 emit
+  `field-change`，不直接写 `config`）。
+- **字段编辑**统一走 `ops.setField`；不再新增 `wrapMethodMap` 包装（旧入口若仍保留包装，
+  必须保证内部只调用一次 `runConfigEdit`，避免双记录）。
 - **批量动作**（如批量导入）在外层用一次 `runConfigEdit`，内层操作作为嵌套编辑并入。
 - 面板模板不要用 `v-model` 直接绑配置字段：改用 `:value` / `:checked` + `@change`，
   否则快照拿到的是"改完之后"的值，撤销记录变成空记录
 - 只改 `_uiState` / 本地状态的逻辑不要包装（`_uiState` 不进快照）
+- 撤销合并默认关闭：`runConfigEdit(label, fn, { coalesce: true, mergeKey })` 才合并；
+  结构性动作与 MCP 调用一律 `coalesce:false`（docs/13 §6.4）
 - 新增变更入口后自测：改一次 → `Ctrl+Z` 能回退、`Ctrl+Y` 能重做
 - 设计文档：[docs/11-接入Blockbench原生撤销.md](./docs/11-接入Blockbench原生撤销.md)
-- 分层重构设计（**待实现**，落地后本节的"字段编辑走组件 methods"将被 `ops.setField` 取代）：
-  [docs/13-业务逻辑层与配置文档API.md](./docs/13-业务逻辑层与配置文档API.md)
-- MCP 工具设计（**待实现**，依赖 docs/13）：[docs/12-MCP工具接入.md](./docs/12-MCP工具接入.md)
+- 分层约定（已落地 P1/P2）：[docs/13-业务逻辑层与配置文档API.md](./docs/13-业务逻辑层与配置文档API.md)
+- MCP 工具设计（P5，依赖 docs/13）：[docs/12-MCP工具接入.md](./docs/12-MCP工具接入.md)
 
 ### 测试
 - 测试文件位于 `test/`，模式 `test/**/*.test.js`
@@ -100,6 +109,7 @@ if (typeof module !== 'undefined' && module.exports) {
 - 夹具在 `test/helpers.js`
 
 ### 子模块文档
+- [src/ops/AGENTS.md](./src/ops/AGENTS.md) — 业务操作层
 - [src/core/AGENTS.md](./src/core/AGENTS.md) — 数据模型层
 - [src/ui/AGENTS.md](./src/ui/AGENTS.md) — 用户界面层
 - [src/mode/AGENTS.md](./src/mode/AGENTS.md) — 模式层

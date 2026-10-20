@@ -10,7 +10,7 @@
 var { showToast } = require('../utils/notify.js');
 var { createLogger } = require('../utils/logger.js');
 var { getConfig } = require('../utils/persistence.js');
-var ops = require('../core/operations.js');
+var ops = require('../ops/index.js');
 
 /** 模块日志 */
 var log = createLogger('TagDialog');

@@ -21,6 +21,7 @@ const { getConfig, saveConfig } = require('../utils/persistence.js');
 const { PartCodec } = require('../codec/codecs/part_codec.js');
 const { resolveBoneReferences } = require('./bone_resolver.js');
 const { showConflictDialog } = require('./conflict_dialog.js');
+const keys = require('../doc/keys.js');
 const undo = require('../core/undo.js');
 
 /** 模块日志 */
@@ -125,6 +126,14 @@ function importSingleFile(filePath, fileName, rawContent, batchAction) {
 
     // 3. 提取零件 ID（文件名去 .json 后缀）
     var partId = fileName.replace(/\.json$/i, '');
+
+    // 3.5 路径安全（docs/13 §5.1.3 / §11 #20）：非法 partId 不写任何文件
+    if (!keys.isSafePartId(partId)) {
+        log.warn('importSingleFile: partId 不合法，拒绝导入', { partId: partId });
+        showToast('零件 ID "' + partId + '" 不合法：只允许小写字母/数字/._-，且不能是 . / .. / '
+            + 'Windows 设备名', 'error');
+        return { imported: false, partId: partId, action: 'invalid_format', unresolvedCount: 0 };
+    }
 
     log.info('importSingleFile: 解析成功', {
         fileName: fileName,

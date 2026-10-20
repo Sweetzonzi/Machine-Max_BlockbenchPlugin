@@ -1,7 +1,7 @@
 const PROPERTY_NAME = 'machine_max_plugin';
 const { CONFIG_VERSION } = require('../core/constants.js');
 const { migrateIfNeeded, createBlankConfig } = require('../core/config.js');
-const { cleanGhostMarkers } = require('../core/element_markers.js');
+const { cleanGhostMarkers, migrateConnectorMarkerRefs } = require('../core/element_markers.js');
 const { createLogger } = require('./logger.js');
 
 /** 模块日志 */
@@ -108,6 +108,13 @@ function loadConfig() {
             Project[PROPERTY_NAME] = blank;
             result = blank;
         }
+    }
+
+    // 把 connector marker 的 config_ref 从 definition 迁移为连接点 key（幂等）
+    var markerMigration = migrateConnectorMarkerRefs(result);
+    if (markerMigration.migrated > 0) {
+        log.info('loadConfig: 已迁移 ' + markerMigration.migrated + ' 个 connector marker 的 config_ref');
+        saveConfig();
     }
 
     // 清理幽灵标记：删除 element_markers 中 UUID 对应的 Group/Locator 已不存在的条目

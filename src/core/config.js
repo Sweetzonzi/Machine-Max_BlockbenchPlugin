@@ -186,7 +186,7 @@ var SUBSYSTEM_MAP_FIELDS = [
     'speed_outputs', 'gear_outputs', 'roll_speed_outputs', 'steering_angle_outputs',
     'passenger_num_outputs', 'camera_discovery_targets', 'throttle_outputs',
     'steering_outputs', 'brake_outputs', 'handbrake_outputs', 'rotation_outputs',
-    'discovery_outputs', 'ammo_outputs',
+    'discovery_outputs', 'ammo_outputs', 'force_outputs',
 ];
 
 function hasOwn(obj, key) {
@@ -310,21 +310,15 @@ function ensureDefaults(config) {
         result._uiState = { activeMode: 'part', activePartId: '', activeVariantName: '' };
     }
 
-    // 用 PartCodec.decode 填充每个零件的默认值
-    // 临时移除 variants 以避免 either codec 对多 variant map 的启发式误判
-    var partKeys, i, pk, part, savedVariants;
+    // 用 PartCodec.decode 填充每个零件（含 variants / sub_parts / 各条目）的默认值。
+    // 单变体简写由 either 的「model 是字符串」判据识别，多 key map（包括键名恰好为
+    // model 的变体）走 map 解码，不再需要临时移走 variants。
+    var partKeys, i, pk, part;
     partKeys = Object.keys(result.parts);
     for (i = 0; i < partKeys.length; i++) {
         pk = partKeys[i];
         part = result.parts[pk];
-        // 保存原始 variants，避免 either codec 解析多 key map 时崩溃
-        savedVariants = part.variants;
-        delete part.variants;
         result.parts[pk] = PartCodec.decode(part);
-        // 恢复多 variant 的原始 map（单 variant 简写同样安全，PartCodec.decode 已处理）
-        if (savedVariants && typeof savedVariants === 'object' && Object.keys(savedVariants).length > 0) {
-            result.parts[pk].variants = savedVariants;
-        }
     }
 
     log.debug('ensureDefaults: 完成');

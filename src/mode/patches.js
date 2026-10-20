@@ -10,7 +10,7 @@ var { getConfig } = require('../utils/persistence.js');
 var { showToast } = require('../utils/notify.js');
 var { createLogger } = require('../utils/logger.js');
 var ssTypes = require('../core/subsystem_types.js');
-var ops = require('../core/operations.js');
+var ops = require('../ops/index.js');
 
 var log = createLogger('Mode');
 

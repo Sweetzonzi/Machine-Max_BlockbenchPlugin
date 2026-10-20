@@ -52,5 +52,5 @@ App.vue.js ──→ SignalFlowPanel.vue.js ──→ lib/signal_graph.js
 - **Action 清理**: `_mmActionInstances` 跟踪所有注册的 Action，`unregisterActions()` 在插件卸载时通过 `action.delete()` 清理
 - **右键菜单注入**: 注入条目在 `menu.open()` 前推入 `menu.structure`，在 `open()` 返回后弹出
 - **菜单/工具栏不做业务逻辑（撤销）**: `patches.js` 的 `click` 与 `toolbar.js` 的 `onConfirm` 只调用
-  `core/operations.js` 的操作函数并处理 `{ok, error}`；不要在这里直接改配置或包 `runConfigEdit`
+  `src/ops/` 的操作函数并处理 `OpResult`；不要在这里直接改配置或包 `runConfigEdit`
   （撤销边界在操作函数内部，换入口自动继承）

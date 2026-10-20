@@ -2,6 +2,17 @@
  * 碰撞箱属性面板子组件
  * 选中标记为 hit_box 的 Group 时在属性面板中显示
  */
+
+/** 旧版顶层 overwrite 字段 → schema 分组（docs/13 §5.2.2） */
+var OVERWRITE_GROUPS = {
+    block_damage_factor: 'physics',
+    rha: 'armor',
+    angle_effect: 'armor',
+    unpen_power: 'armor',
+    decay_rha: 'armor',
+    decay_power: 'armor',
+};
+
 Vue.component('mm-hit-box-panel', {
     template: typeof TEMPLATE_HIT_BOX_PANEL !== 'undefined' ? TEMPLATE_HIT_BOX_PANEL : '<p>碰撞箱面板加载中...</p>',
     props: {
@@ -71,10 +82,15 @@ Vue.component('mm-hit-box-panel', {
             this.$emit('field-change', field, value);
         },
         onOverwriteChange: function (field, value) {
-            this.$emit('overwrite-change', field, value);
+            var group = OVERWRITE_GROUPS[field];
+            this.$emit('overwrite-change', group ? group + '.' + field : field, value);
         },
         overwriteVal: function (field) {
-            return this.config.overwrite ? this.config.overwrite[field] : undefined;
+            if (!this.config.overwrite) return undefined;
+            var group = OVERWRITE_GROUPS[field];
+            if (!group) return this.config.overwrite[field];
+            var bucket = this.config.overwrite[group];
+            return bucket ? bucket[field] : undefined;
         },
         /**
          * 导航到归属子零件：点击归属标签时选中对应的子零件 Group，切换回子零件属性面板

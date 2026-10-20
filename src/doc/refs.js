@@ -95,6 +95,38 @@ function isPlaceholder(value) {
     return value === null || value === undefined || value === '';
 }
 
+/**
+ * 子系统 / 连接点 / 交互区的信号输出字段并不都叫 `signal_targets`：
+ * 引擎是 `speed_outputs`、变速箱是 `gear_outputs`、分动箱是 `power_outputs`
+ * （值不是数组，单独处理）。这里按形状识别：对象且每个值都是数组（空对象也算）。
+ */
+function isSignalMap(value) {
+    if (!isObject(value)) return false;
+    var entries = Object.keys(value);
+    for (var i = 0; i < entries.length; i++) {
+        if (!Array.isArray(value[entries[i]])) return false;
+    }
+    return true;
+}
+
+function eachSignalMap(node, fn) {
+    if (!isObject(node)) return;
+    Object.keys(node).forEach(function (field) {
+        if (field === 'signal_translations') return;
+        if (isSignalMap(node[field])) fn(node[field], field);
+    });
+}
+
+function addSignalRefs(list, map, path, field) {
+    Object.keys(map).forEach(function (ch) {
+        var targets = map[ch];
+        if (!Array.isArray(targets)) return;
+        for (var i = 0; i < targets.length; i++) {
+            addRef(list, path.concat([field, ch, i]), targets[i], 'signal_target');
+        }
+    });
+}
+
 function addRef(list, path, target, kind) {
     if (isPlaceholder(target)) return;
     list.push({ path: path, target: target, kind: kind });
@@ -115,15 +147,9 @@ function collectRefs(subPart, basePath) {
         var p = base.concat(['subsystems', sk]);
         addRef(refs, p.concat(['power_output']), ss.power_output, 'power_output');
         addRef(refs, p.concat(['connector']), ss.connector, 'connector');
-        if (isObject(ss.signal_targets)) {
-            Object.keys(ss.signal_targets).forEach(function (ch) {
-                var list = ss.signal_targets[ch];
-                if (!Array.isArray(list)) return;
-                for (var i = 0; i < list.length; i++) {
-                    addRef(refs, p.concat(['signal_targets', ch, i]), list[i], 'signal_target');
-                }
-            });
-        }
+        eachSignalMap(ss, function (map, field) {
+            addSignalRefs(refs, map, p, field);
+        });
         if (isObject(ss.power_outputs)) {
             Object.keys(ss.power_outputs).forEach(function (target) {
                 addRef(refs, p.concat(['power_outputs', target]), target, 'power_output_key');
@@ -137,15 +163,9 @@ function collectRefs(subPart, basePath) {
         if (!isObject(conn)) return;
         var p = base.concat(['connectors', ck]);
         addRef(refs, p.concat(['power_target']), conn.power_target, 'power_target');
-        if (isObject(conn.signal_targets)) {
-            Object.keys(conn.signal_targets).forEach(function (ch) {
-                var list = conn.signal_targets[ch];
-                if (!Array.isArray(list)) return;
-                for (var i = 0; i < list.length; i++) {
-                    addRef(refs, p.concat(['signal_targets', ch, i]), list[i], 'signal_target');
-                }
-            });
-        }
+        eachSignalMap(conn, function (map, field) {
+            addSignalRefs(refs, map, p, field);
+        });
     });
 
     var interactBoxes = isObject(subPart.interact_boxes) ? subPart.interact_boxes : {};
@@ -153,15 +173,9 @@ function collectRefs(subPart, basePath) {
         var ib = interactBoxes[ik];
         if (!isObject(ib)) return;
         var p = base.concat(['interact_boxes', ik]);
-        if (isObject(ib.signal_targets)) {
-            Object.keys(ib.signal_targets).forEach(function (ch) {
-                var list = ib.signal_targets[ch];
-                if (!Array.isArray(list)) return;
-                for (var i = 0; i < list.length; i++) {
-                    addRef(refs, p.concat(['signal_targets', ch, i]), list[i], 'signal_target');
-                }
-            });
-        }
+        eachSignalMap(ib, function (map, field) {
+            addSignalRefs(refs, map, p, field);
+        });
     });
 
     var hitBoxes = isObject(subPart.hit_boxes) ? subPart.hit_boxes : {};
@@ -264,18 +278,18 @@ function cleanDangling(config, removed) {
                 ss.connector = '';
                 cleaned.push({ path: p.concat(['connector']), target: target, kind: 'connector' });
             }
-            if (isObject(ss.signal_targets)) {
-                Object.keys(ss.signal_targets).forEach(function (ch) {
-                    if (Array.isArray(ss.signal_targets[ch])
-                        && removeSignalTarget(ss.signal_targets[ch], target) > 0) {
+            eachSignalMap(ss, function (map, field) {
+                Object.keys(map).forEach(function (ch) {
+                    if (Array.isArray(map[ch])
+                        && removeSignalTarget(map[ch], target) > 0) {
                         cleaned.push({
-                            path: p.concat(['signal_targets', ch]),
+                            path: p.concat([field, ch]),
                             target: target,
                             kind: 'signal_target',
                         });
                     }
                 });
-            }
+            });
             if (isObject(ss.power_outputs) && own(ss.power_outputs, target)) {
                 delete ss.power_outputs[target];
                 cleaned.push({
@@ -295,34 +309,36 @@ function cleanDangling(config, removed) {
                 conn.power_target = '';
                 cleaned.push({ path: p.concat(['power_target']), target: target, kind: 'power_target' });
             }
-            if (isObject(conn.signal_targets)) {
-                Object.keys(conn.signal_targets).forEach(function (ch) {
-                    if (Array.isArray(conn.signal_targets[ch])
-                        && removeSignalTarget(conn.signal_targets[ch], target) > 0) {
+            eachSignalMap(conn, function (map, field) {
+                Object.keys(map).forEach(function (ch) {
+                    if (Array.isArray(map[ch])
+                        && removeSignalTarget(map[ch], target) > 0) {
                         cleaned.push({
-                            path: p.concat(['signal_targets', ch]),
+                            path: p.concat([field, ch]),
                             target: target,
                             kind: 'signal_target',
                         });
                     }
                 });
-            }
+            });
         });
 
         var interactBoxes = isObject(sp.interact_boxes) ? sp.interact_boxes : {};
         Object.keys(interactBoxes).forEach(function (ik) {
             var ib = interactBoxes[ik];
-            if (!isObject(ib) || !isObject(ib.signal_targets)) return;
+            if (!isObject(ib)) return;
             var p = base.concat(['interact_boxes', ik]);
-            Object.keys(ib.signal_targets).forEach(function (ch) {
-                if (Array.isArray(ib.signal_targets[ch])
-                    && removeSignalTarget(ib.signal_targets[ch], target) > 0) {
-                    cleaned.push({
-                        path: p.concat(['signal_targets', ch]),
-                        target: target,
-                        kind: 'signal_target',
-                    });
-                }
+            eachSignalMap(ib, function (map, field) {
+                Object.keys(map).forEach(function (ch) {
+                    if (Array.isArray(map[ch])
+                        && removeSignalTarget(map[ch], target) > 0) {
+                        cleaned.push({
+                            path: p.concat([field, ch]),
+                            target: target,
+                            kind: 'signal_target',
+                        });
+                    }
+                });
             });
         });
 
@@ -361,8 +377,9 @@ function cleanDangling(config, removed) {
 
 // ── 重命名 ──────────────────────────────────────────────────────
 
-function renameSignalTargets(obj, oldKey, newKey, path, report) {
+function renameSignalTargets(obj, oldKey, newKey, path, report, field) {
     if (!isObject(obj)) return;
+    var name = field || 'signal_targets';
     Object.keys(obj).forEach(function (ch) {
         var list = obj[ch];
         if (!Array.isArray(list)) return;
@@ -375,7 +392,7 @@ function renameSignalTargets(obj, oldKey, newKey, path, report) {
                 i--;
             }
             report.push({
-                path: path.concat(['signal_targets', ch]),
+                path: path.concat([name, ch]),
                 from: oldKey,
                 to: newKey,
                 kind: 'signal_target',
@@ -443,7 +460,9 @@ function renameRefs(config, opts) {
                 ss.connector = newKey;
                 report.push({ path: p.concat(['connector']), from: oldKey, to: newKey, kind: 'connector' });
             }
-            renameSignalTargets(ss.signal_targets, oldKey, newKey, p, report);
+            eachSignalMap(ss, function (map, field) {
+                renameSignalTargets(map, oldKey, newKey, p, report, field);
+            });
             renameKey(ss.power_outputs, oldKey, newKey, p.concat(['power_outputs']), report,
                 'power_output_key');
         });
@@ -457,15 +476,19 @@ function renameRefs(config, opts) {
                 conn.power_target = newKey;
                 report.push({ path: p.concat(['power_target']), from: oldKey, to: newKey, kind: 'power_target' });
             }
-            renameSignalTargets(conn.signal_targets, oldKey, newKey, p, report);
+            eachSignalMap(conn, function (map, field) {
+                renameSignalTargets(map, oldKey, newKey, p, report, field);
+            });
         });
 
         var interactBoxes = isObject(sp.interact_boxes) ? sp.interact_boxes : {};
         Object.keys(interactBoxes).forEach(function (ik) {
             var ib = interactBoxes[ik];
             if (!isObject(ib)) return;
-            renameSignalTargets(ib.signal_targets, oldKey, newKey,
-                base.concat(['interact_boxes', ik]), report);
+            var p = base.concat(['interact_boxes', ik]);
+            eachSignalMap(ib, function (map, field) {
+                renameSignalTargets(map, oldKey, newKey, p, report, field);
+            });
         });
 
         var hitBoxes = isObject(sp.hit_boxes) ? sp.hit_boxes : {};

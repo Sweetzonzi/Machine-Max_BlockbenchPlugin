@@ -33,7 +33,7 @@ function showAddSubsystemDialog(options) {
     var groupedTypes = ssTypes.getTypesGroupedByCategory();
     var { showToast } = require('../utils/notify.js');
     var { saveConfig } = require('../utils/persistence.js');
-    var ops = require('../core/operations.js');
+    var ops = require('../ops/index.js');
 
     // 构建平铺所有子系统类型的下拉选项（分类前缀标注）
     var allTypeOpts = {};

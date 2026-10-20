@@ -23,7 +23,7 @@
   var define_BUILTIN_CONNECTORS_default;
   var init_define_BUILTIN_CONNECTORS = __esm({
     "<define:__BUILTIN_CONNECTORS__>"() {
-      define_BUILTIN_CONNECTORS_default = { fixed_back: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "zp", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_down: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "yn", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_front: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "zn", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_left: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "xn", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_right: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "xp", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, fixed_up: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "yp", integrity: 20, impact_absorption: 0.2, impact_reduction: 2, impact_multiplier: 1 }, heavy_left_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 80, impact_absorption: 0.12, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:direction/left"], joint_attrs: { y: { lower_limit: -0.2, upper_limit: 0.25, stiffness: 6e4, damping: 3e3 }, yr: { lower_limit: -40, upper_limit: 40, stiffness: 139.636625, damping: 0.872729 } } }, heavy_left_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 80, impact_absorption: 0.12, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:direction/left"], joint_attrs: { y: { lower_limit: -0.2, upper_limit: 0.25, stiffness: 6e4, damping: 3e3 } } }, heavy_right_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 80, impact_absorption: 0.12, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:direction/right"], joint_attrs: { y: { lower_limit: -0.2, upper_limit: 0.25, stiffness: 6e4, damping: 3e3 }, yr: { lower_limit: -40, upper_limit: 40, stiffness: 139.636625, damping: 0.872729 } } }, heavy_right_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 80, impact_absorption: 0.12, impact_reduction: 3, impact_multiplier: 0.8, required_tags: ["machine_max:direction/right"], joint_attrs: { y: { lower_limit: -0.2, upper_limit: 0.25, stiffness: 6e4, damping: 3e3 } } }, light_left_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 30, impact_absorption: 0.15, impact_reduction: 1, impact_multiplier: 1, required_tags: ["machine_max:direction/left"], joint_attrs: { y: { lower_limit: -0.1, upper_limit: 0.15, stiffness: 15e3, damping: 800 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 34.909156, damping: 0.261971 } } }, light_left_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 30, impact_absorption: 0.15, impact_reduction: 1, impact_multiplier: 1, required_tags: ["machine_max:direction/left"], joint_attrs: { y: { lower_limit: -0.1, upper_limit: 0.15, stiffness: 15e3, damping: 800 } } }, light_right_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 30, impact_absorption: 0.15, impact_reduction: 1, impact_multiplier: 1, required_tags: ["machine_max:direction/right"], joint_attrs: { y: { lower_limit: -0.1, upper_limit: 0.15, stiffness: 15e3, damping: 800 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 34.909156, damping: 0.261971 } } }, light_right_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 30, impact_absorption: 0.15, impact_reduction: 1, impact_multiplier: 1, required_tags: ["machine_max:direction/right"], joint_attrs: { y: { lower_limit: -0.1, upper_limit: 0.15, stiffness: 15e3, damping: 800 } } }, medium_left_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 45, impact_absorption: 0.15, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/left"], joint_attrs: { y: { lower_limit: -0.15, upper_limit: 0.2, stiffness: 3e4, damping: 1500 }, yr: { lower_limit: -35, upper_limit: 35, stiffness: 69.818313, damping: 0.436517 } } }, medium_left_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 45, impact_absorption: 0.15, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/left"], joint_attrs: { y: { lower_limit: -0.15, upper_limit: 0.2, stiffness: 3e4, damping: 1500 } } }, medium_right_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 45, impact_absorption: 0.15, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/right"], joint_attrs: { y: { lower_limit: -0.15, upper_limit: 0.2, stiffness: 3e4, damping: 1500 }, yr: { lower_limit: -35, upper_limit: 35, stiffness: 69.818313, damping: 0.436517 } } }, medium_right_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 45, impact_absorption: 0.15, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/right"], joint_attrs: { y: { lower_limit: -0.15, upper_limit: 0.2, stiffness: 3e4, damping: 1500 } } }, turret_azimuth_axis: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "yn", integrity: 100, impact_absorption: 0.12, impact_reduction: 3, impact_multiplier: 0.8, joint_attrs: { yr: { lower_limit: 1, upper_limit: -1, damping: 1.827705 } } }, turret_elevation_axis: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zn", integrity: 80, impact_absorption: 0.12, impact_reduction: 2, impact_multiplier: 0.9, joint_attrs: { xr: { lower_limit: -15, upper_limit: 60, damping: 1.523087 } } } };
+      define_BUILTIN_CONNECTORS_default = { fixed_back: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "zp", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1 }, fixed_down: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "yn", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1 }, fixed_front: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "zn", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1 }, fixed_left: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "xn", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1 }, fixed_right: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "xp", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1 }, fixed_up: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Simple", direction: "yp", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1 }, heavy_left_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/left"], joint_attrs: { y: { lower_limit: -0.2, upper_limit: 0.25, stiffness: 6e4, damping: 3e3 }, yr: { lower_limit: -40, upper_limit: 40, stiffness: 139.636625, damping: 0.872729 } } }, heavy_left_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/left"], joint_attrs: { y: { lower_limit: -0.2, upper_limit: 0.25, stiffness: 6e4, damping: 3e3 } } }, heavy_right_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/right"], joint_attrs: { y: { lower_limit: -0.2, upper_limit: 0.25, stiffness: 6e4, damping: 3e3 }, yr: { lower_limit: -40, upper_limit: 40, stiffness: 139.636625, damping: 0.872729 } } }, heavy_right_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/right"], joint_attrs: { y: { lower_limit: -0.2, upper_limit: 0.25, stiffness: 6e4, damping: 3e3 } } }, light_left_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/left"], joint_attrs: { y: { lower_limit: -0.1, upper_limit: 0.15, stiffness: 15e3, damping: 800 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 34.909156, damping: 0.261971 } } }, light_left_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/left"], joint_attrs: { y: { lower_limit: -0.1, upper_limit: 0.15, stiffness: 15e3, damping: 800 } } }, light_right_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/right"], joint_attrs: { y: { lower_limit: -0.1, upper_limit: 0.15, stiffness: 15e3, damping: 800 }, yr: { lower_limit: -45, upper_limit: 45, stiffness: 34.909156, damping: 0.261971 } } }, light_right_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/right"], joint_attrs: { y: { lower_limit: -0.1, upper_limit: 0.15, stiffness: 15e3, damping: 800 } } }, medium_left_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/left"], joint_attrs: { y: { lower_limit: -0.15, upper_limit: 0.2, stiffness: 3e4, damping: 1500 }, yr: { lower_limit: -35, upper_limit: 35, stiffness: 69.818313, damping: 0.436517 } } }, medium_left_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xp", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/left"], joint_attrs: { y: { lower_limit: -0.15, upper_limit: 0.2, stiffness: 3e4, damping: 1500 } } }, medium_right_steering_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/right"], joint_attrs: { y: { lower_limit: -0.15, upper_limit: 0.2, stiffness: 3e4, damping: 1500 }, yr: { lower_limit: -35, upper_limit: 35, stiffness: 69.818313, damping: 0.436517 } } }, medium_right_wheel: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "xn", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, required_tags: ["machine_max:direction/right"], joint_attrs: { y: { lower_limit: -0.15, upper_limit: 0.2, stiffness: 3e4, damping: 1500 } } }, turret_azimuth_axis: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "yn", integrity: 100, impact_absorption: 0.1, impact_reduction: 8, impact_multiplier: 1, joint_attrs: { yr: { lower_limit: 1, upper_limit: -1, damping: 1.827705 } } }, turret_elevation_axis: { $schema: "../docs/zh_cn/schemas/part/subpart/connector/connector_static_attr.schema.json", type: "Advanced", direction: "zn", integrity: 15, impact_absorption: 0.3, impact_reduction: 2, impact_multiplier: 1, joint_attrs: { xr: { lower_limit: -15, upper_limit: 60, damping: 1.523087 } } } };
     }
   });
 
@@ -39,7 +39,7 @@
   var define_BUILTIN_MATERIALS_default;
   var init_define_BUILTIN_MATERIALS = __esm({
     "<define:__BUILTIN_MATERIALS__>"() {
-      define_BUILTIN_MATERIALS_default = { "5083_aluminum_alloy": { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.55, 0.55, 0.5], slip_adaptation: 0.6, rolling_friction: 0.02, spinning_friction: 0.5, restitution: 0.4, block_damage_factor: 0.7 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -4, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.04, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.04, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.4, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.15, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, "7035_aluminum_alloy": { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.55, 0.55, 0.5], slip_adaptation: 0.66, rolling_friction: 0.01, spinning_friction: 0.43, restitution: 0.55, block_damage_factor: 0.7 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -4, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.04, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.04, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.45, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.18, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, depleted_uranium_armor: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.55, 0.55, 0.5], slip_adaptation: 0.3, rolling_friction: 0.01, spinning_friction: 0.4, restitution: 0.2, block_damage_factor: 0.7 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -4, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.04, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.04, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 1.65, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.55, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, drifting_tire: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [1.4, 1.5, 1], slip_adaptation: 0.4, slip_curve: { longitudinal: { peak_slip_ratio: 0.16, peak_scale: 1.2, kinetic_scale: 0.6 }, lateral: { peak_angle_deg: 7, kinetic_angle_deg: 90, peak_scale: 1.3, kinetic_scale: 0.1 } }, rolling_friction: 0.01, spinning_friction: 0.8, restitution: 0.65, block_damage_factor: 0.05 }, armor: { impact_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "multiply", value: 0.05, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.05, condition: { type: "entity_type", id: "minecraft:slime" } }, { operation: "multiply", value: 0.1, condition: { type: "entity_type", id: "minecraft:magma_cube" } }], rha: 0.04, angle_effect: true, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.01, decay_power: 1.5, unpen_power: 0, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: {} }, glass: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.65, 0.65, 0.5], slip_adaptation: 0.15, rolling_friction: 1e-3, spinning_friction: 0.4, restitution: 0.6, block_damage_factor: 0.6 }, armor: { angle_effect: false, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }, { operation: "add", value: -10, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -10, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.03, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.03, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.12, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.04, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.glass", range: 48 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.glass", range: 48 } } }, hardwood: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.65, 0.65, 0.5], slip_adaptation: 0.4, rolling_friction: 0.15, spinning_friction: 0.015, restitution: 0.2, block_damage_factor: 0.6 }, armor: { angle_effect: false, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }, { operation: "add", value: -4, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -3, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.03, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.03, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.1, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.03, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.wood_hard", range: 48 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.wood_hard", range: 48 } } }, ice: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.15, 0.15, 0.5], slip_adaptation: 0.05, rolling_friction: 1e-3, spinning_friction: 0.05, restitution: 0.05, block_damage_factor: 0.7 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -4, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.04, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.04, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.02, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, normal_tire: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [1.4, 1.5, 1], slip_adaptation: 0.4, slip_curve: { longitudinal: { peak_slip_ratio: 0.2, peak_scale: 1.4, kinetic_scale: 0.9 }, lateral: { peak_angle_deg: 12, peak_scale: 1.3, kinetic_scale: 0.8 } }, rolling_friction: 0.01, spinning_friction: 0.8, restitution: 0.65, block_damage_factor: 0.05 }, armor: { impact_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "multiply", value: 0.05, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.05, condition: { type: "entity_type", id: "minecraft:slime" } }, { operation: "multiply", value: 0.1, condition: { type: "entity_type", id: "minecraft:magma_cube" } }], rha: 0.04, angle_effect: true, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.01, decay_power: 1.5, unpen_power: 0, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: {} }, off_road_tire: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [1.2, 1.5, 1], slip_adaptation: 0.8, rolling_friction: 0.2, spinning_friction: 0.7, restitution: 0.6, block_damage_factor: 0.05 }, armor: { impact_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "multiply", value: 0.05, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.05, condition: { type: "entity_type", id: "minecraft:slime" } }, { operation: "multiply", value: 0.1, condition: { type: "entity_type", id: "minecraft:magma_cube" } }], rha: 0.06, angle_effect: true, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.02, decay_power: 1.5, unpen_power: 0, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: {} }, paper: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.55, 0.55, 0.5], slip_adaptation: 0.9, rolling_friction: 0.05, spinning_friction: 0.3, restitution: 0.01, block_damage_factor: 0.7 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -4, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.04, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.04, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.01, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, pvc: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.55, 0.55, 0.5], slip_adaptation: 0.38, rolling_friction: 0.018, spinning_friction: 0.38, restitution: 0.55, block_damage_factor: 0.7 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -4, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.04, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.04, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.06, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.02, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, racing_tire: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [3, 3, 1], slip_adaptation: 0.3, slip_curve: { longitudinal: { peak_slip_ratio: 0.2, peak_scale: 1.4, kinetic_scale: 0.9 }, lateral: { peak_angle_deg: 25, peak_scale: 1.4, kinetic_scale: 0.9 } }, rolling_friction: 0.015, spinning_friction: 1.3, restitution: 0.4, block_damage_factor: 0.05 }, armor: { impact_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "multiply", value: 0.05, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.05, condition: { type: "entity_type", id: "minecraft:slime" } }, { operation: "multiply", value: 0.1, condition: { type: "entity_type", id: "minecraft:magma_cube" } }], rha: 0.05, angle_effect: true, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.02, decay_power: 1.5, unpen_power: 0, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: {} }, rha: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.35, 0.35, 0.5], slip_adaptation: 0.65, rolling_friction: 0.28, spinning_friction: 0, restitution: 0.07, block_damage_factor: 1.3 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.55, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -9, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.09, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.09, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 1, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.3, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, softwood: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.7, 0.7, 0.5], slip_adaptation: 0.35, rolling_friction: 0.12, spinning_friction: 0.02, restitution: 0.25, block_damage_factor: 0.4 }, armor: { angle_effect: false, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.9, condition: { type: "always" } }, { operation: "add", value: -3, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -2, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.02, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.02, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.05, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.02, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.wood", range: 48 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.wood", range: 48 } } }, structural_steel: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.45, 0.45, 0.5], slip_adaptation: 0.55, rolling_friction: 0.22, spinning_friction: 0, restitution: 0.12, block_damage_factor: 1.1 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -6, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.06, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.06, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.85, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.28, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } } };
+      define_BUILTIN_MATERIALS_default = { "5083_aluminum_alloy": { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.55, 0.55, 0.5], slip_adaptation: 0.6, rolling_friction: 0.02, spinning_friction: 0.5, restitution: 0.4, block_damage_factor: 0.7 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -4, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.04, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.04, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.4, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.15, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, "7035_aluminum_alloy": { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.55, 0.55, 0.5], slip_adaptation: 0.66, rolling_friction: 0.01, spinning_friction: 0.43, restitution: 0.55, block_damage_factor: 0.7 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -4, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.04, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.04, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.45, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.18, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, depleted_uranium_armor: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.55, 0.55, 0.5], slip_adaptation: 0.3, rolling_friction: 0.01, spinning_friction: 0.4, restitution: 0.2, block_damage_factor: 0.7 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -4, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.04, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.04, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 1.65, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.55, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, drifting_tire: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [1.4, 1.5, 1], slip_adaptation: 0.4, slip_curve: { longitudinal: { peak_slip_ratio: 0.16, peak_scale: 1.2, kinetic_scale: 0.6 }, lateral: { peak_angle_deg: 7, kinetic_angle_deg: 90, peak_scale: 1.3, kinetic_scale: 0.1 } }, rolling_friction: 0.01, spinning_friction: 0.8, restitution: 0.65, block_damage_factor: 0.05 }, armor: { impact_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "multiply", value: 0.05, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.05, condition: { type: "entity_type", id: "minecraft:slime" } }, { operation: "multiply", value: 0.1, condition: { type: "entity_type", id: "minecraft:magma_cube" } }], rha: 0.04, angle_effect: true, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.01, decay_power: 1.5, unpen_power: 0, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: {} }, glass: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.65, 0.65, 0.5], slip_adaptation: 0.15, rolling_friction: 1e-3, spinning_friction: 0.4, restitution: 0.6, block_damage_factor: 0.6 }, armor: { angle_effect: false, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }, { operation: "add", value: -10, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -10, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.03, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.03, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.12, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.04, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.glass", range: 48 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.glass", range: 48 } } }, hardwood: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.65, 0.65, 0.5], slip_adaptation: 0.4, rolling_friction: 0.15, spinning_friction: 0.015, restitution: 0.2, block_damage_factor: 0.6 }, armor: { angle_effect: false, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }, { operation: "add", value: -4, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -3, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.03, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.03, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.1, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.03, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.wood_hard", range: 48 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.wood_hard", range: 48 } } }, ice: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.15, 0.15, 0.5], slip_adaptation: 0.05, rolling_friction: 1e-3, spinning_friction: 0.05, restitution: 0.05, block_damage_factor: 0.7 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -4, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.04, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.04, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.02, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, internal_machinery: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.45, 0.45, 0.5], slip_adaptation: 0.55, rolling_friction: 0.22, spinning_friction: 0, restitution: 0.12, block_damage_factor: 1.1 }, armor: { angle_effect: false, unpen_power: 1, impact_modifiers: [{ operation: "multiply", value: 0.6, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -9, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.09, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.09, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.55, dmg_resist: 0, dmg_mult: 1, decay_rha: 0.5, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, normal_tire: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [1.4, 1.5, 1], slip_adaptation: 0.4, slip_curve: { longitudinal: { peak_slip_ratio: 0.2, peak_scale: 1.4, kinetic_scale: 0.9 }, lateral: { peak_angle_deg: 12, peak_scale: 1.3, kinetic_scale: 0.8 } }, rolling_friction: 0.01, spinning_friction: 0.8, restitution: 0.65, block_damage_factor: 0.05 }, armor: { impact_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "multiply", value: 0.05, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.05, condition: { type: "entity_type", id: "minecraft:slime" } }, { operation: "multiply", value: 0.1, condition: { type: "entity_type", id: "minecraft:magma_cube" } }], rha: 0.04, angle_effect: true, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.01, decay_power: 1.5, unpen_power: 0, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: {} }, off_road_tire: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [1.2, 1.5, 1], slip_adaptation: 0.8, rolling_friction: 0.2, spinning_friction: 0.7, restitution: 0.6, block_damage_factor: 0.05 }, armor: { impact_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "multiply", value: 0.05, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.05, condition: { type: "entity_type", id: "minecraft:slime" } }, { operation: "multiply", value: 0.1, condition: { type: "entity_type", id: "minecraft:magma_cube" } }], rha: 0.06, angle_effect: true, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.02, decay_power: 1.5, unpen_power: 0, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: {} }, paper: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.55, 0.55, 0.5], slip_adaptation: 0.9, rolling_friction: 0.05, spinning_friction: 0.3, restitution: 0.01, block_damage_factor: 0.7 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -4, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.04, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.04, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.01, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, pvc: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.55, 0.55, 0.5], slip_adaptation: 0.38, rolling_friction: 0.018, spinning_friction: 0.38, restitution: 0.55, block_damage_factor: 0.7 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.85, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -4, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.04, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.04, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.06, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.02, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, racing_tire: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [3, 3, 1], slip_adaptation: 0.3, slip_curve: { longitudinal: { peak_slip_ratio: 0.2, peak_scale: 1.4, kinetic_scale: 0.9 }, lateral: { peak_angle_deg: 25, peak_scale: 1.4, kinetic_scale: 0.9 } }, rolling_friction: 0.015, spinning_friction: 1.3, restitution: 0.4, block_damage_factor: 0.05 }, armor: { impact_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "multiply", value: 0.1, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "add", value: -2, condition: { type: "damage_tag", id: "c:is_impact" } }, { operation: "multiply", value: 0.05, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.05, condition: { type: "entity_type", id: "minecraft:slime" } }, { operation: "multiply", value: 0.1, condition: { type: "entity_type", id: "minecraft:magma_cube" } }], rha: 0.05, angle_effect: true, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.02, decay_power: 1.5, unpen_power: 0, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: {} }, rha: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.35, 0.35, 0.5], slip_adaptation: 0.65, rolling_friction: 0.28, spinning_friction: 0, restitution: 0.07, block_damage_factor: 1.3 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.55, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -9, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.09, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.09, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 1, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.3, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } }, softwood: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.7, 0.7, 0.5], slip_adaptation: 0.35, rolling_friction: 0.12, spinning_friction: 0.02, restitution: 0.25, block_damage_factor: 0.4 }, armor: { angle_effect: false, unpen_power: 0, impact_modifiers: [{ operation: "multiply", value: 0.9, condition: { type: "always" } }, { operation: "add", value: -3, condition: { type: "always" } }], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -2, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.02, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.02, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.05, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.02, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.wood", range: 48 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.wood", range: 48 } } }, structural_steel: { $schema: "../docs/zh_cn/schemas/base/material_attr.schema.json", physics: { friction: [0.45, 0.45, 0.5], slip_adaptation: 0.55, rolling_friction: 0.22, spinning_friction: 0, restitution: 0.12, block_damage_factor: 1.1 }, armor: { angle_effect: true, unpen_power: 0, impact_modifiers: [], penetration_modifiers: [], damage_modifiers: [{ operation: "add", value: -6, condition: { type: "damage_type", id: "minecraft:fly_into_wall" } }, { operation: "multiply", value: 0.06, condition: { type: "damage_type", id: "minecraft:sweet_berry_bush" } }, { operation: "multiply", value: 0.06, condition: { type: "entity_type", id: "minecraft:slime" } }], rha: 0.85, dmg_resist: 1, dmg_mult: 0.95, decay_rha: 0.28, decay_power: 1.5, decay_dmg_resist: 0, decay_dmg_mult: 1 }, sounds: { hit_un_pen: { sound_id: "machine_max:hit_box.hit.up_pen.metal", range: 64 }, hit_pen: { sound_id: "machine_max:hit_box.hit.pen.metal", range: 64 } } } };
     }
   });
 
@@ -55,7 +55,7 @@
   var define_BUILTIN_SUBSYSTEMS_default;
   var init_define_BUILTIN_SUBSYSTEMS = __esm({
     "<define:__BUILTIN_SUBSYSTEMS__>"() {
-      define_BUILTIN_SUBSYSTEMS_default = { default_glass: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:basic", basic_durability: 2, pass_damage: false, limit_damage: false, sounds: { on_destroyed: { sound_id: "machine_max:subsystem.baisc.glass.break", range: 32 } }, hidden: true }, targeting_pod: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:camera", basic_durability: 8, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 16.7, min_pitch: -80, max_pitch: 80, yaw_limit: 360, hud_components: [], tracking_target_inputs: [], discovery_inputs: ["targeting_pod_sight"], allow_cycle: true }, default_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 150, min_steering_radius: 5, lateral_acceleration: 50, max_drift_angular_velocity: 2, manual_gear_shift: false, auto_hand_brake: true, drift_assist: true }, light_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 80, max_power: 8e4, max_torque: 175, idle_rpm: 850, max_torque_rpm: 4e3, red_line_rpm: 6300, red_line_torque_ratio: 0.75, inertia: 10, cylinder: 4, damping_factors: [2, 0.03, 2e-5] }, medium_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 150, max_power: 18e4, max_torque: 380, idle_rpm: 750, max_torque_rpm: 4e3, red_line_rpm: 6e3, red_line_torque_ratio: 0.65, inertia: 15, cylinder: 6, damping_factors: [2, 0.03, 2e-5] }, motorcycle_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 30, max_power: 6e3, max_torque: 9, idle_rpm: 500, max_torque_rpm: 7e3, red_line_rpm: 9500, red_line_torque_ratio: 0.7, inertia: 2, cylinder: 1, damping_factors: [1, 0.02, 1e-5] }, sport_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 100, max_power: 45e4, max_torque: 700, idle_rpm: 500, max_torque_rpm: 5500, red_line_rpm: 9e3, red_line_torque_ratio: 0.9, inertia: 20, cylinder: 8, damping_factors: [2, 0.03, 2e-5] }, truck_diesel_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 400, max_power: 37e4, max_torque: 2500, idle_rpm: 550, max_torque_rpm: 1500, red_line_rpm: 2200, red_line_torque_ratio: 0.9, inertia: 50, cylinder: 6, damping_factors: [5, 0.05, 1e-5] }, light_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 8, ratios: [-3.5, 3.5, 2.5, 1.75, 1.4, 1.15, 0.85], switch_time: 0.2 }, medium_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 150, final_ratio: 10, ratios: [-3.3, 4.71, 3.14, 2.1, 1.6, 1.29, 1.1, 0.88, 0.67], switch_time: 0.2 }, motorcycle_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 40, final_ratio: 15, ratios: [-3.5, 3.5, 2.8, 2, 1.4], switch_time: 0.15 }, simple_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 60, final_ratio: 8, ratios: [2, 1.3], switch_time: 0.1 }, sport_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 10, ratios: [-3.5, 3.5, 2.5, 1.8, 1.4, 1, 0.7, 0.5], switch_time: 0.05 }, truck_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 500, final_ratio: 3.7, ratios: [-12.3, 12.1, 9.41, 7.31, 5.71, 4.46, 3.4, 2.7, 2.11, 1.84, 1.3, 1, 0.78], switch_time: 0.3 }, default_trunk: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 6, columns: 9 }, glove_box: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 50, rows: 2, columns: 3 }, basic_launcher: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:launcher", basic_durability: 80, control_inputs: ["weapon_control"], breech: { fire_rate: 600 } }, beam_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "beam", range: 16, color: [255, 245, 210], intensity: 0.5, beam_angle: 24 }, dummy_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 0, intensity: 0 }, point_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 1, color: [255, 235, 180], intensity: 0.55, beam_angle: 24 }, high_power_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 120, max_power: 15e4, max_torque: 350, red_line_rpm: 15e3, red_line_power_ratio: 0.75, inertia: 8, damping_factors: [10, 0.1, 5e-5], generator_efficiency: 0.9 }, medium_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 80, max_power: 5e4, max_torque: 250, red_line_rpm: 1e4, red_line_power_ratio: 0.8, inertia: 5, damping_factors: [10, 0.1, 1e-4], generator_efficiency: 0.85 }, small_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 50, max_power: 2e4, max_torque: 85, red_line_rpm: 12e3, red_line_power_ratio: 0.8, inertia: 3, damping_factors: [5, 0.05, 5e-5], generator_efficiency: 0.85 }, default_motorbike_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motorbike_controller", basic_durability: 60, min_steering_radius: 3.5, lateral_acceleration: 20, max_drift_angular_velocity: 1.8, max_angle: 35, parking_angle: 5, correction_force_multiplier: 1 }, default_3rd_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, third_person_hud: [], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_3rd_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, default_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_person_hud: ["machine_max:example_hud"], enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, gunner_sight: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 50, vertical_stabilized: false, horizontal_stabilized: false, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, hud_components: ["machine_max:gun_sight_hud"], tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, heavy_duty_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 800, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 15 }, locked_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 400, diff_lock: "true", diff_lock_sensitivity: 1 }, open_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "false", diff_lock_sensitivity: 0.85 }, sport_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "auto", diff_lock_sensitivity: 1.5, auto_diff_lock_threshold: 5 }, standard_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 300, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 10 }, basic_azimuth_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 200, yaw: { max_force: 8e4, max_speed: 90 }, control_inputs: ["weapon_control"] }, basic_elevation_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 150, pitch: { max_force: 35e3, max_speed: 30 }, control_inputs: ["weapon_control"] }, main_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 100, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["fire_input_p0", "fire_input_p1", "fire_input_p2", "fire_input_p3", "fire_input"], aim_tolerance_deg: 60 }, secondary_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 100, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["secondary_fire_input_p0", "secondary_fire_input_p1", "secondary_fire_input_p2", "secondary_fire_input_p3", "secondary_fire_input"], aim_tolerance_deg: 60 }, light_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 800, max_hand_brake_force: 0, max_rpm: 2500 }, steering: { max_force: 2e3, max_speed: 180 }, abs_enabled: true, abs_wheel_radius: 0.35 }, light_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 1500, max_brake_force: 800, max_hand_brake_force: 1e3, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.35 }, motorcycle_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 600, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 500, max_speed: 3.14 }, abs_enabled: true, abs_wheel_radius: 0.3 }, motorcycle_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 2500, max_brake_force: 300, max_hand_brake_force: 200, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.3 }, sport_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 0, max_brake_force: 2e3, max_hand_brake_force: 0, max_speed: 3e3 }, steering: { max_force: 5e3, max_speed: 6.28 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, sport_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 5e3, max_brake_force: 2e3, max_hand_brake_force: 3e3, max_speed: 3e3 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, standard_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 0, max_brake_force: 1500, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 4e3, max_speed: 3.14 }, abs_enabled: false, abs_wheel_radius: 0.4 }, standard_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 2500, max_brake_force: 1500, max_hand_brake_force: 2500, max_speed: 2500 }, abs_enabled: false, abs_wheel_radius: 0.4 }, truck_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 0, max_brake_force: 2e4, max_hand_brake_force: 0, max_speed: 1e3 }, steering: { max_force: 5e3, max_speed: 1.5 }, abs_enabled: true, abs_wheel_radius: 0.5 }, truck_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 28e3, max_brake_force: 2e4, max_hand_brake_force: 35e3, max_speed: 1e3 }, abs_enabled: true, abs_wheel_radius: 0.5 } };
+      define_BUILTIN_SUBSYSTEMS_default = { default_glass: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:basic", basic_durability: 2, pass_damage: false, limit_damage: false, sounds: { on_destroyed: { sound_id: "machine_max:subsystem.baisc.glass.break", range: 32 } }, hidden: true }, targeting_pod: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:camera", basic_durability: 8, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 16.7, min_pitch: -80, max_pitch: 80, yaw_limit: 360, tracking_target_inputs: [], discovery_inputs: ["targeting_pod_sight"], allow_cycle: true }, default_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 150, min_steering_radius: 5, lateral_acceleration: 50, max_drift_angular_velocity: 2, manual_gear_shift: false, auto_hand_brake: true, drift_assist: true }, light_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 80, max_power: 8e4, max_torque: 175, idle_rpm: 850, max_torque_rpm: 4e3, red_line_rpm: 6300, red_line_torque_ratio: 0.75, inertia: 10, cylinder: 4, damping_factors: [2, 0.03, 2e-5] }, medium_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 150, max_power: 18e4, max_torque: 380, idle_rpm: 750, max_torque_rpm: 4e3, red_line_rpm: 6e3, red_line_torque_ratio: 0.65, inertia: 15, cylinder: 6, damping_factors: [2, 0.03, 2e-5] }, motorcycle_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 30, max_power: 6e3, max_torque: 9, idle_rpm: 500, max_torque_rpm: 7e3, red_line_rpm: 9500, red_line_torque_ratio: 0.7, inertia: 2, cylinder: 1, damping_factors: [1, 0.02, 1e-5] }, sport_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 100, max_power: 45e4, max_torque: 700, idle_rpm: 500, max_torque_rpm: 5500, red_line_rpm: 9e3, red_line_torque_ratio: 0.9, inertia: 20, cylinder: 8, damping_factors: [2, 0.03, 2e-5] }, truck_diesel_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 400, max_power: 37e4, max_torque: 2500, idle_rpm: 550, max_torque_rpm: 1500, red_line_rpm: 2200, red_line_torque_ratio: 0.9, inertia: 50, cylinder: 6, damping_factors: [5, 0.05, 1e-5] }, light_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 8, ratios: [-3.5, 3.5, 2.5, 1.75, 1.4, 1.15, 0.85], switch_time: 0.2 }, medium_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 150, final_ratio: 10, ratios: [-3.3, 4.71, 3.14, 2.1, 1.6, 1.29, 1.1, 0.88, 0.67], switch_time: 0.2 }, motorcycle_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 40, final_ratio: 15, ratios: [-3.5, 3.5, 2.8, 2, 1.4], switch_time: 0.15 }, simple_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 60, final_ratio: 8, ratios: [2, 1.3], switch_time: 0.1 }, sport_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 10, ratios: [-3.5, 3.5, 2.5, 1.8, 1.4, 1, 0.7, 0.5], switch_time: 0.05 }, truck_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 500, final_ratio: 3.7, ratios: [-12.3, 12.1, 9.41, 7.31, 5.71, 4.46, 3.4, 2.7, 2.11, 1.84, 1.3, 1, 0.78], switch_time: 0.3 }, default_trunk: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 6, columns: 9 }, glove_box: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 50, rows: 2, columns: 3 }, basic_launcher: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:launcher", basic_durability: 80, control_inputs: ["weapon_control"], breech: { fire_rate: 600 } }, beam_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "beam", range: 16, color: [255, 245, 210], intensity: 0.5, beam_angle: 24 }, dummy_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 0, intensity: 0 }, point_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 1, color: [255, 235, 180], intensity: 0.55, beam_angle: 24 }, high_power_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 120, max_power: 15e4, max_torque: 350, red_line_rpm: 15e3, red_line_power_ratio: 0.75, inertia: 8, damping_factors: [10, 0.1, 5e-5], generator_efficiency: 0.9 }, medium_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 80, max_power: 5e4, max_torque: 250, red_line_rpm: 1e4, red_line_power_ratio: 0.8, inertia: 5, damping_factors: [10, 0.1, 1e-4], generator_efficiency: 0.85 }, small_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 50, max_power: 2e4, max_torque: 85, red_line_rpm: 12e3, red_line_power_ratio: 0.8, inertia: 3, damping_factors: [5, 0.05, 5e-5], generator_efficiency: 0.85 }, default_motorbike_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motorbike_controller", basic_durability: 60, min_steering_radius: 3.5, lateral_acceleration: 20, max_drift_angular_velocity: 1.8, max_angle: 35, parking_angle: 5, correction_force_multiplier: 1 }, default_3rd_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_3rd_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, third_hud_layout: "machine_max:seat_dashboard", follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, default_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_hud_layout: "machine_max:seat_dashboard_aui", enable_third_person: true, third_hud_layout: "machine_max:seat_dashboard", follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, commander_sight_dual_stb: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 10, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, gunner_sight: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 10, vertical_stabilized: false, horizontal_stabilized: false, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, scope_hud_layout: "machine_max:scope_gunner", tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, gunner_sight_dual_stb: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 10, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, scope_hud_layout: "machine_max:scope_gunner_fixed", tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, gunner_sight_vert_stb: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 50, vertical_stabilized: true, horizontal_stabilized: false, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, scope_hud_layout: "machine_max:scope_gunner_fixed", tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, track_controller_standard: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:track_controller", basic_durability: 150, max_yaw_rate: { "0": 0, "10": 30, "30": 18, "50": 10 }, min_turning_radius: 4, max_lateral_acceleration: 6, yaw_p: 1, yaw_d: 0.05, steering_smoothing: 0.1, brake_smoothing: 0.2, auto_hand_brake: true, manual_gear_shift: false, separate_throttle_brake: false }, track_drive_heavy: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:track_drive", basic_durability: 120, max_drive_torque: 3e4, max_brake_torque: 2e4, max_hand_brake_torque: 2e4, max_speed: 120, control_inputs: ["track_control"] }, heavy_duty_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 800, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 15 }, locked_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 400, diff_lock: "true", diff_lock_sensitivity: 1 }, open_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "false", diff_lock_sensitivity: 0.85 }, sport_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "auto", diff_lock_sensitivity: 1.5, auto_diff_lock_threshold: 5 }, standard_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 300, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 10 }, basic_azimuth_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 30, yaw: { max_force: 8e4, max_speed: 90 }, control_inputs: ["weapon_control"] }, basic_elevation_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 30, pitch: { max_force: 35e3, max_speed: 30 }, control_inputs: ["weapon_control"] }, main_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 20, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["fire_input_p0", "fire_input_p1", "fire_input_p2", "fire_input_p3", "fire_input"], aim_tolerance_deg: 60 }, secondary_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 20, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["secondary_fire_input_p0", "secondary_fire_input_p1", "secondary_fire_input_p2", "secondary_fire_input_p3", "secondary_fire_input"], aim_tolerance_deg: 60 }, light_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 800, max_hand_brake_force: 0, max_rpm: 2500 }, steering: { max_force: 2e3, max_speed: 180 }, abs_enabled: true, abs_wheel_radius: 0.35 }, light_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 1500, max_brake_force: 800, max_hand_brake_force: 1e3, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.35 }, motorcycle_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 600, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 500, max_speed: 3.14 }, abs_enabled: true, abs_wheel_radius: 0.3 }, motorcycle_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 2500, max_brake_force: 300, max_hand_brake_force: 200, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.3 }, sport_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 0, max_brake_force: 2e3, max_hand_brake_force: 0, max_speed: 3e3 }, steering: { max_force: 5e3, max_speed: 6.28 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, sport_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 5e3, max_brake_force: 2e3, max_hand_brake_force: 3e3, max_speed: 3e3 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, standard_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 0, max_brake_force: 1500, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 4e3, max_speed: 3.14 }, abs_enabled: false, abs_wheel_radius: 0.4 }, standard_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 2500, max_brake_force: 1500, max_hand_brake_force: 2500, max_speed: 2500 }, abs_enabled: false, abs_wheel_radius: 0.4 }, truck_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 0, max_brake_force: 2e4, max_hand_brake_force: 0, max_speed: 1e3 }, steering: { max_force: 5e3, max_speed: 1.5 }, abs_enabled: true, abs_wheel_radius: 0.5 }, truck_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 28e3, max_brake_force: 2e4, max_hand_brake_force: 35e3, max_speed: 1e3 }, abs_enabled: true, abs_wheel_radius: 0.5 } };
     }
   });
 
@@ -1439,7 +1439,7 @@
       "type": "machine_max:engine",\r
       "definition": "machine_max:ae86at_engine",\r
       "power_output": "gearbox",\r
-      "speed_outputs": { "engine_speed": ["part", "global"] }\r
+      "speed_outputs": { "engine_speed": ["local", "global"] }\r
     }\r
   ]\r
 }`, "en_us/schemas/subsystem/dynamic/gearbox_dynamic_attr.schema.json": `{\r
@@ -1465,7 +1465,7 @@
       "allOf": [\r
         { "$ref": "../base/signal_targets.json" }\r
       ],\r
-      "default": { "gear": ["part", "global"] },\r
+      "default": { "gear": ["local", "global"] },\r
       "description": "Gear name output channel and targets. Optional, by default sends current gear name to the gear channel of parts and vehicles."\r
     }\r
   },\r
@@ -1475,7 +1475,7 @@
       "type": "machine_max:gearbox",\r
       "definition": "machine_max:ae86at_gearbox",\r
       "power_output": "transmission",\r
-      "gear_outputs": { "gear": ["part", "global"] }\r
+      "gear_outputs": { "gear": ["local", "global"] }\r
     }\r
   ]\r
 }`, "en_us/schemas/subsystem/dynamic/item_storage_dynamic_attr.schema.json": `{\r
@@ -1677,7 +1677,7 @@
       "type": "machine_max:motor",\r
       "definition": "machine_max:electric_motor",\r
       "power_output": "transmission",\r
-      "speed_outputs": { "motor_speed": ["part", "global"] }\r
+      "speed_outputs": { "motor_speed": ["local", "global"] }\r
     }\r
   ]\r
 }`, "en_us/schemas/subsystem/dynamic/regen_loader_dynamic_attr.schema.json": `{\r
@@ -2114,8 +2114,8 @@
       "type": "machine_max:wheel_driver",\r
       "definition": "machine_max:ae86at_front_wheel_driver",\r
       "connector": "left_front_wheel",\r
-      "roll_speed_outputs": { "wheel_speed": ["part", "global"] },\r
-      "steering_angle_outputs": { "steering_angle": ["part", "global"] }\r
+      "roll_speed_outputs": { "wheel_speed": ["local", "global"] },\r
+      "steering_angle_outputs": { "steering_angle": ["local", "global"] }\r
     }\r
   ]\r
 }`, "en_us/schemas/subsystem/static/basic_static_attr.schema.json": `{\r
@@ -5885,7 +5885,7 @@
       "type": "machine_max:engine",\r
       "definition": "machine_max:ae86at_engine",\r
       "power_output": "gearbox",\r
-      "speed_outputs": { "engine_speed": ["part", "global"] }\r
+      "speed_outputs": { "engine_speed": ["local", "global"] }\r
     }\r
   ]\r
 }`, "zh_cn/schemas/subsystem/dynamic/gearbox_dynamic_attr.schema.json": `{\r
@@ -5911,7 +5911,7 @@
       "allOf": [\r
         { "$ref": "../base/signal_targets.json" }\r
       ],\r
-      "default": { "gear": ["part", "global"] },\r
+      "default": { "gear": ["local", "global"] },\r
       "description": "\u6321\u4F4D\u540D\u79F0\u8F93\u51FA\u9891\u9053\u53CA\u76EE\u6807\u3002\u53EF\u9009\uFF0C\u9ED8\u8BA4\u5C06\u5F53\u524D\u6321\u4F4D\u540D\u79F0\u53D1\u81F3\u90E8\u4EF6\u548C\u8F7D\u5177\u7684gear\u9891\u9053\u3002"\r
     }\r
   },\r
@@ -5921,7 +5921,7 @@
       "type": "machine_max:gearbox",\r
       "definition": "machine_max:ae86at_gearbox",\r
       "power_output": "transmission",\r
-      "gear_outputs": { "gear": ["part", "global"] }\r
+      "gear_outputs": { "gear": ["local", "global"] }\r
     }\r
   ]\r
 }`, "zh_cn/schemas/subsystem/dynamic/item_storage_dynamic_attr.schema.json": `{\r
@@ -6123,7 +6123,7 @@
       "type": "machine_max:motor",\r
       "definition": "machine_max:electric_motor",\r
       "power_output": "transmission",\r
-      "speed_outputs": { "motor_speed": ["part", "global"] }\r
+      "speed_outputs": { "motor_speed": ["local", "global"] }\r
     }\r
   ]\r
 }`, "zh_cn/schemas/subsystem/dynamic/regen_loader_dynamic_attr.schema.json": `{\r
@@ -6560,8 +6560,8 @@
       "type": "machine_max:wheel_driver",\r
       "definition": "machine_max:ae86at_front_wheel_driver",\r
       "connector": "left_front_wheel",\r
-      "roll_speed_outputs": { "wheel_speed": ["part", "global"] },\r
-      "steering_angle_outputs": { "steering_angle": ["part", "global"] }\r
+      "roll_speed_outputs": { "wheel_speed": ["local", "global"] },\r
+      "steering_angle_outputs": { "steering_angle": ["local", "global"] }\r
     }\r
   ]\r
 }`, "zh_cn/schemas/subsystem/static/basic_static_attr.schema.json": `{\r
@@ -10022,6 +10022,11 @@
               wrapped[WRAP_KEY] = singleCodec.decode(raw);
               return wrapped;
             }
+            if (typeof raw.model === "string") {
+              wrapped = {};
+              wrapped[WRAP_KEY] = singleCodec.decode(raw);
+              return wrapped;
+            }
             keys = Object.keys(raw);
             for (i = 0; i < keys.length; i++) {
               if (keys[i].indexOf(".") >= 0 || keys[i].indexOf(":") >= 0) {
@@ -10241,6 +10246,17 @@
         belt_label: Codec.STRING.default(""),
         discovery_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
       });
+      var TrackControllerCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        control_outputs: Codec.map(Codec.STRING, Codec.STRING.list(), { emitEmpty: true }).default({}),
+        speed_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
+      var TrackDriveCodec = Codec.record({
+        definition: Codec.STRING.field(),
+        connector: Codec.STRING.field(),
+        speed_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        force_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+      });
       var SubsystemDispatchCodec = Codec.dispatch("type", {
         "machine_max:engine": EngineCodec,
         "machine_max:motor": MotorCodec,
@@ -10258,7 +10274,9 @@
         "machine_max:weapon_controller": WeaponControllerCodec,
         "machine_max:launcher": LauncherCodec,
         "machine_max:sight": SightCodec,
-        "machine_max:regen_loader": RegenLoaderCodec
+        "machine_max:regen_loader": RegenLoaderCodec,
+        "machine_max:track_controller": TrackControllerCodec,
+        "machine_max:track_drive": TrackDriveCodec
       });
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
@@ -10279,7 +10297,9 @@
           WeaponControllerCodec,
           LauncherCodec,
           SightCodec,
-          RegenLoaderCodec
+          RegenLoaderCodec,
+          TrackControllerCodec,
+          TrackDriveCodec
         };
       }
     }
@@ -10564,7 +10584,8 @@
         "handbrake_outputs",
         "rotation_outputs",
         "discovery_outputs",
-        "ammo_outputs"
+        "ammo_outputs",
+        "force_outputs"
       ];
       function hasOwn(obj, key) {
         return Object.prototype.hasOwnProperty.call(obj, key);
@@ -10652,17 +10673,12 @@
         if (!result._uiState) {
           result._uiState = { activeMode: "part", activePartId: "", activeVariantName: "" };
         }
-        var partKeys, i, pk, part, savedVariants;
+        var partKeys, i, pk, part;
         partKeys = Object.keys(result.parts);
         for (i = 0; i < partKeys.length; i++) {
           pk = partKeys[i];
           part = result.parts[pk];
-          savedVariants = part.variants;
-          delete part.variants;
           result.parts[pk] = PartCodec.decode(part);
-          if (savedVariants && typeof savedVariants === "object" && Object.keys(savedVariants).length > 0) {
-            result.parts[pk].variants = savedVariants;
-          }
         }
         log2.debug("ensureDefaults: \u5B8C\u6210");
         log2.debug("ensureDefaults: packMeta \u72B6\u6001", {
@@ -11181,6 +11197,137 @@
         });
         return markers;
       }
+      function clearMarkerScope(projectConfig, cleanup) {
+        var removed = 0;
+        if (!projectConfig || !cleanup || !cleanup.partId) return { removed: 0 };
+        var part = projectConfig.parts && projectConfig.parts[cleanup.partId];
+        if (!part || !part.element_markers) return { removed: 0 };
+        if (cleanup.scope === "part") {
+          removed = Object.keys(part.element_markers).reduce(function(n, variantName) {
+            return n + Object.keys(part.element_markers[variantName] || {}).length;
+          }, 0);
+          part.element_markers = {};
+          return { removed };
+        }
+        var markers = part.element_markers[cleanup.variantName];
+        if (!markers) return { removed: 0 };
+        if (cleanup.scope === "variant") {
+          removed = Object.keys(markers).length;
+          delete part.element_markers[cleanup.variantName];
+          return { removed };
+        }
+        if (cleanup.scope === "sub_part") {
+          var refs = cleanup.config_refs || [];
+          var uuids = cleanup.uuids || [];
+          Object.keys(markers).forEach(function(uuid) {
+            var marker = markers[uuid];
+            var hit = uuids.indexOf(uuid) >= 0 || marker && refs.indexOf(marker.config_ref) >= 0;
+            if (!hit) return;
+            delete markers[uuid];
+            removed++;
+          });
+        }
+        return { removed };
+      }
+      function migrateConnectorMarkerRefs(projectConfig) {
+        var migrated = 0;
+        var warnings = [];
+        var entries = [];
+        if (!projectConfig || !projectConfig.parts) return { migrated: 0, warnings, entries };
+        Object.keys(projectConfig.parts).forEach(function(partId) {
+          var part = projectConfig.parts[partId];
+          if (!part || !part.element_markers || !part.variants) return;
+          Object.keys(part.element_markers).forEach(function(variantName) {
+            var markers = part.element_markers[variantName];
+            var variant = part.variants[variantName];
+            if (!markers || !variant) return;
+            var connectors = [];
+            var subParts = variant.sub_parts || {};
+            Object.keys(subParts).forEach(function(spKey) {
+              var map = subParts[spKey] && subParts[spKey].connectors || {};
+              Object.keys(map).forEach(function(ck) {
+                connectors.push({ spKey, key: ck, conn: map[ck] });
+              });
+            });
+            var keys = connectors.map(function(c) {
+              return c.key;
+            });
+            Object.keys(markers).forEach(function(uuid) {
+              var marker = markers[uuid];
+              if (!marker || marker.type !== "connector") return;
+              if (typeof marker.config_ref === "string" && keys.indexOf(marker.config_ref) >= 0) {
+                return;
+              }
+              var legacy = marker.config_ref;
+              var match = null;
+              var hadCandidate = false;
+              var byUuid = connectors.filter(function(c) {
+                return c.conn && c.conn._marker_uuid === uuid;
+              });
+              if (byUuid.length > 0) hadCandidate = true;
+              if (byUuid.length === 1) match = byUuid[0];
+              if (!match) {
+                var locator = null;
+                if (typeof Locator !== "undefined" && Locator.all) {
+                  locator = Locator.all.find(function(l) {
+                    return l.uuid === uuid;
+                  }) || null;
+                }
+                var locName = locator ? locator.name : null;
+                if (locName) {
+                  var byName = connectors.filter(function(c) {
+                    return c.conn && c.conn.locator === locName;
+                  });
+                  if (byName.length > 0) hadCandidate = true;
+                  if (byName.length === 1) {
+                    match = byName[0];
+                  } else if (byName.length > 1) {
+                    var owner = locator ? detectOwnerSubPart(projectConfig, partId, variantName, locator) : null;
+                    if (owner) {
+                      var byOwner = byName.filter(function(c) {
+                        return c.spKey === owner.spKey;
+                      });
+                      if (byOwner.length === 1) match = byOwner[0];
+                    }
+                  }
+                }
+              }
+              if (!match) {
+                marker.legacy_config_ref = legacy;
+                marker.config_ref = null;
+                var reason = hadCandidate ? "ambiguous_connector" : "connector_not_found";
+                entries.push({
+                  partId,
+                  variantName,
+                  uuid,
+                  reason,
+                  legacy_config_ref: legacy
+                });
+                warnings.push({
+                  code: "unresolved_config_ref",
+                  path: ["parts", partId, "element_markers", variantName, uuid],
+                  expected: "\u8FDE\u63A5\u70B9 key",
+                  got: legacy,
+                  hint: "\u65E0\u6CD5\u552F\u4E00\u5339\u914D\u8FDE\u63A5\u70B9\uFF0C\u5DF2\u4FDD\u7559 legacy_config_ref"
+                });
+                return;
+              }
+              marker.config_ref = match.key;
+              if (match.conn && !match.conn._marker_uuid) match.conn._marker_uuid = uuid;
+              migrated++;
+            });
+          });
+        });
+        if (entries.length > 0) {
+          if (!projectConfig._lastMigration || typeof projectConfig._lastMigration !== "object") {
+            projectConfig._lastMigration = {};
+          }
+          projectConfig._lastMigration.marker_refs = entries;
+        } else if (projectConfig._lastMigration && projectConfig._lastMigration.marker_refs) {
+          delete projectConfig._lastMigration.marker_refs;
+        }
+        return { migrated, warnings, entries };
+      }
       function cleanGhostMarkers(projectConfig) {
         if (!projectConfig || !projectConfig.parts) {
           log2.debug("cleanGhostMarkers: \u65E0\u96F6\u4EF6\u914D\u7F6E\uFF0C\u8DF3\u8FC7");
@@ -11354,10 +11501,12 @@
           clearMarker,
           getMarker,
           clearAllMarkers,
+          clearMarkerScope,
           getMarkersForVariant,
           detectOwnerSubPart,
           recalcAutoEndBones,
-          cleanGhostMarkers
+          cleanGhostMarkers,
+          migrateConnectorMarkerRefs
         };
       }
     }
@@ -11375,7 +11524,7 @@
       var PROPERTY_NAME = "machine_max_plugin";
       var { CONFIG_VERSION } = require_constants();
       var { migrateIfNeeded, createBlankConfig } = require_config();
-      var { cleanGhostMarkers } = require_element_markers();
+      var { cleanGhostMarkers, migrateConnectorMarkerRefs } = require_element_markers();
       var { createLogger: createLogger2 } = require_logger();
       var log2 = createLogger2("Persistence");
       function registerProperty2() {
@@ -11451,6 +11600,11 @@
             Project[PROPERTY_NAME] = blank;
             result = blank;
           }
+        }
+        var markerMigration = migrateConnectorMarkerRefs(result);
+        if (markerMigration.migrated > 0) {
+          log2.info("loadConfig: \u5DF2\u8FC1\u79FB " + markerMigration.migrated + " \u4E2A connector marker \u7684 config_ref");
+          saveConfig();
         }
         var ghostResult = cleanGhostMarkers(result);
         if (ghostResult.cleanedCount > 0) {
@@ -12410,6 +12564,17 @@
             { field: "power_outputs", label: "\u529F\u7387\u8F93\u51FA\u5206\u914D", editor: "power_outputs_map", required: true, defaultValue: {} }
           ]
         },
+        {
+          id: "machine_max:track_drive",
+          displayName: "\u5C65\u5E26\u9A71\u52A8",
+          category: "power",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
+            { field: "speed_outputs", label: "\u5C65\u5E26\u901F\u5EA6\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { track_speed: ["local", "global"] } },
+            { field: "force_outputs", label: "\u5C65\u5E26\u9A71\u52A8\u529B\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { track_force: ["local", "global"] } }
+          ]
+        },
         // ===== control 分类 =====
         {
           id: "machine_max:car_controller",
@@ -12437,6 +12602,16 @@
             { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["local", "global"] } },
             { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["local", "global"] } },
             { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["local", "global"] } }
+          ]
+        },
+        {
+          id: "machine_max:track_controller",
+          displayName: "\u5C65\u5E26\u63A7\u5236\u5668",
+          category: "control",
+          dynamicFields: [
+            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
+            { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { track_control: [] } },
+            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["local", "global"] } }
           ]
         },
         // ===== utility 分类 =====
@@ -13020,8 +13195,10 @@
         // 其余零件/变体/子零件级必填项（占位）
         DUPLICATE_NAME: "duplicate_name",
         // 连接点/子系统/交互区名在单变体内重复（Part 级按名寻址歧义）
-        RESERVED_NAME: "reserved_name"
+        RESERVED_NAME: "reserved_name",
         // 使用了信号保留地址（local/global 等）
+        DANGLING_SIGNAL_TARGET: "dangling_signal_target"
+        // 信号/功率目标指向不存在的节点（含 power_outputs 的 key）
       };
       var SCOPE_ITEM_BUCKET = {
         subsystem: "subsystems",
@@ -13082,6 +13259,639 @@
     }
   });
 
+  // src/doc/ports.js
+  var require_ports = __commonJS({
+    "src/doc/ports.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var STATE = null;
+      function groupList() {
+        return typeof Group !== "undefined" && Group && Group.all ? Group.all : [];
+      }
+      function locatorList() {
+        return typeof Locator !== "undefined" && Locator && Locator.all ? Locator.all : [];
+      }
+      function findIn(list, name) {
+        for (var i = 0; i < list.length; i++) {
+          if (list[i] && list[i].name === name) return list[i];
+        }
+        return null;
+      }
+      function findByUuidIn(list, uuid) {
+        for (var i = 0; i < list.length; i++) {
+          if (list[i] && list[i].uuid === uuid) return list[i];
+        }
+        return null;
+      }
+      function createDefaults() {
+        return {
+          bones: {
+            findByName: function(name) {
+              return findIn(groupList(), name) || findIn(locatorList(), name);
+            },
+            findByUuid: function(uuid) {
+              return findByUuidIn(groupList(), uuid) || findByUuidIn(locatorList(), uuid);
+            },
+            findNameByUuid: function(uuid) {
+              var el = findByUuidIn(groupList(), uuid) || findByUuidIn(locatorList(), uuid);
+              return el ? el.name : null;
+            },
+            listAll: function() {
+              return groupList().concat(locatorList());
+            }
+          },
+          markers: {
+            set: null,
+            clear: null,
+            clearScope: null,
+            recalc: null
+          },
+          validation: {
+            collectIssues: null
+          },
+          events: {
+            emit: function(name, payload) {
+              if (typeof Blockbench !== "undefined" && Blockbench && typeof Blockbench.dispatchEvent === "function") {
+                Blockbench.dispatchEvent(name, payload);
+              }
+            }
+          },
+          reactivity: {
+            set: function(obj, key, value) {
+              if (typeof Vue !== "undefined" && Vue && typeof Vue.set === "function") {
+                Vue.set(obj, key, value);
+              } else {
+                obj[key] = value;
+              }
+            },
+            del: function(obj, key) {
+              if (typeof Vue !== "undefined" && Vue && typeof Vue.delete === "function") {
+                Vue.delete(obj, key);
+              } else {
+                delete obj[key];
+              }
+            }
+          }
+        };
+      }
+      function get() {
+        if (!STATE) STATE = createDefaults();
+        return STATE;
+      }
+      function assignCategory(name, patch) {
+        if (!patch || typeof patch !== "object") return;
+        var current = get()[name];
+        Object.keys(patch).forEach(function(key) {
+          current[key] = patch[key];
+        });
+      }
+      function install(p) {
+        if (!p || typeof p !== "object") return get();
+        var current = get();
+        Object.keys(p).forEach(function(category) {
+          if (!current[category]) {
+            current[category] = {};
+          }
+          assignCategory(category, p[category]);
+        });
+        return current;
+      }
+      function reset() {
+        STATE = createDefaults();
+        return STATE;
+      }
+      module.exports = {
+        get,
+        install,
+        reset
+      };
+    }
+  });
+
+  // src/doc/refs.js
+  var require_refs = __commonJS({
+    "src/doc/refs.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var ports = require_ports();
+      var SENTINELS = ["local", "global"];
+      function own(obj, key) {
+        return Object.prototype.hasOwnProperty.call(obj, key);
+      }
+      function isObject(v) {
+        return v !== null && typeof v === "object" && !Array.isArray(v);
+      }
+      function eachVariant(config, fn) {
+        var parts = config && config.parts;
+        if (!isObject(parts)) return;
+        Object.keys(parts).forEach(function(partId) {
+          var part = parts[partId];
+          if (!isObject(part) || !isObject(part.variants)) return;
+          Object.keys(part.variants).forEach(function(variantName) {
+            var variant = part.variants[variantName];
+            if (isObject(variant)) fn(partId, variantName, part, variant);
+          });
+        });
+      }
+      function eachSubPart(config, fn) {
+        eachVariant(config, function(partId, variantName, part, variant) {
+          var subParts = variant.sub_parts;
+          if (!isObject(subParts)) return;
+          Object.keys(subParts).forEach(function(spKey) {
+            var sp = subParts[spKey];
+            if (isObject(sp)) fn(partId, variantName, spKey, sp, part, variant);
+          });
+        });
+      }
+      function eachMarker(config, fn) {
+        var parts = config && config.parts;
+        if (!isObject(parts)) return;
+        Object.keys(parts).forEach(function(partId) {
+          var part = parts[partId];
+          if (!isObject(part) || !isObject(part.element_markers)) return;
+          Object.keys(part.element_markers).forEach(function(variantName) {
+            var markers = part.element_markers[variantName];
+            if (!isObject(markers)) return;
+            Object.keys(markers).forEach(function(uuid) {
+              if (isObject(markers[uuid])) fn(partId, variantName, uuid, markers[uuid], markers);
+            });
+          });
+        });
+      }
+      function targetsOf(subPart) {
+        var targets = {
+          subsystem: {},
+          connector: {},
+          interact_box: {}
+        };
+        ["subsystems", "connectors", "interact_boxes"].forEach(function(map) {
+          var entries = subPart && subPart[map];
+          if (!isObject(entries)) return;
+          var kind = map === "subsystems" ? "subsystem" : map === "connectors" ? "connector" : "interact_box";
+          Object.keys(entries).forEach(function(key) {
+            targets[kind][key] = true;
+          });
+        });
+        return targets;
+      }
+      function targetExists(targets, target) {
+        if (SENTINELS.indexOf(target) >= 0) return true;
+        return !!(targets.subsystem[target] || targets.connector[target] || targets.interact_box[target]);
+      }
+      function isPlaceholder(value) {
+        return value === null || value === void 0 || value === "";
+      }
+      function isSignalMap(value) {
+        if (!isObject(value)) return false;
+        var entries = Object.keys(value);
+        for (var i = 0; i < entries.length; i++) {
+          if (!Array.isArray(value[entries[i]])) return false;
+        }
+        return true;
+      }
+      function eachSignalMap(node, fn) {
+        if (!isObject(node)) return;
+        Object.keys(node).forEach(function(field) {
+          if (field === "signal_translations") return;
+          if (isSignalMap(node[field])) fn(node[field], field);
+        });
+      }
+      function addSignalRefs(list, map, path, field) {
+        Object.keys(map).forEach(function(ch) {
+          var targets = map[ch];
+          if (!Array.isArray(targets)) return;
+          for (var i = 0; i < targets.length; i++) {
+            addRef(list, path.concat([field, ch, i]), targets[i], "signal_target");
+          }
+        });
+      }
+      function addRef(list, path, target, kind) {
+        if (isPlaceholder(target)) return;
+        list.push({ path, target, kind });
+      }
+      function collectRefs(subPart, basePath) {
+        var refs = [];
+        var base = basePath || [];
+        var subsystems = isObject(subPart.subsystems) ? subPart.subsystems : {};
+        Object.keys(subsystems).forEach(function(sk) {
+          var ss = subsystems[sk];
+          if (!isObject(ss)) return;
+          var p = base.concat(["subsystems", sk]);
+          addRef(refs, p.concat(["power_output"]), ss.power_output, "power_output");
+          addRef(refs, p.concat(["connector"]), ss.connector, "connector");
+          eachSignalMap(ss, function(map, field) {
+            addSignalRefs(refs, map, p, field);
+          });
+          if (isObject(ss.power_outputs)) {
+            Object.keys(ss.power_outputs).forEach(function(target) {
+              addRef(refs, p.concat(["power_outputs", target]), target, "power_output_key");
+            });
+          }
+        });
+        var connectors = isObject(subPart.connectors) ? subPart.connectors : {};
+        Object.keys(connectors).forEach(function(ck) {
+          var conn = connectors[ck];
+          if (!isObject(conn)) return;
+          var p = base.concat(["connectors", ck]);
+          addRef(refs, p.concat(["power_target"]), conn.power_target, "power_target");
+          eachSignalMap(conn, function(map, field) {
+            addSignalRefs(refs, map, p, field);
+          });
+        });
+        var interactBoxes = isObject(subPart.interact_boxes) ? subPart.interact_boxes : {};
+        Object.keys(interactBoxes).forEach(function(ik) {
+          var ib = interactBoxes[ik];
+          if (!isObject(ib)) return;
+          var p = base.concat(["interact_boxes", ik]);
+          eachSignalMap(ib, function(map, field) {
+            addSignalRefs(refs, map, p, field);
+          });
+        });
+        var hitBoxes = isObject(subPart.hit_boxes) ? subPart.hit_boxes : {};
+        Object.keys(hitBoxes).forEach(function(hk) {
+          var hb = hitBoxes[hk];
+          if (!isObject(hb)) return;
+          addRef(refs, base.concat(["hit_boxes", hk, "subsystem"]), hb.subsystem, "hit_box_subsystem");
+        });
+        return { targets: targetsOf(subPart), refs };
+      }
+      function resolveConfigRefs(config, scope) {
+        scope = scope || {};
+        var subPart = scope.subPart;
+        var basePath = scope.basePath;
+        if (!subPart) {
+          var part = config && config.parts && config.parts[scope.partId];
+          var variant = part && part.variants && part.variants[scope.variantName];
+          subPart = variant && variant.sub_parts && variant.sub_parts[scope.subPartKey];
+          basePath = [
+            "parts",
+            scope.partId,
+            "variants",
+            scope.variantName,
+            "sub_parts",
+            scope.subPartKey
+          ];
+        }
+        if (!isObject(subPart)) {
+          return {
+            ok: false,
+            resolved: [],
+            dangling: [],
+            errors: [{
+              path: basePath || [],
+              code: "not_found",
+              expected: "sub_part",
+              got: void 0,
+              hint: "\u5B50\u96F6\u4EF6\u4E0D\u5B58\u5728"
+            }]
+          };
+        }
+        var collected = collectRefs(subPart, basePath || []);
+        var resolved = [];
+        var dangling = [];
+        collected.refs.forEach(function(ref) {
+          if (targetExists(collected.targets, ref.target)) {
+            resolved.push(ref);
+          } else {
+            dangling.push(ref);
+          }
+        });
+        return { ok: dangling.length === 0, resolved, dangling, errors: [] };
+      }
+      function removeSignalTarget(list, target) {
+        var removed = 0;
+        for (var i = list.length - 1; i >= 0; i--) {
+          if (list[i] === target) {
+            list.splice(i, 1);
+            removed++;
+          }
+        }
+        return removed;
+      }
+      function cleanDangling(config, removed) {
+        removed = removed || {};
+        var target = removed.target || removed.key;
+        var cleaned = [];
+        if (!target) return { ok: true, cleaned_references: cleaned };
+        eachSubPart(config, function(partId, variantName, spKey, sp) {
+          var base = ["parts", partId, "variants", variantName, "sub_parts", spKey];
+          var subsystems = isObject(sp.subsystems) ? sp.subsystems : {};
+          Object.keys(subsystems).forEach(function(sk) {
+            var ss = subsystems[sk];
+            if (!isObject(ss)) return;
+            var p = base.concat(["subsystems", sk]);
+            if (ss.power_output === target) {
+              ss.power_output = "";
+              cleaned.push({ path: p.concat(["power_output"]), target, kind: "power_output" });
+            }
+            if (ss.connector === target) {
+              ss.connector = "";
+              cleaned.push({ path: p.concat(["connector"]), target, kind: "connector" });
+            }
+            eachSignalMap(ss, function(map, field) {
+              Object.keys(map).forEach(function(ch) {
+                if (Array.isArray(map[ch]) && removeSignalTarget(map[ch], target) > 0) {
+                  cleaned.push({
+                    path: p.concat([field, ch]),
+                    target,
+                    kind: "signal_target"
+                  });
+                }
+              });
+            });
+            if (isObject(ss.power_outputs) && own(ss.power_outputs, target)) {
+              delete ss.power_outputs[target];
+              cleaned.push({
+                path: p.concat(["power_outputs", target]),
+                target,
+                kind: "power_output_key"
+              });
+            }
+          });
+          var connectors = isObject(sp.connectors) ? sp.connectors : {};
+          Object.keys(connectors).forEach(function(ck) {
+            var conn = connectors[ck];
+            if (!isObject(conn)) return;
+            var p = base.concat(["connectors", ck]);
+            if (conn.power_target === target) {
+              conn.power_target = "";
+              cleaned.push({ path: p.concat(["power_target"]), target, kind: "power_target" });
+            }
+            eachSignalMap(conn, function(map, field) {
+              Object.keys(map).forEach(function(ch) {
+                if (Array.isArray(map[ch]) && removeSignalTarget(map[ch], target) > 0) {
+                  cleaned.push({
+                    path: p.concat([field, ch]),
+                    target,
+                    kind: "signal_target"
+                  });
+                }
+              });
+            });
+          });
+          var interactBoxes = isObject(sp.interact_boxes) ? sp.interact_boxes : {};
+          Object.keys(interactBoxes).forEach(function(ik) {
+            var ib = interactBoxes[ik];
+            if (!isObject(ib)) return;
+            var p = base.concat(["interact_boxes", ik]);
+            eachSignalMap(ib, function(map, field) {
+              Object.keys(map).forEach(function(ch) {
+                if (Array.isArray(map[ch]) && removeSignalTarget(map[ch], target) > 0) {
+                  cleaned.push({
+                    path: p.concat([field, ch]),
+                    target,
+                    kind: "signal_target"
+                  });
+                }
+              });
+            });
+          });
+          var hitBoxes = isObject(sp.hit_boxes) ? sp.hit_boxes : {};
+          Object.keys(hitBoxes).forEach(function(hk) {
+            var hb = hitBoxes[hk];
+            if (isObject(hb) && hb.subsystem === target) {
+              hb.subsystem = "";
+              cleaned.push({
+                path: base.concat(["hit_boxes", hk, "subsystem"]),
+                target,
+                kind: "hit_box_subsystem"
+              });
+            }
+          });
+        });
+        eachMarker(config, function(partId, variantName, uuid, marker, markers) {
+          if (marker.config_ref !== target) return;
+          var typeMatches = !removed.kind || marker.type === removed.kind || removed.kind === "sub_part" && (marker.type === "sub_part" || marker.type === "hit_box");
+          if (!typeMatches) return;
+          delete markers[uuid];
+          cleaned.push({
+            path: ["parts", partId, "element_markers", variantName, uuid],
+            target,
+            kind: "marker"
+          });
+        });
+        return { ok: true, cleaned_references: cleaned };
+      }
+      function renameSignalTargets(obj, oldKey, newKey, path, report, field) {
+        if (!isObject(obj)) return;
+        var name = field || "signal_targets";
+        Object.keys(obj).forEach(function(ch) {
+          var list = obj[ch];
+          if (!Array.isArray(list)) return;
+          for (var i = 0; i < list.length; i++) {
+            if (list[i] !== oldKey) continue;
+            if (list.indexOf(newKey) < 0) {
+              list[i] = newKey;
+            } else {
+              list.splice(i, 1);
+              i--;
+            }
+            report.push({
+              path: path.concat([name, ch]),
+              from: oldKey,
+              to: newKey,
+              kind: "signal_target"
+            });
+          }
+        });
+      }
+      function renameKey(obj, oldKey, newKey, path, report, kind) {
+        if (!isObject(obj) || !own(obj, oldKey) || oldKey === newKey) return;
+        var value = obj[oldKey];
+        delete obj[oldKey];
+        obj[newKey] = value;
+        report.push({ path, from: oldKey, to: newKey, kind: kind || "key" });
+      }
+      function renameRefs(config, opts) {
+        opts = opts || {};
+        var oldKey = opts.oldKey;
+        var newKey = opts.newKey;
+        var report = [];
+        if (!oldKey || !newKey || oldKey === newKey) {
+          return { ok: true, changed: 0, renamed: report };
+        }
+        eachMarker(config, function(partId, variantName, uuid, marker) {
+          var shouldRename = false;
+          if (marker.type === "sub_part" || marker.type === "hit_box") {
+            shouldRename = marker.config_ref === oldKey;
+          } else if (marker.type === "connector" || marker.type === "interact_box") {
+            shouldRename = marker.config_ref === oldKey;
+          }
+          if (!shouldRename) return;
+          marker.config_ref = newKey;
+          report.push({
+            path: ["parts", partId, "element_markers", variantName, uuid, "config_ref"],
+            from: oldKey,
+            to: newKey,
+            kind: "marker"
+          });
+        });
+        eachSubPart(config, function(partId, variantName, spKey, sp) {
+          var base = ["parts", partId, "variants", variantName, "sub_parts", spKey];
+          var subsystems = isObject(sp.subsystems) ? sp.subsystems : {};
+          Object.keys(subsystems).forEach(function(sk) {
+            var ss = subsystems[sk];
+            if (!isObject(ss)) return;
+            var p = base.concat(["subsystems", sk]);
+            if (ss.power_output === oldKey) {
+              ss.power_output = newKey;
+              report.push({ path: p.concat(["power_output"]), from: oldKey, to: newKey, kind: "power_output" });
+            }
+            if (ss.connector === oldKey) {
+              ss.connector = newKey;
+              report.push({ path: p.concat(["connector"]), from: oldKey, to: newKey, kind: "connector" });
+            }
+            eachSignalMap(ss, function(map, field) {
+              renameSignalTargets(map, oldKey, newKey, p, report, field);
+            });
+            renameKey(
+              ss.power_outputs,
+              oldKey,
+              newKey,
+              p.concat(["power_outputs"]),
+              report,
+              "power_output_key"
+            );
+          });
+          var connectors = isObject(sp.connectors) ? sp.connectors : {};
+          Object.keys(connectors).forEach(function(ck) {
+            var conn = connectors[ck];
+            if (!isObject(conn)) return;
+            var p = base.concat(["connectors", ck]);
+            if (conn.power_target === oldKey) {
+              conn.power_target = newKey;
+              report.push({ path: p.concat(["power_target"]), from: oldKey, to: newKey, kind: "power_target" });
+            }
+            eachSignalMap(conn, function(map, field) {
+              renameSignalTargets(map, oldKey, newKey, p, report, field);
+            });
+          });
+          var interactBoxes = isObject(sp.interact_boxes) ? sp.interact_boxes : {};
+          Object.keys(interactBoxes).forEach(function(ik) {
+            var ib = interactBoxes[ik];
+            if (!isObject(ib)) return;
+            var p = base.concat(["interact_boxes", ik]);
+            eachSignalMap(ib, function(map, field) {
+              renameSignalTargets(map, oldKey, newKey, p, report, field);
+            });
+          });
+          var hitBoxes = isObject(sp.hit_boxes) ? sp.hit_boxes : {};
+          Object.keys(hitBoxes).forEach(function(hk) {
+            var hb = hitBoxes[hk];
+            if (isObject(hb) && hb.subsystem === oldKey) {
+              hb.subsystem = newKey;
+              report.push({
+                path: base.concat(["hit_boxes", hk, "subsystem"]),
+                from: oldKey,
+                to: newKey,
+                kind: "hit_box_subsystem"
+              });
+            }
+          });
+        });
+        return { ok: true, changed: report.length, renamed: report };
+      }
+      function resolveBones(kind, node, portsObj) {
+        var p = portsObj || ports.get();
+        var bones = p.bones;
+        var resolved = [];
+        var unresolved = [];
+        function byName(name, field, extra) {
+          if (isPlaceholder(name)) return;
+          var el = bones.findByName(name);
+          var entry = { bone: name, field };
+          if (extra) Object.keys(extra).forEach(function(k) {
+            entry[k] = extra[k];
+          });
+          if (el) {
+            entry.uuid = el.uuid;
+            resolved.push(entry);
+          } else {
+            unresolved.push(entry);
+          }
+        }
+        if (kind === "sub_part") {
+          byName(node.start_bone, "start_bone");
+          if (Array.isArray(node.end_bones)) {
+            node.end_bones.forEach(function(b) {
+              byName(b, "end_bones");
+            });
+          }
+          byName(node.mass_center, "mass_center");
+          if (isObject(node.hit_boxes)) {
+            Object.keys(node.hit_boxes).forEach(function(key) {
+              if (isPlaceholder(key)) return;
+              var el = bones.findByUuid(key) || bones.findByName(key);
+              var entry = { bone: key, field: "hit_box_key" };
+              if (el) {
+                entry.uuid = el.uuid;
+                resolved.push(entry);
+              } else {
+                unresolved.push(entry);
+              }
+            });
+          }
+          if (isObject(node.interact_boxes)) {
+            Object.keys(node.interact_boxes).forEach(function(key) {
+              var ib = node.interact_boxes[key];
+              if (isObject(ib)) byName(ib.bone, "interact_box.bone", { key });
+            });
+          }
+          if (isObject(node.connectors)) {
+            Object.keys(node.connectors).forEach(function(key) {
+              var conn = node.connectors[key];
+              if (isObject(conn)) byName(conn.locator, "connector.locator", { key });
+            });
+          }
+          if (isObject(node.subsystems)) {
+            Object.keys(node.subsystems).forEach(function(key) {
+              var ss = node.subsystems[key];
+              if (!isObject(ss)) return;
+              byName(ss.locator, "subsystem.locator", { key });
+              if (Array.isArray(ss.dismount_locators)) {
+                ss.dismount_locators.forEach(function(loc) {
+                  byName(loc, "subsystem.dismount_locators", { key });
+                });
+              }
+            });
+          }
+        } else if (kind === "interact_box") {
+          byName(node.bone, "bone");
+        } else if (kind === "connector") {
+          byName(node.locator, "locator");
+        } else if (kind === "subsystem") {
+          byName(node.locator, "locator");
+          if (Array.isArray(node.dismount_locators)) {
+            node.dismount_locators.forEach(function(loc) {
+              byName(loc, "dismount_locators");
+            });
+          }
+        } else if (kind === "hit_box") {
+          byName(node.bone, "bone");
+        }
+        return { resolved, unresolved };
+      }
+      module.exports = {
+        SENTINELS,
+        collectRefs,
+        resolveConfigRefs,
+        cleanDangling,
+        renameRefs,
+        resolveBones
+      };
+    }
+  });
+
   // src/mode/validation.js
   var require_validation = __commonJS({
     "src/mode/validation.js"(exports, module) {
@@ -13096,6 +13906,7 @@
       var ssTypes = require_subsystem_types();
       var cp = require_content_pack_manager();
       var { CODES, isMissingValue } = require_validation_types();
+      var docRefs = require_refs();
       var log2 = createLogger2("Validation");
       function _scopeForMarkerType(type) {
         if (type === "sub_part") return "subpart";
@@ -13224,6 +14035,31 @@
           });
         });
       }
+      function _collectDanglingRefs(config, partId, vName, spKey, problems) {
+        var result = docRefs.resolveConfigRefs(config, {
+          partId,
+          variantName: vName,
+          subPartKey: spKey
+        });
+        (result.dangling || []).forEach(function(ref) {
+          var p = ref.path || [];
+          var baseLen = 6;
+          var container = p[baseLen];
+          var itemKey = p[baseLen + 1];
+          var scope = "subpart";
+          if (container === "subsystems") scope = "subsystem";
+          else if (container === "connectors") scope = "connector";
+          else if (container === "interact_boxes") scope = "interact_box";
+          else if (container === "hit_boxes") scope = "hit_box";
+          var what = ref.kind === "power_output_key" ? "\u529F\u7387\u8F93\u51FA\u76EE\u6807\uFF08power_outputs \u7684 key\uFF09" : ref.kind === "hit_box_subsystem" ? "\u78B0\u649E\u7BB1\u5B50\u7CFB\u7EDF" : ref.kind === "power_target" ? "\u8FDE\u63A5\u70B9\u529F\u7387\u76EE\u6807" : ref.kind === "power_output" ? "\u5B50\u7CFB\u7EDF\u529F\u7387\u8F93\u51FA" : ref.kind === "connector" ? "\u5B50\u7CFB\u7EDF\u5173\u8054\u8FDE\u63A5\u70B9" : "\u4FE1\u53F7\u76EE\u6807";
+          problems.push(_makeProblem(
+            "error",
+            CODES.DANGLING_SIGNAL_TARGET,
+            '\u96F6\u4EF6 "' + partId + '"/' + vName + ' \u5B50\u96F6\u4EF6 "' + spKey + '"\uFF1A' + what + ' "' + ref.target + '" \u6307\u5411\u4E0D\u5B58\u5728\u7684\u8282\u70B9\uFF08\u53EA\u5141\u8BB8\u540C\u5B50\u96F6\u4EF6\u6761\u76EE\u6216 local/global\uFF09',
+            _mkPath(scope, partId, vName, spKey, itemKey)
+          ));
+        });
+      }
       function collectIssues(config) {
         var problems = [];
         var parts = config && config.parts || {};
@@ -13293,6 +14129,7 @@
                   _mkPath("subpart", partId, vName, spKey)
                 ));
               }
+              _collectDanglingRefs(config, partId, vName, spKey, problems);
               var subsystems = sp.subsystems || {};
               for (var ssName in subsystems) {
                 var ss = subsystems[ssName];
@@ -14260,7 +15097,7 @@
         }
         return mutate();
       }
-      function _coalesceWithPrevious(undo, label) {
+      function _coalesceWithPrevious(undo, label, mergeKey) {
         try {
           var history = undo.history;
           if (!Array.isArray(history) || history.length < 2) return;
@@ -14269,6 +15106,7 @@
           if (!current || !previous) return;
           if (previous.type !== "edit" || current.type !== "edit") return;
           if (previous.action !== label) return;
+          if (previous._mmMergeKey !== mergeKey) return;
           if (!(Date.now() - (previous.time || 0) < COALESCE_WINDOW_MS)) return;
           var prevPost = previous.post && previous.post[SNAPSHOT_KEY];
           var curBefore = current.before && current.before[SNAPSHOT_KEY];
@@ -14356,7 +15194,11 @@
         try {
           undo.finishEdit(text, aspects);
           discarded = _discardEmptyEntry(undo, wasSaved);
-          if (!discarded) _coalesceWithPrevious(undo, text);
+          if (!discarded && opts.coalesce === true && opts.mergeKey) {
+            var entry = undo.history && undo.history[undo.history.length - 1];
+            if (entry) entry._mmMergeKey = opts.mergeKey;
+            _coalesceWithPrevious(undo, text, opts.mergeKey);
+          }
         } catch (e) {
           log2.error("runConfigEdit: finishEdit \u5931\u8D25", e);
         }
@@ -14422,6 +15264,4902 @@
           }
         };
       }
+    }
+  });
+
+  // src/doc/field_specs.generated.js
+  var require_field_specs_generated = __commonJS({
+    "src/doc/field_specs.generated.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var PROVENANCE = {
+        "generator": "scripts/gen-field-specs.js",
+        "generator_version": 1,
+        "source_locale": "en_us",
+        "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
+        "source_revision": "7629416b",
+        "source_files": 67,
+        "source_sha256": "1c6aebbc87cc5527812a4fe68d25a22045acfd5dc870534a8e7efdf2e6083228",
+        "generated_from": "machine_max builtin JSON Schema"
+      };
+      var SPECS = {
+        "part": {
+          "fields": {
+            "icon": {
+              "type": "string",
+              "references": "resource"
+            },
+            "vehicle_durability_rate": {
+              "type": "number",
+              "integer": false,
+              "minimum": 0,
+              "maximum": 1
+            },
+            "vehicle_damage_rate": {
+              "type": "number",
+              "integer": false,
+              "minimum": 0
+            },
+            "vehicle_damage_rate_destroyed": {
+              "type": "number",
+              "integer": false,
+              "minimum": 0
+            },
+            "functional_threshold": {
+              "type": "number",
+              "integer": false,
+              "minimum": 0,
+              "maximum": 1
+            },
+            "share_durability": {
+              "type": "boolean"
+            },
+            "max_stack_size": {
+              "type": "integer",
+              "integer": true,
+              "minimum": 1,
+              "maximum": 64
+            }
+          },
+          "required": []
+        },
+        "variant": {
+          "fields": {
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "references": "resource"
+              }
+            },
+            "model": {
+              "type": "string",
+              "references": "resource",
+              "required": true
+            },
+            "textures": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "references": "resource"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "references": "resource"
+                  },
+                  "minProperties": 1
+                }
+              ],
+              "sideEffect": "ensure_object"
+            },
+            "animations": {
+              "type": "string",
+              "references": "resource"
+            }
+          },
+          "required": [
+            "model"
+          ]
+        },
+        "sub_part": {
+          "fields": {
+            "start_bone": {
+              "type": "string",
+              "references": "bone",
+              "sideEffect": "migrate_sub_part_marker"
+            },
+            "end_bones": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "references": "bone"
+              }
+            },
+            "durability": {
+              "type": "number",
+              "integer": false,
+              "minimum": 0
+            },
+            "mass": {
+              "type": "number",
+              "integer": false,
+              "minimum": 0
+            },
+            "mass_center": {
+              "type": "string",
+              "references": "locator"
+            },
+            "projected_area": {
+              "type": "tuple",
+              "tuple": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "block_collision": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false",
+                "ground"
+              ]
+            },
+            "collision_height": {
+              "type": "number",
+              "integer": false
+            },
+            "climb_assist": {
+              "type": "boolean"
+            },
+            "hydro_priority": {
+              "type": "integer",
+              "integer": true
+            },
+            "hydrodynamics": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "scale": {
+                    "type": "number",
+                    "integer": false,
+                    "minimum": 0
+                  },
+                  "effective_range": {
+                    "type": "number",
+                    "integer": false,
+                    "minimum": 0
+                  },
+                  "transonic_amplifier": {
+                    "type": "number",
+                    "integer": false,
+                    "minimum": 0
+                  },
+                  "front_drag": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "integer": false
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "back_drag": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "integer": false
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "left_drag": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "integer": false
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "right_drag": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "integer": false
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "up_drag": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "integer": false
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "down_drag": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "integer": false
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "x_lift": {
+                    "type": "number",
+                    "integer": false
+                  },
+                  "y_lift": {
+                    "type": "number",
+                    "integer": false
+                  },
+                  "z_lift": {
+                    "type": "number",
+                    "integer": false
+                  },
+                  "advanced": {
+                    "type": "boolean"
+                  },
+                  "advanced_aero": {
+                    "type": "object",
+                    "properties": {
+                      "lift_slope": {
+                        "type": "number",
+                        "integer": false
+                      },
+                      "alpha0": {
+                        "type": "number",
+                        "integer": false
+                      },
+                      "alpha_stall": {
+                        "type": "number",
+                        "integer": false,
+                        "minimum": 0
+                      },
+                      "cd0": {
+                        "type": "number",
+                        "integer": false,
+                        "minimum": 0
+                      },
+                      "k_induced": {
+                        "type": "number",
+                        "integer": false
+                      }
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": []
+        },
+        "hit_box": {
+          "fields": {
+            "id": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "box",
+                "sphere",
+                "cylinder",
+                "capsule",
+                "wheel"
+              ],
+              "required": true
+            },
+            "subsystem": {
+              "type": "string",
+              "references": "subsystem"
+            },
+            "module": {
+              "type": "string"
+            },
+            "material": {
+              "type": "string",
+              "references": "resource"
+            },
+            "thickness": {
+              "type": "number",
+              "integer": false,
+              "minimum": 0
+            },
+            "condition": {
+              "type": "string"
+            },
+            "overwrite": {
+              "type": "object",
+              "properties": {
+                "physics": {
+                  "type": "object",
+                  "properties": {
+                    "friction": {
+                      "type": "tuple",
+                      "tuple": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "minItems": 3,
+                      "maxItems": 3
+                    },
+                    "slip_adaptation": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "slip_curve": {
+                      "type": "object",
+                      "properties": {
+                        "longitudinal": {
+                          "type": "object",
+                          "properties": {
+                            "peak_slip_ratio": {
+                              "type": "number",
+                              "integer": false,
+                              "minimum": 0
+                            },
+                            "base_scale": {
+                              "type": "number",
+                              "integer": false
+                            },
+                            "peak_scale": {
+                              "type": "number",
+                              "integer": false
+                            },
+                            "kinetic_scale": {
+                              "type": "number",
+                              "integer": false
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "lateral": {
+                          "type": "object",
+                          "properties": {
+                            "peak_angle_deg": {
+                              "type": "number",
+                              "integer": false,
+                              "minimum": 0
+                            },
+                            "kinetic_angle_deg": {
+                              "type": "number",
+                              "integer": false,
+                              "minimum": 0
+                            },
+                            "base_scale": {
+                              "type": "number",
+                              "integer": false
+                            },
+                            "peak_scale": {
+                              "type": "number",
+                              "integer": false
+                            },
+                            "kinetic_scale": {
+                              "type": "number",
+                              "integer": false
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "rolling_friction": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0
+                    },
+                    "spinning_friction": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0
+                    },
+                    "restitution": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "block_damage_factor": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "armor": {
+                  "type": "object",
+                  "properties": {
+                    "rha": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0
+                    },
+                    "angle_effect": {
+                      "type": "boolean"
+                    },
+                    "dmg_resist": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0
+                    },
+                    "dmg_mult": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "decay_rha": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0
+                    },
+                    "decay_dmg_resist": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0
+                    },
+                    "decay_dmg_mult": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "decay_power": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0
+                    },
+                    "unpen_power": {
+                      "type": "number",
+                      "integer": false,
+                      "minimum": 0
+                    },
+                    "impact_modifiers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "operation": {
+                            "type": "any",
+                            "recursive": true,
+                            "required": true
+                          },
+                          "value": {
+                            "type": "number",
+                            "integer": false,
+                            "required": true
+                          },
+                          "condition": {
+                            "type": "any",
+                            "recursive": true,
+                            "required": true
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "penetration_modifiers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "operation": {
+                            "type": "any",
+                            "recursive": true,
+                            "required": true
+                          },
+                          "value": {
+                            "type": "number",
+                            "integer": false,
+                            "required": true
+                          },
+                          "condition": {
+                            "type": "any",
+                            "recursive": true,
+                            "required": true
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "damage_modifiers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "operation": {
+                            "type": "any",
+                            "recursive": true,
+                            "required": true
+                          },
+                          "value": {
+                            "type": "number",
+                            "integer": false,
+                            "required": true
+                          },
+                          "condition": {
+                            "type": "any",
+                            "recursive": true,
+                            "required": true
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "sounds": {
+                  "type": "object",
+                  "properties": {
+                    "hit_un_pen": {
+                      "type": "object",
+                      "properties": {
+                        "sound_id": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "range": {
+                          "type": "number",
+                          "integer": false,
+                          "minimum": 0
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "hit_pen": {
+                      "type": "object",
+                      "properties": {
+                        "sound_id": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "range": {
+                          "type": "number",
+                          "integer": false,
+                          "minimum": 0
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false,
+              "sideEffect": "ensure_object",
+              "nullable": true
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        "interact_box": {
+          "fields": {
+            "bone": {
+              "type": "string",
+              "required": true,
+              "references": "bone",
+              "sideEffect": "rebind_interact_marker"
+            },
+            "signal_targets": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "references": "signal"
+                }
+              },
+              "required": true
+            },
+            "interact_mode": {
+              "type": "string",
+              "enum": [
+                "fast",
+                "accurate"
+              ]
+            },
+            "condition": {
+              "type": "string",
+              "enum": [
+                "AND",
+                "OR",
+                "NAND",
+                "NOR",
+                "XOR",
+                "XNOR"
+              ]
+            }
+          },
+          "required": [
+            "bone",
+            "signal_targets"
+          ]
+        },
+        "connector": {
+          "fields": {
+            "locator": {
+              "type": "string",
+              "required": true,
+              "references": "locator",
+              "sideEffect": "migrate_connector_marker"
+            },
+            "definition": {
+              "type": "string",
+              "required": true,
+              "references": "resource",
+              "sideEffect": "sync_marker_config_ref"
+            },
+            "power_target": {
+              "type": "string",
+              "references": "signal"
+            },
+            "overwrite": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "Simple",
+                    "simple",
+                    "advanced",
+                    "Advanced"
+                  ]
+                },
+                "direction": {
+                  "type": "string",
+                  "enum": [
+                    "xp",
+                    "xn",
+                    "yp",
+                    "yn",
+                    "zp",
+                    "zn"
+                  ]
+                },
+                "integrity": {
+                  "type": "number",
+                  "integer": false,
+                  "minimum": 0
+                },
+                "impact_absorption": {
+                  "type": "number",
+                  "integer": false,
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "impact_absorption_destroyed": {
+                  "type": "number",
+                  "integer": false,
+                  "minimum": 0
+                },
+                "impact_reduction": {
+                  "type": "number",
+                  "integer": false,
+                  "minimum": 0
+                },
+                "impact_multiplier": {
+                  "type": "number",
+                  "integer": false,
+                  "minimum": 0
+                },
+                "collide_between_parts": {
+                  "type": "boolean"
+                },
+                "required_tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "references": "resource"
+                  }
+                },
+                "acceptable_tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "references": "resource"
+                  }
+                },
+                "forbidden_tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "references": "resource"
+                  }
+                },
+                "joint_attrs": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "lower_limit": {
+                        "type": "number",
+                        "integer": false
+                      },
+                      "upper_limit": {
+                        "type": "number",
+                        "integer": false
+                      },
+                      "equilibrium": {
+                        "type": "number",
+                        "integer": false
+                      },
+                      "stiffness": {
+                        "type": "number",
+                        "integer": false,
+                        "minimum": 0
+                      },
+                      "damping": {
+                        "type": "number",
+                        "integer": false,
+                        "minimum": 0
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "sideEffect": "ensure_object",
+              "nullable": true
+            },
+            "signal_translations": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "signal_targets": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "references": "signal"
+                }
+              }
+            },
+            "internal": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "locator",
+            "definition"
+          ]
+        },
+        "subsystem": {
+          "machine_max:basic": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:basic"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              }
+            },
+            "required": [
+              "type",
+              "definition"
+            ],
+            "schema": "subsystem/dynamic/basic_dynamic_attr.schema.json"
+          },
+          "machine_max:camera": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:camera"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "locator": {
+                "type": "string",
+                "references": "locator"
+              }
+            },
+            "required": [
+              "type",
+              "definition"
+            ],
+            "schema": "subsystem/dynamic/camera_dynamic_attr.schema.json"
+          },
+          "machine_max:car_controller": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:car_controller"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "control_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "required": true
+              },
+              "speed_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "throttle_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "brake_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "steering_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "handbrake_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "control_outputs"
+            ],
+            "schema": "subsystem/dynamic/car_controller_dynamic_attr.schema.json"
+          },
+          "machine_max:motorbike_controller": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:motorbike_controller"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "control_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "required": true
+              },
+              "speed_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "throttle_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "brake_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "steering_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "handbrake_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "control_outputs"
+            ],
+            "schema": "subsystem/dynamic/motorbike_controller_dynamic_attr.schema.json"
+          },
+          "machine_max:engine": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:engine"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "power_output": {
+                "type": "string",
+                "required": true,
+                "references": "signal"
+              },
+              "speed_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "power_output"
+            ],
+            "schema": "subsystem/dynamic/engine_dynamic_attr.schema.json"
+          },
+          "machine_max:gearbox": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:gearbox"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "power_output": {
+                "type": "string",
+                "required": true,
+                "references": "signal"
+              },
+              "gear_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "power_output"
+            ],
+            "schema": "subsystem/dynamic/gearbox_dynamic_attr.schema.json"
+          },
+          "machine_max:item_storage": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:item_storage"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              }
+            },
+            "required": [
+              "type",
+              "definition"
+            ],
+            "schema": "subsystem/dynamic/item_storage_dynamic_attr.schema.json"
+          },
+          "machine_max:motor": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:motor"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "power_output": {
+                "type": "string",
+                "required": true,
+                "references": "signal"
+              },
+              "speed_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "power_output"
+            ],
+            "schema": "subsystem/dynamic/motor_dynamic_attr.schema.json"
+          },
+          "machine_max:seat": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:seat"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "locator": {
+                "type": "string",
+                "references": "locator"
+              },
+              "control_group_preset": {
+                "type": "string",
+                "references": "resource"
+              },
+              "passenger_num_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "camera_discovery_targets": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "dismount_locators": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "references": "locator"
+                }
+              }
+            },
+            "required": [
+              "type",
+              "definition"
+            ],
+            "schema": "subsystem/dynamic/seat_dynamic_attr.schema.json"
+          },
+          "machine_max:sight": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:sight"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "locator": {
+                "type": "string",
+                "references": "locator"
+              }
+            },
+            "required": [
+              "type",
+              "definition"
+            ],
+            "schema": "subsystem/dynamic/sight_dynamic_attr.schema.json"
+          },
+          "machine_max:transmission": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:transmission"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "power_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "integer": false
+                },
+                "required": true
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "power_outputs"
+            ],
+            "schema": "subsystem/dynamic/transmission_dynamic_attr.schema.json"
+          },
+          "machine_max:wheel_driver": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:wheel_driver"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "connector": {
+                "type": "string",
+                "required": true,
+                "references": "connector"
+              },
+              "roll_speed_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "steering_angle_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "connector"
+            ],
+            "schema": "subsystem/dynamic/wheel_driver_dynamic_attr.schema.json"
+          },
+          "machine_max:lighting": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:lighting"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "locator": {
+                "type": "string",
+                "required": true,
+                "references": "locator"
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "locator"
+            ],
+            "schema": "subsystem/dynamic/lighting_dynamic_attr.schema.json"
+          },
+          "machine_max:turret_driver": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:turret_driver"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "connector": {
+                "type": "string",
+                "required": true,
+                "references": "connector"
+              },
+              "rotation_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "connector"
+            ],
+            "schema": "subsystem/dynamic/turret_driver_dynamic_attr.schema.json"
+          },
+          "machine_max:weapon_controller": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:weapon_controller"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "control_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "first_hud_layout": {
+                "type": "string",
+                "references": "resource"
+              },
+              "third_hud_layout": {
+                "type": "string",
+                "references": "resource"
+              },
+              "scope_hud_layout": {
+                "type": "string",
+                "references": "resource"
+              }
+            },
+            "required": [
+              "type",
+              "definition"
+            ],
+            "schema": "subsystem/dynamic/weapon_controller_dynamic_attr.schema.json"
+          },
+          "machine_max:launcher": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:launcher"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "locator": {
+                "type": "string",
+                "required": true,
+                "references": "locator"
+              },
+              "fire_animation": {
+                "type": "string"
+              },
+              "ammo_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "locator"
+            ],
+            "schema": "subsystem/dynamic/launcher_dynamic_attr.schema.json"
+          },
+          "machine_max:regen_loader": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:regen_loader"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "projectile_types": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer",
+                  "integer": true,
+                  "minimum": 1
+                },
+                "minProperties": 1,
+                "required": true
+              },
+              "belt_label": {
+                "type": "string"
+              },
+              "discovery_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "projectile_types"
+            ],
+            "schema": "subsystem/dynamic/regen_loader_dynamic_attr.schema.json"
+          },
+          "machine_max:track_controller": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:track_controller"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "control_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "required": true
+              },
+              "speed_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "control_outputs"
+            ],
+            "schema": "subsystem/dynamic/track_controller_dynamic_attr.schema.json"
+          },
+          "machine_max:track_drive": {
+            "fields": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "machine_max:track_drive"
+                ],
+                "required": true,
+                "sideEffect": "rebuild_type_fields"
+              },
+              "definition": {
+                "type": "string",
+                "required": true,
+                "references": "resource"
+              },
+              "connector": {
+                "type": "string",
+                "required": true,
+                "references": "connector"
+              },
+              "speed_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "force_outputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "type",
+              "definition",
+              "connector"
+            ],
+            "schema": "subsystem/dynamic/track_drive_dynamic_attr.schema.json"
+          }
+        }
+      };
+      var CONTAINERS = {
+        "part": [
+          "variants"
+        ],
+        "variant": [
+          "sub_parts"
+        ],
+        "sub_part": [
+          "hit_boxes",
+          "interact_boxes",
+          "connectors",
+          "subsystems"
+        ]
+      };
+      var SIDE_EFFECTS = {
+        "sub_part.start_bone": "migrate_sub_part_marker",
+        "interact_box.bone": "rebind_interact_marker",
+        "connector.definition": "sync_marker_config_ref",
+        "connector.locator": "migrate_connector_marker",
+        "hit_box.overwrite": "ensure_object",
+        "connector.overwrite": "ensure_object",
+        "variant.textures": "ensure_object",
+        "subsystem.type": "rebuild_type_fields"
+      };
+      module.exports = { PROVENANCE, SPECS, CONTAINERS, SIDE_EFFECTS };
+    }
+  });
+
+  // src/doc/field_specs.js
+  var require_field_specs = __commonJS({
+    "src/doc/field_specs.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var generated = require_field_specs_generated();
+      var PROVENANCE = generated.PROVENANCE;
+      var SPECS = generated.SPECS;
+      var CONTAINERS = generated.CONTAINERS;
+      var SIDE_EFFECTS = generated.SIDE_EFFECTS;
+      var KINDS = ["part", "variant", "sub_part", "hit_box", "interact_box", "connector", "subsystem"];
+      var ROOT_FIELDS = {
+        "$schema_version": { type: "number" },
+        namespace: { type: "string" },
+        modelFile: { type: "string" },
+        contentPackPath: { type: "string" },
+        dependencyPaths: { type: "array" },
+        packMeta: { type: "object" },
+        parts: { type: "object", container: "map", map: "parts" }
+      };
+      var ROOT_INTERNAL_FIELDS = ["_uiState", "_lastMigration"];
+      var INTERNAL_FIELDS = {
+        part: ["element_markers", "_unresolved_bones"],
+        variant: [],
+        sub_part: ["auto_end_bones"],
+        hit_box: [],
+        interact_box: ["_uuid"],
+        connector: ["_marker_uuid", "legacy_config_ref"],
+        subsystem: []
+      };
+      var CONTAINER_CHILD_KIND = {
+        parts: "part",
+        variants: "variant",
+        sub_parts: "sub_part",
+        hit_boxes: "hit_box",
+        interact_boxes: "interact_box",
+        connectors: "connector",
+        subsystems: "subsystem"
+      };
+      var VALUE_MAP_FIELDS = {
+        textures: "resource",
+        signal_targets: "array",
+        signal_translations: "string",
+        power_outputs: "number",
+        projectile_types: "integer",
+        hydrodynamics: "object",
+        overwrite: "object"
+      };
+      function isKnownKind(kind) {
+        return KINDS.indexOf(kind) >= 0;
+      }
+      function getTypeId(kind, nodeOrTypeId) {
+        if (kind !== "subsystem") return null;
+        if (typeof nodeOrTypeId === "string") return nodeOrTypeId;
+        if (nodeOrTypeId && typeof nodeOrTypeId.type === "string") return nodeOrTypeId.type;
+        return null;
+      }
+      function getSpec(kind, typeIdOrNode) {
+        if (kind === "subsystem") {
+          var typeId = getTypeId("subsystem", typeIdOrNode);
+          if (!typeId) return null;
+          return SPECS.subsystem[typeId] || null;
+        }
+        return SPECS[kind] || null;
+      }
+      function getFields(kind, typeIdOrNode) {
+        var spec = getSpec(kind, typeIdOrNode);
+        return spec ? spec.fields : {};
+      }
+      function getFieldSpec(kind, field, typeIdOrNode) {
+        var fields = getFields(kind, typeIdOrNode);
+        return fields[field] || null;
+      }
+      function getRequiredFields(kind, typeIdOrNode) {
+        var spec = getSpec(kind, typeIdOrNode);
+        return spec && Array.isArray(spec.required) ? spec.required.slice() : [];
+      }
+      function isRequiredField(kind, field, typeIdOrNode) {
+        return getRequiredFields(kind, typeIdOrNode).indexOf(field) >= 0;
+      }
+      function getContainers(kind) {
+        return (CONTAINERS[kind] || []).slice();
+      }
+      function isContainer(kind, field) {
+        return getContainers(kind).indexOf(field) >= 0;
+      }
+      function getContainerChildKind(field) {
+        return CONTAINER_CHILD_KIND[field] || null;
+      }
+      function isValueMapField(field) {
+        return Object.prototype.hasOwnProperty.call(VALUE_MAP_FIELDS, field);
+      }
+      function isMapField(kind, field) {
+        return isContainer(kind, field) || isValueMapField(field);
+      }
+      function getValueMapValueType(field) {
+        return VALUE_MAP_FIELDS[field] || null;
+      }
+      function isInternalField(kind, field) {
+        if (field === "_uiState") return true;
+        if (kind === "config" && ROOT_INTERNAL_FIELDS.indexOf(field) >= 0) return true;
+        var list = INTERNAL_FIELDS[kind] || [];
+        return list.indexOf(field) >= 0;
+      }
+      function getInternalFields(kind) {
+        return (INTERNAL_FIELDS[kind] || []).slice();
+      }
+      function getRootField(field) {
+        return ROOT_FIELDS[field] || null;
+      }
+      function isRootField(field) {
+        return Object.prototype.hasOwnProperty.call(ROOT_FIELDS, field);
+      }
+      function getSideEffect(kind, field) {
+        return SIDE_EFFECTS[kind + "." + field] || null;
+      }
+      function listSubsystemTypes() {
+        return Object.keys(SPECS.subsystem);
+      }
+      function hasSubsystemType(typeId) {
+        return Object.prototype.hasOwnProperty.call(SPECS.subsystem, typeId);
+      }
+      function isNullable(kind, field, typeIdOrNode) {
+        var spec = getFieldSpec(kind, field, typeIdOrNode);
+        return !!(spec && spec.nullable);
+      }
+      function isKnownField(kind, field, typeIdOrNode) {
+        if (isContainer(kind, field)) return true;
+        if (kind === "subsystem") {
+          var typeId = getTypeId("subsystem", typeIdOrNode);
+          if (!typeId || !hasSubsystemType(typeId)) return field === "type";
+        }
+        return !!getFieldSpec(kind, field, typeIdOrNode);
+      }
+      module.exports = {
+        PROVENANCE,
+        SPECS,
+        CONTAINERS,
+        SIDE_EFFECTS,
+        KINDS,
+        ROOT_FIELDS,
+        ROOT_INTERNAL_FIELDS,
+        INTERNAL_FIELDS,
+        CONTAINER_CHILD_KIND,
+        VALUE_MAP_FIELDS,
+        isKnownKind,
+        getTypeId,
+        getSpec,
+        getFields,
+        getFieldSpec,
+        getRequiredFields,
+        isRequiredField,
+        getContainers,
+        isContainer,
+        getContainerChildKind,
+        isValueMapField,
+        isMapField,
+        getValueMapValueType,
+        isInternalField,
+        getInternalFields,
+        getRootField,
+        isRootField,
+        getSideEffect,
+        listSubsystemTypes,
+        hasSubsystemType,
+        isNullable,
+        isKnownField
+      };
+    }
+  });
+
+  // src/doc/keys.js
+  var require_keys = __commonJS({
+    "src/doc/keys.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var PART_ID_RE = /^[a-z0-9_.-]{1,128}$/;
+      var VARIANT_NAME_RE = /^[A-Za-z0-9_.-]{1,128}$/;
+      var NAME_SEGMENT_RE = /^[A-Za-z0-9_.-]{1,128}$/;
+      var NAMESPACE_RE = /^[a-z0-9_-]+$/;
+      var RESOURCE_LOCATION_RE = /^[a-z0-9_.-]+:[a-z0-9_./-]+$/;
+      var WINDOWS_DEVICE_RE = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/;
+      var TRANSLATION_PREFIX = {
+        interact_box: "interact",
+        connector: "connector",
+        subsystem: "subsystem"
+      };
+      var MAP_KEY_KIND = {
+        parts: "partId",
+        variants: "variantName",
+        sub_parts: "subPartKey",
+        hit_boxes: "hitBoxKey",
+        interact_boxes: "interactBoxKey",
+        connectors: "connectorKey",
+        subsystems: "subsystemKey",
+        hydrodynamics: "hydrodynamicKey",
+        textures: "textureKey",
+        signal_targets: "channelKey",
+        signal_translations: "channelKey",
+        power_outputs: "powerOutputKey",
+        projectile_types: "projectileTypeKey",
+        overwrite: "objectField"
+      };
+      function isString(v) {
+        return typeof v === "string";
+      }
+      function hasReservedWildcard(v) {
+        return isString(v) && v.indexOf("*") >= 0;
+      }
+      function isValidNameSegment(name) {
+        if (!isString(name)) return false;
+        if (name.length < 1 || name.length > 128) return false;
+        if (!NAME_SEGMENT_RE.test(name)) return false;
+        if (name.charAt(0) === "." || name.charAt(name.length - 1) === ".") return false;
+        return true;
+      }
+      function isValidNamespace(ns) {
+        return isString(ns) && NAMESPACE_RE.test(ns);
+      }
+      function isValidPartId(partId) {
+        return isString(partId) && PART_ID_RE.test(partId);
+      }
+      function isValidVariantName(name) {
+        return isString(name) && VARIANT_NAME_RE.test(name);
+      }
+      function isValidResourceLocation(value) {
+        return isString(value) && RESOURCE_LOCATION_RE.test(value);
+      }
+      function isWindowsDeviceName(value) {
+        if (!isString(value)) return false;
+        var base = value.split(".")[0].toLowerCase();
+        return WINDOWS_DEVICE_RE.test(base);
+      }
+      function isSafePartIdSegment(value) {
+        if (!isString(value) || value.length === 0) return false;
+        if (value === "." || value === "..") return false;
+        if (value.charAt(0) === "." || value.charAt(value.length - 1) === ".") return false;
+        if (isWindowsDeviceName(value)) return false;
+        return true;
+      }
+      function isSafePartId(partId) {
+        if (!isValidPartId(partId)) return false;
+        if (!isSafePartIdSegment(partId)) return false;
+        if (!isSafePartIdSegment(partId.split("_")[0])) return false;
+        return true;
+      }
+      function isValidSubPartKey(key, namespace) {
+        if (!isString(key) || !isValidNamespace(namespace)) return false;
+        var prefix = "sub_part." + namespace + ".";
+        if (key.indexOf(prefix) !== 0) return false;
+        return isValidNameSegment(key.slice(prefix.length));
+      }
+      function parseSubPartKey(key) {
+        if (!isString(key) || key.indexOf("sub_part.") !== 0) return null;
+        var rest = key.slice("sub_part.".length);
+        var dot = rest.indexOf(".");
+        if (dot < 0) return { namespace: "", name: rest };
+        return { namespace: rest.slice(0, dot), name: rest.slice(dot + 1) };
+      }
+      function isCanonicalTranslationKey(kind, key, namespace) {
+        var prefix = TRANSLATION_PREFIX[kind];
+        if (!prefix || !isString(key) || !isValidNamespace(namespace)) return false;
+        var head = prefix + "." + namespace + ".";
+        if (key.indexOf(head) !== 0) return false;
+        return isValidNameSegment(key.slice(head.length));
+      }
+      function nameSegmentOf(key) {
+        if (!isString(key)) return "";
+        var dot = key.lastIndexOf(".");
+        return dot < 0 ? key : key.slice(dot + 1);
+      }
+      function fail(code, expected, got, hint) {
+        return { ok: false, code, expected, got, hint: hint || "" };
+      }
+      function ok(warning, expected, hint) {
+        var result = { ok: true };
+        if (warning) result.warning = warning;
+        if (expected) result.expected = expected;
+        if (hint) result.hint = hint;
+        return result;
+      }
+      function validateMapKey(map, key, ctx) {
+        ctx = ctx || {};
+        if (!isString(key)) {
+          return fail("invalid_format", "string", key, "\u914D\u7F6E key \u5FC5\u987B\u662F\u5B57\u7B26\u4E32");
+        }
+        if (hasReservedWildcard(key)) {
+          return fail(
+            "key_reserved",
+            "\u4E0D\u542B * \u7684 key",
+            key,
+            "`*` \u662F\u8DEF\u5F84\u901A\u914D\u7B26\uFF0C\u4E0D\u80FD\u4F5C\u4E3A\u5B57\u9762 key\uFF1B\u521B\u5EFA/\u91CD\u547D\u540D\u65F6\u8BF7\u6362\u4E00\u4E2A\u540D\u5B57"
+          );
+        }
+        var kind = MAP_KEY_KIND[map];
+        if (!kind) {
+          return fail("unknown_field", "\u5DF2\u77E5 map \u5C42", map, "\u672A\u77E5\u7684 map \u5C42");
+        }
+        var ns = isValidNamespace(ctx.namespace) ? ctx.namespace : "machine_max";
+        var result;
+        switch (kind) {
+          case "partId":
+            if (!isValidPartId(key)) {
+              return fail(
+                "invalid_format",
+                "^[a-z0-9_.-]{1,128}$",
+                key,
+                "partId \u53EA\u5141\u8BB8\u5C0F\u5199 ASCII \u5B57\u6BCD\u3001\u6570\u5B57\u3001`_`\u3001`.`\u3001`-`\uFF0C\u957F\u5EA6 1\u2013128"
+              );
+            }
+            if (!isSafePartId(key)) {
+              return fail(
+                "invalid_format",
+                "path-safe partId",
+                key,
+                'partId \u4E0D\u80FD\u662F `.` / `..`\u3001\u4E0D\u80FD\u4EE5\u70B9\u5F00\u5934\u6216\u7ED3\u5C3E\u3001\u4E0D\u80FD\u662F Windows \u8BBE\u5907\u540D\uFF08con/prn/aux/nul/com1-9/lpt1-9\uFF09\uFF1B\u76EE\u5F55\u6BB5 split("_")[0] \u4E5F\u8981\u6EE1\u8DB3'
+              );
+            }
+            return ok();
+          case "variantName":
+            if (!isValidVariantName(key)) {
+              return fail(
+                "invalid_format",
+                "^[A-Za-z0-9_.-]{1,128}$",
+                key,
+                "\u53D8\u4F53\u540D\u53EA\u5141\u8BB8 ASCII \u5B57\u6BCD\u3001\u6570\u5B57\u3001`_`\u3001`.`\u3001`-`\uFF0C\u957F\u5EA6 1\u2013128"
+              );
+            }
+            return ok();
+          case "subPartKey":
+            if (!isValidSubPartKey(key, ns)) {
+              return fail(
+                "invalid_format",
+                "sub_part." + ns + ".<name>",
+                key,
+                "\u5B50\u96F6\u4EF6 key \u5FC5\u987B\u662F `sub_part." + ns + ".<name>`\uFF0Cname \u4E3A 1\u2013128 \u4F4D ASCII \u5B57\u6BCD/\u6570\u5B57/`_`/`.`/`-`\uFF0C\u4E14\u4E0D\u4EE5\u70B9\u5F00\u5934\u6216\u7ED3\u5C3E"
+              );
+            }
+            return ok();
+          case "interactBoxKey":
+          case "connectorKey":
+          case "subsystemKey":
+            result = validateTranslationKey(map === "interact_boxes" ? "interact_box" : map === "connectors" ? "connector" : "subsystem", key, ns);
+            return result;
+          case "textureKey":
+          case "channelKey":
+          case "powerOutputKey":
+            if (!isValidNameSegment(key)) {
+              return fail(
+                "invalid_format",
+                "^[A-Za-z0-9_.-]{1,128}$",
+                key,
+                "\u540D\u79F0\u6BB5\u53EA\u5141\u8BB8 ASCII \u5B57\u6BCD\u3001\u6570\u5B57\u3001`_`\u3001`.`\u3001`-`\uFF0C\u957F\u5EA6 1\u2013128\uFF0C\u4E14\u4E0D\u4EE5\u70B9\u5F00\u5934\u6216\u7ED3\u5C3E"
+              );
+            }
+            return ok();
+          case "projectileTypeKey":
+            if (!isValidResourceLocation(key)) {
+              return fail(
+                "invalid_format",
+                "^[a-z0-9_.-]+:[a-z0-9_./-]+$",
+                key,
+                "\u5F39\u79CD key \u662F\u8D44\u6E90\u5730\u5740\uFF08\u5982 machine_max:30mm_ap\uFF09\uFF0C\u8981\u6C42\u5C0F\u5199\uFF0C\u53EF\u542B `:` \u4E0E `/`"
+              );
+            }
+            return ok();
+          case "hitBoxKey":
+            if (key.length === 0) {
+              return fail(
+                "invalid_format",
+                "\u975E\u7A7A\u9AA8\u9ABC\u540D",
+                key,
+                "hit_boxes \u7684 key \u662F\u6A21\u578B\u5143\u7D20\u540D\uFF0C\u4E0D\u80FD\u4E3A\u7A7A\u5B57\u7B26\u4E32"
+              );
+            }
+            return ok();
+          case "hydrodynamicKey":
+            return ok();
+          case "objectField":
+            if (key.length === 0) {
+              return fail("invalid_format", "\u975E\u7A7A\u5BF9\u8C61\u5B57\u6BB5\u540D", key, "\u5BF9\u8C61\u5B57\u6BB5\u540D\u4E0D\u80FD\u4E3A\u7A7A");
+            }
+            return ok();
+          default:
+            return fail("unknown_field", "\u5DF2\u77E5 key \u7C7B\u522B", map, "\u672A\u77E5\u7684 key \u7C7B\u522B");
+        }
+      }
+      function validateTranslationKey(kind, key, namespace) {
+        var prefix = TRANSLATION_PREFIX[kind];
+        if (!prefix) {
+          return fail("unknown_field", "\u5DF2\u77E5\u7FFB\u8BD1\u952E\u7C7B\u522B", kind, "\u672A\u77E5\u7684\u7FFB\u8BD1\u952E\u7C7B\u522B");
+        }
+        var expected = prefix + ".<namespace>.<name>";
+        if (key.length === 0) {
+          return fail("invalid_format", expected, key, "\u7FFB\u8BD1\u952E\u4E0D\u80FD\u4E3A\u7A7A");
+        }
+        if (!NAME_SEGMENT_RE.test(key)) {
+          return fail(
+            "invalid_format",
+            expected,
+            key,
+            "\u7FFB\u8BD1\u952E\u53EA\u5141\u8BB8 ASCII \u5B57\u6BCD\u3001\u6570\u5B57\u3001`_`\u3001`.`\u3001`-`\uFF1B\u4E2D\u6587\u3001\u7A7A\u767D\u3001`*`\u3001`/`\u3001`~`\u3001`:` \u4E00\u5F8B\u62D2\u7EDD"
+          );
+        }
+        if (key.charAt(0) === "." || key.charAt(key.length - 1) === ".") {
+          return fail("invalid_format", expected, key, "\u7FFB\u8BD1\u952E\u4E0D\u80FD\u4EE5\u70B9\u5F00\u5934\u6216\u7ED3\u5C3E");
+        }
+        var name = nameSegmentOf(key);
+        if (!isValidNameSegment(name)) {
+          return fail(
+            "invalid_format",
+            expected,
+            key,
+            "\u7FFB\u8BD1\u952E\u7684\u540D\u79F0\u6BB5\u5FC5\u987B\u662F 1\u2013128 \u4F4D ASCII \u5B57\u6BCD/\u6570\u5B57/`_`/`.`/`-`\uFF0C\u4E14\u4E0D\u4EE5\u70B9\u5F00\u5934\u6216\u7ED3\u5C3E"
+          );
+        }
+        if (!isCanonicalTranslationKey(kind, key, namespace)) {
+          return ok(
+            "non_canonical_key",
+            expected,
+            "\u7FFB\u8BD1\u952E\u524D\u7F00\u4E0D\u662F `" + expected + "`\uFF1B\u4EC5\u544A\u8B66\uFF0C\u4E0D\u963B\u65AD"
+          );
+        }
+        return ok();
+      }
+      function isValidMapKey(map, key, ctx) {
+        return validateMapKey(map, key, ctx).ok;
+      }
+      function extractSubPartName(key) {
+        if (!isString(key)) return "";
+        if (key.indexOf("sub_part.") !== 0) return key;
+        var rest = key.slice("sub_part.".length);
+        var dot = rest.indexOf(".");
+        return dot < 0 ? rest : rest.slice(dot + 1);
+      }
+      function nextLegacyName(usedNames) {
+        var n = 1;
+        while (usedNames && usedNames.indexOf("legacy_" + n) >= 0) n++;
+        return "legacy_" + n;
+      }
+      function subPartKeyOf(namespace, name) {
+        return "sub_part." + namespace + "." + name;
+      }
+      function truncateNameForSuffix(name, suffix) {
+        var max = 128 - suffix.length;
+        if (max < 1) return "";
+        var out = name.slice(0, max);
+        while (out.length > 0 && out.charAt(out.length - 1) === ".") out = out.slice(0, -1);
+        return out;
+      }
+      function uniqueSubPartKey(candidate, usedKeys, usedNames) {
+        usedKeys = usedKeys || [];
+        usedNames = usedNames || [];
+        if (usedKeys.indexOf(candidate) < 0) return candidate;
+        var parsed = parseSubPartKey(candidate);
+        var ns = parsed && parsed.namespace ? parsed.namespace : "machine_max";
+        var name = parsed ? parsed.name : candidate;
+        var n = 2;
+        while (n < 1e4) {
+          var suffix = "_" + n;
+          var base = truncateNameForSuffix(name, suffix);
+          if (base.length === 0) {
+            base = nextLegacyName(usedNames);
+          }
+          var next = subPartKeyOf(ns, base + suffix);
+          if (usedKeys.indexOf(next) < 0) return next;
+          n++;
+        }
+        return subPartKeyOf(ns, nextLegacyName(usedNames));
+      }
+      function canonicalSubPartKey(key, namespace, usedKeys, usedNames) {
+        var ns = isValidNamespace(namespace) ? namespace : "machine_max";
+        usedKeys = usedKeys || [];
+        usedNames = usedNames || [];
+        if (isValidSubPartKey(key, ns)) return key;
+        var name = extractSubPartName(key);
+        if (name === "default") name = "main";
+        if (!isValidNameSegment(name)) name = nextLegacyName(usedNames);
+        return uniqueSubPartKey(subPartKeyOf(ns, name), usedKeys, usedNames);
+      }
+      var CONTAINER_MAPS = {
+        config: ["parts"],
+        part: ["variants"],
+        variant: ["sub_parts"],
+        sub_part: ["hit_boxes", "interact_boxes", "connectors", "subsystems"]
+      };
+      var VALUE_MAPS = {
+        variant: ["textures"],
+        sub_part: ["hydrodynamics"],
+        interact_box: ["signal_targets"],
+        connector: ["signal_targets", "signal_translations"],
+        subsystem: ["signal_targets", "signal_translations", "power_outputs", "projectile_types"]
+      };
+      function childKindForMap(map) {
+        switch (map) {
+          case "parts":
+            return "part";
+          case "variants":
+            return "variant";
+          case "sub_parts":
+            return "sub_part";
+          case "hit_boxes":
+            return "hit_box";
+          case "interact_boxes":
+            return "interact_box";
+          case "connectors":
+            return "connector";
+          case "subsystems":
+            return "subsystem";
+          default:
+            return null;
+        }
+      }
+      function validateKeys(kind, node, ctx) {
+        ctx = ctx || {};
+        var namespace = isValidNamespace(ctx.namespace) ? ctx.namespace : "machine_max";
+        var basePath = Array.isArray(ctx.path) ? ctx.path.slice() : [];
+        var errors = [];
+        var warnings = [];
+        function visit(currentKind, current, path) {
+          if (!current || typeof current !== "object" || Array.isArray(current)) return;
+          var maps = CONTAINER_MAPS[currentKind] || [];
+          for (var i = 0; i < maps.length; i++) {
+            var map = maps[i];
+            var entries = current[map];
+            if (!entries || typeof entries !== "object" || Array.isArray(entries)) continue;
+            var keys = Object.keys(entries);
+            for (var j = 0; j < keys.length; j++) {
+              var key = keys[j];
+              var result = validateMapKey(map, key, { namespace });
+              if (!result.ok) {
+                errors.push({
+                  path: path.concat([map, key]),
+                  code: result.code,
+                  expected: result.expected,
+                  got: key,
+                  hint: result.hint
+                });
+                continue;
+              }
+              if (result.warning === "non_canonical_key") {
+                warnings.push({
+                  path: path.concat([map, key]),
+                  code: "non_canonical_key",
+                  expected: result.expected,
+                  got: key,
+                  hint: result.hint
+                });
+              }
+              var child = entries[key];
+              var childKind = childKindForMap(map);
+              if (childKind && child && typeof child === "object") {
+                visit(childKind, child, path.concat([map, key]));
+              }
+            }
+          }
+          var valueMaps = VALUE_MAPS[currentKind] || [];
+          for (var vi = 0; vi < valueMaps.length; vi++) {
+            var valueMap = valueMaps[vi];
+            var valueEntries = current[valueMap];
+            if (!valueEntries || typeof valueEntries !== "object" || Array.isArray(valueEntries)) continue;
+            var valueKeys = Object.keys(valueEntries);
+            for (var vj = 0; vj < valueKeys.length; vj++) {
+              var vKey = valueKeys[vj];
+              if (valueMap === "projectile_types" && vKey.indexOf("__new_p_") === 0) continue;
+              var valueResult = validateMapKey(valueMap, vKey, { namespace });
+              if (!valueResult.ok) {
+                errors.push({
+                  path: path.concat([valueMap, vKey]),
+                  code: valueResult.code,
+                  expected: valueResult.expected,
+                  got: vKey,
+                  hint: valueResult.hint
+                });
+              }
+            }
+          }
+        }
+        visit(kind, node, basePath);
+        return { ok: errors.length === 0, errors, warnings };
+      }
+      module.exports = {
+        // 正则 / 基础判据
+        PART_ID_RE,
+        VARIANT_NAME_RE,
+        NAME_SEGMENT_RE,
+        NAMESPACE_RE,
+        RESOURCE_LOCATION_RE,
+        TRANSLATION_PREFIX,
+        MAP_KEY_KIND,
+        isValidNameSegment,
+        isValidNamespace,
+        isValidPartId,
+        isSafePartId,
+        isSafePartIdSegment,
+        isValidVariantName,
+        isValidResourceLocation,
+        isValidSubPartKey,
+        parseSubPartKey,
+        isCanonicalTranslationKey,
+        validateMapKey,
+        validateTranslationKey,
+        isValidMapKey,
+        // 迁移
+        extractSubPartName,
+        canonicalSubPartKey,
+        uniqueSubPartKey,
+        nextLegacyName,
+        // 递归
+        validateKeys
+      };
+    }
+  });
+
+  // src/doc/address.js
+  var require_address = __commonJS({
+    "src/doc/address.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var fieldSpecs = require_field_specs();
+      var keys = require_keys();
+      var ports = require_ports();
+      var MAX_PATH_SEGMENTS = 512;
+      function error(path, code, expected, got, hint) {
+        return {
+          path: Array.isArray(path) ? path.slice() : [],
+          code,
+          expected,
+          got,
+          hint: hint || ""
+        };
+      }
+      function fail(path, code, expected, got, hint) {
+        return { ok: false, errors: [error(path, code, expected, got, hint)] };
+      }
+      function own(obj, key) {
+        return Object.prototype.hasOwnProperty.call(obj, key);
+      }
+      function decodePointerSegment(seg) {
+        return seg.replace(/~1/g, "/").replace(/~0/g, "~");
+      }
+      function encodePointerSegment(seg) {
+        return String(seg).replace(/~/g, "~0").replace(/\//g, "~1");
+      }
+      function parsePath(path) {
+        var segments;
+        if (path === void 0 || path === null || path === "") {
+          return { ok: true, segments: [], pointer: "" };
+        }
+        if (typeof path === "string") {
+          if (path.charAt(0) !== "/") {
+            return fail(
+              [],
+              "invalid_format",
+              "JSON Pointer\uFF08\u4EE5 / \u5F00\u5934\uFF09",
+              path,
+              "\u5B57\u7B26\u4E32\u8DEF\u5F84\u5FC5\u987B\u662F JSON Pointer\uFF1B\u6BB5\u6570\u7EC4\u8BF7\u76F4\u63A5\u4F20\u6570\u7EC4"
+            );
+          }
+          var raw = path.slice(1).split("/");
+          segments = [];
+          for (var i = 0; i < raw.length; i++) {
+            if (/~(?![01])/.test(raw[i])) {
+              return fail(
+                [],
+                "invalid_format",
+                "\u5408\u6CD5 JSON Pointer \u8F6C\u4E49",
+                raw[i],
+                "`~` \u53EA\u80FD\u51FA\u73B0\u5728 `~0` / `~1` \u4E2D"
+              );
+            }
+            segments.push(decodePointerSegment(raw[i]));
+          }
+        } else if (Array.isArray(path)) {
+          segments = path.map(function(s) {
+            return String(s);
+          });
+        } else {
+          return fail(
+            [],
+            "invalid_format",
+            "string[] | JSON Pointer",
+            typeof path,
+            "\u8DEF\u5F84\u5FC5\u987B\u662F\u6BB5\u6570\u7EC4\u6216 JSON Pointer"
+          );
+        }
+        if (segments.length > MAX_PATH_SEGMENTS) {
+          return fail(
+            segments,
+            "invalid_format",
+            "<= " + MAX_PATH_SEGMENTS + " \u6BB5",
+            segments.length,
+            "\u8DEF\u5F84\u8FC7\u6DF1"
+          );
+        }
+        var wildcard = -1;
+        for (var j = 0; j < segments.length; j++) {
+          var seg = segments[j];
+          if (seg === "..") {
+            return fail(
+              segments,
+              "invalid_format",
+              "\u4E0D\u542B `..` \u7684\u8DEF\u5F84",
+              seg,
+              "\u8DEF\u5F84\u6CA1\u6709\u76F8\u5BF9\u8BED\u6CD5\uFF1B\u9700\u8981\u76F8\u5BF9\u5B9A\u4F4D\u65F6\u8BF7\u7531\u8C03\u7528\u65B9\u4F20 base"
+            );
+          }
+          if (seg === "*") {
+            if (wildcard >= 0) {
+              return fail(
+                segments,
+                "invalid_format",
+                "\u81F3\u591A\u4E00\u4E2A `*`",
+                seg,
+                "\u901A\u914D\u7B26 `*` \u662F\u6574\u6BB5 token\uFF0C\u81F3\u591A\u4E00\u4E2A"
+              );
+            }
+            wildcard = j;
+          } else if (seg.indexOf("*") >= 0) {
+            return fail(
+              segments,
+              "invalid_format",
+              "`*` \u5FC5\u987B\u662F\u6574\u6BB5 token",
+              seg,
+              "`*` \u4E0D\u80FD\u4F5C\u4E3A\u5B57\u9762 key \u7684\u4E00\u90E8\u5206"
+            );
+          }
+        }
+        return {
+          ok: true,
+          segments,
+          pointer: "/" + segments.map(encodePointerSegment).join("/"),
+          wildcard
+        };
+      }
+      function toPointer(segments) {
+        return "/" + (segments || []).map(encodePointerSegment).join("/");
+      }
+      function state(kind, node, extra) {
+        var s = { kind, node, value: node };
+        if (extra) {
+          Object.keys(extra).forEach(function(k) {
+            s[k] = extra[k];
+          });
+        }
+        return s;
+      }
+      function stateForSpec(spec, node) {
+        if (!spec) return state("value", node);
+        if (Array.isArray(spec.oneOf)) {
+          if (node && typeof node === "object" && !Array.isArray(node)) {
+            for (var i = 0; i < spec.oneOf.length; i++) {
+              if (spec.oneOf[i].type === "object") return state("object", node, { spec: spec.oneOf[i] });
+            }
+          }
+          return state("value", node);
+        }
+        if (spec.type === "array" || spec.type === "tuple") {
+          return state("array", node, { spec });
+        }
+        if (spec.type === "object") {
+          return state("object", node, { spec });
+        }
+        return state("value", node);
+      }
+      function stateForContainer(field, node, ownerKind) {
+        return state("map", node || {}, {
+          map: field,
+          ownerKind: ownerKind || null,
+          childKind: fieldSpecs.getContainerChildKind(field)
+        });
+      }
+      function mapValueSpec(field, fieldSpec) {
+        if (!fieldSpec) return null;
+        if (field === "textures" && Array.isArray(fieldSpec.oneOf)) {
+          for (var i = 0; i < fieldSpec.oneOf.length; i++) {
+            if (fieldSpec.oneOf[i].type === "object") return fieldSpec.oneOf[i].additionalProperties;
+          }
+          return { type: "string" };
+        }
+        if (fieldSpec.additionalProperties && typeof fieldSpec.additionalProperties === "object") {
+          return fieldSpec.additionalProperties;
+        }
+        return null;
+      }
+      function stateForValueMap(field, node, fieldSpec, ownerKind) {
+        return state("map", node || {}, {
+          map: field,
+          ownerKind: ownerKind || null,
+          childKind: "value",
+          valueSpec: mapValueSpec(field, fieldSpec),
+          fieldSpec
+        });
+      }
+      function stateForMapChild(s, entry) {
+        if (s.childKind && s.childKind !== "value") {
+          return nodeState(s.childKind, entry, s.childKind === "subsystem" ? entry && entry.type : null);
+        }
+        return stateForSpec(s.valueSpec, entry);
+      }
+      function nodeState(kind, node, typeId) {
+        return state(kind, node, { typeId: typeId || (kind === "subsystem" ? node && node.type : null) });
+      }
+      function valueOfState(s) {
+        return s ? s.node : void 0;
+      }
+      function rootFieldInfo(field) {
+        if (fieldSpecs.isInternalField("config", field)) {
+          return { error: fail(
+            [field],
+            "unknown_field",
+            "\u53EF\u5BFB\u5740\u7684\u914D\u7F6E\u6839\u5B57\u6BB5",
+            field,
+            "`" + field + "` \u5C5E\u4E8E\u5185\u90E8\u6811\uFF0C\u4E0D\u53C2\u4E0E\u8DEF\u5F84\u5BFB\u5740"
+          ) };
+        }
+        var spec = fieldSpecs.getRootField(field);
+        if (!spec) {
+          return { error: fail(
+            [field],
+            "unknown_field",
+            "\u5DF2\u77E5\u914D\u7F6E\u6839\u5B57\u6BB5",
+            field,
+            "`" + field + "` \u4E0D\u5728\u914D\u7F6E\u6839\u5B57\u6BB5\u767D\u540D\u5355\u5185"
+          ) };
+        }
+        return { spec, container: spec.container === "map" ? spec.map : null };
+      }
+      function recordFieldInfo(s, field) {
+        var kind = s.kind;
+        if (kind === "config") return rootFieldInfo(field);
+        if (fieldSpecs.isInternalField(kind, field)) {
+          return { error: fail(
+            [field],
+            "unknown_field",
+            "\u53EF\u5BFB\u5740\u5B57\u6BB5",
+            field,
+            "`" + field + "` \u5C5E\u4E8E\u5185\u90E8\u6811\uFF0C\u4E0D\u53C2\u4E0E\u8DEF\u5F84\u5BFB\u5740"
+          ) };
+        }
+        if (fieldSpecs.isContainer(kind, field)) {
+          return { container: field };
+        }
+        var typeId = kind === "subsystem" ? s.typeId || s.node && s.node.type : null;
+        var spec = fieldSpecs.getFieldSpec(kind, field, typeId);
+        if (!spec && kind === "subsystem" && field === "type") {
+          spec = { type: "string" };
+        }
+        if (!spec) {
+          if (kind === "subsystem" && !fieldSpecs.hasSubsystemType(typeId)) {
+            return { error: fail(
+              [field],
+              "unknown_type",
+              "\u5DF2\u77E5 subsystem \u7C7B\u578B",
+              typeId,
+              "\u672A\u77E5\u7684\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u53EA\u80FD\u8BBF\u95EE type"
+            ) };
+          }
+          return { error: fail(
+            [field],
+            "unknown_field",
+            "schema \u5B57\u6BB5",
+            field,
+            "`" + field + "` \u4E0D\u5728 " + kind + " \u7684\u5B57\u6BB5\u767D\u540D\u5355\u5185"
+          ) };
+        }
+        if (fieldSpecs.isMapField(kind, field)) {
+          return { spec, mapField: field };
+        }
+        return { spec };
+      }
+      function objectFieldInfo(s, field) {
+        var spec = s.spec || {};
+        if (spec.properties && own(spec.properties, field)) {
+          return { spec: spec.properties[field] };
+        }
+        if (spec.additionalProperties && typeof spec.additionalProperties === "object") {
+          return { spec: spec.additionalProperties };
+        }
+        return { error: fail(
+          [field],
+          "unknown_field",
+          "schema \u5BF9\u8C61\u5B57\u6BB5",
+          field,
+          "\u8BE5\u5BF9\u8C61\u4E0D\u5141\u8BB8\u989D\u5916\u5B57\u6BB5"
+        ) };
+      }
+      function enterField(s, field) {
+        var info;
+        if (s.kind === "object") {
+          info = objectFieldInfo(s, field);
+        } else {
+          info = recordFieldInfo(s, field);
+        }
+        if (info.error) return info;
+        var node = s.node && typeof s.node === "object" ? s.node[field] : void 0;
+        if (info.container) {
+          return { state: stateForContainer(info.container, node, s.kind), exists: node !== void 0 && node !== null };
+        }
+        if (info.mapField) {
+          if (info.mapField === "overwrite") {
+            return { state: state("object", node || {}, { spec: info.spec }), exists: node !== void 0 && node !== null };
+          }
+          return { state: stateForValueMap(info.mapField, node, info.spec, s.kind), exists: node !== void 0 && node !== null };
+        }
+        return { state: stateForSpec(info.spec, node), exists: node !== void 0 && node !== null };
+      }
+      function enterSegment(s, seg, opts) {
+        opts = opts || {};
+        if (s.kind === "map") {
+          var entries = s.node;
+          if (!entries || typeof entries !== "object" || Array.isArray(entries)) {
+            return { error: fail([seg], "type_mismatch", "object map", typeof entries) };
+          }
+          var actualKey = seg;
+          if (s.map === "hit_boxes" && !own(entries, actualKey)) {
+            var byName = ports.get().bones.findByName(seg);
+            if (byName && byName.uuid && own(entries, byName.uuid)) actualKey = byName.uuid;
+          }
+          if (!own(entries, actualKey)) {
+            if (opts.write) {
+              var keyCheck = keys.validateMapKey(s.map, seg, {
+                namespace: opts.namespace
+              });
+              if (!keyCheck.ok) {
+                return {
+                  error: fail(
+                    [seg],
+                    keyCheck.code,
+                    keyCheck.expected,
+                    keyCheck.got,
+                    keyCheck.hint
+                  )
+                };
+              }
+            }
+            return { error: fail([seg], "not_found", "\u5DF2\u5B58\u5728\u7684 map key", seg, "\u8DEF\u5F84\u7684\u4E2D\u95F4\u6BB5\u4E0D\u5B58\u5728") };
+          }
+          return { state: stateForMapChild(s, entries[actualKey]), existed: true, key: actualKey };
+        }
+        if (s.kind === "array") {
+          if (!/^\d+$/.test(seg)) {
+            return { error: fail([seg], "not_found", "\u6570\u7EC4\u4E0B\u6807", seg) };
+          }
+          var idx = parseInt(seg, 10);
+          var arr = s.node;
+          if (!Array.isArray(arr) || idx < 0 || idx >= arr.length) {
+            return { error: fail([seg], "not_found", "\u6570\u7EC4\u4E0B\u6807", seg, "\u4E0B\u6807\u8D8A\u754C") };
+          }
+          return { state: stateForSpec(s.spec && s.spec.items ? s.spec.items : null, arr[idx]), existed: true };
+        }
+        if (s.kind === "object" || fieldSpecs.isKnownKind(s.kind) || s.kind === "config") {
+          var entered = enterField(s, seg);
+          if (entered.error) {
+            entered.error.errors[0].path = [seg].concat(entered.error.errors[0].path || []);
+            return entered;
+          }
+          if (!entered.exists && opts.createParents && entered.state && (entered.state.kind === "map" || entered.state.kind === "object")) {
+            s.node[seg] = entered.state.node = entered.state.kind === "map" ? {} : {};
+            entered.exists = true;
+          }
+          return { state: entered.state, existed: entered.exists };
+        }
+        return { error: fail([seg], "not_found", "\u53EF\u7EE7\u7EED\u904D\u5386\u7684\u8282\u70B9", s.kind) };
+      }
+      function resolveFrom(start, segments) {
+        var current = start;
+        for (var i = 0; i < segments.length; i++) {
+          var entered = enterSegment(current, segments[i], {});
+          if (entered.error) {
+            entered.error.errors[0].path = segments.slice(0, i + 1);
+            return entered.error;
+          }
+          current = entered.state;
+        }
+        return { state: current };
+      }
+      function resolveParent(config, segments, opts) {
+        if (segments.length === 0) {
+          return { state: state("config", config), parent: null, last: null };
+        }
+        var current = state("config", config);
+        for (var i = 0; i < segments.length - 1; i++) {
+          var entered = enterSegment(current, segments[i], opts || {});
+          if (entered.error) {
+            entered.error.errors[0].path = segments.slice(0, i + 1);
+            return entered.error;
+          }
+          current = entered.state;
+        }
+        return { state: current, parent: current, last: segments[segments.length - 1] };
+      }
+      function read(config, path, opts) {
+        opts = opts || {};
+        var parsed = parsePath(path);
+        if (!parsed.ok) return parsed;
+        var segments = parsed.segments;
+        if (parsed.wildcard >= 0) {
+          return readWildcard(config, segments, parsed.wildcard);
+        }
+        var resolved = resolveFrom(state("config", config), segments);
+        if (!resolved.state) return resolved;
+        return {
+          ok: true,
+          kind: resolved.state.kind,
+          value: valueOfState(resolved.state),
+          path: segments.concat()
+        };
+      }
+      function readWildcard(config, segments, wildcardIndex) {
+        var prefix = segments.slice(0, wildcardIndex);
+        var rest = segments.slice(wildcardIndex + 1);
+        var resolved = resolveFrom(state("config", config), prefix);
+        if (!resolved.state) return resolved;
+        var mapState = resolved.state;
+        if (mapState.kind !== "map") {
+          return fail(
+            segments,
+            "invalid_format",
+            "map \u5C42",
+            mapState.kind,
+            "`*` \u53EA\u80FD\u51FA\u73B0\u5728 map \u5C42\uFF1B\u6570\u7EC4\u5C42\u6CA1\u6709 key \u8BED\u4E49"
+          );
+        }
+        var entries = mapState.node || {};
+        var result = {};
+        var entryKeys = Object.keys(entries);
+        for (var i = 0; i < entryKeys.length; i++) {
+          var key = entryKeys[i];
+          var child = stateForMapChild(mapState, entries[key]);
+          var childResolved = resolveFrom(child, rest);
+          if (childResolved.state) {
+            result[key] = valueOfState(childResolved.state);
+          }
+        }
+        return { ok: true, kind: "map", value: result, wildcard: true, path: segments.concat() };
+      }
+      function validateWriteKey(map, key, namespace) {
+        var result = keys.validateMapKey(map, key, { namespace });
+        if (!result.ok) {
+          return error([key], result.code, result.expected, result.got, result.hint);
+        }
+        return null;
+      }
+      function resolveHitBoxWriteKey(key) {
+        var bones = ports.get().bones;
+        if (bones.findByUuid(key)) return key;
+        var el = bones.findByName(key);
+        if (el && el.uuid) return el.uuid;
+        return null;
+      }
+      function write(config, path, value, opts) {
+        opts = opts || {};
+        var parsed = parsePath(path);
+        if (!parsed.ok) return parsed;
+        if (parsed.wildcard >= 0) {
+          return fail(
+            parsed.segments,
+            "invalid_format",
+            "\u4E0D\u542B `*` \u7684\u5199\u5165\u8DEF\u5F84",
+            "*",
+            "\u901A\u914D\u7B26\u53EA\u7528\u4E8E\u8BFB\u53D6"
+          );
+        }
+        var segments = parsed.segments;
+        if (segments.length === 0) {
+          return fail([], "invalid_format", "\u975E\u6839\u8DEF\u5F84", "\u6839", "\u4E0D\u80FD\u6574\u6811\u66FF\u6362\uFF0C\u8BF7\u4F7F\u7528 apply");
+        }
+        var resolved = resolveParent(config, segments, {
+          createParents: !!opts.createParents,
+          write: true,
+          namespace: config && config.namespace || "machine_max"
+        });
+        if (!resolved.state) return resolved;
+        var parent = resolved.state;
+        var key = resolved.last;
+        var namespace = config && config.namespace || "machine_max";
+        var before;
+        var created = false;
+        var mapKey = key;
+        if (parent.kind === "map") {
+          var entries = parent.node;
+          if (!entries || typeof entries !== "object" || Array.isArray(entries)) {
+            return fail(segments, "type_mismatch", "object map", typeof entries);
+          }
+          var keyError = validateWriteKey(parent.map, key, namespace);
+          if (keyError) {
+            keyError.path = segments.slice(0, -1).concat(key);
+            return { ok: false, errors: [keyError] };
+          }
+          if (!own(entries, key)) {
+            if (parent.map === "hit_boxes") {
+              var uuid = resolveHitBoxWriteKey(key);
+              if (!uuid) {
+                return fail(
+                  segments,
+                  "not_found",
+                  "\u5DF2\u5B58\u5728\u7684\u9AA8\u9ABC UUID",
+                  key,
+                  "\u5199\u5165\u65B0\u7684 hit_boxes \u6761\u76EE\u9700\u5148\u521B\u5EFA\u9AA8\u9ABC\uFF0C\u6216\u663E\u5F0F\u4F20 UUID"
+                );
+              }
+              mapKey = uuid;
+            }
+            if (opts.allowMissingLeaf === false) {
+              return fail(
+                segments,
+                "not_found",
+                "\u5DF2\u5B58\u5728\u7684 map key",
+                key,
+                "allowMissingLeaf=false \u65F6\u4E0D\u521B\u5EFA\u65B0 key"
+              );
+            }
+            created = true;
+            before = void 0;
+          } else {
+            before = entries[mapKey];
+          }
+          entries[mapKey] = value;
+          return {
+            ok: true,
+            path: segments.slice(0, -1).concat(mapKey),
+            kind: parent.childKind || "value",
+            before,
+            after: value,
+            created,
+            sideEffect: fieldSpecs.getSideEffect(parent.ownerKind || "", parent.map)
+          };
+        }
+        if (parent.kind === "array") {
+          if (!/^\d+$/.test(key)) {
+            return fail(segments, "not_found", "\u6570\u7EC4\u4E0B\u6807", key);
+          }
+          var idx = parseInt(key, 10);
+          if (!Array.isArray(parent.node) || idx < 0 || idx >= parent.node.length) {
+            return fail(segments, "not_found", "\u6570\u7EC4\u4E0B\u6807", key, "\u4E0B\u6807\u8D8A\u754C");
+          }
+          before = parent.node[idx];
+          parent.node[idx] = value;
+          return { ok: true, path: segments, kind: "value", before, after: value };
+        }
+        if (parent.kind === "object") {
+          var objectInfo = objectFieldInfo(parent, key);
+          if (objectInfo.error) {
+            objectInfo.error.errors[0].path = segments;
+            return objectInfo.error;
+          }
+          if (!own(parent.node, key)) {
+            if (!opts.allowMissingLeaf) {
+              return fail(
+                segments,
+                "unknown_field",
+                "\u5DF2\u5B58\u5728\u7684\u5BF9\u8C61\u5B57\u6BB5",
+                key,
+                "\u5BF9\u8C61\u5B57\u6BB5\u767D\u540D\u5355\u4E0D\u53EF\u7ED5\u8FC7\uFF1B\u65B0\u5EFA\u5B57\u6BB5\u9700 allowMissingLeaf"
+              );
+            }
+            parent.node[key] = void 0;
+          }
+          before = parent.node[key];
+          parent.node[key] = value;
+          return { ok: true, path: segments, kind: "value", before, after: value };
+        }
+        if (parent.kind === "config" || fieldSpecs.isKnownKind(parent.kind)) {
+          if (!parent.node || typeof parent.node !== "object" || Array.isArray(parent.node)) {
+            return fail(segments, "type_mismatch", "object", typeof parent.node);
+          }
+          var info = parent.kind === "config" ? rootFieldInfo(key) : recordFieldInfo(parent, key);
+          if (info.error) {
+            info.error.errors[0].path = segments;
+            return info.error;
+          }
+          if (!own(parent.node, key)) {
+            return fail(
+              segments,
+              "unknown_field",
+              "\u5DF2\u5B58\u5728\u7684\u5B57\u6BB5",
+              key,
+              "\u5199\u64CD\u4F5C\u4E0D\u81EA\u52A8\u521B\u5EFA record \u5B57\u6BB5\uFF1B\u8BF7\u4F7F\u7528 insert / apply"
+            );
+          }
+          before = parent.node[key];
+          parent.node[key] = value;
+          return {
+            ok: true,
+            path: segments,
+            kind: info.spec ? info.spec.type || "value" : "value",
+            before,
+            after: value,
+            sideEffect: fieldSpecs.getSideEffect(parent.kind, key)
+          };
+        }
+        return fail(segments, "not_found", "\u53EF\u5199\u5165\u7684\u7236\u8282\u70B9", parent.kind);
+      }
+      function insert(config, path, key, node, opts) {
+        opts = opts || {};
+        var parsed = parsePath(path);
+        if (!parsed.ok) return parsed;
+        var resolved = resolveFrom(state("config", config), parsed.segments);
+        if (!resolved.state) return resolved;
+        var container = resolved.state;
+        if (container.kind !== "map") {
+          return fail(
+            parsed.segments.concat([key]),
+            "invalid_format",
+            "map \u5C42",
+            container.kind,
+            "insert \u7684\u7236\u8DEF\u5F84\u5FC5\u987B\u6307\u5411 map"
+          );
+        }
+        var namespace = config && config.namespace || "machine_max";
+        var keyError = validateWriteKey(container.map, key, namespace);
+        if (keyError) {
+          keyError.path = parsed.segments.concat([key]);
+          return { ok: false, errors: [keyError] };
+        }
+        if (own(container.node, key)) {
+          return fail(
+            parsed.segments.concat([key]),
+            "duplicate_name",
+            "\u4E0D\u91CD\u590D\u7684 key",
+            key,
+            "\u8BE5 key \u5DF2\u5B58\u5728"
+          );
+        }
+        container.node[key] = node;
+        return {
+          ok: true,
+          path: parsed.segments.concat([key]),
+          kind: container.childKind || "value",
+          after: node,
+          created: true
+        };
+      }
+      function remove(config, path, opts) {
+        opts = opts || {};
+        var parsed = parsePath(path);
+        if (!parsed.ok) return parsed;
+        if (parsed.wildcard >= 0) {
+          return fail(parsed.segments, "invalid_format", "\u4E0D\u542B `*` \u7684\u5220\u9664\u8DEF\u5F84", "*");
+        }
+        var segments = parsed.segments;
+        if (segments.length === 0) {
+          return fail([], "invalid_format", "\u975E\u6839\u8DEF\u5F84", "\u6839");
+        }
+        var resolved = resolveParent(config, segments, {});
+        if (!resolved.state) return resolved;
+        var parent = resolved.state;
+        var key = resolved.last;
+        var removed;
+        if (parent.kind === "map") {
+          if (!own(parent.node, key)) {
+            return fail(segments, "not_found", "\u5DF2\u5B58\u5728\u7684 map key", key);
+          }
+          removed = parent.node[key];
+          delete parent.node[key];
+          return {
+            ok: true,
+            path: segments,
+            removed,
+            kind: parent.childKind || "value",
+            cleaned_references: []
+          };
+        }
+        if (parent.kind === "array") {
+          if (!/^\d+$/.test(key)) return fail(segments, "not_found", "\u6570\u7EC4\u4E0B\u6807", key);
+          var idx = parseInt(key, 10);
+          if (!Array.isArray(parent.node) || idx < 0 || idx >= parent.node.length) {
+            return fail(segments, "not_found", "\u6570\u7EC4\u4E0B\u6807", key);
+          }
+          removed = parent.node.splice(idx, 1)[0];
+          return { ok: true, path: segments, removed, kind: "value", cleaned_references: [] };
+        }
+        if (parent.kind === "object") {
+          if (!own(parent.node, key)) return fail(segments, "not_found", "\u5DF2\u5B58\u5728\u7684\u5BF9\u8C61\u5B57\u6BB5", key);
+          removed = parent.node[key];
+          delete parent.node[key];
+          return { ok: true, path: segments, removed, kind: "value", cleaned_references: [] };
+        }
+        if (parent.kind === "config" || fieldSpecs.isKnownKind(parent.kind)) {
+          var info = parent.kind === "config" ? rootFieldInfo(key) : recordFieldInfo(parent, key);
+          if (info.error) {
+            info.error.errors[0].path = segments;
+            return info.error;
+          }
+          if (!own(parent.node, key)) return fail(segments, "not_found", "\u5DF2\u5B58\u5728\u7684\u5B57\u6BB5", key);
+          removed = parent.node[key];
+          delete parent.node[key];
+          return {
+            ok: true,
+            path: segments,
+            removed,
+            kind: info.spec ? info.spec.type || "value" : "value",
+            cleaned_references: []
+          };
+        }
+        return fail(segments, "not_found", "\u53EF\u5220\u9664\u7684\u8282\u70B9", parent.kind);
+      }
+      module.exports = {
+        parsePath,
+        toPointer,
+        read,
+        write,
+        insert,
+        remove
+      };
+    }
+  });
+
+  // src/doc/shapes.js
+  var require_shapes = __commonJS({
+    "src/doc/shapes.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var Codec = require_Codec().Codec;
+      var HitBoxCodec = require_hit_box_codec().HitBoxCodec;
+      var InteractBoxCodec = require_interact_box_codec().InteractBoxCodec;
+      var ConnectorCodec = require_connector_codec().ConnectorCodec;
+      var HydroCodec = require_hydrodynamic_codec().HydroCodec;
+      var SubsystemDispatchCodec = require_subsystem_codec().SubsystemDispatchCodec;
+      var SubPartShape = Codec.record({
+        start_bone: Codec.STRING.default(""),
+        end_bones: Codec.STRING.list().default([]),
+        durability: Codec.FLOAT.default(20),
+        mass: Codec.FLOAT.default(25),
+        mass_center: Codec.STRING.default("mass_center"),
+        projected_area: Codec.FLOAT.list(3).default([-1, -1, -1]),
+        block_collision: Codec.ENUM(["true", "false", "ground"]).default("true"),
+        collision_height: Codec.FLOAT.default(-1),
+        climb_assist: Codec.BOOL.default(false),
+        hydro_priority: Codec.INT.default(0),
+        hit_boxes: Codec.map(Codec.STRING, HitBoxCodec).default({}),
+        interact_boxes: Codec.map(Codec.STRING, InteractBoxCodec).default({}),
+        connectors: Codec.map(Codec.STRING, ConnectorCodec).default({}),
+        subsystems: Codec.map(Codec.STRING, SubsystemDispatchCodec).default({}),
+        hydrodynamics: Codec.map(Codec.STRING, HydroCodec).default({})
+      });
+      var VariantShape = Codec.record({
+        model: Codec.STRING.field(),
+        textures: Codec.map(Codec.STRING, Codec.STRING).default({ default: "" }),
+        animations: Codec.STRING.default(""),
+        tags: Codec.STRING.list().default([]),
+        sub_parts: Codec.map(Codec.STRING, SubPartShape).default({})
+      });
+      var PartShape = Codec.record({
+        icon: Codec.STRING.default(""),
+        vehicle_durability_rate: Codec.FLOAT.default(0.8),
+        vehicle_damage_rate: Codec.FLOAT.default(1),
+        vehicle_damage_rate_destroyed: Codec.FLOAT.default(0.1),
+        functional_threshold: Codec.FLOAT.default(0.3),
+        share_durability: Codec.BOOL.default(true),
+        max_stack_size: Codec.INT.default(1),
+        variants: Codec.map(Codec.STRING, VariantShape).default({})
+      });
+      var SubsystemShape = SubsystemDispatchCodec;
+      var VariantExportShape = Codec.record({
+        model: Codec.STRING.field(),
+        textures: Codec.either(Codec.STRING, Codec.map(Codec.STRING, Codec.STRING)).default(""),
+        animations: Codec.STRING.default(""),
+        tags: Codec.STRING.list().default([]),
+        // sub_parts 永不折叠：schema 的单子零件简写没有 key，会丢 sub_part.<ns>.* 身份
+        sub_parts: Codec.map(Codec.STRING, SubPartShape).default({})
+      });
+      var PartExportShape = Codec.record({
+        icon: Codec.STRING.default(""),
+        vehicle_durability_rate: Codec.FLOAT.default(0.8),
+        vehicle_damage_rate: Codec.FLOAT.default(1),
+        vehicle_damage_rate_destroyed: Codec.FLOAT.default(0.1),
+        functional_threshold: Codec.FLOAT.default(0.3),
+        share_durability: Codec.BOOL.default(true),
+        max_stack_size: Codec.INT.default(1),
+        variants: Codec.either(
+          VariantExportShape,
+          Codec.map(Codec.STRING, VariantExportShape)
+        ).default({})
+      });
+      var SHAPES = {
+        part: PartShape,
+        variant: VariantShape,
+        sub_part: SubPartShape,
+        hit_box: HitBoxCodec,
+        interact_box: InteractBoxCodec,
+        connector: ConnectorCodec,
+        subsystem: SubsystemShape
+      };
+      var EXPORT_SHAPES = {
+        part: PartExportShape,
+        variant: VariantExportShape,
+        sub_part: SubPartShape,
+        hit_box: HitBoxCodec,
+        interact_box: InteractBoxCodec,
+        connector: ConnectorCodec,
+        subsystem: SubsystemShape
+      };
+      function getShape(kind) {
+        return SHAPES[kind] || null;
+      }
+      function getExportShape(kind) {
+        return EXPORT_SHAPES[kind] || null;
+      }
+      function classifyCodecError(message) {
+        if (/Unknown dispatch type/.test(message)) return "unknown_type";
+        if (/Missing required field/.test(message)) return "missing_required";
+        if (/Expected array of length/.test(message)) return "type_mismatch";
+        if (/Expected (string|number|integer|boolean|array|object)/.test(message)) return "type_mismatch";
+        if (/Invalid enum value/.test(message)) return "invalid_enum";
+        return "type_mismatch";
+      }
+      function decodeStrict(kind, raw, ctx) {
+        ctx = ctx || {};
+        var path = Array.isArray(ctx.path) ? ctx.path.slice() : [];
+        var shape = getShape(kind);
+        if (!shape) {
+          return {
+            ok: false,
+            errors: [{
+              path,
+              code: "unknown_type",
+              expected: "\u5DF2\u77E5 kind",
+              got: kind,
+              hint: "\u672A\u77E5\u7684\u914D\u7F6E\u8282\u70B9\u7C7B\u578B"
+            }]
+          };
+        }
+        try {
+          return { ok: true, node: shape.decode(raw), errors: [] };
+        } catch (e) {
+          var message = e && e.message ? e.message : String(e);
+          return {
+            ok: false,
+            errors: [{
+              path,
+              code: classifyCodecError(message),
+              expected: kind,
+              got: message,
+              hint: "\u914D\u7F6E\u7ED3\u6784\u65E0\u6CD5\u89E3\u7801"
+            }]
+          };
+        }
+      }
+      function encode(kind, node) {
+        var shape = getExportShape(kind);
+        if (!shape) throw new Error("Unknown export shape: " + kind);
+        return shape.encode(node);
+      }
+      module.exports = {
+        PartShape,
+        VariantShape,
+        SubPartShape,
+        SubsystemShape,
+        PartExportShape,
+        VariantExportShape,
+        getShape,
+        getExportShape,
+        decodeStrict,
+        encode
+      };
+    }
+  });
+
+  // src/doc/validate.js
+  var require_validate = __commonJS({
+    "src/doc/validate.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var fieldSpecs = require_field_specs();
+      var keys = require_keys();
+      function isPlainObject(v) {
+        return v !== null && typeof v === "object" && !Array.isArray(v);
+      }
+      function makeError(path, code, expected, got, hint) {
+        return {
+          path: Array.isArray(path) ? path.slice() : [],
+          code,
+          expected,
+          got,
+          hint: hint || ""
+        };
+      }
+      function typeName(v) {
+        if (v === null) return "null";
+        if (Array.isArray(v)) return "array";
+        return typeof v;
+      }
+      function describeBranch(spec) {
+        if (!spec) return "any";
+        if (spec.type) return spec.type;
+        if (spec.oneOf) return "oneOf";
+        return "any";
+      }
+      function validateEnum(spec, value, path) {
+        if (!spec.enum || spec.enum.indexOf(value) >= 0) return [];
+        return [makeError(
+          path,
+          "invalid_enum",
+          spec.enum.slice(),
+          value,
+          "\u5141\u8BB8\u503C\uFF1A" + spec.enum.join(", ")
+        )];
+      }
+      function validateRange(spec, value, path) {
+        var errors = [];
+        if (typeof value !== "number") return errors;
+        if (typeof spec.minimum === "number" && value < spec.minimum) {
+          errors.push(makeError(path, "out_of_range", ">= " + spec.minimum, value));
+        }
+        if (typeof spec.maximum === "number" && value > spec.maximum) {
+          errors.push(makeError(path, "out_of_range", "<= " + spec.maximum, value));
+        }
+        return errors;
+      }
+      function checkType(spec, value, path) {
+        var t = spec.type;
+        if (!t || t === "any") return [];
+        switch (t) {
+          case "string":
+            return typeof value === "string" ? [] : [makeError(path, "type_mismatch", "string", typeName(value))];
+          case "number":
+            return typeof value === "number" && isFinite(value) ? [] : [makeError(path, "type_mismatch", "number", typeName(value))];
+          case "integer":
+            return typeof value === "number" && Number.isInteger(value) ? [] : [makeError(path, "type_mismatch", "integer", typeName(value))];
+          case "boolean":
+            return typeof value === "boolean" ? [] : [makeError(path, "type_mismatch", "boolean", typeName(value))];
+          case "array":
+          case "tuple":
+            return Array.isArray(value) ? [] : [makeError(path, "type_mismatch", "array", typeName(value))];
+          case "object":
+            return isPlainObject(value) ? [] : [makeError(path, "type_mismatch", "object", typeName(value))];
+          default:
+            return [];
+        }
+      }
+      function validateValue(spec, value, path, opts) {
+        opts = opts || {};
+        if (!spec) return [];
+        if (value === null) {
+          if (spec.nullable) return [];
+          return [makeError(path, "type_mismatch", describeBranch(spec) + "\uFF08\u4E0D\u5141\u8BB8 null\uFF09", "null")];
+        }
+        if (Array.isArray(spec.oneOf)) {
+          for (var i = 0; i < spec.oneOf.length; i++) {
+            var branchErrors = validateValue(spec.oneOf[i], value, path, opts);
+            if (branchErrors.length === 0) return [];
+          }
+          return [makeError(
+            path,
+            "type_mismatch",
+            spec.oneOf.map(describeBranch).join(" | "),
+            typeName(value),
+            "\u503C\u4E0D\u5339\u914D\u4EFB\u4F55\u4E00\u4E2A\u5141\u8BB8\u7684\u5206\u652F"
+          )];
+        }
+        var errors = [];
+        errors = errors.concat(checkType(spec, value, path));
+        if (errors.length > 0) return errors;
+        errors = errors.concat(validateEnum(spec, value, path));
+        errors = errors.concat(validateRange(spec, value, path));
+        if (Array.isArray(value)) {
+          if (typeof spec.minItems === "number" && value.length < spec.minItems) {
+            errors.push(makeError(
+              path,
+              "type_mismatch",
+              "array length >= " + spec.minItems,
+              value.length,
+              "\u6570\u7EC4\u957F\u5EA6\u4E0D\u8DB3"
+            ));
+          }
+          if (typeof spec.maxItems === "number" && value.length > spec.maxItems) {
+            errors.push(makeError(
+              path,
+              "type_mismatch",
+              "array length <= " + spec.maxItems,
+              value.length,
+              "\u6570\u7EC4\u957F\u5EA6\u8D85\u51FA"
+            ));
+          }
+          if (spec.type === "tuple" && Array.isArray(spec.tuple)) {
+            var tupleLen = Math.min(value.length, spec.tuple.length);
+            for (var ti = 0; ti < tupleLen; ti++) {
+              errors = errors.concat(validateValue(
+                spec.tuple[ti],
+                value[ti],
+                path.concat([ti]),
+                opts
+              ));
+            }
+          } else if (spec.items) {
+            for (var ai = 0; ai < value.length; ai++) {
+              errors = errors.concat(validateValue(
+                spec.items,
+                value[ai],
+                path.concat([ai]),
+                opts
+              ));
+            }
+          }
+          return errors;
+        }
+        if (isPlainObject(value)) {
+          var objectKeys = Object.keys(value);
+          if (opts.completeness && typeof spec.minProperties === "number" && objectKeys.length < spec.minProperties) {
+            errors.push(makeError(
+              path,
+              "missing_required",
+              "object with >= " + spec.minProperties + " properties",
+              objectKeys.length,
+              "\u81F3\u5C11\u9700\u8981 " + spec.minProperties + " \u4E2A\u6761\u76EE"
+            ));
+          }
+          var known = spec.properties || null;
+          for (var oi = 0; oi < objectKeys.length; oi++) {
+            var key = objectKeys[oi];
+            if (opts.field === "projectile_types" && key.indexOf("__new_p_") === 0) continue;
+            if (known && Object.prototype.hasOwnProperty.call(known, key)) {
+              errors = errors.concat(validateValue(
+                known[key],
+                value[key],
+                path.concat([key]),
+                { field: key, completeness: opts.completeness }
+              ));
+            } else if (spec.additionalProperties === false) {
+              errors.push(makeError(
+                path.concat([key]),
+                "unknown_field",
+                "schema \u672A\u5B9A\u4E49\u7684\u5B57\u6BB5",
+                key,
+                "\u8BE5\u5BF9\u8C61\u4E0D\u5141\u8BB8\u989D\u5916\u5B57\u6BB5"
+              ));
+            } else if (spec.additionalProperties && typeof spec.additionalProperties === "object") {
+              errors = errors.concat(validateValue(
+                spec.additionalProperties,
+                value[key],
+                path.concat([key]),
+                { field: key, completeness: opts.completeness }
+              ));
+            }
+          }
+        }
+        return errors;
+      }
+      function isMissingValue(spec, value) {
+        if (value === void 0 || value === null) return true;
+        if (typeof value === "string" && value.length === 0) return true;
+        if (isPlainObject(value) && spec && spec.minProperties > 0 && Object.keys(value).length < spec.minProperties) {
+          return true;
+        }
+        return false;
+      }
+      function validateValues(node, opts) {
+        opts = opts || {};
+        var kind = opts.kind;
+        var path = Array.isArray(opts.path) ? opts.path.slice() : [];
+        var completeness = !!opts.completeness;
+        var errors = [];
+        if (!node || typeof node !== "object" || Array.isArray(node)) {
+          return {
+            ok: false,
+            errors: [makeError(path, "type_mismatch", kind || "object", typeName(node))]
+          };
+        }
+        var typeId = fieldSpecs.getTypeId(kind, opts.typeId || node);
+        var spec = fieldSpecs.getSpec(kind, typeId || node);
+        if (kind === "subsystem" && !spec) {
+          return {
+            ok: false,
+            errors: [makeError(
+              path,
+              "unknown_type",
+              "\u5DF2\u77E5 subsystem \u7C7B\u578B",
+              typeId || node.type,
+              "\u672A\u77E5\u7684\u5B50\u7CFB\u7EDF\u7C7B\u578B"
+            )]
+          };
+        }
+        if (!spec) {
+          return { ok: true, errors: [] };
+        }
+        var fields = spec.fields || {};
+        Object.keys(fields).forEach(function(field) {
+          var fieldSpec = fields[field];
+          var present = Object.prototype.hasOwnProperty.call(node, field);
+          if (!present) {
+            if (completeness && fieldSpec.required) {
+              errors.push(makeError(
+                path.concat([field]),
+                "missing_required",
+                fieldSpec.type || "any",
+                void 0,
+                "\u5FC5\u586B\u5B57\u6BB5\u7F3A\u5931"
+              ));
+            }
+            return;
+          }
+          var value = node[field];
+          if (completeness && fieldSpec.required && isMissingValue(fieldSpec, value)) {
+            errors.push(makeError(
+              path.concat([field]),
+              "missing_required",
+              fieldSpec.type || "any",
+              value,
+              "\u5FC5\u586B\u5B57\u6BB5\u4E0D\u80FD\u4E3A\u7A7A"
+            ));
+          }
+          errors = errors.concat(validateValue(
+            fieldSpec,
+            value,
+            path.concat([field]),
+            { field, completeness }
+          ));
+        });
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!entries || typeof entries !== "object" || Array.isArray(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            var child = entries[key];
+            var childErrors = validateValues(child, {
+              kind: childKind,
+              typeId: childKind === "subsystem" ? child && child.type : void 0,
+              path: path.concat([container, key]),
+              completeness
+            }).errors;
+            errors = errors.concat(childErrors);
+          });
+        });
+        return { ok: errors.length === 0, errors };
+      }
+      function validateTree(config, opts) {
+        opts = opts || {};
+        var completeness = opts.completeness !== false;
+        var errors = [];
+        if (!config || typeof config !== "object" || Array.isArray(config)) {
+          return [makeError([], "type_mismatch", "object", typeName(config))];
+        }
+        var keyResult = keys.validateKeys("config", config, {
+          namespace: config.namespace,
+          path: []
+        });
+        errors = errors.concat(keyResult.errors);
+        var parts = config.parts;
+        if (parts && typeof parts === "object" && !Array.isArray(parts)) {
+          Object.keys(parts).forEach(function(partId) {
+            var partErrors = validateValues(parts[partId], {
+              kind: "part",
+              path: ["parts", partId],
+              completeness
+            }).errors;
+            errors = errors.concat(partErrors);
+          });
+        }
+        return errors;
+      }
+      module.exports = {
+        validateValue,
+        validateValues,
+        validateTree,
+        isMissingValue
+      };
+    }
+  });
+
+  // src/doc/projection.js
+  var require_projection = __commonJS({
+    "src/doc/projection.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var fieldSpecs = require_field_specs();
+      var keys = require_keys();
+      var shapes = require_shapes();
+      var validate = require_validate();
+      var refs = require_refs();
+      var ports = require_ports();
+      var PLACEHOLDER_PREFIX = "__new_p_";
+      function isObject(v) {
+        return v !== null && typeof v === "object" && !Array.isArray(v);
+      }
+      function own(obj, key) {
+        return Object.prototype.hasOwnProperty.call(obj, key);
+      }
+      function clone(v) {
+        if (v === null || typeof v !== "object") return v;
+        if (Array.isArray(v)) return v.map(clone);
+        var out = {};
+        Object.keys(v).forEach(function(k) {
+          out[k] = clone(v[k]);
+        });
+        return out;
+      }
+      function mergeErrors(base, errors) {
+        return (base || []).concat(errors || []);
+      }
+      function looksLikeSubPartShorthand(value) {
+        if (!isObject(value)) return false;
+        if (typeof value.start_bone === "string") return true;
+        if (typeof value.mass === "number") return true;
+        if (isObject(value.hit_boxes)) {
+          var keysList = Object.keys(value.hit_boxes);
+          for (var i = 0; i < keysList.length; i++) {
+            var hb = value.hit_boxes[keysList[i]];
+            if (isObject(hb) && typeof hb.type === "string") return true;
+          }
+        }
+        return false;
+      }
+      function normalizeShorthand(kind, definition, ctx) {
+        var node = clone(definition || {});
+        var ns = keys.isValidNamespace(ctx && ctx.namespace) ? ctx.namespace : "machine_max";
+        if (kind === "part") {
+          if (isObject(node.variants) && typeof node.variants.model === "string") {
+            node.variants = { default: node.variants };
+          }
+          if (isObject(node.variants)) {
+            Object.keys(node.variants).forEach(function(name) {
+              node.variants[name] = normalizeShorthand("variant", node.variants[name], {
+                namespace: ns
+              });
+            });
+          }
+        } else if (kind === "variant") {
+          if (typeof node.textures === "string") {
+            node.textures = { default: node.textures };
+          }
+          if (isObject(node.sub_parts) && looksLikeSubPartShorthand(node.sub_parts)) {
+            var wrapped = {};
+            wrapped["sub_part." + ns + ".main"] = node.sub_parts;
+            node.sub_parts = wrapped;
+          }
+          if (isObject(node.sub_parts)) {
+            Object.keys(node.sub_parts).forEach(function(key) {
+              node.sub_parts[key] = normalizeShorthand("sub_part", node.sub_parts[key], {
+                namespace: ns
+              });
+            });
+          }
+        }
+        return node;
+      }
+      function isRequiredMapSpec(spec) {
+        return !!(spec && spec.required && spec.type === "object" && spec.additionalProperties !== void 0);
+      }
+      function normalizeUnset(kind, definition) {
+        var node = clone(definition || {});
+        var spec = fieldSpecs.getSpec(kind, node.type);
+        if (spec) {
+          Object.keys(spec.fields).forEach(function(field) {
+            if (!own(node, field)) return;
+            var fieldSpec = spec.fields[field];
+            var value = node[field];
+            if (fieldSpec.required && fieldSpec.type === "string" && (value === null || value === "null")) {
+              node[field] = "";
+              return;
+            }
+            if (isRequiredMapSpec(fieldSpec) && (value === null || field === "projectile_types" && Array.isArray(value))) {
+              node[field] = {};
+              return;
+            }
+            if (value === null && !fieldSpec.nullable) {
+              delete node[field];
+            }
+          });
+        }
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!isObject(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            entries[key] = normalizeUnset(childKind, entries[key]);
+          });
+        });
+        return node;
+      }
+      function stripInternal(kind, definition) {
+        var node = clone(definition || {});
+        if (!isObject(node)) return node;
+        delete node._uiState;
+        fieldSpecs.getInternalFields(kind).forEach(function(field) {
+          delete node[field];
+        });
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!isObject(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            entries[key] = stripInternal(childKind, entries[key]);
+          });
+        });
+        if (kind === "subsystem" && isObject(node.projectile_types)) {
+          Object.keys(node.projectile_types).forEach(function(key) {
+            if (key.indexOf(PLACEHOLDER_PREFIX) === 0) delete node.projectile_types[key];
+          });
+        }
+        return node;
+      }
+      function resolveHitBoxKeys(kind, node, unresolved, basePath) {
+        if (kind === "sub_part" && isObject(node.hit_boxes)) {
+          var bones = ports.get().bones;
+          var next = {};
+          Object.keys(node.hit_boxes).forEach(function(key) {
+            if (bones.findByUuid(key)) {
+              next[key] = node.hit_boxes[key];
+              return;
+            }
+            var el = bones.findByName(key);
+            if (el && el.uuid) {
+              next[el.uuid] = node.hit_boxes[key];
+            } else {
+              next[key] = node.hit_boxes[key];
+              unresolved.push({
+                bone: key,
+                field: "hit_box_key",
+                subPartKey: null,
+                key,
+                path: (basePath || []).concat(["hit_boxes", key])
+              });
+            }
+          });
+          node.hit_boxes = next;
+        }
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!isObject(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            resolveHitBoxKeys(
+              childKind,
+              entries[key],
+              unresolved,
+              (basePath || []).concat([container, key])
+            );
+          });
+        });
+      }
+      function resolveElementRefs(kind, node, unresolved, basePath) {
+        var bones = ports.get().bones;
+        if (kind === "sub_part" && isObject(node.interact_boxes)) {
+          Object.keys(node.interact_boxes).forEach(function(key) {
+            var ib = node.interact_boxes[key];
+            if (!isObject(ib) || !ib.bone) return;
+            var el = bones.findByName(ib.bone);
+            if (el && el.uuid) {
+              ib._uuid = el.uuid;
+            } else {
+              unresolved.push({
+                bone: ib.bone,
+                field: "interact_box.bone",
+                subPartKey: null,
+                key,
+                path: (basePath || []).concat(["interact_boxes", key, "bone"])
+              });
+            }
+          });
+        }
+        if (kind === "sub_part" && isObject(node.connectors)) {
+          Object.keys(node.connectors).forEach(function(key) {
+            var conn = node.connectors[key];
+            if (!isObject(conn) || !conn.locator) return;
+            var el = bones.findByName(conn.locator);
+            if (el && el.uuid) {
+              conn._marker_uuid = el.uuid;
+            } else {
+              unresolved.push({
+                bone: conn.locator,
+                field: "connector.locator",
+                subPartKey: null,
+                key,
+                path: (basePath || []).concat(["connectors", key, "locator"])
+              });
+            }
+          });
+        }
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!isObject(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            resolveElementRefs(
+              childKind,
+              entries[key],
+              unresolved,
+              (basePath || []).concat([container, key])
+            );
+          });
+        });
+      }
+      var MARKER_PRECEDENCE = ["sub_part", "interact_box", "connector", "hit_box"];
+      function addMarker(plan, byKey, entry, warnings) {
+        var key = entry.variantName + "|" + entry.uuid;
+        if (byKey[key]) {
+          var current = byKey[key];
+          var currentRank = MARKER_PRECEDENCE.indexOf(current.type);
+          var nextRank = MARKER_PRECEDENCE.indexOf(entry.type);
+          if (nextRank < currentRank) {
+            warnings.push({
+              code: "marker_conflict",
+              path: ["parts", entry.partId, "variants", entry.variantName],
+              expected: current.type + " > " + entry.type,
+              got: entry.uuid,
+              hint: "\u540C\u4E00 UUID \u843D\u5728\u591A\u4E2A\u6807\u8BB0\u7C7B\u578B\uFF0C\u6309 sub_part > interact_box > connector > hit_box \u4FDD\u7559"
+            });
+            byKey[key] = entry;
+            plan[plan.indexOf(current)] = entry;
+          } else {
+            warnings.push({
+              code: "marker_conflict",
+              path: ["parts", entry.partId, "variants", entry.variantName],
+              expected: entry.type + " < " + current.type,
+              got: entry.uuid,
+              hint: "\u540C\u4E00 UUID \u843D\u5728\u591A\u4E2A\u6807\u8BB0\u7C7B\u578B\uFF0C\u5DF2\u4FDD\u7559\u4F18\u5148\u7EA7\u66F4\u9AD8\u7684\u4E00\u6761"
+            });
+          }
+          return;
+        }
+        byKey[key] = entry;
+        plan.push(entry);
+      }
+      function planForSubPart(partId, variantName, spKey, sp, plan, byKey, warnings) {
+        var bones = ports.get().bones;
+        if (!isObject(sp)) return;
+        var start = sp.start_bone ? bones.findByName(sp.start_bone) : null;
+        if (start && start.uuid) {
+          addMarker(plan, byKey, {
+            partId,
+            variantName,
+            type: "sub_part",
+            uuid: start.uuid,
+            config_ref: spKey
+          }, warnings);
+        }
+        if (isObject(sp.hit_boxes)) {
+          Object.keys(sp.hit_boxes).forEach(function(key) {
+            var el = bones.findByUuid(key) || bones.findByName(key);
+            if (el && el.uuid) {
+              addMarker(plan, byKey, {
+                partId,
+                variantName,
+                type: "hit_box",
+                uuid: el.uuid,
+                config_ref: spKey
+              }, warnings);
+            }
+          });
+        }
+        if (isObject(sp.interact_boxes)) {
+          Object.keys(sp.interact_boxes).forEach(function(key) {
+            var ib = sp.interact_boxes[key];
+            var el = ib && ib.bone ? bones.findByName(ib.bone) : null;
+            if (el && el.uuid) {
+              addMarker(plan, byKey, {
+                partId,
+                variantName,
+                type: "interact_box",
+                uuid: el.uuid,
+                config_ref: key
+              }, warnings);
+            }
+          });
+        }
+        if (isObject(sp.connectors)) {
+          Object.keys(sp.connectors).forEach(function(key) {
+            var conn = sp.connectors[key];
+            var el = conn && conn.locator ? bones.findByName(conn.locator) : null;
+            if (el && el.uuid) {
+              addMarker(plan, byKey, {
+                partId,
+                variantName,
+                type: "connector",
+                uuid: el.uuid,
+                config_ref: key
+              }, warnings);
+            }
+          });
+        }
+      }
+      function buildMarkerPlan(kind, node, ctx) {
+        var plan = [];
+        var byKey = {};
+        var warnings = [];
+        var partId = ctx.partId || "";
+        var variantName = ctx.variantName || "";
+        if (kind === "part" && isObject(node.variants)) {
+          Object.keys(node.variants).forEach(function(vName) {
+            var variant = node.variants[vName];
+            if (!isObject(variant) || !isObject(variant.sub_parts)) return;
+            Object.keys(variant.sub_parts).forEach(function(spKey) {
+              planForSubPart(
+                partId,
+                vName,
+                spKey,
+                variant.sub_parts[spKey],
+                plan,
+                byKey,
+                warnings
+              );
+            });
+          });
+        } else if (kind === "variant" && isObject(node.sub_parts)) {
+          Object.keys(node.sub_parts).forEach(function(spKey) {
+            planForSubPart(
+              partId,
+              variantName,
+              spKey,
+              node.sub_parts[spKey],
+              plan,
+              byKey,
+              warnings
+            );
+          });
+        } else if (kind === "sub_part") {
+          planForSubPart(
+            partId,
+            variantName,
+            ctx.subPartKey || ctx.key || "",
+            node,
+            plan,
+            byKey,
+            warnings
+          );
+        }
+        return { plan, warnings };
+      }
+      function buildMarkerCleanup(kind, ctx) {
+        if (!ctx || ctx.mode === "create") return null;
+        var existing = ctx.existing;
+        if (!existing) return null;
+        if (kind === "part") {
+          return { scope: "part", partId: ctx.oldKey || ctx.partId };
+        }
+        if (kind === "variant") {
+          return {
+            scope: "variant",
+            partId: ctx.partId,
+            variantName: ctx.oldKey || ctx.variantName
+          };
+        }
+        if (kind === "sub_part") {
+          var oldKey = ctx.oldKey || ctx.subPartKey || ctx.key;
+          var configRefs = [];
+          var uuids = [];
+          if (oldKey) configRefs.push(oldKey);
+          if (isObject(existing.interact_boxes)) {
+            Object.keys(existing.interact_boxes).forEach(function(key) {
+              configRefs.push(key);
+              var ib = existing.interact_boxes[key];
+              if (isObject(ib) && ib._uuid) uuids.push(ib._uuid);
+            });
+          }
+          if (isObject(existing.connectors)) {
+            Object.keys(existing.connectors).forEach(function(key) {
+              configRefs.push(key);
+              var conn = existing.connectors[key];
+              if (isObject(conn) && conn._marker_uuid) uuids.push(conn._marker_uuid);
+            });
+          }
+          if (isObject(existing.hit_boxes)) {
+            Object.keys(existing.hit_boxes).forEach(function(key) {
+              uuids.push(key);
+            });
+          }
+          return {
+            scope: "sub_part",
+            partId: ctx.partId,
+            variantName: ctx.variantName,
+            subPartKey: oldKey,
+            config_refs: configRefs,
+            uuids
+          };
+        }
+        return null;
+      }
+      function collectDanglingConfigRefs(kind, node, ctx, basePath) {
+        var dangling = [];
+        var prefix = basePath || [];
+        function checkSubPart(spKey, sp, path) {
+          if (!isObject(sp)) return;
+          var collected = refs.collectRefs(sp, path);
+          collected.refs.forEach(function(ref) {
+            if (!targetsHas(collected.targets, ref.target)) {
+              dangling.push(ref);
+            }
+          });
+        }
+        function targetsHas(targets, target) {
+          if (refs.SENTINELS.indexOf(target) >= 0) return true;
+          return !!(targets.subsystem[target] || targets.connector[target] || targets.interact_box[target]);
+        }
+        if (kind === "part" && isObject(node.variants)) {
+          Object.keys(node.variants).forEach(function(vName) {
+            var variant = node.variants[vName];
+            if (!isObject(variant) || !isObject(variant.sub_parts)) return;
+            Object.keys(variant.sub_parts).forEach(function(spKey) {
+              checkSubPart(
+                spKey,
+                variant.sub_parts[spKey],
+                prefix.concat(["variants", vName, "sub_parts", spKey])
+              );
+            });
+          });
+        } else if (kind === "variant" && isObject(node.sub_parts)) {
+          Object.keys(node.sub_parts).forEach(function(spKey) {
+            checkSubPart(
+              spKey,
+              node.sub_parts[spKey],
+              prefix.concat(["sub_parts", spKey])
+            );
+          });
+        } else if (kind === "sub_part") {
+          checkSubPart(ctx.subPartKey || ctx.key || "", node, prefix);
+        }
+        return dangling;
+      }
+      function resetFields(kind, existing, normalized) {
+        if (!existing || typeof existing !== "object") return [];
+        return Object.keys(existing).filter(function(key) {
+          if (fieldSpecs.isInternalField(kind, key)) return false;
+          return !own(normalized, key);
+        });
+      }
+      function projectIn(definition, ctx) {
+        ctx = ctx || {};
+        var kind = ctx.kind;
+        var parentPath = Array.isArray(ctx.parentPath) ? ctx.parentPath : [];
+        var errors = [];
+        var warnings = [];
+        if (!fieldSpecs.isKnownKind(kind)) {
+          return {
+            ok: false,
+            node: null,
+            reset_fields: [],
+            unresolved: { config_refs: [], bones: [] },
+            markerPlan: [],
+            markerCleanup: null,
+            errors: [{
+              path: parentPath,
+              code: "unknown_type",
+              expected: "\u5DF2\u77E5 kind",
+              got: kind,
+              hint: "\u672A\u77E5\u7684\u5BFC\u5165\u8282\u70B9\u7C7B\u578B"
+            }],
+            warnings: []
+          };
+        }
+        var normalized = normalizeShorthand(kind, definition, ctx);
+        var provided = clone(normalized);
+        normalized = normalizeUnset(kind, normalized);
+        var reset = resetFields(kind, ctx.existing, provided);
+        var stripped = stripInternal(kind, normalized);
+        var keyResult = keys.validateKeys(kind, stripped, {
+          namespace: ctx.namespace,
+          path: parentPath
+        });
+        errors = mergeErrors(errors, keyResult.errors);
+        warnings = mergeErrors(warnings, keyResult.warnings);
+        if (errors.length > 0) {
+          return {
+            ok: false,
+            node: null,
+            reset_fields: reset,
+            unresolved: { config_refs: [], bones: [] },
+            markerPlan: [],
+            markerCleanup: buildMarkerCleanup(kind, ctx),
+            errors,
+            warnings
+          };
+        }
+        var decoded = shapes.decodeStrict(kind, stripped, { path: parentPath });
+        if (!decoded.ok) {
+          errors = mergeErrors(errors, decoded.errors);
+          return {
+            ok: false,
+            node: null,
+            reset_fields: reset,
+            unresolved: { config_refs: [], bones: [] },
+            markerPlan: [],
+            markerCleanup: buildMarkerCleanup(kind, ctx),
+            errors,
+            warnings
+          };
+        }
+        var node = decoded.node;
+        var valueResult = validate.validateValues(node, {
+          kind,
+          typeId: kind === "subsystem" ? node.type : void 0,
+          path: parentPath,
+          completeness: false
+        });
+        errors = mergeErrors(errors, valueResult.errors);
+        if (errors.length > 0) {
+          return {
+            ok: false,
+            node: null,
+            reset_fields: reset,
+            unresolved: { config_refs: [], bones: [] },
+            markerPlan: [],
+            markerCleanup: buildMarkerCleanup(kind, ctx),
+            errors,
+            warnings
+          };
+        }
+        var unresolvedBones = [];
+        resolveHitBoxKeys(kind, node, unresolvedBones, parentPath);
+        resolveElementRefs(kind, node, unresolvedBones, parentPath);
+        var dangling = collectDanglingConfigRefs(kind, node, ctx, parentPath);
+        var unresolvedConfigRefs = dangling.map(function(ref) {
+          return {
+            target: ref.target,
+            kind: ref.kind,
+            path: ref.path
+          };
+        });
+        if (dangling.length > 0) {
+          errors = dangling.map(function(ref) {
+            return {
+              path: ref.path,
+              code: "unresolved_config_ref",
+              expected: "\u540C\u53D8\u4F53\u5185\u7684 subsystem / connector / interact_box key\uFF0C\u6216 local / global",
+              got: ref.target,
+              hint: "\u914D\u7F6E\u5F15\u7528\u65AD\u88C2\uFF0C\u6574\u4EF6\u5199\u5165\u5DF2\u62D2\u7EDD"
+            };
+          });
+        }
+        var marker = buildMarkerPlan(kind, node, ctx);
+        warnings = warnings.concat(marker.warnings);
+        if (errors.length > 0) {
+          return {
+            ok: false,
+            node: null,
+            reset_fields: reset,
+            unresolved: { config_refs: unresolvedConfigRefs, bones: unresolvedBones },
+            markerPlan: [],
+            markerCleanup: buildMarkerCleanup(kind, ctx),
+            errors,
+            warnings
+          };
+        }
+        return {
+          ok: true,
+          node,
+          reset_fields: reset,
+          unresolved: { config_refs: unresolvedConfigRefs, bones: unresolvedBones },
+          markerPlan: marker.plan,
+          markerCleanup: buildMarkerCleanup(kind, ctx),
+          errors: [],
+          warnings
+        };
+      }
+      function canonicalizeTextures(kind, node) {
+        if (kind === "variant" && typeof node.textures === "string") {
+          node.textures = { default: node.textures };
+        }
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!isObject(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            canonicalizeTextures(childKind, entries[key]);
+          });
+        });
+      }
+      function reverseHitBoxKeys(kind, node, unresolved, basePath) {
+        var bones = ports.get().bones;
+        if (kind === "sub_part" && isObject(node.hit_boxes)) {
+          var next = {};
+          Object.keys(node.hit_boxes).forEach(function(key) {
+            var name = bones.findNameByUuid(key);
+            if (name) {
+              next[name] = node.hit_boxes[key];
+            } else {
+              next[key] = node.hit_boxes[key];
+              unresolved.push({
+                bone: key,
+                field: "hit_box_key",
+                path: (basePath || []).concat(["hit_boxes", key])
+              });
+            }
+          });
+          node.hit_boxes = next;
+        }
+        fieldSpecs.getContainers(kind).forEach(function(container) {
+          var childKind = fieldSpecs.getContainerChildKind(container);
+          var entries = node[container];
+          if (!isObject(entries)) return;
+          Object.keys(entries).forEach(function(key) {
+            reverseHitBoxKeys(
+              childKind,
+              entries[key],
+              unresolved,
+              (basePath || []).concat([container, key])
+            );
+          });
+        });
+      }
+      function projectOut(node, ctx, opts) {
+        ctx = ctx || {};
+        opts = opts || {};
+        var kind = ctx.kind || "part";
+        var mode = opts.for || "read";
+        var cloned = clone(node);
+        var stripped = stripInternal(kind, cloned);
+        canonicalizeTextures(kind, stripped);
+        var unresolved = [];
+        reverseHitBoxKeys(kind, stripped, unresolved, []);
+        if (mode === "export") {
+          try {
+            return { definition: shapes.encode(kind, stripped), unresolved };
+          } catch (e) {
+            return {
+              definition: null,
+              unresolved,
+              errors: [{
+                path: [],
+                code: "type_mismatch",
+                expected: kind,
+                got: e && e.message ? e.message : String(e),
+                hint: "\u5BFC\u51FA\u7F16\u7801\u5931\u8D25"
+              }]
+            };
+          }
+        }
+        return { definition: stripped, unresolved };
+      }
+      module.exports = {
+        normalizeShorthand,
+        normalizeUnset,
+        stripInternal,
+        resetFields,
+        buildMarkerPlan,
+        buildMarkerCleanup,
+        resolveHitBoxKeys,
+        resolveElementRefs,
+        projectIn,
+        projectOut,
+        // 兼容 docs/13 的命名
+        in: projectIn,
+        out: projectOut
+      };
+    }
+  });
+
+  // src/doc/index.js
+  var require_doc = __commonJS({
+    "src/doc/index.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var address = require_address();
+      var fieldSpecs = require_field_specs();
+      var keys = require_keys();
+      var projection = require_projection();
+      var refs = require_refs();
+      var validate = require_validate();
+      var ports = require_ports();
+      var shapes = require_shapes();
+      function pathSegments(path) {
+        var parsed = address.parsePath(path);
+        if (!parsed.ok) return parsed;
+        return { ok: true, segments: parsed.segments };
+      }
+      function withBase(path, opts) {
+        var base = opts && Array.isArray(opts.base) ? opts.base : [];
+        var parsed = pathSegments(path);
+        if (!parsed.ok) return parsed;
+        return { ok: true, segments: base.concat(parsed.segments) };
+      }
+      function read(config, path, opts) {
+        opts = opts || {};
+        var merged = withBase(path, opts);
+        if (!merged.ok) return merged;
+        return address.read(config, merged.segments, opts);
+      }
+      function write(config, path, value, opts) {
+        opts = opts || {};
+        var merged = withBase(path, opts);
+        if (!merged.ok) return merged;
+        return address.write(config, merged.segments, value, opts);
+      }
+      function insert(config, path, key, node, opts) {
+        opts = opts || {};
+        var merged = withBase(path, opts);
+        if (!merged.ok) return merged;
+        return address.insert(config, merged.segments, key, node, opts);
+      }
+      function remove(config, path, opts) {
+        opts = opts || {};
+        var merged = withBase(path, opts);
+        if (!merged.ok) return merged;
+        var result = address.remove(config, merged.segments, opts);
+        if (!result.ok) return result;
+        var key = merged.segments[merged.segments.length - 1];
+        var kind = result.kind;
+        if (kind === "sub_part" || kind === "subsystem" || kind === "connector" || kind === "interact_box") {
+          var cleaned = refs.cleanDangling(config, {
+            kind,
+            key,
+            target: key
+          });
+          result.cleaned_references = cleaned.cleaned_references;
+        }
+        return result;
+      }
+      function kindForPath(segments) {
+        var n = segments.length;
+        if (n >= 2 && segments[n - 2] === "parts") return "part";
+        if (n >= 2 && segments[n - 2] === "variants") return "variant";
+        if (n >= 2 && segments[n - 2] === "sub_parts") return "sub_part";
+        if (n >= 2 && segments[n - 2] === "subsystems") return "subsystem";
+        return null;
+      }
+      function apply(config, path, definition, opts) {
+        opts = opts || {};
+        var merged = withBase(path, opts);
+        if (!merged.ok) return merged;
+        var segments = merged.segments;
+        var kind = opts.kind || kindForPath(segments);
+        if (!kind) {
+          return {
+            ok: false,
+            errors: [{
+              path: segments,
+              code: "unknown_type",
+              expected: "part | variant | sub_part | subsystem",
+              got: segments,
+              hint: "\u65E0\u6CD5\u4ECE\u8DEF\u5F84\u63A8\u65AD\u8282\u70B9\u7C7B\u578B\uFF0C\u8BF7\u663E\u5F0F\u4F20 kind"
+            }]
+          };
+        }
+        var existingResult = address.read(config, segments, {});
+        var existing = existingResult.ok ? existingResult.value : void 0;
+        var ctx = Object.assign({}, opts, {
+          kind,
+          parentPath: segments,
+          existing,
+          mode: opts.mode || (existing === void 0 ? "create" : "replace")
+        });
+        var projected = projection.projectIn(definition, ctx);
+        if (!projected.ok) return projected;
+        var written = address.write(config, segments, projected.node, { allowMissingLeaf: true });
+        if (!written.ok) {
+          return Object.assign({}, projected, { ok: false, errors: written.errors });
+        }
+        projected.path = written.path;
+        projected.before = written.before;
+        projected.after = written.after;
+        return projected;
+      }
+      module.exports = {
+        // 子模块（供 ops / services / MCP 直接使用）
+        address,
+        fieldSpecs,
+        keys,
+        projection,
+        refs,
+        validate,
+        ports,
+        shapes,
+        // 原语
+        read,
+        write,
+        insert,
+        remove,
+        apply
+      };
+    }
+  });
+
+  // src/ops/shared.js
+  var require_shared = __commonJS({
+    "src/ops/shared.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var doc = require_doc();
+      var keys = require_keys();
+      var ports = require_ports();
+      var { runConfigEdit } = require_undo();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("Ops");
+      function own(obj, key) {
+        return Object.prototype.hasOwnProperty.call(obj, key);
+      }
+      function clone(v) {
+        if (v === null || typeof v !== "object") return v;
+        return JSON.parse(JSON.stringify(v));
+      }
+      function makeError(path, code, expected, got, hint) {
+        return {
+          path: Array.isArray(path) ? path.slice() : [],
+          code,
+          expected,
+          got,
+          hint: hint || ""
+        };
+      }
+      function ok(data) {
+        return Object.assign({ ok: true }, data || {});
+      }
+      function fail(error, errors, extra) {
+        var result = Object.assign({ ok: false, error, errors: errors || [] }, extra || {});
+        log2.warn("\u64CD\u4F5C\u5931\u8D25\uFF1A" + error);
+        return result;
+      }
+      function fromDoc(result, fallback) {
+        var errors = result && result.errors || [];
+        var first = errors[0];
+        return fail(first ? first.hint || first.code : fallback || "\u914D\u7F6E\u64CD\u4F5C\u5931\u8D25", errors);
+      }
+      function configOrNull(config) {
+        return config && typeof config === "object" ? config : null;
+      }
+      function namespaceOf(config) {
+        return config && typeof config.namespace === "string" && config.namespace || "machine_max";
+      }
+      function partOf(config, partId) {
+        return config && config.parts && partId ? config.parts[partId] || null : null;
+      }
+      function variantOf(config, partId, variantName) {
+        var part = partOf(config, partId);
+        return part && part.variants && variantName ? part.variants[variantName] || null : null;
+      }
+      function subPartOf(config, partId, variantName, spKey) {
+        var variant = variantOf(config, partId, variantName);
+        return variant && variant.sub_parts && spKey ? variant.sub_parts[spKey] || null : null;
+      }
+      function setUiState(config, patch) {
+        if (!config._uiState || typeof config._uiState !== "object") {
+          config._uiState = { activeMode: "part", activePartId: "", activeVariantName: "" };
+        }
+        Object.keys(patch || {}).forEach(function(key) {
+          config._uiState[key] = patch[key];
+        });
+        return config._uiState;
+      }
+      function setProp(obj, key, value) {
+        var r = ports.get().reactivity;
+        if (r && typeof r.set === "function") return r.set(obj, key, value);
+        obj[key] = value;
+        return value;
+      }
+      function delProp(obj, key) {
+        var r = ports.get().reactivity;
+        if (r && typeof r.del === "function") return r.del(obj, key);
+        delete obj[key];
+      }
+      function validateKey(map, key, config, path) {
+        var result = keys.validateMapKey(map, key, { namespace: namespaceOf(config) });
+        if (result.ok) return null;
+        return makeError(path || [map, key], result.code, result.expected, result.got, result.hint);
+      }
+      function markersPort() {
+        var m = ports.get().markers;
+        if (m && m.set && m.clear && m.clearScope) return m;
+        return require_element_markers();
+      }
+      function bonesPort() {
+        return ports.get().bones;
+      }
+      function finishProjection(projected, data) {
+        if (!projected || !projected.ok) {
+          return fail(
+            projected && projected.errors && projected.errors[0] && (projected.errors[0].hint || projected.errors[0].code) || "\u6574\u4EF6\u5199\u5165\u5931\u8D25",
+            projected && projected.errors || [],
+            {
+              reset_fields: projected && projected.reset_fields || [],
+              unresolved: projected && projected.unresolved || { config_refs: [], bones: [] },
+              warnings: projected && projected.warnings || []
+            }
+          );
+        }
+        return ok(Object.assign({
+          path: projected.path,
+          data: data || {},
+          changed: true,
+          reset_fields: projected.reset_fields || [],
+          unresolved: projected.unresolved,
+          unresolved_bones: projected.unresolved && projected.unresolved.bones || [],
+          warnings: projected.warnings || []
+        }, projected.before !== void 0 ? { before: projected.before, after: projected.after } : {}));
+      }
+      function applyProjection(config, path, definition, ctx, options) {
+        options = options || {};
+        var projected = doc.projection.projectIn(definition, ctx);
+        if (!projected.ok) return finishProjection(projected, options.data);
+        var result;
+        try {
+          result = runConfigEdit(options.label || "\u5BFC\u5165\u914D\u7F6E", function() {
+            var mp = markersPort();
+            if (projected.markerCleanup && mp.clearScope) {
+              mp.clearScope(config, projected.markerCleanup);
+            }
+            var written2 = doc.write(config, path, projected.node, { allowMissingLeaf: true });
+            if (!written2.ok) {
+              var e = new Error("write failed");
+              e._opResult = fromDoc(written2, "\u5199\u5165\u914D\u7F6E\u5931\u8D25");
+              throw e;
+            }
+            (projected.markerPlan || []).forEach(function(entry) {
+              mp.set(
+                config,
+                entry.partId,
+                entry.variantName,
+                entry.uuid,
+                entry.type,
+                entry.config_ref
+              );
+            });
+            if (mp.recalc && ctx.kind !== "subsystem") {
+              if (ctx.kind === "part" && projected.node.variants) {
+                Object.keys(projected.node.variants).forEach(function(vName) {
+                  mp.recalc(config, ctx.partId, vName);
+                });
+              } else if (ctx.kind === "variant" || ctx.kind === "sub_part") {
+                mp.recalc(config, ctx.partId, ctx.variantName);
+              }
+            }
+            return { written: written2 };
+          }, {
+            strict: !!options.strict,
+            coalesce: false,
+            source: options.source || "import"
+          });
+        } catch (e) {
+          if (e && e._opResult) return e._opResult;
+          log2.error("applyProjection: \u5199\u5165\u5931\u8D25", e);
+          return fail(e && e.message ? e.message : "\u5199\u5165\u914D\u7F6E\u5931\u8D25", []);
+        }
+        var written = result && result.written;
+        return ok({
+          path: written ? written.path : projected.path || path,
+          data: options.data || {},
+          changed: true,
+          reset_fields: projected.reset_fields || [],
+          unresolved: projected.unresolved,
+          unresolved_bones: projected.unresolved && projected.unresolved.bones || [],
+          warnings: projected.warnings || [],
+          before: written ? written.before : void 0,
+          after: written ? written.after : void 0
+        });
+      }
+      function locateRecord(config, segments) {
+        var node = config;
+        var kind = "config";
+        var nodePath = [];
+        var i = 0;
+        var containers = {
+          parts: "part",
+          variants: "variant",
+          sub_parts: "sub_part",
+          hit_boxes: "hit_box",
+          interact_boxes: "interact_box",
+          connectors: "connector",
+          subsystems: "subsystem"
+        };
+        while (i < segments.length) {
+          var seg = segments[i];
+          if (node && typeof node === "object" && !Array.isArray(node) && own(containers, seg) && i + 1 < segments.length && node[seg] && typeof node[seg] === "object") {
+            node = node[seg][segments[i + 1]];
+            nodePath = nodePath.concat([seg, segments[i + 1]]);
+            kind = containers[seg];
+            i += 2;
+            continue;
+          }
+          break;
+        }
+        return {
+          kind,
+          node,
+          nodePath,
+          field: segments[i],
+          rest: segments.slice(i)
+        };
+      }
+      function ensureParentObjects(config, segments) {
+        for (var i = 0; i < segments.length - 1; i++) {
+          var seg = segments[i];
+          if (seg !== "overwrite" && seg !== "textures") continue;
+          var ownerPath = segments.slice(0, i);
+          var owner = config;
+          for (var j = 0; j < ownerPath.length; j++) {
+            owner = owner && owner[ownerPath[j]];
+          }
+          if (!owner || typeof owner !== "object" || Array.isArray(owner)) continue;
+          if (owner[seg] === null || typeof owner[seg] !== "object" || Array.isArray(owner[seg])) {
+            owner[seg] = {};
+          }
+          var cursor = owner[seg];
+          for (var k = i + 1; k < segments.length - 1; k++) {
+            var key = segments[k];
+            if (cursor[key] === null || typeof cursor[key] !== "object" || Array.isArray(cursor[key])) {
+              cursor[key] = {};
+            }
+            cursor = cursor[key];
+          }
+        }
+      }
+      function validateWrite(config, segments, value) {
+        var located = locateRecord(config, segments);
+        if (!located.node || typeof located.node !== "object") return [];
+        var candidate = clone(located.node);
+        var rest = located.rest;
+        if (rest.length === 0) return [];
+        ensureParentObjects(candidate, rest);
+        var cursor = candidate;
+        for (var i = 0; i < rest.length - 1; i++) {
+          cursor = cursor && cursor[rest[i]];
+        }
+        if (!cursor || typeof cursor !== "object") return [];
+        if (Array.isArray(cursor) && /^\d+$/.test(rest[rest.length - 1])) {
+          cursor[parseInt(rest[rest.length - 1], 10)] = clone(value);
+        } else {
+          cursor[rest[rest.length - 1]] = clone(value);
+        }
+        var typeId = located.kind === "subsystem" ? candidate.type : void 0;
+        var result = doc.validate.validateValues(candidate, {
+          kind: located.kind,
+          typeId,
+          path: located.nodePath,
+          completeness: false
+        });
+        if (result.ok) return [];
+        var prefix = segments;
+        return result.errors.filter(function(e) {
+          var p = e.path || [];
+          for (var j = 0; j < prefix.length && j < p.length; j++) {
+            if (String(prefix[j]) !== String(p[j])) return false;
+          }
+          return true;
+        });
+      }
+      module.exports = {
+        ok,
+        fail,
+        fromDoc,
+        clone,
+        own,
+        makeError,
+        configOrNull,
+        namespaceOf,
+        partOf,
+        variantOf,
+        subPartOf,
+        setUiState,
+        setProp,
+        delProp,
+        validateKey,
+        markersPort,
+        bonesPort,
+        applyProjection,
+        finishProjection,
+        locateRecord,
+        validateWrite,
+        ensureParentObjects
+      };
+    }
+  });
+
+  // src/ops/part.js
+  var require_part = __commonJS({
+    "src/ops/part.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var {
+        createPartConfig
+      } = require_config();
+      var { runConfigEdit } = require_undo();
+      var shared = require_shared();
+      function createPart(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var partId = String(options.partId || "").trim();
+        var variantName = String(options.variantName || "").trim() || "default";
+        var model = options.model || "";
+        if (!partId) return shared.fail("\u96F6\u4EF6 ID \u4E0D\u80FD\u4E3A\u7A7A");
+        var keyError = shared.validateKey("parts", partId, config, ["parts", partId]);
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        var variantError = shared.validateKey(
+          "variants",
+          variantName,
+          config,
+          ["parts", partId, "variants", variantName]
+        );
+        if (variantError) return shared.fail(variantError.hint, [variantError]);
+        if (!config.parts) config.parts = {};
+        if (config.parts[partId]) return shared.fail('\u96F6\u4EF6 "' + partId + '" \u5DF2\u5B58\u5728');
+        runConfigEdit("\u65B0\u5EFA\u96F6\u4EF6", function() {
+          shared.setProp(config.parts, partId, createPartConfig(partId, variantName));
+          if (model) config.parts[partId].variants[variantName].model = model;
+          shared.setUiState(config, { activePartId: partId, activeVariantName: variantName });
+        }, { coalesce: false });
+        return shared.ok({ partId, variantName, changed: true });
+      }
+      function deletePart(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config || !config.parts) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528");
+        var partId = options.partId;
+        if (!partId || !config.parts[partId]) return shared.fail('\u96F6\u4EF6 "' + partId + '" \u4E0D\u5B58\u5728');
+        var remaining = [];
+        var state = null;
+        runConfigEdit("\u5220\u9664\u96F6\u4EF6", function() {
+          var mp = shared.markersPort();
+          if (mp.clearScope) mp.clearScope(config, { scope: "part", partId });
+          shared.delProp(config.parts, partId);
+          remaining = Object.keys(config.parts);
+          if (remaining.length > 0) {
+            var firstPart = config.parts[remaining[0]];
+            var variants = Object.keys(firstPart && firstPart.variants || {});
+            state = shared.setUiState(config, {
+              activePartId: remaining[0],
+              activeVariantName: variants.length > 0 ? variants[0] : "default"
+            });
+          } else {
+            state = shared.setUiState(config, { activePartId: "", activeVariantName: "" });
+          }
+        }, { coalesce: false });
+        return shared.ok({
+          remaining,
+          activePartId: state.activePartId,
+          activeVariantName: state.activeVariantName,
+          changed: true
+        });
+      }
+      function importPart(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var partId = String(options.partId || "").trim();
+        if (!partId) return shared.fail("\u7F3A\u5C11 partId");
+        var keyError = shared.validateKey("parts", partId, config, ["parts", partId]);
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        var existing = config.parts && config.parts[partId];
+        var definition = options.definition || {};
+        if (definition && typeof definition !== "object") {
+          return shared.fail("definition \u5FC5\u987B\u662F\u5BF9\u8C61");
+        }
+        var ctx = {
+          kind: "part",
+          mode: options.mode || (existing ? "replace" : "create"),
+          oldKey: options.oldKey,
+          namespace: shared.namespaceOf(config),
+          partId,
+          parentPath: ["parts", partId],
+          existing
+        };
+        var result = shared.applyProjection(config, ["parts", partId], definition, ctx, {
+          label: "\u5BFC\u5165\u96F6\u4EF6 " + partId,
+          data: { partId }
+        });
+        if (result.ok) shared.setUiState(config, { activePartId: partId });
+        return result;
+      }
+      module.exports = {
+        createPart,
+        deletePart,
+        importPart
+      };
+    }
+  });
+
+  // src/ops/field.js
+  var require_field = __commonJS({
+    "src/ops/field.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var doc = require_doc();
+      var ssTypes = require_subsystem_types();
+      var { runConfigEdit } = require_undo();
+      var shared = require_shared();
+      function pointerOf(segments) {
+        return "/" + segments.map(function(s) {
+          return String(s).replace(/~/g, "~0").replace(/\//g, "~1");
+        }).join("/");
+      }
+      function moveMarker(config, partId, variantName, fromUuid, toUuid, type, configRef) {
+        if (!partId || !variantName || !fromUuid || !toUuid || fromUuid === toUuid) return;
+        var mp = shared.markersPort();
+        if (mp.clear) mp.clear(config, partId, variantName, fromUuid);
+        if (mp.set) mp.set(config, partId, variantName, toUuid, type, configRef);
+      }
+      function findUuid(name) {
+        if (!name) return null;
+        var bones = shared.bonesPort();
+        var el = bones.findByName(name);
+        return el ? el.uuid : null;
+      }
+      function applySideEffect(config, segments, oldValue, newValue) {
+        var located = shared.locateRecord(config, segments);
+        var kind = located.kind;
+        var field = located.field;
+        var node = located.node;
+        if (!node) return;
+        if (kind === "sub_part" && field === "start_bone") {
+          var marker = null;
+          var markerUuid = oldValue ? findUuid(oldValue) : null;
+          if (markerUuid) {
+            var markers = config.parts[segments[1]].element_markers || {};
+            var vm = markers[segments[3]] || {};
+            marker = vm[markerUuid] || null;
+          }
+          moveMarker(
+            config,
+            segments[1],
+            segments[3],
+            markerUuid,
+            findUuid(newValue),
+            "sub_part",
+            marker ? marker.config_ref : segments[5]
+          );
+          return;
+        }
+        if (kind === "interact_box" && field === "bone") {
+          var newUuid = findUuid(newValue);
+          node._uuid = newUuid || void 0;
+          moveMarker(
+            config,
+            segments[1],
+            segments[3],
+            findUuid(oldValue),
+            newUuid,
+            "interact_box",
+            segments[7]
+          );
+          return;
+        }
+        if (kind === "connector" && field === "locator") {
+          var newLocUuid = findUuid(newValue);
+          node._marker_uuid = newLocUuid || void 0;
+          moveMarker(
+            config,
+            segments[1],
+            segments[3],
+            findUuid(oldValue),
+            newLocUuid,
+            "connector",
+            segments[7]
+          );
+          return;
+        }
+        if (kind === "subsystem" && field === "type") {
+          var defaults = ssTypes.getTypeDefaults(newValue) || {};
+          var allowed = ssTypes.getTypeSpecificFields(newValue) || [];
+          Object.keys(node).forEach(function(key) {
+            if (key === "type" || key === "definition") return;
+            if (allowed.indexOf(key) < 0) delete node[key];
+          });
+          Object.keys(defaults).forEach(function(key) {
+            if (!(key in node)) node[key] = shared.clone(defaults[key]);
+          });
+        }
+      }
+      function ensureParentObjects(config, segments) {
+        return shared.ensureParentObjects(config, segments);
+      }
+      function setField(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var parsed = doc.address.parsePath(options.path);
+        if (!parsed.ok) return shared.fromDoc(parsed, "\u8DEF\u5F84\u65E0\u6548");
+        if (parsed.wildcard >= 0) {
+          return shared.fail("\u5199\u5165\u8DEF\u5F84\u4E0D\u80FD\u5305\u542B\u901A\u914D\u7B26 *", [shared.makeError(
+            parsed.segments,
+            "invalid_format",
+            "\u4E0D\u542B * \u7684\u5199\u5165\u8DEF\u5F84",
+            "*",
+            "\u901A\u914D\u7B26\u53EA\u7528\u4E8E\u8BFB\u53D6"
+          )]);
+        }
+        var segments = parsed.segments;
+        if (segments.length === 0) return shared.fail("\u4E0D\u80FD\u6574\u6811\u66FF\u6362\uFF0C\u8BF7\u4F7F\u7528 import*");
+        var current = doc.read(config, options.path);
+        var before = current.ok ? current.value : void 0;
+        var after = options.value;
+        if (current.ok && JSON.stringify(before) === JSON.stringify(after)) {
+          return shared.ok({ path: segments, changed: false, before, after });
+        }
+        var errors = shared.validateWrite(config, segments, after);
+        if (errors.length > 0) {
+          return shared.fail(errors[0].hint || "\u5B57\u6BB5\u503C\u4E0D\u5408\u6CD5: " + (errors[0].code || "invalid"), errors);
+        }
+        var label = options.label || "\u4FEE\u6539 " + pointerOf(segments);
+        var result;
+        try {
+          result = runConfigEdit(label, function() {
+            ensureParentObjects(config, segments);
+            var written = doc.write(config, options.path, after, { allowMissingLeaf: true });
+            if (!written.ok) {
+              var e = new Error("write failed");
+              e._opResult = shared.fromDoc(written, "\u5199\u5165\u5B57\u6BB5\u5931\u8D25");
+              throw e;
+            }
+            applySideEffect(config, written.path || segments, before, after);
+            return written;
+          }, {
+            strict: !!options.strict,
+            coalesce: options.coalesce === true,
+            mergeKey: options.mergeKey || pointerOf(segments),
+            source: options.source || "ui"
+          });
+        } catch (e) {
+          if (e && e._opResult) return e._opResult;
+          return shared.fail(e && e.message ? e.message : "\u5199\u5165\u5B57\u6BB5\u5931\u8D25", []);
+        }
+        return shared.ok({
+          path: result.path || segments,
+          changed: true,
+          before: result.before,
+          after: result.after,
+          data: { sideEffect: result.sideEffect || null }
+        });
+      }
+      module.exports = { setField, _internals: { applySideEffect } };
+    }
+  });
+
+  // src/ops/variant.js
+  var require_variant = __commonJS({
+    "src/ops/variant.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createVariantConfig } = require_config();
+      var { runConfigEdit } = require_undo();
+      var shared = require_shared();
+      function createVariant(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var partId = options.partId;
+        var variantName = String(options.variantName || "").trim();
+        var model = options.model || "";
+        var part = shared.partOf(config, partId);
+        if (!part) return shared.fail("\u5F53\u524D\u96F6\u4EF6\u4E0D\u5B58\u5728");
+        if (!variantName) return shared.fail("\u53D8\u4F53\u540D\u4E0D\u80FD\u4E3A\u7A7A");
+        var keyError = shared.validateKey(
+          "variants",
+          variantName,
+          config,
+          ["parts", partId, "variants", variantName]
+        );
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        if (!part.variants) part.variants = {};
+        if (part.variants[variantName]) return shared.fail('\u53D8\u4F53 "' + variantName + '" \u5DF2\u5B58\u5728');
+        var defaultTexture = options.texture !== void 0 ? options.texture : "machine_max:textures/part/" + partId + "/" + partId + ".png";
+        runConfigEdit("\u65B0\u5EFA\u53D8\u4F53", function() {
+          var variant = createVariantConfig();
+          shared.setProp(part.variants, variantName, variant);
+          if (model) variant.model = model;
+          if (defaultTexture) variant.textures = { "default": defaultTexture };
+          shared.setUiState(config, { activeVariantName: variantName });
+        }, { coalesce: false });
+        return shared.ok({ variantName, changed: true });
+      }
+      function deleteVariant(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        var partId = options.partId;
+        var variantName = options.variantName;
+        var part = shared.partOf(config, partId);
+        if (!part) return shared.fail("\u5F53\u524D\u96F6\u4EF6\u4E0D\u5B58\u5728");
+        if (!variantName || !part.variants || !part.variants[variantName]) {
+          return shared.fail('\u53D8\u4F53 "' + variantName + '" \u4E0D\u5B58\u5728');
+        }
+        var remaining = [];
+        var active = "";
+        runConfigEdit("\u5220\u9664\u53D8\u4F53", function() {
+          var mp = shared.markersPort();
+          if (mp.clearScope) {
+            mp.clearScope(config, {
+              scope: "variant",
+              partId,
+              variantName
+            });
+          }
+          shared.delProp(part.variants, variantName);
+          remaining = Object.keys(part.variants);
+          active = remaining.length > 0 ? remaining[0] : "";
+          shared.setUiState(config, { activeVariantName: active });
+        }, { coalesce: false });
+        return shared.ok({ remaining, activeVariantName: active, changed: true });
+      }
+      function importVariant(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var partId = options.partId;
+        var variantName = String(options.variantName || "").trim();
+        var part = shared.partOf(config, partId);
+        if (!part) return shared.fail("\u5F53\u524D\u96F6\u4EF6\u4E0D\u5B58\u5728");
+        if (!variantName) return shared.fail("\u7F3A\u5C11\u53D8\u4F53\u540D");
+        var keyError = shared.validateKey(
+          "variants",
+          variantName,
+          config,
+          ["parts", partId, "variants", variantName]
+        );
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        var existing = part.variants && part.variants[variantName];
+        var ctx = {
+          kind: "variant",
+          mode: options.mode || (existing ? "replace" : "create"),
+          oldKey: options.oldKey,
+          namespace: shared.namespaceOf(config),
+          partId,
+          variantName,
+          parentPath: ["parts", partId, "variants", variantName],
+          existing
+        };
+        var result = shared.applyProjection(
+          config,
+          ["parts", partId, "variants", variantName],
+          options.definition || {},
+          ctx,
+          {
+            label: "\u5BFC\u5165\u53D8\u4F53 " + variantName,
+            data: { partId, variantName }
+          }
+        );
+        if (result.ok) shared.setUiState(config, { activeVariantName: variantName });
+        return result;
+      }
+      function setVariantTags(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        var variant = shared.variantOf(config, options.partId, options.variantName);
+        if (!variant) return shared.fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        var tags = Array.isArray(options.tags) ? options.tags.slice() : [];
+        return require_field().setField(config, {
+          path: ["parts", options.partId, "variants", options.variantName, "tags"],
+          value: tags,
+          label: "\u7F16\u8F91\u53D8\u4F53\u6807\u7B7E",
+          source: options.source || "ui"
+        });
+      }
+      module.exports = {
+        createVariant,
+        deleteVariant,
+        importVariant,
+        setVariantTags
+      };
     }
   });
 
@@ -14515,9 +20253,752 @@
     }
   });
 
-  // src/core/operations.js
-  var require_operations = __commonJS({
-    "src/core/operations.js"(exports, module) {
+  // src/ops/sub_part.js
+  var require_sub_part = __commonJS({
+    "src/ops/sub_part.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { generateDefaultName } = require_naming();
+      var { runConfigEdit } = require_undo();
+      var doc = require_doc();
+      var shared = require_shared();
+      function ensureSubPartName(config, variant, namespace) {
+        var base = generateDefaultName("sub_part", { namespace });
+        var keys = Object.keys(variant && variant.sub_parts || {});
+        if (keys.indexOf(base) < 0) return base;
+        var n = 2;
+        while (n < 1e4) {
+          var candidate = base + "_" + n;
+          if (keys.indexOf(candidate) < 0) return candidate;
+          n++;
+        }
+        return base;
+      }
+      function markSubPart(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        var variant = shared.variantOf(config, options.partId, options.variantName);
+        if (!variant) return shared.fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        var element = options.element;
+        if (!element || !element.uuid) return shared.fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
+        var ns = shared.namespaceOf(config);
+        var spKey = ensureSubPartName(config, variant, ns);
+        var keyError = shared.validateKey(
+          "sub_parts",
+          spKey,
+          config,
+          ["parts", options.partId, "variants", options.variantName, "sub_parts", spKey]
+        );
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        var mp = shared.markersPort();
+        runConfigEdit("\u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6", function() {
+          mp.set(config, options.partId, options.variantName, element.uuid, "sub_part", spKey);
+          if (mp.recalc) mp.recalc(config, options.partId, options.variantName);
+        }, { coalesce: false });
+        return shared.ok({ spKey, changed: true });
+      }
+      function importSubPart(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var partId = options.partId;
+        var variantName = options.variantName;
+        var spKey = String(options.spKey || options.subPartKey || "").trim();
+        var variant = shared.variantOf(config, partId, variantName);
+        if (!variant) return shared.fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!spKey) return shared.fail("\u7F3A\u5C11\u5B50\u96F6\u4EF6 key");
+        var keyError = shared.validateKey(
+          "sub_parts",
+          spKey,
+          config,
+          ["parts", partId, "variants", variantName, "sub_parts", spKey]
+        );
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        var existing = variant.sub_parts && variant.sub_parts[spKey];
+        var ctx = {
+          kind: "sub_part",
+          mode: options.mode || (existing ? "replace" : "create"),
+          oldKey: options.oldKey,
+          namespace: shared.namespaceOf(config),
+          partId,
+          variantName,
+          subPartKey: spKey,
+          parentPath: ["parts", partId, "variants", variantName, "sub_parts", spKey],
+          existing
+        };
+        return shared.applyProjection(
+          config,
+          ["parts", partId, "variants", variantName, "sub_parts", spKey],
+          options.definition || {},
+          ctx,
+          {
+            label: "\u5BFC\u5165\u5B50\u96F6\u4EF6 " + spKey,
+            data: { partId, variantName, subPartKey: spKey }
+          }
+        );
+      }
+      function renameSubPart(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        var partId = options.partId;
+        var variantName = options.variantName;
+        var oldKey = options.oldKey || options.spKey;
+        var newKey = String(options.newKey || "").trim();
+        var variant = shared.variantOf(config, partId, variantName);
+        if (!variant) return shared.fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!oldKey || !variant.sub_parts || !variant.sub_parts[oldKey]) {
+          return shared.fail('\u5B50\u96F6\u4EF6 "' + oldKey + '" \u4E0D\u5B58\u5728');
+        }
+        if (!newKey || oldKey === newKey) return shared.ok({ changed: false, key: oldKey });
+        var keyError = shared.validateKey(
+          "sub_parts",
+          newKey,
+          config,
+          ["parts", partId, "variants", variantName, "sub_parts", newKey]
+        );
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        if (variant.sub_parts[newKey]) return shared.fail('\u5B50\u96F6\u4EF6 "' + newKey + '" \u5DF2\u5B58\u5728');
+        var renamed = null;
+        runConfigEdit("\u91CD\u547D\u540D\u5B50\u96F6\u4EF6", function() {
+          renamed = doc.refs.renameRefs(config, {
+            kind: "sub_part",
+            oldKey,
+            newKey
+          });
+          var node = variant.sub_parts[oldKey];
+          shared.delProp(variant.sub_parts, oldKey);
+          shared.setProp(variant.sub_parts, newKey, node);
+          var mp = shared.markersPort();
+          if (mp.recalc) mp.recalc(config, partId, variantName);
+        }, { coalesce: false });
+        return shared.ok({
+          key: newKey,
+          changed: true,
+          renamed: renamed ? renamed.renamed : [],
+          cleaned_references: renamed ? renamed.renamed : []
+        });
+      }
+      module.exports = {
+        markSubPart,
+        importSubPart,
+        renameSubPart
+      };
+    }
+  });
+
+  // src/ops/subsystem.js
+  var require_subsystem = __commonJS({
+    "src/ops/subsystem.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { createSubPartConfig } = require_config();
+      var ssTypes = require_subsystem_types();
+      var { runConfigEdit } = require_undo();
+      var doc = require_doc();
+      var shared = require_shared();
+      function createSubsystem(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var partId = options.partId;
+        var variantName = options.variantName;
+        var spKey = options.spKey;
+        var typeId = options.typeId;
+        var instanceName = String(options.instanceName || "").trim();
+        var variant = shared.variantOf(config, partId, variantName);
+        if (!variant) return shared.fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!spKey) return shared.fail("\u7F3A\u5C11\u5B50\u96F6\u4EF6");
+        if (!typeId) return shared.fail("\u8BF7\u9009\u62E9\u5B50\u7CFB\u7EDF\u7C7B\u578B");
+        if (!instanceName) return shared.fail("\u5B50\u7CFB\u7EDF\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A");
+        if (!ssTypes.getTypeMeta(typeId)) return shared.fail("\u65E0\u6548\u7684\u5B50\u7CFB\u7EDF\u7C7B\u578B: " + typeId);
+        var keyError = shared.validateKey(
+          "subsystems",
+          instanceName,
+          config,
+          ["parts", partId, "variants", variantName, "sub_parts", spKey, "subsystems", instanceName]
+        );
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        var sp = shared.subPartOf(config, partId, variantName, spKey);
+        if (sp && sp.subsystems && sp.subsystems[instanceName]) {
+          return shared.fail('\u5B50\u7CFB\u7EDF "' + instanceName + '" \u5DF2\u5B58\u5728');
+        }
+        var defaults = ssTypes.getTypeDefaults(typeId) || {};
+        runConfigEdit("\u6DFB\u52A0\u5B50\u7CFB\u7EDF", function() {
+          if (!variant.sub_parts) shared.setProp(variant, "sub_parts", {});
+          if (!variant.sub_parts[spKey]) {
+            var spConfig = createSubPartConfig();
+            spConfig.start_bone = spKey;
+            shared.setProp(variant.sub_parts, spKey, spConfig);
+          }
+          var target = variant.sub_parts[spKey];
+          if (!target.subsystems) shared.setProp(target, "subsystems", {});
+          var ssConfig = { type: typeId, definition: "" };
+          Object.keys(defaults).forEach(function(key) {
+            ssConfig[key] = shared.clone(defaults[key]);
+          });
+          shared.setProp(target.subsystems, instanceName, ssConfig);
+        }, { coalesce: false });
+        return shared.ok({ instanceName, changed: true });
+      }
+      function deleteSubsystem(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528");
+        var path = [
+          "parts",
+          options.partId,
+          "variants",
+          options.variantName,
+          "sub_parts",
+          options.spKey,
+          "subsystems",
+          options.ssKey
+        ];
+        var removed = null;
+        runConfigEdit("\u5220\u9664\u5B50\u7CFB\u7EDF", function() {
+          removed = doc.remove(config, path, {});
+          if (!removed.ok) {
+            var e = new Error("remove failed");
+            e._opResult = shared.fromDoc(removed, "\u5220\u9664\u5B50\u7CFB\u7EDF\u5931\u8D25");
+            throw e;
+          }
+        }, { coalesce: false });
+        return shared.ok({
+          changed: true,
+          cleaned_references: removed ? removed.cleaned_references || [] : []
+        });
+      }
+      function importSubsystem(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var partId = options.partId;
+        var variantName = options.variantName;
+        var spKey = options.spKey;
+        var instanceName = String(options.instanceName || options.ssKey || "").trim();
+        var variant = shared.variantOf(config, partId, variantName);
+        if (!variant) return shared.fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!instanceName) return shared.fail("\u7F3A\u5C11\u5B50\u7CFB\u7EDF\u540D\u79F0");
+        var keyError = shared.validateKey(
+          "subsystems",
+          instanceName,
+          config,
+          ["parts", partId, "variants", variantName, "sub_parts", spKey, "subsystems", instanceName]
+        );
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        var sp = shared.subPartOf(config, partId, variantName, spKey);
+        if (!sp) return shared.fail('\u5B50\u96F6\u4EF6 "' + spKey + '" \u4E0D\u5B58\u5728');
+        var existing = sp.subsystems && sp.subsystems[instanceName];
+        var ctx = {
+          kind: "subsystem",
+          mode: options.mode || (existing ? "replace" : "create"),
+          oldKey: options.oldKey,
+          namespace: shared.namespaceOf(config),
+          partId,
+          variantName,
+          subPartKey: spKey,
+          parentPath: [
+            "parts",
+            partId,
+            "variants",
+            variantName,
+            "sub_parts",
+            spKey,
+            "subsystems",
+            instanceName
+          ],
+          existing
+        };
+        return shared.applyProjection(config, ctx.parentPath, options.definition || {}, ctx, {
+          label: "\u5BFC\u5165\u5B50\u7CFB\u7EDF " + instanceName,
+          data: { partId, variantName, subPartKey: spKey, instanceName }
+        });
+      }
+      function renameSubsystem(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        var partId = options.partId;
+        var variantName = options.variantName;
+        var spKey = options.spKey;
+        var oldKey = options.oldKey || options.ssKey;
+        var newKey = String(options.newKey || "").trim();
+        var sp = shared.subPartOf(config, partId, variantName, spKey);
+        if (!sp || !sp.subsystems || !sp.subsystems[oldKey]) {
+          return shared.fail('\u5B50\u7CFB\u7EDF "' + oldKey + '" \u4E0D\u5B58\u5728');
+        }
+        if (!newKey || oldKey === newKey) return shared.ok({ changed: false, key: oldKey });
+        var keyError = shared.validateKey(
+          "subsystems",
+          newKey,
+          config,
+          ["parts", partId, "variants", variantName, "sub_parts", spKey, "subsystems", newKey]
+        );
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        if (sp.subsystems[newKey]) return shared.fail('\u5B50\u7CFB\u7EDF "' + newKey + '" \u5DF2\u5B58\u5728');
+        var renamed = null;
+        runConfigEdit("\u91CD\u547D\u540D\u5B50\u7CFB\u7EDF", function() {
+          renamed = doc.refs.renameRefs(config, {
+            kind: "subsystem",
+            oldKey,
+            newKey
+          });
+          var node = sp.subsystems[oldKey];
+          shared.delProp(sp.subsystems, oldKey);
+          shared.setProp(sp.subsystems, newKey, node);
+        }, { coalesce: false });
+        return shared.ok({
+          key: newKey,
+          changed: true,
+          renamed: renamed ? renamed.renamed : [],
+          cleaned_references: renamed ? renamed.renamed : []
+        });
+      }
+      module.exports = {
+        createSubsystem,
+        deleteSubsystem,
+        importSubsystem,
+        renameSubsystem
+      };
+    }
+  });
+
+  // src/ops/element.js
+  var require_element = __commonJS({
+    "src/ops/element.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var {
+        createHitBoxConfig,
+        createInteractBoxConfig,
+        createConnectorInstanceConfig,
+        createSubPartConfig
+      } = require_config();
+      var { generateDefaultName, ensureUniqueName } = require_naming();
+      var em = require_element_markers();
+      var { runConfigEdit } = require_undo();
+      var doc = require_doc();
+      var shared = require_shared();
+      function ownerFor(config, partId, variantName, element) {
+        var marker = em.getMarker(config, partId, variantName, element.uuid);
+        var searchEl = marker && marker.type === "sub_part" ? element.parent || null : element;
+        var owner = em.detectOwnerSubPart(config, partId, variantName, searchEl);
+        return owner ? owner.spKey : null;
+      }
+      function ensureSubPart(variant, spKey) {
+        if (!variant.sub_parts) shared.setProp(variant, "sub_parts", {});
+        if (!variant.sub_parts[spKey]) {
+          shared.setProp(variant.sub_parts, spKey, createSubPartConfig());
+        }
+        return variant.sub_parts[spKey];
+      }
+      function markHitBox(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        var element = options.element;
+        var variant = shared.variantOf(config, options.partId, options.variantName);
+        if (!variant) return shared.fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!element || !element.uuid) return shared.fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
+        var spKey = options.spKey || ownerFor(config, options.partId, options.variantName, element);
+        var mp = shared.markersPort();
+        runConfigEdit("\u6807\u8BB0\u4E3A\u78B0\u649E\u7BB1", function() {
+          if (spKey) {
+            var sp = ensureSubPart(variant, spKey);
+            if (!sp.hit_boxes) shared.setProp(sp, "hit_boxes", {});
+            if (!sp.hit_boxes[element.uuid]) {
+              shared.setProp(sp.hit_boxes, element.uuid, createHitBoxConfig());
+            }
+          }
+          mp.set(config, options.partId, options.variantName, element.uuid, "hit_box", spKey);
+          if (mp.recalc) mp.recalc(config, options.partId, options.variantName);
+        }, { coalesce: false });
+        return shared.ok({
+          spKey,
+          changed: true,
+          warning: spKey ? null : '\u78B0\u649E\u7BB1 "' + (element.name || "") + '" \u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF08\u4E0D\u53D7\u9632\u62A4\u8BA1\u7B97\u5F71\u54CD\uFF09'
+        });
+      }
+      function markInteractBox(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        var element = options.element;
+        var variant = shared.variantOf(config, options.partId, options.variantName);
+        if (!variant) return shared.fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!element || !element.uuid) return shared.fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
+        var spKey = options.spKey || ownerFor(config, options.partId, options.variantName, element);
+        var ns = shared.namespaceOf(config);
+        var baseName = generateDefaultName("interact_box", { namespace: ns, boneName: element.name });
+        var ibName = ensureUniqueName("interact_box", variant, spKey, baseName);
+        var keyError = shared.validateKey(
+          "interact_boxes",
+          ibName,
+          config,
+          [
+            "parts",
+            options.partId,
+            "variants",
+            options.variantName,
+            "sub_parts",
+            spKey,
+            "interact_boxes",
+            ibName
+          ]
+        );
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        var mp = shared.markersPort();
+        runConfigEdit("\u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A", function() {
+          if (spKey) {
+            var sp = ensureSubPart(variant, spKey);
+            if (!sp.interact_boxes) shared.setProp(sp, "interact_boxes", {});
+            if (!sp.interact_boxes[ibName]) {
+              var ibConfig = createInteractBoxConfig();
+              ibConfig.bone = element.name;
+              ibConfig._uuid = element.uuid;
+              shared.setProp(sp.interact_boxes, ibName, ibConfig);
+            }
+          }
+          mp.set(config, options.partId, options.variantName, element.uuid, "interact_box", spKey);
+          if (mp.recalc) mp.recalc(config, options.partId, options.variantName);
+        }, { coalesce: false });
+        return shared.ok({
+          spKey,
+          name: ibName,
+          changed: true,
+          warning: spKey ? null : '\u4EA4\u4E92\u533A "' + (element.name || "") + '" \u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6'
+        });
+      }
+      function markConnector(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        var element = options.element;
+        var variant = shared.variantOf(config, options.partId, options.variantName);
+        if (!variant) return shared.fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!element || !element.uuid) return shared.fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
+        var spKey = options.spKey || ownerFor(config, options.partId, options.variantName, element);
+        var locName = element.name || "";
+        var ns = shared.namespaceOf(config);
+        var baseName = generateDefaultName("connector", { namespace: ns, boneName: locName });
+        var connName = ensureUniqueName("connector", variant, spKey, baseName);
+        var keyError = shared.validateKey(
+          "connectors",
+          connName,
+          config,
+          [
+            "parts",
+            options.partId,
+            "variants",
+            options.variantName,
+            "sub_parts",
+            spKey,
+            "connectors",
+            connName
+          ]
+        );
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        var mp = shared.markersPort();
+        runConfigEdit("\u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9", function() {
+          if (spKey) {
+            var sp = ensureSubPart(variant, spKey);
+            if (!sp.connectors) shared.setProp(sp, "connectors", {});
+            if (!sp.connectors[connName]) {
+              var connConfig = createConnectorInstanceConfig();
+              connConfig.locator = locName;
+              connConfig._marker_uuid = element.uuid;
+              shared.setProp(sp.connectors, connName, connConfig);
+            }
+          }
+          mp.set(config, options.partId, options.variantName, element.uuid, "connector", connName);
+          if (mp.recalc) mp.recalc(config, options.partId, options.variantName);
+        }, { coalesce: false });
+        return shared.ok({
+          spKey,
+          name: connName,
+          changed: true,
+          warning: spKey ? null : '\u8FDE\u63A5\u70B9 "' + (element.name || "") + '" \u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6'
+        });
+      }
+      function renameElementKey(config, options, container, scope, label) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        var partId = options.partId;
+        var variantName = options.variantName;
+        var spKey = options.spKey;
+        var oldKey = options.oldKey || options.key;
+        var newKey = String(options.newKey || "").trim();
+        var sp = shared.subPartOf(config, partId, variantName, spKey);
+        var map = sp && sp[container];
+        if (!map || !map[oldKey]) return shared.fail(scope + ' "' + oldKey + '" \u4E0D\u5B58\u5728');
+        if (!newKey || oldKey === newKey) return shared.ok({ changed: false, key: oldKey });
+        var mapName = scope === "connector" ? "connectors" : scope === "interact_box" ? "interact_boxes" : "subsystems";
+        var keyError = shared.validateKey(
+          mapName,
+          newKey,
+          config,
+          ["parts", partId, "variants", variantName, "sub_parts", spKey, mapName, newKey]
+        );
+        if (keyError) return shared.fail(keyError.hint, [keyError]);
+        if (map[newKey]) return shared.fail(scope + ' "' + newKey + '" \u5DF2\u5B58\u5728');
+        var renamed = null;
+        var mp = shared.markersPort();
+        runConfigEdit(label, function() {
+          renamed = doc.refs.renameRefs(config, { kind: scope, oldKey, newKey });
+          var node = map[oldKey];
+          shared.delProp(map, oldKey);
+          shared.setProp(map, newKey, node);
+          if (mp.recalc) mp.recalc(config, partId, variantName);
+        }, { coalesce: false });
+        return shared.ok({
+          key: newKey,
+          changed: true,
+          renamed: renamed ? renamed.renamed : [],
+          cleaned_references: renamed ? renamed.renamed : []
+        });
+      }
+      function renameConnector(config, options) {
+        return renameElementKey(config, options, "connectors", "connector", "\u91CD\u547D\u540D\u8FDE\u63A5\u70B9");
+      }
+      function renameInteractBox(config, options) {
+        return renameElementKey(config, options, "interact_boxes", "interact_box", "\u91CD\u547D\u540D\u4EA4\u4E92\u533A");
+      }
+      function clearElementMarker(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config || !config.parts) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528");
+        if (!options.uuid) return shared.fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
+        runConfigEdit("\u6E05\u9664 MachineMax \u6807\u8BB0", function() {
+          shared.markersPort().clear(config, options.partId, options.variantName, options.uuid);
+        }, { coalesce: false });
+        return shared.ok({ changed: true });
+      }
+      function bindMarker(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        var variant = shared.variantOf(config, options.partId, options.variantName);
+        if (!variant) return shared.fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        if (!options.uuid) return shared.fail("\u7F3A\u5C11 uuid");
+        var type = options.type;
+        if (["sub_part", "hit_box", "interact_box", "connector"].indexOf(type) < 0) {
+          return shared.fail("\u65E0\u6548\u7684\u6807\u8BB0\u7C7B\u578B: " + type);
+        }
+        var configRef = options.configRef;
+        if (type === "sub_part") {
+          if (!configRef || !variant.sub_parts || !variant.sub_parts[configRef]) {
+            return shared.fail('\u5B50\u96F6\u4EF6 "' + configRef + '" \u4E0D\u5B58\u5728');
+          }
+        } else if (type === "connector" || type === "interact_box") {
+          var mapName = type === "connector" ? "connectors" : "interact_boxes";
+          var found = false;
+          Object.keys(variant.sub_parts || {}).forEach(function(spKey) {
+            var map = variant.sub_parts[spKey] && variant.sub_parts[spKey][mapName];
+            if (map && configRef && map[configRef]) found = true;
+          });
+          if (!found) return shared.fail(type + ' "' + configRef + '" \u4E0D\u5B58\u5728');
+        } else if (type === "hit_box" && configRef) {
+          var sp = variant.sub_parts && variant.sub_parts[configRef];
+          if (!sp || !sp.hit_boxes || !sp.hit_boxes[options.uuid]) {
+            return shared.fail('\u78B0\u649E\u7BB1\u6761\u76EE "' + configRef + '" \u4E0D\u5B58\u5728');
+          }
+        }
+        var mp = shared.markersPort();
+        runConfigEdit("\u7ED1\u5B9A\u6807\u8BB0", function() {
+          mp.set(config, options.partId, options.variantName, options.uuid, type, configRef);
+          if (mp.recalc) mp.recalc(config, options.partId, options.variantName);
+        }, { coalesce: false });
+        return shared.ok({ changed: true });
+      }
+      function removeNode(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528");
+        var parsed = doc.address.parsePath(options.path);
+        if (!parsed.ok) return shared.fromDoc(parsed, "\u8DEF\u5F84\u65E0\u6548");
+        var segments = parsed.segments;
+        if (segments.length < 2) return shared.fail("\u4E0D\u80FD\u5220\u9664\u6839\u8282\u70B9");
+        var kindMap = {
+          parts: "part",
+          variants: "variant",
+          sub_parts: "sub_part",
+          hit_boxes: "hit_box",
+          interact_boxes: "interact_box",
+          connectors: "connector",
+          subsystems: "subsystem"
+        };
+        var mapName = segments[segments.length - 2];
+        var kind = kindMap[mapName];
+        if (!kind) return shared.fail("\u8BE5\u8DEF\u5F84\u4E0D\u662F\u53EF\u5220\u9664\u7684\u914D\u7F6E\u8282\u70B9");
+        var key = segments[segments.length - 1];
+        var removed = null;
+        var mp = shared.markersPort();
+        runConfigEdit("\u5220\u9664 " + kind, function() {
+          if (kind === "part") {
+            if (mp.clearScope) mp.clearScope(config, { scope: "part", partId: key });
+          } else if (kind === "variant") {
+            if (mp.clearScope) {
+              mp.clearScope(config, {
+                scope: "variant",
+                partId: segments[1],
+                variantName: key
+              });
+            }
+          } else if (kind === "hit_box") {
+            if (mp.clear) mp.clear(config, segments[1], segments[3], key);
+          }
+          removed = doc.remove(config, segments, {});
+          if (!removed.ok) {
+            var e = new Error("remove failed");
+            e._opResult = shared.fromDoc(removed, "\u5220\u9664\u8282\u70B9\u5931\u8D25");
+            throw e;
+          }
+        }, { coalesce: false });
+        return shared.ok({
+          changed: true,
+          cleaned_references: removed ? removed.cleaned_references || [] : [],
+          data: { kind, key }
+        });
+      }
+      function addInstance(config, parentPath, kind, key, definition) {
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528");
+        var parsed = doc.address.parsePath(parentPath);
+        if (!parsed.ok) return shared.fromDoc(parsed, "\u7236\u8DEF\u5F84\u65E0\u6548");
+        var parent = parsed.segments;
+        if (parent.length < 2 || parent[parent.length - 2] !== "sub_parts") {
+          return shared.fail("addInstance \u7684\u7236\u8DEF\u5F84\u5FC5\u987B\u662F sub_part \u8282\u70B9");
+        }
+        var partId = parent[1];
+        var variantName = parent[3];
+        var spKey = parent[5];
+        var variant = shared.variantOf(config, partId, variantName);
+        if (!variant) return shared.fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
+        var factory = kind === "hit_box" ? createHitBoxConfig : kind === "interact_box" ? createInteractBoxConfig : kind === "connector" ? createConnectorInstanceConfig : null;
+        if (!factory) return shared.fail("addInstance \u53EA\u652F\u6301 hit_box / interact_box / connector");
+        var base = factory();
+        var def = Object.assign({}, definition || {});
+        Object.keys(def).forEach(function(k) {
+          base[k] = def[k];
+        });
+        var ctx = {
+          kind,
+          mode: "create",
+          namespace: shared.namespaceOf(config),
+          partId,
+          variantName,
+          subPartKey: spKey,
+          parentPath: parent.concat([kind === "connector" ? "connectors" : kind === "interact_box" ? "interact_boxes" : "hit_boxes"]),
+          existing: void 0
+        };
+        var projected = doc.projection.projectIn(base, ctx);
+        if (!projected.ok) return shared.finishProjection(projected);
+        var mp = shared.markersPort();
+        var resultKey = key;
+        runConfigEdit("\u6DFB\u52A0 " + kind, function() {
+          var sp = ensureSubPart(variant, spKey);
+          var container = kind === "connector" ? "connectors" : kind === "interact_box" ? "interact_boxes" : "hit_boxes";
+          if (!sp[container]) shared.setProp(sp, container, {});
+          if (kind === "hit_box") {
+            var bones = shared.bonesPort();
+            var el = key ? bones.findByUuid(key) || bones.findByName(key) : null;
+            if (!el) {
+              var e = new Error("element not found");
+              e._opResult = shared.fail('\u672A\u627E\u5230\u9AA8\u9ABC "' + key + '"', [shared.makeError(
+                parent,
+                "not_found",
+                "\u5DF2\u5B58\u5728\u7684\u9AA8\u9ABC",
+                key,
+                "\u8BF7\u5148\u5EFA\u6A21\u578B\u5143\u7D20\u6216\u6539\u7528 bind_marker"
+              )]);
+              throw e;
+            }
+            resultKey = el.uuid;
+            shared.setProp(sp.hit_boxes, el.uuid, projected.node);
+            mp.set(config, partId, variantName, el.uuid, "hit_box", spKey);
+          } else {
+            var name = key;
+            if (!name) {
+              var ns = shared.namespaceOf(config);
+              var boneName = projected.node.bone || projected.node.locator || kind;
+              var baseName = generateDefaultName(kind, {
+                namespace: ns,
+                boneName
+              });
+              name = ensureUniqueName(kind, variant, spKey, baseName);
+            }
+            var mapName = container === "connectors" ? "connectors" : "interact_boxes";
+            var keyError = shared.validateKey(
+              mapName,
+              name,
+              config,
+              parent.concat([container, name])
+            );
+            if (keyError) {
+              var ke = new Error("invalid key");
+              ke._opResult = shared.fail(keyError.hint, [keyError]);
+              throw ke;
+            }
+            if (kind === "interact_box") {
+              var el2 = shared.bonesPort().findByName(key || projected.node.bone);
+              if (!el2) {
+                var e2 = new Error("element not found");
+                e2._opResult = shared.fail('\u672A\u627E\u5230\u9AA8\u9ABC "' + (key || projected.node.bone) + '"', []);
+                throw e2;
+              }
+              projected.node.bone = el2.name;
+              projected.node._uuid = el2.uuid;
+              mp.set(config, partId, variantName, el2.uuid, "interact_box", name);
+            } else {
+              var loc = shared.bonesPort().findByName(key || projected.node.locator);
+              if (!loc) {
+                var e3 = new Error("element not found");
+                e3._opResult = shared.fail('\u672A\u627E\u5230 Locator "' + (key || projected.node.locator) + '"', []);
+                throw e3;
+              }
+              projected.node.locator = loc.name;
+              projected.node._marker_uuid = loc.uuid;
+              mp.set(config, partId, variantName, loc.uuid, "connector", name);
+            }
+            resultKey = name;
+            shared.setProp(sp[container], name, projected.node);
+          }
+          if (mp.recalc) mp.recalc(config, partId, variantName);
+        }, { coalesce: false });
+        return shared.ok({
+          key: resultKey,
+          changed: true,
+          data: { kind, key: resultKey }
+        });
+      }
+      module.exports = {
+        markHitBox,
+        markInteractBox,
+        markConnector,
+        renameConnector,
+        renameInteractBox,
+        clearElementMarker,
+        bindMarker,
+        removeNode,
+        addInstance,
+        _internals: { renameElementKey }
+      };
+    }
+  });
+
+  // src/ops/pack.js
+  var require_pack = __commonJS({
+    "src/ops/pack.js"(exports, module) {
       "use strict";
       init_define_BUILTIN_CONNECTORS();
       init_define_BUILTIN_CONTROL_GROUPS();
@@ -14526,409 +21007,60 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var { runConfigEdit } = require_undo();
-      var {
-        createPartConfig,
-        createVariantConfig,
-        createSubPartConfig,
-        createHitBoxConfig,
-        createInteractBoxConfig,
-        createConnectorInstanceConfig
-      } = require_config();
-      var { setMarker, clearMarker, clearAllMarkers, getMarker, detectOwnerSubPart } = require_element_markers();
-      var { generateDefaultName, ensureUniqueName } = require_naming();
-      var ssTypes = require_subsystem_types();
-      var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("Operations");
-      function vueSet(obj, key, value) {
-        if (typeof Vue !== "undefined" && Vue && typeof Vue.set === "function") {
-          return Vue.set(obj, key, value);
-        }
-        obj[key] = value;
-        return value;
-      }
-      function vueDelete(obj, key) {
-        if (typeof Vue !== "undefined" && Vue && typeof Vue.delete === "function") {
-          return Vue.delete(obj, key);
-        }
-        delete obj[key];
-      }
-      function ok(extra) {
-        var result = { ok: true };
-        if (extra) {
-          for (var k in extra) {
-            if (Object.prototype.hasOwnProperty.call(extra, k)) result[k] = extra[k];
-          }
-        }
-        return result;
-      }
-      function fail(message) {
-        log2.warn("\u64CD\u4F5C\u5931\u8D25\uFF1A" + message);
-        return { ok: false, error: message };
-      }
-      function _configOrNull(config) {
-        if (!config || typeof config !== "object") return null;
-        return config;
-      }
-      function _part(config, partId) {
-        if (!config || !config.parts || !partId) return null;
-        return config.parts[partId] || null;
-      }
-      function _variant(config, partId, variantName) {
-        var part = _part(config, partId);
-        if (!part || !part.variants || !variantName) return null;
-        return part.variants[variantName] || null;
-      }
-      function _setUiState(config, patch) {
-        if (!config._uiState || typeof config._uiState !== "object") {
-          config._uiState = { activeMode: "part", activePartId: "", activeVariantName: "" };
-        }
-        for (var key in patch) {
-          if (Object.prototype.hasOwnProperty.call(patch, key)) {
-            config._uiState[key] = patch[key];
-          }
-        }
-        return config._uiState;
-      }
-      function createPart(config, options) {
-        options = options || {};
-        config = _configOrNull(config);
-        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
-        var partId = String(options.partId || "").trim();
-        var variantName = String(options.variantName || "").trim() || "default";
-        var model = options.model || "";
-        if (!partId) return fail("\u96F6\u4EF6 ID \u4E0D\u80FD\u4E3A\u7A7A");
-        if (!config.parts) config.parts = {};
-        if (config.parts[partId]) return fail('\u96F6\u4EF6 "' + partId + '" \u5DF2\u5B58\u5728');
-        runConfigEdit("\u65B0\u5EFA\u96F6\u4EF6", function() {
-          vueSet(config.parts, partId, createPartConfig(partId, variantName));
-          if (model) {
-            vueSet(config.parts[partId].variants[variantName], "model", model);
-          }
-          _setUiState(config, { activePartId: partId, activeVariantName: variantName });
-        });
-        log2.info("createPart: \u5DF2\u521B\u5EFA", { partId, variant: variantName });
-        return ok({ partId, variantName });
-      }
-      function deletePart(config, options) {
-        options = options || {};
-        config = _configOrNull(config);
-        if (!config || !config.parts) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528");
-        var partId = options.partId;
-        if (!partId || !config.parts[partId]) return fail('\u96F6\u4EF6 "' + partId + '" \u4E0D\u5B58\u5728');
-        var remaining = [];
-        var state = null;
-        runConfigEdit("\u5220\u9664\u96F6\u4EF6", function() {
-          vueDelete(config.parts, partId);
-          remaining = Object.keys(config.parts);
-          if (remaining.length > 0) {
-            var firstPart = config.parts[remaining[0]];
-            var variants = Object.keys(firstPart && firstPart.variants || {});
-            state = _setUiState(config, {
-              activePartId: remaining[0],
-              activeVariantName: variants.length > 0 ? variants[0] : "default"
-            });
-          } else {
-            state = _setUiState(config, { activePartId: "", activeVariantName: "" });
-          }
-        });
-        log2.info("deletePart: \u5DF2\u5220\u9664", { partId, remaining });
-        return ok({
-          remaining,
-          activePartId: state.activePartId,
-          activeVariantName: state.activeVariantName
-        });
-      }
-      function createVariant(config, options) {
-        options = options || {};
-        config = _configOrNull(config);
-        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
-        var partId = options.partId;
-        var variantName = String(options.variantName || "").trim();
-        var model = options.model || "";
-        var part = _part(config, partId);
-        if (!part) return fail("\u5F53\u524D\u96F6\u4EF6\u4E0D\u5B58\u5728");
-        if (!variantName) return fail("\u53D8\u4F53\u540D\u4E0D\u80FD\u4E3A\u7A7A");
-        if (!part.variants) part.variants = {};
-        if (part.variants[variantName]) return fail('\u53D8\u4F53 "' + variantName + '" \u5DF2\u5B58\u5728');
-        var defaultTexture = options.texture !== void 0 ? options.texture : "machine_max:textures/part/" + partId + "/" + partId + ".png";
-        runConfigEdit("\u65B0\u5EFA\u53D8\u4F53", function() {
-          var variant = createVariantConfig();
-          vueSet(part.variants, variantName, variant);
-          if (model) variant.model = model;
-          if (defaultTexture) variant.textures = { "default": defaultTexture };
-          _setUiState(config, { activeVariantName: variantName });
-        });
-        log2.info("createVariant: \u5DF2\u521B\u5EFA", { partId, variant: variantName });
-        return ok({ variantName });
-      }
-      function deleteVariant(config, options) {
-        options = options || {};
-        config = _configOrNull(config);
-        var partId = options.partId;
-        var variantName = options.variantName;
-        var part = _part(config, partId);
-        if (!part) return fail("\u5F53\u524D\u96F6\u4EF6\u4E0D\u5B58\u5728");
-        if (!variantName || !part.variants || !part.variants[variantName]) {
-          return fail('\u53D8\u4F53 "' + variantName + '" \u4E0D\u5B58\u5728');
-        }
-        var remaining = [];
-        var active = "";
-        runConfigEdit("\u5220\u9664\u53D8\u4F53", function() {
-          clearAllMarkers(config, partId, variantName);
-          vueDelete(part.variants, variantName);
-          remaining = Object.keys(part.variants);
-          active = remaining.length > 0 ? remaining[0] : "";
-          _setUiState(config, { activeVariantName: active });
-        });
-        log2.info("deleteVariant: \u5DF2\u5220\u9664", { partId, variant: variantName, remaining });
-        return ok({ remaining, activeVariantName: active });
-      }
-      function createSubsystem(config, options) {
-        options = options || {};
-        config = _configOrNull(config);
-        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
-        var partId = options.partId;
-        var variantName = options.variantName;
-        var spKey = options.spKey;
-        var typeId = options.typeId;
-        var instanceName = String(options.instanceName || "").trim();
-        var variant = _variant(config, partId, variantName);
-        if (!variant) return fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
-        if (!spKey) return fail("\u7F3A\u5C11\u5B50\u96F6\u4EF6");
-        if (!typeId) return fail("\u8BF7\u9009\u62E9\u5B50\u7CFB\u7EDF\u7C7B\u578B");
-        if (!instanceName) return fail("\u5B50\u7CFB\u7EDF\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A");
-        var meta = ssTypes.getTypeMeta(typeId);
-        if (!meta) return fail("\u65E0\u6548\u7684\u5B50\u7CFB\u7EDF\u7C7B\u578B: " + typeId);
-        var sp = variant.sub_parts && variant.sub_parts[spKey];
-        if (sp && sp.subsystems && sp.subsystems[instanceName]) {
-          return fail('\u5B50\u7CFB\u7EDF "' + instanceName + '" \u5DF2\u5B58\u5728');
-        }
-        var defaults = ssTypes.getTypeDefaults(typeId) || {};
-        runConfigEdit("\u6DFB\u52A0\u5B50\u7CFB\u7EDF", function() {
-          if (!variant.sub_parts) vueSet(variant, "sub_parts", {});
-          if (!variant.sub_parts[spKey]) {
-            var spConfig = createSubPartConfig();
-            spConfig.start_bone = spKey;
-            vueSet(variant.sub_parts, spKey, spConfig);
-          }
-          var target = variant.sub_parts[spKey];
-          if (!target.subsystems) vueSet(target, "subsystems", {});
-          var ssConfig = { type: typeId, definition: "" };
-          for (var key in defaults) {
-            if (Object.prototype.hasOwnProperty.call(defaults, key)) {
-              ssConfig[key] = defaults[key];
-            }
-          }
-          vueSet(target.subsystems, instanceName, ssConfig);
-        });
-        log2.info("createSubsystem: \u5DF2\u521B\u5EFA", { partId, spKey, instanceName, typeId });
-        return ok({ instanceName });
-      }
-      function deleteSubsystem(config, options) {
-        options = options || {};
-        config = _configOrNull(config);
-        var variant = _variant(config, options.partId, options.variantName);
-        var sp = variant && variant.sub_parts ? variant.sub_parts[options.spKey] : null;
-        if (!sp || !sp.subsystems || !options.ssKey || !sp.subsystems[options.ssKey]) {
-          return fail('\u5B50\u7CFB\u7EDF "' + options.ssKey + '" \u4E0D\u5B58\u5728');
-        }
-        runConfigEdit("\u5220\u9664\u5B50\u7CFB\u7EDF", function() {
-          vueDelete(sp.subsystems, options.ssKey);
-        });
-        log2.info("deleteSubsystem: \u5DF2\u5220\u9664", { spKey: options.spKey, ssKey: options.ssKey });
-        return ok();
-      }
-      function setVariantTags(config, options) {
-        options = options || {};
-        config = _configOrNull(config);
-        var variant = _variant(config, options.partId, options.variantName);
-        if (!variant) return fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
-        var tags = Array.isArray(options.tags) ? options.tags.slice() : [];
-        runConfigEdit("\u7F16\u8F91\u53D8\u4F53\u6807\u7B7E", function() {
-          vueSet(variant, "tags", tags);
-        });
-        log2.info("setVariantTags: \u5DF2\u66F4\u65B0", { partId: options.partId, variant: options.variantName, count: tags.length });
-        return ok({ tags });
-      }
-      function markSubPart(config, options) {
-        options = options || {};
-        config = _configOrNull(config);
-        var element = options.element;
-        var variant = _variant(config, options.partId, options.variantName);
-        if (!variant) return fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
-        if (!element || !element.uuid) return fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
-        var ns = config.namespace || "machine_max";
-        var baseName = generateDefaultName("sub_part", { namespace: ns });
-        var spKey = ensureUniqueName("sub_part", variant, null, baseName);
-        runConfigEdit("\u6807\u8BB0\u4E3A\u5B50\u96F6\u4EF6", function() {
-          setMarker(config, options.partId, options.variantName, element.uuid, "sub_part", spKey);
-        });
-        log2.info("markSubPart: \u5DF2\u6807\u8BB0", { spKey, uuid: element.uuid });
-        return ok({ spKey });
-      }
-      function markHitBox(config, options) {
-        options = options || {};
-        config = _configOrNull(config);
-        var element = options.element;
-        var variant = _variant(config, options.partId, options.variantName);
-        if (!variant) return fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
-        if (!element || !element.uuid) return fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
-        var marker = getMarker(config, options.partId, options.variantName, element.uuid);
-        var searchEl = marker && marker.type === "sub_part" ? element.parent || null : element;
-        var owner = detectOwnerSubPart(config, options.partId, options.variantName, searchEl);
-        var spKey = owner ? owner.spKey : null;
-        runConfigEdit("\u6807\u8BB0\u4E3A\u78B0\u649E\u7BB1", function() {
-          if (spKey) {
-            if (!variant.sub_parts) variant.sub_parts = {};
-            if (!variant.sub_parts[spKey]) {
-              vueSet(variant.sub_parts, spKey, createSubPartConfig());
-            }
-            var sp = variant.sub_parts[spKey];
-            if (!sp.hit_boxes) vueSet(sp, "hit_boxes", {});
-            if (!sp.hit_boxes[element.uuid]) {
-              vueSet(sp.hit_boxes, element.uuid, createHitBoxConfig());
-            }
-          }
-          setMarker(config, options.partId, options.variantName, element.uuid, "hit_box", spKey);
-        });
-        log2.info("markHitBox: \u5DF2\u6807\u8BB0", { spKey, uuid: element.uuid });
-        return ok({
-          spKey,
-          warning: spKey ? null : '\u78B0\u649E\u7BB1 "' + (element.name || "") + '" \u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6\uFF08\u4E0D\u53D7\u9632\u62A4\u8BA1\u7B97\u5F71\u54CD\uFF09'
-        });
-      }
-      function markInteractBox(config, options) {
-        options = options || {};
-        config = _configOrNull(config);
-        var element = options.element;
-        var variant = _variant(config, options.partId, options.variantName);
-        if (!variant) return fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
-        if (!element || !element.uuid) return fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
-        var marker = getMarker(config, options.partId, options.variantName, element.uuid);
-        var searchEl = marker && marker.type === "sub_part" ? element.parent || null : element;
-        var owner = detectOwnerSubPart(config, options.partId, options.variantName, searchEl);
-        var spKey = owner ? owner.spKey : null;
-        var ns = config.namespace || "machine_max";
-        var baseName = generateDefaultName("interact_box", { namespace: ns, boneName: element.name });
-        var ibName = ensureUniqueName("interact_box", variant, spKey, baseName);
-        runConfigEdit("\u6807\u8BB0\u4E3A\u4EA4\u4E92\u533A", function() {
-          if (spKey) {
-            if (!variant.sub_parts) variant.sub_parts = {};
-            if (!variant.sub_parts[spKey]) {
-              vueSet(variant.sub_parts, spKey, createSubPartConfig());
-            }
-            var sp = variant.sub_parts[spKey];
-            if (!sp.interact_boxes) vueSet(sp, "interact_boxes", {});
-            if (!sp.interact_boxes[ibName]) {
-              var ibConfig = createInteractBoxConfig();
-              ibConfig.bone = element.name;
-              ibConfig._uuid = element.uuid;
-              vueSet(sp.interact_boxes, ibName, ibConfig);
-            }
-          }
-          setMarker(config, options.partId, options.variantName, element.uuid, "interact_box", spKey);
-        });
-        log2.info("markInteractBox: \u5DF2\u6807\u8BB0", { spKey, name: ibName, uuid: element.uuid });
-        return ok({
-          spKey,
-          name: ibName,
-          warning: spKey ? null : '\u4EA4\u4E92\u533A "' + (element.name || "") + '" \u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6'
-        });
-      }
-      function markConnector(config, options) {
-        options = options || {};
-        config = _configOrNull(config);
-        var element = options.element;
-        var variant = _variant(config, options.partId, options.variantName);
-        if (!variant) return fail("\u5F53\u524D\u53D8\u4F53\u4E0D\u5B58\u5728");
-        if (!element || !element.uuid) return fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
-        var owner = detectOwnerSubPart(config, options.partId, options.variantName, element);
-        var spKey = owner ? owner.spKey : null;
-        var locName = element.name || "";
-        var ns = config.namespace || "machine_max";
-        var baseName = generateDefaultName("connector", { namespace: ns, boneName: locName });
-        var connName = ensureUniqueName("connector", variant, spKey, baseName);
-        runConfigEdit("\u6807\u8BB0\u4E3A\u8FDE\u63A5\u70B9", function() {
-          if (spKey) {
-            if (!variant.sub_parts) variant.sub_parts = {};
-            if (!variant.sub_parts[spKey]) {
-              vueSet(variant.sub_parts, spKey, createSubPartConfig());
-            }
-            var sp = variant.sub_parts[spKey];
-            if (!sp.connectors) vueSet(sp, "connectors", {});
-            if (!sp.connectors[connName]) {
-              var connConfig = createConnectorInstanceConfig();
-              connConfig.locator = locName;
-              connConfig._marker_uuid = element.uuid;
-              vueSet(sp.connectors, connName, connConfig);
-            }
-          }
-          setMarker(config, options.partId, options.variantName, element.uuid, "connector", null);
-        });
-        log2.info("markConnector: \u5DF2\u6807\u8BB0", { spKey, name: connName, locator: locName });
-        return ok({
-          spKey,
-          name: connName,
-          warning: spKey ? null : '\u8FDE\u63A5\u70B9 "' + (element.name || "") + '" \u65E0\u5F52\u5C5E\u5B50\u96F6\u4EF6'
-        });
-      }
-      function clearElementMarker(config, options) {
-        options = options || {};
-        config = _configOrNull(config);
-        if (!config || !config.parts) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528");
-        if (!options.uuid) return fail("\u672A\u9009\u4E2D\u4EFB\u4F55\u5143\u7D20");
-        runConfigEdit("\u6E05\u9664 MachineMax \u6807\u8BB0", function() {
-          clearMarker(config, options.partId, options.variantName, options.uuid);
-        });
-        log2.info("clearElementMarker: \u5DF2\u6E05\u9664", { partId: options.partId, uuid: options.uuid });
-        return ok();
-      }
+      var shared = require_shared();
       function setContentPack(config, options) {
         options = options || {};
-        config = _configOrNull(config);
-        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
         var path = options.path || "";
         var namespace = options.namespace || "";
         var meta = options.meta || {};
         var label = options.label || "\u5207\u6362\u5185\u5BB9\u5305";
+        if (namespace) {
+          var keys = require_keys();
+          if (!keys.isValidNamespace(namespace)) {
+            return shared.fail("namespace \u975E\u6CD5", [shared.makeError(
+              ["namespace"],
+              "invalid_format",
+              "^[a-z0-9_.-]+$",
+              namespace,
+              "namespace \u53EA\u5141\u8BB8\u5C0F\u5199 ASCII \u5B57\u6BCD\u3001\u6570\u5B57\u3001`_`\u3001`.`\u3001`-`"
+            )]);
+          }
+        }
         runConfigEdit(label, function() {
           config.contentPackPath = path;
           config.namespace = namespace;
           config.packMeta = meta;
-        });
-        log2.info("setContentPack: \u5DF2\u5207\u6362", { path, namespace, hasMeta: !!meta });
-        return ok();
+        }, { coalesce: false });
+        return shared.ok({ changed: true });
       }
       function setContentPackPath(config, path) {
-        config = _configOrNull(config);
-        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
         runConfigEdit("\u4FEE\u6539\u5185\u5BB9\u5305\u8DEF\u5F84", function() {
           config.contentPackPath = path || "";
-        });
-        log2.info("setContentPackPath: \u5DF2\u66F4\u65B0", { path });
-        return ok();
+        }, { coalesce: false });
+        return shared.ok({ changed: true });
       }
       function updatePackMeta(config, patch) {
-        config = _configOrNull(config);
-        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
         patch = patch || {};
         runConfigEdit("\u4FEE\u6539\u5185\u5BB9\u5305\u4FE1\u606F", function() {
           if (!config.packMeta || typeof config.packMeta !== "object") {
             config.packMeta = {};
           }
-          for (var key in patch) {
-            if (Object.prototype.hasOwnProperty.call(patch, key)) {
-              vueSet(config.packMeta, key, patch[key]);
-            }
-          }
-        });
-        log2.info("updatePackMeta: \u5DF2\u66F4\u65B0", { keys: Object.keys(patch) });
-        return ok();
+          Object.keys(patch).forEach(function(key) {
+            shared.setProp(config.packMeta, key, patch[key]);
+          });
+        }, { coalesce: false });
+        return shared.ok({ changed: true });
       }
       function updateDependencyPaths(config, options) {
         options = options || {};
-        config = _configOrNull(config);
-        if (!config) return fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
         var add = options.add || [];
         var remove = options.remove || [];
         var replace = options.replace;
@@ -14956,33 +21088,108 @@
             }
           }
           paths = config.dependencyPaths.slice();
-        });
-        if (!changed) {
-          log2.debug("updateDependencyPaths: \u65E0\u53D8\u66F4");
+        }, { coalesce: false });
+        return shared.ok({ changed, dependencyPaths: paths });
+      }
+      module.exports = {
+        setContentPack,
+        setContentPackPath,
+        updatePackMeta,
+        updateDependencyPaths
+      };
+    }
+  });
+
+  // src/ops/session.js
+  var require_session = __commonJS({
+    "src/ops/session.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var shared = require_shared();
+      function setActive(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        var patch = {};
+        if (options.partId !== void 0) patch.activePartId = options.partId;
+        if (options.variantName !== void 0) patch.activeVariantName = options.variantName;
+        if (options.mode !== void 0) patch.activeMode = options.mode;
+        if (patch.activePartId && !shared.partOf(config, patch.activePartId)) {
+          return shared.fail('\u96F6\u4EF6 "' + patch.activePartId + '" \u4E0D\u5B58\u5728');
         }
-        return ok({ changed, dependencyPaths: paths });
+        if (patch.activePartId && patch.activeVariantName) {
+          var variant = shared.variantOf(config, patch.activePartId, patch.activeVariantName);
+          if (!variant) return shared.fail('\u53D8\u4F53 "' + patch.activeVariantName + '" \u4E0D\u5B58\u5728');
+        }
+        shared.setUiState(config, patch);
+        return shared.ok({ changed: true, data: { _uiState: config._uiState } });
       }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          createPart,
-          deletePart,
-          createVariant,
-          deleteVariant,
-          createSubsystem,
-          deleteSubsystem,
-          setVariantTags,
-          markSubPart,
-          markHitBox,
-          markInteractBox,
-          markConnector,
-          clearElementMarker,
-          setContentPack,
-          setContentPackPath,
-          updatePackMeta,
-          updateDependencyPaths,
-          _internals: { vueSet, vueDelete, _setUiState }
-        };
-      }
+      module.exports = { setActive };
+    }
+  });
+
+  // src/ops/index.js
+  var require_ops = __commonJS({
+    "src/ops/index.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var part = require_part();
+      var variant = require_variant();
+      var subPart = require_sub_part();
+      var subsystem = require_subsystem();
+      var element = require_element();
+      var field = require_field();
+      var pack = require_pack();
+      var session = require_session();
+      module.exports = {
+        // part.js
+        createPart: part.createPart,
+        deletePart: part.deletePart,
+        importPart: part.importPart,
+        // variant.js
+        createVariant: variant.createVariant,
+        deleteVariant: variant.deleteVariant,
+        importVariant: variant.importVariant,
+        setVariantTags: variant.setVariantTags,
+        // sub_part.js
+        markSubPart: subPart.markSubPart,
+        importSubPart: subPart.importSubPart,
+        renameSubPart: subPart.renameSubPart,
+        // subsystem.js
+        createSubsystem: subsystem.createSubsystem,
+        deleteSubsystem: subsystem.deleteSubsystem,
+        importSubsystem: subsystem.importSubsystem,
+        renameSubsystem: subsystem.renameSubsystem,
+        // element.js
+        markHitBox: element.markHitBox,
+        markInteractBox: element.markInteractBox,
+        markConnector: element.markConnector,
+        renameConnector: element.renameConnector,
+        renameInteractBox: element.renameInteractBox,
+        clearElementMarker: element.clearElementMarker,
+        bindMarker: element.bindMarker,
+        removeNode: element.removeNode,
+        addInstance: element.addInstance,
+        // field.js
+        setField: field.setField,
+        // pack.js
+        setContentPack: pack.setContentPack,
+        setContentPackPath: pack.setContentPackPath,
+        updatePackMeta: pack.updatePackMeta,
+        updateDependencyPaths: pack.updateDependencyPaths,
+        // session.js
+        setActive: session.setActive
+      };
     }
   });
 
@@ -15036,7 +21243,7 @@
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
       var { DEP_TYPE_LABELS } = require_pack_common();
-      var ops = require_operations();
+      var ops = require_ops();
       var log2 = createLogger2("DependencyEditor");
       function _findPackInSiblings(parentDir, packId) {
         if (!packId || !parentDir || !fs.existsSync(parentDir)) return null;
@@ -15364,7 +21571,7 @@
       var { createLogger: createLogger2 } = require_logger();
       var { isConfigValid, sanitizeFolderName } = require_pack_common();
       var { showDependencyPathEditor } = require_dependency_editor();
-      var ops = require_operations();
+      var ops = require_ops();
       var log2 = createLogger2("PackCreate");
       function showCreatePackDialog(config, onSave) {
         if (!isConfigValid(config)) {
@@ -15508,7 +21715,7 @@
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
       var { isConfigValid } = require_pack_common();
-      var ops = require_operations();
+      var ops = require_ops();
       var log2 = createLogger2("PackOpen");
       function showOpenPackDialog(config, onSave) {
         if (!isConfigValid(config)) {
@@ -15696,7 +21903,7 @@
       var { showToast: showToast2 } = require_notify();
       var { collectIssues } = require_validation();
       var { executeExport } = require_export_pipeline();
-      var ops = require_operations();
+      var ops = require_ops();
       var path = __require("path");
       var log2 = createLogger2("ExportDialog");
       function _getDefaultExportDir(pm) {
@@ -16337,6 +22544,7 @@
       var { PartCodec } = require_part_codec();
       var { resolveBoneReferences } = require_bone_resolver();
       var { showConflictDialog } = require_conflict_dialog();
+      var keys = require_keys();
       var undo = require_undo();
       var log2 = createLogger2("DragImport");
       var MODE_ID = "machine_max_part";
@@ -16399,6 +22607,11 @@
           return { imported: false, partId: null, action: "error", unresolvedCount: 0 };
         }
         var partId = fileName.replace(/\.json$/i, "");
+        if (!keys.isSafePartId(partId)) {
+          log2.warn("importSingleFile: partId \u4E0D\u5408\u6CD5\uFF0C\u62D2\u7EDD\u5BFC\u5165", { partId });
+          showToast2('\u96F6\u4EF6 ID "' + partId + '" \u4E0D\u5408\u6CD5\uFF1A\u53EA\u5141\u8BB8\u5C0F\u5199\u5B57\u6BCD/\u6570\u5B57/._-\uFF0C\u4E14\u4E0D\u80FD\u662F . / .. / Windows \u8BBE\u5907\u540D', "error");
+          return { imported: false, partId, action: "invalid_format", unresolvedCount: 0 };
+        }
         log2.info("importSingleFile: \u89E3\u6790\u6210\u529F", {
           fileName,
           partId,
@@ -17564,7 +23777,7 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var ops = require_operations();
+      var ops = require_ops();
       var { showToast: showToast2 } = require_notify();
       var { saveConfig } = require_persistence();
       var { createLogger: createLogger2 } = require_logger();
@@ -17877,7 +24090,7 @@
         var groupedTypes = ssTypes.getTypesGroupedByCategory();
         var { showToast: showToast2 } = require_notify();
         var { saveConfig } = require_persistence();
-        var ops = require_operations();
+        var ops = require_ops();
         var allTypeOpts = {};
         var catOrder = ["power", "control", "utility", "experimental"];
         for (var ci = 0; ci < catOrder.length; ci++) {
@@ -17951,7 +24164,7 @@
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
       var ssTypes = require_subsystem_types();
-      var ops = require_operations();
+      var ops = require_ops();
       var log2 = createLogger2("Mode");
       var _originalShowContextMenus = {};
       var _PATCH_TARGETS = ["OutlinerNode", "Group", "OutlinerElement"];
@@ -18361,7 +24574,7 @@
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
       var { getConfig } = require_persistence();
-      var ops = require_operations();
+      var ops = require_ops();
       var log2 = createLogger2("TagDialog");
       var TAG_PALETTE = [
         "#3a6a9a",
@@ -19066,6 +25279,14 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
+      var OVERWRITE_GROUPS = {
+        block_damage_factor: "physics",
+        rha: "armor",
+        angle_effect: "armor",
+        unpen_power: "armor",
+        decay_rha: "armor",
+        decay_power: "armor"
+      };
       Vue.component("mm-hit-box-panel", {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -19254,10 +25475,15 @@
             this.$emit("field-change", field, value);
           },
           onOverwriteChange: function(field, value) {
-            this.$emit("overwrite-change", field, value);
+            var group = OVERWRITE_GROUPS[field];
+            this.$emit("overwrite-change", group ? group + "." + field : field, value);
           },
           overwriteVal: function(field) {
-            return this.config.overwrite ? this.config.overwrite[field] : void 0;
+            if (!this.config.overwrite) return void 0;
+            var group = OVERWRITE_GROUPS[field];
+            if (!group) return this.config.overwrite[field];
+            var bucket = this.config.overwrite[group];
+            return bucket ? bucket[field] : void 0;
           },
           /**
            * 导航到归属子零件：点击归属标签时选中对应的子零件 Group，切换回子零件属性面板
@@ -19499,7 +25725,6 @@
       init_define_SCHEMAS();
       var nameUtils = require_name_utils();
       var { SIGNAL_CHANNEL_HINTS } = require_constants();
-      var undo = require_undo();
       var MM_CONNECTOR_PANEL_OPTIONS = {
         template: true ? `<div class="mm-section">
     <div class="mm-sticky-title">
@@ -19767,22 +25992,22 @@
            * 添加新的转译规则
            */
           addTranslation: function() {
-            var entries = this.translationEntries;
+            var entries = Object.assign({}, this.translationEntries);
             var newSrc = "new_source";
             var idx = 1;
             while (entries[newSrc]) {
               newSrc = "new_source_" + idx;
               idx++;
             }
-            this.$set(entries, newSrc, "new_target");
+            entries[newSrc] = "new_target";
             this.emitTranslations(entries);
           },
           /**
            * 删除转译规则
            */
           removeTranslation: function(sourceChan) {
-            var entries = this.translationEntries;
-            this.$delete(entries, sourceChan);
+            var entries = Object.assign({}, this.translationEntries);
+            delete entries[sourceChan];
             this.emitTranslations(entries);
           },
           /**
@@ -19790,22 +26015,21 @@
            */
           onTranslationSourceChange: function(oldSource, newSource) {
             if (!newSource || oldSource === newSource) return;
-            var entries = this.translationEntries;
+            var entries = Object.assign({}, this.translationEntries);
             var target = entries[oldSource];
             if (target === void 0) return;
-            this.$delete(entries, oldSource);
-            this.$set(entries, newSource, target);
+            delete entries[oldSource];
+            entries[newSource] = target;
             this.emitTranslations(entries);
           },
           /**
            * 修改转译规则的目标频道值
            */
           onTranslationTargetChange: function(sourceChan, newTarget) {
-            var entries = this.translationEntries;
-            if (entries[sourceChan] !== void 0) {
-              this.$set(entries, sourceChan, newTarget);
-              this.emitTranslations(entries);
-            }
+            var entries = Object.assign({}, this.translationEntries);
+            if (entries[sourceChan] === void 0) return;
+            entries[sourceChan] = newTarget;
+            this.emitTranslations(entries);
           },
           /**
            * 触发 signal_translations 字段变更事件
@@ -19818,22 +26042,22 @@
            * 添加新的覆写字段
            */
           addOverwriteField: function() {
-            var entries = this.overwriteEntries;
+            var entries = Object.assign({}, this.overwriteEntries);
             var newField = "new_field";
             var idx = 1;
             while (entries[newField] !== void 0) {
               newField = "new_field_" + idx;
               idx++;
             }
-            this.$set(entries, newField, "");
+            entries[newField] = "";
             this.emitOverwrite(entries);
           },
           /**
            * 删除覆写字段
            */
           removeOverwriteField: function(field) {
-            var entries = this.overwriteEntries;
-            this.$delete(entries, field);
+            var entries = Object.assign({}, this.overwriteEntries);
+            delete entries[field];
             this.emitOverwrite(entries);
           },
           /**
@@ -19841,22 +26065,21 @@
            */
           onOverwriteFieldChange: function(oldField, newField, currentVal) {
             if (!newField || oldField === newField) return;
-            var entries = this.overwriteEntries;
+            var entries = Object.assign({}, this.overwriteEntries);
             var val = entries[oldField];
             if (val === void 0) return;
-            this.$delete(entries, oldField);
-            this.$set(entries, newField, val);
+            delete entries[oldField];
+            entries[newField] = val;
             this.emitOverwrite(entries);
           },
           /**
            * 修改覆写字段的值
            */
           onOverwriteValueChange: function(field, value) {
-            var entries = this.overwriteEntries;
-            if (entries[field] !== void 0) {
-              this.$set(entries, field, value);
-              this.emitOverwrite(entries);
-            }
+            var entries = Object.assign({}, this.overwriteEntries);
+            if (entries[field] === void 0) return;
+            entries[field] = value;
+            this.emitOverwrite(entries);
           },
           /**
            * 触发 overwrite 字段变更事件
@@ -19866,17 +26089,6 @@
           }
         }
       };
-      undo.wrapMethodMap(MM_CONNECTOR_PANEL_OPTIONS.methods, {
-        onSignalTargetsChange: "\u4FEE\u6539\u8FDE\u63A5\u70B9\u4FE1\u53F7\u76EE\u6807",
-        addTranslation: "\u6DFB\u52A0\u4FE1\u53F7\u8F6C\u8BD1",
-        removeTranslation: "\u5220\u9664\u4FE1\u53F7\u8F6C\u8BD1",
-        onTranslationSourceChange: "\u91CD\u547D\u540D\u4FE1\u53F7\u8F6C\u8BD1\u6E90\u9891\u9053",
-        onTranslationTargetChange: "\u4FEE\u6539\u4FE1\u53F7\u8F6C\u8BD1\u76EE\u6807\u9891\u9053",
-        addOverwriteField: "\u6DFB\u52A0\u5C5E\u6027\u8986\u5199",
-        removeOverwriteField: "\u5220\u9664\u5C5E\u6027\u8986\u5199",
-        onOverwriteFieldChange: "\u91CD\u547D\u540D\u5C5E\u6027\u8986\u5199\u5B57\u6BB5",
-        onOverwriteValueChange: "\u4FEE\u6539\u5C5E\u6027\u8986\u5199\u503C"
-      });
       Vue.component("mm-connector-panel", MM_CONNECTOR_PANEL_OPTIONS);
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {};
@@ -19897,7 +26109,6 @@
       var nameUtils = require_name_utils();
       var { SIGNAL_CHANNEL_HINTS } = require_constants();
       var { createLogger: createLogger2 } = require_logger();
-      var undo = require_undo();
       var log2 = createLogger2("SubsystemPanel");
       var PLACEHOLDER_PREFIX = "__new_p_";
       var MAX_PLACEHOLDER_ITERATIONS = 1e3;
@@ -20251,7 +26462,7 @@
               var candidate = this.ownedLocatorNames[i];
               if (!used[candidate]) {
                 next.push(candidate);
-                this.$set(this.config, field, next);
+                this.onFieldChange(field, next);
                 return;
               }
             }
@@ -20265,7 +26476,7 @@
           removeLocatorListEntry: function(field, index) {
             var next = this.getLocatorListEntries(field).slice();
             next.splice(index, 1);
-            this.$set(this.config, field, next);
+            this.onFieldChange(field, next);
           },
           /**
            * 改写列表中的第 index 项；改成空名视为删除该行
@@ -20277,7 +26488,7 @@
             var next = this.getLocatorListEntries(field).slice();
             if (!value) next.splice(index, 1);
             else next[index] = value;
-            this.$set(this.config, field, next);
+            this.onFieldChange(field, next);
           },
           // ─── 信号频道编辑器（signal_targets） ─────────────────────────────
           getSignalEntries: function(sigField) {
@@ -20294,7 +26505,7 @@
            * @param {Object} entries - 变更后的 { channel: [target, ...] } 映射
            */
           onSignalTargetsChange: function(sigField, entries) {
-            this.$set(this.config, sigField, JSON.parse(JSON.stringify(entries)));
+            this.onFieldChange(sigField, JSON.parse(JSON.stringify(entries)));
           },
           // ─── 功率输出映射编辑器（power_outputs_map，Map<string, number>） ──
           /**
@@ -20329,7 +26540,7 @@
             return {};
           },
           addPowerOutput: function(field) {
-            var entries = this.getPowerOutputEntries(field);
+            var entries = Object.assign({}, this.getPowerOutputEntries(field));
             var newName = "new_target";
             var idx = 1;
             while (entries[newName] !== void 0) {
@@ -20337,28 +26548,27 @@
               idx++;
             }
             entries[newName] = 1;
-            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            this.onFieldChange(field, entries);
           },
           removePowerOutput: function(field, targetName) {
-            var entries = this.getPowerOutputEntries(field);
-            this.$delete(entries, targetName);
-            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            var entries = Object.assign({}, this.getPowerOutputEntries(field));
+            delete entries[targetName];
+            this.onFieldChange(field, entries);
           },
           onPowerOutputTargetChange: function(field, oldName, newName) {
             if (!newName || oldName === newName) return;
-            var entries = this.getPowerOutputEntries(field);
+            var entries = Object.assign({}, this.getPowerOutputEntries(field));
             var ratio = entries[oldName];
             if (ratio === void 0) return;
-            this.$delete(entries, oldName);
-            this.$set(entries, newName, ratio);
-            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            delete entries[oldName];
+            entries[newName] = ratio;
+            this.onFieldChange(field, entries);
           },
           onPowerOutputRatioChange: function(field, targetName, ratio) {
-            var entries = this.getPowerOutputEntries(field);
-            if (entries[targetName] !== void 0) {
-              this.$set(entries, targetName, ratio);
-              this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
-            }
+            var entries = Object.assign({}, this.getPowerOutputEntries(field));
+            if (entries[targetName] === void 0) return;
+            entries[targetName] = ratio;
+            this.onFieldChange(field, entries);
           },
           // ─── 弹链编辑器（projectile_belt_editor，Map<projectileId, count>） ─
           /**
@@ -20419,15 +26629,16 @@
             } while (entries.hasOwnProperty(newKey));
             log2.debug("[addProjectileEntry] \u751F\u6210\u65B0\u5360\u4F4D\u952E=" + newKey + ", counter=" + counter + ", \u8FED\u4EE3\u6B21\u6570=" + watchdog);
             this.projectilePlaceholderCounter = counter;
-            this.$set(entries, newKey, 1);
-            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            var next = Object.assign({}, entries);
+            next[newKey] = 1;
+            this.onFieldChange(field, next);
             log2.debug("[addProjectileEntry] \u5B8C\u6210");
           },
           removeProjectileEntry: function(field, projectileId) {
             log2.debug("[removeProjectileEntry] field=" + field + ", id=" + projectileId);
-            var entries = this.getProjectileEntries(field);
-            this.$delete(entries, projectileId);
-            this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+            var entries = Object.assign({}, this.getProjectileEntries(field));
+            delete entries[projectileId];
+            this.onFieldChange(field, entries);
           },
           /**
            * 弹链条目切换投射物。
@@ -20450,9 +26661,10 @@
               log2.debug("[onProjectileIdChange] \u53D6\u6D88\u9009\u62E9\uFF0C\u539F\u4F4D\u66FF\u6362\u4E3A\u5360\u4F4D\u952E=" + newId);
             } else if (entries.hasOwnProperty(newId)) {
               log2.debug("[onProjectileIdChange] \u5408\u5E76\u6570\u91CF\uFF1A" + entries[newId] + " + " + count);
-              this.$set(entries, newId, entries[newId] + count);
-              this.$delete(entries, oldId);
-              this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
+              var merged = Object.assign({}, entries);
+              merged[newId] = entries[newId] + count;
+              delete merged[oldId];
+              this.onFieldChange(field, merged);
               return;
             }
             var rebuilt = {};
@@ -20465,14 +26677,13 @@
                 rebuilt[k] = entries[k];
               }
             }
-            this.$set(this.config, field, rebuilt);
+            this.onFieldChange(field, rebuilt);
           },
           onProjectileCountChange: function(field, projectileId, count) {
-            var entries = this.getProjectileEntries(field);
-            if (entries[projectileId] !== void 0) {
-              this.$set(entries, projectileId, count);
-              this.$set(this.config, field, JSON.parse(JSON.stringify(entries)));
-            }
+            var entries = Object.assign({}, this.getProjectileEntries(field));
+            if (entries[projectileId] === void 0) return;
+            entries[projectileId] = count;
+            this.onFieldChange(field, entries);
           },
           // ─── JSON 编辑框（json_textarea） ────────────────────────────────
           formatJsonValue: function(field) {
@@ -20498,22 +26709,6 @@
           }
         }
       };
-      undo.wrapMethodMap(MM_SUBSYSTEM_PANEL_OPTIONS.methods, {
-        addLocatorListEntry: "\u6DFB\u52A0\u5B9A\u4F4D\u5668\u6761\u76EE",
-        removeLocatorListEntry: "\u5220\u9664\u5B9A\u4F4D\u5668\u6761\u76EE",
-        onLocatorListChange: "\u4FEE\u6539\u5B9A\u4F4D\u5668\u6761\u76EE",
-        onSignalTargetsChange: function(sigField) {
-          return "\u4FEE\u6539\u4FE1\u53F7\u76EE\u6807 " + sigField;
-        },
-        addPowerOutput: "\u6DFB\u52A0\u529F\u7387\u8F93\u51FA",
-        removePowerOutput: "\u5220\u9664\u529F\u7387\u8F93\u51FA",
-        onPowerOutputTargetChange: "\u91CD\u547D\u540D\u529F\u7387\u8F93\u51FA\u76EE\u6807",
-        onPowerOutputRatioChange: "\u4FEE\u6539\u529F\u7387\u8F93\u51FA\u500D\u7387",
-        addProjectileEntry: "\u6DFB\u52A0\u5F39\u94FE\u6761\u76EE",
-        removeProjectileEntry: "\u5220\u9664\u5F39\u94FE\u6761\u76EE",
-        onProjectileIdChange: "\u4FEE\u6539\u5F39\u94FE\u5F39\u79CD",
-        onProjectileCountChange: "\u4FEE\u6539\u5F39\u94FE\u6570\u91CF"
-      });
       Vue.component("mm-subsystem-panel", MM_SUBSYSTEM_PANEL_OPTIONS);
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {};
@@ -20796,7 +26991,7 @@
       var { getConfig, loadConfig, saveConfig } = require_persistence();
       var { getMarkerInfo, detectOwnerSubPart } = require_element_markers();
       var { createSubPartConfig } = require_config();
-      var ops = require_operations();
+      var ops = require_ops();
       var { createLogger: createLogger2 } = require_logger();
       var { refreshOutlinerIcons } = require_icons();
       var { showToast: showToast2 } = require_notify();
@@ -22146,84 +28341,82 @@
            * 模板改为 :value + @change 绑定，提交时才写入配置，从而每次提交产生一条撤销记录
            */
           updatePartField: function(field, value) {
-            var part = this.currentPart;
-            if (!part) {
+            if (!this.currentPart) {
               log2.warn("updatePartField: currentPart \u4E3A\u7A7A", { field });
               return;
             }
-            this.$set(part, field, value);
-            log2.debug("updatePartField: \u5DF2\u66F4\u65B0", { field, value });
+            var result = ops.setField(this.config, {
+              path: ["parts", this.activePartId, field],
+              value,
+              label: "\u4FEE\u6539\u96F6\u4EF6\u5B57\u6BB5 " + field,
+              source: "ui"
+            });
+            if (!result.ok) showToast2(result.error, "error");
+            log2.debug("updatePartField: \u5DF2\u63D0\u4EA4", { field, value, ok: result.ok });
           },
           /**
            * 更新变体级字段（模型、动画路径等）
            */
           updateVariantField: function(field, value) {
-            var variant = this.currentVariant;
-            if (!variant) {
+            if (!this.currentVariant) {
               log2.warn("updateVariantField: currentVariant \u4E3A\u7A7A", { field });
               return;
             }
-            this.$set(variant, field, value);
-            log2.debug("updateVariantField: \u5DF2\u66F4\u65B0", { field, value });
+            var result = ops.setField(this.config, {
+              path: ["parts", this.activePartId, "variants", this.activeVariantName, field],
+              value,
+              label: "\u4FEE\u6539\u53D8\u4F53\u5B57\u6BB5 " + field,
+              source: "ui"
+            });
+            if (!result.ok) showToast2(result.error, "error");
+            log2.debug("updateVariantField: \u5DF2\u63D0\u4EA4", { field, value, ok: result.ok });
           },
           /**
            * 更新子零件配置中的单个字段。
-           * start_bone 变动时需连带迁移子零件标记。
+           * start_bone 的标记迁移由 ops.setField 的 sideEffect 统一处理。
            */
           updateSubPartField: function(field, value) {
-            const config = this.selectedSubPartConfig;
-            if (!config) {
+            var spKey = this.selectedMarker && this.selectedMarker.config_ref;
+            if (!spKey || !this.selectedSubPartConfig) {
               log2.warn("updateSubPartField: selectedSubPartConfig \u4E3A\u7A7A");
               return;
             }
-            if (field === "start_bone" && config.start_bone !== value) {
-              this.migrateSubPartStartBone(config.start_bone, value);
-            }
-            this.$set(config, field, value);
-            log2.debug("updateSubPartField: \u5DF2\u66F4\u65B0", { field, value });
+            var result = ops.setField(this.config, {
+              path: [
+                "parts",
+                this.activePartId,
+                "variants",
+                this.activeVariantName,
+                "sub_parts",
+                spKey,
+                field
+              ],
+              value,
+              label: "\u4FEE\u6539\u5B50\u96F6\u4EF6\u5B57\u6BB5 " + field,
+              source: "ui"
+            });
+            if (!result.ok) showToast2(result.error, "error");
+            log2.debug("updateSubPartField: \u5DF2\u63D0\u4EA4", { field, value, ok: result.ok });
           },
           /**
-           * 重命名子零件：修改 sub_parts 字典的 key
-           * 同时更新 element_markers 中的 config_ref
+           * 重命名子零件：key 迁移 + 全部引用 / 4 类 marker 改写，由 ops.renameSubPart 统一完成。
            */
           renameSubPart: function(oldKey, newKey) {
             if (!oldKey || !newKey || oldKey === newKey) return;
-            var variant = this.currentVariant;
-            var part = this.currentPart;
-            var variantName = this.activeVariantName;
-            if (!variant || !variant.sub_parts || !part) return;
-            var spConfig = variant.sub_parts[oldKey];
-            if (!spConfig) {
-              log2.warn("renameSubPart: \u672A\u627E\u5230\u5B50\u96F6\u4EF6", { oldKey });
+            var result = ops.renameSubPart(this.config, {
+              partId: this.activePartId,
+              variantName: this.activeVariantName,
+              oldKey,
+              newKey
+            });
+            if (!result.ok) {
+              showToast2(result.error, "error");
               return;
-            }
-            var ns = this.config && this.config.namespace || "machine_max";
-            var { validateNameUniqueness } = require_naming();
-            var check = validateNameUniqueness(variant, "sub_part", null, newKey, oldKey);
-            if (!check.valid) {
-              showToast2(check.message, "error");
-              return;
-            }
-            log2.info("renameSubPart: \u91CD\u547D\u540D", { from: oldKey, to: newKey });
-            this.$set(variant.sub_parts, newKey, spConfig);
-            this.$delete(variant.sub_parts, oldKey);
-            var markers = part.element_markers && part.element_markers[variantName];
-            if (markers) {
-              for (var uuid in markers) {
-                if (markers[uuid].type === "sub_part" && markers[uuid].config_ref === oldKey) {
-                  this.$set(markers, uuid, { type: "sub_part", config_ref: newKey });
-                }
-              }
-            }
-            var em = require_element_markers();
-            var cfg = getConfig();
-            if (cfg) {
-              em.recalcAutoEndBones(cfg, this.activePartId, variantName);
             }
             refreshOutlinerIcons();
-            Blockbench.dispatchEvent("update_selection");
+            this.markerVersion.v++;
             showToast2('\u5B50\u96F6\u4EF6\u5DF2\u91CD\u547D\u540D\u4E3A "' + newKey + '"', "positive");
-            log2.info("renameSubPart: \u5B8C\u6210");
+            log2.info("renameSubPart: \u5B8C\u6210", { from: oldKey, to: newKey });
           },
           /**
            * 迁移子零件标记：start_bone 从旧骨骼名变更为新骨骼名时，
@@ -22232,37 +28425,26 @@
            * @param {string} newBoneName - 新的起始骨骼名称
            */
           migrateSubPartStartBone: function(oldBoneName, newBoneName) {
-            var variant = this.currentVariant;
-            var part = this.currentPart;
-            var variantName = this.activeVariantName;
-            if (!variant || !variant.sub_parts || !part) return;
             var spKey = this.selectedMarker ? this.selectedMarker.config_ref : null;
-            if (!spKey || !variant.sub_parts[spKey]) return;
-            log2.info("migrateSubPartStartBone: start_bone \u53D8\u66F4", { from: oldBoneName, to: newBoneName, spKey });
-            var markers = part.element_markers && part.element_markers[variantName];
-            var oldGroup = Group.all.find(function(g) {
-              return g.name === oldBoneName;
+            if (!spKey || !this.selectedSubPartConfig) return;
+            var result = ops.setField(this.config, {
+              path: [
+                "parts",
+                this.activePartId,
+                "variants",
+                this.activeVariantName,
+                "sub_parts",
+                spKey,
+                "start_bone"
+              ],
+              value: newBoneName,
+              label: "\u8FC1\u79FB\u5B50\u96F6\u4EF6\u8D77\u59CB\u9AA8\u9ABC",
+              source: "ui"
             });
-            var newGroup = Group.all.find(function(g) {
-              return g.name === newBoneName;
-            });
-            if (markers && oldGroup && newGroup && oldGroup !== newGroup) {
-              var markerData = markers[oldGroup.uuid];
-              if (markerData && markerData.type === "sub_part") {
-                markerData.config_ref = spKey;
-                this.$set(markers, newGroup.uuid, markerData);
-                this.$delete(markers, oldGroup.uuid);
-                log2.debug("migrateSubPartStartBone: \u6807\u8BB0\u5DF2\u8FC1\u79FB", { from: oldGroup.uuid, to: newGroup.uuid });
-              }
-            }
+            if (!result.ok) showToast2(result.error, "error");
             refreshOutlinerIcons();
-            var em = require_element_markers();
-            var cfg = getConfig();
-            if (cfg) {
-              em.recalcAutoEndBones(cfg, this.activePartId, variantName);
-            }
-            Blockbench.dispatchEvent("update_selection");
-            log2.info("migrateSubPartStartBone: \u5B8C\u6210");
+            this.markerVersion.v++;
+            log2.info("migrateSubPartStartBone: \u5B8C\u6210", { from: oldBoneName, to: newBoneName });
           },
           /**
            * 迁移连接点定位器：locator 从旧名称变更为新名称时，
@@ -22272,10 +28454,9 @@
            */
           migrateConnectorLocator: function(oldLocName, newLocName) {
             if (!oldLocName || !newLocName || oldLocName === newLocName) return;
-            var part = this.currentPart;
             var variant = this.currentVariant;
             var variantName = this.activeVariantName;
-            if (!variant || !variant.sub_parts || !part) return;
+            if (!variant || !variant.sub_parts) return;
             var owner = this.selectedElement ? detectOwnerSubPart(this.config, this.activePartId, variantName, this.selectedElement) : null;
             var spKey = owner ? owner.spKey : null;
             if (!spKey || !variant.sub_parts[spKey]) return;
@@ -22288,62 +28469,102 @@
               log2.warn("migrateConnectorLocator: \u672A\u627E\u5230\u8FDE\u63A5\u70B9\u6761\u76EE", { locator: oldLocName, spKey });
               return;
             }
-            log2.info("migrateConnectorLocator: \u53D8\u66F4\u5B9A\u4F4D\u5668\u7ED1\u5B9A", { from: oldLocName, to: newLocName, connKey, spKey });
-            sp.connectors[connKey].locator = newLocName;
-            var markers = part.element_markers && part.element_markers[variantName];
-            var oldLoc = typeof Locator !== "undefined" ? Locator.all.find(function(l) {
-              return l.name === oldLocName;
-            }) : null;
-            var newLoc = typeof Locator !== "undefined" ? Locator.all.find(function(l) {
-              return l.name === newLocName;
-            }) : null;
-            if (markers && oldLoc && newLoc && oldLoc !== newLoc) {
-              var markerData = markers[oldLoc.uuid];
-              if (markerData && markerData.type === "connector") {
-                this.$set(markers, newLoc.uuid, markerData);
-                this.$delete(markers, oldLoc.uuid);
-                log2.debug("migrateConnectorLocator: \u6807\u8BB0\u5DF2\u8FC1\u79FB", { from: oldLoc.uuid, to: newLoc.uuid });
-              }
-            }
+            var result = ops.setField(this.config, {
+              path: [
+                "parts",
+                this.activePartId,
+                "variants",
+                variantName,
+                "sub_parts",
+                spKey,
+                "connectors",
+                connKey,
+                "locator"
+              ],
+              value: newLocName,
+              label: "\u8FC1\u79FB\u8FDE\u63A5\u70B9\u5B9A\u4F4D\u5668",
+              source: "ui"
+            });
+            if (!result.ok) showToast2(result.error, "error");
             refreshOutlinerIcons();
-            Blockbench.dispatchEvent("update_selection");
-            log2.info("migrateConnectorLocator: \u5B8C\u6210");
+            this.markerVersion.v++;
+            log2.info("migrateConnectorLocator: \u5B8C\u6210", { from: oldLocName, to: newLocName });
           },
           /**
            * 添加排除骨骼到 end_bones 列表
            */
           addEndBone: function(boneName) {
-            const config = this.selectedSubPartConfig;
-            if (!config) {
+            var config = this.selectedSubPartConfig;
+            var spKey = this.selectedMarker && this.selectedMarker.config_ref;
+            if (!config || !spKey) {
               log2.warn("addEndBone: selectedSubPartConfig \u4E3A\u7A7A");
               return;
             }
-            if (!config.end_bones) {
-              this.$set(config, "end_bones", []);
-            }
-            if (config.end_bones.indexOf(boneName) === -1) {
-              config.end_bones.push(boneName);
-              log2.debug("addEndBone: \u5DF2\u6DFB\u52A0", { bone: boneName });
-            }
+            var list = (config.end_bones || []).slice();
+            if (list.indexOf(boneName) < 0) list.push(boneName);
+            this._setSubPartField(spKey, "end_bones", list, "\u6DFB\u52A0\u6392\u9664\u9AA8\u9ABC");
           },
           /**
            * 移除排除骨骼
            */
           removeEndBone: function(index) {
-            const config = this.selectedSubPartConfig;
-            if (!config || !config.end_bones) {
+            var config = this.selectedSubPartConfig;
+            var spKey = this.selectedMarker && this.selectedMarker.config_ref;
+            if (!config || !spKey || !config.end_bones) {
               log2.warn("removeEndBone: selectedSubPartConfig \u4E3A\u7A7A\u6216\u65E0 end_bones");
               return;
             }
-            config.end_bones.splice(index, 1);
-            log2.debug("removeEndBone: \u5DF2\u79FB\u9664", { index });
+            var list = config.end_bones.slice();
+            list.splice(index, 1);
+            this._setSubPartField(spKey, "end_bones", list, "\u79FB\u9664\u6392\u9664\u9AA8\u9ABC");
+          },
+          /** 统一的子零件字段提交（数组/对象整体提交，一条撤销记录） */
+          _setSubPartField: function(spKey, field, value, label) {
+            var result = ops.setField(this.config, {
+              path: [
+                "parts",
+                this.activePartId,
+                "variants",
+                this.activeVariantName,
+                "sub_parts",
+                spKey,
+                field
+              ],
+              value,
+              label: label || "\u4FEE\u6539\u5B50\u96F6\u4EF6\u5B57\u6BB5 " + field,
+              source: "ui"
+            });
+            if (!result.ok) showToast2(result.error, "error");
+            return result;
+          },
+          _setItemField: function(container, key, field, value, label) {
+            var spKey = container === "subsystems" ? this.subsystemSelection.spKey : container === "hit_boxes" ? this.hitBoxParentSubPartKey : container === "interact_boxes" ? this.interactBoxParentSubPartKey : this.connectorParentSubPartKey;
+            if (!spKey || !key) return { ok: false, error: "\u7F3A\u5C11\u4E0A\u4E0B\u6587" };
+            var suffix = Array.isArray(field) ? field : [field];
+            var result = ops.setField(this.config, {
+              path: [
+                "parts",
+                this.activePartId,
+                "variants",
+                this.activeVariantName,
+                "sub_parts",
+                spKey,
+                container,
+                key
+              ].concat(suffix),
+              value,
+              label: label || "\u4FEE\u6539 " + suffix.join("."),
+              source: "ui"
+            });
+            if (!result.ok) showToast2(result.error, "error");
+            return result;
           },
           /**
            * 更新碰撞箱配置中的单个字段
            * 游离碰撞箱（无归属）可编辑但不会持久化
            */
           updateHitBoxField: function(field, value) {
-            const config = this.selectedHitBoxConfig;
+            var config = this.selectedHitBoxConfig;
             if (!config) {
               log2.warn("updateHitBoxField: selectedHitBoxConfig \u4E3A\u7A7A");
               return;
@@ -22352,14 +28573,19 @@
               log2.warn("updateHitBoxField: \u6E38\u79BB\u78B0\u649E\u7BB1\u4E0D\u53EF\u6301\u4E45\u5316", { field, value });
               return;
             }
-            this.$set(config, field, value);
-            log2.debug("updateHitBoxField: \u5DF2\u66F4\u65B0", { field, value });
+            this._setItemField(
+              "hit_boxes",
+              this.selectedElement.uuid,
+              field,
+              value,
+              "\u4FEE\u6539\u78B0\u649E\u7BB1\u5B57\u6BB5 " + field
+            );
           },
           /**
            * 更新碰撞箱材质覆写字段
            */
           updateHitBoxOverwrite: function(field, value) {
-            const config = this.selectedHitBoxConfig;
+            var config = this.selectedHitBoxConfig;
             if (!config) {
               log2.warn("updateHitBoxOverwrite: selectedHitBoxConfig \u4E3A\u7A7A");
               return;
@@ -22368,19 +28594,20 @@
               log2.warn("updateHitBoxOverwrite: \u6E38\u79BB\u78B0\u649E\u7BB1\u4E0D\u53EF\u6301\u4E45\u5316", { field, value });
               return;
             }
-            if (!config.overwrite) {
-              this.$set(config, "overwrite", {});
-            }
-            this.$set(config.overwrite, field, value);
-            log2.debug("updateHitBoxOverwrite: \u5DF2\u66F4\u65B0", { field, value });
+            this._setItemField(
+              "hit_boxes",
+              this.selectedElement.uuid,
+              ["overwrite"].concat(String(field).split(".")),
+              value,
+              "\u4FEE\u6539\u78B0\u649E\u7BB1\u8986\u5199 " + field
+            );
           },
           /**
            * 更新交互区配置中的单个字段
            * 游离交互区（无归属）可编辑但不会持久化
-           * bone 变更后增量 markerVersion 强制所有计算属性重新求值
            */
           updateInteractBoxField: function(field, value) {
-            const config = this.selectedInteractBoxConfig;
+            var config = this.selectedInteractBoxConfig;
             if (!config) {
               log2.warn("updateInteractBoxField: selectedInteractBoxConfig \u4E3A\u7A7A");
               return;
@@ -22389,14 +28616,17 @@
               log2.warn("updateInteractBoxField: \u6E38\u79BB\u4EA4\u4E92\u533A\u4E0D\u53EF\u6301\u4E45\u5316", { field, value });
               return;
             }
-            this.$set(config, field, value);
-            if (field === "bone") {
-              this.markerVersion.v++;
-            }
-            log2.debug("updateInteractBoxField: \u5DF2\u66F4\u65B0", { field, value });
+            this._setItemField(
+              "interact_boxes",
+              this.interactBoxName,
+              field,
+              value,
+              "\u4FEE\u6539\u4EA4\u4E92\u533A\u5B57\u6BB5 " + field
+            );
+            if (field === "bone") this.markerVersion.v++;
           },
           /**
-           * 更新连接点配置字段，同时同步到标记的 config_ref
+           * 更新连接点配置字段（marker.config_ref 始终指向连接点 key，不再随 definition 变化）
            */
           updateConnectorField: function(field, value) {
             var config = this.selectedConnectorConfig;
@@ -22408,18 +28638,13 @@
               log2.warn("updateConnectorField: \u6E38\u79BB\u8FDE\u63A5\u70B9\u4E0D\u53EF\u6301\u4E45\u5316", { field, value });
               return;
             }
-            this.$set(config, field, value);
-            if (field === "definition") {
-              var marker = this.selectedMarker;
-              var part = this.currentPart;
-              if (marker && part && part.element_markers && this.activeVariantName) {
-                var vMarkers = part.element_markers[this.activeVariantName];
-                if (vMarkers && vMarkers[this.selectedElement.uuid]) {
-                  vMarkers[this.selectedElement.uuid].config_ref = value;
-                }
-              }
-            }
-            log2.debug("updateConnectorField: \u5DF2\u66F4\u65B0", { field, value });
+            this._setItemField(
+              "connectors",
+              this.connectorKeyName,
+              field,
+              value,
+              "\u4FEE\u6539\u8FDE\u63A5\u70B9\u5B57\u6BB5 " + field
+            );
           },
           /**
            * 添加子系统：弹出类型选择对话框，用户选择类型并输入名称后在指定子零件下创建子系统实例
@@ -22508,21 +28733,17 @@
             if (!oldKey || !newKey || oldKey === newKey) return;
             var spKey = this.subsystemSelection.spKey;
             if (!spKey) return;
-            var variant = this.currentVariant;
-            if (!variant || !variant.sub_parts) return;
-            var sp = variant.sub_parts[spKey];
-            if (!sp || !sp.subsystems) return;
-            if (!sp.subsystems[oldKey]) {
-              log2.warn("renameSubsystem: \u672A\u627E\u5230\u5B50\u7CFB\u7EDF", { oldKey });
+            var result = ops.renameSubsystem(this.config, {
+              partId: this.activePartId,
+              variantName: this.activeVariantName,
+              spKey,
+              oldKey,
+              newKey
+            });
+            if (!result.ok) {
+              showToast2(result.error, "error");
               return;
             }
-            if (sp.subsystems[newKey]) {
-              showToast2('\u5B50\u7CFB\u7EDF "' + newKey + '" \u5DF2\u5B58\u5728', "error");
-              return;
-            }
-            log2.info("renameSubsystem: \u91CD\u547D\u540D", { from: oldKey, to: newKey });
-            this.$set(sp.subsystems, newKey, sp.subsystems[oldKey]);
-            this.$delete(sp.subsystems, oldKey);
             this.subsystemSelection.subsystemKey = newKey;
             showToast2('\u5B50\u7CFB\u7EDF\u5DF2\u91CD\u547D\u540D\u4E3A "' + newKey + '"', "positive");
           },
@@ -22531,14 +28752,7 @@
            */
           updateSubsystemField: function(ssKey, field, value) {
             if (!ssKey || !field) return;
-            var spKey = this.subsystemSelection.spKey;
-            if (!spKey) return;
-            var variant = this.currentVariant;
-            if (!variant || !variant.sub_parts) return;
-            var sp = variant.sub_parts[spKey];
-            if (!sp || !sp.subsystems || !sp.subsystems[ssKey]) return;
-            this.$set(sp.subsystems[ssKey], field, value);
-            log2.debug("updateSubsystemField: \u5DF2\u66F4\u65B0", { ssKey, field, value });
+            this._setItemField("subsystems", ssKey, field, value, "\u4FEE\u6539\u5B50\u7CFB\u7EDF\u5B57\u6BB5 " + field);
           },
           /**
            * 重命名连接点：修改 connectors 字典的 key
@@ -22546,57 +28760,44 @@
            */
           renameConnector: function(oldKey, newKey) {
             if (!oldKey || !newKey || oldKey === newKey) return;
-            var variant = this.currentVariant;
-            if (!variant) return;
-            var owner = this.connectorOwner;
-            var spKey = owner ? owner.spKey : null;
-            if (!spKey || !variant.sub_parts[spKey]) return;
-            var sp = variant.sub_parts[spKey];
-            if (!sp.connectors || !sp.connectors[oldKey]) {
-              log2.warn("renameConnector: \u672A\u627E\u5230\u8FDE\u63A5\u70B9", { oldKey });
+            var spKey = this.connectorParentSubPartKey;
+            if (!spKey) return;
+            var result = ops.renameConnector(this.config, {
+              partId: this.activePartId,
+              variantName: this.activeVariantName,
+              spKey,
+              oldKey,
+              newKey
+            });
+            if (!result.ok) {
+              showToast2(result.error, "error");
               return;
             }
-            var { validateNameUniqueness } = require_naming();
-            var check = validateNameUniqueness(variant, "connector", spKey, newKey, oldKey);
-            if (!check.valid) {
-              showToast2(check.message, "error");
-              return;
-            }
-            log2.info("renameConnector: \u91CD\u547D\u540D", { from: oldKey, to: newKey });
-            this.$set(sp.connectors, newKey, sp.connectors[oldKey]);
-            this.$delete(sp.connectors, oldKey);
             refreshOutlinerIcons();
-            Blockbench.dispatchEvent("update_selection");
+            this.markerVersion.v++;
             showToast2('\u8FDE\u63A5\u70B9\u5DF2\u91CD\u547D\u540D\u4E3A "' + newKey + '"', "positive");
-            log2.info("renameConnector: \u5B8C\u6210");
           },
           /**
            * 重命名交互区：修改 interact_boxes 字典的 key
            */
           renameInteractBox: function(oldKey, newKey) {
             if (!oldKey || !newKey || oldKey === newKey) return;
-            var variant = this.currentVariant;
-            if (!variant) return;
             var spKey = this.interactBoxParentSubPartKey;
-            if (!spKey || !variant.sub_parts) return;
-            var sp = variant.sub_parts[spKey];
-            if (!sp || !sp.interact_boxes || !sp.interact_boxes[oldKey]) {
-              log2.warn("renameInteractBox: \u672A\u627E\u5230\u4EA4\u4E92\u533A", { oldKey });
+            if (!spKey) return;
+            var result = ops.renameInteractBox(this.config, {
+              partId: this.activePartId,
+              variantName: this.activeVariantName,
+              spKey,
+              oldKey,
+              newKey
+            });
+            if (!result.ok) {
+              showToast2(result.error, "error");
               return;
             }
-            var { validateNameUniqueness } = require_naming();
-            var check = validateNameUniqueness(variant, "interact_box", spKey, newKey, oldKey);
-            if (!check.valid) {
-              showToast2(check.message, "error");
-              return;
-            }
-            log2.info("renameInteractBox: \u91CD\u547D\u540D", { from: oldKey, to: newKey });
-            this.$set(sp.interact_boxes, newKey, sp.interact_boxes[oldKey]);
-            this.$delete(sp.interact_boxes, oldKey);
             refreshOutlinerIcons();
-            Blockbench.dispatchEvent("update_selection");
+            this.markerVersion.v++;
             showToast2('\u4EA4\u4E92\u533A\u5DF2\u91CD\u547D\u540D\u4E3A "' + newKey + '"', "positive");
-            log2.info("renameInteractBox: \u5B8C\u6210");
           },
           /**
            * 迁移交互区骨骼绑定：bone 从旧骨骼变更为新骨骼时，
@@ -22604,72 +28805,84 @@
            */
           migrateInteractBoxBone: function(field, newBoneName) {
             var config = this.selectedInteractBoxConfig;
-            if (!config || config._orphan) {
+            var ibKey = this.interactBoxName;
+            if (!config || config._orphan || !ibKey) {
               log2.warn("migrateInteractBoxBone: \u4EA4\u4E92\u533A\u4E0D\u53EF\u8FC1\u79FB");
               return;
             }
             var oldBoneName = config.bone || "";
             if (oldBoneName === newBoneName) return;
-            var part = this.currentPart;
-            var variant = this.currentVariant;
-            var variantName = this.activeVariantName;
-            if (!part || !variant) return;
-            this.$set(config, "bone", newBoneName);
-            var oldGroup = typeof Group !== "undefined" ? Group.all.find(function(g) {
-              return g.name === oldBoneName;
-            }) : null;
+            var result = ops.setField(this.config, {
+              path: [
+                "parts",
+                this.activePartId,
+                "variants",
+                this.activeVariantName,
+                "sub_parts",
+                this.interactBoxParentSubPartKey,
+                "interact_boxes",
+                ibKey,
+                "bone"
+              ],
+              value: newBoneName,
+              label: "\u8FC1\u79FB\u4EA4\u4E92\u533A\u9AA8\u9ABC",
+              source: "ui"
+            });
+            if (!result.ok) {
+              showToast2(result.error, "error");
+              return;
+            }
             var newGroup = typeof Group !== "undefined" ? Group.all.find(function(g) {
               return g.name === newBoneName;
             }) : null;
-            if (oldGroup && newGroup && oldGroup !== newGroup) {
-              config._uuid = newGroup.uuid;
-              var markers = part.element_markers && part.element_markers[variantName];
-              if (markers) {
-                var markerData = markers[oldGroup.uuid];
-                if (markerData && markerData.type === "interact_box") {
-                  this.$set(markers, newGroup.uuid, markerData);
-                  this.$delete(markers, oldGroup.uuid);
-                  log2.debug("migrateInteractBoxBone: \u6807\u8BB0\u5DF2\u8FC1\u79FB", {
-                    from: oldGroup.uuid,
-                    to: newGroup.uuid
-                  });
-                }
-              }
+            if (newGroup) {
               newGroup.select();
               newGroup.showInOutliner();
             }
             this.markerVersion.v++;
             refreshOutlinerIcons();
-            Blockbench.dispatchEvent("update_selection");
             log2.info("migrateInteractBoxBone: \u9AA8\u9ABC\u8FC1\u79FB\u5B8C\u6210", { from: oldBoneName, to: newBoneName });
           },
           /* —————— 贴图键值对编辑器事件处理 —————— */
           handleTexturesKvAdd: function(payload) {
             var v = this.currentVariant;
             if (!v) return;
-            if (typeof v.textures !== "object" || Array.isArray(v.textures)) {
-              this.$set(v, "textures", {});
-            }
-            this.$set(v.textures, payload.key, payload.value);
+            var next = Object.assign({}, typeof v.textures === "object" && !Array.isArray(v.textures) ? v.textures : {});
+            next[payload.key] = payload.value;
+            this._setVariantTextures(next, "\u6DFB\u52A0\u8D34\u56FE\u6D82\u88C5");
           },
           handleTexturesKvRemove: function(payload) {
             var v = this.currentVariant;
             if (!v || !v.textures || typeof v.textures !== "object") return;
-            this.$delete(v.textures, payload.key);
+            var next = Object.assign({}, v.textures);
+            delete next[payload.key];
+            this._setVariantTextures(next, "\u5220\u9664\u8D34\u56FE\u6D82\u88C5");
           },
           handleTexturesKvUpdateKey: function(payload) {
             var v = this.currentVariant;
             if (!v || !v.textures || typeof v.textures !== "object") return;
-            var val = v.textures[payload.oldKey];
-            this.$delete(v.textures, payload.oldKey);
-            if (val !== void 0) {
-              this.$set(v.textures, payload.newKey, val);
-            }
+            var next = Object.assign({}, v.textures);
+            var val = next[payload.oldKey];
+            delete next[payload.oldKey];
+            if (val !== void 0) next[payload.newKey] = val;
+            this._setVariantTextures(next, "\u91CD\u547D\u540D\u8D34\u56FE\u6D82\u88C5");
           },
           handleTexturesKvUpdateValue: function(payload) {
             var v = this.currentVariant;
             if (!v || !v.textures || typeof v.textures !== "object") return;
-            this.$set(v.textures, payload.key, payload.newValue);
+            var next = Object.assign({}, v.textures);
+            next[payload.key] = payload.newValue;
+            this._setVariantTextures(next, "\u4FEE\u6539\u8D34\u56FE\u8DEF\u5F84");
+          },
+          _setVariantTextures: function(textures, label) {
+            var result = ops.setField(this.config, {
+              path: ["parts", this.activePartId, "variants", this.activeVariantName, "textures"],
+              value: textures,
+              label,
+              source: "ui"
+            });
+            if (!result.ok) showToast2(result.error, "error");
+            return result;
           }
         },
         mounted: function() {
@@ -22760,44 +28973,7 @@
         }
       };
       var MM_UNDO_LABELS = {
-        updatePartField: function(field) {
-          return "\u4FEE\u6539\u96F6\u4EF6\u5B57\u6BB5 " + field;
-        },
-        updateVariantField: function(field) {
-          return "\u4FEE\u6539\u53D8\u4F53\u5B57\u6BB5 " + field;
-        },
-        updateSubPartField: function(field) {
-          return "\u4FEE\u6539\u5B50\u96F6\u4EF6\u5B57\u6BB5 " + field;
-        },
-        updateHitBoxField: function(field) {
-          return "\u4FEE\u6539\u78B0\u649E\u7BB1\u5B57\u6BB5 " + field;
-        },
-        updateHitBoxOverwrite: function(field) {
-          return "\u4FEE\u6539\u78B0\u649E\u7BB1\u8986\u5199 " + field;
-        },
-        updateInteractBoxField: function(field) {
-          return "\u4FEE\u6539\u4EA4\u4E92\u533A\u5B57\u6BB5 " + field;
-        },
-        updateConnectorField: function(field) {
-          return "\u4FEE\u6539\u8FDE\u63A5\u70B9\u5B57\u6BB5 " + field;
-        },
-        updateSubsystemField: function(ssKey, field) {
-          return "\u4FEE\u6539\u5B50\u7CFB\u7EDF\u5B57\u6BB5 " + field;
-        },
-        addEndBone: "\u6DFB\u52A0\u6392\u9664\u9AA8\u9ABC",
-        removeEndBone: "\u79FB\u9664\u6392\u9664\u9AA8\u9ABC",
         removeTag: "\u5220\u9664\u6807\u7B7E",
-        handleTexturesKvAdd: "\u6DFB\u52A0\u8D34\u56FE\u6D82\u88C5",
-        handleTexturesKvRemove: "\u5220\u9664\u8D34\u56FE\u6D82\u88C5",
-        handleTexturesKvUpdateKey: "\u91CD\u547D\u540D\u8D34\u56FE\u6D82\u88C5",
-        handleTexturesKvUpdateValue: "\u4FEE\u6539\u8D34\u56FE\u8DEF\u5F84",
-        renameSubPart: "\u91CD\u547D\u540D\u5B50\u96F6\u4EF6",
-        renameConnector: "\u91CD\u547D\u540D\u8FDE\u63A5\u70B9",
-        renameInteractBox: "\u91CD\u547D\u540D\u4EA4\u4E92\u533A",
-        renameSubsystem: "\u91CD\u547D\u540D\u5B50\u7CFB\u7EDF",
-        migrateSubPartStartBone: "\u8FC1\u79FB\u5B50\u96F6\u4EF6\u8D77\u59CB\u9AA8\u9ABC",
-        migrateConnectorLocator: "\u8FC1\u79FB\u8FDE\u63A5\u70B9\u5B9A\u4F4D\u5668",
-        migrateInteractBoxBone: "\u8FC1\u79FB\u4EA4\u4E92\u533A\u9AA8\u9ABC",
         handleCleanGhostEntry: "\u6E05\u7406\u5E7D\u7075\u6761\u76EE"
       };
       undo.wrapMethodMap(MM_MAIN_PANEL_OPTIONS.methods, MM_UNDO_LABELS);
@@ -24198,6 +30374,7 @@
   var { registerDragImport, unregisterDragImport } = require_drag_import();
   var { registerUndoBridge, unregisterUndoBridge } = require_undo();
   var { showToast } = require_notify();
+  var docPorts = require_ports();
   var PLUGIN_VERSION = "0.4.0";
   var log = createLogger("Plugin");
   Plugin.register("machine_max_bb_plugin", {
@@ -24217,6 +30394,28 @@
       });
       console.log("[MM][Plugin] \u9636\u6BB51: registerProperty");
       registerProperty();
+      console.log("[MM][Plugin] \u9636\u6BB51a: installDocPorts");
+      docPorts.install({
+        markers: {
+          set: function(config, partId, variantName, uuid, type, configRef) {
+            return require_element_markers().setMarker(config, partId, variantName, uuid, type, configRef);
+          },
+          clear: function(config, partId, variantName, uuid) {
+            return require_element_markers().clearMarker(config, partId, variantName, uuid);
+          },
+          clearScope: function(config, cleanup) {
+            return require_element_markers().clearMarkerScope(config, cleanup);
+          },
+          recalc: function(config, partId, variantName) {
+            return require_element_markers().recalcAutoEndBones(config, partId, variantName);
+          }
+        },
+        validation: {
+          collectIssues: function(config) {
+            return require_validation().collectIssues(config);
+          }
+        }
+      });
       console.log("[MM][Plugin] \u9636\u6BB51b: registerUndoBridge");
       registerUndoBridge();
       console.log("[MM][Plugin] \u9636\u6BB52: registerMode");

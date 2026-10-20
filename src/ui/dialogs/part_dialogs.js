@@ -6,7 +6,7 @@
  * `core/operations.js`（createPart / setContentPackPath）里，本文件不碰配置。
  */
 
-var ops = require('../../core/operations.js');
+var ops = require('../../ops/index.js');
 var { showToast } = require('../../utils/notify.js');
 var { saveConfig } = require('../../utils/persistence.js');
 var { createLogger } = require('../../utils/logger.js');

@@ -580,6 +580,12 @@ function either(singleCodec, mapCodec) {
                 return wrapped;
             }
             // 检测 key 是否为资源位置/翻译键格式（含 . 或 :）→ 直接走 map
+            // 单变体简写判定：model 是字符串。变体名恰好叫 model 时值是对象，仍走 map。
+            if (typeof raw.model === 'string') {
+                wrapped = {};
+                wrapped[WRAP_KEY] = singleCodec.decode(raw);
+                return wrapped;
+            }
             keys = Object.keys(raw);
             for (i = 0; i < keys.length; i++) {
                 if (keys[i].indexOf('.') >= 0 || keys[i].indexOf(':') >= 0) {

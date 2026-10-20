@@ -482,6 +482,178 @@ function getMarkersForVariant(projectConfig, partId, variantName) {
 }
 
 /**
+ * 按清理策略删除标记条目（docs/13 §5.3.1、§7.1）。
+ *
+ * 只删 element_markers 条目，不触发 clearMarker 的下游配置清理，也不重算
+ * auto_end_bones —— 旧子树会被整件写入替换，提前清配置只会制造中间态。
+ *
+ * @param {Object} projectConfig
+ * @param {Object} cleanup - { scope:'part'|'variant'|'sub_part', partId, variantName?, config_refs?, uuids? }
+ * @returns {{removed: number}}
+ */
+function clearMarkerScope(projectConfig, cleanup) {
+    var removed = 0;
+    if (!projectConfig || !cleanup || !cleanup.partId) return { removed: 0 };
+    var part = projectConfig.parts && projectConfig.parts[cleanup.partId];
+    if (!part || !part.element_markers) return { removed: 0 };
+
+    if (cleanup.scope === 'part') {
+        removed = Object.keys(part.element_markers).reduce(function (n, variantName) {
+            return n + Object.keys(part.element_markers[variantName] || {}).length;
+        }, 0);
+        part.element_markers = {};
+        return { removed: removed };
+    }
+
+    var markers = part.element_markers[cleanup.variantName];
+    if (!markers) return { removed: 0 };
+
+    if (cleanup.scope === 'variant') {
+        removed = Object.keys(markers).length;
+        delete part.element_markers[cleanup.variantName];
+        return { removed: removed };
+    }
+
+    if (cleanup.scope === 'sub_part') {
+        var refs = cleanup.config_refs || [];
+        var uuids = cleanup.uuids || [];
+        Object.keys(markers).forEach(function (uuid) {
+            var marker = markers[uuid];
+            var hit = uuids.indexOf(uuid) >= 0
+                || (marker && refs.indexOf(marker.config_ref) >= 0);
+            if (!hit) return;
+            delete markers[uuid];
+            removed++;
+        });
+    }
+    return { removed: removed };
+}
+
+/**
+ * 把 connector marker 的 config_ref 从 definition 迁移为连接点 key（docs/13 §15.2.1）。
+ *
+ * 定序匹配：已是 key → `_marker_uuid` 精确匹配 → Locator 名全局唯一 →
+ * 祖先子零件内唯一。definition 不参与匹配；无法唯一命中时保留
+ * `legacy_config_ref`、`config_ref:null` 并记 warning，不猜、不删 marker。
+ * 幂等：已迁移的 marker 原样保留。
+ *
+ * @param {Object} projectConfig
+ * @returns {{migrated:number, warnings:Array, entries:Array}}
+ */
+function migrateConnectorMarkerRefs(projectConfig) {
+    var migrated = 0;
+    var warnings = [];
+    var entries = [];
+    if (!projectConfig || !projectConfig.parts) return { migrated: 0, warnings: warnings, entries: entries };
+
+    Object.keys(projectConfig.parts).forEach(function (partId) {
+        var part = projectConfig.parts[partId];
+        if (!part || !part.element_markers || !part.variants) return;
+
+        Object.keys(part.element_markers).forEach(function (variantName) {
+            var markers = part.element_markers[variantName];
+            var variant = part.variants[variantName];
+            if (!markers || !variant) return;
+
+            // 收集本变体全部 connector 条目
+            var connectors = [];
+            var subParts = variant.sub_parts || {};
+            Object.keys(subParts).forEach(function (spKey) {
+                var map = (subParts[spKey] && subParts[spKey].connectors) || {};
+                Object.keys(map).forEach(function (ck) {
+                    connectors.push({ spKey: spKey, key: ck, conn: map[ck] });
+                });
+            });
+            var keys = connectors.map(function (c) { return c.key; });
+
+            Object.keys(markers).forEach(function (uuid) {
+                var marker = markers[uuid];
+                if (!marker || marker.type !== 'connector') return;
+
+                // 1) 已经是 key
+                if (typeof marker.config_ref === 'string' && keys.indexOf(marker.config_ref) >= 0) {
+                    return;
+                }
+
+                var legacy = marker.config_ref;
+                var match = null;
+                var hadCandidate = false;
+
+                // 2) _marker_uuid 精确匹配
+                var byUuid = connectors.filter(function (c) {
+                    return c.conn && c.conn._marker_uuid === uuid;
+                });
+                if (byUuid.length > 0) hadCandidate = true;
+                if (byUuid.length === 1) match = byUuid[0];
+
+                // 3) Locator 名全局唯一
+                if (!match) {
+                    var locator = null;
+                    if (typeof Locator !== 'undefined' && Locator.all) {
+                        locator = Locator.all.find(function (l) { return l.uuid === uuid; }) || null;
+                    }
+                    var locName = locator ? locator.name : null;
+                    if (locName) {
+                        var byName = connectors.filter(function (c) {
+                            return c.conn && c.conn.locator === locName;
+                        });
+                        if (byName.length > 0) hadCandidate = true;
+                        if (byName.length === 1) {
+                            match = byName[0];
+                        } else if (byName.length > 1) {
+                            // 4) 所属子零件内唯一
+                            var owner = locator
+                                ? detectOwnerSubPart(projectConfig, partId, variantName, locator)
+                                : null;
+                            if (owner) {
+                                var byOwner = byName.filter(function (c) { return c.spKey === owner.spKey; });
+                                if (byOwner.length === 1) match = byOwner[0];
+                            }
+                        }
+                    }
+                }
+
+                if (!match) {
+                    marker.legacy_config_ref = legacy;
+                    marker.config_ref = null;
+                    var reason = hadCandidate ? 'ambiguous_connector' : 'connector_not_found';
+                    entries.push({
+                        partId: partId,
+                        variantName: variantName,
+                        uuid: uuid,
+                        reason: reason,
+                        legacy_config_ref: legacy,
+                    });
+                    warnings.push({
+                        code: 'unresolved_config_ref',
+                        path: ['parts', partId, 'element_markers', variantName, uuid],
+                        expected: '连接点 key',
+                        got: legacy,
+                        hint: '无法唯一匹配连接点，已保留 legacy_config_ref',
+                    });
+                    return;
+                }
+
+                marker.config_ref = match.key;
+                if (match.conn && !match.conn._marker_uuid) match.conn._marker_uuid = uuid;
+                migrated++;
+            });
+        });
+    });
+
+    if (entries.length > 0) {
+        if (!projectConfig._lastMigration || typeof projectConfig._lastMigration !== 'object') {
+            projectConfig._lastMigration = {};
+        }
+        projectConfig._lastMigration.marker_refs = entries;
+    } else if (projectConfig._lastMigration && projectConfig._lastMigration.marker_refs) {
+        delete projectConfig._lastMigration.marker_refs;
+    }
+
+    return { migrated: migrated, warnings: warnings, entries: entries };
+}
+
+/**
  * 判断字符串是否像 Blockbench UUID（格式：xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx）
  * 用于区分旧格式数据中的骨骼名 key 和 UUID key
  * @param {string} str
@@ -705,9 +877,11 @@ if (typeof module !== 'undefined' && module.exports) {
         clearMarker,
         getMarker,
         clearAllMarkers,
+        clearMarkerScope,
         getMarkersForVariant,
         detectOwnerSubPart,
         recalcAutoEndBones,
         cleanGhostMarkers,
+        migrateConnectorMarkerRefs,
     };
 }

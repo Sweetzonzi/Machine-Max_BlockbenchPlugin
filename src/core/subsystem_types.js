@@ -67,6 +67,17 @@ var SUBSYSTEM_TYPES = [
             { field: 'power_outputs', label: '功率输出分配', editor: 'power_outputs_map',    required: true,  defaultValue: {} },
         ],
     },
+    {
+        id: 'machine_max:track_drive',
+        displayName: '履带驱动',
+        category: 'power',
+        dynamicFields: [
+            { field: 'definition',    label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'connector',     label: '关联连接点',   editor: 'connector_selector',  required: true,  defaultValue: '' },
+            { field: 'speed_outputs', label: '履带速度输出', editor: 'signal_targets',       required: false, defaultValue: { track_speed: ['local', 'global'] } },
+            { field: 'force_outputs', label: '履带驱动力输出', editor: 'signal_targets',     required: false, defaultValue: { track_force: ['local', 'global'] } },
+        ],
+    },
     // ===== control 分类 =====
     {
         id: 'machine_max:car_controller',
@@ -94,6 +105,16 @@ var SUBSYSTEM_TYPES = [
             { field: 'steering_outputs', label: '转向信号输出',  editor: 'signal_targets',      required: false, defaultValue: { steering: ['local', 'global'] } },
             { field: 'brake_outputs',    label: '刹车信号输出',  editor: 'signal_targets',      required: false, defaultValue: { brake: ['local', 'global'] } },
             { field: 'handbrake_outputs',label: '手刹信号输出',  editor: 'signal_targets',      required: false, defaultValue: { handbrake: ['local', 'global'] } },
+        ],
+    },
+    {
+        id: 'machine_max:track_controller',
+        displayName: '履带控制器',
+        category: 'control',
+        dynamicFields: [
+            { field: 'definition',      label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'control_outputs', label: '控制信号输出',  editor: 'signal_targets',      required: true,  defaultValue: { track_control: [] } },
+            { field: 'speed_outputs',   label: '速度信号输出',  editor: 'signal_targets',      required: false, defaultValue: { vehicle_speed: ['local', 'global'] } },
         ],
     },
     // ===== utility 分类 =====

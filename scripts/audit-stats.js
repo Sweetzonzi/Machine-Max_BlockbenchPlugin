@@ -25,49 +25,49 @@ const SRC = path.join(REPO_ROOT, 'src');
 const BASELINE = {
     '2.1.ui.js_files': 27,
     '2.1.ui.template_files': 7,
-    '2.1.ui.js_lines': 6774,
+    '2.1.ui.js_lines': 6656,
     '2.1.ui.template_lines': 1122,
     '2.1.mode.files': 6,
-    '2.1.mode.lines': 1479,
-    '2.1.core.files': 13,
-    '2.1.core.lines': 4790,
+    '2.1.mode.lines': 1526,
+    '2.1.core.files': 12,
+    '2.1.core.lines': 4271,
     '2.1.codec.files': 10,
-    '2.1.codec.lines': 1240,
+    '2.1.codec.lines': 1271,
     '2.1.managers.files': 5,
     '2.1.managers.lines': 330,
     '2.1.generators.files': 6,
     '2.1.generators.lines': 440,
     '2.1.import.files': 3,
-    '2.1.import.lines': 886,
-    '2.2.operations.functions': 16,
-    '2.2.app.undo_labels': 23,
-    '2.2.app.undo_labels.field': 8,
-    '2.2.app.undo_labels.collection': 7,
-    '2.2.app.undo_labels.lifecycle': 8,
-    '2.2.subsystem_panel.set': 18,
-    '2.2.subsystem_panel.delete': 4,
-    '2.2.connector_panel.set': 6,
-    '2.2.connector_panel.delete': 4,
+    '2.1.import.lines': 895,
+    '2.2.operations.functions': 29,
+    '2.2.app.undo_labels': 2,
+    '2.2.app.undo_labels.field': 0,
+    '2.2.app.undo_labels.collection': 1,
+    '2.2.app.undo_labels.lifecycle': 1,
+    '2.2.subsystem_panel.set': 0,
+    '2.2.subsystem_panel.delete': 0,
+    '2.2.connector_panel.set': 0,
+    '2.2.connector_panel.delete': 0,
     '2.2.app.computed.properties': 5,
     '2.2.app.computed.sites': 9,
-    '2.3.save_config.calls': 19,
+    '2.3.save_config.calls': 20,
     '2.3.save_config.files': 12,
     '2.3.refresh_outliner.calls': 17,
     '2.3.refresh_outliner.files': 7,
     '2.3.refresh_outliner.no_undo.calls': 16,
     '2.3.refresh_outliner.no_undo.files': 6,
-    '2.3.update_selection.calls': 22,
+    '2.3.update_selection.calls': 16,
     '2.3.update_selection.files': 7,
-    '2.3.update_selection.no_undo.calls': 20,
+    '2.3.update_selection.no_undo.calls': 14,
     '2.3.update_selection.no_undo.files': 6,
-    '2.3.show_toast.calls': 112,
+    '2.3.show_toast.calls': 122,
     '2.3.show_toast.files': 21,
-    '2.3.show_toast.no_undo.calls': 111,
+    '2.3.show_toast.no_undo.calls': 121,
     '2.3.show_toast.no_undo.files': 20,
     '2.3.fs_path_require.files': 13,
     '2.3.write_file_sync.calls': 8,
     '2.3.write_file_sync.files': 4,
-    '2.4.validation.error_points': 14,
+    '2.4.validation.error_points': 15,
     '2.4.validation.warning_points': 3,
     '2.4.validation.warning_codes': 1,
 };
@@ -223,18 +223,6 @@ function collectUndoLabels(source) {
     return { total: labels.length, field, collection, lifecycle, labels };
 }
 
-function countExportedOperations(source) {
-    const block = findBlock(source, 'module.exports = {');
-    if (!block) return 0;
-    let count = 0;
-    const re = /^\s{8}([A-Za-z_$][\w$]*),?\s*$/gm;
-    let match;
-    while ((match = re.exec(block)) !== null) {
-        if (match[1] !== '_internals') count++;
-    }
-    return count;
-}
-
 function collectValidationStats(file) {
     const source = stripComments(read(file));
     const errors = [];
@@ -288,7 +276,7 @@ function collect() {
     const allJs = listFiles(SRC, '.js');
     const app = path.join(SRC, 'ui', 'App.vue.js');
     const appSource = stripComments(read(app));
-    const operations = path.join(SRC, 'core', 'operations.js');
+    const operations = path.join(SRC, 'ops', 'index.js');
     const subsystemPanel = path.join(SRC, 'ui', 'SubsystemPanel.vue.js');
     const connectorPanel = path.join(SRC, 'ui', 'ConnectorPanel.vue.js');
     const undo = path.join(SRC, 'core', 'undo.js');
@@ -309,7 +297,8 @@ function collect() {
     const validation = collectValidationStats(path.join(SRC, 'mode', 'validation.js'));
 
     const stats = Object.assign({}, directoryStats(), {
-        '2.2.operations.functions': countExportedOperations(read(operations)),
+        '2.2.operations.functions': countPattern(stripComments(read(operations)),
+            /^\s{4}[A-Za-z_$][\w$]*:\s/gm),
         '2.2.app.undo_labels': labels.total,
         '2.2.app.undo_labels.field': labels.field,
         '2.2.app.undo_labels.collection': labels.collection,

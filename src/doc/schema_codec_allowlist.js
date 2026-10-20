@@ -7,15 +7,13 @@
 //
 // P1 仅登记真实缺口；D12（P2）补齐后必须删除 missing_fields，D13 补齐后
 // 删除 missing_types，D18（P2）删除 WIP 类型后删除 extra_types。
+// D13 已完成：track_controller / track_drive 已进 Codec 与 registry，missing_types 为空。
 
 'use strict';
 
 module.exports = {
-    // 1) 类型集合缺口：Codec 缺、schema 有
-    missing_types: [
-        { type: 'machine_max:track_controller', owner: 'D13' },
-        { type: 'machine_max:track_drive', owner: 'D13' },
-    ],
+    // 1) 类型集合缺口：Codec 缺、schema 有（D13 补齐后为空）
+    missing_types: [],
 
     // 2) 类型集合多余：Codec 有、schema 没有（D18 的 5 个 WIP 类型已删除）
     extra_types: [],

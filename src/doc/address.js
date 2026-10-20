@@ -525,8 +525,12 @@ function write(config, path, value, opts) {
             return objectInfo.error;
         }
         if (!own(parent.node, key)) {
-            return fail(segments, 'unknown_field', '已存在的对象字段', key,
-                '对象字段白名单不可绕过');
+            if (!opts.allowMissingLeaf) {
+                return fail(segments, 'unknown_field', '已存在的对象字段', key,
+                    '对象字段白名单不可绕过；新建字段需 allowMissingLeaf');
+            }
+            // 白名单已确认 key 合法，允许 setField 惰性补对象字段（如 overwrite.physics.*）
+            parent.node[key] = undefined;
         }
         before = parent.node[key];
         parent.node[key] = value;

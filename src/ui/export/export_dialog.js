@@ -14,7 +14,7 @@ const { getConfig, saveConfig } = require('../../utils/persistence.js');
 const { showToast } = require('../../utils/notify.js');
 const { collectIssues } = require('../../mode/validation.js');
 const { executeExport } = require('./export_pipeline.js');
-const ops = require('../../core/operations.js');
+const ops = require('../../ops/index.js');
 const path = require('path');
 
 /** 模块日志 */

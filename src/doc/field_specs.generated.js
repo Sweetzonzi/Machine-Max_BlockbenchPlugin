@@ -3,7 +3,7 @@
 /**
  * 本文件由 scripts/gen-field-specs.js 自动生成，不要手工编辑。
  * 数据源：src/builtin/builtin/machine_max/docs/en_us/schemas
- * 上游快照：Machine-Max@a1460ce1
+ * 上游快照：Machine-Max@7629416b
  * 重新生成：node scripts/gen-field-specs.js
  * 漂移检查：node scripts/gen-field-specs.js --check
  */
@@ -12,9 +12,9 @@ const PROVENANCE = {
     "generator_version": 1,
     "source_locale": "en_us",
     "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
-    "source_revision": "a1460ce1",
+    "source_revision": "7629416b",
     "source_files": 67,
-    "source_sha256": "184e3be388c85381ebdfb7e7244b71c2b9d89d291ecc0ce20807808900c0282f",
+    "source_sha256": "1c6aebbc87cc5527812a4fe68d25a22045acfd5dc870534a8e7efdf2e6083228",
     "generated_from": "machine_max builtin JSON Schema"
 };
 

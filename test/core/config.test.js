@@ -108,4 +108,41 @@ describe('core/config 旧占位归一化', () => {
             expect(sp.subsystems['subsystem.machine_max.engine'].definition).toBe('');
         }
     });
+
+    test('ensureDefaults 完整 decode variants：单变体简写 / 变体名恰为 model', () => {
+        const shorthand = {
+            parts: {
+                hull: {
+                    variants: {
+                        model: 'machine_max:model/hull',
+                        sub_parts: {
+                            'sub_part.machine_max.main': { mass: 3 },
+                        },
+                    },
+                },
+            },
+        };
+        const migrated = migrateIfNeeded(shorthand);
+        const variant = migrated.parts.hull.variants.default;
+        expect(variant.model).toBe('machine_max:model/hull');
+        // 完整 decode 后子零件默认字段也补齐（P2 前会被整体跳过）
+        expect(variant.sub_parts['sub_part.machine_max.main'].start_bone).toBe('');
+
+        const namedModel = {
+            parts: {
+                hull: {
+                    variants: {
+                        model: {
+                            model: 'machine_max:model/named',
+                            sub_parts: {},
+                        },
+                    },
+                },
+            },
+        };
+        const migrated2 = migrateIfNeeded(namedModel);
+        expect(migrated2.parts.hull.variants.model).toBeTruthy();
+        expect(migrated2.parts.hull.variants.model.model).toBe('machine_max:model/named');
+        expect(migrated2.parts.hull.variants.default).toBeUndefined();
+    });
 });

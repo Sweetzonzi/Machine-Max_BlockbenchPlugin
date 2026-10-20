@@ -8,7 +8,7 @@ const persistence = require('../../utils/persistence.js');
 const { showToast } = require('../../utils/notify.js');
 const { createLogger } = require('../../utils/logger.js');
 const { isConfigValid } = require('./pack_common.js');
-const ops = require('../../core/operations.js');
+const ops = require('../../ops/index.js');
 
 /** 模块日志 */
 var log = createLogger('PackOpen');

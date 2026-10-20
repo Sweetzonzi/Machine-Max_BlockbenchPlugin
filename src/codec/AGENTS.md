@@ -13,7 +13,7 @@ src/codec/
 │   ├── part_codec.js           # Part 配置（12 字段，含 variants Either 简写）
 │   ├── variant_codec.js        # Variant 配置
 │   ├── sub_part_codec.js       # SubPart 配置（含物理属性、碰撞箱、交互箱）
-│   ├── subsystem_codec.js      # 17 种子系统类型的独立 codec + DispatchCodec（252行）
+│   ├── subsystem_codec.js      # 19 种子系统类型的独立 codec + DispatchCodec（约 295 行）
 │   ├── connector_codec.js      # 连接点配置
 │   ├── hit_box_codec.js        # 碰撞箱配置
 │   ├── interact_box_codec.js   # 交互箱配置

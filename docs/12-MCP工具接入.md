@@ -159,7 +159,7 @@ config
 | `part` | `PartCodec` | `read_node` | `import_part` | `remove_node` |
 | `variant` | `VariantCodec` | `read_node` | `import_variant` | `remove_node` |
 | `sub_part` | `SubPartCodec` | `read_node` | `import_sub_part` | `remove_node` |
-| `subsystem` | `SubsystemDispatchCodec`（当前 17 种，`type` 形如 `machine_max:engine`；D18 已删除 5 个 WIP，D13 补 `track_controller`/`track_drive` 后 19；上游 builtin 为 **19**，见 docs/13 §3.2） | `read_node` | `import_subsystem` / `add_instance` | `remove_node` |
+| `subsystem` | `SubsystemDispatchCodec`（**19 种**，`type` 形如 `machine_max:engine`；D18 已删除 5 个 WIP，D13 已补 `track_controller`/`track_drive`；与上游 builtin 一致，见 docs/13 §3.2） | `read_node` | `import_subsystem` / `add_instance` | `remove_node` |
 | `hit_box` | `HitBoxCodec` | `read_node` | `add_instance` | `remove_node` |
 | `interact_box` | `InteractBoxCodec` | `read_node` | `add_instance` | `remove_node` |
 | `connector` | `ConnectorCodec` | `read_node` | `add_instance` | `remove_node` |
@@ -528,7 +528,7 @@ validate   { only_introduced: true }
 | `signal_graph` | 导出信号拓扑（nodes/edges），审查 SignalChannel 路由 | 复用 `extractSignalGraph`（[src/lib/signal_graph.js:23](../src/lib/signal_graph.js)） |
 | `list_defs` | 列出可用的 subsystems/connectors/materials/control_groups/projectiles 及其来源（builtin/dependency/current） | 复用 `getAvailableDefsForType` / `resolveDefSource`（[src/core/content_pack_manager.js:56](../src/core/content_pack_manager.js)） |
 | `hit_box`/`interact_box`/`connector` 整件通道 | 三小件也能整件替换 | 先解决 key↔UUID 投影的易用性（决策 D9 的回访点） |
-| `track_controller` / `track_drive` 支持 | 与上游 builtin 对齐（19 种；现缺 2 种） | 独立立项（D13）：补 Codec、`subsystem_types.js` 与面板动态字段；D18 已删除 5 个 WIP 类型（Codec 22→17），补完 `track_*` 后回到 19 |
+| `track_controller` / `track_drive` 支持 | 与上游 builtin 对齐（19 种） | **已完成（D13）**：Codec、`subsystem_types.js` 与面板动态字段已补齐；D18 删除 5 个 WIP 后 Codec 17，补完 `track_*` 回到 19 |
 | 修改前快照对比 | 编辑前后整树 diff，供 AI 自查 | 复用 `doc/projection` + diff |
 
 ---
