@@ -1,0 +1,138 @@
+'use strict';
+
+const { describe, test, expect } = require('bun:test');
+const generated = require('../../src/doc/field_specs.generated.js');
+const allow = require('../../src/doc/schema_codec_allowlist.js');
+const { PartCodec } = require('../../src/codec/codecs/part_codec.js');
+const { VariantCodec } = require('../../src/codec/codecs/variant_codec.js');
+const { SubPartCodec } = require('../../src/codec/codecs/sub_part_codec.js');
+const { HitBoxCodec } = require('../../src/codec/codecs/hit_box_codec.js');
+const { InteractBoxCodec } = require('../../src/codec/codecs/interact_box_codec.js');
+const { ConnectorCodec } = require('../../src/codec/codecs/connector_codec.js');
+const { SubsystemDispatchCodec } = require('../../src/codec/codecs/subsystem_codec.js');
+
+const CODECS = {
+    part: PartCodec,
+    variant: VariantCodec,
+    sub_part: SubPartCodec,
+    hit_box: HitBoxCodec,
+    interact_box: InteractBoxCodec,
+    connector: ConnectorCodec,
+};
+
+function codecFields(kind, codec) {
+    return Object.keys(codec.schema).filter((field) => {
+        if (kind === 'part' && field === 'element_markers') return false;
+        return (generated.CONTAINERS[kind] || []).indexOf(field) < 0;
+    });
+}
+
+function schemaFields(kind) {
+    return Object.keys(generated.SPECS[kind].fields);
+}
+
+function allowedMissing(kind, type, field) {
+    return allow.missing_fields.some((e) => e.kind === kind
+        && e.field === field
+        && (!e.type || e.type === type));
+}
+
+function allowedExtra(kind, type, field) {
+    return allow.extra_fields.some((e) => e.kind === kind
+        && e.field === field
+        && (!e.type || e.type === type));
+}
+
+describe('schema ↔ Codec 差异登记', () => {
+    test('类型集合：schema ∪ extra_types = dispatch ∪ missing_types', () => {
+        const schemaTypes = Object.keys(generated.SPECS.subsystem).sort();
+        const dispatchTypes = Object.keys(SubsystemDispatchCodec.codecs).sort();
+        const extra = allow.extra_types.map((e) => e.type).sort();
+        const missing = allow.missing_types.map((e) => e.type).sort();
+
+        expect([...new Set(schemaTypes.concat(extra))].sort())
+            .toEqual([...new Set(dispatchTypes.concat(missing))].sort());
+        expect(allow.missing_types.every((e) => e.owner === 'D13')).toBe(true);
+        expect(allow.extra_types.every((e) => e.owner === 'D18')).toBe(true);
+    });
+
+    test('字段集合差异只能来自 missing_fields / extra_fields', () => {
+        for (const kind of Object.keys(CODECS)) {
+            const schema = schemaFields(kind);
+            const codec = codecFields(kind, CODECS[kind]);
+            const missing = schema.filter((f) => codec.indexOf(f) < 0);
+            const extra = codec.filter((f) => schema.indexOf(f) < 0);
+
+            for (const field of missing) {
+                expect(allowedMissing(kind, null, field)).toBe(true);
+            }
+            for (const field of extra) {
+                expect(allowedExtra(kind, null, field)).toBe(true);
+            }
+        }
+
+        const supported = Object.keys(generated.SPECS.subsystem)
+            .filter((type) => !allow.missing_types.some((e) => e.type === type))
+            .filter((type) => !allow.extra_types.some((e) => e.type === type));
+
+        for (const type of supported) {
+            const schema = Object.keys(generated.SPECS.subsystem[type].fields)
+                .filter((f) => f !== 'type');
+            const codec = Object.keys(SubsystemDispatchCodec.codecs[type].schema)
+                .filter((f) => f !== 'type');
+            const missing = schema.filter((f) => codec.indexOf(f) < 0);
+            const extra = codec.filter((f) => schema.indexOf(f) < 0);
+
+            for (const field of missing) {
+                expect(allowedMissing('subsystem', type, field)).toBe(true);
+            }
+            for (const field of extra) {
+                expect(allowedExtra('subsystem', type, field)).toBe(true);
+            }
+        }
+    });
+
+    test('每条 missing_fields 都指向真实缺口，且带 owner', () => {
+        for (const entry of allow.missing_fields) {
+            expect(entry.owner).toBeTruthy();
+            if (entry.kind === 'subsystem') {
+                const spec = generated.SPECS.subsystem[entry.type];
+                expect(spec).toBeTruthy();
+                expect(spec.fields[entry.field]).toBeTruthy();
+                expect(SubsystemDispatchCodec.codecs[entry.type].schema[entry.field])
+                    .toBeUndefined();
+            } else {
+                expect(generated.SPECS[entry.kind].fields[entry.field]).toBeTruthy();
+                expect(CODECS[entry.kind].schema[entry.field]).toBeUndefined();
+            }
+        }
+    });
+
+    test('constraint_diffs / decode_tolerance 的字段真实存在', () => {
+        for (const entry of allow.constraint_diffs) {
+            if (entry.kind === 'subsystem') {
+                const types = entry.types || [];
+                for (const type of types) {
+                    expect(generated.SPECS.subsystem[type].fields[entry.field]).toBeTruthy();
+                    expect(SubsystemDispatchCodec.codecs[type].schema[entry.field]).toBeTruthy();
+                }
+                continue;
+            }
+            const schemaField = generated.SPECS[entry.kind].fields[entry.field]
+                || (generated.CONTAINERS[entry.kind] || []).indexOf(entry.field) >= 0;
+            expect(schemaField).toBeTruthy();
+            const codecField = CODECS[entry.kind].schema[entry.field]
+                || (generated.CONTAINERS[entry.kind] || []).indexOf(entry.field) >= 0;
+            expect(codecField).toBeTruthy();
+        }
+
+        for (const entry of allow.decode_tolerance) {
+            expect(generated.SPECS[entry.kind].fields[entry.field]).toBeTruthy();
+            expect(CODECS[entry.kind].schema[entry.field]).toBeTruthy();
+        }
+    });
+
+    test('unknown_fields 是唯一全局例外', () => {
+        expect(allow.unknown_fields).toBe('preserve');
+    });
+});

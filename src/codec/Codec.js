@@ -421,7 +421,7 @@ function record(schema) {
             return result;
         },
     };
-    return withFieldMethods(codec);
+    return Object.assign(withFieldMethods(codec), { schema: schema }); // 只读元数据，供 doc 层测试
 }
 
 /**
@@ -499,7 +499,7 @@ function dispatch(key, codecMap) {
             return decoded;
         },
     };
-    return withFieldMethods(codec);
+    return Object.assign(withFieldMethods(codec), { codecs: codecMap }); // 只读元数据，供 doc 层测试
 }
 
 /**
