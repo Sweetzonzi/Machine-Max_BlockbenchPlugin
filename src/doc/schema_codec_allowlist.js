@@ -37,11 +37,9 @@ module.exports = {
     // 5) 同一字段的约束差异：字段存在，但类型/required/enum/结构不同
     constraint_diffs: [
         { kind: 'hit_box', field: 'type', schema: 'enum', codec: 'string', enforcedBy: 'field_specs.enum' },
-        { kind: 'hit_box', field: 'id', schema: "default('')", codec: 'field()', enforcedBy: 'D12' },
         { kind: 'hit_box', field: 'overwrite', schema: 'object(physics/armor/sounds)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
         { kind: 'connector', field: 'overwrite', schema: 'object(12)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
         { kind: 'interact_box', field: 'condition', schema: 'enum', codec: 'string', enforcedBy: 'field_specs.enum' },
-        { kind: 'interact_box', field: 'signal_targets', schema: 'required', codec: 'default({}) + emitEmpty', enforcedBy: 'codec.emitEmpty' },
         { kind: 'connector', field: 'definition', schema: 'required', codec: "default('')", enforcedBy: 'collectIssues' },
         { kind: 'sub_part', field: 'hit_boxes', schema: 'required+minProperties', codec: 'map', enforcedBy: 'collectIssues' },
         { kind: 'sub_part', field: 'hydrodynamics', schema: 'default {""}', codec: 'default {}', enforcedBy: 'decode_tolerance' },

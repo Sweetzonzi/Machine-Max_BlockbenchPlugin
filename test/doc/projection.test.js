@@ -403,6 +403,47 @@ describe('doc/projection.out / round-trip', () => {
         expect(definitionOnly(result.node)).toEqual(first);
     });
 
+    test('export 保留 required 空字符串与 required 空 map', () => {
+        const config = helpers.createConfig();
+        const part = config.parts.hull;
+        const sp = part.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.interact_boxes['interact.machine_max.door'].signal_targets = {};
+        sp.subsystems = {
+            'subsystem.machine_max.basic': {
+                type: 'machine_max:basic',
+                definition: '',
+            },
+            'subsystem.machine_max.transmission': {
+                type: 'machine_max:transmission',
+                definition: '',
+                power_outputs: {},
+            },
+            'subsystem.machine_max.car_controller': {
+                type: 'machine_max:car_controller',
+                definition: '',
+                control_outputs: {},
+            },
+            'subsystem.machine_max.regen_loader': {
+                type: 'machine_max:regen_loader',
+                definition: '',
+                projectile_types: {},
+                belt_label: '',
+                discovery_outputs: {},
+            },
+        };
+
+        const out = projection.projectOut(part, { kind: 'part' }, { for: 'export' });
+        expect(out.errors).toBeUndefined();
+        const spOut = out.definition.variants.sub_parts['sub_part.machine_max.main'];
+        const subsystems = spOut.subsystems;
+
+        expect(spOut.interact_boxes['interact.machine_max.door'].signal_targets).toEqual({});
+        expect(subsystems['subsystem.machine_max.basic'].definition).toBe('');
+        expect(subsystems['subsystem.machine_max.transmission'].power_outputs).toEqual({});
+        expect(subsystems['subsystem.machine_max.car_controller'].control_outputs).toEqual({});
+        expect(subsystems['subsystem.machine_max.regen_loader'].projectile_types).toEqual({});
+    });
+
     test('out 不修改内部树', () => {
         const config = helpers.createConfig();
         const before = helpers.deepClone(config.parts.hull);

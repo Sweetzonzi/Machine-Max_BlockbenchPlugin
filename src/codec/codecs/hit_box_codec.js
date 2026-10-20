@@ -17,7 +17,7 @@ const { Codec } = require('../Codec.js');
  * 可选覆写字段，整体为 Optional。
  */
 const HitBoxCodec = Codec.record({
-    id:         Codec.STRING.field(),              // 碰撞形状ID（必填）
+    id:         Codec.STRING.default(''),          // 碰撞形状ID（schema 可选，默认 ""）
     type:       Codec.STRING.field(),              // 碰撞形状类型（必填，box/sphere/cylinder/capsule/wheel）
     material:   Codec.STRING.default('machine_max:default'),
     thickness:  Codec.FLOAT.default(1.0),

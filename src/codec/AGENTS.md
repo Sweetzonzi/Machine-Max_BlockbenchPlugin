@@ -8,12 +8,12 @@
 
 ```
 src/codec/
-├── Codec.js                    # 核心组合子库：5 基元 + 3 字段规格 + 6 组合子（567行）
+├── Codec.js                    # 核心组合子库：6 基元 + 3 字段规格 + 5 组合子（617行）
 ├── codecs/                     # 类型级 Codec 定义（8 个）
 │   ├── part_codec.js           # Part 配置（12 字段，含 variants Either 简写）
 │   ├── variant_codec.js        # Variant 配置
 │   ├── sub_part_codec.js       # SubPart 配置（含物理属性、碰撞箱、交互箱）
-│   ├── subsystem_codec.js      # 20 种子系统类型的独立 codec + DispatchCodec（277行）
+│   ├── subsystem_codec.js      # 22 种子系统类型的独立 codec + DispatchCodec（310行）
 │   ├── connector_codec.js      # 连接点配置
 │   ├── hit_box_codec.js        # 碰撞箱配置
 │   ├── interact_box_codec.js   # 交互箱配置
@@ -34,15 +34,16 @@ src/codec/
 
 ## 设计架构
 
-### 5 种基元类型
+### 6 种基元类型
 
 | 基元 | `encode` | `decode` | 用途 |
 |------|----------|----------|------|
-| `Codec.STRING` | 透传 | 类型断言 `string` | 标识符、路径 |
-| `Codec.INT` | 透传 | `Math.floor()` 截断 | 计数、等级 |
-| `Codec.FLOAT` | 透传 | `parseFloat()` | 比率、坐标 |
-| `Codec.BOOL` | 透传 | `!!` 强制转换 | 开关标记 |
-| `Codec.JSON` | 透传 | 透传 | 任意 JSON（不校验） |
+| `Codec.STRING` | 类型断言 `string`（非 string 抛错） | 类型断言 `string` | 标识符、路径 |
+| `Codec.INT` | 类型断言整数 | 类型断言整数（不做截断） | 计数、等级 |
+| `Codec.FLOAT` | 类型断言 `number` | 类型断言 `number` | 比率、坐标 |
+| `Codec.BOOL` | 类型断言 `boolean` | 类型断言 `boolean` | 开关标记 |
+| `Codec.ENUM(values)` | 值必须在枚举内 | 值必须在枚举内 | 有限取值 |
+| `Codec.ANY` | 透传 | 透传 | 任意 JSON（`overwrite` 等） |
 
 ### 3 种字段规格
 
@@ -52,16 +53,15 @@ src/codec/
 | `.default(val)` | 等于默认值时跳过 | 缺失时填充默认值 |
 | `.nullable()` | null/undefined 时跳过 | 缺失时返回 `null` |
 
-### 6 种组合子
+### 5 种组合子
 
 | 组合子 | 功能 | 典型用法 |
 |--------|------|---------|
 | `Codec.record(schema)` | 对象结构 | 所有类型级 codec 的基础 |
 | `.list(len)` | 固定/可变长度数组 | `speed_outputs: Codec.STRING.list()` |
-| `.map(keyC, valC)` | 键值对对象 | `sub_parts: Codec.map(Codec.STRING, SubPartCodec)` |
+| `.map(keyC, valC, {emitEmpty})` | 键值对对象；`emitEmpty` 时空对象输出 `{}`（required map） | `sub_parts: Codec.map(Codec.STRING, SubPartCodec)` |
 | `Codec.either(a, b)` | 单值/对象二选一 | Variant 简写：单变体 vs 多变体 |
-| `Codec.dispatch(key, map)` | 按判别字段路由 | 20 种子系统类型按 `type` 字段分发 |
-| `Codec.of(fn)` | 自定义转换 | 枚举 ↔ 字符串映射 |
+| `Codec.dispatch(key, map)` | 按判别字段路由 | 子系统按 `type` 字段分发 |
 
 ## 约定
 
@@ -78,6 +78,8 @@ src/codec/
 - **不要在 codec 内部引入循环依赖**: codecs/ 之间只能通过 `require` 引用，不能形成循环
 - **不要在 `SubsystemDispatchCodec` 中使用 `.field()` 的 `type` 字段**: type 已是判别器 key，由 dispatch 自动处理
 - **不要修改 Codec 原型**: 所有 codec 是普通对象，不是类实例
+- **required map 不要用裸 `.map()`**: schema required 的 map 必须加 `{emitEmpty:true}`，否则 `{}` 会被省略成缺键
+- **不要依赖 `STRING.encode` 做隐式转换**: 非 string 直接抛错，输入侧先归一化
 
 ## 数据流向
 

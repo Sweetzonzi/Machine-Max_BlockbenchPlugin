@@ -302,7 +302,7 @@ function createSubsystem(config, options) {
         var target = variant.sub_parts[spKey];
         if (!target.subsystems) vueSet(target, 'subsystems', {});
 
-        var ssConfig = { type: typeId, definition: null };
+        var ssConfig = { type: typeId, definition: '' };
         for (var key in defaults) {
             if (Object.prototype.hasOwnProperty.call(defaults, key)) {
                 ssConfig[key] = defaults[key];

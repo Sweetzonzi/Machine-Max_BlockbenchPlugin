@@ -36,8 +36,8 @@ function withFieldMethods(codec) {
     codec.list = function (len) {
         return createListCodec(codec, len);
     };
-    codec.map = function (keyC, valC) {
-        return createMapCodec(keyC, valC);
+    codec.map = function (keyC, valC, opts) {
+        return createMapCodec(keyC, valC, opts);
     };
     return codec;
 }
@@ -169,14 +169,18 @@ function createListCodec(itemCodec, len) {
  * 创建映射 codec（对象键值对）
  *
  * 对对象的每个 value 递归执行 value codec 的 encode/decode。
- * encode 时空对象返回 undefined（由父级 record 决定跳过）。
+ * encode 时空对象默认返回 undefined（由父级 record 决定跳过）；
+ * emitEmpty:true 时空对象输出 {}，用于 schema required 的 map 字段
+ * （键必须存在，空 map 是否合法交给完整性/业务规则判断）。
  * decode 时缺失/非对象输入返回空对象 {}。
  *
  * @param {object} keyCodec - 键 codec（通常为 Codec.STRING）
  * @param {object} valCodec - 值 codec
+ * @param {object} [opts] - { emitEmpty: boolean }
  * @returns {object} 映射 codec 对象
  */
-function createMapCodec(keyCodec, valCodec) {
+function createMapCodec(keyCodec, valCodec, opts) {
+    var emitEmpty = !!(opts && opts.emitEmpty);
     var codec = {
         type: 'map',
         encode: function (obj, path) {
@@ -191,8 +195,10 @@ function createMapCodec(keyCodec, valCodec) {
                 k = keys[i];
                 result[keyCodec.encode(k)] = valCodec.encode(obj[k], (path || '') + '[' + k + ']');
             }
-            // 空对象返回 undefined，由父级 record 决定跳过
-            if (Object.keys(result).length === 0) return undefined;
+            // 空对象：required map 输出 {}，其余返回 undefined 由父级 record 跳过
+            if (Object.keys(result).length === 0) {
+                return emitEmpty ? {} : undefined;
+            }
             return result;
         },
         decode: function (obj) {
@@ -248,11 +254,16 @@ var ANY = createPrimitiveCodec(
 
 /**
  * @type {object} STRING codec
- * encode: 任意值 → String(v)
+ * encode: 必须是 string 类型，否则报错（不做 String(v) 隐式转换）
  * decode: 必须是 string 类型，否则报错
  */
 var STRING = createPrimitiveCodec(
-    function (v) { return String(v); },
+    function (v) {
+        if (typeof v !== 'string') {
+            throw new Error('Expected string, got ' + typeof v);
+        }
+        return v;
+    },
     function (v) {
         if (typeof v !== 'string') {
             throw new Error('Expected string, got ' + typeof v);

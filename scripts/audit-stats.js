@@ -32,7 +32,7 @@ const BASELINE = {
     '2.1.core.files': 13,
     '2.1.core.lines': 4714,
     '2.1.codec.files': 10,
-    '2.1.codec.lines': 1286,
+    '2.1.codec.lines': 1297,
     '2.1.managers.files': 5,
     '2.1.managers.lines': 330,
     '2.1.generators.files': 6,

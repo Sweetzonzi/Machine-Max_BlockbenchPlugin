@@ -42,7 +42,7 @@ const WheelDriverCodec = Codec.record({
  */
 const SeatCodec = Codec.record({
     definition:               Codec.STRING.field(),
-    locator:                  Codec.STRING.field(),
+    locator:                  Codec.STRING.default(''),
     control_group_preset:     Codec.STRING.default(''),
     passenger_num_outputs:    Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     camera_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
@@ -65,7 +65,7 @@ const GearboxCodec = Codec.record({
  */
 const CarControllerCodec = Codec.record({
     definition:        Codec.STRING.field(),
-    control_outputs:   Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    control_outputs:   Codec.map(Codec.STRING, Codec.STRING.list(), { emitEmpty: true }).default({}),
     speed_outputs:     Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     throttle_outputs:  Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     steering_outputs:  Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
@@ -116,7 +116,7 @@ const LightingCodec = Codec.record({
  */
 const MotorbikeControllerCodec = Codec.record({
     definition:        Codec.STRING.field(),
-    control_outputs:   Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    control_outputs:   Codec.map(Codec.STRING, Codec.STRING.list(), { emitEmpty: true }).default({}),
     speed_outputs:     Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     throttle_outputs:  Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     steering_outputs:  Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
@@ -130,7 +130,7 @@ const MotorbikeControllerCodec = Codec.record({
  */
 const TransmissionCodec = Codec.record({
     definition:     Codec.STRING.field(),
-    power_outputs:  Codec.map(Codec.STRING, Codec.FLOAT).default({}),   // 频道→减速比（数值）
+    power_outputs:  Codec.map(Codec.STRING, Codec.FLOAT, { emitEmpty: true }).default({}),   // 频道→减速比（数值）
 });
 
 
@@ -172,7 +172,7 @@ const JointDriverCodec = Codec.record({
  */
 const CameraCodec = Codec.record({
     definition: Codec.STRING.field(),
-    locator:    Codec.STRING.default(),
+    locator:    Codec.STRING.default(''),
 });
 
 /**
@@ -223,7 +223,7 @@ const LauncherCodec = Codec.record({
  */
 const SightCodec = Codec.record({
     definition: Codec.STRING.field(),
-    locator:    Codec.STRING.default(),
+    locator:    Codec.STRING.default(''),
 });
 
 /**
@@ -241,7 +241,7 @@ const AmmoLoaderCodec = Codec.record({
  */
 const RegenLoaderCodec = Codec.record({
     definition:        Codec.STRING.field(),
-    projectile_types:  Codec.map(Codec.STRING, Codec.INT).default({}),
+    projectile_types:  Codec.map(Codec.STRING, Codec.INT, { emitEmpty: true }).default({}),
     belt_label:        Codec.STRING.default(''),
     discovery_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
 });

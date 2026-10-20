@@ -9667,8 +9667,8 @@
         codec.list = function(len) {
           return createListCodec(codec, len);
         };
-        codec.map = function(keyC, valC) {
-          return createMapCodec(keyC, valC);
+        codec.map = function(keyC, valC, opts) {
+          return createMapCodec(keyC, valC, opts);
         };
         return codec;
       }
@@ -9761,7 +9761,8 @@
         };
         return withFieldMethods(codec);
       }
-      function createMapCodec(keyCodec, valCodec) {
+      function createMapCodec(keyCodec, valCodec, opts) {
+        var emitEmpty = !!(opts && opts.emitEmpty);
         var codec = {
           type: "map",
           encode: function(obj, path) {
@@ -9776,7 +9777,9 @@
               k = keys[i];
               result[keyCodec.encode(k)] = valCodec.encode(obj[k], (path || "") + "[" + k + "]");
             }
-            if (Object.keys(result).length === 0) return void 0;
+            if (Object.keys(result).length === 0) {
+              return emitEmpty ? {} : void 0;
+            }
             return result;
           },
           decode: function(obj) {
@@ -9814,7 +9817,10 @@
       );
       var STRING = createPrimitiveCodec(
         function(v) {
-          return String(v);
+          if (typeof v !== "string") {
+            throw new Error("Expected string, got " + typeof v);
+          }
+          return v;
         },
         function(v) {
           if (typeof v !== "string") {
@@ -10061,8 +10067,8 @@
       init_define_SCHEMAS();
       var { Codec } = require_Codec();
       var HitBoxCodec = Codec.record({
-        id: Codec.STRING.field(),
-        // 碰撞形状ID（必填）
+        id: Codec.STRING.default(""),
+        // 碰撞形状ID（schema 可选，默认 ""）
         type: Codec.STRING.field(),
         // 碰撞形状类型（必填，box/sphere/cylinder/capsule/wheel）
         material: Codec.STRING.default("machine_max:default"),
@@ -10096,7 +10102,7 @@
         // 骨骼名（必填）
         interact_mode: Codec.ENUM(["fast", "accurate"]).default("fast"),
         condition: Codec.STRING.default("NOR"),
-        signal_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
+        signal_targets: Codec.map(Codec.STRING, Codec.STRING.list(), { emitEmpty: true }).default({})
       });
       module.exports = { InteractBoxCodec };
     }
@@ -10154,7 +10160,7 @@
       });
       var SeatCodec = Codec.record({
         definition: Codec.STRING.field(),
-        locator: Codec.STRING.field(),
+        locator: Codec.STRING.default(""),
         control_group_preset: Codec.STRING.default(""),
         passenger_num_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
         camera_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
@@ -10167,7 +10173,7 @@
       });
       var CarControllerCodec = Codec.record({
         definition: Codec.STRING.field(),
-        control_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        control_outputs: Codec.map(Codec.STRING, Codec.STRING.list(), { emitEmpty: true }).default({}),
         speed_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
         throttle_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
         steering_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
@@ -10191,7 +10197,7 @@
       });
       var MotorbikeControllerCodec = Codec.record({
         definition: Codec.STRING.field(),
-        control_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+        control_outputs: Codec.map(Codec.STRING, Codec.STRING.list(), { emitEmpty: true }).default({}),
         speed_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
         throttle_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
         steering_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
@@ -10200,7 +10206,7 @@
       });
       var TransmissionCodec = Codec.record({
         definition: Codec.STRING.field(),
-        power_outputs: Codec.map(Codec.STRING, Codec.FLOAT).default({})
+        power_outputs: Codec.map(Codec.STRING, Codec.FLOAT, { emitEmpty: true }).default({})
         // 频道→减速比（数值）
       });
       var BatteryCodec = Codec.record({
@@ -10220,7 +10226,7 @@
       });
       var CameraCodec = Codec.record({
         definition: Codec.STRING.field(),
-        locator: Codec.STRING.default()
+        locator: Codec.STRING.default("")
       });
       var JavascriptCodec = Codec.record({
         definition: Codec.STRING.field(),
@@ -10246,7 +10252,7 @@
       });
       var SightCodec = Codec.record({
         definition: Codec.STRING.field(),
-        locator: Codec.STRING.default()
+        locator: Codec.STRING.default("")
       });
       var AmmoLoaderCodec = Codec.record({
         definition: Codec.STRING.field(),
@@ -10254,7 +10260,7 @@
       });
       var RegenLoaderCodec = Codec.record({
         definition: Codec.STRING.field(),
-        projectile_types: Codec.map(Codec.STRING, Codec.INT).default({}),
+        projectile_types: Codec.map(Codec.STRING, Codec.INT, { emitEmpty: true }).default({}),
         belt_label: Codec.STRING.default(""),
         discovery_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
       });
@@ -12302,7 +12308,7 @@
           category: "power",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: null },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
             { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { engine_speed: ["vehicle", "subpart"] } }
           ]
         },
@@ -12312,7 +12318,7 @@
           category: "power",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: null },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
             { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { motor_speed: ["subpart", "vehicle"] } }
           ]
         },
@@ -12330,7 +12336,7 @@
           category: "power",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: null },
+            { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
             { field: "gear_outputs", label: "\u6321\u4F4D\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { gear: ["subpart", "vehicle"] } }
           ]
         },
@@ -12387,7 +12393,7 @@
           category: "utility",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: null },
+            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
             { field: "roll_speed_outputs", label: "\u6EDA\u52A8\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} },
             { field: "steering_angle_outputs", label: "\u8F6C\u5411\u89D2\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
           ]
@@ -12398,7 +12404,7 @@
           category: "utility",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: null },
+            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
             { field: "control_group_preset", label: "\u63A7\u5236\u7EC4\u9884\u8BBE", editor: "control_group_selector", required: false, defaultValue: "" },
             { field: "passenger_num_outputs", label: "\u4E58\u5BA2\u6570\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { passenger_num: ["subpart", "vehicle"] } },
             { field: "camera_discovery_targets", label: "\u6444\u50CF\u673A\u53D1\u73B0\u63E1\u624B\u76EE\u6807", editor: "signal_targets", required: false, defaultValue: {} },
@@ -12436,7 +12442,7 @@
           category: "utility",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: null },
+            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
             {
               field: "rotation_order",
               label: "\u65CB\u8F6C\u987A\u5E8F",
@@ -12455,7 +12461,7 @@
           category: "experimental",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u6444\u50CF\u673A\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: null }
+            { field: "locator", label: "\u6444\u50CF\u673A\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: "" }
           ]
         },
         {
@@ -12473,7 +12479,7 @@
           category: "experimental",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: null },
+            { field: "connector", label: "\u5173\u8054\u8FDE\u63A5\u70B9", editor: "connector_selector", required: true, defaultValue: "" },
             { field: "rotation_outputs", label: "\u89D2\u5EA6\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
           ]
         },
@@ -12495,7 +12501,7 @@
           category: "experimental",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u53D1\u5C04\u70B9\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: null },
+            { field: "locator", label: "\u53D1\u5C04\u70B9\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
             { field: "fire_animation", label: "\u5F00\u706B\u52A8\u753B\u540D", editor: "text_input", required: false, defaultValue: "fire" },
             { field: "ammo_outputs", label: "\u5F39\u836F\u53CD\u9988\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: {} }
           ]
@@ -12524,7 +12530,7 @@
           category: "experimental",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "projectile_types", label: "\u5F39\u94FE\u6784\u6210", editor: "projectile_belt_editor", required: true, defaultValue: [] },
+            { field: "projectile_types", label: "\u5F39\u94FE\u6784\u6210", editor: "projectile_belt_editor", required: true, defaultValue: {} },
             { field: "belt_label", label: "\u5F39\u94FE\u6807\u7B7E", editor: "text_input", required: false, defaultValue: "" },
             { field: "discovery_outputs", label: "\u5F39\u836F\u53D1\u73B0\u9891\u9053", editor: "signal_targets", required: false, defaultValue: {} }
           ]
@@ -14690,7 +14696,7 @@
           }
           var target = variant.sub_parts[spKey];
           if (!target.subsystems) vueSet(target, "subsystems", {});
-          var ssConfig = { type: typeId, definition: null };
+          var ssConfig = { type: typeId, definition: "" };
           for (var key in defaults) {
             if (Object.prototype.hasOwnProperty.call(defaults, key)) {
               ssConfig[key] = defaults[key];
