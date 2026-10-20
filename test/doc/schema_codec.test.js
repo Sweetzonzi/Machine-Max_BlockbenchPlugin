@@ -54,7 +54,7 @@ describe('schema ↔ Codec 差异登记', () => {
         expect([...new Set(schemaTypes.concat(extra))].sort())
             .toEqual([...new Set(dispatchTypes.concat(missing))].sort());
         expect(allow.missing_types.every((e) => e.owner === 'D13')).toBe(true);
-        expect(allow.extra_types.every((e) => e.owner === 'D18')).toBe(true);
+        expect(allow.extra_types).toEqual([]);
     });
 
     test('字段集合差异只能来自 missing_fields / extra_fields', () => {
@@ -136,6 +136,33 @@ describe('schema ↔ Codec 差异登记', () => {
             const names = ssTypes.getDynamicFields(type).map((f) => f.field);
             expect(names).toContain(field);
         }
+    });
+
+    test('D18：5 个 WIP 类型已从 Codec / registry 删除', () => {
+        const removed = [
+            'machine_max:battery',
+            'machine_max:signal_convert',
+            'machine_max:joint',
+            'machine_max:javascript',
+            'machine_max:ammo_loader',
+        ];
+        expect(allow.extra_types).toEqual([]);
+        expect(Object.keys(SubsystemDispatchCodec.codecs)).toHaveLength(17);
+        expect(ssTypes.getAllTypes()).toHaveLength(17);
+        for (const type of removed) {
+            expect(SubsystemDispatchCodec.codecs[type]).toBeUndefined();
+            expect(ssTypes.getTypeMeta(type)).toBeNull();
+            expect(() => SubsystemDispatchCodec.decode({ type: type })).toThrow();
+        }
+    });
+
+    test('D19：registry 默认信号目标是 local / global', () => {
+        expect(ssTypes.getTypeDefaults('machine_max:engine').speed_outputs)
+            .toEqual({ engine_speed: ['global', 'local'] });
+        expect(ssTypes.getTypeDefaults('machine_max:gearbox').gear_outputs)
+            .toEqual({ gear: ['local', 'global'] });
+        expect(ssTypes.getTypeDefaults('machine_max:seat').passenger_num_outputs)
+            .toEqual({ passenger_num: ['local', 'global'] });
     });
 
     test('每条 missing_fields 都指向真实缺口，且带 owner', () => {

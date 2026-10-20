@@ -124,7 +124,7 @@ function _collectMarkerIssues(config, partId, vName, problems) {
 }
 
 /** 信号保留地址：不得用作连接点 / 子系统 / 交互区名 */
-var RESERVED_SIGNAL_NAMES = ['local', 'global', 'subpart', 'vehicle'];
+var RESERVED_SIGNAL_NAMES = ['local', 'global'];
 
 /**
  * 单变体内「连接点 / 子系统 / 交互区」名称唯一性 + 信号保留地址校验。

@@ -35,7 +35,7 @@ var SUBSYSTEM_TYPES = [
         dynamicFields: [
             { field: 'definition',    label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'power_output',  label: '功率输出目标',  editor: 'power_target',        required: true,  defaultValue: '' },
-            { field: 'speed_outputs', label: '转速信号输出',  editor: 'signal_targets',       required: false, defaultValue: { engine_speed: ['vehicle', 'subpart'] } },
+            { field: 'speed_outputs', label: '转速信号输出',  editor: 'signal_targets',       required: false, defaultValue: { engine_speed: ['global', 'local'] } },
         ],
     },
     {
@@ -45,15 +45,7 @@ var SUBSYSTEM_TYPES = [
         dynamicFields: [
             { field: 'definition',    label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'power_output',  label: '功率输出目标',  editor: 'power_target',        required: true,  defaultValue: '' },
-            { field: 'speed_outputs', label: '转速信号输出',  editor: 'signal_targets',       required: false, defaultValue: { motor_speed: ['subpart', 'vehicle'] } },
-        ],
-    },
-    {
-        id: 'machine_max:battery',
-        displayName: '电池',
-        category: 'power',
-        dynamicFields: [
-            { field: 'definition',    label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'speed_outputs', label: '转速信号输出',  editor: 'signal_targets',       required: false, defaultValue: { motor_speed: ['local', 'global'] } },
         ],
     },
     {
@@ -63,7 +55,7 @@ var SUBSYSTEM_TYPES = [
         dynamicFields: [
             { field: 'definition',    label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'power_output',  label: '功率输出目标', editor: 'power_target',        required: true,  defaultValue: '' },
-            { field: 'gear_outputs',  label: '挡位信号输出', editor: 'signal_targets',       required: false, defaultValue: { gear: ['subpart', 'vehicle'] } },
+            { field: 'gear_outputs',  label: '挡位信号输出', editor: 'signal_targets',       required: false, defaultValue: { gear: ['local', 'global'] } },
         ],
     },
     {
@@ -83,11 +75,11 @@ var SUBSYSTEM_TYPES = [
         dynamicFields: [
             { field: 'definition',       label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'control_outputs',  label: '控制信号输出',  editor: 'signal_targets',      required: true,  defaultValue: { car_control: [] } },
-            { field: 'speed_outputs',    label: '速度信号输出',  editor: 'signal_targets',      required: false, defaultValue: { vehicle_speed: ['subpart', 'vehicle'] } },
-            { field: 'throttle_outputs', label: '油门信号输出',  editor: 'signal_targets',      required: false, defaultValue: { throttle: ['subpart', 'vehicle'] } },
-            { field: 'steering_outputs', label: '转向信号输出',  editor: 'signal_targets',      required: false, defaultValue: { steering: ['subpart', 'vehicle'] } },
-            { field: 'brake_outputs',    label: '刹车信号输出',  editor: 'signal_targets',      required: false, defaultValue: { brake: ['subpart', 'vehicle'] } },
-            { field: 'handbrake_outputs',label: '手刹信号输出',  editor: 'signal_targets',      required: false, defaultValue: { handbrake: ['subpart', 'vehicle'] } },
+            { field: 'speed_outputs',    label: '速度信号输出',  editor: 'signal_targets',      required: false, defaultValue: { vehicle_speed: ['local', 'global'] } },
+            { field: 'throttle_outputs', label: '油门信号输出',  editor: 'signal_targets',      required: false, defaultValue: { throttle: ['local', 'global'] } },
+            { field: 'steering_outputs', label: '转向信号输出',  editor: 'signal_targets',      required: false, defaultValue: { steering: ['local', 'global'] } },
+            { field: 'brake_outputs',    label: '刹车信号输出',  editor: 'signal_targets',      required: false, defaultValue: { brake: ['local', 'global'] } },
+            { field: 'handbrake_outputs',label: '手刹信号输出',  editor: 'signal_targets',      required: false, defaultValue: { handbrake: ['local', 'global'] } },
         ],
     },
     {
@@ -97,19 +89,11 @@ var SUBSYSTEM_TYPES = [
         dynamicFields: [
             { field: 'definition',       label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'control_outputs',  label: '控制信号输出',  editor: 'signal_targets',      required: true,  defaultValue: { car_control: [] } },
-            { field: 'speed_outputs',    label: '速度信号输出',  editor: 'signal_targets',      required: false, defaultValue: { vehicle_speed: ['subpart', 'vehicle'] } },
-            { field: 'throttle_outputs', label: '油门信号输出',  editor: 'signal_targets',      required: false, defaultValue: { throttle: ['subpart', 'vehicle'] } },
-            { field: 'steering_outputs', label: '转向信号输出',  editor: 'signal_targets',      required: false, defaultValue: { steering: ['subpart', 'vehicle'] } },
-            { field: 'brake_outputs',    label: '刹车信号输出',  editor: 'signal_targets',      required: false, defaultValue: { brake: ['subpart', 'vehicle'] } },
-            { field: 'handbrake_outputs',label: '手刹信号输出',  editor: 'signal_targets',      required: false, defaultValue: { handbrake: ['subpart', 'vehicle'] } },
-        ],
-    },
-    {
-        id: 'machine_max:signal_convert',
-        displayName: '信号转换器',
-        category: 'control',
-        dynamicFields: [
-            { field: 'definition', label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'speed_outputs',    label: '速度信号输出',  editor: 'signal_targets',      required: false, defaultValue: { vehicle_speed: ['local', 'global'] } },
+            { field: 'throttle_outputs', label: '油门信号输出',  editor: 'signal_targets',      required: false, defaultValue: { throttle: ['local', 'global'] } },
+            { field: 'steering_outputs', label: '转向信号输出',  editor: 'signal_targets',      required: false, defaultValue: { steering: ['local', 'global'] } },
+            { field: 'brake_outputs',    label: '刹车信号输出',  editor: 'signal_targets',      required: false, defaultValue: { brake: ['local', 'global'] } },
+            { field: 'handbrake_outputs',label: '手刹信号输出',  editor: 'signal_targets',      required: false, defaultValue: { handbrake: ['local', 'global'] } },
         ],
     },
     // ===== utility 分类 =====
@@ -132,7 +116,7 @@ var SUBSYSTEM_TYPES = [
             { field: 'definition',              label: '型号定义',          editor: 'definition_selector',   required: true,  defaultValue: '' },
             { field: 'locator',                 label: '关联定位器',        editor: 'locator_selector',      required: true,  defaultValue: '' },
             { field: 'control_group_preset',    label: '控制组预设',        editor: 'control_group_selector', required: false, defaultValue: '' },
-            { field: 'passenger_num_outputs',   label: '乘客数信号输出',    editor: 'signal_targets',        required: false, defaultValue: { passenger_num: ['subpart', 'vehicle'] } },
+            { field: 'passenger_num_outputs',   label: '乘客数信号输出',    editor: 'signal_targets',        required: false, defaultValue: { passenger_num: ['local', 'global'] } },
             { field: 'camera_discovery_targets', label: '摄像机发现握手目标', editor: 'signal_targets',      required: false, defaultValue: {} },
             { field: 'dismount_locators',       label: '下车定位器（按优先级）', editor: 'locator_list', required: false, defaultValue: [] },
         ],
@@ -162,18 +146,6 @@ var SUBSYSTEM_TYPES = [
             { field: 'definition', label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
         ],
     },
-    {
-        id: 'machine_max:joint',
-        displayName: '关节',
-        category: 'utility',
-        dynamicFields: [
-            { field: 'definition',      label: '型号定义',   editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'locator',         label: '关联定位器', editor: 'locator_selector',    required: true,  defaultValue: '' },
-            { field: 'rotation_order',  label: '旋转顺序',   editor: 'enum_selector',       required: true,  defaultValue: 'XYZ',
-              options: ['XYZ', 'XZY', 'YXZ', 'ZYX', 'ZXY', 'YZX'] },
-            { field: 'axes',            label: '关节轴参数', editor: 'json_textarea',        required: true,  defaultValue: {} },
-        ],
-    },
     // ===== experimental 分类 =====
     {
         id: 'machine_max:camera',
@@ -182,15 +154,6 @@ var SUBSYSTEM_TYPES = [
         dynamicFields: [
             { field: 'definition', label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'locator',    label: '摄像机定位器', editor: 'locator_selector',    required: false, defaultValue: '' },
-        ],
-    },
-    {
-        id: 'machine_max:javascript',
-        displayName: 'JavaScript 脚本',
-        category: 'experimental',
-        dynamicFields: [
-            { field: 'definition', label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'script',     label: '脚本内容', editor: 'text_input',           required: false, defaultValue: '' },
         ],
     },
     {
@@ -233,15 +196,6 @@ var SUBSYSTEM_TYPES = [
         dynamicFields: [
             { field: 'definition', label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'locator',    label: '瞄准镜定位器', editor: 'locator_selector',    required: false, defaultValue: '' },
-        ],
-    },
-    {
-        id: 'machine_max:ammo_loader',
-        displayName: '装弹机',
-        category: 'experimental',
-        dynamicFields: [
-            { field: 'definition',       label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'discovery_outputs', label: '弹药发现频道', editor: 'signal_targets',       required: false, defaultValue: {} },
         ],
     },
     {

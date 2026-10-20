@@ -31,7 +31,7 @@
   var define_BUILTIN_CONTROL_GROUPS_default;
   var init_define_BUILTIN_CONTROL_GROUPS = __esm({
     "<define:__BUILTIN_CONTROL_GROUPS__>"() {
-      define_BUILTIN_CONTROL_GROUPS_default = { default_commander: { base_group: { name: "controlGroup.machine_max.base", control_mode: "ground", move_targets: { move_input: ["vehicle"] }, regular_targets: { regular_input: ["vehicle"] } }, groups: [{ name: "controlGroup.machine_max.backup_fire_control", control_mode: "inherit", view_targets: { aim_input: ["vehicle"] }, main_weapon_targets: { fire_input: ["vehicle"] }, secondary_weapon_targets: { secondary_fire_input: ["vehicle"] } }, { name: "controlGroup.machine_max.commander_override", control_mode: "inherit", view_targets: { aim_input_p1: ["vehicle"] }, main_weapon_targets: { fire_input_p1: ["vehicle"] }, secondary_weapon_targets: { secondary_fire_input_p1: ["vehicle"] } }] }, default_driver: { base_group: { name: "controlGroup.machine_max.base", control_mode: "ground", move_targets: { move_input_p1: ["vehicle"] }, view_targets: {}, regular_targets: { regular_input_p1: ["vehicle"] }, bindings: [] } }, default_gunner: { base_group: { name: "controlGroup.machine_max.base", control_mode: "inherit", move_targets: {}, view_targets: { aim_input_p2: ["vehicle"] }, regular_targets: {}, main_weapon_targets: { fire_input_p2: ["vehicle"] }, secondary_weapon_targets: { secondary_fire_input_p2: ["vehicle"] }, bindings: [] } }, default_passenger: { base_group: { name: "controlGroup.machine_max.base", control_mode: "inherit", move_targets: {}, view_targets: {}, regular_targets: {}, bindings: [] } } };
+      define_BUILTIN_CONTROL_GROUPS_default = { default_commander: { base_group: { name: "controlGroup.machine_max.base", control_mode: "ground", move_targets: { move_input: ["global"] }, regular_targets: { regular_input: ["global"] } }, groups: [{ name: "controlGroup.machine_max.backup_fire_control", control_mode: "inherit", view_targets: { aim_input: ["global"] }, main_weapon_targets: { fire_input: ["global"] }, secondary_weapon_targets: { secondary_fire_input: ["global"] } }, { name: "controlGroup.machine_max.commander_override", control_mode: "inherit", view_targets: { aim_input_p1: ["global"] }, main_weapon_targets: { fire_input_p1: ["global"] }, secondary_weapon_targets: { secondary_fire_input_p1: ["global"] } }] }, default_driver: { base_group: { name: "controlGroup.machine_max.base", control_mode: "ground", move_targets: { move_input_p1: ["global"] }, view_targets: {}, regular_targets: { regular_input_p1: ["global"] }, bindings: [] } }, default_gunner: { base_group: { name: "controlGroup.machine_max.base", control_mode: "inherit", move_targets: {}, view_targets: { aim_input_p2: ["global"] }, regular_targets: {}, main_weapon_targets: { fire_input_p2: ["global"] }, secondary_weapon_targets: { secondary_fire_input_p2: ["global"] }, bindings: [] } }, default_passenger: { base_group: { name: "controlGroup.machine_max.base", control_mode: "inherit", move_targets: {}, view_targets: {}, regular_targets: {}, bindings: [] } } };
     }
   });
 
@@ -55,7 +55,7 @@
   var define_BUILTIN_SUBSYSTEMS_default;
   var init_define_BUILTIN_SUBSYSTEMS = __esm({
     "<define:__BUILTIN_SUBSYSTEMS__>"() {
-      define_BUILTIN_SUBSYSTEMS_default = { default_glass: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:basic", basic_durability: 2, pass_damage: false, limit_damage: false, sounds: { on_destroyed: { sound_id: "machine_max:subsystem.baisc.glass.break", range: 32 } }, hidden: true }, large_battery: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:battery", basic_durability: 100, max_stored_energy: 5e5, max_charge_rate: 5e3, max_discharge_rate: 1e4 }, medium_battery: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:battery", basic_durability: 50, max_stored_energy: 1e5, max_charge_rate: 2e3, max_discharge_rate: 5e3 }, small_battery: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:battery", basic_durability: 20, max_stored_energy: 2e4, max_charge_rate: 500, max_discharge_rate: 1e3 }, targeting_pod: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:camera", basic_durability: 8, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 16.7, min_pitch: -80, max_pitch: 80, yaw_limit: 360, hud_components: [], tracking_target_inputs: [], discovery_inputs: ["targeting_pod_sight"], allow_cycle: true }, default_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 150, min_steering_radius: 5, lateral_acceleration: 50, max_drift_angular_velocity: 2, manual_gear_shift: false, auto_hand_brake: true, drift_assist: true }, light_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 80, max_power: 8e4, max_torque: 175, idle_rpm: 850, max_torque_rpm: 4e3, red_line_rpm: 6300, red_line_torque_ratio: 0.75, inertia: 10, cylinder: 4, damping_factors: [2, 0.03, 2e-5] }, medium_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 150, max_power: 18e4, max_torque: 380, idle_rpm: 750, max_torque_rpm: 4e3, red_line_rpm: 6e3, red_line_torque_ratio: 0.65, inertia: 15, cylinder: 6, damping_factors: [2, 0.03, 2e-5] }, motorcycle_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 30, max_power: 6e3, max_torque: 9, idle_rpm: 500, max_torque_rpm: 7e3, red_line_rpm: 9500, red_line_torque_ratio: 0.7, inertia: 2, cylinder: 1, damping_factors: [1, 0.02, 1e-5] }, sport_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 100, max_power: 45e4, max_torque: 700, idle_rpm: 500, max_torque_rpm: 5500, red_line_rpm: 9e3, red_line_torque_ratio: 0.9, inertia: 20, cylinder: 8, damping_factors: [2, 0.03, 2e-5] }, truck_diesel_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 400, max_power: 37e4, max_torque: 2500, idle_rpm: 550, max_torque_rpm: 1500, red_line_rpm: 2200, red_line_torque_ratio: 0.9, inertia: 50, cylinder: 6, damping_factors: [5, 0.05, 1e-5] }, light_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 8, ratios: [-3.5, 3.5, 2.5, 1.75, 1.4, 1.15, 0.85], switch_time: 0.2 }, medium_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 150, final_ratio: 10, ratios: [-3.3, 4.71, 3.14, 2.1, 1.6, 1.29, 1.1, 0.88, 0.67], switch_time: 0.2 }, motorcycle_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 40, final_ratio: 15, ratios: [-3.5, 3.5, 2.8, 2, 1.4], switch_time: 0.15 }, simple_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 60, final_ratio: 8, ratios: [2, 1.3], switch_time: 0.1 }, sport_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 10, ratios: [-3.5, 3.5, 2.5, 1.8, 1.4, 1, 0.7, 0.5], switch_time: 0.05 }, truck_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 500, final_ratio: 3.7, ratios: [-12.3, 12.1, 9.41, 7.31, 5.71, 4.46, 3.4, 2.7, 2.11, 1.84, 1.3, 1, 0.78], switch_time: 0.3 }, default_trunk: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 6, columns: 9 }, glove_box: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 50, rows: 2, columns: 3 }, basic_launcher: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:launcher", basic_durability: 80, control_inputs: ["weapon_control"], breech: { fire_rate: 600 } }, beam_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "beam", range: 16, color: [255, 245, 210], intensity: 0.5, beam_angle: 24 }, dummy_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 0, intensity: 0 }, point_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 1, color: [255, 235, 180], intensity: 0.55, beam_angle: 24 }, basic_loader: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:ammo_loader", basic_durability: 40, round_by_round: false, magazine_capacity: 30, reload_time: 10, ammo_request_channel: "ammo_request", ammo_response_channel: "ammo_response", ammo_consumed_channel: "ammo_consumed", reload_channel: "reload" }, high_power_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 120, max_power: 15e4, max_torque: 350, red_line_rpm: 15e3, red_line_power_ratio: 0.75, inertia: 8, damping_factors: [10, 0.1, 5e-5], generator_efficiency: 0.9 }, medium_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 80, max_power: 5e4, max_torque: 250, red_line_rpm: 1e4, red_line_power_ratio: 0.8, inertia: 5, damping_factors: [10, 0.1, 1e-4], generator_efficiency: 0.85 }, small_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 50, max_power: 2e4, max_torque: 85, red_line_rpm: 12e3, red_line_power_ratio: 0.8, inertia: 3, damping_factors: [5, 0.05, 5e-5], generator_efficiency: 0.85 }, default_motorbike_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motorbike_controller", basic_durability: 60, min_steering_radius: 3.5, lateral_acceleration: 20, max_drift_angular_velocity: 1.8, max_angle: 35, parking_angle: 5, correction_force_multiplier: 1 }, default_3rd_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, third_person_hud: [], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_3rd_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, default_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_person_hud: ["machine_max:example_hud"], enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, gunner_sight: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 50, vertical_stabilized: false, horizontal_stabilized: false, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, hud_components: ["machine_max:gun_sight_hud"], tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, heavy_duty_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 800, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 15 }, locked_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 400, diff_lock: "true", diff_lock_sensitivity: 1 }, open_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "false", diff_lock_sensitivity: 0.85 }, sport_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "auto", diff_lock_sensitivity: 1.5, auto_diff_lock_threshold: 5 }, standard_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 300, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 10 }, basic_azimuth_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 200, yaw: { max_force: 8e4, max_speed: 90 }, control_inputs: ["weapon_control"] }, basic_elevation_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 150, pitch: { max_force: 35e3, max_speed: 30 }, control_inputs: ["weapon_control"] }, main_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 100, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["fire_input_p0", "fire_input_p1", "fire_input_p2", "fire_input_p3", "fire_input"], aim_tolerance_deg: 60 }, secondary_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 100, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["secondary_fire_input_p0", "secondary_fire_input_p1", "secondary_fire_input_p2", "secondary_fire_input_p3", "secondary_fire_input"], aim_tolerance_deg: 60 }, light_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 800, max_hand_brake_force: 0, max_rpm: 2500 }, steering: { max_force: 2e3, max_speed: 180 }, abs_enabled: true, abs_wheel_radius: 0.35 }, light_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 1500, max_brake_force: 800, max_hand_brake_force: 1e3, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.35 }, motorcycle_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 600, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 500, max_speed: 3.14 }, abs_enabled: true, abs_wheel_radius: 0.3 }, motorcycle_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 2500, max_brake_force: 300, max_hand_brake_force: 200, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.3 }, sport_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 0, max_brake_force: 2e3, max_hand_brake_force: 0, max_speed: 3e3 }, steering: { max_force: 5e3, max_speed: 6.28 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, sport_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 5e3, max_brake_force: 2e3, max_hand_brake_force: 3e3, max_speed: 3e3 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, standard_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 0, max_brake_force: 1500, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 4e3, max_speed: 3.14 }, abs_enabled: false, abs_wheel_radius: 0.4 }, standard_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 2500, max_brake_force: 1500, max_hand_brake_force: 2500, max_speed: 2500 }, abs_enabled: false, abs_wheel_radius: 0.4 }, truck_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 0, max_brake_force: 2e4, max_hand_brake_force: 0, max_speed: 1e3 }, steering: { max_force: 5e3, max_speed: 1.5 }, abs_enabled: true, abs_wheel_radius: 0.5 }, truck_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 28e3, max_brake_force: 2e4, max_hand_brake_force: 35e3, max_speed: 1e3 }, abs_enabled: true, abs_wheel_radius: 0.5 } };
+      define_BUILTIN_SUBSYSTEMS_default = { default_glass: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:basic", basic_durability: 2, pass_damage: false, limit_damage: false, sounds: { on_destroyed: { sound_id: "machine_max:subsystem.baisc.glass.break", range: 32 } }, hidden: true }, targeting_pod: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:camera", basic_durability: 8, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 16.7, min_pitch: -80, max_pitch: 80, yaw_limit: 360, hud_components: [], tracking_target_inputs: [], discovery_inputs: ["targeting_pod_sight"], allow_cycle: true }, default_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 150, min_steering_radius: 5, lateral_acceleration: 50, max_drift_angular_velocity: 2, manual_gear_shift: false, auto_hand_brake: true, drift_assist: true }, light_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 80, max_power: 8e4, max_torque: 175, idle_rpm: 850, max_torque_rpm: 4e3, red_line_rpm: 6300, red_line_torque_ratio: 0.75, inertia: 10, cylinder: 4, damping_factors: [2, 0.03, 2e-5] }, medium_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 150, max_power: 18e4, max_torque: 380, idle_rpm: 750, max_torque_rpm: 4e3, red_line_rpm: 6e3, red_line_torque_ratio: 0.65, inertia: 15, cylinder: 6, damping_factors: [2, 0.03, 2e-5] }, motorcycle_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 30, max_power: 6e3, max_torque: 9, idle_rpm: 500, max_torque_rpm: 7e3, red_line_rpm: 9500, red_line_torque_ratio: 0.7, inertia: 2, cylinder: 1, damping_factors: [1, 0.02, 1e-5] }, sport_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 100, max_power: 45e4, max_torque: 700, idle_rpm: 500, max_torque_rpm: 5500, red_line_rpm: 9e3, red_line_torque_ratio: 0.9, inertia: 20, cylinder: 8, damping_factors: [2, 0.03, 2e-5] }, truck_diesel_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 400, max_power: 37e4, max_torque: 2500, idle_rpm: 550, max_torque_rpm: 1500, red_line_rpm: 2200, red_line_torque_ratio: 0.9, inertia: 50, cylinder: 6, damping_factors: [5, 0.05, 1e-5] }, light_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 8, ratios: [-3.5, 3.5, 2.5, 1.75, 1.4, 1.15, 0.85], switch_time: 0.2 }, medium_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 150, final_ratio: 10, ratios: [-3.3, 4.71, 3.14, 2.1, 1.6, 1.29, 1.1, 0.88, 0.67], switch_time: 0.2 }, motorcycle_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 40, final_ratio: 15, ratios: [-3.5, 3.5, 2.8, 2, 1.4], switch_time: 0.15 }, simple_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 60, final_ratio: 8, ratios: [2, 1.3], switch_time: 0.1 }, sport_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 10, ratios: [-3.5, 3.5, 2.5, 1.8, 1.4, 1, 0.7, 0.5], switch_time: 0.05 }, truck_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 500, final_ratio: 3.7, ratios: [-12.3, 12.1, 9.41, 7.31, 5.71, 4.46, 3.4, 2.7, 2.11, 1.84, 1.3, 1, 0.78], switch_time: 0.3 }, default_trunk: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 6, columns: 9 }, glove_box: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 50, rows: 2, columns: 3 }, basic_launcher: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:launcher", basic_durability: 80, control_inputs: ["weapon_control"], breech: { fire_rate: 600 } }, beam_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "beam", range: 16, color: [255, 245, 210], intensity: 0.5, beam_angle: 24 }, dummy_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 0, intensity: 0 }, point_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 1, color: [255, 235, 180], intensity: 0.55, beam_angle: 24 }, high_power_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 120, max_power: 15e4, max_torque: 350, red_line_rpm: 15e3, red_line_power_ratio: 0.75, inertia: 8, damping_factors: [10, 0.1, 5e-5], generator_efficiency: 0.9 }, medium_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 80, max_power: 5e4, max_torque: 250, red_line_rpm: 1e4, red_line_power_ratio: 0.8, inertia: 5, damping_factors: [10, 0.1, 1e-4], generator_efficiency: 0.85 }, small_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 50, max_power: 2e4, max_torque: 85, red_line_rpm: 12e3, red_line_power_ratio: 0.8, inertia: 3, damping_factors: [5, 0.05, 5e-5], generator_efficiency: 0.85 }, default_motorbike_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motorbike_controller", basic_durability: 60, min_steering_radius: 3.5, lateral_acceleration: 20, max_drift_angular_velocity: 1.8, max_angle: 35, parking_angle: 5, correction_force_multiplier: 1 }, default_3rd_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, third_person_hud: [], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_3rd_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, default_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_person_hud: ["machine_max:example_hud"], enable_third_person: true, third_person_hud: ["machine_max:example_hud"], follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, gunner_sight: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 50, vertical_stabilized: false, horizontal_stabilized: false, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, hud_components: ["machine_max:gun_sight_hud"], tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, heavy_duty_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 800, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 15 }, locked_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 400, diff_lock: "true", diff_lock_sensitivity: 1 }, open_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "false", diff_lock_sensitivity: 0.85 }, sport_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "auto", diff_lock_sensitivity: 1.5, auto_diff_lock_threshold: 5 }, standard_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 300, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 10 }, basic_azimuth_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 200, yaw: { max_force: 8e4, max_speed: 90 }, control_inputs: ["weapon_control"] }, basic_elevation_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 150, pitch: { max_force: 35e3, max_speed: 30 }, control_inputs: ["weapon_control"] }, main_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 100, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["fire_input_p0", "fire_input_p1", "fire_input_p2", "fire_input_p3", "fire_input"], aim_tolerance_deg: 60 }, secondary_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 100, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["secondary_fire_input_p0", "secondary_fire_input_p1", "secondary_fire_input_p2", "secondary_fire_input_p3", "secondary_fire_input"], aim_tolerance_deg: 60 }, light_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 800, max_hand_brake_force: 0, max_rpm: 2500 }, steering: { max_force: 2e3, max_speed: 180 }, abs_enabled: true, abs_wheel_radius: 0.35 }, light_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 1500, max_brake_force: 800, max_hand_brake_force: 1e3, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.35 }, motorcycle_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 600, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 500, max_speed: 3.14 }, abs_enabled: true, abs_wheel_radius: 0.3 }, motorcycle_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 2500, max_brake_force: 300, max_hand_brake_force: 200, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.3 }, sport_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 0, max_brake_force: 2e3, max_hand_brake_force: 0, max_speed: 3e3 }, steering: { max_force: 5e3, max_speed: 6.28 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, sport_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 5e3, max_brake_force: 2e3, max_hand_brake_force: 3e3, max_speed: 3e3 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, standard_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 0, max_brake_force: 1500, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 4e3, max_speed: 3.14 }, abs_enabled: false, abs_wheel_radius: 0.4 }, standard_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 2500, max_brake_force: 1500, max_hand_brake_force: 2500, max_speed: 2500 }, abs_enabled: false, abs_wheel_radius: 0.4 }, truck_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 0, max_brake_force: 2e4, max_hand_brake_force: 0, max_speed: 1e3 }, steering: { max_force: 5e3, max_speed: 1.5 }, abs_enabled: true, abs_wheel_radius: 0.5 }, truck_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 28e3, max_brake_force: 2e4, max_hand_brake_force: 35e3, max_speed: 1e3 }, abs_enabled: true, abs_wheel_radius: 0.5 } };
     }
   });
 
@@ -10209,28 +10209,9 @@
         power_outputs: Codec.map(Codec.STRING, Codec.FLOAT, { emitEmpty: true }).default({})
         // 频道→减速比（数值）
       });
-      var BatteryCodec = Codec.record({
-        definition: Codec.STRING.field()
-      });
-      var SignalConvertCodec = Codec.record({
-        definition: Codec.STRING.field()
-      });
-      var JointDriverCodec = Codec.record({
-        definition: Codec.STRING.field(),
-        locator: Codec.STRING.field(),
-        rotation_order: Codec.STRING.default("XYZ"),
-        axes: Codec.record({
-          // axes 是一个对象，其内部结构由用户通过 JSON 编辑框定义
-          // 这里使用宽松的 record（无 schema 字段）来保留所有键
-        }).default({})
-      });
       var CameraCodec = Codec.record({
         definition: Codec.STRING.field(),
         locator: Codec.STRING.default("")
-      });
-      var JavascriptCodec = Codec.record({
-        definition: Codec.STRING.field(),
-        script: Codec.STRING.default("")
       });
       var TurretDriverCodec = Codec.record({
         definition: Codec.STRING.field(),
@@ -10254,10 +10235,6 @@
         definition: Codec.STRING.field(),
         locator: Codec.STRING.default("")
       });
-      var AmmoLoaderCodec = Codec.record({
-        definition: Codec.STRING.field(),
-        discovery_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({})
-      });
       var RegenLoaderCodec = Codec.record({
         definition: Codec.STRING.field(),
         projectile_types: Codec.map(Codec.STRING, Codec.INT, { emitEmpty: true }).default({}),
@@ -10269,23 +10246,18 @@
         "machine_max:motor": MotorCodec,
         "machine_max:gearbox": GearboxCodec,
         "machine_max:transmission": TransmissionCodec,
-        "machine_max:battery": BatteryCodec,
         "machine_max:car_controller": CarControllerCodec,
         "machine_max:motorbike_controller": MotorbikeControllerCodec,
-        "machine_max:signal_convert": SignalConvertCodec,
         "machine_max:wheel_driver": WheelDriverCodec,
         "machine_max:seat": SeatCodec,
         "machine_max:lighting": LightingCodec,
         "machine_max:item_storage": ItemStorageCodec,
         "machine_max:basic": BasicCodec,
-        "machine_max:joint": JointDriverCodec,
         "machine_max:camera": CameraCodec,
-        "machine_max:javascript": JavascriptCodec,
         "machine_max:turret_driver": TurretDriverCodec,
         "machine_max:weapon_controller": WeaponControllerCodec,
         "machine_max:launcher": LauncherCodec,
         "machine_max:sight": SightCodec,
-        "machine_max:ammo_loader": AmmoLoaderCodec,
         "machine_max:regen_loader": RegenLoaderCodec
       });
       if (typeof module !== "undefined" && module.exports) {
@@ -10302,16 +10274,11 @@
           LightingCodec,
           MotorbikeControllerCodec,
           TransmissionCodec,
-          BatteryCodec,
-          SignalConvertCodec,
-          JointDriverCodec,
           CameraCodec,
-          JavascriptCodec,
           TurretDriverCodec,
           WeaponControllerCodec,
           LauncherCodec,
           SightCodec,
-          AmmoLoaderCodec,
           RegenLoaderCodec
         };
       }
@@ -12411,7 +12378,7 @@
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
             { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
-            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { engine_speed: ["vehicle", "subpart"] } }
+            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { engine_speed: ["global", "local"] } }
           ]
         },
         {
@@ -12421,15 +12388,7 @@
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
             { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
-            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { motor_speed: ["subpart", "vehicle"] } }
-          ]
-        },
-        {
-          id: "machine_max:battery",
-          displayName: "\u7535\u6C60",
-          category: "power",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+            { field: "speed_outputs", label: "\u8F6C\u901F\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { motor_speed: ["local", "global"] } }
           ]
         },
         {
@@ -12439,7 +12398,7 @@
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
             { field: "power_output", label: "\u529F\u7387\u8F93\u51FA\u76EE\u6807", editor: "power_target", required: true, defaultValue: "" },
-            { field: "gear_outputs", label: "\u6321\u4F4D\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { gear: ["subpart", "vehicle"] } }
+            { field: "gear_outputs", label: "\u6321\u4F4D\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { gear: ["local", "global"] } }
           ]
         },
         {
@@ -12459,11 +12418,11 @@
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
             { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { car_control: [] } },
-            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["subpart", "vehicle"] } },
-            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["subpart", "vehicle"] } },
-            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["subpart", "vehicle"] } },
-            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["subpart", "vehicle"] } },
-            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["subpart", "vehicle"] } }
+            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["local", "global"] } },
+            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["local", "global"] } },
+            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["local", "global"] } },
+            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["local", "global"] } },
+            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["local", "global"] } }
           ]
         },
         {
@@ -12473,19 +12432,11 @@
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
             { field: "control_outputs", label: "\u63A7\u5236\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: true, defaultValue: { car_control: [] } },
-            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["subpart", "vehicle"] } },
-            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["subpart", "vehicle"] } },
-            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["subpart", "vehicle"] } },
-            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["subpart", "vehicle"] } },
-            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["subpart", "vehicle"] } }
-          ]
-        },
-        {
-          id: "machine_max:signal_convert",
-          displayName: "\u4FE1\u53F7\u8F6C\u6362\u5668",
-          category: "control",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
+            { field: "speed_outputs", label: "\u901F\u5EA6\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { vehicle_speed: ["local", "global"] } },
+            { field: "throttle_outputs", label: "\u6CB9\u95E8\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { throttle: ["local", "global"] } },
+            { field: "steering_outputs", label: "\u8F6C\u5411\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { steering: ["local", "global"] } },
+            { field: "brake_outputs", label: "\u5239\u8F66\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { brake: ["local", "global"] } },
+            { field: "handbrake_outputs", label: "\u624B\u5239\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { handbrake: ["local", "global"] } }
           ]
         },
         // ===== utility 分类 =====
@@ -12508,7 +12459,7 @@
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
             { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
             { field: "control_group_preset", label: "\u63A7\u5236\u7EC4\u9884\u8BBE", editor: "control_group_selector", required: false, defaultValue: "" },
-            { field: "passenger_num_outputs", label: "\u4E58\u5BA2\u6570\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { passenger_num: ["subpart", "vehicle"] } },
+            { field: "passenger_num_outputs", label: "\u4E58\u5BA2\u6570\u4FE1\u53F7\u8F93\u51FA", editor: "signal_targets", required: false, defaultValue: { passenger_num: ["local", "global"] } },
             { field: "camera_discovery_targets", label: "\u6444\u50CF\u673A\u53D1\u73B0\u63E1\u624B\u76EE\u6807", editor: "signal_targets", required: false, defaultValue: {} },
             { field: "dismount_locators", label: "\u4E0B\u8F66\u5B9A\u4F4D\u5668\uFF08\u6309\u4F18\u5148\u7EA7\uFF09", editor: "locator_list", required: false, defaultValue: [] }
           ]
@@ -12538,24 +12489,6 @@
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" }
           ]
         },
-        {
-          id: "machine_max:joint",
-          displayName: "\u5173\u8282",
-          category: "utility",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "locator", label: "\u5173\u8054\u5B9A\u4F4D\u5668", editor: "locator_selector", required: true, defaultValue: "" },
-            {
-              field: "rotation_order",
-              label: "\u65CB\u8F6C\u987A\u5E8F",
-              editor: "enum_selector",
-              required: true,
-              defaultValue: "XYZ",
-              options: ["XYZ", "XZY", "YXZ", "ZYX", "ZXY", "YZX"]
-            },
-            { field: "axes", label: "\u5173\u8282\u8F74\u53C2\u6570", editor: "json_textarea", required: true, defaultValue: {} }
-          ]
-        },
         // ===== experimental 分类 =====
         {
           id: "machine_max:camera",
@@ -12564,15 +12497,6 @@
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
             { field: "locator", label: "\u6444\u50CF\u673A\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: "" }
-          ]
-        },
-        {
-          id: "machine_max:javascript",
-          displayName: "JavaScript \u811A\u672C",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "script", label: "\u811A\u672C\u5185\u5BB9", editor: "text_input", required: false, defaultValue: "" }
           ]
         },
         {
@@ -12615,15 +12539,6 @@
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
             { field: "locator", label: "\u7784\u51C6\u955C\u5B9A\u4F4D\u5668", editor: "locator_selector", required: false, defaultValue: "" }
-          ]
-        },
-        {
-          id: "machine_max:ammo_loader",
-          displayName: "\u88C5\u5F39\u673A",
-          category: "experimental",
-          dynamicFields: [
-            { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
-            { field: "discovery_outputs", label: "\u5F39\u836F\u53D1\u73B0\u9891\u9053", editor: "signal_targets", required: false, defaultValue: {} }
           ]
         },
         {
@@ -13273,7 +13188,7 @@
           }
         }
       }
-      var RESERVED_SIGNAL_NAMES = ["local", "global", "subpart", "vehicle"];
+      var RESERVED_SIGNAL_NAMES = ["local", "global"];
       function _collectNameConflicts(partId, vName, subParts, problems) {
         var seen = {};
         var scopes = [
@@ -14529,7 +14444,7 @@
         var ns = context.namespace || "machine_max";
         switch (entityType) {
           case "sub_part":
-            return "sub_part.machine_max.main";
+            return "sub_part." + ns + ".main";
           case "connector":
             var locName = context.boneName || "connector";
             return "connector." + ns + "." + toSnakeCase(locName);
@@ -14543,7 +14458,7 @@
             return "";
         }
       }
-      var RESERVED_SIGNAL_NAMES = ["local", "global", "subpart", "vehicle"];
+      var RESERVED_SIGNAL_NAMES = ["local", "global"];
       function validateNameUniqueness(variant, scope, subPartKey, name, excludeKey) {
         if (!variant || !name) return { valid: false, message: "\u540D\u79F0\u4E3A\u7A7A" };
         if (scope !== "sub_part" && RESERVED_SIGNAL_NAMES.indexOf(name) >= 0) {
@@ -18407,19 +18322,22 @@
       var nameUtils = require_name_utils();
       function buildSignalTargetOptions(subPart, namespace) {
         var ns = namespace || "machine_max";
-        var result = [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
+        var result = [{ value: "local", label: "local" }, { value: "global", label: "global" }];
+        var seen = { local: true, global: true };
         if (!subPart) return result;
+        function push(key) {
+          if (seen[key]) return;
+          seen[key] = true;
+          result.push({ value: key, label: nameUtils.displayLabel(key, "zh", ns) });
+        }
         if (subPart.connectors) {
-          var connKeys = Object.keys(subPart.connectors);
-          for (var i = 0; i < connKeys.length; i++) {
-            result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], "zh", ns) });
-          }
+          Object.keys(subPart.connectors).forEach(push);
         }
         if (subPart.subsystems) {
-          var ssKeys = Object.keys(subPart.subsystems);
-          for (var j = 0; j < ssKeys.length; j++) {
-            result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], "zh", ns) });
-          }
+          Object.keys(subPart.subsystems).forEach(push);
+        }
+        if (subPart.interact_boxes) {
+          Object.keys(subPart.interact_boxes).forEach(push);
         }
         return result;
       }
@@ -19467,7 +19385,7 @@
           parentSubsystems: { type: Object, default: function() {
             return {};
           } },
-          /** 信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'） */
+          /** 信号目标补全列表（子系统名 + 连接点名 + 交互区名 + 'local' + 'global'） */
           signalTargetHints: { type: Array, default: function() {
             return [];
           } },
@@ -19733,7 +19651,7 @@
           subsystemKeys: { type: Object, default: function() {
             return {};
           } },
-          /** 信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'） */
+          /** 信号目标补全列表（子系统名 + 连接点名 + 交互区名 + 'local' + 'global'） */
           signalTargetHints: { type: Array, default: function() {
             return [];
           } }
@@ -21713,7 +21631,7 @@
           signalTargetOptionsFor: function(spKey) {
             void this.markerVersion.v;
             if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) {
-              return [{ value: "subpart", label: "subpart" }, { value: "vehicle", label: "vehicle" }];
+              return [{ value: "local", label: "local" }, { value: "global", label: "global" }];
             }
             return buildSignalTargetOptions(
               this.currentVariant.sub_parts[spKey],
@@ -23044,7 +22962,7 @@
       function _ensureTargetNode(target, nodeMap, nodes, seenSpecialTargets, currentSpKey) {
         if (!target) return;
         if (nodeMap[target]) return;
-        if (target === "subpart" || target === "vehicle") {
+        if (target === "local" || target === "global") {
           if (!seenSpecialTargets[target]) {
             seenSpecialTargets[target] = true;
             nodeMap[target] = true;

@@ -36,7 +36,7 @@ function generateDefaultName(entityType, context) {
 
     switch (entityType) {
         case 'sub_part':
-            return 'sub_part.machine_max.main';
+            return 'sub_part.' + ns + '.main';
 
         case 'connector':
             var locName = context.boneName || 'connector';
@@ -56,7 +56,7 @@ function generateDefaultName(entityType, context) {
 }
 
 /** 信号保留地址：不得用作连接点 / 子系统 / 交互区名（Part 级按名寻址） */
-var RESERVED_SIGNAL_NAMES = ['local', 'global', 'subpart', 'vehicle'];
+var RESERVED_SIGNAL_NAMES = ['local', 'global'];
 
 /**
  * 校验名称在当前作用域下是否唯一

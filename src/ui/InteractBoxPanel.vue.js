@@ -22,7 +22,7 @@ Vue.component('mm-interact-box-panel', {
         parentSubPartKey: { type: String, default: '' },
         /** 当前子零件内的子系统映射，用于信号目标下拉选择 */
         parentSubsystems: { type: Object, default: function() { return {}; } },
-        /** 信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'） */
+        /** 信号目标补全列表（子系统名 + 连接点名 + 交互区名 + 'local' + 'global'） */
         signalTargetHints: { type: Array, default: function() { return []; } },
         /** 模型中所有骨骼名称列表（用于骨骼选择器） */
         allBoneNames: { type: Array, default: function() { return []; } },

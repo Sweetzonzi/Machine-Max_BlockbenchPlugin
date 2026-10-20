@@ -17,14 +17,8 @@ module.exports = {
         { type: 'machine_max:track_drive', owner: 'D13' },
     ],
 
-    // 2) 类型集合多余：Codec 有、schema 没有（D18 删除 5 个 WIP 类型）
-    extra_types: [
-        { type: 'machine_max:battery', owner: 'D18' },
-        { type: 'machine_max:signal_convert', owner: 'D18' },
-        { type: 'machine_max:joint', owner: 'D18' },
-        { type: 'machine_max:javascript', owner: 'D18' },
-        { type: 'machine_max:ammo_loader', owner: 'D18' },
-    ],
+    // 2) 类型集合多余：Codec 有、schema 没有（D18 的 5 个 WIP 类型已删除）
+    extra_types: [],
 
     // 3) 字段集合缺口：Codec 缺字段（D12 修完后都应为空）
     //    D12 已补 hit_box.module、launcher.fire_animation、regen_loader.belt_label

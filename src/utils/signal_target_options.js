@@ -12,30 +12,34 @@ var nameUtils = require('./name_utils.js');
  * 构建子零件的信号目标选项列表
  *
  * 返回 {value, label}[]，value=完整键，label=[类型]短名。
- * 固定包含 'subpart' 与 'vehicle' 两个内置目标，
- * 其后追加子零件内的连接点与子系统目标。
+ * 固定包含 'local' 与 'global' 两个内置哨兵，
+ * 其后追加子零件内的连接点、子系统与交互区目标。
  *
- * @param {Object|null} subPart - 子零件对象（含 connectors / subsystems 映射）
+ * @param {Object|null} subPart - 子零件对象（含 connectors / subsystems / interact_boxes 映射）
  * @param {string} namespace - 命名空间（默认 machine_max）
  * @returns {Array<{value: string, label: string}>} 信号目标选项列表
  */
 function buildSignalTargetOptions(subPart, namespace) {
     var ns = namespace || 'machine_max';
-    var result = [{ value: 'subpart', label: 'subpart' }, { value: 'vehicle', label: 'vehicle' }];
+    var result = [{ value: 'local', label: 'local' }, { value: 'global', label: 'global' }];
+    var seen = { local: true, global: true };
 
     if (!subPart) return result;
 
+    function push(key) {
+        if (seen[key]) return;
+        seen[key] = true;
+        result.push({ value: key, label: nameUtils.displayLabel(key, 'zh', ns) });
+    }
+
     if (subPart.connectors) {
-        var connKeys = Object.keys(subPart.connectors);
-        for (var i = 0; i < connKeys.length; i++) {
-            result.push({ value: connKeys[i], label: nameUtils.displayLabel(connKeys[i], 'zh', ns) });
-        }
+        Object.keys(subPart.connectors).forEach(push);
     }
     if (subPart.subsystems) {
-        var ssKeys = Object.keys(subPart.subsystems);
-        for (var j = 0; j < ssKeys.length; j++) {
-            result.push({ value: ssKeys[j], label: nameUtils.displayLabel(ssKeys[j], 'zh', ns) });
-        }
+        Object.keys(subPart.subsystems).forEach(push);
+    }
+    if (subPart.interact_boxes) {
+        Object.keys(subPart.interact_boxes).forEach(push);
     }
     return result;
 }

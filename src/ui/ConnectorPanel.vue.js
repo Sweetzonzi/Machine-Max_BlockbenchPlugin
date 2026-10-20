@@ -29,7 +29,7 @@ var MM_CONNECTOR_PANEL_OPTIONS = {
         allLocatorNames: { type: Array, default: function() { return []; } },
         /** 当前子零件内的子系统映射，用于 power_target 下拉选择 */
         subsystemKeys: { type: Object, default: function() { return {}; } },
-        /** 信号目标补全列表（子系统名 + 连接点名 + 'subpart' + 'vehicle'） */
+        /** 信号目标补全列表（子系统名 + 连接点名 + 交互区名 + 'local' + 'global'） */
         signalTargetHints: { type: Array, default: function() { return []; } },
     },
     data: function () {

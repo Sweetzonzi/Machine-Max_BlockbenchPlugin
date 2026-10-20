@@ -159,7 +159,7 @@ config
 | `part` | `PartCodec` | `read_node` | `import_part` | `remove_node` |
 | `variant` | `VariantCodec` | `read_node` | `import_variant` | `remove_node` |
 | `sub_part` | `SubPartCodec` | `read_node` | `import_sub_part` | `remove_node` |
-| `subsystem` | `SubsystemDispatchCodec`（当前 22 种，`type` 形如 `machine_max:engine`；D18 删除 5 个 WIP 后 17，D13 补 `track_controller`/`track_drive` 后 19；上游 builtin 为 **19**，见 docs/13 §3.2） | `read_node` | `import_subsystem` / `add_instance` | `remove_node` |
+| `subsystem` | `SubsystemDispatchCodec`（当前 17 种，`type` 形如 `machine_max:engine`；D18 已删除 5 个 WIP，D13 补 `track_controller`/`track_drive` 后 19；上游 builtin 为 **19**，见 docs/13 §3.2） | `read_node` | `import_subsystem` / `add_instance` | `remove_node` |
 | `hit_box` | `HitBoxCodec` | `read_node` | `add_instance` | `remove_node` |
 | `interact_box` | `InteractBoxCodec` | `read_node` | `add_instance` | `remove_node` |
 | `connector` | `ConnectorCodec` | `read_node` | `add_instance` | `remove_node` |

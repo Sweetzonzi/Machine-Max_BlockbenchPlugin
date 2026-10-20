@@ -641,7 +641,7 @@ const MM_MAIN_PANEL_OPTIONS = {
         signalTargetOptionsFor: function (spKey) {
             void this.markerVersion.v;
             if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) {
-                return [{ value: 'subpart', label: 'subpart' }, { value: 'vehicle', label: 'vehicle' }];
+                return [{ value: 'local', label: 'local' }, { value: 'global', label: 'global' }];
             }
             return buildSignalTargetOptions(
                 this.currentVariant.sub_parts[spKey],

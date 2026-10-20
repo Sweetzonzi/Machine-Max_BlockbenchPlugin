@@ -95,7 +95,6 @@ describe('Codec 占位语义（docs/13 §4.4）', () => {
         expect(ssTypes.getTypeDefaults('machine_max:wheel_driver').connector).toBe('');
         expect(ssTypes.getTypeDefaults('machine_max:turret_driver').connector).toBe('');
         expect(ssTypes.getTypeDefaults('machine_max:seat').locator).toBe('');
-        expect(ssTypes.getTypeDefaults('machine_max:joint').locator).toBe('');
         expect(ssTypes.getTypeDefaults('machine_max:launcher').locator).toBe('');
         expect(ssTypes.getTypeDefaults('machine_max:camera').locator).toBe('');
         expect(ssTypes.getTypeDefaults('machine_max:regen_loader').projectile_types).toEqual({});

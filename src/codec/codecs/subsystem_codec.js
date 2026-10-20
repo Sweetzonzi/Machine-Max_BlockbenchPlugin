@@ -1,5 +1,5 @@
 // 文件: src/codec/codecs/subsystem_codec.js
-// 用途: 20 种子系统类型的独立 codec + SubsystemDispatchCodec（按 type 字段路由）
+// 用途: 17 种正式子系统类型的独立 codec + SubsystemDispatchCodec（按 type 字段路由）
 // 所属模块: MachineMax Blockbench 插件
 //
 // 字段定义与 src/core/subsystem_types.js 中 dynamicFields 一一对应。
@@ -91,7 +91,7 @@ const BasicCodec = Codec.record({
     definition: Codec.STRING.field(),
 });
 
-// ==================== 第二批（7 种）====================
+// ==================== 第二批（4 种）====================
 
 /**
  * ItemStorageCodec — 物品存储
@@ -134,37 +134,7 @@ const TransmissionCodec = Codec.record({
 });
 
 
-/**
- * BatteryCodec — 电池
- * 字段: definition
- */
-const BatteryCodec = Codec.record({
-    definition: Codec.STRING.field(),
-});
-
-/**
- * SignalConvertCodec — 信号转换器
- * 字段: definition
- */
-const SignalConvertCodec = Codec.record({
-    definition: Codec.STRING.field(),
-});
-
 // ==================== 第三批（6 种）====================
-
-/**
- * JointDriverCodec — 关节
- * 字段: definition, locator, rotation_order, axes
- */
-const JointDriverCodec = Codec.record({
-    definition:     Codec.STRING.field(),
-    locator:        Codec.STRING.field(),
-    rotation_order: Codec.STRING.default('XYZ'),
-    axes:           Codec.record({
-        // axes 是一个对象，其内部结构由用户通过 JSON 编辑框定义
-        // 这里使用宽松的 record（无 schema 字段）来保留所有键
-    }).default({}),
-});
 
 /**
  * CameraCodec — 摄像机
@@ -173,15 +143,6 @@ const JointDriverCodec = Codec.record({
 const CameraCodec = Codec.record({
     definition: Codec.STRING.field(),
     locator:    Codec.STRING.default(''),
-});
-
-/**
- * JavascriptCodec — JavaScript 脚本
- * 字段: definition, script
- */
-const JavascriptCodec = Codec.record({
-    definition: Codec.STRING.field(),
-    script:     Codec.STRING.default(''),
 });
 
 /**
@@ -227,15 +188,6 @@ const SightCodec = Codec.record({
 });
 
 /**
- * AmmoLoaderCodec — 装弹机
- * 字段: definition, discovery_outputs
- */
-const AmmoLoaderCodec = Codec.record({
-    definition:        Codec.STRING.field(),
-    discovery_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
-});
-
-/**
  * RegenLoaderCodec — 再生装弹机
  * 字段: definition, projectile_types, belt_label, discovery_outputs
  */
@@ -259,23 +211,18 @@ const SubsystemDispatchCodec = Codec.dispatch('type', {
     'machine_max:motor':                MotorCodec,
     'machine_max:gearbox':              GearboxCodec,
     'machine_max:transmission':         TransmissionCodec,
-    'machine_max:battery':              BatteryCodec,
     'machine_max:car_controller':       CarControllerCodec,
     'machine_max:motorbike_controller': MotorbikeControllerCodec,
-    'machine_max:signal_convert':       SignalConvertCodec,
     'machine_max:wheel_driver':         WheelDriverCodec,
     'machine_max:seat':                 SeatCodec,
     'machine_max:lighting':             LightingCodec,
     'machine_max:item_storage':         ItemStorageCodec,
     'machine_max:basic':                BasicCodec,
-    'machine_max:joint':                JointDriverCodec,
     'machine_max:camera':               CameraCodec,
-    'machine_max:javascript':           JavascriptCodec,
     'machine_max:turret_driver':        TurretDriverCodec,
     'machine_max:weapon_controller':    WeaponControllerCodec,
     'machine_max:launcher':             LauncherCodec,
     'machine_max:sight':                SightCodec,
-    'machine_max:ammo_loader':          AmmoLoaderCodec,
     'machine_max:regen_loader':         RegenLoaderCodec,
 });
 
@@ -295,16 +242,11 @@ if (typeof module !== 'undefined' && module.exports) {
         LightingCodec,
         MotorbikeControllerCodec,
         TransmissionCodec,
-        BatteryCodec,
-        SignalConvertCodec,
-        JointDriverCodec,
         CameraCodec,
-        JavascriptCodec,
         TurretDriverCodec,
         WeaponControllerCodec,
         LauncherCodec,
         SightCodec,
-        AmmoLoaderCodec,
         RegenLoaderCodec,
     };
 }

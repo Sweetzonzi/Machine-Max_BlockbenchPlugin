@@ -8,12 +8,12 @@
 
 ```
 src/codec/
-├── Codec.js                    # 核心组合子库：6 基元 + 3 字段规格 + 5 组合子（617行）
+├── Codec.js                    # 核心组合子库：6 基元 + 3 字段规格 + 5 组合子（618行）
 ├── codecs/                     # 类型级 Codec 定义（8 个）
 │   ├── part_codec.js           # Part 配置（12 字段，含 variants Either 简写）
 │   ├── variant_codec.js        # Variant 配置
 │   ├── sub_part_codec.js       # SubPart 配置（含物理属性、碰撞箱、交互箱）
-│   ├── subsystem_codec.js      # 22 种子系统类型的独立 codec + DispatchCodec（310行）
+│   ├── subsystem_codec.js      # 17 种子系统类型的独立 codec + DispatchCodec（252行）
 │   ├── connector_codec.js      # 连接点配置
 │   ├── hit_box_codec.js        # 碰撞箱配置
 │   ├── interact_box_codec.js   # 交互箱配置
@@ -29,7 +29,7 @@ src/codec/
 | 添加新基元类型 | `Codec.js` → `createPrimitiveCodec()` | 注册到 `module.exports`，调用 `withFieldMethods()` |
 | 添加新组合子 | `Codec.js` | 实现 create 函数 + 注册到 `withFieldMethods()` 链式接口 |
 | 为现有类型添加新字段 | `codecs/<type>_codec.js` | 在 `Codec.record({...})` 中添加行，遵循字段规格 `.field()` / `.default()` / `.nullable()` |
-| 添加新子系统类型 codec | `codecs/subsystem_codec.js` | 定义新 codec 并注册到 `SUBSYSTEM_CODECS` 映射表 |
+| 添加新子系统类型 codec | `codecs/subsystem_codec.js` | 定义新 codec 并注册到 `SubsystemDispatchCodec` 映射表 |
 | 在导出流程中使用 Codec | `generators/*.js` | 调用 `XCodec.encode(config)` 输出 JSON |
 
 ## 设计架构

@@ -6,7 +6,7 @@
  *
  * 节点创建使用两遍扫描策略：
  *   第1遍：创建所有子系统和连接点节点
- *   第2遍：处理信号边，仅在目标是真正的"特殊目标"（subpart/vehicle）
+ *   第2遍：处理信号边，仅在目标是真正的"特殊目标"（local/global）
  *          或完全无法匹配时才创建特殊/未解析节点
  * 避免因迭代顺序导致的"子系统被抢注为未解析节点"问题。
  */
@@ -91,7 +91,7 @@ function extractSignalGraph(variant) {
     // ====================================================================
     // 第2遍：处理信号边（此时所有已知节点已就位）
     // ====================================================================
-    var seenSpecialTargets = {}; // 'subpart' / 'vehicle' 去重
+    var seenSpecialTargets = {}; // 'local' / 'global' 去重
 
     for (var spKey in variant.sub_parts) {
         var sp = variant.sub_parts[spKey];
@@ -207,7 +207,7 @@ function extractSignalGraph(variant) {
  *
  * 第2遍处理边时：
  * - 第1遍已创建的 subsystem/connector 节点 → nodeMap 命中，跳过
- * - 'subpart' / 'vehicle' → 创建特殊节点
+ * - 'local' / 'global' → 创建特殊节点
  * - 其他未识别的目标 → 创建未解析节点（灰色）
  */
 function _ensureTargetNode(target, nodeMap, nodes, seenSpecialTargets, currentSpKey) {
@@ -215,7 +215,7 @@ function _ensureTargetNode(target, nodeMap, nodes, seenSpecialTargets, currentSp
     // 第1遍已创建的子系统/连接点 → 无需操作
     if (nodeMap[target]) return;
     // 内置特殊目标
-    if (target === 'subpart' || target === 'vehicle') {
+    if (target === 'local' || target === 'global') {
         if (!seenSpecialTargets[target]) {
             seenSpecialTargets[target] = true;
             nodeMap[target] = true;
