@@ -148,7 +148,7 @@ config
 - `_uiState` 与 `element_markers` 不可寻址写 → 返回 `unknown_field`；切上下文用 `set_active`。
 - `hit_boxes` 的 key 在对外格式里是**骨骼名**、内存里是 **UUID**：`read_node` / `set_node` 两种写法都接受，内部归一化为 UUID 并回写为骨骼名；解析不到元素时只记 `unresolved_bones` warning。
 - 含点的 key（`sub_part.machine_max.main`）是**默认情况**，不是例外：任何字符串形式的拆分都不得按 `.` 切分。段数组与 JSON Pointer 都按 `/`/段位置解析，不存在「猜切分」。
-- 所有配置 key 只允许 ASCII：翻译键、`partId`（且必须小写）、`variant`、纹理名、频道名；模型元素名（`hit_boxes` / `hydrodynamics` 的 key）是唯一例外。中文、空白、大写 `partId` 返回 `invalid_format`；翻译键前缀形态不合规范只告警（docs/13 §5.1.3，D17）。
+- 所有配置 key 只允许 ASCII，且按类别区分（完整表见 docs/13 §5.1.3.1）：`partId` 必须小写 `[a-z0-9_.-]+`；`variant` / 翻译键 / 纹理名 / 频道名 / `power_outputs` 的 key 为 `[A-Za-z0-9_.-]+`；子零件 key 必须是 `sub_part.<ns>.<name>`；`projectile_types` 的 key 是**资源地址**，允许 `:` `/` 但必须小写；模型元素名（`hit_boxes` / `hydrodynamics` 的 key）是唯一例外（`hydrodynamics` 还允许空串 `""`）。中文、空白、大写 `partId` 返回 `invalid_format`；翻译键前缀形态不合规范只告警（docs/13 D17）。
 
 ---
 
@@ -188,14 +188,14 @@ condition: { project: true, modes: ['machine_max_part'] }
 | `read_node` | `path`, `as?: 'raw'\|'definition'` | `{ ok, path, kind, value }`；`as='definition'` 时走 `projection.out(..., {for:'read'})`：UUID→骨骼名、剥瞬态、保留默认值、**不折叠 `sub_parts`** |
 | `validate` | `only_introduced?: bool` | `{ ok, count, issues: [{ severity, code, message, path }] }` |
 
-`validate` 复用 `collectIssues(config)`（[src/mode/validation.js:180](../src/mode/validation.js)），与原生问题清单同源。`only_introduced` 与上一次工具调用的结果做 diff（§7.2）。
+`validate` 复用 `collectIssues(config)`（[src/mode/validation.js:180](../src/mode/validation.js)）并合并 `validateTree(config, {completeness:true})`（枚举 / 范围 / key / required），与原生问题清单、导出闸门同源。`only_introduced` 与上一次工具调用的结果做 diff（§7.2）。
 
 ### 5.2 细粒度编辑（4，全部进撤销栈）
 
 | 工具 | 参数 | 行为 |
 |---|---|---|
 | `set_node` | `path`, `value` | 写标量/数组/对象。走 `ops.setField`：字段白名单、**严格类型（不做隐式转换）**、副作用（如 `start_bone` 迁移标记）、一条撤销记录。返回 `before`/`after` 与本次引入的问题 |
-| `remove_node` | `path`, `cascade?: bool` | 删除节点，清理指向它的引用：4 类 `element_markers[*][uuid].config_ref`、`signal_targets[*][]`（子系统/连接点/交互区三处，`local`/`global` 不动）、`connectors[*].power_target`、`subsystems[*].power_output`、`hit_boxes[*].subsystem`、`subsystems[*].connector / locator / dismount_locators[]`。**不清理** `signal_translations`（频道→频道，不是节点引用）与 `definition`（资源位置）。返回 `cleaned_references` |
+| `remove_node` | `path`, `cascade?: bool` | 删除节点，清理指向它的引用：4 类 `element_markers[*][uuid].config_ref`、`signal_targets[*][]`（子系统/连接点/交互区三处，`local`/`global` 不动）、`connectors[*].power_target`、`subsystems[*].power_output`、**`subsystems[*].power_outputs` 的 key（transmission）**、`hit_boxes[*].subsystem`、`subsystems[*].connector / locator / dismount_locators[]`。**不清理** `signal_translations`（频道→频道，不是节点引用）、`projectile_types`（资源地址）与 `definition`（资源位置）。返回 `cleaned_references` |
 | `bind_marker` | `uuid`, `type`, `config_ref?` | 把元素绑成 `sub_part` / `hit_box` / `interact_box` / `connector`，内部走 `ops.bindMarker`（`setMarker` + `recalcAutoEndBones`）。`hit_box`/`interact_box`/`connector` 的 `config_ref` 由上下文推导 |
 | `set_active` | `part`, `variant?` | 切 active 上下文（等价于 UI 里点一下）。**不进撤销栈**：这是视图状态，不是工程内容 |
 
@@ -211,13 +211,16 @@ condition: { project: true, modes: ['machine_max_part'] }
 | `import_subsystem` | `key`, `definition`, `parent_sub_part`, `mode` | `<sub_part>.subsystems.<key>` |
 
 ```jsonc
-// key 规范（docs/13 §5.1.3）
+// key 规范（docs/13 §5.1.3 / §5.1.3.1）
 "sub_part.machine_max.chassis"        // ✅
 "chassis"                             // ❌ invalid_format（import_sub_part，docs/13 D16）
 "sub_part.machine_max.底盘"            // ❌ invalid_format（非 ASCII，docs/13 D17）
+"sub_part.machine_max.default"        // ✅ 规范形态；裸 "default" 才会迁移为 main
 ```
 
-`part_id` 必须是 `[a-z0-9_.-]+`（它会进入 resource location 与文件名，必须小写）；`variant` 为 `[A-Za-z0-9_.-]+`。`key`（sub_part）必须是规范 key，`mode:'create'` 省略 `key` 时由 `ensureUniqueName` 生成规范默认名（`sub_part.<ns>.main`）。`import_subsystem` 的 `key` 建议写成 `subsystem.<ns>.<name>`：完整 key 是模组侧信号目标的匹配依据（docs/13 §5.4）。
+`part_id` 必须是 `[a-z0-9_.-]+`（它会进入 resource location 与文件名，必须小写）；`variant` 为 `[A-Za-z0-9_.-]+`；`import_subsystem` 的 `key` 为 `[A-Za-z0-9_.-]+`，建议写成 `subsystem.<ns>.<name>`（完整 key 是模组侧信号目标的匹配依据，docs/13 §5.4）。`key`（sub_part）必须是规范 key，`mode:'create'` 省略 `key` 时由 `ensureUniqueName` 生成规范默认名（`sub_part.<ns>.main`）。
+
+`import_*` 的**嵌套 map key** 同样校验：`textures` / `signal_targets` / `signal_translations` / `power_outputs` 用 `[A-Za-z0-9_.-]+`；`projectile_types` 用**资源地址** `[a-z0-9_.-]+:[a-z0-9_./-]+`；`hit_boxes` / `hydrodynamics` 用元素名规则（后者允许 `""`）。任何违规返回 `invalid_format` / `key_reserved`，不写半截。
 
 `PartCodec` **没有 `id` 字段**：`import_part` 的 `part_id` 只作为 `parts` 的 map key，不会写进定义体。
 
@@ -290,7 +293,7 @@ condition: { project: true, modes: ['machine_max_part'] }
 
 1. **形状**（工具层）：`MCP.z.object({...})` 声明参数类型与必填项，MCP 插件在调用 `execute` 前完成解析（含默认值）。
 2. **路径**（`doc/address`）：按位置逐段校验（docs/13 §5.1.1）——map 层的下一段永远是 key，record 层的下一段必须是字段名；`*` 至多一个且只在 map 层；数组下标不越界；`_uiState`/`element_markers` 拒写。`set_node` 允许最后一段是 map 的新 key（`allowMissingLeaf`），但 record 的未知字段一律 `unknown_field`。
-3. **值**（`doc/field_specs`）：白名单与类型来自 `src/doc/field_specs.generated.js`——由 builtin schema codegen 得到（docs/13 §5.2、§3），**不从 `Codec.decode` 派生**（宽松 decode 会带出 `element_markers` / `_uuid` 等内部字段）。枚举直接取 schema，例如 `block_collision ∈ {'true','false','ground'}`、`interact_box.condition ∈ {AND,OR,NAND,NOR,XOR,XNOR}`、`hit_box.type ∈ {box,sphere,cylinder,capsule,wheel}`。**默认 strict，不做隐式转换**：`mass: "12.5"` 返回 `type_mismatch`，不自动转数字（UI 输入框在调用前自行归一化）。
+3. **值**（`doc/validate`）：白名单与类型来自 `src/doc/field_specs.generated.js`——由 builtin schema codegen 得到（docs/13 §5.2、§3），**不从 `Codec.decode` 派生**（宽松 decode 会带出 `element_markers` / `_uuid` 等内部字段）。枚举直接取 schema，例如 `block_collision ∈ {'true','false','ground'}`、`interact_box.condition ∈ {AND,OR,NAND,NOR,XOR,XNOR}`、`hit_box.type ∈ {box,sphere,cylinder,capsule,wheel}`。**默认 strict，不做隐式转换**：`mass: "12.5"` 返回 `type_mismatch`，不自动转数字（UI 输入框在调用前自行归一化）。**`set_node` 与四个 `import_*` 走同一份 `validateValues`**：`import_sub_part` 里 `hit_box.type:"banana"` 返回 `invalid_enum`，`projectile_types` 的值 `0` 返回 `out_of_range`；`canExport` 用 `validateTree(completeness:true)` 对存量数据做同样的扫描（docs/13 §5.2.5）。
 
 完整性（`required`、`hit_boxes` 非空、型号必选）**不在写入期校验**：新建子零件没有碰撞箱是合法中间态，由 `validate` 与导出闸门处理（docs/13 §4）。
 
@@ -446,11 +449,18 @@ Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 | 18 | AI 编辑后不保存 → 关闭工程 | 弹出未保存提示（`Project.saved === false`） |
 | 19 | 拖拽元素过程中调用编辑工具 | `ok:false`，提示「有未完成的编辑」 |
 | 20 | 重载插件两次 | 工具仍只有 12 个，无重复注册报错 |
-| 21 | `read_node(as='definition')` 读出的定义整件回传给 `import_*` | 结构等价（round-trip 无损），`reset_fields` 为空；覆盖含 `hit_boxes`、单变体、未解析骨骼、`definition:null` 的输入 |
+| 21 | `read_node(as='definition')` 读出的定义整件回传给 `import_*` | 结构等价（round-trip 无损），`reset_fields` 为空；覆盖含 `hit_boxes`、单变体、未解析骨骼、`definition:null`、`power_output:null`、`signal_targets:{}`、`power_outputs:{}`、`projectile_types:{}` 的输入 |
 | 22 | `import_sub_part` 建一个没有 hit_boxes 的子零件 | `ok:true`（合法中间态），`introduced_issues` 含「碰撞箱为空」；此时**导出被拦** |
 | 23 | 子系统未选型号就导出 | 导出被阻断，对话框列出该问题并可点击定位 |
 | 24 | `import_subsystem` 用 `machine_max:battery`（已删除） | `ok:false`，`code:unknown_type`（D18） |
 | 25 | `signal_targets` 写 `subpart` / `vehicle` | `ok:false`，`code:unresolved_config_ref`（D19：旧值不存在，不告警） |
+| 26 | `set_node` / `import_sub_part` 把 `hit_box.type` 设为 `"banana"` | `ok:false`，`code:invalid_enum`，`expected` 列 5 种（docs/13 §5.2.5） |
+| 27 | `set_node` 把 `interact_box.condition` 设为 `"WHATEVER"` | `ok:false`，`code:invalid_enum` |
+| 28 | `import_subsystem` 新建 transmission，`definition:null` + `power_outputs:{}` | `ok:true`（合法占位），`reset_fields` 为空；`read_node` round-trip 保持 null/`{}`；导出被 required 闸门拦 |
+| 29 | `import_part` 的定义里 `variants` 恰好有一个 key 叫 `"model"`（其值是 VariantConfig 对象） | 当作 map 处理（不得被单变体简写吞掉），`read_node` 能按 `variants.model` 寻址 |
+| 30 | `read_node` / `set_node` 用 `hydrodynamics` 的空字符串 key | `ok:true`（空串 = 质心）；`hit_boxes` 的空串 key 返回 `invalid_format` |
+| 31 | 存量工程含 `hit_box.type:"banana"` | 工程能打开；`validate` 报 `invalid_enum`，导出被阻断（Codec 不在 load 阶段拒绝，docs/13 D21） |
+| 32 | `import_subsystem` 的 key 为 `"子系统"` / `import_part` 的 `part_id` 为 `"Hull"` | `ok:false`，`code:invalid_format`（ASCII / 小写规则） |
 
 ---
 
