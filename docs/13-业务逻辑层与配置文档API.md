@@ -121,7 +121,7 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 | `require('fs'/'path')` | — | **13** | `content_pack`、`zip_reader`、3 个 generator、`drag_import`、`dependency_editor`、4 个对话框、`export_pipeline`、`file_writer`、`persistence` |
 | `fs.writeFileSync` | **8** | **4** | `persistence` 1、`file_writer` 3、`export_pipeline` 3、`content_pack` 1 |
 
-> 这些数字由 P1 交付的 `scripts/audit-stats.js` 生成，避免再次漂移。
+> 这些数字由 P0 交付的 `scripts/audit-stats.js` 生成（`npm run audit:stats`，47 项基线），避免再次漂移。
 
 ### 2.4 校验现状
 
@@ -532,7 +532,7 @@ v2 只有 `type: 'number'` + `items/minItems/maxItems`，表达不了 `textures`
 | `variant.textures` | `oneOf: [{type:'string', references:'resource'}, {type:'object', additionalProperties:{type:'string', references:'resource'}}]` |
 | `variant.model` / `animations` | `type:'string', references:'resource'`（schema 的 `$ref` 是 `resource_location` = 纯 string；它自己的 example 写成 map，属 examples bug，Codec 也只接受 string） |
 | `hit_box.overwrite` | `type:'object', properties: {16 个}, additionalProperties: false` |
-| `connector.overwrite` | `type:'object', properties: {12 个}, additionalProperties: false` |
+| `connector.overwrite` | `type:'object', properties: {11 个}, additionalProperties: false` |
 | `sub_part.projected_area` | `type:'tuple', tuple:[number,number,number], minItems:3, maxItems:3` |
 | `sub_part.end_bones` | `type:'array', items:{type:'string', references:'bone'}` |
 | `subsystem.seat.dismount_locators` | `type:'array', items:{type:'string', references:'locator'}` |
@@ -541,6 +541,46 @@ v2 只有 `type: 'number'` + `items/minItems/maxItems`，表达不了 `textures`
 | `hit_boxes` / `interact_boxes` / `connectors` / `subsystems` | 容器由 `address` 处理，不生成字段规格 |
 
 `setField` 的值校验顺序：`nullable` 短路 → `oneOf` 逐个尝试 → `type` 基础校验 → `enum` / `minimum` / `maximum` → `tuple` 长度 → `items` 递归 → `properties` / `additionalProperties` 递归。任一失败返回 `errors[]`（可多条），不写入。
+
+> **`connector.overwrite` 是 11 个而不是 12 个**：`connector_attr.schema.json` 的 `properties.overwrite` 只列了 11 项；Java `ConnectorAttr.OverwriteAttr` 额外有 `impact_absorption_destroyed` 与 `power_target`，但 schema 未收录。P0 按 schema 生成 11 项，P1 的 `field_specs` 会拒绝这两个 schema 外字段；若上游补 schema，重新运行 codegen 即可，不在 allowlist 里手工放宽。
+
+#### 5.2.1.1 生成物接口（P0 已落地）
+
+`src/doc/field_specs.generated.js` 由 `node scripts/gen-field-specs.js` 生成，`require` 后得到四个导出：
+
+```js
+const { PROVENANCE, SPECS, CONTAINERS, SIDE_EFFECTS } = require('./field_specs.generated.js');
+
+PROVENANCE = {
+  generator, generator_version, source_locale, source_root,
+  source_revision: '9450a0f4',
+  source_files: 67, source_sha256, generated_from,
+};
+
+SPECS = {
+  part:        { fields: { icon: {...}, ... }, required: [] },
+  variant:     { fields: { tags: {...}, model: {...}, ... }, required: ['model'] },
+  sub_part:    { fields: {...}, required: [] },
+  hit_box:     { fields: {...}, required: ['type'] },
+  interact_box:{ fields: {...}, required: ['bone', 'signal_targets'] },
+  connector:   { fields: {...}, required: ['locator', 'definition'] },
+  subsystem: {
+    'machine_max:basic': { fields: {...}, required: ['type', 'definition'], schema: '...' },
+    // …共 19 种
+  },
+};
+
+CONTAINERS = { part: ['variants'], variant: ['sub_parts'], sub_part: ['hit_boxes', ...] };
+SIDE_EFFECTS = { 'sub_part.start_bone': 'migrate_sub_part_marker', ... };
+```
+
+约定：
+
+- `SPECS.<kind>.fields` 只含标量 / map / 数组字段；`CONTAINERS` 里的容器不生成规格，由 `doc/address` 处理。
+- 每个字段的 `required: true` 与 `SPECS.<kind>.required` 同时存在；后者已按真实字段过滤（`variant` 的 `model` 会把上游 en_us 的 `required:["models"]` 拼写归一化为 `model`，与 zh_cn 及实际 property 一致）。
+- `SPECS.subsystem` 的 key 是完整 type id（`machine_max:engine`），不是短名；生成器从 `subsystem_dynamic_attr.schema.json` 的 `type.enum` + `if/then` 展开，并显式补齐无分支的 `machine_max:basic`。
+- `PROVENANCE.source_sha256` 是 67 个 en_us schema JSON 的路径 + 内容 hash；`--check` 同时比较生成文本，重复运行逐字节一致（不含时间戳）。
+- 改 schema 或生成器后运行 `node scripts/gen-field-specs.js`；CI 用 `node scripts/gen-field-specs.js --check`。
 
 #### 5.2.2 类型清单与 `schema_codec_allowlist` 的职责
 
@@ -571,7 +611,7 @@ module.exports = {
   constraint_diffs: [
     { kind: 'hit_box', field: 'type', schema: 'enum', codec: 'string', enforcedBy: 'field_specs.enum' },
     { kind: 'hit_box', field: 'overwrite', schema: 'object(16)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
-    { kind: 'connector', field: 'overwrite', schema: 'object(12)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
+    { kind: 'connector', field: 'overwrite', schema: 'object(11)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
     { kind: 'interact_box', field: 'condition', schema: 'enum', codec: 'string', enforcedBy: 'field_specs.enum' },
     { kind: 'interact_box', field: 'signal_targets', schema: 'required', codec: 'default({}) + emitEmpty', enforcedBy: 'codec.emitEmpty' },
     { kind: 'connector', field: 'definition', schema: 'required', codec: "default('')", enforcedBy: 'collectIssues' },
@@ -1010,19 +1050,28 @@ src/services/
 
 ## 10. 分期与验收
 
-### P0 — 上游对齐（部分已落地）
+### P0 — 上游对齐（已完成）
 
 - ✅ `scripts/sync-schemas.js`（`--check` / `--apply` / `--source`，不 spawn 子进程，尽力读上游 commit 作溯源）
 - ✅ vendored 快照全量替换：`src/builtin/builtin/machine_max/docs` 由 139 → 153 文件，与 `Machine-Max@9450a0f4` 逐文件 SHA256 一致；`--check` 零漂移
 - ✅ 7 个缺失 schema 到位（`track_controller` / `track_drive` 的 static+dynamic、`launcher` / `regen_loader` dynamic、`part_fabricating_recipe`）
-- ⏳ `scripts/gen-field-specs.js`（codegen，待做；按 §5.2 的类型模型生成，只覆盖 19 种）
-- ⏳ `scripts/audit-stats.js`（数字审计，待做）
+- ✅ `scripts/gen-field-specs.js`（codegen；按 §5.2 的类型模型生成 19 种，含 provenance；`--check` 可做漂移检查）
+- ✅ `scripts/audit-stats.js`（数字审计；47 项基线，输出与 §2 一致）
+- ✅ `test/schema/field_specs.test.js`（生成物逐字节同步、19 种类型、关键字段、required map、容器/内部字段、副作用表、provenance 共 8 个测试）
 
-剩余验收：`gen-field-specs` 能生成 `src/doc/field_specs.generated.js`；`audit-stats` 输出与 §2 一致；manifest ↔ schema 同步测试。
+验收命令：
+
+```bash
+node scripts/gen-field-specs.js --check   # 生成物 ↔ schema
+node scripts/audit-stats.js               # §2 的 47 项基线
+bun test test/schema/field_specs.test.js
+```
+
+当前结果：`--check` 通过；`audit-stats` 47/47 一致；`bun test` 8 pass。生成物为 `src/doc/field_specs.generated.js`（`PROVENANCE` / `SPECS` / `CONTAINERS` / `SIDE_EFFECTS`，接口见 §5.2.1.1）。
 
 ### P1 — 文档层（1 会话）
 
-`doc/{address,field_specs.generated,shapes,projection,refs,ports,validate,keys,index}.js` + `test/` 骨架。`keys.js` 是 §5.1.3 的唯一正则实现，`validate.js` 是 §5.2.5 的值校验。
+`doc/{address,field_specs.generated,shapes,projection,refs,ports,validate,keys,index}.js` + 扩 `test/` 骨架（P0 已有 `test/schema/field_specs.test.js`）。`keys.js` 是 §5.1.3 的唯一正则实现，`validate.js` 是 §5.2.5 的值校验。
 
 验收：`bun test` 覆盖 §5.1.5 全部 17 个测试向量 + §5.3.1/§5.3.2 的 in/out 顺序 + §5.4 全部 13 行；round-trip（含 `hit_boxes`、单变体/单子零件、未解析骨骼、`definition:''`、required 空 map）通过；`keys.js` 的 `isSafePartId` 覆盖 §11 #20；`schema` 字段集合测试按 `missing_fields` 的 `owner:'D12'` 放行两条真实缺口；`require` 全部 `doc` 模块的测试通过（P1 无调用方，dist 不增量，故不以体积为验收）；零行为变更。
 
@@ -1056,7 +1105,7 @@ test/
 ├── helpers.js              # 造配置树、快照对比
 ├── doc/{address,field_specs,projection,refs}.test.js
 ├── ops/*.test.js
-├── schema/{sync,drift}.test.js
+├── schema/{field_specs,sync,drift}.test.js
 └── services/{export,validate}.test.js
 ```
 
