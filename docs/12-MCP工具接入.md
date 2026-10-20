@@ -148,7 +148,7 @@ config
 - `_uiState` 与 `element_markers` 不可寻址写 → 返回 `unknown_field`；切上下文用 `set_active`。
 - `hit_boxes` 的 key 在对外格式里是**骨骼名**、内存里是 **UUID**：`read_node` / `set_node` 两种写法都接受，内部归一化为 UUID 并回写为骨骼名；解析不到元素时只记 `unresolved_bones` warning。
 - 含点的 key（`sub_part.machine_max.main`）是**默认情况**，不是例外：任何字符串形式的拆分都不得按 `.` 切分。段数组与 JSON Pointer 都按 `/`/段位置解析，不存在「猜切分」。
-- 所有翻译键（子零件/连接点/子系统/交互区）只允许 ASCII：中文、空白返回 `invalid_format`；前缀形态不合规范只告警（docs/13 §5.1.3，D17）。
+- 所有配置 key 只允许 ASCII：翻译键、`partId`（且必须小写）、`variant`、纹理名、频道名；模型元素名（`hit_boxes` / `hydrodynamics` 的 key）是唯一例外。中文、空白、大写 `partId` 返回 `invalid_format`；翻译键前缀形态不合规范只告警（docs/13 §5.1.3，D17）。
 
 ---
 
@@ -217,7 +217,7 @@ condition: { project: true, modes: ['machine_max_part'] }
 "sub_part.machine_max.底盘"            // ❌ invalid_format（非 ASCII，docs/13 D17）
 ```
 
-`part_id` / `variant` 不是翻译键，只校验非空与保留字符；`key`（sub_part）必须是规范 key，`mode:'create'` 省略 `key` 时由 `ensureUniqueName` 生成规范默认名（`sub_part.<ns>.main`）。`import_subsystem` 的 `key` 建议写成 `subsystem.<ns>.<name>`：完整 key 是模组侧信号目标的匹配依据（docs/13 §5.4）。
+`part_id` 必须是 `[a-z0-9_.-]+`（它会进入 resource location 与文件名，必须小写）；`variant` 为 `[A-Za-z0-9_.-]+`。`key`（sub_part）必须是规范 key，`mode:'create'` 省略 `key` 时由 `ensureUniqueName` 生成规范默认名（`sub_part.<ns>.main`）。`import_subsystem` 的 `key` 建议写成 `subsystem.<ns>.<name>`：完整 key 是模组侧信号目标的匹配依据（docs/13 §5.4）。
 
 `PartCodec` **没有 `id` 字段**：`import_part` 的 `part_id` 只作为 `parts` 的 map key，不会写进定义体。
 

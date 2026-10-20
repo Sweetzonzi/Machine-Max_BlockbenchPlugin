@@ -290,7 +290,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 ^sub_part\.<namespace>\.[A-Za-z0-9_.-]+$        // 纯 ASCII
 ```
 
-- `<namespace>` = `config.namespace`（缺省 `machine_max`），字符集 `[A-Za-z0-9_-]+`，**不含点**（点是分隔符）；
+- `<namespace>` = `config.namespace`（缺省 `machine_max`），字符集 `[a-z0-9_-]+`（小写，进 resource location），**不含点**（点是分隔符）；
 - 名称段只允许 ASCII 字母/数字、`_`、`-`、`.`；**中文与非 ASCII 一律拒绝**（`invalid_format`，`hint` 提示改用英文名）；
 - 名称段禁止：非 ASCII、空白、`*`、`/`、`~`、`:` 与控制字符；不得为空，长度 ≤ 128；
 - 名称段以 `.` 开头或结尾 → `invalid_format`；
@@ -306,11 +306,20 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 
 `<name>` 与子零件同名规则：纯 ASCII、无空白与 `* / ~ :`；中文一律 `invalid_format`（D17）。前缀/namespace 不合规范只记 warning `non_canonical_key`，但字符集违规是硬错误。
 
-`createPart` / `createVariant` 的 `partId` / `variantName` 不是翻译键，只要求：非空、无 `*` `/` `~` 与控制字符。
+`createPart` / `createVariant` 的 `partId` / `variantName` 不是翻译键，但同样只允许 ASCII：
+
+| key | 字符集 | 原因 |
+|---|---|---|
+| `partId` | `[a-z0-9_.-]+` | 会进入 resource location（`machine_max:textures/part/<partId>/…`）与 `parts/<partId>.json` 文件名，必须小写 |
+| `variantName` | `[A-Za-z0-9_.-]+` | JSON map key / lang key，不需要小写 |
+| 纹理名、信号频道名 | `[A-Za-z0-9_.-]+` | 同上 |
+| 模型元素名（`hit_boxes` / `hydrodynamics` 的 key） | 任意（除 `*`，**唯一例外**） | 来自 Blockbench 骨骼 / Locator 名，不能强迫改名 |
+
+`config.namespace` 自身必须是 `[a-z0-9_-]+`（进 resource location），在内容包设置入口校验。
 
 **为什么子零件连格式一起强制、其它只强制字符集**：`sub_parts` 有整件通道（`import_sub_part`）和 `read_node(as='definition')` 的 round-trip 验收，key 必须可逆；连接点/子系统/交互区的整件通道在 D9 里已排除，v3 只强制 ASCII 字符集，前缀形态暂只告警；它们的存量非 ASCII key 记 `KEY_RESERVED` error，但不在 `loadConfig` 里自动改名（改名要同步第 5~11 行引用，留到后续）。
 
-**强制点**：`ops.rename*`（4 个）与 `ops.importSubPart` / `ops.importSubsystem` 的 key、`ops.mark*` 的自动命名、`loadConfig`（仅子零件迁移，§15）。字符集违规返回 `invalid_format`，`errors[]` 带 `expected` 与 `hint`（提示完整形态）。
+**强制点**：`ops.createPart` / `ops.createVariant`（新 key）、`ops.rename*`（4 个）与 `ops.importSubPart` / `ops.importSubsystem` 的 key、`ops.mark*` 的自动命名、`loadConfig`（仅子零件迁移，§15）。字符集违规返回 `invalid_format`，`errors[]` 带 `expected` 与 `hint`（提示完整形态）。
 
 #### 5.1.4 读写差异与 `allowMissingLeaf`
 
@@ -328,7 +337,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 |---|---|---|
 | 1 | `['parts','hull','variants','default','sub_parts','sub_part.machine_max.main','mass']` | 命中 |
 | 2 | `'/parts/hull/variants/default/sub_parts/sub_part.machine_max.main/mass'` | 命中 |
-| 3 | `['parts','中文零件','variants','默认','sub_parts','sub_part.machine_max.chassis','mass']`（零件/变体名可为中文，子零件名必须 ASCII） | 命中 |
+| 3 | `['parts','hull','variants','default','sub_parts','sub_part.machine_max.chassis','hit_boxes','底盘骨骼','id']`（模型元素名可为中文，其余 key 必须 ASCII） | 命中 |
 | 4 | `['parts','a.b.c','variants','default','sub_parts','sub_part.machine_max.x','mass']`（零件 id 含点） | 命中（段数组） |
 | 5 | `['parts','hull','variants','default','sub_parts','*','mass']` | `{ <spKey>: number }` |
 | 6 | `['parts','hull','variants','default','sub_parts','chassis']`（非规范 key） | `not_found`（迁移后不可能存在；写入侧 `invalid_format`） |
@@ -337,6 +346,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 | 9 | 同 8 但父级 `connectors` 不存在 | `not_found` |
 | 10 | `['parts','hull','variants','default','sub_parts','*','projected_area','*']`（数组层通配） | `invalid_format` |
 | 11 | 写入 key `sub_part.machine_max.底盘` / `sub_part.machine_max.前 底盘` | `invalid_format`（非 ASCII / 空白） |
+| 12 | `createPart` 的 `partId` 为 `底盘` 或 `Hull` | `invalid_format`（非 ASCII / 非小写） |
 
 **`hit_boxes` 双形 key**：对外是骨骼名、内存是 UUID；解析时先按 UUID 命中 `ports.bones.findByUuid`，再按骨骼名查 `Group.all`。两者都不中时，**只有读取允许**按原字符串命中（未解析的存量条目），写入需先建元素或显式给 UUID。
 
@@ -774,7 +784,7 @@ test/
 8. `"null"` 清洗（`definition: null` 不出现在导出结果里）；
 9. 导出闸门：空 `hit_boxes` 拦截、`ORPHAN_ELEMENT` 放行；
 10. `schema` 漂移：manifest ↔ schema、dispatch map ⊇ schema 类型集合（D18 删除后到 D13 前，因缺 `track_*` 该项为已知红灯）；
-11. 严格 key：非规范 `import_sub_part` 返回 `invalid_format`；中文/空白 key 同样 `invalid_format`；`loadConfig` 迁移后**子零件**旧 key 全部规范化（非 ASCII 名改为 `legacy_<n>`），marker 同步；
+11. 严格 key：非规范 `import_sub_part` 返回 `invalid_format`；中文/空白 key、中文或大写 `partId` 同样 `invalid_format`；`loadConfig` 迁移后**子零件**旧 key 全部规范化（非 ASCII 名改为 `legacy_<n>`），marker 同步；
 12. 哨兵：只有 `local`/`global` 放行；`part`/`subpart`/`vehicle` 一律 `unresolved_config_ref`（不告警、不迁移）。
 
 ---
@@ -832,7 +842,7 @@ test/
 | D14 | 可空字段清单 | **撤销**——一套规则集，编辑不拦、导出阻断 | 用户（§4） |
 | D15 | 导出闸门 | `severity==='error'` 阻断导出 | 用户 |
 | D16 | key 策略 | **严格规范 key**：ASCII 字符集对所有翻译键强制；子零件 `sub_part.<ns>.<name>` 形态强制并迁移；其它 kind 前缀形态只告警 | **用户**（第二轮） |
-| D17 | 名称字符集 | **纯 ASCII** 字母/数字 + `_-.`；中文与非 ASCII 拒绝；禁空白 `* / ~ :`；namespace 不含点 | **用户**（第二轮） |
+| D17 | key 字符集 | **所有配置 key 纯 ASCII**（模型元素名除外）；`partId` 与 namespace 小写 `[a-z0-9_.-]+` / `[a-z0-9_-]+`（进 resource location），其余 `[A-Za-z0-9_.-]+`；中文/空白拒绝 | **用户**（第二轮） |
 | D18 | 5 个 WIP 子系统类型 | **删除**（Codec 22→17、registry、面板、类型清单）；不保留 decode/read，不提供兼容层 | **用户**（第二轮） |
 | D19 | 信号哨兵 | 只有 `local`/`global`；`part`/`subpart`/`vehicle` **不存在**：不保留、不告警、不迁移，按普通未知目标报错 | **用户**（第二轮） |
 | Q1 | 内容包定义 JSON | 只读，不纳入业务层 | 用户 |
@@ -901,6 +911,7 @@ for each part, variant:
 | 孤儿子零件（无标记） | **不再在渲染期删除**；改为 `loadConfig` 报告 + 面板「创建配置」按钮 |
 | 5 个 WIP 子系统实例（`battery`/`signal_convert`/`joint`/`javascript`/`ammo_loader`） | D18 删除类型：`loadConfig` 在 decode 前从 raw JSON 剔除对应条目，记入 `_lastMigration.removed`，备份保留；不提供兼容层 |
 | 连接点/子系统/交互区的非 ASCII key | 不改名，记 `KEY_RESERVED`（导出期 error），由用户手动重建/重命名；子零件之外不做自动迁移 |
+| 零件 / 变体 / 纹理 / 频道名的非 ASCII key，或非小写 `partId` | **不自动改名**（`partId` 会牵动文件名、resource location 与存档），记 `KEY_RESERVED`（导出期 error），由用户手动重建 |
 | key 含 `*`（任意 map），或翻译键含 `/` `~` | 记 `KEY_RESERVED`，导出期 error；不自动改写；`hit_boxes` / `hydrodynamics` 的元素名不受 `/` `~` 限制 |
 
 ---
