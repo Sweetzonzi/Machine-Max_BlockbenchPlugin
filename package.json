@@ -5,7 +5,11 @@
     "description": "MachineMax Blockbench 插件构建工具",
     "scripts": {
         "build": "node scripts/build.js",
-        "watch": "node scripts/build.js --watch"
+        "watch": "node scripts/build.js --watch",
+        "gen:field-specs": "node scripts/gen-field-specs.js",
+        "check:field-specs": "node scripts/gen-field-specs.js --check",
+        "audit:stats": "node scripts/audit-stats.js",
+        "test": "bun test"
     },
     "devDependencies": {
         "esbuild": "^0.25.0"
