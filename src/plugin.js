@@ -84,7 +84,14 @@ Plugin.register('machine_max_bb_plugin', {
         console.log('[MM][Plugin] 阶段3: registerDragImport (调用后)');
 
         console.log('[MM][Plugin] 阶段4: registerMachineMaxMenu');
-        registerMachineMaxMenu();
+        // 菜单注册曾经在 BB 5.0.7 上抛 TypeError（MenuBar.addMenu 已移除），
+        // 中断 onload 会让阶段 4a 的 MCP 工具注册永远不执行。这里隔离菜单故障。
+        try {
+            registerMachineMaxMenu();
+        } catch (e) {
+            log.warn('菜单注册失败（不影响其它功能）', e && e.message);
+            console.error('[MM][Plugin] 菜单注册失败', e);
+        }
 
         console.log('[MM][Plugin] 阶段4a: registerMcpTools');
         // MCP 工具通过 globalThis.MCP_QUEUE 挂载（docs/12）；MCP 插件未装时为空操作

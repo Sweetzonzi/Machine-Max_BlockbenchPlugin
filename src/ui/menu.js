@@ -234,10 +234,42 @@ function registerMachineMaxMenu() {
         icon: 'precision_manufacturing',
     });
 
-    MenuBar.addMenu(_machineMaxMenu, 'tools');
+    // Blockbench 5.0.7 移除了 MenuBar.addMenu：BarMenu 构造时已写入
+    // MenuBar.menus，调用不存在的 addMenu 会抛 TypeError 并中断 onload，
+    // 导致后面的 MCP 工具注册永远不执行。
+    if (typeof MenuBar.addMenu === 'function') {
+        MenuBar.addMenu(_machineMaxMenu, 'tools');
+    } else {
+        _placeMenuAfterTools();
+        if (typeof MenuBar.update === 'function') {
+            MenuBar.update();
+        }
+    }
 
     log.info('MachineMax 常驻菜单已注册（位于 Tools 之后，模式无关）');
     return _machineMaxMenu;
+}
+
+/**
+ * 把 machine_max 菜单移到 tools 之后。
+ *
+ * MenuBar.update() 按 MenuBar.menus 的键插入顺序渲染菜单栏，
+ * 所以这里原地重排对象键，保持 MenuBar.menues 别名仍然有效。
+ */
+function _placeMenuAfterTools() {
+    var menus = MenuBar && MenuBar.menus;
+    if (!menus || !menus['machine_max'] || !menus['tools']) return;
+
+    var ordered = {};
+    Object.keys(menus).forEach(function (id) {
+        if (id === 'machine_max') return;
+        ordered[id] = menus[id];
+        if (id === 'tools') ordered['machine_max'] = menus['machine_max'];
+    });
+    if (!ordered['machine_max']) ordered['machine_max'] = menus['machine_max'];
+
+    Object.keys(menus).forEach(function (id) { delete menus[id]; });
+    Object.keys(ordered).forEach(function (id) { menus[id] = ordered[id]; });
 }
 
 /**

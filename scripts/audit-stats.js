@@ -25,7 +25,7 @@ const SRC = path.join(REPO_ROOT, 'src');
 const BASELINE = {
     '2.1.ui.js_files': 27,
     '2.1.ui.template_files': 7,
-    '2.1.ui.js_lines': 6446,
+    '2.1.ui.js_lines': 6478,
     '2.1.ui.template_lines': 1147,
     '2.1.mode.files': 5,
     '2.1.mode.lines': 1155,

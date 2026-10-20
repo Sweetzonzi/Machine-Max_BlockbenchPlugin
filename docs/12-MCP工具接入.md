@@ -405,7 +405,7 @@ AI 的正确用法是「`read_node(path, as='definition')` 拿全量 → 改 →
 ## 10. 注册时序与生命周期
 
 1. Blockbench 加载 `dist/machine_max_bb_plugin.js` → `onload`。
-2. `registerProperty()` → `registerUndoBridge()`（挂两个 undo 事件，docs/11 已实现）→ `registerMode()` → `registerMcpTools()`。
+2. `registerProperty()` → `installDocPorts()` → `registerUndoBridge()`（挂两个 undo 事件，docs/11 已实现）→ `registerMode()` → `registerDragImport()` → `registerMachineMaxMenu()` → `registerMcpTools()`。
 3. `registerMcpTools()` 把 `{ plugin: 'machine_max_bb_plugin', setup(mcp) {...} }` 推进 `globalThis.MCP_QUEUE`，并记下每个工具的 disposer；若 `globalThis.MCP` 已存在，再立即 `setup` 一次。
 4. MCP 插件（无论先加载还是后加载）会 drain `MCP_QUEUE` 并调 `setup(mcp)`；若 MCP 后加载，本插件还监听 `loaded_plugin` 事件补一次 `ensureMcpReady()`。之后已连接的客户端收到 `tools/list_changed`，新工具即刻可用，不需要重启 Blockbench。
 5. 插件卸载 → `onunload` 调 disposer 注销工具；撤销桥监听由 `unregisterUndoBridge()` 单独清理。
@@ -424,7 +424,7 @@ npm run build      # scripts/build.js → dist/machine_max_bb_plugin.js（esbuil
 
 Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 
-> **实测注意（2026-10-21）**：Blockbench 5.0.7 的 Reload Plugins 会复用已注册的 Plugin 对象；当 `onload` 本身发生变化时，重载后可能继续执行旧 `onload`，表现为「模式/菜单已更新，但 MCP 工具不出现」。修改 `plugin.js onload` 或 `src/mcp/index.js` 后建议**重启 Blockbench**；仅改面板/工具实现时 Reload Plugins 足够。
+> **实测注意（2026-10-21）**：MCP 工具不出现的真实原因不是 Reload Plugins 复用旧 `onload`，而是 `registerMachineMaxMenu()` 调用了 Blockbench 5.0.7 已移除的 `MenuBar.addMenu`，抛 `TypeError` 后中断 `onload`，阶段 4a 的 `registerMcpTools()` 从未执行。现已改为：`BarMenu` 构造后直接 `MenuBar.update()` 重建菜单栏；`plugin.js` 对菜单注册单独 try/catch，菜单故障不再阻断 MCP。Reload Plugins 会重新读取 `dist` 并执行新 `onload`，修好后无需重启。
 
 ### 11.2 探针
 

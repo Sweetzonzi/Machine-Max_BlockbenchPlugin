@@ -24403,9 +24403,33 @@
           name: "MachineMax",
           icon: "precision_manufacturing"
         });
-        MenuBar.addMenu(_machineMaxMenu, "tools");
+        if (typeof MenuBar.addMenu === "function") {
+          MenuBar.addMenu(_machineMaxMenu, "tools");
+        } else {
+          _placeMenuAfterTools();
+          if (typeof MenuBar.update === "function") {
+            MenuBar.update();
+          }
+        }
         log2.info("MachineMax \u5E38\u9A7B\u83DC\u5355\u5DF2\u6CE8\u518C\uFF08\u4F4D\u4E8E Tools \u4E4B\u540E\uFF0C\u6A21\u5F0F\u65E0\u5173\uFF09");
         return _machineMaxMenu;
+      }
+      function _placeMenuAfterTools() {
+        var menus = MenuBar && MenuBar.menus;
+        if (!menus || !menus["machine_max"] || !menus["tools"]) return;
+        var ordered = {};
+        Object.keys(menus).forEach(function(id) {
+          if (id === "machine_max") return;
+          ordered[id] = menus[id];
+          if (id === "tools") ordered["machine_max"] = menus["machine_max"];
+        });
+        if (!ordered["machine_max"]) ordered["machine_max"] = menus["machine_max"];
+        Object.keys(menus).forEach(function(id) {
+          delete menus[id];
+        });
+        Object.keys(ordered).forEach(function(id) {
+          menus[id] = ordered[id];
+        });
       }
       function unregisterMachineMaxMenu2() {
         if (_machineMaxMenu) {
@@ -32247,7 +32271,12 @@
       registerDragImport();
       console.log("[MM][Plugin] \u9636\u6BB53: registerDragImport (\u8C03\u7528\u540E)");
       console.log("[MM][Plugin] \u9636\u6BB54: registerMachineMaxMenu");
-      registerMachineMaxMenu();
+      try {
+        registerMachineMaxMenu();
+      } catch (e) {
+        log.warn("\u83DC\u5355\u6CE8\u518C\u5931\u8D25\uFF08\u4E0D\u5F71\u54CD\u5176\u5B83\u529F\u80FD\uFF09", e && e.message);
+        console.error("[MM][Plugin] \u83DC\u5355\u6CE8\u518C\u5931\u8D25", e);
+      }
       console.log("[MM][Plugin] \u9636\u6BB54a: registerMcpTools");
       try {
         require_mcp().registerMcpTools();

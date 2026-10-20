@@ -89,3 +89,4 @@ src/ui/
 - **直接数组变更** 而不使用 `$set`: `array.push()`, `array.splice()`, `array.length = 0`
 - **保存无错误边界**: 事件订阅里的 `scheduleSave` 由 `persistence` 统一兜底；不要在 UI 里裸调 `saveConfig()` 后假设一定写盘成功。
 - **回退模板掩盖错误**: `typeof TEMPLATE_XXX !== 'undefined' ? TEMPLATE_XXX : '<p>...</p>'` — 若运行时模板缺失，会静默显示损坏的 UI 而非抛出错误
+- **直接调用 `MenuBar.addMenu`**: Blockbench 5.0.7 已移除该 API；`new BarMenu` 构造时已写入 `MenuBar.menus`，注册后调用 `MenuBar.update()` 重建菜单栏。直接调用会抛 `TypeError` 并中断 `onload`，连带 MCP 工具注册不执行。
