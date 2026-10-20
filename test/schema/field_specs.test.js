@@ -33,12 +33,14 @@ describe('field_specs.generated.js', () => {
         const textures = generated.SPECS.variant.fields.textures;
         expect(textures.oneOf).toHaveLength(2);
         expect(textures.oneOf[0].references).toBe('resource');
+        expect(textures.oneOf[1].minProperties).toBe(1);
         expect(textures.oneOf[1].additionalProperties.references).toBe('resource');
 
         expect(generated.SPECS.sub_part.fields.start_bone.references).toBe('bone');
         expect(generated.SPECS.sub_part.fields.end_bones.items.references).toBe('bone');
         expect(generated.SPECS.sub_part.fields.mass_center.references).toBe('locator');
         expect(generated.SPECS.interact_box.fields.bone.references).toBe('bone');
+        expect(generated.SPECS.connector.fields.definition.references).toBe('resource');
         expect(generated.SPECS.interact_box.fields.signal_targets
             .additionalProperties.items.references).toBe('signal');
         expect(generated.SPECS.subsystem['machine_max:launcher'].fields.locator.references).toBe('locator');
@@ -47,7 +49,11 @@ describe('field_specs.generated.js', () => {
 
     test('overwrite 结构与 nullable 按 schema / 上游 Optional', () => {
         expect(Object.keys(generated.SPECS.hit_box.fields.overwrite.properties)).toHaveLength(16);
-        expect(Object.keys(generated.SPECS.connector.fields.overwrite.properties)).toHaveLength(11);
+        expect(Object.keys(generated.SPECS.connector.fields.overwrite.properties)).toHaveLength(12);
+        expect(generated.SPECS.connector.fields.overwrite.properties)
+            .toHaveProperty('impact_absorption_destroyed');
+        expect(generated.SPECS.connector.fields.overwrite.properties.impact_absorption.maximum)
+            .toBe(1);
         expect(generated.SPECS.hit_box.fields.overwrite.nullable).toBe(true);
         expect(generated.SPECS.connector.fields.overwrite.nullable).toBe(true);
         expect(generated.SPECS.hit_box.fields.overwrite.additionalProperties).toBe(false);
@@ -89,7 +95,7 @@ describe('field_specs.generated.js', () => {
     });
 
     test('provenance 记录 67 个 schema 与源 hash', () => {
-        expect(generated.PROVENANCE.source_revision).toBe('9450a0f4');
+        expect(generated.PROVENANCE.source_revision).toBe('d8d1df8b');
         expect(generated.PROVENANCE.source_files).toBe(67);
         expect(generated.PROVENANCE.source_sha256).toMatch(/^[0-9a-f]{64}$/);
         expect(generated.PROVENANCE.source_root)

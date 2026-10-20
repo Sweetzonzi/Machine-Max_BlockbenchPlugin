@@ -28,7 +28,7 @@ const DEFAULT_SOURCE = path.join(REPO_ROOT, SCHEMA_REL);
 const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 
 // vendored 快照的溯源 commit；同步 schema 时与 docs/13 §3.2 一起更新。
-const UPSTREAM_REVISION = '9450a0f4';
+const UPSTREAM_REVISION = 'd8d1df8b';
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;
@@ -38,12 +38,6 @@ const CONTAINERS = {
     part: ['variants'],
     variant: ['sub_parts'],
     sub_part: ['hit_boxes', 'interact_boxes', 'connectors', 'subsystems'],
-};
-
-// 上游 en_us 的 variant_attr 把 required 写成了 "models"，property 是 "model"
-// （zh_cn 同一文件是正确的 "model"）；生成时归一化，避免 required 永远匹配不到字段。
-const REQUIRED_ALIASES = {
-    variant: { models: 'model' },
 };
 
 // docs/13 §5.2.3：唯一手写的副作用表（8 个字段 / 6 条规则）。
@@ -333,11 +327,9 @@ function applyFieldMeta(kind, field, spec) {
 }
 
 /** required 里只保留真实字段；容器字段交给 doc/address，不进入字段表 */
-function normalizeRequired(kind, required, fields) {
-    const aliases = REQUIRED_ALIASES[kind] || {};
+function normalizeRequired(required, fields) {
     const out = [];
-    for (const raw of required) {
-        const field = aliases[raw] || raw;
+    for (const field of required) {
         if (!fields[field]) continue;
         out.push(field);
     }
@@ -358,7 +350,7 @@ function buildKind(store, file, kind) {
         if (required.has(field)) spec.required = true;
         fields[field] = applyFieldMeta(kind, field, spec);
     }
-    const requiredFields = normalizeRequired(kind, Array.from(required), fields);
+    const requiredFields = normalizeRequired(Array.from(required), fields);
     for (const field of requiredFields) fields[field].required = true;
     return { fields, required: requiredFields };
 }
@@ -391,7 +383,7 @@ function buildSubsystems(store) {
             if (required.has(field)) spec.required = true;
             fields[field] = applyFieldMeta('subsystem', field, spec);
         }
-        const requiredFields = normalizeRequired('subsystem', Array.from(required), fields);
+        const requiredFields = normalizeRequired(Array.from(required), fields);
         for (const field of requiredFields) fields[field].required = true;
         byType[typeId] = {
             fields,
