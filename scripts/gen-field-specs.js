@@ -28,9 +28,9 @@ const DEFAULT_SOURCE = path.join(REPO_ROOT, SCHEMA_REL);
 const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 
 // vendored 快照的溯源 commit；同步 schema 时与 docs/13 §3.2 一起更新。
-// 上游 HEAD 仍是 d8d1df8b，但本轮 schema 来自其未提交工作树；用 +worktree 标记，
-// 避免把未提交内容误记成该 commit 的产物。内容真值以 source_sha256 为准。
-const UPSTREAM_REVISION = 'd8d1df8b+worktree';
+// 上游 HEAD a1460ce1（修正内容包 schema：字段与代码对齐、示例可校验、en_us 翻译补全）。
+// 内容真值以 source_sha256 为准。
+const UPSTREAM_REVISION = 'a1460ce1';
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;

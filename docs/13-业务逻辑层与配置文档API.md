@@ -167,7 +167,7 @@ src/doc/field_specs.generated.js（含 provenance）
 
 ### 3.2 快照状态与类型真值
 
-**当前状态（P0 已完成）**：vendored 快照 153 个文件，与 `Machine-Max@d8d1df8b+worktree` 逐文件 SHA256 一致，`node scripts/sync-schemas.js --check` 零漂移。
+**当前状态（P0 已完成）**：vendored 快照 153 个文件，与 `Machine-Max@a1460ce1` 逐文件 SHA256 一致，`node scripts/sync-schemas.js --check` 零漂移。
 
 > 历史数字：同步**前**插件 67 个文件、上游 60 个（同 35 / 异 25 / 缺 7），已由全量替换解决；不要再把 60/67 当现状。
 
@@ -188,7 +188,7 @@ src/doc/field_specs.generated.js（含 provenance）
 
 顺带修掉的上游缺陷（`Machine-Max@9450a0f4`，已同步）：`motor_controller` 是 `motorbike_controller` 的错写——枚举中两种拼写并存，而 `if/then` 分支只用了错写那个且 `$ref` 指向 `motorbike_controller_*_attr.schema.json`，导致**正确的 `motorbike_controller` 匹配不到任何分支**（字段完全不校验）；此外 `subsystem_static_attr` 的枚举整体漏了 `motorbike_controller`。修复后 dynamic 与 static 枚举一致为 19 种。
 
-> vendored 快照的溯源为 **`d8d1df8b+worktree`**（HEAD `d8d1df8b` + 未提交的 schema 更新；内容真值以 `source_sha256` 为准）；`sync-schemas.js --check` 当前零漂移。
+> vendored 快照的溯源为 **`a1460ce1`**（`67638bbf` 移除 connector overwrite 的无效 `power_target` + `a1460ce1` 修正内容包 schema）；内容真值以 `source_sha256` 为准；`sync-schemas.js --check` 当前零漂移。
 
 **key 不是 schema 约束**：`variant_attr.schema.json` 的 `sub_parts` 只写了 `additionalProperties`，没有 `patternProperties`；它自己的 examples 还用短 key（`"turret_base"`）。因此「`sub_part.<ns>.<name>`」是**插件侧约定**（翻译键 + 面板/导出/l10n 共用），不是上游要求。严格的理由是可逆性（read → import 无损），不是合规性；迁移只是把插件自己的历史写法收敛到这套约定（§15）。
 
@@ -555,7 +555,7 @@ const { PROVENANCE, SPECS, CONTAINERS, SIDE_EFFECTS } = require('./field_specs.g
 
 PROVENANCE = {
   generator, generator_version, source_locale, source_root,
-  source_revision: 'd8d1df8b+worktree',
+  source_revision: 'a1460ce1',
   source_files: 67, source_sha256, generated_from,
 };
 
@@ -1070,7 +1070,7 @@ src/services/
 ### P0 — 上游对齐（已完成）
 
 - ✅ `scripts/sync-schemas.js`（`--check` / `--apply` / `--source`，不 spawn 子进程，尽力读上游 commit 作溯源）
-- ✅ vendored 快照全量替换：`src/builtin/builtin/machine_max/docs` 由 139 → 153 文件，与 `Machine-Max@d8d1df8b+worktree` 逐文件 SHA256 一致；`--check` 零漂移
+- ✅ vendored 快照全量替换：`src/builtin/builtin/machine_max/docs` 由 139 → 153 文件，与 `Machine-Max@a1460ce1` 逐文件 SHA256 一致；`--check` 零漂移
 - ✅ 本轮 schema 更新：`variant.required` 的 `models` → `model`、`connector.overwrite` 补 `impact_absorption_destroyed`（11→12）、`variant.textures` 对象分支补 `minProperties:1`、`part_definition_schema` 的 examples 同步
 - ✅ 7 个缺失 schema 到位（`track_controller` / `track_drive` 的 static+dynamic、`launcher` / `regen_loader` dynamic、`part_fabricating_recipe`）
 - ✅ `scripts/gen-field-specs.js`（codegen；按 §5.2 的类型模型生成 19 种，含 provenance；`--check` 可做漂移检查）
