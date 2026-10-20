@@ -9720,7 +9720,7 @@
             return codec.encode(value, path);
           },
           decodeField: function(value, key, path) {
-            if (value === void 0) {
+            if (value === void 0 || value === null) {
               return isMutable ? cloneMutable(defaultVal) : defaultVal;
             }
             return codec.decode(value);
@@ -10579,6 +10579,102 @@
         log2.debug("createConnectorInstanceConfig: \u521B\u5EFA\u8FDE\u63A5\u70B9\u5B9E\u4F8B\u914D\u7F6E");
         return JSON.parse(JSON.stringify(CONNECTOR_INSTANCE_DEFAULTS));
       }
+      var REQUIRED_STRING_FIELDS = ["definition", "power_output", "connector", "locator"];
+      var SUBSYSTEM_MAP_FIELDS = [
+        "signal_targets",
+        "power_outputs",
+        "control_outputs",
+        "projectile_types",
+        "speed_outputs",
+        "gear_outputs",
+        "roll_speed_outputs",
+        "steering_angle_outputs",
+        "passenger_num_outputs",
+        "camera_discovery_targets",
+        "throttle_outputs",
+        "steering_outputs",
+        "brake_outputs",
+        "handbrake_outputs",
+        "rotation_outputs",
+        "discovery_outputs",
+        "ammo_outputs"
+      ];
+      function hasOwn(obj, key) {
+        return Object.prototype.hasOwnProperty.call(obj, key);
+      }
+      function normalizeStringField(obj, field) {
+        if (!obj || typeof obj !== "object" || !hasOwn(obj, field)) return;
+        if (obj[field] === null || obj[field] === "null") obj[field] = "";
+      }
+      function normalizeMapField(obj, field) {
+        if (!obj || typeof obj !== "object" || !hasOwn(obj, field)) return;
+        if (obj[field] === null || Array.isArray(obj[field])) obj[field] = {};
+      }
+      function forEachEntry(obj, field, fn) {
+        var map = obj && obj[field];
+        if (!map || typeof map !== "object" || Array.isArray(map)) return;
+        Object.keys(map).forEach(function(key) {
+          var entry = map[key];
+          if (entry && typeof entry === "object" && !Array.isArray(entry)) fn(entry);
+        });
+      }
+      function normalizeHitBox(hitBox) {
+        normalizeStringField(hitBox, "id");
+        normalizeStringField(hitBox, "module");
+        normalizeStringField(hitBox, "subsystem");
+      }
+      function normalizeInteractBox(interactBox) {
+        normalizeMapField(interactBox, "signal_targets");
+      }
+      function normalizeConnector(connector) {
+        normalizeStringField(connector, "definition");
+        normalizeStringField(connector, "power_target");
+        normalizeMapField(connector, "signal_targets");
+        normalizeMapField(connector, "signal_translations");
+      }
+      function normalizeSubsystem(subsystem) {
+        REQUIRED_STRING_FIELDS.forEach(function(field) {
+          normalizeStringField(subsystem, field);
+        });
+        SUBSYSTEM_MAP_FIELDS.forEach(function(field) {
+          normalizeMapField(subsystem, field);
+        });
+      }
+      function normalizeSubPart(subPart) {
+        normalizeMapField(subPart, "hit_boxes");
+        normalizeMapField(subPart, "interact_boxes");
+        normalizeMapField(subPart, "connectors");
+        normalizeMapField(subPart, "subsystems");
+        forEachEntry(subPart, "hit_boxes", normalizeHitBox);
+        forEachEntry(subPart, "interact_boxes", normalizeInteractBox);
+        forEachEntry(subPart, "connectors", normalizeConnector);
+        forEachEntry(subPart, "subsystems", normalizeSubsystem);
+      }
+      function normalizeVariant(variant) {
+        forEachEntry(variant, "sub_parts", normalizeSubPart);
+      }
+      function normalizeLegacyPlaceholders(config) {
+        if (!config || typeof config !== "object") return config;
+        var result = JSON.parse(JSON.stringify(config));
+        var parts = result.parts;
+        if (!parts || typeof parts !== "object" || Array.isArray(parts)) return result;
+        Object.keys(parts).forEach(function(partId) {
+          var part = parts[partId];
+          var variants = part && part.variants;
+          if (!variants || typeof variants !== "object") return;
+          if (typeof variants.model === "string") {
+            normalizeVariant(variants);
+          } else {
+            Object.keys(variants).forEach(function(name) {
+              var variant = variants[name];
+              if (variant && typeof variant === "object" && !Array.isArray(variant)) {
+                normalizeVariant(variant);
+              }
+            });
+          }
+        });
+        return result;
+      }
       function ensureDefaults(config) {
         if (!config || typeof config !== "object") {
           log2.warn("ensureDefaults: \u914D\u7F6E\u65E0\u6548\uFF0C\u8FD4\u56DE\u7A7A\u767D\u914D\u7F6E");
@@ -10613,7 +10709,12 @@
         return result;
       }
       function migrateIfNeeded(config) {
-        if (!config || !config.$schema_version) {
+        if (!config || typeof config !== "object") {
+          log2.info("migrateIfNeeded: \u65E0\u7248\u672C\u53F7\uFF0C\u5E94\u7528\u9ED8\u8BA4\u503C");
+          return ensureDefaults(config);
+        }
+        config = normalizeLegacyPlaceholders(config);
+        if (!config.$schema_version) {
           log2.info("migrateIfNeeded: \u65E0\u7248\u672C\u53F7\uFF0C\u5E94\u7528\u9ED8\u8BA4\u503C");
           return ensureDefaults(config);
         }
@@ -10631,7 +10732,7 @@
             log2.debug("migrateIfNeeded: \u8FC1\u79FB\u6B65\u9AA4 v" + v + " \u5B8C\u6210");
           }
         }
-        return ensureDefaults(migrated);
+        return ensureDefaults(normalizeLegacyPlaceholders(migrated));
       }
       function getActivePart(config) {
         if (!config || !config.parts) {
@@ -10672,6 +10773,7 @@
           createConnectorInstanceConfig,
           ensureDefaults,
           migrateIfNeeded,
+          normalizeLegacyPlaceholders,
           getActivePart,
           getActiveVariant
         };

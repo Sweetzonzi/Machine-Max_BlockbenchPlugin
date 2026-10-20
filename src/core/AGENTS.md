@@ -8,7 +8,7 @@
 
 ```
 src/core/
-├── config.js              # 工厂函数 + 迁移引擎（273行）
+├── config.js              # 工厂函数 + 迁移引擎 + 旧占位归一化（439行）
 ├── config_defaults.js     # 所有默认值、CONFIG_VERSION、预设（410行，纯数据）
 ├── content_pack.js        # 内容包目录 I/O：meta.json + 定义文件读取（548行）
 ├── content_pack_manager.js # 内置包 + 依赖包 + 当前包的合并视图（只读）
@@ -24,6 +24,7 @@ src/core/
 | 创建新配置对象 | `config.js` | `createPartConfig()`, `createVariantConfig()`, `createSubPartConfig()` 等 |
 | 定义新字段默认值 | `config_defaults.js` | `PART_DEFAULTS`, `VARIANT_DEFAULTS` 等 — 工厂中使用 `JSON.parse(JSON.stringify(...))` |
 | 处理配置版本迁移 | `config.js` → `MIGRATIONS` 对象 | 按版本号键值存储；`migrateIfNeeded()` 循环补齐间隙 |
+| 归一化旧工程占位 | `config.js` → `normalizeLegacyPlaceholders()` | required 字符串 `null`/`"null"` → `''`，map `null`/`[]` → `{}`；`migrateIfNeeded()` 在 decode 前调用 |
 | 添加新标记类型 | `element_markers.js` → `MARKER_TYPES` | 添加 `{ label, icon, color }` 条目；更新 `getMarkerTypesForElement()` |
 | 重算自动排除骨骼 | `element_markers.js` → `recalcAutoEndBones()` | 子零件标记起始骨骼变更时调用 |
 | 读取内容包定义 | `content_pack.js` | `readAllDefs()`, `listDefIds()`, `defExists()` — 按类目分别处理 parts/subsystems/connectors/materials；定义文件由作者直接编辑 JSON（writeDef/deleteDef 已随只读化重构删除） |

@@ -173,6 +173,118 @@ function createConnectorInstanceConfig() {
     return JSON.parse(JSON.stringify(CONNECTOR_INSTANCE_DEFAULTS));
 }
 
+// ==================== 旧占位归一化 ====================
+//
+// 旧工程 / 旧 MCP 输入会用 null / "null" / [] 表示「未配置」。required 字段在
+// decode 阶段不能是 null（`fieldOf` 只接受字符串/对象），所以必须在 decode 前
+// 归一化成内部占位：required 字符串 → ''，required map → {}。optional 字段的
+// null 由 Codec `.default()` 的解码宽容兜底（见 docs/13 §3.4、§4.4）。
+
+var REQUIRED_STRING_FIELDS = ['definition', 'power_output', 'connector', 'locator'];
+var SUBSYSTEM_MAP_FIELDS = [
+    'signal_targets', 'power_outputs', 'control_outputs', 'projectile_types',
+    'speed_outputs', 'gear_outputs', 'roll_speed_outputs', 'steering_angle_outputs',
+    'passenger_num_outputs', 'camera_discovery_targets', 'throttle_outputs',
+    'steering_outputs', 'brake_outputs', 'handbrake_outputs', 'rotation_outputs',
+    'discovery_outputs', 'ammo_outputs',
+];
+
+function hasOwn(obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
+function normalizeStringField(obj, field) {
+    if (!obj || typeof obj !== 'object' || !hasOwn(obj, field)) return;
+    if (obj[field] === null || obj[field] === 'null') obj[field] = '';
+}
+
+function normalizeMapField(obj, field) {
+    if (!obj || typeof obj !== 'object' || !hasOwn(obj, field)) return;
+    if (obj[field] === null || Array.isArray(obj[field])) obj[field] = {};
+}
+
+function forEachEntry(obj, field, fn) {
+    var map = obj && obj[field];
+    if (!map || typeof map !== 'object' || Array.isArray(map)) return;
+    Object.keys(map).forEach(function (key) {
+        var entry = map[key];
+        if (entry && typeof entry === 'object' && !Array.isArray(entry)) fn(entry);
+    });
+}
+
+function normalizeHitBox(hitBox) {
+    normalizeStringField(hitBox, 'id');
+    normalizeStringField(hitBox, 'module');
+    normalizeStringField(hitBox, 'subsystem');
+}
+
+function normalizeInteractBox(interactBox) {
+    normalizeMapField(interactBox, 'signal_targets');
+}
+
+function normalizeConnector(connector) {
+    normalizeStringField(connector, 'definition');
+    normalizeStringField(connector, 'power_target');
+    normalizeMapField(connector, 'signal_targets');
+    normalizeMapField(connector, 'signal_translations');
+}
+
+function normalizeSubsystem(subsystem) {
+    REQUIRED_STRING_FIELDS.forEach(function (field) {
+        normalizeStringField(subsystem, field);
+    });
+    SUBSYSTEM_MAP_FIELDS.forEach(function (field) {
+        normalizeMapField(subsystem, field);
+    });
+}
+
+function normalizeSubPart(subPart) {
+    normalizeMapField(subPart, 'hit_boxes');
+    normalizeMapField(subPart, 'interact_boxes');
+    normalizeMapField(subPart, 'connectors');
+    normalizeMapField(subPart, 'subsystems');
+    forEachEntry(subPart, 'hit_boxes', normalizeHitBox);
+    forEachEntry(subPart, 'interact_boxes', normalizeInteractBox);
+    forEachEntry(subPart, 'connectors', normalizeConnector);
+    forEachEntry(subPart, 'subsystems', normalizeSubsystem);
+}
+
+function normalizeVariant(variant) {
+    forEachEntry(variant, 'sub_parts', normalizeSubPart);
+}
+
+/**
+ * 在 decode 前把旧占位归一化为内部合法值，返回深拷贝（不修改入参）。
+ *
+ * @param {Object} config - 原始项目配置
+ * @returns {Object} 归一化后的配置
+ */
+function normalizeLegacyPlaceholders(config) {
+    if (!config || typeof config !== 'object') return config;
+    var result = JSON.parse(JSON.stringify(config));
+    var parts = result.parts;
+    if (!parts || typeof parts !== 'object' || Array.isArray(parts)) return result;
+
+    Object.keys(parts).forEach(function (partId) {
+        var part = parts[partId];
+        var variants = part && part.variants;
+        if (!variants || typeof variants !== 'object') return;
+        // 单变体简写：model 是字符串；多变体 map 的值是对象（即使变体名恰好叫 model）
+        if (typeof variants.model === 'string') {
+            normalizeVariant(variants);
+        } else {
+            Object.keys(variants).forEach(function (name) {
+                var variant = variants[name];
+                if (variant && typeof variant === 'object' && !Array.isArray(variant)) {
+                    normalizeVariant(variant);
+                }
+            });
+        }
+    });
+
+    return result;
+}
+
 /**
  * 填充配置的缺失默认值：顶层字段用 createBlankConfig 合并，
  * 每个零件用 PartCodec.decode 填充 codec 定义的字段默认值
@@ -235,7 +347,15 @@ function ensureDefaults(config) {
  * @returns {Object} 迁移并修复后的配置
  */
 function migrateIfNeeded(config) {
-    if (!config || !config.$schema_version) {
+    if (!config || typeof config !== 'object') {
+        log.info('migrateIfNeeded: 无版本号，应用默认值');
+        return ensureDefaults(config);
+    }
+
+    // 先归一化旧占位，再做版本迁移与 decode（docs/13 §15：raw → decode → key 迁移）
+    config = normalizeLegacyPlaceholders(config);
+
+    if (!config.$schema_version) {
         log.info('migrateIfNeeded: 无版本号，应用默认值');
         return ensureDefaults(config);
     }
@@ -255,7 +375,8 @@ function migrateIfNeeded(config) {
             log.debug('migrateIfNeeded: 迁移步骤 v' + v + ' 完成');
         }
     }
-    return ensureDefaults(migrated);
+    // 迁移可能移动 parts 的位置（如 v1 的 project 包装），迁移后再归一化一次
+    return ensureDefaults(normalizeLegacyPlaceholders(migrated));
 }
 
 /**
@@ -311,6 +432,7 @@ if (typeof module !== 'undefined' && module.exports) {
         createConnectorInstanceConfig,
         ensureDefaults,
         migrateIfNeeded,
+        normalizeLegacyPlaceholders,
         getActivePart,
         getActiveVariant,
     };

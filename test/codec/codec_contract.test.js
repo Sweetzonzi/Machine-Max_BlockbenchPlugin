@@ -16,6 +16,16 @@ describe('Codec 占位语义（docs/13 §4.4）', () => {
         expect(() => Codec.STRING.encode({})).toThrow();
     });
 
+    test('optional 字段 decode 时把 null 当作缺省值', () => {
+        const Optional = Codec.record({
+            name: Codec.STRING.default('x'),
+            items: Codec.STRING.list().default([]),
+            map: Codec.map(Codec.STRING, Codec.STRING).default({}),
+        });
+        expect(Optional.decode({ name: null, items: null, map: null }))
+            .toEqual({ name: 'x', items: [], map: {} });
+    });
+
     test('map emitEmpty：空 map 输出 {}，默认 map 仍省略', () => {
         const RequiredMap = Codec.record({
             bone: Codec.STRING.field(),

@@ -111,8 +111,9 @@ function createFieldDescriptor(codec, opts) {
             return codec.encode(value, path);
         },
         decodeField: function (value, key, path) {
-            if (value === undefined) {
-                // 每次返回克隆，防止跨实例共享同一可变对象引用导致数据泄漏
+            if (value === undefined || value === null) {
+                // 每次返回克隆，防止跨实例共享同一可变对象引用导致数据泄漏。
+                // null 视为「未配置」：旧工程 / 旧 MCP 输入用它占位，按缺省值处理。
                 return isMutable ? cloneMutable(defaultVal) : defaultVal;
             }
             return codec.decode(value);
