@@ -2,17 +2,15 @@
 // 用途: 导出闸门 canExport + partId 出口断言（docs/13 §4.3 / §8）
 // 所属模块: MachineMax Blockbench 插件
 //
-// 过渡期（P3）：collectIssues 仍在 mode/validation.js；P4 下沉到 core/validation.js。
+// P4：collectIssues 已下沉到 services/validate.js（保持 core 不依赖 doc）。
 // services 层可以 require fs、async、不参与撤销、不暴露给 MCP。
 
 'use strict';
 
-var { collectIssues } = require('../mode/validation.js');
+var { collectIssues } = require('./validate.js');
 var { validateTree } = require('../doc/validate.js');
 var keys = require('../doc/keys.js');
-var { createLogger } = require('../utils/logger.js');
-
-var log = createLogger('ExportService');
+var { assertSafePartIds } = require('./safe_part_ids.js');
 
 var ITEM_CONTAINERS = {
     hit_boxes: 'hit_box',
@@ -163,26 +161,15 @@ function canExport(config) {
 }
 
 /**
- * 导出管线写盘前的最后一道断言（docs/13 §4.3 / §11 #20）。
- * 必须在任何 mkdir/writeFile 之前调用，保证坏 partId 不产生半个包。
+ * executeExport 由 export_pipeline.js 实现（P4 从 ui/export/ 迁入）；
+ * 这里只做聚合导出，调用方统一从 services/export.js 进入。
  */
-function assertSafePartIds(config) {
-    var bad = Object.keys((config && config.parts) || {}).filter(function (partId) {
-        return !keys.isSafePartId(partId);
-    });
-    if (bad.length > 0) {
-        var err = new Error('存在不安全的零件 ID，已阻止导出: ' + bad.join(', '));
-        err.code = 'unsafe_part_id';
-        err.partIds = bad;
-        log.error(err.message);
-        throw err;
-    }
-    return true;
-}
+var pipeline = require('./export_pipeline.js');
 
 module.exports = {
     canExport: canExport,
     assertSafePartIds: assertSafePartIds,
+    executeExport: pipeline.executeExport,
     dedupeIssues: dedupeIssues,
     toProblem: toProblem,
     _issueKey: issueKey,

@@ -3,7 +3,7 @@
  */
 
 const path = require('path');
-const content_pack = require('../../core/content_pack.js');
+const packService = require('../../services/pack.js');
 const persistence = require('../../utils/persistence.js');
 const { showToast } = require('../../utils/notify.js');
 const { createLogger } = require('../../utils/logger.js');
@@ -115,7 +115,7 @@ function showCreatePackDialog(config, onSave) {
                 };
 
                 // ---- 创建内容包 ----
-                var result = content_pack.createContentPack(packDirPath, meta);
+                var result = packService.createPack(packDirPath, meta);
                 if (!result.success) {
                     showToast('创建失败: ' + (result.error || '未知错误'), 'error');
                     return false;

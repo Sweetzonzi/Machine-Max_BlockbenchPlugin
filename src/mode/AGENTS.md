@@ -4,7 +4,7 @@
 
 MachineMax 自定义模式"零件定义"的全部逻辑。负责模式生命周期、Vue 面板懒加载、Outliner 图标、原型猴子补丁、配置校验和工具栏动作注册。
 
-重构前 `mode.js` 为 935 行单体文件，现已拆分为 4 个专注模块 + 懒加载 Vue 面板。
+重构前 `mode.js` 为 935 行单体文件，现已拆分为 5 个专注模块 + 懒加载 Vue 面板。
 
 ## 结构
 
@@ -13,8 +13,7 @@ src/mode/
 ├── mode.js           # 模式注册 + 生命周期（344行，含 Vue 面板懒加载）
 ├── icons.js          # Outliner 图标刷新（82行）
 ├── patches.js        # 原型猴子补丁 + 右键菜单（623行）
-├── validation.js     # 唯一校验 collectIssues() → Problem[]（约371行，字段级带 path.field）
-├── validation_check.js # 接入 Blockbench 原生 ValidatorCheck（约90行）
+├── validation_check.js # 接入 Blockbench 原生 ValidatorCheck（约90行；collectIssues 在 services/validate.js）
 └── toolbar.js        # 工具栏 Action 注册（185行）
 ```
 
@@ -25,7 +24,7 @@ src/mode/
 | 修改模式生命周期 | `mode.js:registerMode()` | onSelect/onUnselect、Panel 注册、CSS 注入 |
 | 修改 Outliner 图标 | `icons.js` | `refreshOutlinerIcons()`, `resetOutlinerIcons()` |
 | 修改右键菜单 | `patches.js` | `buildMMMenuItems()`, `patchShowContextMenu()` |
-| 修改校验逻辑 | `validation.js` | `collectIssues(config)` — 唯一校验源，返回 Problem[] |
+| 修改校验逻辑 | `../services/validate.js` | `collectIssues(config)` — 唯一校验源，返回 Problem[]（字段级带 `path.field`） |
 | 接入原生清单 | `validation_check.js` | `registerValidation()` / `unregisterValidation()` — ValidatorCheck 封装 |
 | 修改工具栏按钮 | `toolbar.js` | `registerToolbarActions()` — 注册 4 个 Action |
 | 添加工具栏按钮 | `toolbar.js` | 在 `_mmActionIds` 中添加 ID，push 新的 `Action()` |
@@ -37,7 +36,7 @@ mode.js
   ├── icons.js        → element_markers, persistence (getConfig)
   ├── patches.js      → element_markers, persistence, notify, LOGGER
   │                     (内部懒加载 mode.js 获取 refreshOutlinerIcons)
-  ├── validation.js   → LOGGER
+  ├── validation_check.js → services/validate
   └── toolbar.js      → persistence, notify, LOGGER, validation
                         (内部懒加载 mode.js 获取 refreshOutlinerIcons)
 mode.js ──→ App.vue.js（懒加载，运行时安全）

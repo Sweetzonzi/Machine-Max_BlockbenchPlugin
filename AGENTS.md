@@ -31,6 +31,13 @@ plugin.js                      # 插件入口（103行）
   │           ├── doc/                # 路径 / 投影 / 引用 / 值校验
   │           └── core/undo.js        # 每个操作内部 runConfigEdit
   ├── utils/notify.js            # 用户通知（Toast）
+  ├── services/                  # 文件系统 / 导出闸门（不进撤销、不暴露 MCP）
+  │     ├── export.js            # canExport + executeExport 聚合出口
+  │     ├── export_pipeline.js   # executeExport（生成器 + 写盘）
+  │     ├── safe_part_ids.js     # 写盘前 partId 断言
+  │     ├── import.js            # 文件读取 + 带注释 JSON 解析
+  │     ├── pack.js              # 内容包创建/打开 + 依赖链解析
+  │     └── validate.js          # collectIssues（P4 从 mode/ 下沉）
   ├── mode.js                    # 模式生命周期 + 注册（344行）
   │     ├── core/element_markers.js  # 标记类型系统 + 缺失配置修复（约990行）
   │     ├── core/content_pack.js
@@ -38,9 +45,9 @@ plugin.js                      # 插件入口（103行）
   │     ├── utils/notify.js
   │     ├── mode/icons.js        # Outliner 图标刷新（82行）
   │     ├── mode/patches.js      # 原型猴子补丁 + 右键菜单（623行）
-  │     ├── mode/validation.js   # 配置校验 collectIssues（371行）
+  │     ├── mode/validation_check.js # Problems → 原生清单适配
   │     ├── mode/toolbar.js      # 工具栏 Action 注册（185行）
-  │     └── ui/App.vue.js        # Vue 属性面板（懒加载，1779行；计算属性只读）
+  │     └── ui/App.vue.js        # Vue 属性面板（懒加载，1786行；计算属性只读）
   │           ├── ui/SubPartPanel.vue.js
   │           ├── ui/HitBoxPanel.vue.js
   │           ├── ui/SignalFlowPanel.vue.js  # 信号流图面板（579行）
@@ -50,9 +57,9 @@ plugin.js                      # 插件入口（103行）
   │                 ├── pack_setup_dialog.js    (805行)
   │                 ├── subsystem_dialog.js     (600行)
   │                 └── connector_dialog.js     (506行)
-  └── ui/menu.js                 # BarMenu + 导出管线（319行）
+  └── ui/menu.js                 # BarMenu（319行）
         ├── utils/persistence.js  # saveConfig / scheduleSave（300ms 防抖）
-        ├── services/export.js    # canExport 闸门 + partId 出口断言（P3）
+        ├── services/export.js    # canExport 闸门 + executeExport 聚合出口
         ├── utils/file_writer.js
         ├── core/content_pack.js
         ├── mode.js (runValidation)
@@ -105,7 +112,7 @@ if (typeof module !== 'undefined' && module.exports) {
   结构性动作与 MCP 调用一律 `coalesce:false`（docs/13 §6.4）
 - 新增变更入口后自测：改一次 → `Ctrl+Z` 能回退、`Ctrl+Y` 能重做
 - 设计文档：[docs/11-接入Blockbench原生撤销.md](./docs/11-接入Blockbench原生撤销.md)
-- 分层约定（已落地 P1–P3）：[docs/13-业务逻辑层与配置文档API.md](./docs/13-业务逻辑层与配置文档API.md)
+- 分层约定（已落地 P1–P4）：[docs/13-业务逻辑层与配置文档API.md](./docs/13-业务逻辑层与配置文档API.md)
 - MCP 工具设计（P5，依赖 docs/13）：[docs/12-MCP工具接入.md](./docs/12-MCP工具接入.md)
 
 ### 测试

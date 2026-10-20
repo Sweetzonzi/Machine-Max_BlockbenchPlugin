@@ -1,5 +1,5 @@
 /**
- * export_pipeline.js — 内容包导出管线（从 menu.js 拆出）
+ * export_pipeline.js — 内容包导出管线（P4 从 ui/export/export_pipeline.js 迁入）
  *
  * 原 menu.js 的 _executeExport：执行内容包导出并返回统计信息。
  *
@@ -32,9 +32,9 @@
  *   executeExport(config, packMeta, exportDir, packFolderName) — 执行导出
  */
 
-const { createLogger } = require('../../utils/logger.js');
-const fileWriter = require('../../utils/file_writer.js');
-const { assertSafePartIds } = require('../../services/export.js');
+const { createLogger } = require('../utils/logger.js');
+const fileWriter = require('../utils/file_writer.js');
+const { assertSafePartIds } = require('./safe_part_ids.js');
 
 /** 模块日志 */
 var log = createLogger('ExportPipeline');
@@ -165,7 +165,7 @@ function executeExport(config, packMeta, exportDir, packFolderName) {
     }
 
     // === meta.json ===
-    var genMeta = require('../../generators/meta_generator.js');
+    var genMeta = require('../generators/meta_generator.js');
     var savedPackMeta = config.packMeta;
     config.packMeta = packMeta;
     var meta = genMeta.generateMeta(config);
@@ -203,7 +203,7 @@ function executeExport(config, packMeta, exportDir, packFolderName) {
     }
 
     // === {namespace}/lang/{locale}.json（合并模式：保留已有条目，仅添加缺失键） ===
-    var genLang = require('../../generators/lang_generator.js');
+    var genLang = require('../generators/lang_generator.js');
     var allLangs = genLang.generateAllLangs(config);
     if (allLangs) {
         var langDir = path.join(packRoot, ns, 'lang');
@@ -216,7 +216,7 @@ function executeExport(config, packMeta, exportDir, packFolderName) {
     }
 
     // === {namespace}/parts/{partId}.json ===
-    var genParts = require('../../generators/part_generator.js');
+    var genParts = require('../generators/part_generator.js');
     var allParts = genParts.generateAllParts(config);
     var partsBaseDir = path.join(packRoot, ns, 'parts');
     for (var partId in allParts) {
@@ -240,9 +240,9 @@ function executeExport(config, packMeta, exportDir, packFolderName) {
     // === 从内容包目录复制连接点/子系统/材料 ===
     var packDir = config.contentPackPath;
     if (packDir && fs.existsSync(packDir)) {
-        var genConn = require('../../generators/connector_generator.js');
-        var genSub = require('../../generators/subsystem_generator.js');
-        var genMat = require('../../generators/material_generator.js');
+        var genConn = require('../generators/connector_generator.js');
+        var genSub = require('../generators/subsystem_generator.js');
+        var genMat = require('../generators/material_generator.js');
 
         stats.connectors = genConn.copyConnectorDefs(packDir, ns, path.join(packRoot, ns, 'connectors'), isFlat);
         stats.subsystems = genSub.copySubsystemDefs(packDir, ns, path.join(packRoot, ns, 'subsystems'), isFlat);

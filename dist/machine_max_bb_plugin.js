@@ -14097,9 +14097,9 @@
     }
   });
 
-  // src/mode/validation.js
-  var require_validation = __commonJS({
-    "src/mode/validation.js"(exports, module) {
+  // src/services/validate.js
+  var require_validate = __commonJS({
+    "src/services/validate.js"(exports, module) {
       init_define_BUILTIN_CONNECTORS();
       init_define_BUILTIN_CONTROL_GROUPS();
       init_define_BUILTIN_MATERIALS();
@@ -16633,7 +16633,7 @@
   });
 
   // src/doc/validate.js
-  var require_validate = __commonJS({
+  var require_validate2 = __commonJS({
     "src/doc/validate.js"(exports, module) {
       "use strict";
       init_define_BUILTIN_CONNECTORS();
@@ -16938,9 +16938,9 @@
     }
   });
 
-  // src/services/export.js
-  var require_export = __commonJS({
-    "src/services/export.js"(exports, module) {
+  // src/services/safe_part_ids.js
+  var require_safe_part_ids = __commonJS({
+    "src/services/safe_part_ids.js"(exports, module) {
       "use strict";
       init_define_BUILTIN_CONNECTORS();
       init_define_BUILTIN_CONTROL_GROUPS();
@@ -16948,130 +16948,9 @@
       init_define_BUILTIN_PACK_META();
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
-      var { collectIssues } = require_validation();
-      var { validateTree } = require_validate();
       var keys = require_keys();
       var { createLogger: createLogger2 } = require_logger();
-      var log2 = createLogger2("ExportService");
-      var ITEM_CONTAINERS = {
-        hit_boxes: "hit_box",
-        interact_boxes: "interact_box",
-        connectors: "connector",
-        subsystems: "subsystem"
-      };
-      function toProblem(error, config) {
-        var segs = error && error.path || [];
-        var path = { scope: "config", partId: "", variantName: "" };
-        if (segs[0] === "parts" && segs.length >= 2) {
-          path.scope = "part";
-          path.partId = segs[1];
-        }
-        if (segs[2] === "variants" && segs.length >= 4) {
-          path.scope = "variant";
-          path.variantName = segs[3];
-        }
-        var leafStart = 4;
-        if (segs[4] === "sub_parts" && segs.length >= 6) {
-          path.scope = "subpart";
-          path.subPartKey = segs[5];
-          leafStart = 6;
-        }
-        var container = segs[leafStart];
-        if (container && ITEM_CONTAINERS[container] && segs.length > leafStart + 1) {
-          path.scope = ITEM_CONTAINERS[container];
-          path.itemKey = segs[leafStart + 1];
-          path.field = segs.slice(leafStart + 2).join(".");
-          if (path.scope === "hit_box") {
-            path.elementUuid = path.itemKey;
-          } else if (path.scope === "interact_box" && config) {
-            path.elementUuid = _findInteractBoxUuid(config, path);
-          }
-        } else {
-          path.field = segs.slice(leafStart).join(".");
-        }
-        var detail = error.hint || error.expected || "";
-        if (typeof detail === "object") detail = JSON.stringify(detail);
-        var message = error.code + (detail ? "\uFF1A" + detail : "");
-        if (error.got !== void 0 && error.got !== null && typeof error.got !== "object") {
-          message += "\uFF08\u5F53\u524D\u503C: " + String(error.got) + "\uFF09";
-        }
-        return {
-          severity: "error",
-          code: error.code,
-          message,
-          path
-        };
-      }
-      function _findInteractBoxUuid(config, path) {
-        var variant = config && config.parts && config.parts[path.partId] && config.parts[path.partId].variants && config.parts[path.partId].variants[path.variantName];
-        var sp = variant && variant.sub_parts && variant.sub_parts[path.subPartKey];
-        var entry = sp && sp.interact_boxes && sp.interact_boxes[path.itemKey];
-        return entry && entry._uuid || "";
-      }
-      function issueKey(p) {
-        var path = p && p.path || {};
-        return [
-          path.scope || "",
-          path.partId || "",
-          path.variantName || "",
-          path.subPartKey || "",
-          path.itemKey || "",
-          path.field || ""
-        ].join("|");
-      }
-      function dedupeIssues(primary, schema) {
-        var out = [];
-        var seen = {};
-        (primary || []).forEach(function(p) {
-          out.push(p);
-          seen[issueKey(p)] = true;
-        });
-        (schema || []).forEach(function(p) {
-          var key = issueKey(p);
-          if (!seen[key]) {
-            seen[key] = true;
-            out.push(p);
-          }
-        });
-        return out;
-      }
-      function canExport(config) {
-        if (!config || typeof config !== "object") {
-          return {
-            ok: false,
-            errors: [{
-              severity: "error",
-              code: "config_unavailable",
-              message: "\u914D\u7F6E\u4E0D\u53EF\u7528",
-              path: { scope: "config", partId: "", variantName: "", field: "" }
-            }],
-            warnings: [],
-            issues: []
-          };
-        }
-        var primary = collectIssues(config);
-        Object.keys(config.parts || {}).forEach(function(partId) {
-          if (!keys.isSafePartId(partId)) {
-            primary.push({
-              severity: "error",
-              code: "unsafe_part_id",
-              message: '\u96F6\u4EF6 ID "' + partId + '" \u4E0D\u5B89\u5168\uFF08\u4E0D\u80FD\u4F5C\u4E3A\u5BFC\u51FA\u8DEF\u5F84\u6BB5\uFF09',
-              path: { scope: "part", partId, variantName: "", field: "" }
-            });
-          }
-        });
-        var schema = validateTree(config, { completeness: true }).map(function(e) {
-          return toProblem(e, config);
-        });
-        var issues = dedupeIssues(primary, schema);
-        var errors = issues.filter(function(p) {
-          return p.severity === "error";
-        });
-        var warnings = issues.filter(function(p) {
-          return p.severity !== "error";
-        });
-        return { ok: errors.length === 0, errors, warnings, issues };
-      }
+      var log2 = createLogger2("SafePartIds");
       function assertSafePartIds(config) {
         var bad = Object.keys(config && config.parts || {}).filter(function(partId) {
           return !keys.isSafePartId(partId);
@@ -17085,13 +16964,7 @@
         }
         return true;
       }
-      module.exports = {
-        canExport,
-        assertSafePartIds,
-        dedupeIssues,
-        toProblem,
-        _issueKey: issueKey
-      };
+      module.exports = { assertSafePartIds };
     }
   });
 
@@ -17566,9 +17439,9 @@
     }
   });
 
-  // src/ui/export/export_pipeline.js
+  // src/services/export_pipeline.js
   var require_export_pipeline = __commonJS({
-    "src/ui/export/export_pipeline.js"(exports, module) {
+    "src/services/export_pipeline.js"(exports, module) {
       init_define_BUILTIN_CONNECTORS();
       init_define_BUILTIN_CONTROL_GROUPS();
       init_define_BUILTIN_MATERIALS();
@@ -17577,7 +17450,7 @@
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
       var fileWriter = require_file_writer();
-      var { assertSafePartIds } = require_export();
+      var { assertSafePartIds } = require_safe_part_ids();
       var log2 = createLogger2("ExportPipeline");
       function executeExport(config, packMeta, exportDir, packFolderName) {
         var fs = __require("fs");
@@ -17774,6 +17647,151 @@
           executeExport
         };
       }
+    }
+  });
+
+  // src/services/export.js
+  var require_export = __commonJS({
+    "src/services/export.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var { collectIssues } = require_validate();
+      var { validateTree } = require_validate2();
+      var keys = require_keys();
+      var { assertSafePartIds } = require_safe_part_ids();
+      var ITEM_CONTAINERS = {
+        hit_boxes: "hit_box",
+        interact_boxes: "interact_box",
+        connectors: "connector",
+        subsystems: "subsystem"
+      };
+      function toProblem(error, config) {
+        var segs = error && error.path || [];
+        var path = { scope: "config", partId: "", variantName: "" };
+        if (segs[0] === "parts" && segs.length >= 2) {
+          path.scope = "part";
+          path.partId = segs[1];
+        }
+        if (segs[2] === "variants" && segs.length >= 4) {
+          path.scope = "variant";
+          path.variantName = segs[3];
+        }
+        var leafStart = 4;
+        if (segs[4] === "sub_parts" && segs.length >= 6) {
+          path.scope = "subpart";
+          path.subPartKey = segs[5];
+          leafStart = 6;
+        }
+        var container = segs[leafStart];
+        if (container && ITEM_CONTAINERS[container] && segs.length > leafStart + 1) {
+          path.scope = ITEM_CONTAINERS[container];
+          path.itemKey = segs[leafStart + 1];
+          path.field = segs.slice(leafStart + 2).join(".");
+          if (path.scope === "hit_box") {
+            path.elementUuid = path.itemKey;
+          } else if (path.scope === "interact_box" && config) {
+            path.elementUuid = _findInteractBoxUuid(config, path);
+          }
+        } else {
+          path.field = segs.slice(leafStart).join(".");
+        }
+        var detail = error.hint || error.expected || "";
+        if (typeof detail === "object") detail = JSON.stringify(detail);
+        var message = error.code + (detail ? "\uFF1A" + detail : "");
+        if (error.got !== void 0 && error.got !== null && typeof error.got !== "object") {
+          message += "\uFF08\u5F53\u524D\u503C: " + String(error.got) + "\uFF09";
+        }
+        return {
+          severity: "error",
+          code: error.code,
+          message,
+          path
+        };
+      }
+      function _findInteractBoxUuid(config, path) {
+        var variant = config && config.parts && config.parts[path.partId] && config.parts[path.partId].variants && config.parts[path.partId].variants[path.variantName];
+        var sp = variant && variant.sub_parts && variant.sub_parts[path.subPartKey];
+        var entry = sp && sp.interact_boxes && sp.interact_boxes[path.itemKey];
+        return entry && entry._uuid || "";
+      }
+      function issueKey(p) {
+        var path = p && p.path || {};
+        return [
+          path.scope || "",
+          path.partId || "",
+          path.variantName || "",
+          path.subPartKey || "",
+          path.itemKey || "",
+          path.field || ""
+        ].join("|");
+      }
+      function dedupeIssues(primary, schema) {
+        var out = [];
+        var seen = {};
+        (primary || []).forEach(function(p) {
+          out.push(p);
+          seen[issueKey(p)] = true;
+        });
+        (schema || []).forEach(function(p) {
+          var key = issueKey(p);
+          if (!seen[key]) {
+            seen[key] = true;
+            out.push(p);
+          }
+        });
+        return out;
+      }
+      function canExport(config) {
+        if (!config || typeof config !== "object") {
+          return {
+            ok: false,
+            errors: [{
+              severity: "error",
+              code: "config_unavailable",
+              message: "\u914D\u7F6E\u4E0D\u53EF\u7528",
+              path: { scope: "config", partId: "", variantName: "", field: "" }
+            }],
+            warnings: [],
+            issues: []
+          };
+        }
+        var primary = collectIssues(config);
+        Object.keys(config.parts || {}).forEach(function(partId) {
+          if (!keys.isSafePartId(partId)) {
+            primary.push({
+              severity: "error",
+              code: "unsafe_part_id",
+              message: '\u96F6\u4EF6 ID "' + partId + '" \u4E0D\u5B89\u5168\uFF08\u4E0D\u80FD\u4F5C\u4E3A\u5BFC\u51FA\u8DEF\u5F84\u6BB5\uFF09',
+              path: { scope: "part", partId, variantName: "", field: "" }
+            });
+          }
+        });
+        var schema = validateTree(config, { completeness: true }).map(function(e) {
+          return toProblem(e, config);
+        });
+        var issues = dedupeIssues(primary, schema);
+        var errors = issues.filter(function(p) {
+          return p.severity === "error";
+        });
+        var warnings = issues.filter(function(p) {
+          return p.severity !== "error";
+        });
+        return { ok: errors.length === 0, errors, warnings, issues };
+      }
+      var pipeline = require_export_pipeline();
+      module.exports = {
+        canExport,
+        assertSafePartIds,
+        executeExport: pipeline.executeExport,
+        dedupeIssues,
+        toProblem,
+        _issueKey: issueKey
+      };
     }
   });
 
@@ -19051,7 +19069,7 @@
       var fieldSpecs = require_field_specs();
       var keys = require_keys();
       var shapes = require_shapes();
-      var validate = require_validate();
+      var validate = require_validate2();
       var refs = require_refs();
       var ports = require_ports();
       var PLACEHOLDER_PREFIX = "__new_p_";
@@ -19735,7 +19753,7 @@
       var keys = require_keys();
       var projection = require_projection();
       var refs = require_refs();
-      var validate = require_validate();
+      var validate = require_validate2();
       var ports = require_ports();
       var shapes = require_shapes();
       function pathSegments(path) {
@@ -21538,9 +21556,10 @@
     }
   });
 
-  // src/ui/dialogs/dependency_editor.js
-  var require_dependency_editor = __commonJS({
-    "src/ui/dialogs/dependency_editor.js"(exports, module) {
+  // src/services/pack.js
+  var require_pack2 = __commonJS({
+    "src/services/pack.js"(exports, module) {
+      "use strict";
       init_define_BUILTIN_CONNECTORS();
       init_define_BUILTIN_CONTROL_GROUPS();
       init_define_BUILTIN_MATERIALS();
@@ -21550,13 +21569,18 @@
       var fs = __require("fs");
       var path = __require("path");
       var content_pack = require_content_pack();
-      var persistence = require_persistence();
-      var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
-      var { DEP_TYPE_LABELS } = require_pack_common();
-      var ops = require_ops();
-      var log2 = createLogger2("DependencyEditor");
-      function _findPackInSiblings(parentDir, packId) {
+      var log2 = createLogger2("PackService");
+      function createPack(dirPath, meta) {
+        return content_pack.createContentPack(dirPath, meta);
+      }
+      function openPack(dirPath) {
+        return content_pack.openContentPack(dirPath);
+      }
+      function readPackMeta(packPath) {
+        return content_pack.readPackMeta(packPath);
+      }
+      function findPackInSiblings(parentDir, packId) {
         if (!packId || !parentDir || !fs.existsSync(parentDir)) return null;
         var entries, i, fullPath, stat, meta;
         try {
@@ -21586,7 +21610,7 @@
         }
         return null;
       }
-      function _resolveChainDependencies(directDeps, parentDir) {
+      function resolveChainDependencies(directDeps, parentDir) {
         var indirect = [];
         var processed = {};
         var i, j, dep, depMeta, depDeps, depDep, depId, found;
@@ -21604,7 +21628,7 @@
           for (j = 0; j < depDeps.length; j++) {
             depDep = depDeps[j];
             depId = depDep.id || depDep;
-            found = _findPackInSiblings(parentDir, depId);
+            found = findPackInSiblings(parentDir, depId);
             if (found && !processed[found]) {
               processed[found] = true;
               indirect.push({
@@ -21621,6 +21645,32 @@
           indirect
         };
       }
+      module.exports = {
+        createPack,
+        openPack,
+        readPackMeta,
+        findPackInSiblings,
+        resolveChainDependencies
+      };
+    }
+  });
+
+  // src/ui/dialogs/dependency_editor.js
+  var require_dependency_editor = __commonJS({
+    "src/ui/dialogs/dependency_editor.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var packService = require_pack2();
+      var persistence = require_persistence();
+      var { showToast: showToast2 } = require_notify();
+      var { createLogger: createLogger2 } = require_logger();
+      var { DEP_TYPE_LABELS } = require_pack_common();
+      var ops = require_ops();
+      var log2 = createLogger2("DependencyEditor");
       function showDependencyPathEditor(existingDeps, contextParentDir, options, onComplete) {
         if (typeof options === "function") {
           onComplete = options;
@@ -21712,7 +21762,7 @@
                 }
                 if (formData.depDir && formData.depDir.trim()) {
                   var depPath = formData.depDir.trim();
-                  var r = content_pack.openContentPack(depPath);
+                  var r = packService.openPack(depPath);
                   if (!r.valid) {
                     showToast2("\u6240\u9009\u76EE\u5F55\u4E0D\u662F\u6709\u6548\u5185\u5BB9\u5305: " + (r.error || "\u7F3A\u5C11 meta.json"), "warning");
                     stepNum++;
@@ -21745,7 +21795,7 @@
                 this.hide();
                 var resolved = { direct: selected, indirect: [] };
                 if (selected.length > 0 && contextParentDir) {
-                  resolved = _resolveChainDependencies(selected, contextParentDir);
+                  resolved = packService.resolveChainDependencies(selected, contextParentDir);
                   for (var j = 0; j < resolved.indirect.length; j++) {
                     selected.push(resolved.indirect[j]);
                   }
@@ -21756,7 +21806,7 @@
                 this.hide();
                 var resolved = { direct: selected, indirect: [] };
                 if (selected.length > 0 && contextParentDir) {
-                  resolved = _resolveChainDependencies(selected, contextParentDir);
+                  resolved = packService.resolveChainDependencies(selected, contextParentDir);
                 }
                 if (typeof onComplete === "function") onComplete(resolved);
               }
@@ -21858,9 +21908,7 @@
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
           showDependencyPathEditor,
-          showManageDependenciesDialog,
-          _resolveChainDependencies,
-          _findPackInSiblings
+          showManageDependenciesDialog
         };
       }
     }
@@ -21876,7 +21924,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var path = __require("path");
-      var content_pack = require_content_pack();
+      var packService = require_pack2();
       var persistence = require_persistence();
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
@@ -21958,7 +22006,7 @@
                 author: formData.packAuthor || "",
                 description: formData.packDescription || ""
               };
-              var result = content_pack.createContentPack(packDirPath, meta);
+              var result = packService.createPack(packDirPath, meta);
               if (!result.success) {
                 showToast2("\u521B\u5EFA\u5931\u8D25: " + (result.error || "\u672A\u77E5\u9519\u8BEF"), "error");
                 return false;
@@ -22021,7 +22069,7 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var path = __require("path");
-      var content_pack = require_content_pack();
+      var packService = require_pack2();
       var persistence = require_persistence();
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
@@ -22056,7 +22104,7 @@
                 return false;
               }
               var dirPath = formData.packDir.trim();
-              var result = content_pack.openContentPack(dirPath);
+              var result = packService.openPack(dirPath);
               if (!result.valid) {
                 showToast2("\u5185\u5BB9\u5305\u65E0\u6548: " + (result.error || "\u76EE\u5F55\u4E2D\u7F3A\u5C11 meta.json \u6216\u5FC5\u8981\u5B50\u76EE\u5F55"), "error");
                 return false;
@@ -22212,8 +22260,7 @@
       var { createLogger: createLogger2 } = require_logger();
       var { getConfig, saveConfig } = require_persistence();
       var { showToast: showToast2 } = require_notify();
-      var { canExport } = require_export();
-      var { executeExport } = require_export_pipeline();
+      var { canExport, executeExport } = require_export();
       var ops = require_ops();
       var path = __require("path");
       var log2 = createLogger2("ExportDialog");
@@ -22859,9 +22906,9 @@
     }
   });
 
-  // src/import/drag_import.js
-  var require_drag_import = __commonJS({
-    "src/import/drag_import.js"(exports, module) {
+  // src/services/import.js
+  var require_import = __commonJS({
+    "src/services/import.js"(exports, module) {
       "use strict";
       init_define_BUILTIN_CONNECTORS();
       init_define_BUILTIN_CONTROL_GROUPS();
@@ -22870,19 +22917,6 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var fs = __require("fs");
-      var path = __require("path");
-      var { createLogger: createLogger2 } = require_logger();
-      var { showToast: showToast2 } = require_notify();
-      var { getConfig, saveConfig } = require_persistence();
-      var { PartCodec } = require_part_codec();
-      var { resolveBoneReferences } = require_bone_resolver();
-      var { showConflictDialog } = require_conflict_dialog();
-      var keys = require_keys();
-      var undo = require_undo();
-      var log2 = createLogger2("DragImport");
-      var MODE_ID = "machine_max_part";
-      var _dragoverHandler = null;
-      var _dropHandler = null;
       function parseJSONWithComments(content) {
         if (content && content.charCodeAt(0) === 65279) {
           content = content.slice(1);
@@ -22910,6 +22944,44 @@
         }
         return JSON.parse(result.join("\n"));
       }
+      function readTextFile(filePath) {
+        return fs.readFileSync(filePath, "utf-8");
+      }
+      function readJsonFile(filePath) {
+        return parseJSONWithComments(readTextFile(filePath));
+      }
+      module.exports = {
+        parseJSONWithComments,
+        readTextFile,
+        readJsonFile
+      };
+    }
+  });
+
+  // src/import/drag_import.js
+  var require_drag_import = __commonJS({
+    "src/import/drag_import.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var path = __require("path");
+      var { createLogger: createLogger2 } = require_logger();
+      var { showToast: showToast2 } = require_notify();
+      var { getConfig, saveConfig } = require_persistence();
+      var { PartCodec } = require_part_codec();
+      var { resolveBoneReferences } = require_bone_resolver();
+      var { showConflictDialog } = require_conflict_dialog();
+      var keys = require_keys();
+      var undo = require_undo();
+      var importService = require_import();
+      var log2 = createLogger2("DragImport");
+      var MODE_ID = "machine_max_part";
+      var _dragoverHandler = null;
+      var _dropHandler = null;
       function generateUniqueId(baseId, existingParts) {
         if (!existingParts || !existingParts[baseId]) {
           return baseId;
@@ -22925,7 +22997,7 @@
       function importSingleFile(filePath, fileName, rawContent, batchAction) {
         var json;
         try {
-          json = parseJSONWithComments(rawContent);
+          json = importService.parseJSONWithComments(rawContent);
         } catch (e) {
           log2.warn("importSingleFile: JSON \u89E3\u6790\u5931\u8D25", { fileName, error: e.message });
           showToast2("\u6587\u4EF6 " + fileName + " \u4E0D\u662F\u6709\u6548\u7684 JSON", "error");
@@ -23052,7 +23124,7 @@
           for (var k = 0; k < jsonFiles.length; k++) {
             var raw;
             try {
-              raw = fs.readFileSync(jsonFiles[k].path, "utf-8");
+              raw = importService.readTextFile(jsonFiles[k].path);
             } catch (e) {
               log2.warn("importMultipleFiles: \u8BFB\u53D6\u6587\u4EF6\u5931\u8D25", { path: jsonFiles[k].path, error: e.message });
               continue;
@@ -23077,7 +23149,7 @@
             for (var m = 0; m < jsonFiles.length; m++) {
               var rawContent;
               try {
-                rawContent = fs.readFileSync(jsonFiles[m].path, "utf-8");
+                rawContent = importService.readTextFile(jsonFiles[m].path);
               } catch (e) {
                 log2.warn("importMultipleFiles: \u8BFB\u53D6\u6587\u4EF6\u5931\u8D25", { path: jsonFiles[m].path, error: e.message });
                 continue;
@@ -23129,7 +23201,7 @@
                 var rawContent = typeof file.content === "string" ? file.content : "";
                 if (!rawContent && file.path) {
                   try {
-                    rawContent = fs.readFileSync(file.path, "utf-8");
+                    rawContent = importService.readTextFile(file.path);
                   } catch (e) {
                     log2.warn("registerDragImport: \u8BFB\u53D6\u6587\u4EF6\u5931\u8D25", { path: file.path, error: e.message });
                     continue;
@@ -23205,7 +23277,7 @@
             }
             var domRawContent;
             try {
-              domRawContent = fs.readFileSync(domFilePath, "utf-8");
+              domRawContent = importService.readTextFile(domFilePath);
             } catch (readErr) {
               log2.warn("registerDragImport: \u8BFB\u53D6\u6587\u4EF6\u5931\u8D25", { path: domFilePath, error: readErr.message });
               continue;
@@ -23252,7 +23324,7 @@
         }
         var rawContent;
         try {
-          rawContent = fs.readFileSync(filePath, "utf-8");
+          rawContent = importService.readTextFile(filePath);
         } catch (e) {
           log2.error("importPartFromPath: \u8BFB\u53D6\u6587\u4EF6\u5931\u8D25", { path: filePath, error: e.message });
           showToast2("\u65E0\u6CD5\u8BFB\u53D6\u6587\u4EF6: " + fileName, "error");
@@ -24319,7 +24391,7 @@
       init_define_SCHEMAS();
       var { createLogger: createLogger2 } = require_logger();
       var { getConfig } = require_persistence();
-      var { collectIssues } = require_validation();
+      var { collectIssues } = require_validate();
       var log2 = createLogger2("ValidationCheck");
       var CHECK_ID = "mm_validation";
       var _checkInstance = null;
@@ -27330,7 +27402,7 @@
       var content_pack_manager = require_content_pack_manager();
       var nameUtils = require_name_utils();
       var { buildSignalTargetOptions } = require_signal_target_options();
-      var { collectIssues } = require_validation();
+      var { collectIssues } = require_validate();
       var { aggregate, resolveIssueLevel } = require_validation_types();
       var { showAddTagDialog, _hashTagColor } = require_tag_dialog_helper();
       var undo = require_undo();
@@ -30772,7 +30844,7 @@
         },
         validation: {
           collectIssues: function(config) {
-            return require_validation().collectIssues(config);
+            return require_validate().collectIssues(config);
           }
         }
       });

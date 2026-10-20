@@ -12,8 +12,7 @@
 const { createLogger } = require('../../utils/logger.js');
 const { getConfig, saveConfig } = require('../../utils/persistence.js');
 const { showToast } = require('../../utils/notify.js');
-const { canExport } = require('../../services/export.js');
-const { executeExport } = require('./export_pipeline.js');
+const { canExport, executeExport } = require('../../services/export.js');
 const ops = require('../../ops/index.js');
 const path = require('path');
 

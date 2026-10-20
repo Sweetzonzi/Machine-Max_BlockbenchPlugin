@@ -9,7 +9,7 @@ const em = require('../../src/core/element_markers.js');
 const undo = require('../../src/core/undo.js');
 const helpers = require('../helpers.js');
 const ops = require('../../src/ops/index.js');
-const { collectIssues } = require('../../src/mode/validation.js');
+const { collectIssues } = require('../../src/services/validate.js');
 
 const BONES = [
     { name: 'hull', uuid: '11111111-1111-1111-1111-111111111111' },

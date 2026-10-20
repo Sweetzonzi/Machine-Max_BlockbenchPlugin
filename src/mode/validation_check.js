@@ -7,7 +7,7 @@
  */
 var { createLogger } = require('../utils/logger.js');
 var { getConfig } = require('../utils/persistence.js');
-var { collectIssues } = require('./validation.js');
+var { collectIssues } = require('../services/validate.js');
 
 var log = createLogger('ValidationCheck');
 

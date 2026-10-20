@@ -3,7 +3,7 @@
  */
 
 const path = require('path');
-const content_pack = require('../../core/content_pack.js');
+const packService = require('../../services/pack.js');
 const persistence = require('../../utils/persistence.js');
 const { showToast } = require('../../utils/notify.js');
 const { createLogger } = require('../../utils/logger.js');
@@ -56,7 +56,7 @@ function showOpenPackDialog(config, onSave) {
                 }
 
                 var dirPath = formData.packDir.trim();
-                var result = content_pack.openContentPack(dirPath);
+                var result = packService.openPack(dirPath);
 
                 if (!result.valid) {
                     showToast('内容包无效: ' + (result.error || '目录中缺少 meta.json 或必要子目录'), 'error');

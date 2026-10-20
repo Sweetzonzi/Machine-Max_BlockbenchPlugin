@@ -23,12 +23,12 @@ const SRC = path.join(REPO_ROOT, 'src');
 
 // docs/13 §2（2026-10-21）。这些是审计基线，不是运行时数据。
 const BASELINE = {
-    '2.1.ui.js_files': 27,
+    '2.1.ui.js_files': 26,
     '2.1.ui.template_files': 7,
-    '2.1.ui.js_lines': 6700,
+    '2.1.ui.js_lines': 6309,
     '2.1.ui.template_lines': 1138,
-    '2.1.mode.files': 6,
-    '2.1.mode.lines': 1527,
+    '2.1.mode.files': 5,
+    '2.1.mode.lines': 1155,
     '2.1.core.files': 12,
     '2.1.core.lines': 4390,
     '2.1.codec.files': 10,
@@ -38,7 +38,7 @@ const BASELINE = {
     '2.1.generators.files': 6,
     '2.1.generators.lines': 440,
     '2.1.import.files': 3,
-    '2.1.import.lines': 895,
+    '2.1.import.lines': 859,
     '2.2.operations.functions': 29,
     '2.2.app.undo_labels': 2,
     '2.2.app.undo_labels.field': 0,
@@ -64,7 +64,7 @@ const BASELINE = {
     '2.3.show_toast.files': 21,
     '2.3.show_toast.no_undo.calls': 126,
     '2.3.show_toast.no_undo.files': 20,
-    '2.3.fs_path_require.files': 13,
+    '2.3.fs_path_require.files': 14,
     '2.3.write_file_sync.calls': 8,
     '2.3.write_file_sync.files': 4,
     '2.4.validation.error_points': 15,
@@ -294,7 +294,7 @@ function collect() {
 
     const labels = collectUndoLabels(read(app));
     const computed = collectComputedWrites(appSource);
-    const validation = collectValidationStats(path.join(SRC, 'mode', 'validation.js'));
+    const validation = collectValidationStats(path.join(SRC, 'services', 'validate.js'));
 
     const stats = Object.assign({}, directoryStats(), {
         '2.2.operations.functions': countPattern(stripComments(read(operations)),

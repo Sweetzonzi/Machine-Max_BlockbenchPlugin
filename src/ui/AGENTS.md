@@ -2,13 +2,13 @@
 
 ## 概览
 
-Vue 2 属性面板 + BarMenu + 导出管线。重构前 `App.vue.js` 为 1035 行单体文件，现已拆分为多个独立模块。
+Vue 2 属性面板 + BarMenu + 导出对话框。重构前 `App.vue.js` 为 1035 行单体文件，现已拆分为多个独立模块。
 
 ## 结构
 
 ```
 src/ui/
-├── App.vue.js              # 主 Vue 2 面板（约 1779 行，mm-main-panel；字段编辑统一走 ops.setField，计算属性只读）
+├── App.vue.js              # 主 Vue 2 面板（约 1786 行，mm-main-panel；字段编辑统一走 ops.setField，计算属性只读）
 ├── SubPartPanel.vue.js     # 子零件属性子组件（86行）
 ├── HitBoxPanel.vue.js      # 碰撞箱属性子组件（68行）
 ├── SignalFlowPanel.vue.js  # 信号流图可视化面板（579行）
@@ -19,14 +19,13 @@ src/ui/
 │   ├── SignalTargetEditor.vue.js   # 信号目标编辑器（三面板复用）
 │   ├── LocatorPicker.vue.js        # 定位器选择（输入框 + datalist + 自由文本）
 │   └── KeyValueEditor.vue.js       # 键值对编辑器
-├── export/                 # 导出管线（从 menu.js 拆出）
-│   ├── export_pipeline.js  # executeExport — 目录结构 + schema 注入
+├── export/                 # 导出对话框（管线已在 services/）
 │   └── export_dialog.js    # showExportDialog / showPackSettingsDialog
 ├── dialogs/                # 对话框子组件（由 menu.js 调用）
 │   ├── pack_setup_dialog.js    # 内容包设置向导主入口（转发拆分模块）
 │   ├── pack_create_dialog.js   # 创建新内容包
 │   ├── pack_open_dialog.js     # 打开已有内容包
-│   ├── dependency_editor.js    # 依赖路径编辑 + 链式解析 + 管理对话框
+│   ├── dependency_editor.js    # 依赖路径编辑 + 管理对话框（链式解析在 services/pack.js）
 │   ├── part_dialogs.js         # 新建零件 / 项目管理（工具栏·面板·右键菜单共用）
 │   ├── pack_common.js          # 内容包对话框公共工具
 │   ├── subsystem_dialog.js     # 子系统型号查看对话框（只读）
@@ -53,7 +52,7 @@ src/ui/
 | 修改信号流图面板 | `SignalFlowPanel.vue.js` | SVG 力导向图，数据来自 `lib/signal_graph.js` |
 | 修改标签对话框 | `tag_dialog_helper.js` | `showAddTagDialog(vm, variant)` — 标签 CRUD + 颜色哈希 |
 | 添加新工具栏动作 | `menu.js` → `registerMachineMaxMenu()` | 菜单是纯对象 `{name, icon, click}` — Blockbench 中无 MenuItem 类 |
-| 接线导出 | `export/export_pipeline.js` → `executeExport()` | 串联 6 个生成器 + codec 编码 → 通过 `file_writer.js` 写入 |
+| 接线导出 | `../services/export.js` → `executeExport()` | 串联 6 个生成器 + codec 编码 → 通过 `file_writer.js` 写入；对话框只消费统计结果 |
 | 添加设置字段 | `export/export_dialog.js` → `showPackSettingsDialog()` | 8 字段 Dialog；在 `onConfirm` 前添加表单字段 |
 | 内容包对话框 | `dialogs/pack_setup_dialog.js` | 向导主入口，转发 create/open/dependency 三个拆分模块 |
 | 新建零件 / 项目管理对话框 | `dialogs/part_dialogs.js` | 工具栏·面板·右键菜单共用；只调 `ops.createPart` / `ops.setContentPackPath` |

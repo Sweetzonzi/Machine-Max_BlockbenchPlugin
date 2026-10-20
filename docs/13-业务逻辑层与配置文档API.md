@@ -1,7 +1,7 @@
 # 业务逻辑层与配置文档 API（v3.2）
 
-> 状态：**P0–P3 已完成；P4/P5 待实现** · 日期：2026-10-21 · v3.2 依据：第四轮审阅（replace 旧 marker、connector 迁移算法、partId 路径安全、闸门去重）逐条核对代码后收口
-> P3（事件总线 + 导出闸门 + 计算属性收口）交付见 §10；P4（`services/` 抽离）与 P5（MCP）仍按 §10 推进
+> 状态：**P0–P4 已完成；P5（MCP）按用户 2026-10-21 确认不在本轮范围** · 日期：2026-10-21 · v3.2 依据：第四轮审阅（replace 旧 marker、connector 迁移算法、partId 路径安全、闸门去重）逐条核对代码后收口
+> P3（事件总线 + 导出闸门 + 计算属性收口）见 §10；P4（`services/` 抽离）见 §10；P5 见 [docs/12](./12-MCP工具接入.md)
 > v3 的第二轮收口见 §0；第三轮收口见 §0.2；本轮新增/修正见 §0.3
 > 范围：`src/doc/`（新增）+ `src/ops/`（由 `src/core/operations.js` 拆出）+ `src/services/`（新增）+ `src/ui/`、`src/mode/`（改薄）
 > 目标版本：v0.5.0（当前 0.4.0） · 前置：[docs/11](./11-接入Blockbench原生撤销.md) · 下游：[docs/12](./12-MCP工具接入.md)
@@ -21,7 +21,7 @@
 | 6 | `field_specs` 表达不了 `oneOf` / object / tuple / nullable | 扩展字段规格类型模型，并列出 9 个关键字段的生成结果（§5.2） |
 | 7 | §4.1「引用必须可解析」与 §5.3「未解析不阻塞」相反 | 拆成 `unresolved_config_ref`（error，拒绝）与 `unresolved_bone`（warning，放行）（§4.5） |
 | 8 | `OpResult` 缺 docs/12 已使用的 `path`，也缺 `dropped_fields` | 补齐字段与错误码（§12） |
-| 9 | `services` 依赖顺序写成 `core → doc → ops → services`，但 `collectIssues` 仍在 `mode/` | 明确过渡期允许 `services → mode`，P4 再下沉（§8） |
+| 9 | `services` 依赖顺序写成 `core → doc → ops → services`，但 `collectIssues` 仍在 `mode/` | P4 已下沉到 `services/validate.js`（不落 `core`，避免 core→doc 反转，见 D30），`mode/validation_check.js` 只做适配（§8） |
 | 10 | 多处数字/行号口径不准 | 全部重算，并把「读点」改为「写点」（§2） |
 
 ### 0.1 本轮实测校正（与审阅结论不一致之处）
@@ -68,10 +68,10 @@
 |---|---|---|---|
 | 1 | `import_*` 的 `replace` 只产出 `markerPlan`（新增），没有旧 marker 清理；旧 `start_bone` / `hit_boxes` / `interact_boxes` / `connectors` 的 marker 会在配置被替换后残留，`cleanGhostMarkers` 只清元素已不存在的标记，清不到「元素还在、配置已换」的旧标记 | **确认**。`projection.in` 第 9 步只生成新增计划；`clearAllMarkers` 只有 part / variant 两级，没有 sub_part 级；`cleanGhostMarkers` 的判据是 UUID 是否存在，不读 `config_ref` | 返回 `markerCleanup`（part / variant / sub_part 三级 scope）；`ops.import*` 在**同一笔撤销**里按「清理旧 marker → 替换节点 → 落 `markerPlan`」执行；sub_part 级用旧条目的 `config_refs` 精确清理；补「replace 后旧 marker 不残留、同形替换不重复、Ctrl+Z 恢复」测试（§5.3.1、§6.3、§11 #18） |
 | 2 | connector marker 的 `config_ref` 从 `definition` 迁移到连接点 key 没有可执行算法：同一 `definition` 可被多个 connector 共用；同名 Locator 可跨子零件；匹配不到时保留 / 置空 / 报错未定 | **确认**。§15.2 只有一句「统一为连接点 key」；`connectors[*]._marker_uuid` 已存在，可作为首选精确匹配；marker 的 UUID 就是 Locator 的 UUID | 定序匹配：**已迁移 key → `_marker_uuid` → Locator 名（唯一）→ 所属子零件内 Locator 名唯一**；`definition` **不参与匹配**。匹配不到时保留旧值到 `legacy_config_ref`、`config_ref` 置 `null`、记 `unresolved_config_ref` warning，不猜测、不删 marker；补「同 definition 多 connector」测试（§15.2.1、§11 #19） |
-| 3 | `partId` 允许 `.` / `..`，会进入 `parts/<partId>.json`、纹理资源路径和 `path.join`；`import_part` 可传任意 `part_id`，存在路径穿越 | **确认**。设计规则只校验 `^[a-z0-9_.-]+$`，当前 `createPart` 仅查非空（`importPart` 尚未实现）；`export_pipeline._resolveTargetDir` 在 `flat_export:false` 时把 `partId.split('_')[0]` 直接 `path.join`；`import_part` 是规划中的 MCP 入口 | `partId` 增加路径安全判据：拒绝 `.` / `..` / 首尾点 / Windows 设备名，且**完整值与 `split('_')[0]` 目录段都查**；`createPart`、`importPart`、拖拽导入统一 `invalid_format`；导出管线在 `path.join` 前**再次**断言，绕过闸门直接调 generator 也失败；存量非法 `partId` 不自动改名，记 `key_reserved` 导出 error（§5.1.3、§15.2） |
+| 3 | `partId` 允许 `.` / `..`，会进入 `parts/<partId>.json`、纹理资源路径和 `path.join`；`import_part` 可传任意 `part_id`，存在路径穿越 | **确认**。设计规则只校验 `^[a-z0-9_.-]+$`，当时 `createPart` 仅查非空、`importPart` 尚未实现；`services/export_pipeline._resolveTargetDir` 在 `flat_export:false` 时把 `partId.split('_')[0]` 直接 `path.join`；`import_part` 是规划中的 MCP 入口 | `partId` 增加路径安全判据：拒绝 `.` / `..` / 首尾点 / Windows 设备名，且**完整值与 `split('_')[0]` 目录段都查**；`createPart`、`importPart`、拖拽导入统一 `invalid_format`；导出管线在 `path.join` 前**再次**断言，绕过闸门直接调 generator 也失败；存量非法 `partId` 不自动改名，记 `key_reserved` 导出 error（§5.1.3、§15.2） |
 | 4 | `canExport` 的 `path + code` 去重不成立：`collectIssues` 报 `definition_required` / `subsystem_required_field`，`validateTree` 报 `missing_required`，同一路径两条不同 code，去重不生效 | **确认**。两层错误码本就不同；`collectIssues` 的 `Problem.path` 还缺字段名，无法与 `validateTree` 的段数组对齐 | 统一 `Problem.path` 为对象并补 `field`；`canExport` 把 `validateTree` 的段数组规范化为同一对象；去重键改为 **`scope|partId|variantName|subPartKey|itemKey|field`**，`collectIssues` 优先，`validateTree` 只补空缺；同一字段只留一条，不同字段各自保留（§4.3、§5.2.5、§12） |
 | 5 | `reset_fields` 只算顶层字段，docs/12 却把它描述成「整件语义唯一的安全网」；`import_part` 省略 `variant.tags` / `sub_part.hit_boxes` 时不会列出嵌套路径 | **确认**。§5.3.1 第 4 步明确写「顶层字段」；docs/12 的措辞过度承诺 | 保留**顶层字段**语义（递归 diff 成本高且无法区分「省略」与「默认值」）；docs/12 明说只保证顶层容器，嵌套字段整体丢弃、不逐项列出；补「省略嵌套字段不产生 reset_fields 条目」测试（§5.3.1、docs/12 §5.3） |
-| 6 | `schema_codec_allowlist.missing_fields` 为空，但 D12 尚未补 `launcher.fire_animation` / `regen_loader.belt_label`；P1 的字段集合测试会先红 | **确认；最新快照还新增了 `hit_box.module` 与 `weapon_controller` 的 3 个 HUD layout 字段**（`physics` / `armor` / `sounds` 已收进 `overwrite`，见 §5.2.2） | 6 条曾以 `owner: 'D12'` 放进 `missing_fields`，P1 按 owner 放行；现已在 P2 前补齐并清空，过期条目会使测试失败（§5.2.2） |
+| 6 | `schema_codec_allowlist.missing_fields` 为空，但 D12 当时尚未补 `launcher.fire_animation` / `regen_loader.belt_label`；P1 的字段集合测试会先红 | **确认；最新快照还新增了 `hit_box.module` 与 `weapon_controller` 的 3 个 HUD layout 字段**（`physics` / `armor` / `sounds` 已收进 `overwrite`，见 §5.2.2） | 6 条曾以 `owner: 'D12'` 放进 `missing_fields`，P1 按 owner 放行；现已在 P2 前补齐并清空，过期条目会使测试失败（§5.2.2） |
 | 7 | `hit_box.block_collision` 是笔误，实际字段在 `sub_part.block_collision`（`hit_box` 没有这个字段） | **确认**。`sub_part_codec.js` 的 `block_collision`；`hit_box_codec.js` 无此字段 | 修正 §5.2.5 的枚举示例；测试按 `sub_part.block_collision` 构造（§5.2.5、§11 #15） |
 | 8 | `KEY_RESERVED` 大小写/级别不统一：§15 / §12 用大写，§5.1.3 的错误码与 `_lastMigration.key_reserved` 用小写 | **确认**。仓库没有 `KEY_RESERVED` 常量；稳定 code 应统一小写 snake_case | 全部改为 `key_reserved`；顺带把同类的 `ORPHAN_ELEMENT` 改为 `orphan_element`。大写只保留为规则名 / `CODES` 常量名，不再作为 `Problem.code`（§12） |
 
@@ -81,9 +81,11 @@
 
 docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数内部」，但当时只覆盖结构性动作（`src/core/operations.js` 的 16 个函数）。字段编辑仍散在 UI：`App.vue.js` 23 个方法靠 `wrapMethodMap` 人工包装、`SubsystemPanel` 18 处 / `ConnectorPanel` 6 处直接 `$set`、5 个计算属性里有 9 处写入（含一处渲染时 `delete`）。
 
-> **P2 已收口**：业务函数迁到 `src/ops/`（29 个），`core/operations.js` 删除；App 字段编辑统一走 `ops.setField`，两个面板只 emit `field-change`；`MM_UNDO_LABELS` 仅保留 2 个尚未改薄的旧入口。计算属性写入按计划留给 P3。
+> **P2 已收口**：业务函数迁到 `src/ops/`（29 个），`core/operations.js` 删除；App 字段编辑统一走 `ops.setField`，两个面板只 emit `field-change`；`MM_UNDO_LABELS` 仅保留 2 个尚未改薄的旧入口。计算属性写入已在 P3 收口。
 >
 > **P3 已收口**：`App.vue.js` 的 5 个计算属性 / 9 处写入全部删除，渲染期不再改配置；缺失条目由 `loadConfig` 一次性补建、面板「创建配置」按钮走 `ops.mark*`。`runConfigEdit` 成为变更事件单一出口（`mm_config_changed`），UI 统一刷新 + 300ms 防抖落盘。`canExport`（`collectIssues` + `validateTree(completeness:true)` + 字段级去重）已接入导出对话框，`definition:''` / 空碰撞箱 / 空 `projectile_types` / 存量枚举脏值 / 不安全 `partId` 均在写盘前阻断。
+>
+> **P4 已收口**：`export_pipeline` / `drag_import` 的 IO / pack 对话框 fs / `collectIssues` 全部迁入 `src/services/`；`collectIssues` 落 `services/validate.js`（不落 `core`，避免 core→doc 反转）。P5（MCP）按用户确认不在本轮范围。
 
 这套结构对「人点面板」够用，对下面三件事不够：MCP 需要可序列化的操作描述（AI 没有 `this`、选中元素、`_uiState`）；维护上同一模式重复数十次、副作用散落；测试上仓库有 `bunfig.toml` 但无 `test/`。
 
@@ -97,13 +99,13 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 
 | 目录 | 文件 | 行数 |
 |---|---|---|
-| `src/ui/` | 27 JS + 7 模板 | 6,700 + 1,138 |
-| `src/mode/` | 6 | 1,527 |
+| `src/ui/` | 26 JS + 7 模板 | 6,309 + 1,138 |
+| `src/mode/` | 5 | 1,155 |
 | `src/core/` | 12 | 4,390 |
 | `src/codec/` | 10 JS（11 含 AGENTS.md） | 1,271 |
 | `src/ops/` | 10（含 `shared.js` / `AGENTS.md`） | — |
-| `src/services/` | 1（`export.js`；P4 再补 import/pack/validate） | — |
-| `src/managers/` · `src/generators/` · `src/import/` | 5 · 6 · 3 | 330 · 440 · 895 |
+| `src/services/` | 6（export / export_pipeline / safe_part_ids / import / pack / validate） | 1,062 |
+| `src/managers/` · `src/generators/` · `src/import/` | 5 · 6 · 3 | 330 · 440 · 859 |
 
 ### 2.2 写入入口
 
@@ -127,16 +129,16 @@ P2 之后两个面板不再直接写配置；P3 之后计算属性也不写配�
 | `refreshOutlinerIcons()` | 18 | 7 | 排除 `undo.js` 后 17/6；P3 新增事件订阅 1 处 |
 | `dispatchEvent('update_selection')` | 16 | 7 | 排除 `undo.js` 后 14/6；`runConfigEdit` 统一派发 |
 | `showToast(...)` | 127 | 21 | 排除 `undo.js` 后 126/20；P3 新增导出拦截与创建配置提示 |
-| `require('fs'/'path')` | — | **13** | `content_pack`、`zip_reader`、3 个 generator、`drag_import`、`dependency_editor`、4 个对话框、`export_pipeline`、`file_writer`、`persistence` |
-| `fs.writeFileSync` | **8** | **4** | `persistence` 1、`file_writer` 3、`export_pipeline` 3、`content_pack` 1 |
+| `require('fs'/'path')` | — | **14** | `content_pack`、`zip_reader`、3 个 generator、`drag_import`、`dependency_editor`、4 个对话框、`services/{export_pipeline,import,pack}`、`file_writer`、`persistence` |
+| `fs.writeFileSync` | **8** | **4** | `persistence` 1、`file_writer` 3、`services/export_pipeline` 3、`content_pack` 1 |
 
 > 这些数字由 P0 交付的 `scripts/audit-stats.js` 生成（`npm run audit:stats`，47 项基线），避免再次漂移。
 
 ### 2.4 校验现状
 
-`mode/validation.js → collectIssues(config)` 是唯一实现（`validation_check.js` 调的也是它）：**15 个 error 产生点 / 3 个 warning 产生点**（P2 新增 `dangling_signal_target`，P3 为字段级问题补 `path.field`），但 warning **只有 1 个 code**：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
+`services/validate.js → collectIssues(config)` 是唯一实现（`mode/validation_check.js` 调的也是它）：**15 个 error 产生点 / 3 个 warning 产生点**（P2 新增 `dangling_signal_target`，P3 为字段级问题补 `path.field`，P4 从 `mode/validation.js` 下沉到 `services/validate.js`），但 warning **只有 1 个 code**：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
 
-重复的只有名称唯一性两套：`naming.validateNameUniqueness`（UI rename 调用）与 `validation._collectNameConflicts`；ops 的 key/存在性检查已收口到 `doc/keys` 与各动作前置校验。
+重复的只有名称唯一性两套：`naming.validateNameUniqueness`（UI rename 调用）与 `services/validate._collectNameConflicts`；ops 的 key/存在性检查已收口到 `doc/keys` 与各动作前置校验。
 
 ### 2.5 已确认的其它债务
 
@@ -275,7 +277,7 @@ src/doc/field_specs.generated.js（含 provenance）
 | 写入合法性 | 类型 / 枚举 / 长度 / 格式 / key / 父节点 | `doc.field_specs` + `doc.address` + Codec | `ok:false`（`type_mismatch` / `invalid_enum` / `invalid_format` / `not_found`） |
 | 引用合法性 | 配置引用必须指向同变体内的子系统 / 连接点 / 交互区 | `doc.refs.resolveConfigRefs` | `ok:false`（`unresolved_config_ref`） |
 | 骨骼可解析性 | 骨骼 / Locator 名能否命中 `Group` / `Locator` | `doc.refs.resolveBones` + `ports.bones` | warning（`unresolved_bone`），照常写入 |
-| 完整性 | required / minProperties / 名称唯一 / 保留名 / 型号存在 | `collectIssues`（业务规则）+ `validateTree(completeness:true)`（schema required/minProperties） | 编辑期：仅提示；导出期：**阻断** |
+| 完整性 | required / minProperties / 名称唯一 / 保留名 / 型号存在 | `services/validate.collectIssues`（业务规则）+ `validateTree(completeness:true)`（schema required/minProperties） | 编辑期：仅提示；导出期：**阻断** |
 | 导出值扫描 | 枚举 / 数值范围 / 对象结构 / key 格式 / required | `doc.validate.validateTree(config, {completeness:true})` | 编辑期：不跑；导出期：**阻断** |
 | 信号目标完整性 | `signal_targets[*][]` / `power_output` / `power_target` / `power_outputs` 的 key 指向同变体节点或 `local`/`global` | `collectIssues`（`DANGLING_SIGNAL_TARGET`，P2 新增一条规则） | 编辑期：提示；导出期：**阻断** |
 
@@ -296,7 +298,7 @@ function canExport(config) {
 ```
 
 - `export_dialog.onConfirm`：`canExport` 失败 → `showToast` + 列出问题（复用现有 `buildValidationInfo` 的按 path 分组渲染，改为接收 `canExport` 返回的合并数组，每条挂 `__mmNavigator.selectByIssue` 定位按钮），`return false` 不关对话框。
-- **P3 已实现**：`src/services/export.js` 提供 `canExport` / `dedupeIssues` / `toProblem` / `assertSafePartIds`；`export_dialog` 打开时与 `onConfirm` 时各跑一次闸门，失败时对话框保持打开。`export_pipeline.executeExport` 在**任何 mkdir/writeFile 之前**调用 `assertSafePartIds`。
+- **P3 已实现**：`src/services/export.js` 提供 `canExport` / `dedupeIssues` / `toProblem` / `assertSafePartIds`；`export_dialog` 打开时与 `onConfirm` 时各跑一次闸门，失败时对话框保持打开。`services/export_pipeline.executeExport` 在**任何 mkdir/writeFile 之前**调用 `assertSafePartIds`。
 - `collectIssues` 的 15 个 error 产生点逐条确认可定位（都带 `path`，字段级问题带 `path.field`）；`orphan_element` 放行；`validateTree` 的每条错误也带同样的 `path` 口径。
 - **两条闸门缺一不可**：`collectIssues` 负责业务完整性（型号是否存在、名称冲突、信号目标断裂），`validateTree` 负责 schema 值与 key。第三轮审阅的 `"banana"` / `condition:"WHATEVER"` 属于后者；`projectile_types:{}` 的 `minProperties` 也由后者报。
 - **去重按字段，不按 code**：同一路径可能同时被两层报（例如 `definition:''`：`collectIssues` 报 `definition_required`，`validateTree` 报 `missing_required`）。输出前统一 `Problem.path` 为对象并补 `field`，去重键为 `scope|partId|variantName|subPartKey|itemKey|field`；`collectIssues` 优先，`validateTree` 只补空缺。同一字段只留一条；不同字段（如 `definition` 与 `locator`）各自保留，不能因为路径相同就合并。
@@ -879,7 +881,7 @@ in(out(node, 'read'), { existing: node }) ≡ node   （结构等价，reset_fie
 
 `part` / `subpart` / `vehicle` **不是哨兵**（D19）：它们按普通未知目标处理，写入/导入返回 `unresolved_config_ref`，不告警、不迁移。数据里若还留着这三个值，就当作错误目标，由用户改成 `local` / `global` 或真实节点 key。
 
-> 依据：模组只解析 `local` / `global`（`ISignalSender.getReceiversFromNames`），`subpart` / `vehicle` 只出现在 `VariantAttr.RESERVED_SIGNAL_NAMES` 里作为**禁用名**。**已完成（D19）**：`subsystem_types.js` 的默认目标、`buildSignalTargetOptions`、`App.vue.js` 兜底、`signal_graph` 特殊节点、`validation.js` / `naming.js` 的 `RESERVED_SIGNAL_NAMES` 全部切换为 `local`/`global`；`buildSignalTargetOptions` 同时补上了交互区选项。
+> 依据：模组只解析 `local` / `global`（`ISignalSender.getReceiversFromNames`），`subpart` / `vehicle` 只出现在 `VariantAttr.RESERVED_SIGNAL_NAMES` 里作为**禁用名**。**已完成（D19）**：`subsystem_types.js` 的默认目标、`buildSignalTargetOptions`、`App.vue.js` 兜底、`signal_graph` 特殊节点、`services/validate.js` / `naming.js` 的 `RESERVED_SIGNAL_NAMES` 全部切换为 `local`/`global`；`buildSignalTargetOptions` 同时补上了交互区选项。
 
 **不计入引用**：`signal_translations` 是「频道名 → 频道名」映射，与配置节点无关（v1 误列）；`definition` 是资源位置（内容包定义 id），由 `collectIssues` 的 `DEFINITION_REF_MISSING` 管，不做删除清理。
 
@@ -974,7 +976,7 @@ src/ops/
 var ports = {
     bones:      { findByName: null, findNameByUuid: null, findByUuid: null, listAll: null }, // Group / Locator
     markers:    { set: null, clear: null, clearScope: null, recalc: null }, // element_markers
-    validation: { collectIssues: null },                  // mode/validation
+    validation: { collectIssues: null },                  // services/validate
     events:     { emit: null },                            // Blockbench.dispatchEvent
     reactivity: { set: null, del: null },                  // Vue.set / Vue.delete
 };
@@ -1026,15 +1028,17 @@ Blockbench.on('mm_config_changed', function (e) {
 
 ```
 src/services/
-├── export.js     # P3：canExport / dedupeIssues / toProblem / assertSafePartIds；P4 再迁入 executeExport
-├── import.js     # 文件读取 + 批量编排（drag_import 的 IO 部分，P4）
-├── pack.js       # 创建/打开/校验内容包、依赖链解析（三个 pack 对话框的 fs 部分，P4）
-└── validate.js   # collectIssues + validateTree 包装 + diff（P4；当前 collectIssues 仍在 mode/）
+├── export.js          # canExport / dedupeIssues / toProblem + executeExport 聚合出口
+├── export_pipeline.js # executeExport（P4 从 ui/export/export_pipeline.js 迁入）
+├── safe_part_ids.js   # assertSafePartIds（写盘前 partId 断言）
+├── import.js          # 文件读取 + 带注释 JSON 解析（drag_import 的 IO 部分）
+├── pack.js            # 创建/打开/校验内容包、依赖链解析（三个 pack 对话框的 fs 部分）
+└── validate.js        # collectIssues（P4 从 mode/validation.js 迁入）
 ```
 
 依赖顺序固定：`core → doc → ops → services → ui/mcp`。
 
-**过渡期例外**：`collectIssues` 仍在 `mode/validation.js`，而 `services/validate.js` 与 `doc/ports.validation` 都要用它。P4 之前允许 **`services → mode`** 与 **`ops → ports.validation`**（经端口而非直接 `require`），P4 再把实现下沉为 `core/validation.js`，`mode/validation_check.js` 只做「Problems → 原生清单」的适配。这样 P1–P3 不必等 P4。
+**P4 的落点修正（用户 2026-10-21 确认）**：v3.2 原计划把 `collectIssues` 下沉到 `core/validation.js`，但它依赖 `doc/refs.js`，会让 `core` 反向依赖 `doc`，违背上面的顺序。P4 改为放在 `services/validate.js`：`services → doc/core` 是允许的方向，`mode/validation_check.js` 只做「Problems → 原生清单」的适配；不再保留 `mode/validation.js`。`doc/ports.validation` 与 `services/export.js` 都直接 require 本文件。
 
 `services/` 可以 `require('fs')`、可以 async、**不参与撤销、不暴露给 MCP**。
 
@@ -1051,10 +1055,10 @@ src/services/
 | `App.handleCleanGhostEntry` | 手写 delete + 落盘 | `ops.removeNode` |
 | `SubsystemPanel` 18 / `ConnectorPanel` 6 | 直接 `$set(this.config, …)` | `ops.setField` |
 | 计算属性 9 处写入（含 `subPartEntries` 的 `delete`） | 渲染期改配置 | **P3 已删除**；缺条目由 `mark*` 建，面板显示「创建配置」按钮，`loadConfig` 一次性 repair |
-| `drag_import` | fs + 对话框 + 落盘 | `services/import.js` + `ops.importPart` |
+| `drag_import` | fs + 对话框 + 落盘 | **P4 已迁**：文件读取/带注释 JSON 解析 → `services/import.js`；冲突对话框与 `ops.importPart` 编排仍在 `import/drag_import.js` |
 | `bone_resolver` | 仅导入时用 | `doc/refs.js`（导入/删除/重命名共用，§5.3） |
-| 19 处 `saveConfig` / 17 处 refresh / 22 处 update_selection | 就地调用 | 事件订阅 + `scheduleSave` |
-| `export_dialog` 忽略校验结果 | 仅提示 | `services/export.canExport` 阻断 |
+| 20 处 `saveConfig` / 17 处 refresh / 16 处 update_selection | 就地调用 | **P3 已收敛**：事件订阅 + `scheduleSave`（直接 saveConfig 11 处 / 4 文件） |
+| `export_dialog` 忽略校验结果 | 仅提示 | **P3 已接**：`services/export.canExport` 阻断；P4 把 `executeExport` 也移入 services |
 
 ---
 
@@ -1094,7 +1098,7 @@ bun test test/schema/field_specs.test.js
 - ✅ `require` 全部 `doc` 模块；P1 无调用方，未重建 `dist`。
 - ✅ 零运行时行为变更：`Codec.record` / `Codec.dispatch` 只新增只读元数据 `schema` / `codecs`，不参与 encode/decode。
 
-验收命令：`bun test`（135 pass / 524 expect，含 P0 的 8 个 schema 测试、P2 的 Codec 契约、旧占位归一化、D18/D19、ops 层与 DANGLING 测试、P3 的导出闸门与事件测试）。
+验收命令：`bun test`（137 pass / 527 expect，含 P0 的 8 个 schema 测试、P2 的 Codec 契约、旧占位归一化、D18/D19、ops 层与 DANGLING 测试、P3 的导出闸门与事件测试、P4 的导入解析测试）。
 
 ### P2 — 操作层（已完成）
 
@@ -1144,11 +1148,22 @@ bun test test/schema/field_specs.test.js
 
 ### P4 — `services/` 抽离（1 会话）
 
-`export_pipeline` → `services/export.js`；`drag_import` IO → `services/import.js`；pack 三件套 fs → `services/pack.js`；`collectIssues` 下沉 `core/validation.js`。纯搬移。
+### P4 — `services/` 抽离（已完成）
 
-验收：同一工程导出产物逐字节一致。
+**交付（2026-10-21）**：
 
-### P5 — MCP（见 docs/12，1 会话）
+- `export_pipeline` → `services/export_pipeline.js`；`services/export.js` 聚合导出 `canExport` + `executeExport`，调用方只从 `services/export.js` 进入。
+- `assertSafePartIds` 拆到 `services/safe_part_ids.js`，供 `export.js` 与 `export_pipeline.js` 共用，避免循环依赖。
+- `drag_import` 的文件读取 + 带注释 JSON 解析 → `services/import.js`（`readTextFile` / `parseJSONWithComments` / `readJsonFile`）；冲突对话框与 ops 编排仍留在 `import/`。
+- pack 三件套的 fs 部分 → `services/pack.js`：创建/打开/读取 meta 的薄包装 + `findPackInSiblings` / `resolveChainDependencies`；`dependency_editor` 不再 `require('fs')`。
+- `collectIssues` 从 `mode/validation.js` **移动**到 `services/validate.js`；`mode/validation.js` 删除，`mode/validation_check.js` 只做原生清单适配。**没有**下沉到 `core/validation.js`，因为那会让 core 反向依赖 `doc/refs.js`（用户 2026-10-21 确认改放 services）。
+- 所有 require 更新：`App.vue.js`、`plugin.js`、`services/export.js`、`mode/validation_check.js`、`test/ops/ops.test.js`。
+
+验收：同一工程导出产物逐字节一致（纯搬移，无逻辑改动）；`bun test` 137 pass / 527 expect；`audit-stats` 47/47；`gen-field-specs --check` 与 `sync-schemas --check` 通过；`npm run build` 成功。
+
+### P5 — MCP（见 docs/12）
+
+**本轮不做**（用户 2026-10-21 确认“做到 P4 为止”）；docs/13 只保留 P5 的入口说明，具体工具矩阵与验收在 [docs/12](./12-MCP工具接入.md)。
 
 ---
 
@@ -1161,7 +1176,7 @@ test/
 ├── doc/{address,field_specs,projection,refs,keys,validate,schema_codec,index}.test.js
 ├── ops/*.test.js
 ├── schema/{field_specs,sync,drift}.test.js
-└── services/{export,validate}.test.js
+└── services/{export,import,validate}.test.js
 ```
 
 必测清单（对应 §0 的十条改动、§0.2 的十四条收口、§0.3 的八条收口与 §5 的约束；#18–#22 是 v3.2 新增）：
@@ -1219,7 +1234,7 @@ test/
 
 **`path` 用规范化后的段数组**回传，工具层直接透传，不再从 `data` 里猜。`collectIssues` / `canExport` 的 `Problem.path` 是对象（`{scope, partId, variantName, subPartKey?, itemKey?, field?}`），与 `OpResult.path` 的段数组是两种口径：前者供面板定位和去重，后者供工具调用方使用，不要混用。
 
-**产生者**：`before/after` ← `doc` 原语；`reset_fields` ← `projection.in`；`dropped_fields` ← `setField` 的 `sideEffect`；`cleaned_references` ← `refs`；`introduced_issues` ← `ops` 通过 `ports.validation.collectIssues` 在**同一撤销记录内**做前后 diff（不 `require` `mode/validation`，保持分层）。
+**产生者**：`before/after` ← `doc` 原语；`reset_fields` ← `projection.in`；`dropped_fields` ← `setField` 的 `sideEffect`；`cleaned_references` ← `refs`；`introduced_issues` ← `ops` 通过 `ports.validation.collectIssues` 在**同一撤销记录内**做前后 diff（不直接 `require` `services/validate`，保持分层）。
 
 错误码：`no_project` / `not_found` / `missing_required` / `type_mismatch` / `invalid_enum` / `invalid_format` / `out_of_range` / `duplicate_name` / `unknown_field` / `unknown_type` / `unresolved_config_ref` / `key_reserved` / `edit_in_progress` / `snapshot_too_large` / `io_error`。warning code：`non_canonical_key`（前缀不规范，不阻断）、`unresolved_bone`、`orphan_element`、`key_reserved`（存量非法 key，导出期转 error）。
 
@@ -1262,6 +1277,7 @@ test/
 | D27 | 计算属性只读 | 渲染期不写配置；缺失条目由 `loadConfig.repairMarkerConfigs` 一次性补建，运行时由面板「创建配置」按钮走 `ops.mark*`；`markSubPart` 在 ops 内建条目 | **P3 实施**（§9） |
 | D28 | 变更事件单一出口 | `runConfigEdit` 提交后派发 `mm_config_changed`；UI 只订阅一次做刷新 + `scheduleSave`；嵌套编辑/空记录不重复派发 | **P3 实施**（§7.2） |
 | D29 | 导出闸门实现 | `services/export.canExport` 双层校验 + 字段级去重；`export_dialog` 打开与确认各跑一次；`assertSafePartIds` 在写盘前二次断言 | **P3 实施**（§4.3 / §8） |
+| D30 | P4 校验落点 | v3.2 原写 `core/validation.js`，但它依赖 `doc/refs.js`，会让 core 反向依赖 doc；改为 `services/validate.js`，保持 `core → doc → ops → services`，`mode/validation_check.js` 只做适配 | **用户确认**（2026-10-21，P4） |
 | Q1 | 内容包定义 JSON | 只读，不纳入业务层 | 用户 |
 | Q2 | 交付形态 | 拆两串 commit | 用户 |
 
@@ -1431,7 +1447,7 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 
 - 撤销：[docs/11](./11-接入Blockbench原生撤销.md) · MCP：[docs/12](./12-MCP工具接入.md)
 - Codec：[docs/08](./08-序列化反序列化-Codec体系重构.md) / [src/codec/AGENTS.md](../src/codec/AGENTS.md)
-- 校验：[docs/10](./10-校验与错误提示重构实现计划.md) / [src/mode/validation.js](../src/mode/validation.js)
+- 校验：[docs/10](./10-校验与错误提示重构实现计划.md) / [src/services/validate.js](../src/services/validate.js)
 - 上游 schema：`../../Machine-Max/src/main/resources/spark_modules/machine_max.builtin/machine_max/docs/zh_cn/schemas/`
 - 现有整件通道：[src/import/drag_import.js](../src/import/drag_import.js) + [src/import/bone_resolver.js](../src/import/bone_resolver.js)
 - 模组侧信号解析：[ISignalSender.java](../../Machine-Max/src/main/java/io/github/sweetzonzi/machine_max/common/mech/signal/ISignalSender.java)（`local` / `global` 的唯一依据）

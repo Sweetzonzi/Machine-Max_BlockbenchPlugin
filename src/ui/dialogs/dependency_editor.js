@@ -2,14 +2,13 @@
  * dependency_editor.js — 依赖包编辑相关对话框（从 pack_setup_dialog.js 拆出）
  *
  * 包含：
- *   - 链式依赖解析（_findPackInSiblings / _resolveChainDependencies）
  *   - 依赖路径编辑器（showDependencyPathEditor，逐目录循环重建 Dialog）
  *   - 依赖包管理对话框（showManageDependenciesDialog，只读列表 + 添加/移除）
+ *
+ * 文件系统与链式解析在 services/pack.js（P4）。
  */
 
-const fs = require('fs');
-const path = require('path');
-const content_pack = require('../../core/content_pack.js');
+const packService = require('../../services/pack.js');
 const persistence = require('../../utils/persistence.js');
 const { showToast } = require('../../utils/notify.js');
 const { createLogger } = require('../../utils/logger.js');
@@ -22,108 +21,6 @@ var log = createLogger('DependencyEditor');
 // =============================================================================
 // 链式依赖解析
 // =============================================================================
-
-/**
- * 在父目录下搜索具有指定 ID 的内容包
- *
- * 遍历 parentDir 的直接子目录和 .zip 文件，读取 meta.json 检查 id 匹配。
- *
- * @param {string} parentDir - 搜索的父目录
- * @param {string} packId - 要查找的内容包 ID（如 machine_max:core）
- * @returns {string|null} 找到的目录或 ZIP 文件路径，或 null
- */
-function _findPackInSiblings(parentDir, packId) {
-    if (!packId || !parentDir || !fs.existsSync(parentDir)) return null;
-
-    var entries, i, fullPath, stat, meta;
-    try {
-        entries = fs.readdirSync(parentDir);
-    } catch (e) {
-        return null;
-    }
-
-    for (i = 0; i < entries.length; i++) {
-        fullPath = path.join(parentDir, entries[i]);
-        try {
-            stat = fs.statSync(fullPath);
-        } catch (e) {
-            continue;
-        }
-
-        // 目录形式
-        if (stat.isDirectory()) {
-            meta = content_pack.readPackMeta(fullPath);
-            if (meta && meta.id === packId) {
-                return fullPath;
-            }
-        }
-
-        // ZIP 文件形式
-        if (stat.isFile() && fullPath.toLowerCase().endsWith('.zip')) {
-            meta = content_pack.readPackMeta(fullPath);
-            if (meta && meta.id === packId) {
-                return fullPath;
-            }
-        }
-    }
-    return null;
-}
-
-/**
- * 解析直接依赖的链式（间接）依赖
- *
- * 对每个直接依赖路径：
- *   1. 读取其 meta.json 中的 dependencies 字段
- *   2. 在父目录（所有直接依赖的公共父目录）下搜索匹配的包
- *   3. 只搜索一层（被找到的间接依赖不再递归解析其自身依赖）
- *
- * @param {Array<{path: string, type: string}>} directDeps - 直接依赖列表
- * @param {string} parentDir - 搜索的父目录
- * @returns {{direct: Array, indirect: Array<{path: string, type: string, isIndirect: boolean}>}}
- */
-function _resolveChainDependencies(directDeps, parentDir) {
-    var indirect = [];
-    var processed = {};
-    var i, j, dep, depMeta, depDeps, depDep, depId, found;
-
-    // 标记直接依赖路径为已处理，避免被当作间接依赖重复添加
-    for (i = 0; i < directDeps.length; i++) {
-        if (directDeps[i].path) {
-            processed[directDeps[i].path] = true;
-        }
-    }
-
-    for (i = 0; i < directDeps.length; i++) {
-        dep = directDeps[i];
-        if (!dep.path) continue;
-
-        depMeta = content_pack.readPackMeta(dep.path);
-        if (!depMeta || !depMeta.dependencies || !depMeta.dependencies.length) continue;
-
-        depDeps = depMeta.dependencies;
-        for (j = 0; j < depDeps.length; j++) {
-            depDep = depDeps[j];
-            depId = depDep.id || depDep;
-
-            // 在公共父目录下搜索
-            found = _findPackInSiblings(parentDir, depId);
-            if (found && !processed[found]) {
-                processed[found] = true;
-                indirect.push({
-                    path: found,
-                    type: depDep.type || 'hard',
-                    isIndirect: true,
-                });
-                log.info('链式解析: 发现间接依赖 "' + depId + '" → ' + found);
-            }
-        }
-    }
-
-    return {
-        direct: directDeps,
-        indirect: indirect,
-    };
-}
 
 // =============================================================================
 // 依赖路径编辑器（Blockbench Dialog 重建方案）
@@ -249,7 +146,7 @@ function showDependencyPathEditor(existingDeps, contextParentDir, options, onCom
                     // 处理本次选择的目录
                     if (formData.depDir && formData.depDir.trim()) {
                         var depPath = formData.depDir.trim();
-                        var r = content_pack.openContentPack(depPath);
+                        var r = packService.openPack(depPath);
                         if (!r.valid) {
                             showToast('所选目录不是有效内容包: ' + (r.error || '缺少 meta.json'), 'warning');
                             stepNum++;
@@ -282,7 +179,7 @@ function showDependencyPathEditor(existingDeps, contextParentDir, options, onCom
                     this.hide();
                     var resolved = { direct: selected, indirect: [] };
                     if (selected.length > 0 && contextParentDir) {
-                        resolved = _resolveChainDependencies(selected, contextParentDir);
+                        resolved = packService.resolveChainDependencies(selected, contextParentDir);
                         for (var j = 0; j < resolved.indirect.length; j++) {
                             selected.push(resolved.indirect[j]);
                         }
@@ -293,7 +190,7 @@ function showDependencyPathEditor(existingDeps, contextParentDir, options, onCom
                     this.hide();
                     var resolved = { direct: selected, indirect: [] };
                     if (selected.length > 0 && contextParentDir) {
-                        resolved = _resolveChainDependencies(selected, contextParentDir);
+                        resolved = packService.resolveChainDependencies(selected, contextParentDir);
                     }
                     if (typeof onComplete === 'function') onComplete(resolved);
                 },
@@ -423,7 +320,5 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         showDependencyPathEditor,
         showManageDependenciesDialog,
-        _resolveChainDependencies,
-        _findPackInSiblings,
     };
 }

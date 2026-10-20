@@ -12,7 +12,6 @@
 
 'use strict';
 
-var fs = require('fs');
 var path = require('path');
 
 const { createLogger } = require('../utils/logger.js');
@@ -23,6 +22,7 @@ const { resolveBoneReferences } = require('./bone_resolver.js');
 const { showConflictDialog } = require('./conflict_dialog.js');
 const keys = require('../doc/keys.js');
 const undo = require('../core/undo.js');
+const importService = require('../services/import.js');
 
 /** 模块日志 */
 var log = createLogger('DragImport');
@@ -37,42 +37,6 @@ var _dropHandler = null;
 // =============================================================================
 // 内部工具函数
 // =============================================================================
-
-/**
- * 剥离 JSON 中的 // 单行注释并解析
- * @param {string} content - 原始文件内容
- * @returns {Object} 解析后的 JSON 对象
- * @throws {Error} JSON 格式错误时抛出
- */
-function parseJSONWithComments(content) {
-    // 去除 UTF-8 BOM
-    if (content && content.charCodeAt(0) === 0xFEFF) {
-        content = content.slice(1);
-    }
-
-    var lines = content.split('\n');
-    var result = [];
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        var inString = false;
-        var commentStart = -1;
-        for (var j = 0; j < line.length; j++) {
-            var ch = line[j];
-            if (ch === '"' && (j === 0 || line[j - 1] !== '\\')) {
-                inString = !inString;
-            }
-            if (!inString && ch === '/' && j + 1 < line.length && line[j + 1] === '/') {
-                commentStart = j;
-                break;
-            }
-        }
-        if (commentStart >= 0) {
-            line = line.substring(0, commentStart);
-        }
-        result.push(line);
-    }
-    return JSON.parse(result.join('\n'));
-}
 
 /**
  * 根据文件名生成唯一的零件 ID（冲突时追加数字后缀）
@@ -107,7 +71,7 @@ function importSingleFile(filePath, fileName, rawContent, batchAction) {
     // 1. 解析 JSON
     var json;
     try {
-        json = parseJSONWithComments(rawContent);
+        json = importService.parseJSONWithComments(rawContent);
     } catch (e) {
         log.warn('importSingleFile: JSON 解析失败', { fileName: fileName, error: e.message });
         showToast('文件 ' + fileName + ' 不是有效的 JSON', 'error');
@@ -294,7 +258,7 @@ function importMultipleFiles(files) {
         for (var k = 0; k < jsonFiles.length; k++) {
             var raw;
             try {
-                raw = fs.readFileSync(jsonFiles[k].path, 'utf-8');
+                raw = importService.readTextFile(jsonFiles[k].path);
             } catch (e) {
                 log.warn('importMultipleFiles: 读取文件失败', { path: jsonFiles[k].path, error: e.message });
                 continue;
@@ -321,7 +285,7 @@ function importMultipleFiles(files) {
             for (var m = 0; m < jsonFiles.length; m++) {
                 var rawContent;
                 try {
-                    rawContent = fs.readFileSync(jsonFiles[m].path, 'utf-8');
+                    rawContent = importService.readTextFile(jsonFiles[m].path);
                 } catch (e) {
                     log.warn('importMultipleFiles: 读取文件失败', { path: jsonFiles[m].path, error: e.message });
                     continue;
@@ -396,7 +360,7 @@ function registerDragImport() {
                     var rawContent = typeof file.content === 'string' ? file.content : '';
                     if (!rawContent && file.path) {
                         try {
-                            rawContent = fs.readFileSync(file.path, 'utf-8');
+                            rawContent = importService.readTextFile(file.path);
                         } catch (e) {
                             log.warn('registerDragImport: 读取文件失败', { path: file.path, error: e.message });
                             continue;
@@ -483,7 +447,7 @@ function registerDragImport() {
 
             var domRawContent;
             try {
-                domRawContent = fs.readFileSync(domFilePath, 'utf-8');
+                domRawContent = importService.readTextFile(domFilePath);
             } catch (readErr) {
                 log.warn('registerDragImport: 读取文件失败', { path: domFilePath, error: readErr.message });
                 continue;
@@ -553,7 +517,7 @@ function importPartFromPath(filePath) {
 
     var rawContent;
     try {
-        rawContent = fs.readFileSync(filePath, 'utf-8');
+        rawContent = importService.readTextFile(filePath);
     } catch (e) {
         log.error('importPartFromPath: 读取文件失败', { path: filePath, error: e.message });
         showToast('无法读取文件: ' + fileName, 'error');

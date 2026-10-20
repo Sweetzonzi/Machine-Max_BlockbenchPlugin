@@ -65,7 +65,7 @@ Plugin.register('machine_max_bb_plugin', {
             },
             validation: {
                 collectIssues: function (config) {
-                    return require('./mode/validation.js').collectIssues(config);
+                    return require('./services/validate.js').collectIssues(config);
                 },
             },
         });

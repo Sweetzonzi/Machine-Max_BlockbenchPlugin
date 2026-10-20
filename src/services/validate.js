@@ -1,9 +1,8 @@
 /**
- * validation.js — 唯一校验实现 collectIssues(config) → Problem[]
+ * validate.js — 唯一校验实现 collectIssues(config) → Problem[]
  *
- * 单一真源：所有消费点（原生清单 validation_check / 面板 App.vue.js / 导出对话框）
- * 都调用本函数的同一份实现，消除"面板一套、原生清单一套"的二次散乱。
- *
+ * P4 起从 mode/validation.js 下沉到 services/validate.js：保持 core 不依赖 doc，
+ * 同时让 services/export.js 与 doc/ports.validation 共用同一实现。
  * 依赖 Blockbench 全局 Group / Locator / Project（仅运行时可用），属"只读、不修改全局"。
  */
 var { createLogger } = require('../utils/logger.js');
