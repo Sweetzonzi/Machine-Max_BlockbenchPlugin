@@ -449,14 +449,14 @@ Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 | 18 | AI 编辑后不保存 → 关闭工程 | 弹出未保存提示（`Project.saved === false`） |
 | 19 | 拖拽元素过程中调用编辑工具 | `ok:false`，提示「有未完成的编辑」 |
 | 20 | 重载插件两次 | 工具仍只有 12 个，无重复注册报错 |
-| 21 | `read_node(as='definition')` 读出的定义整件回传给 `import_*` | 结构等价（round-trip 无损），`reset_fields` 为空；覆盖含 `hit_boxes`、单变体、未解析骨骼、`definition:null`、`power_output:null`、`signal_targets:{}`、`power_outputs:{}`、`projectile_types:{}` 的输入 |
+| 21 | `read_node(as='definition')` 读出的定义整件回传给 `import_*` | 结构等价（round-trip 无损），`reset_fields` 为空；覆盖含 `hit_boxes`、单变体、未解析骨骼、`definition:''`、`power_output:''`、`connector:''`、`locator:''`、`signal_targets:{}`、`power_outputs:{}`、`projectile_types:{}` 的输入；旧数据里的 `null`/`"null"` 由 `normalizeUnset` 归一化为 `''`/`{}` |
 | 22 | `import_sub_part` 建一个没有 hit_boxes 的子零件 | `ok:true`（合法中间态），`introduced_issues` 含「碰撞箱为空」；此时**导出被拦** |
 | 23 | 子系统未选型号就导出 | 导出被阻断，对话框列出该问题并可点击定位 |
 | 24 | `import_subsystem` 用 `machine_max:battery`（已删除） | `ok:false`，`code:unknown_type`（D18） |
 | 25 | `signal_targets` 写 `subpart` / `vehicle` | `ok:false`，`code:unresolved_config_ref`（D19：旧值不存在，不告警） |
 | 26 | `set_node` / `import_sub_part` 把 `hit_box.type` 设为 `"banana"` | `ok:false`，`code:invalid_enum`，`expected` 列 5 种（docs/13 §5.2.5） |
 | 27 | `set_node` 把 `interact_box.condition` 设为 `"WHATEVER"` | `ok:false`，`code:invalid_enum` |
-| 28 | `import_subsystem` 新建 transmission，`definition:null` + `power_outputs:{}` | `ok:true`（合法占位），`reset_fields` 为空；`read_node` round-trip 保持 null/`{}`；导出被 required 闸门拦 |
+| 28 | `import_subsystem` 新建 transmission，`definition:''` + `power_outputs:{}` | `ok:true`（合法占位），`reset_fields` 为空；`read_node` round-trip 保持 `''`/`{}`；导出被 required 闸门拦（`definition` 为空） |
 | 29 | `import_part` 的定义里 `variants` 恰好有一个 key 叫 `"model"`（其值是 VariantConfig 对象） | 当作 map 处理（不得被单变体简写吞掉），`read_node` 能按 `variants.model` 寻址 |
 | 30 | `read_node` / `set_node` 用 `hydrodynamics` 的空字符串 key | `ok:true`（空串 = 质心）；`hit_boxes` 的空串 key 返回 `invalid_format` |
 | 31 | 存量工程含 `hit_box.type:"banana"` | 工程能打开；`validate` 报 `invalid_enum`，导出被阻断（Codec 不在 load 阶段拒绝，docs/13 D21） |

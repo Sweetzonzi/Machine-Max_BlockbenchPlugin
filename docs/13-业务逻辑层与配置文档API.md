@@ -38,7 +38,7 @@
 
 | # | 第三轮问题 | 实测 | v3.1 处理 |
 |---|---|---|---|
-| 1 | required 字段的 `null` 未统一：`createSubsystem` 写 `definition: null`，`getTypeDefaults()` 还写 `power_output` / `connector` / `locator: null`，`SubsystemDispatchCodec.decode` 直接抛 `Expected string, got object` | **确认**。`operations.js:305` 写 `definition: null`；`subsystem_types.js` 有 9 个字段 `defaultValue: null`（engine/motor/gearbox 的 `power_output`、wheel_driver/turret_driver 的 `connector`、seat/joint/launcher/camera 的 `locator`）；`.field()` 只挡 `undefined`，不挡 `null` | 统一为「required 字符串的内部占位 = `null`」：这些字段的 Codec 全部 `.nullable()`；`createSubsystem` 保持写 `null`；导出时 encode 省略该键，由 §4.3 闸门按 `collectIssues` 的 required 规则阻断。`definition` 对所有类型同规则。字段清单与规则见 §3.3 / §4.4 |
+| 1 | required 字段的 `null` 未统一：`createSubsystem` 写 `definition: null`，`getTypeDefaults()` 还写 `power_output` / `connector` / `locator: null`，`SubsystemDispatchCodec.decode` 直接抛 `Expected string, got object` | **确认**。`operations.js:305` 写 `definition: null`；`subsystem_types.js` 有 9 个字段 `defaultValue: null`（engine/motor/gearbox 的 `power_output`、wheel_driver/turret_driver 的 `connector`、seat/joint/launcher/camera 的 `locator`）；`.field()` 只挡 `undefined`，不挡 `null` | **不采用 blanket nullable**（见 §3.4 的上游复核）：required 字段上游都是 `fieldOf`，保持 `.field()`；把内部未配置占位从 `null` 改成 `''`（字符串）/ `{}`（map），`createSubsystem` 与 `getTypeDefaults()` 同步改；`loadConfig` / `projection.in` 把存量 `null` / `"null"` 归一化为 `''`/`{}`。只有上游 `optionalFieldOf` **无默认值**（`Optional` → Java `null`）的 `overwrite` 保留 `.nullable()` |
 | 2 | required + 空 map 被 Codec 省略：`InteractBoxCodec.encode({signal_targets:{}})` → `{bone}`；`TransmissionCodec.encode({power_outputs:{}})` → `{definition}`；`isMissingValue({})` 为 false，闸门也不拦 | **确认**（实测输出正是 `{"bone":"x"}` / `{"definition":"x"}`）。schema：`interact_box.signal_targets` required；`transmission.power_outputs` required；`car_controller` / `motorbike_controller.control_outputs` required；`regen_loader.projectile_types` required + `minProperties:1` | required map 统一 `Codec.map(..., {emitEmpty:true})`：`encode({})` 输出 `{}`、decode 缺失仍补 `{}`；`projectile_types` 的空 map 另由 `minProperties` 完整性规则判 error。顺带修 `regen_loader.projectile_types` 默认值写成 `[]` 的类型错误（见 #13） |
 | 3 | `import_*` 与 `canExport` 都没有执行 schema 的值校验；`hit_box.type` / `interact_box.condition` 在 Codec 里仍是 `STRING`，`"banana"` 可写入并原样导出 | **确认**。`projection.in` 第 4 步只 `decodeStrict`；`canExport` 只跑 `collectIssues`（不含 enum/结构校验） | 新增 `doc.validate.validateValues(node, opts)` 与 `validateTree(config, opts)`：`projection.in` 在 decode 后执行（覆盖全部 `import_*`）；`canExport` 执行 `completeness:true` 的树扫描。**不改 Codec 枚举**——避免存量非法值在 `loadConfig` decode 阶段就让工程打不开；枚举错误统一由 `field_specs` 报 `invalid_enum` 并带 path（§4.3、§5.2.5、§5.3.1） |
 | 4 | `canonicalSubPartKey` 会产出非法 key：`default` → `sub_part.<ns>.default`；`.main` / `main.` 首尾点；`chassis!`；超长名 | **确认**。§15.1 的算法只查「非 ASCII / 空白 / `* / ~ :` / 控制字符」，没复用 §5.1.3 的完整校验 | 算法改为**先复用** `isValidSubPartKey`：规范 key 原样返回；裸 `default` → `main`；其余名称段不合法 → `legacy_<n>`；碰撞后缀保持 ≤128 且不产生首尾点。迁移测试覆盖 `default` / `.main` / `main.` / `chassis!` / 中文 / 超长 / 跨 namespace（§15.1） |
@@ -52,6 +52,14 @@
 | 12 | §14 的 `App.vue.js` 行数写成 1,884，实际 1,883 | **确认**（`Get-Content` 计数 1,883） | 改为 1,883 |
 | 13 | （本轮新增实测）字段缺失/默认值类型错误 | **确认**：`LauncherCodec` 缺 `fire_animation`（schema 可选，默认 `"fire"`）；`RegenLoaderCodec` 缺 `belt_label`（可选，默认 `""`）；`subsystem_types.js` 的 `regen_loader.projectile_types` 默认值是 `[]`，与 schema/Codec 的 object 冲突，新建即无法 encode/decode | D12 扩为「结构性修复 3 项 + 字段补齐 2 项 + 默认值 1 项」；`subsystem_types.js` 同步补 `fire_animation` / `belt_label` 的编辑器字段（`text_input`），`projectile_types` 默认改 `{}` |
 | 14 | （本轮新增实测）§16 仍留着「WIP 类型只读」的旧风险行，与 D18 删除矛盾 | **确认** | 删除该行；WIP 风险只保留「raw 剔除 + 备份」一条 |
+
+**上游 optionality 复核（2026-10-21，`Machine-Max` 兄弟仓库）**：
+
+- **required（`fieldOf`）**：所有 dynamic attr 的 `definition`（`ResourceLocation.CODEC`）；engine/motor/gearbox 的 `power_output`；wheel_driver/turret_driver 的 `connector`；launcher/joint 的 `locator`；car_controller/motorbike_controller 的 `control_outputs`；transmission 的 `power_outputs`；regen_loader 的 `projectile_types`。
+- **optional（`optionalFieldOf` + 默认值）**：seat/camera/lighting/sight 的 `locator`；各 `*_outputs` 映射；`fire_animation`、`belt_label`、`script`、`dismount_locators`、`control_group_preset`。
+- **optional（`optionalFieldOf` 无默认值 → `Optional` → Java `null`）**：`hit_box.overwrite`、`connector.overwrite`。
+
+`optionalFieldOf` 的语义是「**键可以缺失**」：缺失时用默认值（或 `Optional.empty`），**不是**「JSON 值可以是 `null`」。显式 `null` 仍会交给底层 `Codec.STRING` / `ResourceLocation.CODEC` / map codec，通常直接报错。因此插件内部不能把 `null` 当作 required 字段的通用占位；`null` 只适合 `Optional` 型字段（`overwrite`）。
 
 ---
 
@@ -178,46 +186,52 @@ src/doc/field_specs.generated.js（含 provenance）
 | `sub_part.hit_boxes` | `required` + `minProperties: 1` | 无约束 | 由 `collectIssues` 负责（已实现，§4） |
 | `hit_box.id` | 有默认 `"part"`，非必填（`required` 只有 `type`） | `.field()` 必填 | 修 Codec：`.default('part')`（D12） |
 | `hit_box.type` | `enum: [box,sphere,cylinder,capsule,wheel]` | `STRING` | **constraint_diff**；写入、导入、导出三侧都由 `field_specs.enum` 报 `invalid_enum`（§4.3、§5.3.1） |
-| `hit_box.overwrite` | 结构化 **16** 字段、`additionalProperties:false` | `Codec.ANY.nullable()` | **constraint_diff**；`field_specs` 用 object 规格做写入/导出校验，Codec 只负责透传（§5.2） |
+| `hit_box.overwrite` | 结构化 **16** 字段、`additionalProperties:false` | `Codec.ANY.nullable()`（上游 `optionalFieldOf` 无默认 → Java `null`） | **constraint_diff**；`field_specs.nullable:true`（可选对象），`validateValues` 允许 `null`，导出省略；结构由 object 规格校验（§5.2） |
 | `interact_box.condition` | `enum: [AND,OR,NAND,NOR,XOR,XNOR]` | `STRING` 默认 `NOR` | **constraint_diff**；同上，由 `field_specs.enum` 拦，不改成 `Codec.ENUM`（避免存量非法值在 load 阶段失败） |
 | `interact_box.signal_targets` | `required` | `.default({})`，空 map 被省略 | 修 Codec：required map + `emitEmpty`，`{}` 也输出；decode 缺失仍补 `{}`（§3.4） |
 | `connector.definition` | `required` | `.default('')` | 由 `collectIssues` 负责（已判 error） |
-| `subsystem.definition` | `required` | `.field()`（`createSubsystem` 写 `null`） | 修 Codec：`.nullable()`；`null` 是内部占位，encode 省略，导出闸门阻断（§3.4、§4.4） |
-| `subsystem.power_output` / `.connector` / `.locator` | `required` 或 optional（按类型） | `.field()` / `.default()`；`subsystem_types.js` 的 `defaultValue` 是 `null` | 同 `definition`：这些字段全部 `.nullable()`；`locator` 即使 schema 可选也按「内部占位」处理（§3.4） |
+| `subsystem.definition` | `required`（`ResourceLocation.fieldOf`） | `.field()`（`createSubsystem` 写 `null`） | **不改 Codec**：`createSubsystem` 改写 `''`；`loadConfig` / `projection.in` 把 `null`/`"null"` 归一化为 `''`；导出闸门阻断空串 |
+| `subsystem.power_output` / `.connector` / `.locator` | required（engine/motor/gearbox、wheel_driver/turret_driver、launcher/joint）或 optional（seat/camera/lighting/sight） | required 为 `.field()`；optional 为 `.default('')`（seat 当前 `.field()`、camera 当前 `.default()`）；`subsystem_types.js` 的 `defaultValue` 是 `null` | **不改 Codec 为 nullable**：required 保持 `.field()`，registry 默认值 `null → ''`；optional 统一 `.default('')`；`locator` 缺失/`null` 归一化为缺省或 `''`（§3.4） |
 | `sub_part.hydrodynamics` | 默认 `{"":{}}`；允许空字符串 key | 默认 `{}`（空 map 跳过） | **constraint_diff / decode_tolerance**；导出省略 `{}` 依赖模组默认值；若内部有 `""` 条目则原样输出（§5.1.3） |
 | `car_controller` / `motorbike_controller.control_outputs` | `required` | `.default({})`，空 map 被省略 | 修 Codec：required map + `emitEmpty` |
 | `transmission.power_outputs` | `required` | `.default({})`，空 map 被省略 | 修 Codec：required map + `emitEmpty` |
 | `regen_loader.projectile_types` | `required` + `minProperties: 1`，key 是资源地址 | `.default({})`；`subsystem_types.js` 默认值写成 `[]` | 修 Codec：required map + `emitEmpty`；registry 默认改 `{}`；空 map 由完整性规则判 error（§4.3） |
 | `launcher.fire_animation` | 可选，默认 `"fire"` | **缺字段** | 修 Codec + `subsystem_types.js`（`text_input`） |
 | `regen_loader.belt_label` | 可选，默认 `""` | **缺字段** | 修 Codec + `subsystem_types.js`（`text_input`） |
-| `seat.locator` / `camera.locator` | 可选，默认 `""` | seat `.field()`；camera `.default()`（`undefined`） | 按 `subsystem_types.js` 的 `defaultValue: null` 统一为 `.nullable()`：decode 缺失 → `null`，encode 省略；schema 仍接受缺省 |
+| `seat.locator` / `camera.locator` | 可选，默认 `""` | seat `.field()`；camera `.default()`（`undefined`） | 改为 `.default('')`，与上游 `optionalFieldOf("locator", "")` 一致；registry `null → ''`；不 nullable |
 | 多数对象 | `additionalProperties: false` | 宽松保留 | **unknown_fields 例外**：`unknown_fields: 'preserve'`；导出时由 Codec 剥离 schema 外字段 |
 | `sub_part.projected_area` | `$ref vector_3d` = `number[3]` | `FLOAT.list(3)` | **一致**（schema 自身 example 写成 `{x,y,z}`，是文档 bug） |
 
 > 另注：`interact_box_attr` 的第二个 example 用了枚举外的 `"interact_mode": "toggle"`；`hit_box_attr` 的 example 从 `subpart.has_connector(...)` 改为 `local.has_connector(...)`；`gearbox` 等 schema 的 `power_output` example 仍是短名。**schema 的 examples 不能当契约**，只用 `properties/required/enum/$ref`。
 >
-> `constraint_diffs` 的完整清单与测试规则见 §5.2.2；`subsystem.*.{definition,power_output,connector,locator}` 的 nullable 是**内部树**的约定，schema 仍是 required/string——这不是「schema 放宽」，而是「占位符允许存在，导出前必须补齐」。
+> `constraint_diffs` 的完整清单与测试规则见 §5.2.2。**required 字段不使用 nullable**：上游是 `fieldOf`，内部未配置用 `''`/`{}`；只有 `optionalFieldOf` 无默认值的 `overwrite` 在内部是 `null`。
 
-### 3.4 Codec 编码契约：required 值缺失时输出什么
+### 3.4 Codec 与上游 optionality 对齐（required 不使用 nullable）
 
-这一节回答第三轮审阅的第 1 条：**内部占位不能变成脏数据，也不能让 round-trip 失败**。
+第三轮审阅后我补查了兄弟仓库的 dynamic attr codec。结论：**required 字段全部是 `fieldOf`，不能 nullable；`optionalFieldOf` 是「键可缺失 → 默认值」，不是「值可为 `null`」；只有 `optionalFieldOf` 无默认值的 `Optional` 字段（`overwrite`）在 Java 里会是 `null`。**
 
-| 内部状态 | 来源 | Codec 处理 | 导出结果 | 谁负责阻断 |
+| 上游类别 | 字段 | Codec | 内部「未配置」 | 导出 |
 |---|---|---|---|---|
-| required 字符串 = `null` | `createSubsystem` 写 `definition: null`；`getTypeDefaults()` 复制 `defaultValue: null` | 字段 `.nullable()`：decode `null`/缺失 → `null`；encode `null` → 省略该键 | 键缺失（不是 `"null"`） | `collectIssues` 的 `DEFINITION_REQUIRED` / `SUBSYSTEM_REQUIRED_FIELD`；`canExport` 阻断 |
-| `definition: "null"`（历史脏数据） | 旧版 `Codec.STRING.encode(null)` 的产物 | `loadConfig` raw 预处理把字符串 `"null"` 改为 `null`（§15.2） | 同上一行 | 同上 |
-| required map = `{}` | 新建交互区 / 分动箱；`regen_loader.projectile_types` | `Codec.map(..., {emitEmpty:true})`：encode `{}` → `{}`；decode 缺失 → `{}` | `"signal_targets": {}` / `"power_outputs": {}` | 空 map 本身对多数字段合法；`projectile_types` 由 `minProperties:1` 判 error |
-| 可选 map = `{}` | 无目标 / 未配置 | 普通 `Codec.map`：encode `{}` → 省略 | 键缺失，等价 schema default `{}` | 无需阻断 |
-| 非字符串进入 STRING | UI 误传 / MCP 传错 | `Codec.STRING.encode/decode` 对非 string 抛错（去掉 `String(v)` 隐式转换） | 抛错，不落盘 | `projection.in` 映射为 `type_mismatch`；导出前 `canExport` 已拦 |
+| required 字符串（`fieldOf`） | `definition`（全部）；`engine/motor/gearbox.power_output`；`wheel_driver/turret_driver.connector`；`launcher/joint.locator` | `.field()` | `''`（空串占位） | 键存在、值为 `""`；`collectIssues` 判 required 缺失，闸门阻断 |
+| required map（`fieldOf`） | `interact_box.signal_targets`；`car_controller/motorbike_controller.control_outputs`；`transmission.power_outputs`；`regen_loader.projectile_types` | `.default({})` + `emitEmpty`（decode 缺失→`{}`、encode 恒输出） | `{}` | 键存在、值为 `{}`；`projectile_types` 再由 `minProperties:1` 阻断 |
+| optional + 默认值（`optionalFieldOf(name, default)`） | `seat/camera/lighting/sight.locator`；`speed_outputs` / `gear_outputs` / …；`fire_animation`；`belt_label`；`script`；`dismount_locators` | `.default(默认值)` | 缺失（decode 补默认） | 等于默认值时省略；`locator:''` 与上游默认一致 |
+| optional 无默认值（`optionalFieldOf(name)` → `Optional` → Java `null`） | `hit_box.overwrite`；`connector.overwrite` | `.nullable()` | `null` | 省略；schema 可选 |
 
-**明确字段清单**（P2 必须逐项落地）：
+**关键区别**：
 
-- nullable：`subsystem.*.definition`（全部 19 类型）；`engine|motor|gearbox.power_output`；`wheel_driver|turret_driver.connector`；`seat|launcher|camera|lighting|sight|joint.locator`（`lighting`/`sight` 现在默认是 `''`，但统一 nullable 不改变正常值语义）。WIP 类型 `joint` 在 D18 删除后不再有代码，仅迁移期处理。
-- required map + `emitEmpty`：`interact_box.signal_targets`、`car_controller.control_outputs`、`motorbike_controller.control_outputs`、`transmission.power_outputs`、`regen_loader.projectile_types`。
-- 字段补齐：`launcher.fire_animation`（`Codec.STRING.default('fire')`）、`regen_loader.belt_label`（`Codec.STRING.default('')`）。
-- `regen_loader.projectile_types` 的 registry 默认值 `[]` → `{}`；`createSubsystem` 不再产生数组型 map。
+- `default({})` 只用于 required map 的**解码宽容**（旧文件缺键 → `{}`），不是 nullable；输出时 `emitEmpty` 保证键一直在。
+- `null` 只用于 `Optional` 型字段（`overwrite`）。required 字符串不再使用 `null`；`createSubsystem` 写 `definition: ''`，`getTypeDefaults()` 的 `null` 默认值全部改成 `''`（seat/camera optional locator 也是 `''`）。
+- `projection.in` / `loadConfig` 在 decode 前做一次**占位归一化**：required 字符串 `null`/`"null"` → `''`；required map `null` → `{}`；optional 字段 `null` → 删除（让 `default` 生效）。这样旧工程/旧 MCP 输入仍可打开，Codec 不需要 nullable。
+- `definition: ''` 不是合法 ResourceLocation，`power_output/connector/locator: ''` 也不是有效目标；它们**只存在于内部树**，导出时由 §4.3 闸门阻断。若绕过闸门直接 encode，JSON 里会是 `""`（required 键仍在），但模组侧不会接受——这是有意的「脏值可定位」而不是「静默缺键」。
 
-> 为什么不用「省略 null 键」：`projection.in` 的严格解码要求 required 字段存在；省略会让「新建但未填型号」的节点无法 round-trip。为什么不用 `''` 替代 `null`：`definition` 是资源地址，`''` 与「未选择」在 UI/校验里不可区分，且会改变既有工程的内存形态；`null` 是明确的「未配置」占位，导出时省略，闸门负责拦截。
+**P2 字段清单**：
+
+- 改 `subsystem_types.js`：`power_output` / `connector` / `locator` 的 `defaultValue: null` → `''`；`regen_loader.projectile_types` 的 `[]` → `{}`；补 `launcher.fire_animation`（默认 `'fire'`）与 `regen_loader.belt_label`（默认 `''`）。
+- 改 `createSubsystem`：`var ssConfig = { type: typeId, definition: '' };`，其余 `defaults` 原样合并。
+- 改 Codec：`seat.locator` `.field()` → `.default('')`；`camera.locator` `.default()` → `.default('')`；required map 增加 `emitEmpty`；`launcher.fire_animation` / `regen_loader.belt_label` 补字段；`STRING.encode` 严格化。**不给 `definition` / `power_output` / `connector` / `launcher|joint.locator` 加 `.nullable()`。**
+- 迁移：`loadConfig` raw 阶段把 `definition/power_output/connector/locator: null|"null"` → `''`（缺失也可补 `''`，保证旧工程能 decode）；`projection.in` 只归一化显式 `null`/`"null"`，required 字符串缺失仍报 `missing_required`。`projectile_types: []` → `{}`；`signal_targets`/`power_outputs`/`control_outputs` 的 `null` → `{}`；optional 字段 `null` → 删除。
+
+> 为什么不用 `null` 作为 required 占位：`Codec.STRING.field()` / `ResourceLocation.CODEC.fieldOf` 只接受字符串；`null` 会在 decode 阶段直接抛错，且 `Codec.STRING.encode(null)` 会产出字符串 `"null"`。`''` 至少能通过 JSON 类型层，并把「未配置」留给校验器/闸门处理。
 
 ---
 
@@ -230,7 +244,7 @@ src/doc/field_specs.generated.js（含 provenance）
 - **完整性只提示，不阻断编辑**：新建子零件没有碰撞箱、子系统没选型号，都是**合法中间态**。
 - **导出期用同一份规则集，遇 error 阻断**。
 
-因此**不设「用户可选的空字段清单」**，但内部树有两类**固定占位**（§3.4）：required 字符串用 `null`、required map 用 `{}`。两类占位都允许在编辑期存在；`collectIssues` 与 `validateTree(completeness:true)` 在导出时把它们变成闸门。
+因此**不设「用户可选的空字段清单」**，但内部树有两类**固定占位**（§3.4）：required 字符串用 `''`、required map 用 `{}`；optional 字段用 `default` 或（仅 `Optional` 型）`null`。这些占位都允许在编辑期存在；`collectIssues` 与 `validateTree(completeness:true)` 在导出时把它们变成闸门。
 
 ### 4.2 分层职责
 
@@ -262,22 +276,22 @@ function canExport(config) {
 - 现状是「仅提示不拦截」（[export_dialog.js:307](../src/ui/export/export_dialog.js)），本期改为阻断。
 - `collectIssues` 的 14 个 error 产生点逐条确认可定位（都带 `path`）；`ORPHAN_ELEMENT` 放行；`validateTree` 的每条错误也带同样的 `path` 口径。
 - **两条闸门缺一不可**：`collectIssues` 负责业务完整性（型号是否存在、名称冲突、信号目标断裂），`validateTree` 负责 schema 值与 key。第三轮审阅的 `"banana"` / `condition:"WHATEVER"` 属于后者；`projectile_types:{}` 的 `minProperties` 也由后者报。
-- 同一路径可能同时被两层报（例如 `definition:null`）：输出前按 `path + code` 去重，保留信息更具体的一条。
+- 同一路径可能同时被两层报（例如 `definition:''`）：输出前按 `path + code` 去重，保留信息更具体的一条。
 
 ### 4.4 占位符不得变成脏数据（前置修复）
 
-`createSubsystem` 写 `definition: null` 是**正确的占位**，但它会一路写到内容包：
+`createSubsystem` 写 `definition: null` **不是合法占位**：上游 `definition` 是 `ResourceLocation.CODEC.fieldOf`，required 字符串。它会一路走到内容包：
 
 ```
 createSubsystem: definition = null                      operations.js:305
 SubsystemDispatchCodec → EngineCodec.definition = .field()   // 只挡 undefined，不挡 null
 Codec.STRING.encode(null) = String(null) = "null"       Codec.js:74-77 / 254-256
-→ 内容包出现 "definition": "null"
+→ decode 抛 Expected string, got object；若绕过 decode 直接 encode，则出现 "definition": "null"
 ```
 
 同一类问题不止 `definition`：
 
-| 占位 | 现有代码 | 失败方式 |
+| 现有占位 | 现有代码 | 失败方式 |
 |---|---|---|
 | `definition: null` | `operations.js:305` 对**所有类型**写 | `BasicCodec.definition` `.field()` → decode `Expected string, got object` |
 | `power_output: null` | `subsystem_types.js` engine/motor/gearbox | `EngineCodec.power_output` `.field()` → 同上 |
@@ -286,15 +300,17 @@ Codec.STRING.encode(null) = String(null) = "null"       Codec.js:74-77 / 254-256
 | `projectile_types: []` | `subsystem_types.js` regen_loader | `Codec.map` 拒绝数组 |
 | `signal_targets: {}` / `power_outputs: {}` | 新建交互区 / 分动箱 | map encode 空对象返回 `undefined`，required 键被省略 |
 
-修法（五项一起）：
+修法（五项一起，**不引入 required nullable**）：
 
-1. **required 字符串占位**：`definition`、`power_output`、`connector`、`locator` 全部 `.nullable()`（`null → undefined`，不输出该键）；`createSubsystem` 继续写 `null`，不改成 `''`（理由见 §3.4）；
-2. **required map**：`signal_targets` / `control_outputs` / `power_outputs` / `projectile_types` 用 `Codec.map(..., {emitEmpty:true})`，`{}` 也输出；decode 缺失仍补 `{}`；
-3. `Codec.STRING.encode` 对非 string 抛错，去掉 `String(v)` 隐式强制；`STRING.decode` 已有类型断言；
-4. `projectile_types` 的 registry 默认值 `[]` → `{}`；补 `fire_animation` / `belt_label` 两个缺失字段（§3.3 #13）；
-5. 导出闸门（§4.3）兜底：`collectIssues` 把 `definition` / required 字段的 `null`/`''` 判 error，`validateTree(completeness:true)` 把空 `projectile_types` 判 error。
+1. **required 字符串占位改为 `''`**：`createSubsystem` 写 `definition: ''`；`subsystem_types.js` 的 `power_output` / `connector` / `locator` 默认值 `null → ''`；Codec 保持 `.field()`（`STRING` 接受空串）。`loadConfig` / `projection.in` 在 decode 前把 `null`/`"null"` 归一化为 `''`。
+2. **required map**：`signal_targets` / `control_outputs` / `power_outputs` / `projectile_types` 用 `Codec.map(..., {emitEmpty:true})`，`{}` 也输出；decode 缺失仍补 `{}`（解码宽容，不是 nullable）。
+3. `Codec.STRING.encode` 对非 string 抛错，去掉 `String(v)` 隐式强制；`STRING.decode` 已有类型断言。
+4. `projectile_types` 的 registry 默认值 `[]` → `{}`；补 `fire_animation` / `belt_label` 两个缺失字段（§3.3 #13）。
+5. 导出闸门（§4.3）兜底：`collectIssues` 把 `definition` / required 字段的 `''` 判 error，`validateTree(completeness:true)` 把空 `projectile_types` 判 error。
 
-> 待复核（P2 实测项）：当前 `loadConfig → ensureDefaults` 只 decode `PartCodec`（先临时移走 `variants`），子系统子树并未 decode，所以存量 `null` 今天不会在加载时抛错。P2 改为完整 `PartCodec.decode` 后，nullable 必须先落地，否则工程打不开。这也是 §15「raw 预处理 → decode → key 迁移」顺序的原因之一。
+> **为什么不用 nullable**：上游 required 字段是 `fieldOf`，`null` 不是合法值；`.nullable()` 虽然能让插件 round-trip，却会让“未配置”在导出时变成**缺键**，与 required 契约相反。`''`/`{}` 至少保持键存在，同时让校验器能定位“值为空”。只有 `overwrite` 这种上游 `Optional` 字段才使用 `null`。
+>
+> **P2 顺序**：当前 `loadConfig → ensureDefaults` 只 decode `PartCodec`（先临时移走 `variants`），子系统子树并未 decode，所以存量 `null` 今天不会在加载时抛错。P2 改为完整 `PartCodec.decode` 前，必须先在 raw 阶段把 required `null` 归一化为 `''`/`{}`；否则工程打不开。这也是 §15「raw 预处理 → decode → key 迁移」顺序的原因之一。
 
 ### 4.5 两类「未解析」必须分开
 
@@ -466,7 +482,7 @@ v2 只有 `type: 'number'` + `items/minItems/maxItems`，表达不了 `textures`
   kind: 'sub_part', key: 'mass',
   type: 'number',            // number | integer | string | boolean | array | object | tuple | any
   integer: false,
-  nullable: false,           // 内部树允许 null（§3.4 的占位字段；schema 本身仍是 required/string）
+  nullable: false,           // 是否允许 null（仅 schema nullable 或 upstream Optional 字段，如 overwrite；required 字段禁止）
   minimum: 0, maximum: null,
   enum: null,                // string 枚举
   oneOf: null,               // [{type,...}, ...]，如 textures: string | object
@@ -504,7 +520,7 @@ v2 只有 `type: 'number'` + `items/minItems/maxItems`，表达不了 `textures`
 - 普通 kind 的规格来自对应 schema；
 - `subsystem` 按 `typeId` 分组，**只生成上游 19 种**（由 `subsystem_dynamic_attr.schema.json` 的 `if/then` + 各类型 schema 展开）；
 - **D18**：5 个 WIP 类型从 `SubsystemDispatchCodec` 与 `subsystem_types.js` 删除（22→17）；不保留 decode/read、不告警、不提供兼容层，遇到这些 type 一律 `unknown_type`；
-- `subsystem.*.{definition,power_output,connector,locator}` 的 `nullable: true` 来自**手写覆盖表**（§3.4），不是 schema；其余字段的 `nullable` 均来自 schema。
+- **required 字段没有 nullable override**；只有 `hit_box.overwrite` / `connector.overwrite` 因为是上游 `Optional` 字段，在 `field_specs` 里标 `nullable: true`。`subsystem` 的 required 字段（`definition` / `power_output` / `connector` / 必填 `locator`）使用 `''` 占位，optional `locator` 使用 `.default('')`，都不标 nullable。
 
 `schema_codec_allowlist.js` **不是一个笼统的「允许清单」**，它按测试类型分成四段：
 
@@ -523,16 +539,13 @@ module.exports = {
   // 3) 同一字段的约束差异：字段存在，但类型/required/enum/结构不同
   constraint_diffs: [
     { kind: 'hit_box', field: 'type', schema: 'enum', codec: 'string', enforcedBy: 'field_specs.enum' },
-    { kind: 'hit_box', field: 'overwrite', schema: 'object(16)', codec: 'any', enforcedBy: 'field_specs.object' },
+    { kind: 'hit_box', field: 'overwrite', schema: 'object(16)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
+    { kind: 'connector', field: 'overwrite', schema: 'object(12)', codec: 'any.nullable', enforcedBy: 'field_specs.object' },
     { kind: 'interact_box', field: 'condition', schema: 'enum', codec: 'string', enforcedBy: 'field_specs.enum' },
     { kind: 'interact_box', field: 'signal_targets', schema: 'required', codec: 'default({}) + emitEmpty', enforcedBy: 'codec.emitEmpty' },
     { kind: 'connector', field: 'definition', schema: 'required', codec: "default('')", enforcedBy: 'collectIssues' },
     { kind: 'sub_part', field: 'hit_boxes', schema: 'required+minProperties', codec: 'map', enforcedBy: 'collectIssues' },
     { kind: 'sub_part', field: 'hydrodynamics', schema: 'default {""}', codec: 'default {}', enforcedBy: 'decode_tolerance' },
-    { kind: 'subsystem', field: 'definition', types: '*', schema: 'required string', codec: 'nullable', enforcedBy: 'collectIssues+nullable' },
-    { kind: 'subsystem', field: 'power_output', types: ['engine','motor','gearbox'], schema: 'required string', codec: 'nullable', enforcedBy: 'collectIssues+nullable' },
-    { kind: 'subsystem', field: 'connector', types: ['wheel_driver','turret_driver'], schema: 'required string', codec: 'nullable', enforcedBy: 'collectIssues+nullable' },
-    { kind: 'subsystem', field: 'locator', types: ['seat','launcher','camera','lighting','sight'], schema: 'string', codec: 'nullable', enforcedBy: 'collectIssues+nullable' },
     { kind: 'subsystem', field: 'projectile_types', types: ['regen_loader'], schema: 'required+minProperties', codec: 'default({}) + emitEmpty', enforcedBy: 'codec.emitEmpty+minProperties' },
   ],
 
@@ -601,7 +614,7 @@ validateTree(config, { completeness: true }) → Problem[]
 
 **检查内容**（按顺序，任一项失败都进 `errors[]`，不短路）：
 
-1. `nullable`：`null` 只对被覆盖的字段放行（§3.4）；其余字段报 `type_mismatch`；
+1. `nullable`：`null` 只对 schema nullable 或上游 `Optional` 字段（`overwrite`）放行；required 字符串收到 `null` 报 `type_mismatch`。`projection.in` 在 decode 前先把旧数据的 `null`/`"null"` 归一化为 `''`/`{}`，所以正常导入不会走到这条错误；
 2. `oneOf`：逐个尝试，全失败报 `type_mismatch`，`expected` 列出分支；
 3. `type` 基础校验：`string` / `number` / `integer` / `boolean` / `array` / `object` / `tuple` / `any`；
 4. `enum`：`hit_box.type`、`interact_box.condition`、`hit_box.block_collision` 等；报 `invalid_enum`，`expected` 给完整枚举；
@@ -642,6 +655,12 @@ validateTree(config, { completeness: true }) → Problem[]
    - `variants`: **仅当 `typeof variants.model === 'string'`** 时才视为单变体，包成 `{ default: v }`。不能只判「对象自身含 `model` 字段」——变体名 `model` 是合法的，此时 `variants.model` 的值是对象（一个 `VariantConfig`），必须保持 map；
    - `sub_parts`: 单子零件简写**没有 key**，判定不能只看「含 `hit_boxes` / `mass` / `start_bone` 字段」——subpart 名恰好叫 `mass` / `hit_boxes` 时也是合法 map key。判据改为**看值形状**：`hit_boxes` 是对象且其条目形如 `{type: ...}`（不是嵌套的 `{hit_boxes: ...}`），或 `mass` 是 number、`start_bone` 是 string；满足则包成 `{ 'sub_part.' + ns + '.main': sp }`，**不是 `default`**；
    - `hit_boxes` / `interact_boxes` / `connectors` / `subsystems` **不做简写归一化**（key 就是身份）。
+1.5. **归一化未配置占位**（`normalizeUnset`，必须早于 decode）
+   - required 字符串（`definition`、`power_output`、`connector`、`launcher|joint.locator`）：显式 `null` / `"null"` → `''`；**缺失不补**，留给 `.field()` 报 `missing_required`（`read_node` 总会带字段，所以 round-trip 不受影响）；
+   - required map（`interact_box.signal_targets`、`control_outputs`、`power_outputs`、`projectile_types`）：显式 `null` → `{}`；缺失由 `.default({})` 补（解码宽容）；
+   - optional 字段（`seat/camera/lighting/sight.locator` 等带默认值的）：`null` → 删除，让 `.default(...)` 生效；
+   - `projectile_types: []` → `{}`（旧版 registry 的脏默认值）；
+   - 归一化只发生在 `projection.in`，不写回调用方对象；`reset_fields` 按“归一化后实际提供的字段”计算，显式 `null` 视为提供。
 2. **剥内部字段**（`stripInternal`）
    - part: `element_markers`、`_unresolved_bones`；
    - sub_part: `auto_end_bones`；
@@ -663,7 +682,7 @@ validateTree(config, { completeness: true }) → Problem[]
    - Codec 抛出的类型错误在此捕获，映射为 `errors[]` 的 `type_mismatch` / `not_found`，带回当前 `path`；
    - `reset_fields`：`existing` 中存在、但本次输入（归一化后）没有的**顶层字段**；结构动作的 `reset_fields` 为空。
 5. **校验值**（`validateValues`，§5.2.5）
-   - `completeness:false`：只查枚举 / 范围 / 结构 / 数组长度；`null` 仅对 §3.4 的占位字段放行；`{}` 对 required map 放行（缺 required 由导出闸门负责）；
+   - `completeness:false`：只查枚举 / 范围 / 结构 / 数组长度；`''` / `{}` 是合法占位（required 缺失由导出闸门负责）；`null` 只对 `overwrite` 这类 upstream `Optional` 字段放行；
    - 发生在 decode 之后，因此看到的是补齐默认值后的节点；失败返回 `invalid_enum` / `type_mismatch` / `out_of_range`，带 `path` 与 `expected/got`；
    - 覆盖 `import_part` / `import_variant` / `import_sub_part` / `import_subsystem` 的全部路径：`hit_box.type:"banana"`、`interact_box.condition:"WHATEVER"` 在这里被拒。
 6. **解析 `hit_boxes` key**（`resolveHitBoxKeys`）
@@ -703,7 +722,7 @@ validateTree(config, { completeness: true }) → Problem[]
 in(out(node, 'read'), { existing: node }) ≡ node   （结构等价，reset_fields 为空）
 ```
 
-含 `hit_boxes`（UUID↔骨骼名）、单变体/单子零件、未解析骨骼、`definition:null`、`power_output:null`、`signal_targets:{}`、`power_outputs:{}`、`projectile_types:{}` 的节点都必须成立。`out('read')` 保留 `null` 与空 map 的形状；`in` 的 `validateValues(completeness:false)` 允许这些占位，因此 `reset_fields` 为空；导出时 `out('export')` 省略 `null` 键、保留空 map 键，再由 `canExport` 决定是否阻断。
+含 `hit_boxes`（UUID↔骨骼名）、单变体/单子零件、未解析骨骼、`definition:''`、`power_output:''`、`connector:''`、`locator:''`、`signal_targets:{}`、`power_outputs:{}`、`projectile_types:{}` 的节点都必须成立。`out('read')` 保留 `''` 与空 map 的形状；`in` 的 `validateValues(completeness:false)` 允许这些占位，因此 `reset_fields` 为空；导出时 `out('export')` 对 required 字段输出 `""` / `{}`（键仍在），再由 `canExport` 阻断。
 
 #### 5.3.3 单子零件简写的落点（v3 修正）
 
@@ -717,8 +736,8 @@ in(out(node, 'read'), { existing: node }) ≡ node   （结构等价，reset_fie
 
 - 非规范 `sub_parts` key → **改写为规范 key**（唯一性冲突加后缀），同步更新 `element_markers` 的 `sub_part` / `hit_box` `config_ref`；
 - 单变体 / 单子零件简写、缺失 `hit_boxes` 容器 → 归一化为 map；
-- `definition: null` / `power_output: null` / `connector: null` / `locator: null` → 保留为 `null`（内部占位），由 §4.4 的 nullable Codec 接住；
-- `definition: "null"`（字符串）→ `null`；`projectile_types: []` → `{}`；`interact_box.signal_targets` 缺失 → 补 `{}`；
+- `definition: null` / `power_output: null` / `connector: null` / `locator: null` → **归一化为 `''`**（required 字段）；`seat/camera` 等 optional `locator: null` → 删除，让默认值生效；
+- `definition: "null"`（字符串）→ `''`；`projectile_types: []` → `{}`；`interact_box.signal_targets` 缺失 → 补 `{}`；
 - `connector` marker 的 `config_ref` 存着 definition → 统一为连接点 key；
 - `_uuid` / `_marker_uuid` 缺失或指向不存在元素 → 按骨骼名 / Locator 名重建；
 - 悬空 marker → `cleanGhostMarkers`（已有）；
@@ -748,7 +767,7 @@ in(out(node, 'read'), { existing: node }) ≡ node   （结构等价，reset_fie
 
 **第 2 行是现成 bug**：`markHitBox` 写入的 `config_ref` 是**所属子零件 key**（[operations.js:433](../src/core/operations.js)、[bone_resolver.js:125](../src/import/bone_resolver.js)），但 `renameSubPart` 只改 `type === 'sub_part'` 的 marker（[App.vue.js:1257](../src/ui/App.vue.js)）。子零件重命名后，其下所有 `hit_box` marker 仍指向旧 key，`cleanGhostMarkers` 会把它们当孤儿清掉。P2 的 `refs.renameRefs` 必须同时处理两类 marker；测试要覆盖「子零件改名 → 碰撞箱标记仍归属正确」。
 
-**第 9 行是现成缺失**：`power_output` 是 `subsystem_types.js` 的动态字段、`required: true`、编辑器 `power_target`，Codec 里是 `Codec.STRING.field()`（[subsystem_codec.js:20](../src/codec/codecs/subsystem_codec.js)），v3.1 改为 `.nullable()` 以承接新建时的 `null`。删除/重命名目标子系统时必须清理/改写，否则模组侧解析失败。
+**第 9 行是现成缺失**：`power_output` 是 `subsystem_types.js` 的动态字段、`required: true`、编辑器 `power_target`，Codec 里是 `Codec.STRING.field()`（[subsystem_codec.js:20](../src/codec/codecs/subsystem_codec.js)），v3.1 保持 `.field()`，内部未配置改为 `''`。删除/重命名目标子系统时必须清理/改写，否则模组侧解析失败。
 
 **第 4 行语义统一**：`connector` marker 的 `config_ref` 现在写的是 `definition` 值（[App.vue.js:1475](../src/ui/App.vue.js)），而 `sub_part`/`interact_box`/`hit_box` 写的是 key。统一为「marker → 被标记配置条目的 key」，`definition` 单独存于配置条目；迁移见 §15。
 
@@ -950,13 +969,13 @@ src/services/
 
 `doc/{address,field_specs.generated,shapes,projection,refs,ports,validate,keys,index}.js` + `test/` 骨架。`keys.js` 是 §5.1.3 的唯一正则实现，`validate.js` 是 §5.2.5 的值校验。
 
-验收：`bun test` 覆盖 §5.1.5 全部 17 个测试向量 + §5.3.1/§5.3.2 的 in/out 顺序 + §5.4 全部 13 行；round-trip（含 `hit_boxes`、单变体/单子零件、未解析骨骼、`definition:null`、required 空 map）通过；`require` 全部 `doc` 模块的测试通过（P1 无调用方，dist 不增量，故不以体积为验收）；零行为变更。
+验收：`bun test` 覆盖 §5.1.5 全部 17 个测试向量 + §5.3.1/§5.3.2 的 in/out 顺序 + §5.4 全部 13 行；round-trip（含 `hit_boxes`、单变体/单子零件、未解析骨骼、`definition:''`、required 空 map）通过；`require` 全部 `doc` 模块的测试通过（P1 无调用方，dist 不增量，故不以体积为验收）；零行为变更。
 
 ### P2 — 操作层（1.5–2 会话）
 
-`src/ops/*`（9 文件）；删除 `core/operations.js`（9 处 require 改写）；UI 44 个方法改薄；§4.4 **五项修复**（nullable、required map `emitEmpty`、`STRING.encode` 严格化、`projectile_types` 默认值与缺失字段、闸门兜底）；§5.2.5 的 `doc/validate.js`；§6.4 合并开关；`renameSubPart` 的 ASCII key 校验 + `hit_box` marker 修复；`generateDefaultName('sub_part')` 用 `context.namespace`；**删除 5 个 WIP 类型**（Codec 22→17、`subsystem_types.js`、面板）；`signal_target_options.js` 改 `local`/`global` 并补交互区；`subsystem_types.js` 默认值改 `['local','global']`；`validation.js` / `naming.js` 的 `RESERVED_SIGNAL_NAMES` 收为 `['local','global']`；`collectIssues` 增加 `DANGLING_SIGNAL_TARGET`；`subsystem_types.js` 补 `fire_animation` / `belt_label`、`projectile_types` 默认改 `{}`。
+`src/ops/*`（9 文件）；删除 `core/operations.js`（9 处 require 改写）；UI 44 个方法改薄；§4.4 **五项修复**（required 字符串 `''` / required map `emitEmpty`、`STRING.encode` 严格化、`projectile_types` 默认值与缺失字段、闸门兜底）；`subsystem_types.js` 的 `defaultValue: null → ''`；§5.2.5 的 `doc/validate.js`；§6.4 合并开关；`renameSubPart` 的 ASCII key 校验 + `hit_box` marker 修复；`generateDefaultName('sub_part')` 用 `context.namespace`；**删除 5 个 WIP 类型**（Codec 22→17、`subsystem_types.js`、面板）；`signal_target_options.js` 改 `local`/`global` 并补交互区；`subsystem_types.js` 默认值改 `['local','global']`；`validation.js` / `naming.js` 的 `RESERVED_SIGNAL_NAMES` 收为 `['local','global']`；`collectIssues` 增加 `DANGLING_SIGNAL_TARGET`；`subsystem_types.js` 补 `fire_animation` / `belt_label`、`projectile_types` 默认改 `{}`。
 
-验收：每字段改一次 = 一条撤销记录；四个 `import*` 可用且返回 `reset_fields`；拖拽导入回归；`coalesce:false` 下三次 `set_node` = 三条；子零件改名后碰撞箱标记归属正确；非规范 key 的 import 返回 `invalid_format`；**新建 basic / transmission / interact_box / regen_loader 的 round-trip 通过**（`definition:null`、`power_outputs:{}`、`signal_targets:{}`、`projectile_types:{}`）；`import_sub_part` 传 `hit_box.type:"banana"` 返回 `invalid_enum`。
+验收：每字段改一次 = 一条撤销记录；四个 `import*` 可用且返回 `reset_fields`；拖拽导入回归；`coalesce:false` 下三次 `set_node` = 三条；子零件改名后碰撞箱标记归属正确；非规范 key 的 import 返回 `invalid_format`；**新建 basic / transmission / interact_box / regen_loader 的 round-trip 通过**（`definition:''`、`power_outputs:{}`、`signal_targets:{}`、`projectile_types:{}`）；`import_sub_part` 传 `hit_box.type:"banana"` 返回 `invalid_enum`。
 
 ### P3 — 事件总线 + 导出闸门（1 会话）
 
@@ -990,18 +1009,18 @@ test/
 
 1. 含点/中文/namespace 带点的路径；`*` 在中间 map 层；数组层 `*` 报 `invalid_format`；
 2. `sub_parts` 单 key 反例（`{chassis:{…}}`）必须 `invalid_format`，不得被吞成 `{default:…}`；
-3. `read_node` → `import_*` **round-trip**：ASCII 规范 key、含 `hit_boxes`、单变体、未解析骨骼、`definition:null`、`power_output:null`、`signal_targets:{}`、`power_outputs:{}`、`projectile_types:{}` 九种输入均 `reset_fields` 为空；
+3. `read_node` → `import_*` **round-trip**：ASCII 规范 key、含 `hit_boxes`、单变体、未解析骨骼、`definition:''`、`power_output:''`、`connector:''`、`locator:''`、`signal_targets:{}`、`power_outputs:{}`、`projectile_types:{}` 均 `reset_fields` 为空；
 4. `field_specs` 不暴露 `id` / `element_markers`；`textures` / `overwrite` / `projected_area` 的类型校验生效；
 5. `power_output` / `hit_box.subsystem` / `signal_targets` / `power_outputs` 的清理与重命名；`signal_translations` 不被清理；
 6. `coalesce:false`：不同目标不合并、结构动作不合并；
 7. 投影剥离内部字段（注入 `element_markers` / `_uuid` / `_marker_uuid` 后不可见）；
-8. `"null"` 清洗（`definition:null` 不出现在导出结果里，且不会变成字符串 `"null"`）；
+8. `"null"` 清洗（`definition:null` / `"null"` 归一化为 `''`，不出现字符串 `"null"`；required 字符串导出时允许 `""` 但被闸门拦）；
 9. 导出闸门：空 `hit_boxes` 拦截、`ORPHAN_ELEMENT` 放行、`invalid_enum` 拦截、`projectile_types:{}` 的 `minProperties` 拦截；
 10. `schema` 漂移：manifest ↔ schema、dispatch map ⊇ schema 类型集合（D18 删除后到 D13 前，因缺 `track_*` 该项为已知红灯）；`missing_types` / `missing_fields` / `extra_fields` / `constraint_diffs` / `decode_tolerance` 各自校验，过期条目失败；
 11. 严格 key：非规范 `import_sub_part` 返回 `invalid_format`；中文/空白 key、中文或大写 `partId` 同样 `invalid_format`；`loadConfig` 迁移后**子零件**旧 key 全部规范化（`default` → `main`；`.main` / `main.` / `chassis!` / 中文 / 超长 → `legacy_<n>`），marker 同步；
 12. 哨兵：只有 `local`/`global` 放行；`part`/`subpart`/`vehicle` 一律 `unresolved_config_ref`（不告警、不迁移）；
-13. **required 占位**：新建 basic / engine / wheel_driver / seat / transmission 后立即 `read_node → import_*`；`definition` / `power_output` / `connector` / `locator` 的 `null` 不得抛错，`reset_fields` 为空；`out('export')` 不输出 `"null"`；
-14. **required 空 map**：`interact_box.signal_targets`、`transmission.power_outputs`、`car_controller.control_outputs`、`regen_loader.projectile_types` 的 `encode` 必须保留 `{}` 键；`decode(encode(x))` 回环；
+13. **required 占位**：新建 basic / engine / wheel_driver / seat / transmission 后立即 `read_node → import_*`；`definition` / `power_output` / `connector` / `locator` 为 `''`，required map 为 `{}`，`reset_fields` 为空；旧数据传 `null` / `"null"` 在 `normalizeUnset` 后同样成功；
+14. **required 空 map**：`interact_box.signal_targets`、`transmission.power_outputs`、`car_controller.control_outputs`、`regen_loader.projectile_types` 的 `encode` 必须保留 `{}` 键；decode 缺失 → `{}`；`decode(encode(x))` 回环；
 15. **值校验**：`import_*` 传 `hit_box.type:"banana"` / `interact_box.condition:"WHATEVER"` 返回 `invalid_enum`；`projectile_types` 的值 `0` 返回 `out_of_range`；已有非法值的工程 `canExport` 返回 `ok:false`，但 `loadConfig` 能打开；
 16. **key 矩阵**：`import_part` 的 `part_id:"Hull"` / `import_variant` 的 `variant:"门"` / `createSubsystem` 的 `instanceName:"引擎"` / `setField` 新建 `textures.纹理` 全部 `invalid_format`；`projectile_types` 的 `machine_max:30mm_ap` 合法，`Machine_Max:30mm_ap` 非法（大写）；
 17. **投影边界**：`variants` 的 key 恰好是 `model` 时不得被简写吞掉；`hydrodynamics[""]` 可读可写、`hit_boxes[""]` 报 `invalid_format`；`_uiState` 在根、`element_markers` 在 part，均返回 `unknown_field`；`projectile_types` 里残留 `__new_p_*` 时 `validateTree` 不报错（内部占位键）。
@@ -1056,16 +1075,17 @@ test/
 | D9 | 小件整件通道 | 本期不做 `hit_box`/`interact_box`/`connector` | 用户 |
 | D10 | 路径语法 | `string[]` 主 + JSON Pointer 从；`*` 为整段 token；**按位置解析** | 推荐（v3 收口） |
 | D11 | 字段规格来源 | 兄弟仓库 schema → vendored → codegen | 推荐（v2） |
-| D12 | schema↔Codec 漂移 | 以 schema 为准：结构性修复 3 项（`hit_box.id` 默认值、`STRING.encode` 严格化、`subsystem.*` nullable）+ 字段补齐 2 项（`launcher.fire_animation`、`regen_loader.belt_label`）+ 默认值 1 项（`projectile_types: []` → `{}`）；枚举/结构差异由 `field_specs` 在写入/导入/导出三侧拦，其余进 allowlist | 推荐（v3.1 扩） |
+| D12 | schema↔Codec 漂移 | 以 schema/上游为准：结构性修复（`hit_box.id` 默认值、`STRING.encode` 严格化、required 字段保持 `.field()` + `''` 占位、optional locator 改 `.default('')`）+ 字段补齐 2 项（`launcher.fire_animation`、`regen_loader.belt_label`）+ 默认值 1 项（`projectile_types: []` → `{}`）；枚举/结构差异由 `field_specs` 在写入/导入/导出三侧拦，其余进 allowlist | 推荐（v3.1 扩） |
 | D13 | `track_*` 两种类型 | **单独立项**（不阻塞 P1，但 `missing_types` 留 2 条，测试为已知红灯；补齐后 allowlist 必须清空） | 用户 |
-| D14 | 可空字段清单 | **撤销「用户可选清单」**；仅有 §3.4 的两类固定内部占位（required 字符串 `null`、required map `{}`），编辑不拦、导出阻断 | 用户（§4） |
+| D14 | 可空字段清单 | **撤销「用户可选清单」**；固定内部占位：required 字符串 `''`、required map `{}`；`null` 只用于 upstream `Optional` 字段（`overwrite`）；编辑不拦、导出阻断 | 用户（§4） |
 | D15 | 导出闸门 | `severity==='error'` 阻断导出 | 用户 |
 | D16 | key 策略 | **严格规范 key**：ASCII 字符集对所有翻译键强制；子零件 `sub_part.<ns>.<name>` 形态强制并迁移；其它 kind 前缀形态只告警 | **用户**（第二轮） |
 | D17 | key 字符集 | **所有配置 key 纯 ASCII**（模型元素名除外）；`partId` 与 namespace 小写 `[a-z0-9_.-]+` / `[a-z0-9_-]+`（进 resource location），其余 `[A-Za-z0-9_.-]+`；中文/空白拒绝 | **用户**（第二轮） |
 | D18 | 5 个 WIP 子系统类型 | **删除**（Codec 22→17、registry、面板、类型清单）；不保留 decode/read，不提供兼容层 | **用户**（第二轮） |
 | D19 | 信号哨兵 | 只有 `local`/`global`；`part`/`subpart`/`vehicle` **不存在**：不保留、不告警、不迁移，按普通未知目标报错 | **用户**（第二轮） |
-| D20 | required 占位与空容器 | required 字符串用 `null` 占位 + Codec `.nullable()`；required map 用 `Codec.map(..., {emitEmpty:true})`，`{}` 也输出；导出闸门负责阻断缺失/空 `minProperties`。不改成 `''`，不省略键 | **第三轮审阅** + 代码实测（§3.4、§4.4） |
+| D20 | required 占位与空容器 | required 字符串保持 `.field()`，内部未配置用 `''`（不用 `null`/nullable）；required map 用 `Codec.map(..., {emitEmpty:true})`，`{}` 也输出；optional 字段用 `.default(...)`；`null` 只用于 upstream `Optional` 字段（`overwrite`）。导出闸门阻断空 required / 空 `minProperties` | **第三轮审阅** + 上游复核（§3.4、§4.4） |
 | D21 | 值校验边界 | Codec 只保证结构可解；枚举/范围/结构/key 由 `doc.field_specs` + `doc.validate` 在 `setField` / `projection.in` / `canExport` 三处执行；**不把枚举塞进 Codec**，避免存量脏值让工程无法打开 | **第三轮审阅**（§5.2.5） |
+| D22 | required / optional 判定 | 以上游 `fieldOf` / `optionalFieldOf` 为准：`optionalFieldOf` 是「键可缺失 → 默认值」，不是「值可为 null」；required 字段不 nullable；只有 `optionalFieldOf` 无默认（`Optional` → Java null）的 `overwrite` 用 nullable | **用户追问**（2026-10-21） |
 | Q1 | 内容包定义 JSON | 只读，不纳入业务层 | 用户 |
 | Q2 | 交付形态 | 拆两串 commit | 用户 |
 
@@ -1095,7 +1115,7 @@ test/
 A. raw 预处理（必须早于任何 PartCodec.decode）
    1) 备份原始 JSON（services/pack：<project>.mm_project.json.bak）
    2) 剔除 5 个 WIP 子系统条目（D18），记入 _lastMigration.removed
-   3) "null"（字符串）→ null；projectile_types: [] → {}
+   3) required 字符串 null/"null"/缺失 → ''；required map null/缺失 → {}；optional 字段 null → 删除（让默认值生效）；projectile_types: [] → {}
    4) 单变体 / 单子零件简写归一化（按 §5.3.1 第 1 步的判据；必须在 decode 前完成，避免 either 的启发式把 `variants.model` 当成单变体）
 B. decode（用 `doc/shapes` 的 `PartShape` 显式 map；若暂时仍用 `PartCodec`，必须已由 A 段归一化，不能让 `either` 猜）
 C. key / marker 迁移（子零件 key 规范化、marker.config_ref 改写、容器补全、幽灵清理）
@@ -1171,8 +1191,8 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 | 单变体 / 单子零件简写 | raw 或 decode 阶段归一化为 map；单子零件落到 `sub_part.<ns>.main`（不是 `default`） |
 | `sub_parts` 里因 `either` 产生的裸 `default` key | 同上改写为 `sub_part.<ns>.main` |
 | 缺失 `hit_boxes` / `connectors` 等容器 | 补空 map（不改语义） |
-| `subsystems[*].definition === null` / `power_output: null` / `connector: null` / `locator: null` | **保留 `null`**（§3.4 的内部占位），由 nullable Codec 接住；导出闸门拦截 |
-| `subsystems[*].definition === "null"`（字符串） | raw 阶段转 `null`，避免被当成合法资源地址 |
+| `subsystems[*].definition === null` / `power_output: null` / `connector: null` / `locator: null` | **归一到 `''`**（required 字段；`definition` 对所有类型，`power_output/connector` 仅 required 类型）；optional `locator` 直接删除，让 `.default('')` 生效 |
+| `subsystems[*].definition === "null"`（字符串） | raw 阶段转 `''`，避免被当成合法资源地址 |
 | `subsystems[*].regen_loader.projectile_types === []` | raw 阶段转 `{}`；空 map 由 `minProperties` 闸门拦截 |
 | `connector` marker 的 `config_ref` 存着 definition | 统一为连接点 key（§5.4） |
 | `_uuid` / `_marker_uuid` 缺失或失效 | 按骨骼名 / Locator 名重建 |
@@ -1199,7 +1219,7 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 | 导出闸门改变现有行为（从「总是成功」到「被拦」） | P3 单独 commit；先跑一次全量校验看现有工程有多少 error |
 | 批量导入撤销粒度回退 | 冲突决策提前到开记录前（修 `drag_import` 既有缺陷） |
 | 端口未注入（早于 `plugin.js onload`） | 端口默认空实现 + `assertPorts()` 在 ops 入口做一次软检查 |
-| `null` 占位在导出时被省略，若绕过 `canExport` 直接调 generator，会产出缺 required 字段的 JSON | 导出只有一个入口 `services/export.js`；generator 不在 `ui/menu` 直接调用；P3 验收里加「直接调用 generator 的测试必须失败」 |
+| required 空串/空 map 在导出时仍是 `''`/`{}`，若绕过 `canExport` 直接调 generator，会产出空 required 值（`definition:''` 不是合法 ResourceLocation） | 导出只有一个入口 `services/export.js`；generator 不在 `ui/menu` 直接调用；P3 验收里加「直接调用 generator 的测试必须失败」 |
 | required map `emitEmpty` 让输出从「省略」变成 `{}`，可能与旧内容包逐字节不同 | 语义等价（schema required）；P3 用「旧工程导出 → 再导入 → 再导出」做 round-trip 对比，不要求与旧版本逐字节一致 |
 | `power_outputs` 的 key 清理/改名新增引用面 | 先补测试（删除/重命名 transmission 的目标），再改 `refs`；第 13 行单独 review |
 | 子零件 key 迁移在 128 字符边界截短，可能产生新的碰撞 | `uniqueSubPartKey` 截短后再查 `used`；迁移报告记录 `reason:'collision'`，加载后一次性确认 |
