@@ -159,71 +159,6 @@ describe('MCP 只读工具', () => {
         expect(r.value[spKey()].hit_boxes.hull).toBeTruthy();
     });
 
-    test('describe_node 返回子系统可填字段与当前值状态', () => {
-        const cfg = helpers.createConfig();
-        installGlobals(cfg);
-        const r = run('describe_node', {
-            path: ['sub_parts', spKey(), 'subsystems', 'subsystem.machine_max.engine'],
-        });
-        expect(r.ok).toBe(true);
-        expect(r.kind).toBe('subsystem');
-        expect(r.type_id).toBe('machine_max:engine');
-        expect(r.found).toBe(true);
-        expect(r.required).toEqual(['type', 'definition', 'power_output']);
-
-        const fields = {};
-        r.fields.forEach(function (f) { fields[f.name] = f; });
-        expect(fields.type.enum).toEqual(['machine_max:engine']);
-        expect(fields.type.required).toBe(true);
-        expect(fields.type.sideEffect).toBe('rebuild_type_fields');
-        expect(fields.definition.required).toBe(true);
-        expect(fields.definition.references).toBe('resource');
-        expect(fields.definition.description).toContain('Resource location');
-        expect(fields.power_output.present).toBe(true);
-        expect(fields.power_output.required).toBe(true);
-        expect(fields.power_output.description).toContain('Power output target');
-        expect(fields.speed_outputs.present).toBe(true);
-        expect(fields.speed_outputs.type).toBe('object');
-        expect(fields.speed_outputs.additionalProperties.type).toBe('array');
-        expect(r.present_fields).toEqual(['type', 'definition', 'power_output', 'speed_outputs']);
-        expect(r.missing_required).toEqual([]);
-    });
-
-    test('describe_node 可描述尚未创建的子系统（传 type）', () => {
-        const cfg = helpers.createConfig();
-        installGlobals(cfg);
-        const r = run('describe_node', {
-            path: ['sub_parts', 'sub_part.machine_max.chassis', 'subsystems', 'subsystem.machine_max.motor'],
-            type: 'motor',
-        });
-        expect(r.ok).toBe(true);
-        expect(r.kind).toBe('subsystem');
-        expect(r.type_id).toBe('machine_max:motor');
-        expect(r.found).toBe(false);
-        expect(r.present_fields).toEqual([]);
-        expect(r.fields.some(function (f) { return f.name === 'power_output'; })).toBe(true);
-    });
-
-    test('describe_node 返回容器与值 map，未知子系统类型报错', () => {
-        const cfg = helpers.createConfig();
-        installGlobals(cfg);
-        const sp = run('describe_node', { path: ['sub_parts', spKey()] });
-        expect(sp.ok).toBe(true);
-        expect(sp.kind).toBe('sub_part');
-        expect(sp.containers.map(function (c) { return c.name; })).toEqual([
-            'hit_boxes', 'interact_boxes', 'connectors', 'subsystems',
-        ]);
-        const hydro = sp.fields.filter(function (f) { return f.name === 'hydrodynamics'; })[0];
-        expect(hydro.value_map).toBe('object');
-
-        const unknown = run('describe_node', {
-            path: ['sub_parts', 'sub_part.machine_max.chassis', 'subsystems', 'subsystem.machine_max.missing'],
-            type: 'machine_max:missing',
-        });
-        expect(unknown.ok).toBe(false);
-        expect(unknown.errors[0].code).toBe('unknown_type');
-    });
-
     test('validate 返回结构化问题与 export_ok', () => {
         const cfg = helpers.createConfig();
         installGlobals(cfg);
@@ -801,7 +736,7 @@ describe('MCP 注册生命周期', () => {
         };
     }
 
-    test('setup 注册 15 个带前缀工具，condition 限定模式', () => {
+    test('setup 注册 14 个带前缀工具，condition 限定模式', () => {
         globalThis.MCP_QUEUE = [];
         const registered = [];
         const unregistered = [];
@@ -817,7 +752,7 @@ describe('MCP 注册生命周期', () => {
         expect(globalThis.MCP_QUEUE).toHaveLength(1);
         globalThis.MCP_QUEUE[0].setup(mcp);
 
-        expect(registered).toHaveLength(15);
+        expect(registered).toHaveLength(14);
         expect(registered[0].name).toBe('machine_max_bb_plugin_get_context');
         expect(registered[0].parameters).toBeTruthy();
         expect(registered[0].params).toBeUndefined();
@@ -828,8 +763,8 @@ describe('MCP 注册生命周期', () => {
 
         mcpIndex.unregisterMcpTools();
         expect(globalThis.MCP_QUEUE).toHaveLength(0);
-        // setup 前先按名字注销同名工具（15），unregister 再注销一次（15）
-        expect(unregistered.length).toBe(30);
+        // setup 前先按名字注销同名工具（14），unregister 再注销一次（14）
+        expect(unregistered.length).toBe(28);
     });
 
     test('重复 register 不重复入队', () => {
@@ -851,13 +786,13 @@ describe('MCP 注册生命周期', () => {
         };
 
         mcpIndex.registerMcpTools();
-        expect(registered).toHaveLength(15);
+        expect(registered).toHaveLength(14);
         expect(registered[0].name).toBe('machine_max_bb_plugin_get_context');
 
         // 队列条目仍在；MCP 后续 drain 时会幂等重注册
         expect(globalThis.MCP_QUEUE).toHaveLength(1);
         globalThis.MCP_QUEUE[0].setup(globalThis.MCP);
-        expect(registered).toHaveLength(30);
+        expect(registered).toHaveLength(28);
         mcpIndex.unregisterMcpTools();
     });
 
@@ -884,7 +819,7 @@ describe('MCP 注册生命周期', () => {
             createJsonResult: function (obj) { return obj; },
         };
         loadedHandler({ plugin: { id: 'mcp' } });
-        expect(registered).toHaveLength(15);
+        expect(registered).toHaveLength(14);
         mcpIndex.unregisterMcpTools();
     });
 });

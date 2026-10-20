@@ -155,48 +155,6 @@ function getSideEffect(kind, field) {
     return SIDE_EFFECTS[kind + '.' + field] || null;
 }
 
-/**
- * 描述一个节点可填的字段，供只读工具 / UI 使用。
- *
- * 字段规格保持 generated 的原始形状（type / enum / minimum / oneOf / ...），
- * 这里只补三个地址层语义：required 来自 spec.required 数组、容器字段标
- * `container`、值 map 标 `value_map`。返回 null 表示未知 kind 或未知子系统类型。
- *
- * @param {string} kind - part | variant | sub_part | hit_box | interact_box | connector | subsystem
- * @param {string|object} [typeIdOrNode] - subsystem 必填（完整 type id 或节点）
- * @returns {object|null}
- */
-function describeNode(kind, typeIdOrNode) {
-    if (!isKnownKind(kind)) return null;
-    var spec = getSpec(kind, typeIdOrNode);
-    if (!spec) return null;
-
-    var required = getRequiredFields(kind, typeIdOrNode);
-    var fields = Object.keys(spec.fields || {}).map(function (name) {
-        var field = Object.assign({ name: name }, spec.fields[name]);
-        field.required = required.indexOf(name) >= 0;
-        if (isContainer(kind, name)) {
-            field.container = getContainerChildKind(name);
-        }
-        if (isValueMapField(name)) {
-            field.value_map = getValueMapValueType(name);
-        }
-        return field;
-    });
-
-    return {
-        kind: kind,
-        type_id: kind === 'subsystem' ? getTypeId(kind, typeIdOrNode) : null,
-        schema: spec.schema || null,
-        required: required,
-        fields: fields,
-        containers: getContainers(kind).map(function (name) {
-            return { name: name, child_kind: getContainerChildKind(name) };
-        }),
-        internal: getInternalFields(kind),
-    };
-}
-
 function listSubsystemTypes() {
     return Object.keys(SPECS.subsystem);
 }
@@ -255,7 +213,6 @@ module.exports = {
     getRootField: getRootField,
     isRootField: isRootField,
     getSideEffect: getSideEffect,
-    describeNode: describeNode,
     listSubsystemTypes: listSubsystemTypes,
     hasSubsystemType: hasSubsystemType,
     isNullable: isNullable,

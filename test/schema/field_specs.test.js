@@ -23,14 +23,12 @@ describe('field_specs.generated.js', () => {
     });
 
     test('关键字段规格符合 docs/13 §5.2', () => {
-        expect(generated.SPECS.sub_part.fields.projected_area).toMatchObject({
+        expect(generated.SPECS.sub_part.fields.projected_area).toEqual({
             type: 'tuple',
             tuple: [{ type: 'number' }, { type: 'number' }, { type: 'number' }],
             minItems: 3,
             maxItems: 3,
         });
-        expect(generated.SPECS.sub_part.fields.projected_area.description)
-            .toContain('Projected area of the sub-part');
 
         const textures = generated.SPECS.variant.fields.textures;
         expect(textures.oneOf).toHaveLength(2);

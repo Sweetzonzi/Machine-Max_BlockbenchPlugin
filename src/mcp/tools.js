@@ -252,90 +252,6 @@ function readNode(args) {
     };
 }
 
-function normalizeSubsystemType(typeId, config) {
-    if (!typeId || typeof typeId !== 'string') return null;
-    var out = typeId.trim();
-    if (!out) return null;
-    if (out.indexOf(':') < 0 && config && config.namespace) {
-        out = config.namespace + ':' + out;
-    }
-    return out;
-}
-
-function describeNode(args) {
-    var got = configOrError();
-    if (got.error) return got.error;
-    var config = got.config;
-    var path = resolvePath(config, args.path);
-    if (!path.ok) return result.error('路径无效', path.errors || []);
-
-    var read = doc.read(config, path.segments);
-    if (read.ok && isContainer(path.segments)) {
-        return result.error('路径指向容器，不是单个节点', [{
-            path: path.segments, code: 'invalid_target', expected: '节点路径',
-            got: 'map', hint: '在容器后追加一个 key，例如 subsystems.<subsystem_key>',
-        }]);
-    }
-
-    var kind = read.ok ? read.kind : kindAt(path.segments);
-    if (!doc.fieldSpecs.isKnownKind(kind)) {
-        return result.error('无法推断节点类型', [{
-            path: path.segments, code: 'not_found', expected: 'part / variant / sub_part / hit_box / interact_box / connector / subsystem',
-            got: kind || null, hint: '传入一个节点路径（不是字段路径），例如 subsystems.<key>',
-        }]);
-    }
-
-    var node = read.ok && isObject(read.value) ? read.value : null;
-    var typeId = null;
-    if (kind === 'subsystem') {
-        typeId = normalizeSubsystemType((node && node.type) || args.type, config);
-        if (!typeId) {
-            return result.error('无法确定子系统类型', [{
-                path: path.segments, code: 'unknown_type', expected: '节点 type 字段或参数 type',
-                got: null, hint: '对尚未创建的子系统传入 type，例如 machine_max:engine',
-            }]);
-        }
-    }
-
-    var desc = doc.fieldSpecs.describeNode(kind, typeId);
-    if (!desc) {
-        return result.error('未知子系统类型: ' + typeId, [{
-            path: path.segments, code: 'unknown_type', expected: '已注册的 subsystem type',
-            got: typeId,
-            hint: '可用类型：' + doc.fieldSpecs.listSubsystemTypes().join(', '),
-        }]);
-    }
-
-    var fields = desc.fields.map(function (field) {
-        var row = Object.assign({}, field);
-        row.present = !!node && Object.prototype.hasOwnProperty.call(node, field.name);
-        return row;
-    });
-    var presentFields = fields.filter(function (field) {
-        return field.present;
-    }).map(function (field) {
-        return field.name;
-    });
-    var missingRequired = desc.required.filter(function (name) {
-        return presentFields.indexOf(name) < 0;
-    });
-
-    return {
-        ok: true,
-        path: path.segments,
-        kind: kind,
-        type_id: desc.type_id,
-        schema: desc.schema,
-        found: !!node,
-        required: desc.required,
-        fields: fields,
-        containers: desc.containers,
-        internal: desc.internal,
-        present_fields: presentFields,
-        missing_required: missingRequired,
-    };
-}
-
 function validate(args) {
     var got = configOrError();
     if (got.error) return got.error;
@@ -832,11 +748,6 @@ var TOOLS = [
         name: 'read_node',
         description: 'Read a config node by segment array or JSON Pointer. Relative paths are resolved against the active part/variant. as="definition" projects UUIDs to bone names and strips internal fields; it keeps sub_parts as a map.',
         run: readNode,
-    },
-    {
-        name: 'describe_node',
-        description: 'Describe the fields a node can contain: type/range/enum, required flags, container child kinds, value maps, and which fields are currently present. Use this before set_node/import_* to discover valid fields; for a not-yet-created subsystem pass type (e.g. machine_max:engine).',
-        run: describeNode,
     },
     {
         name: 'list_defs',

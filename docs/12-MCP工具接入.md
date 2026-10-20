@@ -179,7 +179,7 @@ config
 
 ## 5. 工具清单
 
-全部 15 个工具共用同一个可用性条件：
+全部 14 个工具共用同一个可用性条件：
 
 ```js
 condition: { project: true, modes: ['machine_max_part'] }
@@ -187,13 +187,12 @@ condition: { project: true, modes: ['machine_max_part'] }
 
 工具名统一以插件 id 前缀开头（`machine_max_bb_plugin_`），避开 94 个内置工具的名字空间（重名会在注册时抛错）。下表省略前缀。
 
-### 5.1 只读（6）
+### 5.1 只读（5）
 
 | 工具 | 参数 | 返回 |
 |---|---|---|
 | `get_context` | — | `{ project, active: { part, variant }, parts: [...], variants: [...], selection: [{ uuid, name, marker }] }` |
 | `read_node` | `path`, `as?: 'raw'\|'definition'` | `{ ok, path, kind, value }`；`as='definition'` 时走 `projection.out(..., {for:'read'})`：UUID→骨骼名、剥瞬态、保留默认值、**不折叠 `sub_parts`** |
-| `describe_node` | `path`, `type?` | `{ ok, path, kind, type_id, schema, found, required, fields, containers, internal, present_fields, missing_required }`；字段行带 `type` / `enum` / `minimum` / `maximum` / `oneOf` / `references` / `sideEffect` / `description` / `required` / `present`，容器字段带 `container`，值 map 带 `value_map` |
 | `validate` | `only_introduced?: bool` | `{ ok, count, issues: [{ severity, code, message, path }] }` |
 | `list_defs` | `type`, `search?`, `source?`, `limit?` | `{ ok, type, total, count, truncated, defs: [{ id, source, editable, name, summary }] }`；合并内置 / 依赖 / 当前包 |
 | `read_def` | `type`, `id` | `{ ok, type, id, source, editable, definition }`；`id` 支持裸 key（按 `config.namespace` 补前缀） |
@@ -201,8 +200,6 @@ condition: { project: true, modes: ['machine_max_part'] }
 `validate` 复用 `collectIssues(config)`（[src/mode/validation.js:180](../src/mode/validation.js)）并合并 `validateTree(config, {completeness:true})`（枚举 / 范围 / key / required），与原生问题清单、导出闸门同源。`only_introduced` 与上一次工具调用的结果做 diff（§7.2）。
 
 `list_defs` / `read_def` 走 `core/content_pack_manager.loadMergedDefs()`：按「内置包 → 依赖包 → 当前包」优先级合并，`source` 为 `builtin` / `dependency:N` / `current`，只有 `current` 的 `editable` 为 `true`。`list_defs` 的 `summary` 是紧凑视图（材料带 `armor.rha` / `physics.friction`，连接点带 `type` / `direction`，子系统带型号字段）；要看完整属性用 `read_def` 取原样 JSON。`type` 取值：`materials` / `connectors` / `subsystems` / `control_groups` / `projectiles`。
-
-`describe_node` 是**字段目录**，不返回配置值：`fields` 来自 `doc.fieldSpecs.describeNode()`（builtin schema 生成物），每行是字段规格原样 + `name` / `required` / `present`，因此 AI 在 `set_node` 前能知道字段名、类型、枚举、范围、引用目标、上游 schema 的 `description` 与是否必填。`containers` 列出该节点下的 map（如 sub_part 的 `hit_boxes` / `interact_boxes` / `connectors` / `subsystems`），`internal` 列出不可寻址的内部字段。`path` 指向尚不存在的节点时也返回字段目录（`found:false`）；子系统必须能从节点 `type` 或参数 `type` 确定型号，裸型号按 `config.namespace` 补前缀，未知型号返回 `unknown_type`。
 
 ### 5.2 细粒度编辑（4，全部进撤销栈）
 
@@ -471,7 +468,7 @@ Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 | 17 | 连续 3 次 `set_node` 同一字段 → `Ctrl+Z` ×3 | **三条记录**逐条回退（MCP 强制 `coalesce:false`），面板同步 |
 | 18 | AI 编辑后不保存 → 关闭工程 | 弹出未保存提示（`Project.saved === false`） |
 | 19 | 拖拽元素过程中调用编辑工具 | `ok:false`，提示「有未完成的编辑」 |
-| 20 | 重载插件两次 | 工具仍只有 15 个，无重复注册报错 |
+| 20 | 重载插件两次 | 工具仍只有 14 个，无重复注册报错 |
 | 21 | `read_node(as='definition')` 读出的定义整件回传给 `import_*` | 结构等价（round-trip 无损），`reset_fields` 为空；覆盖含 `hit_boxes`、单变体、未解析骨骼、`definition:''`、`power_output:''`、`connector:''`、`locator:''`、`signal_targets:{}`、`power_outputs:{}`、`projectile_types:{}` 的输入；旧数据里的 `null`/`"null"` 由 `normalizeUnset` 归一化为 `''`/`{}` |
 | 22 | `import_sub_part` 建一个没有 hit_boxes 的子零件 | `ok:true`（合法中间态），`introduced_issues` 含「碰撞箱为空」；此时**导出被拦** |
 | 23 | 子系统未选型号就导出 | 导出被阻断，对话框列出该问题并可点击定位 |
@@ -488,7 +485,6 @@ Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 | 34 | `import_part` 省略 `variants.default.tags` / `sub_part.hit_boxes` | `reset_fields` 只列顶层字段，不出现嵌套路径；`read_node` 显示默认值（docs/13 §11 #22） |
 | 35 | `import_part` 的 `part_id` 为 `".."` / `"."` / `".hull"` / `"hull."` / `"con"` / `"con.1"` / `"lpt9"` / `".._hull"` / `"a._b"` | `ok:false`，`code:invalid_format`；不写任何文件；`a.b.c` 仍 `ok:true`（docs/13 D25） |
 | 36 | 子系统 `machine_max:launcher` 的 `definition:''` 且 `locator:''` 的工程导出 | `canExport` 返回两条不同字段的 required 错误，`definition` 只出现一次（`collectIssues` 优先）；不因同一路径合并成一条（docs/13 §11 #21） |
-| 37 | `describe_node` 读已有子系统、尚未创建的子系统、sub_part 容器 | 已有节点返回 `found:true` + `present_fields`；未创建节点传 `type` 返回 `found:false` + 字段目录；sub_part 返回 4 个 `containers`；未知 type 返回 `unknown_type` |
 
 ---
 
@@ -538,26 +534,11 @@ validate   { only_introduced: true }
 
 三个 `set_node` 落在三条撤销记录上，人按三次 `Ctrl+Z` 可以逐条退；要一次退干净，用 `import_*` 做整件替换（后续可加 `apply_patch` 复合通道）。
 
-**例 5：先查字段目录，再新建子系统**
-
-```
-machine_max_bb_plugin_describe_node { path: ["sub_parts", "sub_part.machine_max.chassis",
-                                             "subsystems", "subsystem.machine_max.motor"],
-                                      type: "machine_max:motor" }
-  → { ok:true, kind:"subsystem", type_id:"machine_max:motor", found:false,
-      required:["type","definition","power_output"],
-      fields:[{ name:"power_output", type:"string", required:true, references:"signal", present:false }, …],
-      missing_required:["type","definition","power_output"] }
-   …AI 按字段目录补齐 type / definition / power_output…
-machine_max_bb_plugin_import_subsystem { key:"subsystem.machine_max.motor", … }
-machine_max_bb_plugin_validate { only_introduced: true }
-```
-
 ---
 
 ## 13. 后续扩展
 
-原计划中的 `list_defs` 已扩展为 `list_defs` + `read_def`，字段目录以 `describe_node` 落地（§5.1）；剩余项如下。
+原计划中的 `list_defs` 已扩展为 `list_defs` + `read_def` 并落地（§5.1），剩余项如下。
 
 | 项 | 价值 | 前提 |
 |---|---|---|

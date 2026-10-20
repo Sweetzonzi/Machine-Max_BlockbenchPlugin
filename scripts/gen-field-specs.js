@@ -354,7 +354,6 @@ function buildKind(store, file, kind) {
         if ((CONTAINERS[kind] || []).indexOf(field) >= 0) continue;
         const ctx = { store, fromFile: abs, depth: 0, stack: new Set() };
         const spec = convert(child, ctx);
-        if (typeof child.description === 'string') spec.description = child.description;
         if (required.has(field)) spec.required = true;
         fields[field] = applyFieldMeta(kind, field, spec);
     }
@@ -388,7 +387,6 @@ function buildSubsystems(store) {
             if (field === '$schema') continue;
             const ctx = { store, fromFile: resolved.file, depth: 0, stack: new Set() };
             const spec = convert(child, ctx);
-            if (typeof child.description === 'string') spec.description = child.description;
             if (required.has(field)) spec.required = true;
             fields[field] = applyFieldMeta('subsystem', field, spec);
         }

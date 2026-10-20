@@ -40,7 +40,7 @@ plugin.js                      # 插件入口（103行）
   │     └── validate.js          # collectIssues（P4 从 mode/ 下沉）
   ├── mcp/                       # MCP 工具层（P5；docs/12）
   │     ├── index.js             # MCP_QUEUE 注册/注销 + 生命周期
-  │     ├── tools.js             # 15 个工具实现（只读/字段描述/定义目录/细粒度/整件/validate）
+  │     ├── tools.js             # 14 个工具实现（只读/定义目录/细粒度/整件/validate）
   │     ├── params.js            # MCP.z 参数形状
   │     └── result.js            # OpResult → MCP 返回信封
   ├── mode.js                    # 模式生命周期 + 注册（344行）

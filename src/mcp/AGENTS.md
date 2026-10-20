@@ -11,9 +11,9 @@
 ```
 src/mcp/
 ├── index.js   # registerMcpTools / unregisterMcpTools；MCP_QUEUE + 同名注销
-├── tools.js   # 15 个工具：get_context / read_node / describe_node / list_defs /
-│              #   read_def / validate / set_node / remove_node / bind_marker /
-│              #   set_active / import_part / import_variant / import_sub_part /
+├── tools.js   # 14 个工具：get_context / read_node / list_defs / read_def /
+│              #   validate / set_node / remove_node / bind_marker / set_active /
+│              #   import_part / import_variant / import_sub_part /
 │              #   import_subsystem / add_instance
 ├── params.js  # build(z)，用 MCP.z 构造参数形状；注册时字段名是 parameters
 └── result.js  # OpResult → {ok,path,before,after,...}；MCP.createJsonResult 包装
@@ -30,9 +30,6 @@ src/mcp/
 - `introduced_issues` 由 `tools.js` 在调用前后各跑一次 `collectIssues` 做 diff，不写进 ops。
 - `read_node(as='definition')` 用 `doc.projection.out(..., {for:'read'})`；`sub_parts` / `variants`
   保持 map，不折叠。
-- `describe_node` 只读 `doc.fieldSpecs.describeNode()`：返回字段类型/范围/枚举、description、required、
-  `container` / `value_map` 语义与 `present_fields` / `missing_required`。`path` 可为尚未创建的
-  节点；子系统需从节点 `type` 或参数 `type` 取得型号，未知型号报 `unknown_type`。
 - `validate` 复用 `services/export.canExport`（= `collectIssues` + `validateTree(completeness:true)` + 去重）。
 - `list_defs` / `read_def` 复用 `core/content_pack_manager.loadMergedDefs`（内置 → 依赖 → 当前包）；
   `source` 与 `editable` 直接来自合并层，不在工具里重复实现优先级。
