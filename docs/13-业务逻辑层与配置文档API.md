@@ -121,7 +121,16 @@ subsystem/static/{track_controller,track_drive}_static_attr.schema.json
 recipe/part_fabricating_recipe.schema.json
 ```
 
-`subsystem_dynamic_attr.schema.json` 的 `type` 枚举在兄弟仓库已含 `machine_max:track_controller` / `machine_max:track_drive`；插件 `SubsystemDispatchCodec` 只有 22 种 → **履带子系统在插件里无法创建/校验**（`Unknown dispatch type`）。
+**类型集合以 Java 为准，schema 与 Codec 都不是真源**（2026-10-20 实测）：
+
+| 来源 | 数量 | 相对 Java 的差异 |
+|---|---|---|
+| **Java `SubsystemTypes` 枚举**（`common/mech/subsystem/attr/SubsystemTypes.java`，权威） | **24** | — |
+| 插件 `SubsystemDispatchCodec` | 22 | 缺 `track_controller`、`track_drive` |
+| 上游 schema `type` 枚举 | 20 | 缺 `battery`、`signal_convert`、`joint`、`javascript`、`ammo_loader`；**多 `motor_controller`**（Java 无此类型） |
+| 上游 `subsystem/dynamic/*.schema.json` 文件 | 19 | 缺上述 5 种 |
+
+结论：**履带子系统在插件里无法创建/校验**（`Unknown dispatch type`），因为 Codec 缺 `track_controller` / `track_drive`；而 schema 本身也过期（少 5 种、多 1 种）。因此 D11 的"以 schema 为准"只适用于**字段级元数据**（类型/枚举/范围），**类型清单必须硬编码 Java 枚举或与之对账**，不能从 schema 枚举推导。
 
 已知 schema ↔ Codec 差异（进 allowlist 或修复）：
 
@@ -502,11 +511,15 @@ src/services/
 
 ## 10. 分期与验收
 
-### P0 — 上游对齐（0.5 会话）
+### P0 — 上游对齐（部分已落地）
 
-`scripts/sync-schemas.js`（含 `--check`）+ `scripts/gen-field-specs.js` + `scripts/audit-stats.js`；补 7 个缺失 schema；记 provenance。
+- ✅ `scripts/sync-schemas.js`（`--check` / `--apply` / `--source`，不 spawn 子进程，尽力读上游 commit 作溯源）
+- ✅ vendored 快照全量替换：`src/builtin/builtin/machine_max/docs` 由 139 → 153 文件，与 `Machine-Max@26ae8841` 逐文件 SHA256 一致；`--check` 零漂移
+- ✅ 7 个缺失 schema 到位（`track_controller` / `track_drive` 的 static+dynamic、`launcher` / `regen_loader` dynamic、`part_fabricating_recipe`）
+- ⏳ `scripts/gen-field-specs.js`（codegen，待做）
+- ⏳ `scripts/audit-stats.js`（数字审计，待做）
 
-验收：`--check` 输出零漂移；manifest 能生成；`audit-stats` 输出与 §2 数字一致。
+剩余验收：`gen-field-specs` 能生成 `src/doc/field_specs.generated.js`；`audit-stats` 输出与 §2 一致；manifest ↔ schema 同步测试。
 
 ### P1 — 文档层（1 会话）
 
