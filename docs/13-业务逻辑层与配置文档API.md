@@ -136,7 +136,9 @@ recipe/part_fabricating_recipe.schema.json
 - Java 枚举里有 WIP 占位（`joint` 这类虽有代码但未完成），**不能作为类型清单依据**；D11 的字段元数据与类型清单都以上游 schema 为准；
 - D13 立项范围相应扩大为"补 2 个正式类型 + 移除或标记 5 个 WIP 类型"。
 
-顺带修掉的上游缺陷（已改并重新同步）：`motor_controller` 是 `motorbike_controller` 的错写 —— 枚举中两种拼写并存，而 `if/then` 分支只用了错写那个且 `$ref` 指向 `motorbike_controller_*_attr.schema.json`，导致**正确的 `motorbike_controller` 匹配不到任何分支**（字段完全不校验）；此外 `subsystem_static_attr` 的枚举整体漏了 `motorbike_controller`（分支与 schema 文件都在）。修复后 dynamic 与 static 枚举一致为 19 种。
+顺带修掉的上游缺陷（`Machine-Max@9450a0f4`，已同步）：`motor_controller` 是 `motorbike_controller` 的错写 —— 枚举中两种拼写并存，而 `if/then` 分支只用了错写那个且 `$ref` 指向 `motorbike_controller_*_attr.schema.json`，导致**正确的 `motorbike_controller` 匹配不到任何分支**（字段完全不校验）；此外 `subsystem_static_attr` 的枚举整体漏了 `motorbike_controller`（分支与 schema 文件都在）。修复后 dynamic 与 static 枚举一致为 19 种。
+
+> vendored 快照的溯源 commit 为 **`9450a0f4`**（在 `26ae8841` 基础上含上述修复）；`sync-schemas.js --check` 当前零漂移。
 
 已知 schema ↔ Codec 差异（进 allowlist 或修复）：
 
@@ -520,7 +522,7 @@ src/services/
 ### P0 — 上游对齐（部分已落地）
 
 - ✅ `scripts/sync-schemas.js`（`--check` / `--apply` / `--source`，不 spawn 子进程，尽力读上游 commit 作溯源）
-- ✅ vendored 快照全量替换：`src/builtin/builtin/machine_max/docs` 由 139 → 153 文件，与 `Machine-Max@26ae8841` 逐文件 SHA256 一致；`--check` 零漂移
+- ✅ vendored 快照全量替换：`src/builtin/builtin/machine_max/docs` 由 139 → 153 文件，与 `Machine-Max@9450a0f4` 逐文件 SHA256 一致；`--check` 零漂移
 - ✅ 7 个缺失 schema 到位（`track_controller` / `track_drive` 的 static+dynamic、`launcher` / `regen_loader` dynamic、`part_fabricating_recipe`）
 - ⏳ `scripts/gen-field-specs.js`（codegen，待做）
 - ⏳ `scripts/audit-stats.js`（数字审计，待做）
