@@ -93,6 +93,13 @@ function createBlankConfig() {
             activeMode: 'part',
             activePartId: '',
             activeVariantName: '',
+            iconCamera: {
+                direction: null,
+                assemblyDirection: null,
+                fill: 0.9,
+                framing: 'uniform',
+                conventionVersion: 2,
+            },
         },
     };
 }
@@ -300,6 +307,11 @@ function ensureDefaults(config) {
     if (!result.parts) result.parts = {};
     if (!result._uiState) {
         result._uiState = { activeMode: 'part', activePartId: '', activeVariantName: '' };
+    }
+    if (!result._uiState.iconCamera || typeof result._uiState.iconCamera !== 'object') {
+        result._uiState.iconCamera = { direction: null, assemblyDirection: null, fill: 0.9, framing: 'uniform', conventionVersion: 2 };
+    } else if (!('assemblyDirection' in result._uiState.iconCamera)) {
+        result._uiState.iconCamera.assemblyDirection = null;
     }
 
     // 用 PartCodec.decode 填充每个零件（含 variants / sub_parts / 各条目）的默认值。

@@ -46,6 +46,24 @@ function registerMachineMaxMenu() {
                 });
             },
         },
+        {
+            name: '生成图标…',
+            icon: 'fa-camera',
+            id: 'mm_menu_generate_icons',
+            click: function () {
+                log.info('MachineMax 菜单: 点击生成图标');
+                var config = getConfig();
+                if (!config) {
+                    showToast('请先打开项目', 'warning');
+                    return;
+                }
+                if (!config.contentPackPath) {
+                    showToast('请先设置内容包路径', 'warning');
+                    return;
+                }
+                require('./dialogs/icon_generator_dialog.js').showIconGeneratorDialog(config);
+            },
+        },
 
         '_',
 

@@ -21,6 +21,7 @@ module.exports = {
     createPart: part.createPart,
     deletePart: part.deletePart,
     importPart: part.importPart,
+    setPartIcons: part.setPartIcons,
 
     // variant.js
     createVariant: variant.createVariant,

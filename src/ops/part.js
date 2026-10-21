@@ -8,6 +8,7 @@ var {
     createPartConfig,
 } = require('../core/config.js');
 var { runConfigEdit } = require('../core/undo.js');
+var keys = require('../doc/keys.js');
 var shared = require('./shared.js');
 
 function createPart(config, options) {
@@ -72,8 +73,7 @@ function deletePart(config, options) {
     });
 }
 
-function importPart(config, options) {
-    options = options || {};
+function importPart(config, options) {    options = options || {};
     config = shared.configOrNull(config);
     if (!config) return shared.fail('配置不可用，请先打开项目');
 
@@ -126,8 +126,103 @@ function importPart(config, options) {
     return result;
 }
 
+/**
+ * 批量写 part.icon（生成图标专用）。
+ *
+ * 前置校验全部通过后才进入一次 runConfigEdit：
+ * - 所有 partId 必须存在且 keys.isSafePartId；
+ * - 所有路径必须是本 namespace 的 textures/icon/ 下的合法 resource location；
+ * - 不安全的 .. / 反斜杠 / 绝对路径直接拒绝，绝不写半截。
+ * 没有实际变化时返回 changed:false，不产生撤销记录。
+ *
+ * @param {Object} config
+ * @param {{icons: Object<string,string>, label?: string}} options
+ * @returns {Object} OpResult
+ */
+function setPartIcons(config, options) {
+    options = options || {};
+    config = shared.configOrNull(config);
+    if (!config) return shared.fail('配置不可用，请先打开项目');
+    if (!config.parts || typeof config.parts !== 'object') {
+        return shared.fail('配置中没有零件');
+    }
+
+    var icons = options.icons;
+    if (!icons || typeof icons !== 'object' || Array.isArray(icons)) {
+        return shared.fail('icons 必须是 partId → icon 的对象');
+    }
+
+    var ns = shared.namespaceOf(config);
+    var ids = Object.keys(icons);
+    var errors = [];
+    var updates = [];
+
+    ids.forEach(function (partId) {
+        var path = ['parts', partId, 'icon'];
+        if (!keys.isSafePartId(partId)) {
+            errors.push(shared.makeError(path, 'unsafe_part_id', '安全的 partId', partId,
+                'partId 只能是小写字母/数字/._-，且不能是路径穿越或 Windows 设备名'));
+            return;
+        }
+        var part = config.parts[partId];
+        if (!part) {
+            errors.push(shared.makeError(path, 'not_found', '已存在的零件', partId));
+            return;
+        }
+        var value = icons[partId];
+        if (typeof value !== 'string' || !keys.isValidResourceLocation(value)) {
+            errors.push(shared.makeError(path, 'invalid_resource_location', 'namespace:textures/icon/...', value));
+            return;
+        }
+        var colon = value.indexOf(':');
+        var valueNs = value.slice(0, colon);
+        var resourcePath = value.slice(colon + 1);
+        if (valueNs !== ns) {
+            errors.push(shared.makeError(path, 'foreign_namespace',
+                '本包 namespace ' + ns, valueNs, '外部图标引用不应由 setPartIcons 写入'));
+            return;
+        }
+        if (resourcePath.indexOf('textures/icon/') !== 0
+            || resourcePath.indexOf('..') >= 0
+            || resourcePath.indexOf('\\') >= 0
+            || resourcePath.charAt(0) === '/') {
+            errors.push(shared.makeError(path, 'outside_icon_root',
+                'textures/icon/ 下的安全路径', value, '只允许写本包 icon 目录'));
+            return;
+        }
+        if (part.icon !== value) {
+            updates.push({ partId: partId, icon: value });
+        }
+    });
+
+    if (errors.length > 0) {
+        return shared.fail(errors[0].hint || '图标路径校验失败', errors);
+    }
+    if (updates.length === 0) {
+        return shared.ok({ changed: false, updated: [], icons: {} });
+    }
+
+    var applied = [];
+    runConfigEdit(options.label || '生成零件图标', function () {
+        updates.forEach(function (entry) {
+            shared.setProp(config.parts[entry.partId], 'icon', entry.icon);
+            applied.push(entry.partId);
+        });
+    }, { coalesce: false, source: 'ui' });
+
+    var resultIcons = {};
+    applied.forEach(function (partId) { resultIcons[partId] = config.parts[partId].icon; });
+    return shared.ok({
+        changed: true,
+        updated: applied,
+        icons: resultIcons,
+        data: { updated: applied },
+    });
+}
+
 module.exports = {
     createPart: createPart,
     deletePart: deletePart,
     importPart: importPart,
+    setPartIcons: setPartIcons,
 };

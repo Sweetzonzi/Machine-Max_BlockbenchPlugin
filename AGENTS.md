@@ -31,12 +31,16 @@ plugin.js                      # 插件入口（103行）
   │           ├── doc/                # 路径 / 投影 / 引用 / 值校验
   │           └── core/undo.js        # 每个操作内部 runConfigEdit
   ├── utils/notify.js            # 用户通知（Toast）
-  ├── services/                  # 文件系统 / 导出闸门（不进撤销、不暴露 MCP）
+  ├── services/                  # 文件系统 / 导出闸门 / 图标渲染（不进撤销、不暴露 MCP）
   │     ├── export.js            # canExport + executeExport 聚合出口
   │     ├── export_pipeline.js   # executeExport（生成器 + 写盘）
   │     ├── safe_part_ids.js     # 写盘前 partId 断言
   │     ├── import.js            # 文件读取 + 带注释 JSON 解析
   │     ├── pack.js              # 内容包创建/打开 + 依赖链解析
+  │     ├── icon_paths.js        # 纯 planner：图标三态 / resource location
+  │     ├── icon_visibility.js   # 纯函数：start/end/auto_end → 可见 UUID 集
+  │     ├── icon_fit.js          # 纯函数：AABB → 正交 zoom / target
+  │     ├── icon_generator.js    # 离屏渲染 + PNG 写盘（不写 _uiState）
   │     └── validate.js          # collectIssues（P4 从 mode/ 下沉）
   ├── mcp/                       # MCP 工具层（P5；docs/12）
   │     ├── index.js             # MCP_QUEUE 注册/注销 + 生命周期
@@ -60,6 +64,7 @@ plugin.js                      # 插件入口（103行）
   │           ├── ui/components/field_issues.js # 终端字段校验标注 mixin
   │           ├── ui/tag_dialog_helper.js
   │           └── ui/dialogs/    # 对话框子组件
+  │                 ├── icon_generator_dialog.js # 生成图标：设置 → 预览 → 写入
   │                 ├── pack_setup_dialog.js    (805行)
   │                 ├── subsystem_dialog.js     (600行)
   │                 └── connector_dialog.js     (506行)

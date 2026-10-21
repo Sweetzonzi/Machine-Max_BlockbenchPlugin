@@ -104,7 +104,7 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 | `src/core/` | 12 | 4,430 |
 | `src/codec/` | 10 JS（11 含 AGENTS.md） | 1,271 |
 | `src/ops/` | 10（含 `shared.js` / `AGENTS.md`） | — |
-| `src/services/` | 6（export / export_pipeline / safe_part_ids / import / pack / validate） | 1,062 |
+| `src/services/` | 10（export / export_pipeline / safe_part_ids / import / pack / icon_paths / icon_visibility / icon_fit / icon_generator / validate） | — |
 | `src/mcp/` | 4（index / tools / params / result） | — |
 | `src/managers/` · `src/generators/` · `src/import/` | 5 · 6 · 3 | 330 · 440 · 859 |
 
@@ -1042,8 +1042,14 @@ src/services/
 ├── safe_part_ids.js   # assertSafePartIds（写盘前 partId 断言）
 ├── import.js          # 文件读取 + 带注释 JSON 解析（drag_import 的 IO 部分）
 ├── pack.js            # 创建/打开/校验内容包、依赖链解析（三个 pack 对话框的 fs 部分）
+├── icon_paths.js      # 纯 planner：part.icon 三态 / resource location / 文件名
+├── icon_visibility.js # 纯函数：start_bone / end / auto_end → 可见 Group UUID 集
+├── icon_fit.js        # 纯函数：AABB + right/up → 正交 zoom / target
+├── icon_generator.js  # 离屏 Preview 渲染 + 128 PNG 写盘（不进撤销）
 └── validate.js        # collectIssues（P4 从 mode/validation.js 迁入）
 ```
+
+图标生成的服务边界：`icon_paths` / `icon_visibility` / `icon_fit` 不依赖 Blockbench/fs，可直接 `bun test`；`icon_generator` 只做渲染与写盘，**不写 `_uiState`、不 toast、不刷新 Outliner**。`part.icon` 的批量写入由 UI 在写盘成功后调用 `ops.setPartIcons`（一次 `runConfigEdit`，一条撤销记录）。P1 入口为菜单 `生成图标…`，详见 [14-图标自动生成计划](./14-图标自动生成计划.md)。
 
 依赖顺序固定：`core → doc → ops → services → ui/mcp`。
 

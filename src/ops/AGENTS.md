@@ -11,9 +11,9 @@
 
 ```
 src/ops/
-├── index.js      # 29 个动作的聚合导出
+├── index.js      # 30 个动作的聚合导出
 ├── field.js      # setField + 字段级副作用（start_bone / bone / locator / subsystem.type）
-├── part.js       # createPart / deletePart / importPart
+├── part.js       # createPart / deletePart / importPart / setPartIcons
 ├── variant.js    # createVariant / deleteVariant / importVariant / setVariantTags
 ├── sub_part.js   # markSubPart / importSubPart / renameSubPart
 ├── subsystem.js  # createSubsystem / deleteSubsystem / importSubsystem / renameSubsystem

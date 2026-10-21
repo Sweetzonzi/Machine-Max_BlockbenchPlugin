@@ -118,6 +118,11 @@ Plugin.register('machine_max_bb_plugin', {
         unregisterValidation();
         unregisterDragImport();
         unregisterMachineMaxMenu();
+        try {
+            require('./services/icon_generator.js').dispose();
+        } catch (e) {
+            log.warn('图标渲染器清理失败（忽略）', e && e.message);
+        }
         log.debug('插件清理完成');
     },
 });

@@ -12,6 +12,10 @@ src/services/
 ├── safe_part_ids.js   # assertSafePartIds
 ├── import.js          # readTextFile / parseJSONWithComments / readJsonFile
 ├── pack.js            # createPack / openPack / readPackMeta / 依赖链解析
+├── icon_paths.js      # 纯 planner：part.icon 三态 / resource location
+├── icon_visibility.js # 纯函数：start/end/auto_end → 可见 UUID 集
+├── icon_fit.js        # 纯函数：AABB → 正交 zoom / target
+├── icon_generator.js  # 离屏渲染 + 128 PNG 写盘
 └── validate.js        # collectIssues（唯一校验实现）
 ```
 
@@ -26,6 +30,7 @@ src/services/
 | 问题合并 | `export.js` → `dedupeIssues(primary, schema)` | `collectIssues` 优先，`validateTree` 只补空缺；不同字段不合并 |
 | 导入文件读取 | `import.js` → `readTextFile` / `parseJSONWithComments` | 去 BOM、剥 `//` 注释；冲突对话框与 ops 编排仍在 `import/drag_import.js` |
 | 内容包 fs | `pack.js` | 创建/打开/读 meta 的薄包装；`findPackInSiblings` / `resolveChainDependencies` |
+| 图标生成 | `icon_generator.js` | `generate(config, options)`：离屏渲染 + PNG 写盘；`icon_paths` / `icon_visibility` / `icon_fit` 为纯函数；`part.icon` 由 UI 调 `ops.setPartIcons` |
 | 唯一校验 | `validate.js` → `collectIssues(config)` | P4 从 `mode/validation.js` 迁入；`mode/validation_check.js` 只做原生清单适配 |
 
 ## 约定
@@ -36,6 +41,7 @@ src/services/
 - `collectIssues` 落 `validate.js` 而不是 `core/validation.js`：它依赖 `doc/refs.js`，放 core 会反转 `core → doc` 分层（docs/13 D30）。
 - `hit_boxes` key 不是骨骼 UUID 时 `collectIssues` 报 `hit_box_key_not_uuid`；没有模型元素时跳过（测试 / 未加载模型不误报）。
 - 新增服务后同步 `docs/13` §8 与根 `AGENTS.md` 的导入图。
+- 图标生成是独立写盘用例：`icon_generator` 不写 `_uiState`、不 toast、不刷新；字段更新由 UI 在写盘成功后调用 `ops.setPartIcons`。零件路径逐条用 `keys.isSafePartId`，不能复用整包 `assertSafePartIds`。
 
 ## 反模式
 

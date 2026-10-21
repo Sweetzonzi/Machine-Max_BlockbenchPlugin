@@ -1,5 +1,5 @@
 // ============================================================
-// MachineMax Blockbench Plugin v0.4.0
+// MachineMax Blockbench Plugin v0.5.0
 // 打包文件 — 由 scripts/build.js 自动生成
 // 源文件在 src/ 目录，修改后运行 npm run build 重新生成
 // ============================================================
@@ -10520,7 +10520,14 @@
           _uiState: {
             activeMode: "part",
             activePartId: "",
-            activeVariantName: ""
+            activeVariantName: "",
+            iconCamera: {
+              direction: null,
+              assemblyDirection: null,
+              fill: 0.9,
+              framing: "uniform",
+              conventionVersion: 2
+            }
           }
         };
       }
@@ -10662,6 +10669,11 @@
         if (!result.parts) result.parts = {};
         if (!result._uiState) {
           result._uiState = { activeMode: "part", activePartId: "", activeVariantName: "" };
+        }
+        if (!result._uiState.iconCamera || typeof result._uiState.iconCamera !== "object") {
+          result._uiState.iconCamera = { direction: null, assemblyDirection: null, fill: 0.9, framing: "uniform", conventionVersion: 2 };
+        } else if (!("assemblyDirection" in result._uiState.iconCamera)) {
+          result._uiState.iconCamera.assemblyDirection = null;
         }
         var partKeys, i, pk, part;
         partKeys = Object.keys(result.parts);
@@ -20408,6 +20420,7 @@
         createPartConfig
       } = require_config();
       var { runConfigEdit } = require_undo();
+      var keys = require_keys();
       var shared = require_shared();
       function createPart(config, options) {
         options = options || {};
@@ -20513,10 +20526,99 @@
         }
         return result;
       }
+      function setPartIcons(config, options) {
+        options = options || {};
+        config = shared.configOrNull(config);
+        if (!config) return shared.fail("\u914D\u7F6E\u4E0D\u53EF\u7528\uFF0C\u8BF7\u5148\u6253\u5F00\u9879\u76EE");
+        if (!config.parts || typeof config.parts !== "object") {
+          return shared.fail("\u914D\u7F6E\u4E2D\u6CA1\u6709\u96F6\u4EF6");
+        }
+        var icons = options.icons;
+        if (!icons || typeof icons !== "object" || Array.isArray(icons)) {
+          return shared.fail("icons \u5FC5\u987B\u662F partId \u2192 icon \u7684\u5BF9\u8C61");
+        }
+        var ns = shared.namespaceOf(config);
+        var ids = Object.keys(icons);
+        var errors = [];
+        var updates = [];
+        ids.forEach(function(partId) {
+          var path = ["parts", partId, "icon"];
+          if (!keys.isSafePartId(partId)) {
+            errors.push(shared.makeError(
+              path,
+              "unsafe_part_id",
+              "\u5B89\u5168\u7684 partId",
+              partId,
+              "partId \u53EA\u80FD\u662F\u5C0F\u5199\u5B57\u6BCD/\u6570\u5B57/._-\uFF0C\u4E14\u4E0D\u80FD\u662F\u8DEF\u5F84\u7A7F\u8D8A\u6216 Windows \u8BBE\u5907\u540D"
+            ));
+            return;
+          }
+          var part = config.parts[partId];
+          if (!part) {
+            errors.push(shared.makeError(path, "not_found", "\u5DF2\u5B58\u5728\u7684\u96F6\u4EF6", partId));
+            return;
+          }
+          var value = icons[partId];
+          if (typeof value !== "string" || !keys.isValidResourceLocation(value)) {
+            errors.push(shared.makeError(path, "invalid_resource_location", "namespace:textures/icon/...", value));
+            return;
+          }
+          var colon = value.indexOf(":");
+          var valueNs = value.slice(0, colon);
+          var resourcePath = value.slice(colon + 1);
+          if (valueNs !== ns) {
+            errors.push(shared.makeError(
+              path,
+              "foreign_namespace",
+              "\u672C\u5305 namespace " + ns,
+              valueNs,
+              "\u5916\u90E8\u56FE\u6807\u5F15\u7528\u4E0D\u5E94\u7531 setPartIcons \u5199\u5165"
+            ));
+            return;
+          }
+          if (resourcePath.indexOf("textures/icon/") !== 0 || resourcePath.indexOf("..") >= 0 || resourcePath.indexOf("\\") >= 0 || resourcePath.charAt(0) === "/") {
+            errors.push(shared.makeError(
+              path,
+              "outside_icon_root",
+              "textures/icon/ \u4E0B\u7684\u5B89\u5168\u8DEF\u5F84",
+              value,
+              "\u53EA\u5141\u8BB8\u5199\u672C\u5305 icon \u76EE\u5F55"
+            ));
+            return;
+          }
+          if (part.icon !== value) {
+            updates.push({ partId, icon: value });
+          }
+        });
+        if (errors.length > 0) {
+          return shared.fail(errors[0].hint || "\u56FE\u6807\u8DEF\u5F84\u6821\u9A8C\u5931\u8D25", errors);
+        }
+        if (updates.length === 0) {
+          return shared.ok({ changed: false, updated: [], icons: {} });
+        }
+        var applied = [];
+        runConfigEdit(options.label || "\u751F\u6210\u96F6\u4EF6\u56FE\u6807", function() {
+          updates.forEach(function(entry) {
+            shared.setProp(config.parts[entry.partId], "icon", entry.icon);
+            applied.push(entry.partId);
+          });
+        }, { coalesce: false, source: "ui" });
+        var resultIcons = {};
+        applied.forEach(function(partId) {
+          resultIcons[partId] = config.parts[partId].icon;
+        });
+        return shared.ok({
+          changed: true,
+          updated: applied,
+          icons: resultIcons,
+          data: { updated: applied }
+        });
+      }
       module.exports = {
         createPart,
         deletePart,
-        importPart
+        importPart,
+        setPartIcons
       };
     }
   });
@@ -21869,6 +21971,7 @@
         createPart: part.createPart,
         deletePart: part.deletePart,
         importPart: part.importPart,
+        setPartIcons: part.setPartIcons,
         // variant.js
         createVariant: variant.createVariant,
         deleteVariant: variant.deleteVariant,
@@ -23023,6 +23126,1951 @@
           showPackSettingsDialog
         };
       }
+    }
+  });
+
+  // src/services/icon_paths.js
+  var require_icon_paths = __commonJS({
+    "src/services/icon_paths.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var keys = require_keys();
+      var DEFAULT_NAMESPACE = "machine_max";
+      var ICON_ROOT = "textures/icon/";
+      var WINDOWS_DEVICE_RE = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/;
+      function normalizeNamespace(ns) {
+        var value = String(ns || "").trim();
+        return keys.isValidNamespace(value) ? value : DEFAULT_NAMESPACE;
+      }
+      function sanitizeSegment(value) {
+        var s = String(value == null ? "" : value).trim().toLowerCase();
+        if (!s) return "";
+        s = s.replace(/[^a-z0-9_.-]+/g, "_").replace(/_+/g, "_");
+        s = s.replace(/^[._-]+|[._-]+$/g, "");
+        if (!s || s === "." || s === "..") return "";
+        if (WINDOWS_DEVICE_RE.test(s.split(".")[0])) return "";
+        return s.slice(0, 64);
+      }
+      function sanitizeFileName(value) {
+        var s = sanitizeSegment(value);
+        if (!s) return "";
+        if (!/\.png$/i.test(s)) s += ".png";
+        return s;
+      }
+      function isSafeResourcePath(resourcePath) {
+        var p = String(resourcePath || "");
+        if (!p || p.charAt(0) === "/") return false;
+        if (p.indexOf("\\") >= 0 || p.indexOf("..") >= 0 || p.indexOf(":") >= 0) return false;
+        return true;
+      }
+      function parseResourceLocation(value) {
+        var text = String(value == null ? "" : value).trim();
+        if (!text || !keys.isValidResourceLocation(text)) return null;
+        var index = text.indexOf(":");
+        if (index <= 0) return null;
+        return { namespace: text.slice(0, index), path: text.slice(index + 1) };
+      }
+      function isInIconRoot(value, namespace) {
+        var parsed = parseResourceLocation(value);
+        var ns = normalizeNamespace(namespace);
+        return !!parsed && parsed.namespace === ns && parsed.path.indexOf(ICON_ROOT) === 0 && isSafeResourcePath(parsed.path);
+      }
+      function classifyIcon(icon, namespace) {
+        var text = String(icon == null ? "" : icon).trim();
+        if (!text) return "empty";
+        var parsed = parseResourceLocation(text);
+        if (!parsed) return "external";
+        var ns = normalizeNamespace(namespace);
+        if (parsed.namespace !== ns) return "external";
+        if (parsed.path.indexOf(ICON_ROOT) !== 0) return "external";
+        return isSafeResourcePath(parsed.path) ? "in_pack" : "invalid";
+      }
+      function defaultPartTarget(options) {
+        options = options || {};
+        var ns = normalizeNamespace(options.namespace);
+        var partId = sanitizeSegment(options.partId);
+        if (!partId) return null;
+        var folder = sanitizeSegment(options.folder) || sanitizeSegment(partId.split("_")[0]);
+        if (!folder) return null;
+        return ns + ":" + ICON_ROOT + folder + "/" + partId + ".png";
+      }
+      function defaultAssemblyTarget(options) {
+        options = options || {};
+        var ns = normalizeNamespace(options.namespace);
+        var name = sanitizeSegment(options.name || "assembly");
+        if (!name) return null;
+        var folder = sanitizeSegment(options.folder) || sanitizeSegment(name.split("_")[0]);
+        if (!folder) return null;
+        return ns + ":" + ICON_ROOT + folder + "/" + name + ".png";
+      }
+      function assemblyTargetWithCollision(options) {
+        var base = defaultAssemblyTarget(options);
+        if (!base) return null;
+        var reserved = Array.isArray(options.reservedPaths) ? options.reservedPaths : [];
+        if (reserved.indexOf(base) < 0) return base;
+        var name = sanitizeSegment(options.name || "assembly");
+        var folder = sanitizeSegment(options.folder) || sanitizeSegment(name.split("_")[0]);
+        var candidate;
+        for (var i = 0; i < 20; i++) {
+          var suffix = i === 0 ? "_assembly" : "_assembly_" + (i + 1);
+          candidate = normalizeNamespace(options.namespace) + ":" + ICON_ROOT + folder + "/" + name + suffix + ".png";
+          if (reserved.indexOf(candidate) < 0) return candidate;
+        }
+        return base;
+      }
+      function resolveTarget(options) {
+        options = options || {};
+        var kind = options.kind === "assembly" ? "assembly" : "part";
+        var ns = normalizeNamespace(options.namespace);
+        var icon = String(options.icon == null ? "" : options.icon).trim();
+        var iconState = classifyIcon(icon, ns);
+        if (iconState === "invalid") {
+          return { ok: false, error: "part.icon \u8DEF\u5F84\u5305\u542B\u4E0D\u5B89\u5168\u7684 .. \u6216\u53CD\u659C\u6760\uFF0C\u5DF2\u8DF3\u8FC7", iconState };
+        }
+        var target;
+        var collision = false;
+        if (kind === "assembly") {
+          target = assemblyTargetWithCollision(options);
+          collision = !!target && Array.isArray(options.reservedPaths) && options.reservedPaths.indexOf(defaultAssemblyTarget(options)) >= 0 && target !== defaultAssemblyTarget(options);
+        } else if (iconState === "in_pack") {
+          target = icon;
+        } else {
+          target = defaultPartTarget(options);
+        }
+        if (!target) {
+          return { ok: false, error: "\u65E0\u6CD5\u751F\u6210\u5408\u6CD5\u7684\u56FE\u6807\u8DEF\u5F84", iconState };
+        }
+        var parsed = parseResourceLocation(target);
+        if (!parsed || parsed.namespace !== ns || parsed.path.indexOf(ICON_ROOT) !== 0) {
+          return { ok: false, error: "\u56FE\u6807\u8DEF\u5F84\u4E0D\u5728\u672C\u5305 textures/icon/ \u4E0B", iconState };
+        }
+        var fileName = parsed.path.slice(parsed.path.lastIndexOf("/") + 1);
+        var folder = parsed.path.slice(ICON_ROOT.length, parsed.path.lastIndexOf("/"));
+        return {
+          ok: true,
+          target,
+          iconState,
+          collision,
+          folder,
+          fileName
+        };
+      }
+      function planIcon(options) {
+        options = options || {};
+        var target = options.target || resolveTarget(options).target;
+        var kind = options.kind === "assembly" ? "assembly" : "part";
+        var ns = normalizeNamespace(options.namespace);
+        var iconState = options.iconState || classifyIcon(options.icon, ns);
+        var targetExists = options.targetExists === true;
+        var overwrite = options.overwrite === true;
+        var rewrite = options.rewriteExternalIcon === true;
+        if (!target) {
+          return {
+            target: "",
+            iconState,
+            fileAction: "none",
+            fieldAction: "keep",
+            fieldChanged: false,
+            status: "failed",
+            reason: "\u6CA1\u6709\u5408\u6CD5\u76EE\u6807\u8DEF\u5F84"
+          };
+        }
+        if (kind === "assembly") {
+          if (targetExists && !overwrite) {
+            return { target, iconState, fileAction: "skip", fieldAction: "none", fieldChanged: false, status: "skipped", reason: "\u76EE\u6807\u6587\u4EF6\u5DF2\u5B58\u5728\uFF0C\u672A\u52FE\u9009\u8986\u76D6" };
+          }
+          return {
+            target,
+            iconState,
+            fileAction: "write",
+            fieldAction: "none",
+            fieldChanged: false,
+            status: targetExists ? "overwritten" : "created",
+            reason: targetExists ? "\u91CD\u5199\u5DF2\u6709\u88C5\u914D\u4F53\u56FE\u6807" : "\u65B0\u5EFA\u88C5\u914D\u4F53\u56FE\u6807"
+          };
+        }
+        if (iconState === "empty") {
+          if (targetExists && !overwrite) {
+            return { target, iconState, fileAction: "none", fieldAction: "set", fieldChanged: true, status: "linked", reason: "\u5B57\u6BB5\u4E3A\u7A7A\uFF0C\u53EA\u5173\u8054\u5DF2\u6709\u6587\u4EF6" };
+          }
+          return { target, iconState, fileAction: "write", fieldAction: "set", fieldChanged: true, status: "created", reason: "\u5B57\u6BB5\u4E3A\u7A7A\uFF0C\u5199\u5165\u5E76\u5173\u8054" };
+        }
+        if (iconState === "in_pack") {
+          if (targetExists && !overwrite) {
+            return { target, iconState, fileAction: "skip", fieldAction: "keep", fieldChanged: false, status: "skipped", reason: "\u6CBF\u7528\u672C\u5305\u8DEF\u5F84\uFF0C\u76EE\u6807\u6587\u4EF6\u5DF2\u5B58\u5728\u4E14\u672A\u8986\u76D6" };
+          }
+          return { target, iconState, fileAction: "write", fieldAction: "keep", fieldChanged: false, status: "overwritten", reason: "\u6CBF\u7528\u672C\u5305\u8DEF\u5F84\uFF0C\u91CD\u5199\u6587\u4EF6\u4F46\u4E0D\u6539\u5B57\u6BB5" };
+        }
+        if (targetExists && !overwrite) {
+          if (rewrite) {
+            return { target, iconState, fileAction: "none", fieldAction: "set", fieldChanged: true, status: "linked", reason: "\u5916\u90E8\u5B57\u6BB5\u6539\u5199\u4E3A\u5DF2\u6709\u672C\u5305\u6587\u4EF6\uFF0C\u4E0D\u5199\u76D8" };
+          }
+          return { target, iconState, fileAction: "skip", fieldAction: "keep", fieldChanged: false, status: "skipped", reason: "\u76EE\u6807\u6587\u4EF6\u5DF2\u5B58\u5728\u4E14\u672A\u8986\u76D6" };
+        }
+        if (rewrite) {
+          return { target, iconState, fileAction: "write", fieldAction: "set", fieldChanged: true, status: "overwritten", reason: "\u5916\u90E8\u5B57\u6BB5\u6539\u5199\u4E3A\u672C\u5305\u8DEF\u5F84\u5E76\u5199\u6587\u4EF6" };
+        }
+        return { target, iconState, fileAction: "write", fieldAction: "keep", fieldChanged: false, status: "unrewritten", reason: "\u6587\u4EF6\u5DF2\u751F\u6210/\u8986\u76D6\uFF0C\u5916\u90E8\u5B57\u6BB5\u672A\u6539\u5199" };
+      }
+      module.exports = {
+        DEFAULT_NAMESPACE,
+        ICON_ROOT,
+        normalizeNamespace,
+        sanitizeSegment,
+        sanitizeFileName,
+        isSafeResourcePath,
+        parseResourceLocation,
+        isInIconRoot,
+        classifyIcon,
+        defaultPartTarget,
+        defaultAssemblyTarget,
+        resolveTarget,
+        planIcon
+      };
+    }
+  });
+
+  // src/services/icon_visibility.js
+  var require_icon_visibility = __commonJS({
+    "src/services/icon_visibility.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      function asString(value) {
+        return String(value == null ? "" : value);
+      }
+      function unique(list) {
+        var out = [];
+        var seen = {};
+        (list || []).forEach(function(item) {
+          var key = asString(item);
+          if (!key || seen[key]) return;
+          seen[key] = true;
+          out.push(key);
+        });
+        return out;
+      }
+      function buildIndex(nodes) {
+        var byUuid = {};
+        var byName = {};
+        var children = {};
+        (nodes || []).forEach(function(node) {
+          if (!node || !node.uuid) return;
+          var uuid = asString(node.uuid);
+          byUuid[uuid] = node;
+          var name = asString(node.name);
+          if (!byName[name]) byName[name] = [];
+          byName[name].push(node);
+          var parent = asString(node.parentUuid);
+          if (parent) {
+            if (!children[parent]) children[parent] = [];
+            children[parent].push(uuid);
+          }
+        });
+        return { byUuid, byName, children };
+      }
+      function collectSubtree(rootUuid, children, out) {
+        var stack = [asString(rootUuid)];
+        var seen = {};
+        while (stack.length) {
+          var uuid = stack.pop();
+          if (!uuid || seen[uuid]) continue;
+          seen[uuid] = true;
+          if (out) out[uuid] = true;
+          var list = children[uuid] || [];
+          for (var i = 0; i < list.length; i++) stack.push(list[i]);
+        }
+        return seen;
+      }
+      function collectAncestors(uuid, byUuid, out) {
+        var current = asString(uuid);
+        var guard = 0;
+        while (current && byUuid[current] && guard < 1e5) {
+          var parent = asString(byUuid[current].parentUuid);
+          if (!parent || !byUuid[parent]) break;
+          out[parent] = true;
+          current = parent;
+          guard++;
+        }
+      }
+      function warning(code, message, extra) {
+        return Object.assign({ code, message }, extra || {});
+      }
+      function buildVisibility(nodes, subParts, options) {
+        options = options || {};
+        var index = buildIndex(nodes);
+        var allUuids = (nodes || []).map(function(node) {
+          return asString(node.uuid);
+        }).filter(Boolean);
+        var parts = Array.isArray(subParts) ? subParts : [];
+        var warnings = [];
+        var errors = [];
+        var unresolvedStart = [];
+        var unresolvedEnd = [];
+        var duplicateStart = [];
+        var visible = {};
+        var anySubPart = false;
+        var allStartEmpty = true;
+        if (parts.length === 0) {
+          allUuids.forEach(function(uuid) {
+            visible[uuid] = true;
+          });
+          warnings.push(warning("no_sub_parts", "\u53D8\u4F53\u6CA1\u6709 sub_parts\uFF0C\u6309\u6574\u68F5\u6A21\u578B\u751F\u6210"));
+          return finish(visible, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart, true);
+        }
+        parts.forEach(function(subPart, partIndex) {
+          var startName = asString(subPart && subPart.start_bone).trim();
+          var endNames = unique([].concat(
+            subPart && subPart.end_bones || [],
+            subPart && subPart.auto_end_bones || []
+          ));
+          if (startName) allStartEmpty = false;
+          var excluded = {};
+          endNames.forEach(function(endName) {
+            var matches2 = index.byName[endName] || [];
+            if (matches2.length === 0) {
+              unresolvedEnd.push(endName);
+              warnings.push(warning(
+                "end_bone_not_found",
+                'end_bone "' + endName + '" \u4E0D\u5B58\u5728\uFF0C\u5DF2\u5FFD\u7565',
+                { subPartIndex: partIndex, bone: endName }
+              ));
+              return;
+            }
+            if (matches2.length > 1) {
+              warnings.push(warning(
+                "duplicate_end_bone",
+                'end_bone "' + endName + '" \u6709 ' + matches2.length + " \u4E2A\u540C\u540D\u7EC4\uFF0C\u5168\u90E8\u6392\u9664",
+                { subPartIndex: partIndex, bone: endName }
+              ));
+            }
+            matches2.forEach(function(match) {
+              collectSubtree(match.uuid, index.children, excluded);
+            });
+          });
+          var startSet;
+          if (!startName) {
+            startSet = {};
+            allUuids.forEach(function(uuid) {
+              startSet[uuid] = true;
+            });
+          } else {
+            var matches = index.byName[startName] || [];
+            if (matches.length === 0) {
+              unresolvedStart.push(startName);
+              errors.push(warning(
+                "start_bone_not_found",
+                'start_bone "' + startName + '" \u4E0D\u5B58\u5728\uFF0C\u8DF3\u8FC7\u8BE5 sub_part',
+                { subPartIndex: partIndex, bone: startName }
+              ));
+              if (options.strictStartBone) return;
+              return;
+            }
+            if (matches.length > 1) {
+              duplicateStart.push(startName);
+              warnings.push(warning(
+                "duplicate_start_bone",
+                'start_bone "' + startName + '" \u6709 ' + matches.length + " \u4E2A\u540C\u540D\u7EC4\uFF0C\u9ED8\u8BA4\u53D6\u7B2C\u4E00\u4E2A",
+                { subPartIndex: partIndex, bone: startName }
+              ));
+              if (options.strictStartBone) {
+                errors.push(warning(
+                  "ambiguous_start_bone",
+                  'start_bone "' + startName + '" \u91CD\u540D\uFF0C\u4E25\u683C\u6A21\u5F0F\u8DF3\u8FC7\u8BE5 sub_part',
+                  { subPartIndex: partIndex, bone: startName }
+                ));
+                return;
+              }
+            }
+            startSet = collectSubtree(matches[0].uuid, index.children, null);
+          }
+          anySubPart = true;
+          Object.keys(startSet).forEach(function(uuid) {
+            if (!excluded[uuid]) visible[uuid] = true;
+          });
+        });
+        if (!anySubPart) {
+          if (allStartEmpty) {
+            allUuids.forEach(function(uuid) {
+              visible[uuid] = true;
+            });
+            errors.push(warning("no_visible_sub_parts", "\u6240\u6709 start_bone \u4E3A\u7A7A\uFF0C\u6309\u6574\u68F5\u6A21\u578B\u751F\u6210"));
+            return finish(visible, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart, true);
+          }
+          errors.push(warning("no_resolved_start_bones", "\u6240\u6709 start_bone \u90FD\u65E0\u6CD5\u89E3\u6790\uFF0C\u8DF3\u8FC7\u8BE5\u56FE\u6807"));
+          return finish(visible, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart, false);
+        }
+        Object.keys(visible).forEach(function(uuid) {
+          collectAncestors(uuid, index.byUuid, visible);
+        });
+        var result = finish(
+          visible,
+          allUuids,
+          warnings,
+          errors,
+          unresolvedStart,
+          unresolvedEnd,
+          duplicateStart,
+          parts.length === 0 || allStartEmpty
+        );
+        if (result.visible.length === 0) {
+          errors.push(warning("empty_visibility", "\u53EF\u89C1\u96C6\u4E3A\u7A7A\uFF0C\u53EF\u80FD start_bone \u4E0E end_bones \u4E92\u76F8\u62B5\u6D88"));
+        }
+        return result;
+      }
+      function finish(visibleMap, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart, fallback) {
+        var visible = [];
+        allUuids.forEach(function(uuid) {
+          if (visibleMap[uuid]) visible.push(uuid);
+        });
+        return {
+          visible,
+          warnings,
+          errors,
+          unresolvedStart,
+          unresolvedEnd,
+          duplicateStart,
+          fallback: !!fallback
+        };
+      }
+      module.exports = {
+        buildVisibility,
+        _internals: {
+          buildIndex,
+          collectSubtree,
+          collectAncestors
+        }
+      };
+    }
+  });
+
+  // src/services/icon_fit.js
+  var require_icon_fit = __commonJS({
+    "src/services/icon_fit.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      function vec(value, fallback) {
+        if (!Array.isArray(value) || value.length < 3) return (fallback || [0, 0, 0]).slice();
+        return [Number(value[0]) || 0, Number(value[1]) || 0, Number(value[2]) || 0];
+      }
+      function add(a, b) {
+        return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+      }
+      function sub(a, b) {
+        return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+      }
+      function scale(a, s) {
+        return [a[0] * s, a[1] * s, a[2] * s];
+      }
+      function dot(a, b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      }
+      function cross(a, b) {
+        return [
+          a[1] * b[2] - a[2] * b[1],
+          a[2] * b[0] - a[0] * b[2],
+          a[0] * b[1] - a[1] * b[0]
+        ];
+      }
+      function length(a) {
+        return Math.sqrt(dot(a, a));
+      }
+      function normalize(a) {
+        var len = length(a);
+        if (!len || !isFinite(len)) return [0, 1, 0];
+        return [a[0] / len, a[1] / len, a[2] / len];
+      }
+      function normalizeDirection(direction) {
+        var raw = vec(direction, [1, 1, 1]);
+        if (length(raw) < 1e-8) return [1, 1, 1];
+        return normalize(raw);
+      }
+      function cameraBasis(direction) {
+        var dir = normalizeDirection(direction);
+        var worldUp = [0, 1, 0];
+        if (Math.abs(dot(dir, worldUp)) > 0.999) worldUp = [0, 0, 1];
+        var right = normalize(cross(worldUp, dir));
+        var up = normalize(cross(right, scale(dir, -1)));
+        return { direction: dir, right, up };
+      }
+      function aabbCorners(aabb) {
+        var min = vec(aabb && aabb.min);
+        var max = vec(aabb && aabb.max);
+        var out = [];
+        for (var i = 0; i < 8; i++) {
+          out.push([
+            i & 1 ? max[0] : min[0],
+            i & 2 ? max[1] : min[1],
+            i & 4 ? max[2] : min[2]
+          ]);
+        }
+        return out;
+      }
+      function spanAlong(aabb, axis) {
+        var axisN = normalize(vec(axis, [1, 0, 0]));
+        var corners = aabbCorners(aabb);
+        var min = Infinity;
+        var max = -Infinity;
+        for (var i = 0; i < corners.length; i++) {
+          var value = dot(corners[i], axisN);
+          if (value < min) min = value;
+          if (value > max) max = value;
+        }
+        return Math.max(max - min, 0);
+      }
+      function centerOf(aabb) {
+        var min = vec(aabb && aabb.min);
+        var max = vec(aabb && aabb.max);
+        return [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2];
+      }
+      function isEmptyAabb(aabb) {
+        if (!aabb || !Array.isArray(aabb.min) || !Array.isArray(aabb.max)) return true;
+        for (var i = 0; i < 3; i++) {
+          if (!isFinite(Number(aabb.min[i])) || !isFinite(Number(aabb.max[i]))) return true;
+          if (Number(aabb.min[i]) > Number(aabb.max[i])) return true;
+        }
+        return false;
+      }
+      function unionAabb(list) {
+        var min = [Infinity, Infinity, Infinity];
+        var max = [-Infinity, -Infinity, -Infinity];
+        var has = false;
+        (list || []).forEach(function(aabb) {
+          if (isEmptyAabb(aabb)) return;
+          has = true;
+          for (var i = 0; i < 3; i++) {
+            min[i] = Math.min(min[i], Number(aabb.min[i]));
+            max[i] = Math.max(max[i], Number(aabb.max[i]));
+          }
+        });
+        return has ? { min, max } : null;
+      }
+      function computeFit(aabb, options) {
+        options = options || {};
+        var basis = options.right && options.up ? { right: normalize(vec(options.right, [1, 0, 0])), up: normalize(vec(options.up, [0, 1, 0])) } : cameraBasis(options.direction || [1, 1, 1]);
+        var width = Number(options.width) > 0 ? Number(options.width) : 512;
+        var height = Number(options.height) > 0 ? Number(options.height) : 512;
+        var fill = Number(options.fill);
+        if (!isFinite(fill) || fill <= 0) fill = 0.9;
+        fill = Math.max(0.05, Math.min(1.5, fill));
+        var spanRight = spanAlong(aabb, basis.right);
+        var spanUp = spanAlong(aabb, basis.up);
+        var zoom = fill * Math.min(
+          width / (40 * Math.max(spanRight, 1e-6)),
+          height / (40 * Math.max(spanUp, 1e-6))
+        );
+        var center = centerOf(aabb);
+        return {
+          center,
+          target: center.slice(),
+          right: basis.right,
+          up: basis.up,
+          spanRight,
+          spanUp,
+          zoom,
+          fill
+        };
+      }
+      module.exports = {
+        vec,
+        add,
+        sub,
+        scale,
+        dot,
+        cross,
+        length,
+        normalize,
+        normalizeDirection,
+        cameraBasis,
+        aabbCorners,
+        spanAlong,
+        centerOf,
+        isEmptyAabb,
+        unionAabb,
+        computeFit
+      };
+    }
+  });
+
+  // src/services/icon_generator.js
+  var require_icon_generator = __commonJS({
+    "src/services/icon_generator.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var fs = __require("fs");
+      var path = __require("path");
+      var iconPaths = require_icon_paths();
+      var iconVisibility = require_icon_visibility();
+      var iconFit = require_icon_fit();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("IconGenerator");
+      var PREVIEW_ID = "mm_icon_render";
+      var RENDER_SIZE = 512;
+      var OUTPUT_SIZE = 128;
+      var DEFAULT_FILL = 0.9;
+      var _preview = null;
+      function groupList() {
+        try {
+          return typeof Group !== "undefined" && Group && Array.isArray(Group.all) ? Group.all.slice() : [];
+        } catch (e) {
+          return [];
+        }
+      }
+      function cubeList() {
+        try {
+          return typeof Cube !== "undefined" && Cube && Array.isArray(Cube.all) ? Cube.all.slice() : [];
+        } catch (e) {
+          return [];
+        }
+      }
+      function meshElements() {
+        var list = [];
+        try {
+          if (typeof Outliner !== "undefined" && Outliner && Array.isArray(Outliner.elements)) {
+            list = Outliner.elements.slice();
+          }
+        } catch (e) {
+        }
+        if (list.length === 0) list = cubeList();
+        return list.filter(function(el) {
+          return el && el.mesh && el.type !== "group" && el.type !== "locator";
+        });
+      }
+      function locatorList() {
+        try {
+          return typeof Locator !== "undefined" && Locator && Array.isArray(Locator.all) ? Locator.all.slice() : [];
+        } catch (e) {
+          return [];
+        }
+      }
+      function previewModelList() {
+        try {
+          if (typeof PreviewModel !== "undefined" && PreviewModel && typeof PreviewModel.getActiveModels === "function") {
+            return PreviewModel.getActiveModels().slice();
+          }
+        } catch (e) {
+        }
+        return [];
+      }
+      function getProjectName() {
+        try {
+          if (typeof Project === "undefined" || !Project) return "assembly";
+          return Project.geometry_name || Project.name || "assembly";
+        } catch (e) {
+          return "assembly";
+        }
+      }
+      function getNamespace(config) {
+        return iconPaths.normalizeNamespace(config && config.namespace);
+      }
+      function variantsOf(part) {
+        var variants = part && part.variants;
+        if (!variants || typeof variants !== "object" || Array.isArray(variants)) return {};
+        if (typeof variants.model === "string" || variants.sub_parts || variants.textures || variants.animations) {
+          return { default: variants };
+        }
+        return variants;
+      }
+      function subPartsOf(variant) {
+        var subParts = variant && variant.sub_parts;
+        if (!subParts) return [];
+        if (Array.isArray(subParts)) return subParts.slice();
+        if (typeof subParts === "object" && (Object.prototype.hasOwnProperty.call(subParts, "start_bone") || Object.prototype.hasOwnProperty.call(subParts, "end_bones") || Object.prototype.hasOwnProperty.call(subParts, "auto_end_bones"))) {
+          return [subParts];
+        }
+        return Object.keys(subParts).map(function(key) {
+          return subParts[key];
+        }).filter(Boolean);
+      }
+      function chooseVariant(part, preferred) {
+        var variants = variantsOf(part);
+        var names = Object.keys(variants);
+        if (names.length === 0) return { name: "", variant: null };
+        if (preferred && variants[preferred]) return { name: preferred, variant: variants[preferred] };
+        var active = preferred;
+        if (!active) {
+          try {
+            active = typeof configUiState === "function" ? configUiState().activeVariantName : "";
+          } catch (e) {
+            active = "";
+          }
+        }
+        if (active && variants[active]) return { name: active, variant: variants[active] };
+        return { name: names[0], variant: variants[names[0]] };
+      }
+      function configUiState() {
+        return _currentUiState || {};
+      }
+      var _currentUiState = {};
+      function buildNodes() {
+        var groups = groupList();
+        var groupSet = {};
+        groups.forEach(function(g) {
+          if (g && g.uuid) groupSet[g.uuid] = g;
+        });
+        return groups.map(function(g) {
+          var parent = g.parent;
+          var parentUuid = parent && parent !== "root" && parent.uuid && groupSet[parent.uuid] ? parent.uuid : null;
+          return { uuid: g.uuid, name: g.name, parentUuid };
+        });
+      }
+      function groupChildrenMap(groups) {
+        var map = {};
+        groups.forEach(function(g) {
+          var parent = g.parent;
+          var parentUuid = parent && parent !== "root" && parent.uuid ? parent.uuid : null;
+          if (!parentUuid) return;
+          if (!map[parentUuid]) map[parentUuid] = [];
+          map[parentUuid].push(g.uuid);
+        });
+        return map;
+      }
+      function collectGroupSubtree(uuid, children, out) {
+        var stack = [uuid];
+        var seen = {};
+        while (stack.length) {
+          var current = stack.pop();
+          if (!current || seen[current]) continue;
+          seen[current] = true;
+          out[current] = true;
+          (children[current] || []).forEach(function(child) {
+            stack.push(child);
+          });
+        }
+      }
+      function elementByUuid() {
+        var map = {};
+        groupList().concat(meshElements(), locatorList()).forEach(function(el) {
+          if (el && el.uuid) map[el.uuid] = el;
+        });
+        return map;
+      }
+      function collectMarkerHidden(config, enabled) {
+        var hidden = {};
+        if (enabled === false) return hidden;
+        var elements = elementByUuid();
+        var groups = groupList();
+        var children = groupChildrenMap(groups);
+        Object.keys(config && config.parts || {}).forEach(function(partId) {
+          var part = config.parts[partId];
+          var markers = part && part.element_markers || {};
+          Object.keys(markers).forEach(function(variantName) {
+            var map = markers[variantName] || {};
+            Object.keys(map).forEach(function(uuid) {
+              var marker = map[uuid];
+              if (!marker || marker.type !== "hit_box" && marker.type !== "interact_box") return;
+              var el = elements[uuid];
+              if (!el) return;
+              if (el.type === "cube" || typeof el.getGlobalVertexPositions === "function") {
+                hidden[uuid] = true;
+              } else if (el.children || el.type === "group") {
+                collectGroupSubtree(uuid, children, hidden);
+              } else {
+                hidden[uuid] = true;
+              }
+            });
+          });
+        });
+        var nameRe = /hitbox|hit[_ ]?box|collision/i;
+        groups.forEach(function(g) {
+          if (g && nameRe.test(String(g.name || ""))) collectGroupSubtree(g.uuid, children, hidden);
+        });
+        cubeList().forEach(function(c) {
+          if (c && nameRe.test(String(c.name || ""))) hidden[c.uuid] = true;
+        });
+        meshElements().forEach(function(m) {
+          if (m && nameRe.test(String(m.name || ""))) hidden[m.uuid] = true;
+        });
+        return hidden;
+      }
+      function isElementVisible(el) {
+        if (!el || !el.mesh || el.mesh.visible === false) return false;
+        var parent = el.parent;
+        var guard = 0;
+        while (parent && parent !== "root" && guard < 1e5) {
+          if (parent.mesh && parent.mesh.visible === false) return false;
+          parent = parent.parent;
+          guard++;
+        }
+        return true;
+      }
+      function applyAutoVisibility(visibleSet, hidden) {
+        var visibleMap = {};
+        if (Array.isArray(visibleSet)) {
+          visibleSet.forEach(function(uuid) {
+            visibleMap[uuid] = true;
+          });
+        } else if (visibleSet && typeof visibleSet === "object") {
+          visibleMap = visibleSet;
+        }
+        groupList().forEach(function(g) {
+          if (!g.mesh) return;
+          g.mesh.visible = !!visibleMap[g.uuid] && !hidden[g.uuid];
+        });
+        cubeList().forEach(function(c) {
+          if (!c.mesh) return;
+          c.mesh.visible = !hidden[c.uuid];
+        });
+        meshElements().forEach(function(m) {
+          if (!m.mesh || m.type === "cube") return;
+          m.mesh.visible = !hidden[m.uuid];
+        });
+        locatorList().forEach(function(l) {
+          if (l.mesh) l.mesh.visible = !hidden[l.uuid];
+        });
+      }
+      function applyManualVisibility(hidden) {
+        groupList().forEach(function(g) {
+          if (g.mesh && hidden[g.uuid]) g.mesh.visible = false;
+        });
+        cubeList().forEach(function(c) {
+          if (c.mesh && hidden[c.uuid]) c.mesh.visible = false;
+        });
+        meshElements().forEach(function(m) {
+          if (m.mesh && m.type !== "cube" && hidden[m.uuid]) m.mesh.visible = false;
+        });
+        locatorList().forEach(function(l) {
+          if (l.mesh && hidden[l.uuid]) l.mesh.visible = false;
+        });
+      }
+      function measureAabb() {
+        var min = [Infinity, Infinity, Infinity];
+        var max = [-Infinity, -Infinity, -Infinity];
+        var has = false;
+        var failed = 0;
+        meshElements().forEach(function(element) {
+          if (!isElementVisible(element)) return;
+          var vertices = null;
+          if (typeof element.getGlobalVertexPositions === "function") {
+            try {
+              vertices = element.getGlobalVertexPositions();
+            } catch (e) {
+              failed++;
+              return;
+            }
+          } else if (element.mesh && element.mesh.geometry) {
+            try {
+              element.mesh.updateMatrixWorld(true);
+              var geometry = element.mesh.geometry;
+              if (!geometry.boundingBox && typeof geometry.computeBoundingBox === "function") {
+                geometry.computeBoundingBox();
+              }
+              var box = geometry.boundingBox;
+              if (box) {
+                var scenePos = typeof Canvas !== "undefined" && Canvas && Canvas.scene ? Canvas.scene.position : { x: 0, y: 0, z: 0 };
+                for (var c = 0; c < 8; c++) {
+                  var v = new THREE.Vector3(
+                    c & 1 ? box.max.x : box.min.x,
+                    c & 2 ? box.max.y : box.min.y,
+                    c & 4 ? box.max.z : box.min.z
+                  );
+                  v.applyMatrix4(element.mesh.matrixWorld);
+                  v.sub(scenePos);
+                  if (!vertices) vertices = [];
+                  vertices.push(v.toArray());
+                }
+              }
+            } catch (e2) {
+              failed++;
+              return;
+            }
+          }
+          if (!Array.isArray(vertices)) return;
+          vertices.forEach(function(v2) {
+            if (!Array.isArray(v2) || v2.length < 3) return;
+            has = true;
+            for (var i = 0; i < 3; i++) {
+              var value = Number(v2[i]);
+              if (!isFinite(value)) continue;
+              if (value < min[i]) min[i] = value;
+              if (value > max[i]) max[i] = value;
+            }
+          });
+        });
+        if (!has) return { aabb: null, failed };
+        return { aabb: { min, max }, failed };
+      }
+      function snapshotScene() {
+        var state = {
+          groups: [],
+          meshes: [],
+          locators: [],
+          background: null,
+          fog: null,
+          shading: null,
+          brightness: null,
+          toneMapping: null,
+          lightColor: null,
+          lightSide: null,
+          viewMode: null,
+          previewModels: []
+        };
+        groupList().forEach(function(g) {
+          state.groups.push({ el: g, visible: g.mesh ? g.mesh.visible : null, visibility: g.visibility });
+        });
+        meshElements().forEach(function(m) {
+          state.meshes.push({ el: m, visible: m.mesh ? m.mesh.visible : null, visibility: m.visibility });
+        });
+        locatorList().forEach(function(l) {
+          state.locators.push({ el: l, visible: l.mesh ? l.mesh.visible : null, visibility: l.visibility });
+        });
+        if (typeof Canvas !== "undefined" && Canvas) {
+          if (Canvas.scene) {
+            state.background = Canvas.scene.background;
+            state.fog = Canvas.scene.fog;
+          }
+          state.lightColor = Canvas.global_light_color ? Canvas.global_light_color.clone() : null;
+          state.lightSide = Canvas.global_light_side;
+        }
+        if (typeof settings !== "undefined" && settings) {
+          if (settings.shading) state.shading = settings.shading.value;
+          if (settings.brightness) state.brightness = settings.brightness.value;
+          if (settings.tone_mapping) state.toneMapping = settings.tone_mapping.value;
+        }
+        if (typeof Project !== "undefined" && Project) state.viewMode = Project.view_mode;
+        previewModelList().forEach(function(model) {
+          state.previewModels.push({ model, enabled: model.enabled });
+        });
+        return state;
+      }
+      function restoreScene(state) {
+        if (!state) return;
+        state.groups.forEach(function(item) {
+          if (item.el.mesh && item.visible !== null) item.el.mesh.visible = item.visible;
+          if (item.visibility !== void 0) item.el.visibility = item.visibility;
+        });
+        state.meshes.forEach(function(item) {
+          if (item.el.mesh && item.visible !== null) item.el.mesh.visible = item.visible;
+          if (item.visibility !== void 0) item.el.visibility = item.visibility;
+        });
+        state.locators.forEach(function(item) {
+          if (item.el.mesh && item.visible !== null) item.el.mesh.visible = item.visible;
+          if (item.visibility !== void 0) item.el.visibility = item.visibility;
+        });
+        if (typeof settings !== "undefined" && settings) {
+          if (settings.shading && state.shading !== null) settings.shading.value = state.shading;
+          if (settings.brightness && state.brightness !== null) settings.brightness.value = state.brightness;
+          if (settings.tone_mapping && state.toneMapping !== null) settings.tone_mapping.value = state.toneMapping;
+        }
+        if (typeof Canvas !== "undefined" && Canvas) {
+          if (Canvas.scene) {
+            Canvas.scene.background = state.background;
+            Canvas.scene.fog = state.fog;
+          }
+          if (Canvas.global_light_color && state.lightColor) Canvas.global_light_color.copy(state.lightColor);
+          if (state.lightSide !== null) Canvas.global_light_side = state.lightSide;
+          try {
+            if (typeof Project !== "undefined" && Project && state.viewMode !== null && Project.view_mode !== state.viewMode) {
+              Project.view_mode = state.viewMode;
+              if (typeof Canvas.updateViewMode === "function") Canvas.updateViewMode();
+            } else if (typeof Canvas.updateShading === "function") {
+              Canvas.updateShading();
+            }
+          } catch (e) {
+            log2.warn("restoreScene: \u6062\u590D\u89C6\u53E3\u6A21\u5F0F\u5931\u8D25", e && e.message);
+          }
+        }
+        state.previewModels.forEach(function(item) {
+          try {
+            if (item.enabled) item.model.enable();
+            else item.model.disable();
+          } catch (e) {
+          }
+        });
+        if (typeof Preview !== "undefined" && Preview && Array.isArray(Preview.all)) {
+          Preview.all.forEach(function(p) {
+            try {
+              if (typeof p.updateToneMapping === "function") p.updateToneMapping();
+            } catch (e) {
+            }
+          });
+        }
+      }
+      function applyFixedScene() {
+        if (typeof Canvas !== "undefined" && Canvas) {
+          if (Canvas.scene) {
+            Canvas.scene.background = null;
+            Canvas.scene.fog = null;
+          }
+          if (Canvas.global_light_color) Canvas.global_light_color.set(16777215);
+          Canvas.global_light_side = 0;
+        }
+        if (typeof settings !== "undefined" && settings) {
+          if (settings.shading) settings.shading.value = true;
+          if (settings.brightness) settings.brightness.value = 50;
+          if (settings.tone_mapping) settings.tone_mapping.value = "none";
+        }
+        if (typeof Project !== "undefined" && Project) {
+          if (Project.view_mode !== "textured") {
+            Project.view_mode = "textured";
+            if (typeof Canvas !== "undefined" && Canvas && typeof Canvas.updateViewMode === "function") {
+              Canvas.updateViewMode();
+            }
+          }
+        }
+        if (typeof Canvas !== "undefined" && Canvas && typeof Canvas.updateShading === "function") {
+          Canvas.updateShading();
+        }
+        previewModelList().forEach(function(model) {
+          try {
+            model.disable();
+          } catch (e) {
+          }
+        });
+        if (_preview && typeof _preview.updateToneMapping === "function") {
+          try {
+            _preview.updateToneMapping();
+          } catch (e) {
+          }
+        }
+      }
+      function packDirOf(config) {
+        var dir = config && config.contentPackPath;
+        if (!dir || typeof dir !== "string") return { ok: false, error: "\u672A\u8BBE\u7F6E\u5185\u5BB9\u5305\u8DEF\u5F84" };
+        try {
+          var stat = fs.statSync(dir);
+          if (!stat.isDirectory()) return { ok: false, error: "\u5185\u5BB9\u5305\u8DEF\u5F84\u4E0D\u662F\u76EE\u5F55\uFF08zip \u5185\u5BB9\u5305\u6682\u4E0D\u652F\u6301\u5199\u56FE\u6807\uFF09" };
+        } catch (e) {
+          return { ok: false, error: "\u5185\u5BB9\u5305\u8DEF\u5F84\u4E0D\u5B58\u5728: " + dir };
+        }
+        return { ok: true, dir };
+      }
+      function fileTargetOf(config, target) {
+        var parsed = iconPaths.parseResourceLocation(target);
+        if (!parsed) return { ok: false, error: "\u4E0D\u662F\u5408\u6CD5\u7684 resource location: " + target };
+        var ns = getNamespace(config);
+        if (parsed.namespace !== ns) return { ok: false, error: "\u76EE\u6807 namespace \u4E0D\u662F\u672C\u5305: " + parsed.namespace };
+        if (parsed.path.indexOf(iconPaths.ICON_ROOT) !== 0 || !iconPaths.isSafeResourcePath(parsed.path)) {
+          return { ok: false, error: "\u76EE\u6807\u4E0D\u5728\u672C\u5305 textures/icon/ \u4E0B: " + target };
+        }
+        if (!/\.png$/i.test(parsed.path)) return { ok: false, error: "\u56FE\u6807\u76EE\u6807\u5FC5\u987B\u662F .png: " + target };
+        var pack = packDirOf(config);
+        if (!pack.ok) return pack;
+        var root = path.resolve(pack.dir, ns, "textures", "icon");
+        var file = path.resolve(pack.dir, ns, parsed.path);
+        if (file === root || file.indexOf(root + path.sep) !== 0) {
+          return { ok: false, error: "\u56FE\u6807\u8DEF\u5F84\u9003\u9038\u51FA icon \u76EE\u5F55: " + target };
+        }
+        return { ok: true, file, path: parsed.path };
+      }
+      function assemblyJsonExists(config, name) {
+        var pack = packDirOf(config);
+        if (!pack.ok) return false;
+        var safe = iconPaths.sanitizeSegment(name || "assembly");
+        if (!safe) return false;
+        try {
+          return fs.existsSync(path.join(pack.dir, "assemblies", safe + ".json"));
+        } catch (e) {
+          return false;
+        }
+      }
+      function ensurePreview() {
+        if (typeof Preview === "undefined" || !Preview) throw new Error("Blockbench Preview API \u4E0D\u53EF\u7528");
+        if (_preview && _preview.canvas && _preview.canvas.parentElement) return _preview;
+        if (typeof Preview.all !== "undefined" && Array.isArray(Preview.all)) {
+          var old = Preview.all.find(function(p) {
+            return p.id === PREVIEW_ID;
+          });
+          if (old) {
+            try {
+              old.delete();
+            } catch (e) {
+            }
+          }
+        }
+        _preview = new Preview({ id: PREVIEW_ID, offscreen: true, antialias: true });
+        _preview.setProjectionMode(true);
+        _preview.resize(RENDER_SIZE, RENDER_SIZE);
+        _preview.controls.minDistance = 1;
+        _preview.controls.maxDistance = 1e5;
+        _preview.controls.enableDamping = false;
+        return _preview;
+      }
+      function dispose() {
+        if (_preview) {
+          try {
+            _preview.delete();
+          } catch (e) {
+          }
+          _preview = null;
+        }
+      }
+      function defaultDirection(kind) {
+        var presetId = kind === "assembly" ? "isometric_left" : "isometric_right";
+        try {
+          if (typeof DefaultCameraPresets !== "undefined" && Array.isArray(DefaultCameraPresets)) {
+            var preset = DefaultCameraPresets.find(function(p) {
+              return p.id === presetId;
+            }) || DefaultCameraPresets.find(function(p) {
+              return p.id === "isometric_left";
+            }) || DefaultCameraPresets[0];
+            if (preset && Array.isArray(preset.position) && Array.isArray(preset.target)) {
+              return iconFit.normalize([
+                preset.position[0] - preset.target[0],
+                preset.position[1] - preset.target[1],
+                preset.position[2] - preset.target[2]
+              ]);
+            }
+          }
+        } catch (e) {
+        }
+        return iconFit.normalize(kind === "assembly" ? [1, 1, -1] : [-1, 1, -1]);
+      }
+      function directionFor(config, options, kind) {
+        if (options.camera === "iso") return defaultDirection(kind);
+        var stored = config && config._uiState && config._uiState.iconCamera;
+        if (options.camera === "project" && stored && stored.conventionVersion === 2) {
+          var key = kind === "assembly" ? "assemblyDirection" : "direction";
+          if (Array.isArray(stored[key]) && stored[key].length >= 3) {
+            return iconFit.normalizeDirection(stored[key]);
+          }
+        }
+        return defaultDirection(kind);
+      }
+      function renderToDataUrl(preview) {
+        if (typeof Canvas === "undefined" || !Canvas) throw new Error("Canvas API \u4E0D\u53EF\u7528");
+        var oldBg = Canvas.scene.background;
+        var oldFog = Canvas.scene.fog;
+        Canvas.scene.background = null;
+        Canvas.scene.fog = null;
+        try {
+          Canvas.withoutGizmos(function() {
+            preview.render();
+          });
+          if (typeof CanvasFrame !== "undefined") {
+            var frame = new CanvasFrame(preview.canvas);
+            if (frame.isEmpty()) throw new Error("\u6E32\u67D3\u7ED3\u679C\u4E3A\u7A7A\uFF08\u6CA1\u6709\u53EF\u89C1\u51E0\u4F55\uFF09");
+          }
+          var source = preview.canvas.toDataURL("image/png");
+          if (!source || source.indexOf("data:image/png") !== 0) throw new Error("\u65E0\u6CD5\u7F16\u7801 PNG");
+          var canvas = document.createElement("canvas");
+          canvas.width = OUTPUT_SIZE;
+          canvas.height = OUTPUT_SIZE;
+          var ctx = canvas.getContext("2d");
+          ctx.imageSmoothingEnabled = true;
+          ctx.drawImage(preview.canvas, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+          return canvas.toDataURL("image/png");
+        } finally {
+          Canvas.scene.background = oldBg;
+          Canvas.scene.fog = oldFog;
+        }
+      }
+      function renderSpec(preview, spec, cameraInfo) {
+        if (cameraInfo.current) {
+          if (typeof Preview === "undefined" || !Preview.selected) {
+            throw new Error("\u6CA1\u6709\u53EF\u7528\u7684\u4E3B\u89C6\u53E3\uFF0C\u65E0\u6CD5\u4F7F\u7528\u5F53\u524D\u89C6\u89D2");
+          }
+          preview.copyView(Preview.selected);
+          preview.resize(RENDER_SIZE, RENDER_SIZE);
+        } else {
+          var fit = iconFit.computeFit(spec.aabb, {
+            direction: cameraInfo.direction,
+            width: RENDER_SIZE,
+            height: RENDER_SIZE,
+            fill: cameraInfo.fill
+          });
+          var center = fit.center;
+          var zoom = fit.zoom;
+          if (cameraInfo.framing === "uniform" && cameraInfo.uniformZoom) {
+            zoom = cameraInfo.uniformZoom;
+            if (spec.kind === "assembly" && cameraInfo.uniformCenter) center = cameraInfo.uniformCenter;
+          }
+          var basis = iconFit.cameraBasis(cameraInfo.direction);
+          var distance = 1200;
+          preview.setProjectionMode(true);
+          preview.resize(RENDER_SIZE, RENDER_SIZE);
+          preview.camOrtho.position.set(
+            center[0] + cameraInfo.direction[0] * distance,
+            center[1] + cameraInfo.direction[1] * distance,
+            center[2] + cameraInfo.direction[2] * distance
+          );
+          preview.controls.target.set(center[0], center[1], center[2]);
+          preview.camOrtho.up.set(basis.up[0], basis.up[1], basis.up[2]);
+          preview.camOrtho.lookAt(center[0], center[1], center[2]);
+          preview.camOrtho.zoom = zoom;
+          preview.camOrtho.updateProjectionMatrix();
+          preview.controls.update();
+        }
+        return renderToDataUrl(preview);
+      }
+      function dataUrlToBuffer(dataUrl) {
+        var comma = dataUrl.indexOf(",");
+        if (comma < 0) throw new Error("PNG data URL \u683C\u5F0F\u9519\u8BEF");
+        return Buffer.from(dataUrl.slice(comma + 1), "base64");
+      }
+      function writePng(filePath, dataUrl) {
+        fs.mkdirSync(path.dirname(filePath), { recursive: true });
+        fs.writeFileSync(filePath, dataUrlToBuffer(dataUrl));
+      }
+      function mergeWarnings(target, list, partId) {
+        (list || []).forEach(function(item) {
+          target.push({
+            partId: partId || "",
+            code: item.code || "warning",
+            message: item.message || String(item),
+            bone: item.bone
+          });
+        });
+      }
+      function buildPartVisibility(part, variant) {
+        var nodes = buildNodes();
+        var result = iconVisibility.buildVisibility(nodes, subPartsOf(variant));
+        return result;
+      }
+      function buildAssemblyVisibility(parts) {
+        var nodes = buildNodes();
+        var visible = {};
+        var warnings = [];
+        var errors = [];
+        var any = false;
+        Object.keys(parts || {}).forEach(function(partId) {
+          var variants = variantsOf(parts[partId]);
+          Object.keys(variants).forEach(function(variantName) {
+            var result = iconVisibility.buildVisibility(nodes, subPartsOf(variants[variantName]));
+            mergeWarnings(warnings, result.warnings, partId);
+            if (result.errors.length > 0) mergeWarnings(errors, result.errors, partId);
+            result.visible.forEach(function(uuid) {
+              visible[uuid] = true;
+              any = true;
+            });
+          });
+        });
+        return {
+          visible: Object.keys(visible),
+          warnings,
+          errors,
+          fallback: !any
+        };
+      }
+      function commonFolder(specs) {
+        var folders = {};
+        specs.forEach(function(spec) {
+          if (spec.resolved && spec.resolved.folder) folders[spec.resolved.folder] = true;
+        });
+        var keys = Object.keys(folders);
+        return keys.length === 1 ? keys[0] : "";
+      }
+      function buildPartSpecs(config, options) {
+        var specs = [];
+        var errors = [];
+        var parts = config.parts || {};
+        var partIds = Object.keys(parts);
+        var preferred = config._uiState && config._uiState.activeVariantName || "";
+        if (options.scope === "current") {
+          preferred = options.variantName || preferred;
+        }
+        var currentId = options.partId || config._uiState && config._uiState.activePartId || "";
+        partIds.forEach(function(partId) {
+          var part = parts[partId];
+          if (!part) return;
+          var picked = chooseVariant(part, preferred);
+          if (!picked.variant) {
+            errors.push({ kind: "part", partId, status: "failed", error: "\u96F6\u4EF6\u6CA1\u6709\u53EF\u7528\u53D8\u4F53" });
+            return;
+          }
+          var resolved = iconPaths.resolveTarget({
+            namespace: getNamespace(config),
+            kind: "part",
+            partId,
+            icon: part.icon,
+            folder: options.folder
+          });
+          if (!resolved.ok) {
+            errors.push({ kind: "part", partId, status: "failed", error: resolved.error });
+            return;
+          }
+          var spec = {
+            kind: "part",
+            partId,
+            variantName: picked.name,
+            variant: picked.variant,
+            resolved,
+            selected: partId === currentId
+          };
+          specs.push(spec);
+        });
+        return { specs, errors, currentId, partIds };
+      }
+      function generate(config, options) {
+        options = options || {};
+        if (!config || typeof config !== "object") {
+          return { ok: false, error: "\u914D\u7F6E\u4E0D\u53EF\u7528", items: [], summary: emptySummary(), errors: [{ message: "\u914D\u7F6E\u4E0D\u53EF\u7528" }], warnings: [] };
+        }
+        var pack = packDirOf(config);
+        if (!pack.ok) {
+          return { ok: false, error: pack.error, items: [], summary: emptySummary(), errors: [{ message: pack.error }], warnings: [] };
+        }
+        _currentUiState = config._uiState || {};
+        var scope = options.scope || "all+assembly";
+        var built = buildPartSpecs(config, options);
+        var items = built.errors.slice();
+        var warnings = [];
+        var errors = [];
+        var selectedParts = built.specs.filter(function(spec) {
+          if (scope === "current") return spec.selected;
+          return scope === "all" || scope === "all+assembly";
+        });
+        if (scope === "current" && selectedParts.length === 0) {
+          errors.push({ message: "\u5F53\u524D\u6CA1\u6709\u9009\u4E2D\u7684\u96F6\u4EF6" });
+        }
+        built.specs.forEach(function(spec) {
+          spec.visibility = options.visibility === "manual" ? null : buildPartVisibility(null, spec.variant);
+          if (spec.visibility) {
+            mergeWarnings(warnings, spec.visibility.warnings, spec.partId);
+            if (spec.visibility.errors.length > 0) mergeWarnings(warnings, spec.visibility.errors, spec.partId);
+            if (spec.visibility.visible.length === 0) {
+              spec.failed = true;
+              spec.error = "\u53EF\u89C1\u96C6\u4E3A\u7A7A";
+            }
+          }
+        });
+        var assemblySpec = null;
+        var wantsAssembly = scope === "assembly" || scope === "all+assembly";
+        if (wantsAssembly) {
+          var name = getProjectName();
+          var folder = options.folder || commonFolder(built.specs);
+          var reserved = built.specs.map(function(spec) {
+            return spec.resolved.target;
+          });
+          var resolved = iconPaths.resolveTarget({
+            namespace: getNamespace(config),
+            kind: "assembly",
+            name,
+            folder,
+            reservedPaths: reserved
+          });
+          if (!resolved.ok) {
+            items.push({ kind: "assembly", status: "failed", error: resolved.error });
+          } else {
+            assemblySpec = {
+              kind: "assembly",
+              partId: "",
+              variantName: "",
+              resolved,
+              visibility: options.visibility === "manual" ? null : buildAssemblyVisibility(config.parts)
+            };
+            if (resolved.collision) {
+              warnings.push({ code: "assembly_path_collision", message: "\u88C5\u914D\u4F53\u4E0E\u96F6\u4EF6\u8DEF\u5F84\u51B2\u7A81\uFF0C\u5DF2\u6539\u7528 " + resolved.target });
+            }
+            if (assemblyJsonExists(config, name)) {
+              warnings.push({
+                code: "assembly_json_exists",
+                message: "\u5DF2\u6709 assemblies/" + iconPaths.sanitizeSegment(name) + ".json\uFF1BP1 \u4E0D\u8BFB\u53D6/\u4E0D\u5199\u8BE5 JSON\uFF0C\u5982 icon \u6307\u5411\u65E7\u51B2\u7A81\u8DEF\u5F84\u9700\u624B\u5DE5\u4FEE\u6539"
+              });
+            }
+            if (assemblySpec.visibility) {
+              mergeWarnings(warnings, assemblySpec.visibility.warnings);
+              if (assemblySpec.visibility.errors.length > 0) mergeWarnings(warnings, assemblySpec.visibility.errors);
+              if (assemblySpec.visibility.visible.length === 0) {
+                assemblySpec.failed = true;
+                assemblySpec.error = "\u88C5\u914D\u4F53\u53EF\u89C1\u96C6\u4E3A\u7A7A";
+              }
+            }
+          }
+        }
+        var allSpecs = selectedParts.map(function(spec) {
+          return spec;
+        });
+        if (wantsAssembly && assemblySpec) allSpecs.push(assemblySpec);
+        allSpecs.forEach(function(spec) {
+          var file = fileTargetOf(config, spec.resolved.target);
+          if (!file.ok) {
+            spec.failed = true;
+            spec.error = file.error;
+            return;
+          }
+          spec.file = file.file;
+          spec.targetExists = fs.existsSync(file.file);
+          spec.plan = iconPaths.planIcon({
+            kind: spec.kind,
+            namespace: getNamespace(config),
+            icon: spec.kind === "part" ? config.parts[spec.partId] && config.parts[spec.partId].icon : "",
+            target: spec.resolved.target,
+            iconState: spec.resolved.iconState,
+            targetExists: spec.targetExists,
+            overwrite: !!options.overwrite,
+            rewriteExternalIcon: !!options.rewriteExternalIcon
+          });
+          if (spec.plan.status === "failed") {
+            spec.failed = true;
+            spec.error = spec.plan.reason;
+          }
+        });
+        var state = snapshotScene();
+        var preview;
+        var camera = options.camera || "project";
+        var storedCamera = config._uiState && config._uiState.iconCamera;
+        var storedFill = storedCamera ? Number(storedCamera.fill) : NaN;
+        var fill = isFinite(Number(options.fill)) ? Number(options.fill) : isFinite(storedFill) && storedFill > 0 ? storedFill : DEFAULT_FILL;
+        var framing = options.framing === "fit" ? "fit" : options.framing === "uniform" ? "uniform" : storedCamera && storedCamera.framing === "fit" ? "fit" : "uniform";
+        var partDirection = camera === "current" ? null : directionFor(config, { camera }, "part");
+        var assemblyDirection = camera === "current" ? null : directionFor(config, { camera }, "assembly");
+        var cameraInfo = {
+          current: false,
+          direction: partDirection,
+          partDirection,
+          assemblyDirection,
+          fill,
+          framing
+        };
+        var hideMarkers = options.hideMarkers !== false;
+        try {
+          preview = ensurePreview();
+          applyFixedScene();
+          if (options.visibility === "manual") {
+            applyManualVisibility(collectMarkerHidden(config, hideMarkers));
+            var manualMeasure = measureAabb();
+            if (!manualMeasure.aabb) {
+              errors.push({ message: "\u5F53\u524D\u573A\u666F\u6CA1\u6709\u53EF\u89C1\u51E0\u4F55" });
+            } else {
+              allSpecs.forEach(function(spec) {
+                spec.aabb = manualMeasure.aabb;
+              });
+            }
+          } else {
+            allSpecs.forEach(function(spec) {
+              if (spec.failed) return;
+              var hidden = collectMarkerHidden(config, hideMarkers);
+              if (spec.visibility) applyAutoVisibility(spec.visibility.visible, hidden);
+              else applyManualVisibility(hidden);
+              var measured = measureAabb();
+              if (!measured.aabb) {
+                spec.failed = true;
+                spec.error = "\u6CA1\u6709\u53EF\u89C1\u51E0\u4F55";
+                return;
+              }
+              spec.aabb = measured.aabb;
+            });
+          }
+          var partAabb = iconFit.unionAabb(allSpecs.filter(function(s) {
+            return s.kind === "part" && s.aabb;
+          }).map(function(s) {
+            return s.aabb;
+          }));
+          var assemblyAabb = assemblySpec && assemblySpec.aabb ? assemblySpec.aabb : null;
+          if (!partAabb && !assemblyAabb && allSpecs.length > 0) {
+            errors.push({ message: "\u6CA1\u6709\u4EFB\u4F55\u53EF\u91CF\u6D4B\u7684\u53EF\u89C1\u51E0\u4F55" });
+          }
+          if (partAabb && partDirection) {
+            var partFit = iconFit.computeFit(partAabb, {
+              direction: partDirection,
+              width: RENDER_SIZE,
+              height: RENDER_SIZE,
+              fill
+            });
+            cameraInfo.partUniformZoom = partFit.zoom;
+            cameraInfo.partUniformCenter = partFit.center;
+          }
+          if (assemblyAabb && assemblyDirection) {
+            var assemblyFit = iconFit.computeFit(assemblyAabb, {
+              direction: assemblyDirection,
+              width: RENDER_SIZE,
+              height: RENDER_SIZE,
+              fill
+            });
+            cameraInfo.assemblyUniformZoom = assemblyFit.zoom;
+            cameraInfo.assemblyUniformCenter = assemblyFit.center;
+          }
+          allSpecs.forEach(function(spec) {
+            if (spec.failed) return;
+            var hidden = collectMarkerHidden(config, hideMarkers);
+            if (spec.visibility) applyAutoVisibility(spec.visibility.visible, hidden);
+            else applyManualVisibility(hidden);
+            var measured = measureAabb();
+            if (!measured.aabb) {
+              spec.failed = true;
+              spec.error = "\u6CA1\u6709\u53EF\u89C1\u51E0\u4F55";
+              return;
+            }
+            spec.aabb = measured.aabb;
+            var itemCamera;
+            if (camera === "current") {
+              if (spec.kind !== "part") {
+                spec.failed = true;
+                spec.error = "\u5F53\u524D\u89C6\u89D2\u4EC5\u652F\u6301\u5355\u4E2A\u96F6\u4EF6";
+                return;
+              }
+              itemCamera = { current: true, fill, framing: "current" };
+            } else {
+              var isAssembly = spec.kind === "assembly";
+              itemCamera = Object.assign({}, cameraInfo, {
+                direction: isAssembly ? assemblyDirection : partDirection,
+                uniformZoom: isAssembly ? cameraInfo.assemblyUniformZoom : cameraInfo.partUniformZoom,
+                uniformCenter: isAssembly ? cameraInfo.assemblyUniformCenter : cameraInfo.partUniformCenter
+              });
+            }
+            try {
+              spec.dataUrl = renderSpec(preview, spec, itemCamera);
+            } catch (e) {
+              spec.failed = true;
+              spec.error = e && e.message ? e.message : String(e);
+            }
+          });
+        } finally {
+          restoreScene(state);
+        }
+        var fieldUpdates = {};
+        allSpecs.forEach(function(spec) {
+          var writeOk = true;
+          var writeError = "";
+          if (options.write && !spec.failed && spec.plan && spec.plan.fileAction === "write") {
+            try {
+              writePng(spec.file, spec.dataUrl);
+            } catch (e) {
+              writeOk = false;
+              writeError = "\u5199\u76D8\u5931\u8D25: " + (e && e.message ? e.message : String(e));
+            }
+          }
+          var item = {
+            kind: spec.kind,
+            partId: spec.partId || void 0,
+            variantName: spec.variantName || void 0,
+            path: spec.resolved ? spec.resolved.target : "",
+            status: spec.failed ? "failed" : writeOk ? spec.plan ? spec.plan.status : "failed" : "failed",
+            fileAction: spec.plan ? spec.plan.fileAction : "none",
+            fieldAction: spec.plan ? spec.plan.fieldAction : "keep",
+            fieldChanged: !!(spec.plan && spec.plan.fieldChanged),
+            dataUrl: spec.dataUrl,
+            usedVariant: spec.variantName || void 0,
+            error: spec.failed ? spec.error : writeError || spec.error,
+            collision: spec.resolved ? spec.resolved.collision : false
+          };
+          if (item.status === "failed") {
+            errors.push({ kind: spec.kind, partId: spec.partId, message: item.error || "\u751F\u6210\u5931\u8D25" });
+          } else if (item.fieldChanged && spec.kind === "part") {
+            fieldUpdates[spec.partId] = spec.resolved.target;
+          }
+          items.push(item);
+        });
+        var summary = emptySummary();
+        items.forEach(function(item) {
+          if (item.status === "created") summary.created++;
+          else if (item.status === "linked") summary.linked++;
+          else if (item.status === "overwritten") summary.overwritten++;
+          else if (item.status === "skipped") summary.skipped++;
+          else if (item.status === "unrewritten") summary.unrewritten++;
+          else summary.failed++;
+        });
+        return {
+          ok: errors.length === 0 || items.some(function(item) {
+            return item.status !== "failed";
+          }),
+          items,
+          summary,
+          errors,
+          warnings,
+          cameraUsed: {
+            direction: camera === "current" ? null : partDirection,
+            assemblyDirection: camera === "current" ? null : assemblyDirection,
+            fill,
+            framing: camera === "current" ? "current" : framing
+          },
+          fieldUpdates
+        };
+      }
+      function emptySummary() {
+        return { created: 0, linked: 0, overwritten: 0, skipped: 0, unrewritten: 0, failed: 0 };
+      }
+      module.exports = {
+        generate,
+        dispose,
+        PREVIEW_ID,
+        _internals: {
+          variantsOf,
+          subPartsOf,
+          buildNodes,
+          fileTargetOf,
+          measureAabb
+        }
+      };
+    }
+  });
+
+  // src/ui/dialogs/icon_generator_dialog.js
+  var require_icon_generator_dialog = __commonJS({
+    "src/ui/dialogs/icon_generator_dialog.js"(exports, module) {
+      "use strict";
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var iconGenerator = require_icon_generator();
+      var ops = require_ops();
+      var { showToast: showToast2 } = require_notify();
+      var { scheduleSave } = require_persistence();
+      var { createLogger: createLogger2 } = require_logger();
+      var log2 = createLogger2("IconDialog");
+      var STATUS_LABEL = {
+        created: "\u65B0\u5EFA",
+        linked: "\u5173\u8054",
+        overwritten: "\u8986\u76D6",
+        skipped: "\u8DF3\u8FC7",
+        unrewritten: "\u672A\u6539\u5199",
+        failed: "\u5931\u8D25"
+      };
+      function variantOptionsOf(config) {
+        var activeId = config && config._uiState && config._uiState.activePartId;
+        var part = activeId && config.parts ? config.parts[activeId] : null;
+        var options = { "": "\u81EA\u52A8\uFF08\u9010\u96F6\u4EF6\u89E3\u6790\uFF09" };
+        if (part && part.variants && typeof part.variants === "object") {
+          Object.keys(part.variants).forEach(function(name) {
+            options[name] = name;
+          });
+        }
+        return options;
+      }
+      function cameraDefaults(config) {
+        var stored = config && config._uiState && config._uiState.iconCamera;
+        return {
+          camera: stored && Array.isArray(stored.direction) ? "project" : "project",
+          framing: stored && stored.framing === "fit" ? "fit" : "uniform",
+          fill: stored && isFinite(Number(stored.fill)) ? Number(stored.fill) : 0.9
+        };
+      }
+      function persistCamera(config, result) {
+        if (!config || !result || !result.cameraUsed) return;
+        if (!config._uiState || typeof config._uiState !== "object") config._uiState = {};
+        var old = config._uiState.iconCamera || {};
+        var next = {
+          direction: old.direction || null,
+          assemblyDirection: old.assemblyDirection || null,
+          fill: result.cameraUsed.fill,
+          framing: result.cameraUsed.framing === "current" ? old.framing || "uniform" : result.cameraUsed.framing,
+          conventionVersion: 2
+        };
+        if (Array.isArray(result.cameraUsed.direction) && result.cameraUsed.direction.length >= 3) {
+          next.direction = result.cameraUsed.direction.slice();
+        }
+        if (Array.isArray(result.cameraUsed.assemblyDirection) && result.cameraUsed.assemblyDirection.length >= 3) {
+          next.assemblyDirection = result.cameraUsed.assemblyDirection.slice();
+        }
+        config._uiState.iconCamera = next;
+        scheduleSave();
+      }
+      function buildPreviewElement(result) {
+        var root = document.createElement("div");
+        root.style.maxHeight = "60vh";
+        root.style.overflow = "auto";
+        root.style.minWidth = "640px";
+        var summary = result.summary || {};
+        var line = document.createElement("div");
+        line.style.marginBottom = "8px";
+        line.style.fontWeight = "bold";
+        line.textContent = "\u65B0\u5EFA/\u5173\u8054 " + ((summary.created || 0) + (summary.linked || 0)) + " / \u8986\u76D6 " + (summary.overwritten || 0) + " / \u8DF3\u8FC7 " + (summary.skipped || 0) + " / \u672A\u6539\u5199 " + (summary.unrewritten || 0) + " / \u5931\u8D25 " + (summary.failed || 0);
+        root.appendChild(line);
+        var grid = document.createElement("div");
+        grid.style.display = "grid";
+        grid.style.gridTemplateColumns = "repeat(4, minmax(130px, 1fr))";
+        grid.style.gap = "8px";
+        root.appendChild(grid);
+        (result.items || []).forEach(function(item) {
+          var card = document.createElement("div");
+          card.style.border = "1px solid rgba(255,255,255,.16)";
+          card.style.borderRadius = "4px";
+          card.style.padding = "6px";
+          card.style.background = "rgba(0,0,0,.14)";
+          card.style.minWidth = "0";
+          var box = document.createElement("div");
+          box.style.width = "128px";
+          box.style.height = "128px";
+          box.style.margin = "0 auto 4px";
+          box.style.background = "repeating-conic-gradient(#444 0% 25%, #333 0% 50%) 50% / 16px 16px";
+          box.style.display = "flex";
+          box.style.alignItems = "center";
+          box.style.justifyContent = "center";
+          if (item.dataUrl) {
+            var img = document.createElement("img");
+            img.src = item.dataUrl;
+            img.width = 128;
+            img.height = 128;
+            img.alt = item.partId || "assembly";
+            img.style.imageRendering = "auto";
+            box.appendChild(img);
+          } else {
+            box.textContent = "\u65E0\u9884\u89C8";
+            box.style.color = "#aaa";
+          }
+          card.appendChild(box);
+          var title = document.createElement("div");
+          title.style.fontSize = "12px";
+          title.style.fontWeight = "bold";
+          title.style.overflow = "hidden";
+          title.style.textOverflow = "ellipsis";
+          title.style.whiteSpace = "nowrap";
+          title.title = item.path || "";
+          title.textContent = (item.kind === "assembly" ? "\u88C5\u914D\u4F53" : item.partId || "?") + (item.usedVariant ? " / " + item.usedVariant : "");
+          card.appendChild(title);
+          var status = document.createElement("div");
+          status.style.fontSize = "11px";
+          status.style.color = item.status === "failed" ? "#ff7b7b" : item.status === "skipped" ? "#d6a84b" : "#8fd18f";
+          status.textContent = (STATUS_LABEL[item.status] || item.status) + (item.fieldChanged ? " + \u5B57\u6BB5" : "");
+          card.appendChild(status);
+          if (item.path) {
+            var p = document.createElement("div");
+            p.style.fontSize = "10px";
+            p.style.color = "#aaa";
+            p.style.wordBreak = "break-all";
+            p.textContent = item.path;
+            card.appendChild(p);
+          }
+          if (item.error) {
+            var err = document.createElement("div");
+            err.style.fontSize = "10px";
+            err.style.color = "#ff7b7b";
+            err.style.wordBreak = "break-all";
+            err.textContent = item.error;
+            card.appendChild(err);
+          }
+          grid.appendChild(card);
+        });
+        if (result.warnings && result.warnings.length > 0) {
+          var warn = document.createElement("div");
+          warn.style.marginTop = "8px";
+          warn.style.fontSize = "11px";
+          warn.style.color = "#d6a84b";
+          warn.textContent = "\u63D0\u793A\uFF1A" + result.warnings.map(function(w) {
+            return w.message || w.code;
+          }).join("\uFF1B");
+          root.appendChild(warn);
+        }
+        return root;
+      }
+      function writeResult(config, settings2, previewResult) {
+        var result = iconGenerator.generate(config, Object.assign({}, settings2, { write: true }));
+        var hasUsable = result.items && result.items.some(function(item) {
+          return item.status !== "failed";
+        });
+        if (!hasUsable) {
+          showToast2("\u56FE\u6807\u5199\u5165\u5931\u8D25\uFF1A" + (result.errors && result.errors[0] && result.errors[0].message || "\u6CA1\u6709\u53EF\u5199\u5165\u7684\u56FE\u6807"), "error");
+          return false;
+        }
+        if (result.fieldUpdates && Object.keys(result.fieldUpdates).length > 0) {
+          var op = ops.setPartIcons(config, { icons: result.fieldUpdates });
+          if (!op.ok) {
+            showToast2("PNG \u5DF2\u5199\u5165\uFF0C\u4F46 part.icon \u66F4\u65B0\u5931\u8D25\uFF1A" + op.error, "error", 6e3);
+            log2.error("setPartIcons \u5931\u8D25", op);
+            return false;
+          }
+        }
+        persistCamera(config, result);
+        var s = result.summary || {};
+        showToast2("\u56FE\u6807\u5DF2\u751F\u6210\uFF1A\u65B0\u5EFA/\u5173\u8054 " + ((s.created || 0) + (s.linked || 0)) + "\uFF0C\u8986\u76D6 " + (s.overwritten || 0) + "\uFF0C\u8DF3\u8FC7 " + (s.skipped || 0) + "\uFF0C\u5931\u8D25 " + (s.failed || 0), s.failed ? "warning" : "positive", 6e3);
+        return true;
+      }
+      function showPreviewDialog(config, settings2, result) {
+        var root = buildPreviewElement(result);
+        var dialog = new Dialog({
+          id: "mm_icon_preview",
+          title: "\u56FE\u6807\u9884\u89C8",
+          width: 760,
+          lines: [root],
+          buttons: ["\u5199\u5165", "\u53D6\u6D88"],
+          onButton: function(button) {
+            if (button !== 0) {
+              this.hide();
+              return false;
+            }
+            var ok = false;
+            try {
+              ok = writeResult(config, settings2, result);
+            } catch (e) {
+              log2.error("\u5199\u5165\u56FE\u6807\u5F02\u5E38", e);
+              showToast2("\u5199\u5165\u56FE\u6807\u5F02\u5E38: " + (e && e.message ? e.message : String(e)), "error", 6e3);
+            }
+            if (ok) {
+              this.hide();
+              return false;
+            }
+            return false;
+          }
+        });
+        dialog.show();
+      }
+      function showIconGeneratorDialog(config) {
+        if (!config) {
+          showToast2("\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+          return;
+        }
+        if (!config.contentPackPath) {
+          showToast2("\u8BF7\u5148\u8BBE\u7F6E\u5185\u5BB9\u5305\u8DEF\u5F84", "warning");
+          return;
+        }
+        if (!config.parts || Object.keys(config.parts).length === 0) {
+          showToast2("\u6CA1\u6709\u5B9A\u4E49\u4EFB\u4F55\u96F6\u4EF6", "warning");
+          return;
+        }
+        var defaults = cameraDefaults(config);
+        var variants = variantOptionsOf(config);
+        var activeVariant = config._uiState && config._uiState.activeVariantName || "";
+        if (!variants[activeVariant]) activeVariant = "";
+        try {
+          new Dialog({
+            id: "mm_icon_generator",
+            title: "\u751F\u6210\u96F6\u4EF6 / \u88C5\u914D\u4F53\u56FE\u6807",
+            width: 560,
+            form: {
+              scope: {
+                type: "select",
+                label: "\u8303\u56F4",
+                value: "all+assembly",
+                options: {
+                  current: "\u5F53\u524D\u96F6\u4EF6",
+                  all: "\u5168\u90E8\u96F6\u4EF6",
+                  assembly: "\u4EC5\u88C5\u914D\u4F53",
+                  "all+assembly": "\u5168\u90E8\u96F6\u4EF6 + \u88C5\u914D\u4F53"
+                }
+              },
+              variant: {
+                type: "select",
+                label: "\u53D8\u4F53",
+                value: activeVariant,
+                options: variants,
+                description: "\u4EC5\u201C\u5F53\u524D\u96F6\u4EF6\u201D\u751F\u6548\uFF1B\u5168\u90E8\u96F6\u4EF6\u65F6\u6309\u6BCF\u4E2A\u96F6\u4EF6\u81EA\u5DF1\u7684 active/\u7B2C\u4E00\u4E2A\u53D8\u4F53\u89E3\u6790"
+              },
+              visibility: {
+                type: "select",
+                label: "\u663E\u9690\u65B9\u5F0F",
+                value: "auto",
+                options: {
+                  auto: "\u6309\u96F6\u4EF6\u5B9A\u4E49\u81EA\u52A8\u663E\u9690",
+                  manual: "\u4F7F\u7528\u5F53\u524D\u663E\u9690"
+                }
+              },
+              camera: {
+                type: "select",
+                label: "\u76F8\u673A\u65B9\u5411",
+                value: defaults.camera,
+                options: {
+                  project: "\u9879\u76EE\u76F8\u673A\uFF08\u9996\u6B21\u7B49\u8F74\u6D4B\uFF09",
+                  iso: "\u7B49\u8F74\u6D4B",
+                  current: "\u4F7F\u7528\u5F53\u524D\u89C6\u89D2\uFF08\u4EC5\u5F53\u524D\u96F6\u4EF6\uFF09"
+                },
+                description: "\u96F6\u4EF6\u9ED8\u8BA4\u5DE6\u524D\u3001\u88C5\u914D\u4F53\u9ED8\u8BA4\u53F3\u524D\uFF08\u6309 MachineMax \u73B0\u6709\u56FE\u6807\u6821\u51C6\uFF09\uFF1B\u201C\u4F7F\u7528\u5F53\u524D\u89C6\u89D2\u201D\u5B8C\u6574\u590D\u5236\u4E3B\u89C6\u53E3\u76F8\u673A\uFF0C\u53EA\u5141\u8BB8\u5F53\u524D\u96F6\u4EF6"
+              },
+              framing: {
+                type: "select",
+                label: "\u53D6\u666F",
+                value: defaults.framing,
+                options: {
+                  uniform: "\u7EDF\u4E00\u6BD4\u4F8B\uFF08\u6574\u673A\u5B9A\u4E00\u6B21 zoom\uFF09",
+                  fit: "\u6BCF\u4EF6\u586B\u6EE1"
+                }
+              },
+              fill: {
+                type: "number",
+                label: "\u586B\u5145\u7387",
+                value: defaults.fill,
+                min: 0.5,
+                max: 1,
+                step: 0.01,
+                description: "2S38 \u9996\u6B21\u590D\u523B\u7528 0.86\uFF1Bk17 / sdkfz234 \u7EA6 0.95\uFF1B\u9ED8\u8BA4 0.9"
+              },
+              folder: {
+                type: "text",
+                label: "\u56FE\u6807\u5B50\u76EE\u5F55",
+                value: "",
+                description: "\u7559\u7A7A\u81EA\u52A8\uFF1A\u96F6\u4EF6\u6309 partId \u524D\u7F00\uFF0C\u88C5\u914D\u4F53\u6309 name \u524D\u7F00\uFF1B\u53EA\u5F71\u54CD\u65B0\u5EFA\u8DEF\u5F84"
+              },
+              overwrite: {
+                type: "checkbox",
+                label: "\u8986\u76D6\u5DF2\u6709\u6587\u4EF6",
+                value: false,
+                description: "\u5173\u95ED\u65F6\u8DF3\u8FC7\u5DF2\u5B58\u5728\u6587\u4EF6\uFF1B\u5B57\u6BB5\u4E3A\u7A7A\u65F6\u4ECD\u53EF\u53EA\u5173\u8054\u5DF2\u6709\u6587\u4EF6"
+              },
+              rewriteExternalIcon: {
+                type: "checkbox",
+                label: "\u6539\u5199\u5916\u90E8/\u4F9D\u8D56\u56FE\u6807\u5F15\u7528",
+                value: false,
+                description: "\u9ED8\u8BA4\u4FDD\u7559\u5916\u90E8 namespace / \u975E textures/icon \u7684 part.icon"
+              },
+              hideMarkers: {
+                type: "checkbox",
+                label: "\u9690\u85CF\u78B0\u649E\u7BB1/\u4EA4\u4E92\u533A/\u8FDE\u63A5\u70B9",
+                value: true
+              },
+              resolution: {
+                type: "info",
+                text: "\u8F93\u51FA\uFF1A128\xD7128 RGBA \u900F\u660E PNG\uFF08P1 \u56FA\u5B9A\uFF09"
+              }
+            },
+            onConfirm: function(formData) {
+              var settings2 = {
+                scope: formData.scope || "all+assembly",
+                partId: config._uiState && config._uiState.activePartId,
+                variantName: formData.variant || "",
+                visibility: formData.visibility || "auto",
+                camera: formData.camera || "project",
+                framing: formData.framing || "uniform",
+                fill: Number(formData.fill),
+                folder: String(formData.folder || "").trim() || void 0,
+                overwrite: !!formData.overwrite,
+                rewriteExternalIcon: !!formData.rewriteExternalIcon,
+                hideMarkers: formData.hideMarkers !== false,
+                write: false
+              };
+              if (settings2.scope === "current" && !settings2.partId) {
+                showToast2("\u5F53\u524D\u6CA1\u6709\u9009\u4E2D\u7684\u96F6\u4EF6", "warning");
+                return false;
+              }
+              if (settings2.camera === "current" && settings2.scope !== "current") {
+                showToast2("\u201C\u4F7F\u7528\u5F53\u524D\u89C6\u89D2\u201D\u53EA\u5141\u8BB8\u5F53\u524D\u96F6\u4EF6", "warning");
+                return false;
+              }
+              var result;
+              try {
+                result = iconGenerator.generate(config, settings2);
+              } catch (e) {
+                log2.error("\u56FE\u6807\u9884\u89C8\u5F02\u5E38", e);
+                showToast2("\u56FE\u6807\u9884\u89C8\u5931\u8D25: " + (e && e.message ? e.message : String(e)), "error", 6e3);
+                return false;
+              }
+              if (!result.items || result.items.length === 0) {
+                showToast2(result.errors && result.errors[0] && result.errors[0].message || "\u6CA1\u6709\u53EF\u9884\u89C8\u7684\u56FE\u6807", "error");
+                return false;
+              }
+              var hasUsable = result.items.some(function(item) {
+                return item.status !== "failed";
+              });
+              if (!hasUsable) {
+                showToast2(result.errors && result.errors[0] && result.errors[0].message || "\u56FE\u6807\u751F\u6210\u5931\u8D25", "error", 6e3);
+                return false;
+              }
+              if (!settings2.hideMarkers) {
+                showToast2("\u6CE8\u610F\uFF1A\u672A\u9690\u85CF\u78B0\u649E\u7BB1/\u4EA4\u4E92\u533A\uFF0C\u56FE\u6807\u53EF\u80FD\u5305\u542B\u8F85\u52A9\u51E0\u4F55", "warning", 4e3);
+              }
+              showPreviewDialog(config, settings2, result);
+              this.hide();
+            }
+          }).show();
+        } catch (e) {
+          log2.error("\u751F\u6210\u56FE\u6807 Dialog \u5931\u8D25", e);
+          showToast2("\u65E0\u6CD5\u6253\u5F00\u751F\u6210\u56FE\u6807\u5BF9\u8BDD\u6846: " + (e && e.message ? e.message : String(e)), "error");
+        }
+      }
+      module.exports = {
+        showIconGeneratorDialog
+      };
     }
   });
 
@@ -24323,6 +26371,24 @@
                   showToast2("\u8BF7\u5148\u8BBE\u7F6E\u6709\u6548\u7684\u5185\u5BB9\u5305", "warning");
                 }
               });
+            }
+          },
+          {
+            name: "\u751F\u6210\u56FE\u6807\u2026",
+            icon: "fa-camera",
+            id: "mm_menu_generate_icons",
+            click: function() {
+              log2.info("MachineMax \u83DC\u5355: \u70B9\u51FB\u751F\u6210\u56FE\u6807");
+              var config = getConfig();
+              if (!config) {
+                showToast2("\u8BF7\u5148\u6253\u5F00\u9879\u76EE", "warning");
+                return;
+              }
+              if (!config.contentPackPath) {
+                showToast2("\u8BF7\u5148\u8BBE\u7F6E\u5185\u5BB9\u5305\u8DEF\u5F84", "warning");
+                return;
+              }
+              require_icon_generator_dialog().showIconGeneratorDialog(config);
             }
           },
           "_",
@@ -32496,7 +34562,7 @@
   var { registerUndoBridge, unregisterUndoBridge } = require_undo();
   var { showToast } = require_notify();
   var docPorts = require_ports();
-  var PLUGIN_VERSION = "0.4.0";
+  var PLUGIN_VERSION = "0.5.0";
   var log = createLogger("Plugin");
   Plugin.register("machine_max_bb_plugin", {
     title: "MachineMax \u96F6\u4EF6\u5B9A\u4E49",
@@ -32574,6 +34640,11 @@
       unregisterValidation();
       unregisterDragImport();
       unregisterMachineMaxMenu();
+      try {
+        require_icon_generator().dispose();
+      } catch (e) {
+        log.warn("\u56FE\u6807\u6E32\u67D3\u5668\u6E05\u7406\u5931\u8D25\uFF08\u5FFD\u7565\uFF09", e && e.message);
+      }
       log.debug("\u63D2\u4EF6\u6E05\u7406\u5B8C\u6210");
     }
   });

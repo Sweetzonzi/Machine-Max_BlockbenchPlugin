@@ -23,6 +23,7 @@ src/ui/
 ├── export/                 # 导出对话框（管线已在 services/）
 │   └── export_dialog.js    # showExportDialog / showPackSettingsDialog
 ├── dialogs/                # 对话框子组件（由 menu.js 调用）
+│   ├── icon_generator_dialog.js # 生成图标：设置 → 预览 → 写入
 │   ├── pack_setup_dialog.js    # 内容包设置向导主入口（转发拆分模块）
 │   ├── pack_create_dialog.js   # 创建新内容包
 │   ├── pack_open_dialog.js     # 打开已有内容包
@@ -57,6 +58,7 @@ src/ui/
 | 添加设置字段 | `export/export_dialog.js` → `showPackSettingsDialog()` | 8 字段 Dialog；在 `onConfirm` 前添加表单字段 |
 | 内容包对话框 | `dialogs/pack_setup_dialog.js` | 向导主入口，转发 create/open/dependency 三个拆分模块 |
 | 新建零件 / 项目管理对话框 | `dialogs/part_dialogs.js` | 工具栏·面板·右键菜单共用；只调 `ops.createPart` / `ops.setContentPackPath` |
+| 生成图标 | `dialogs/icon_generator_dialog.js` | 设置 → 预览 → 写入；预览只渲染，写入后调 `ops.setPartIcons` |
 | 定义查看对话框 | `components/definition_viewer.js` | `showDefinitionViewer()` — 5 个"查看定义"入口共用；列表 + 来源徽标 + 只读标记 + 统计条 |
 | 信号目标编辑器 | `components/SignalTargetEditor.vue.js` | SubsystemPanel / ConnectorPanel / InteractBoxPanel 复用；频道增删改、目标过滤去重 |
 | 终端字段校验标注 | `components/field_issues.js` | App 按 `byItem` / `bySubPart` / `byPartVariant` 切片传 `issue-list`；面板用 `fieldClass(field)` 标红，不显示原因文案 |
