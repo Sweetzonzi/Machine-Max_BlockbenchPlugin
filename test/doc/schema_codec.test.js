@@ -177,7 +177,7 @@ describe('schema ↔ Codec 差异登记', () => {
         expect(drive.force_outputs).toEqual({});
 
         expect(ssTypes.getTypeDefaults('machine_max:track_controller').control_outputs)
-            .toEqual({ track_control: [] });
+            .toEqual({ car_control: [] });
         expect(ssTypes.getTypeDefaults('machine_max:track_drive').force_outputs)
             .toEqual({ track_force: ['local', 'global'] });
     });

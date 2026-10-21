@@ -1,6 +1,6 @@
 'use strict';
 
-// 内置内容包同步回归：上游 7629416b 的 53 个子系统定义 / 新履带类型 / 已删 WIP 示例。
+// 内置内容包同步回归：上游 53024908+worktree 的 53 个子系统定义 / 26 个连接点 / 新履带类型 / 已删 WIP 示例。
 // 只检查 vendored 快照，不依赖构建注入的 __BUILTIN_*__ 常量。
 
 const { describe, test, expect } = require('bun:test');
@@ -35,5 +35,24 @@ describe('builtin 内容包同步', () => {
         expect(fs.existsSync(path.join(SUB, 'loader'))).toBe(false);
         expect(fs.existsSync(path.join(ROOT, 'materials', 'internal_machinery.json'))).toBe(true);
         expect(fs.existsSync(path.join(SUB, 'sight', 'gunner_sight_dual_stb.json'))).toBe(true);
+    });
+
+    test('履带连接点已同步，track_drive 默认控制频道并入 car_control', () => {
+        const connectors = fs.readdirSync(path.join(ROOT, 'connectors'))
+            .filter((name) => name.endsWith('.json'));
+        expect(connectors).toHaveLength(26);
+
+        for (const id of [
+            'track_idler_left', 'track_idler_right',
+            'track_road_wheel_left', 'track_road_wheel_right',
+            'track_sprocket_left', 'track_sprocket_right',
+        ]) {
+            expect(connectors).toContain(id + '.json');
+        }
+
+        const driveRaw = fs.readFileSync(
+            path.join(SUB, 'track_drive', 'track_drive_heavy.json'), 'utf8');
+        expect(driveRaw).toContain('"car_control"');
+        expect(driveRaw).not.toContain('"track_control"');
     });
 });

@@ -113,7 +113,7 @@ var SUBSYSTEM_TYPES = [
         category: 'control',
         dynamicFields: [
             { field: 'definition',      label: '型号定义',      editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'control_outputs', label: '控制信号输出',  editor: 'signal_targets',      required: true,  defaultValue: { track_control: [] } },
+            { field: 'control_outputs', label: '控制信号输出',  editor: 'signal_targets',      required: true,  defaultValue: { car_control: [] } },
             { field: 'speed_outputs',   label: '速度信号输出',  editor: 'signal_targets',      required: false, defaultValue: { vehicle_speed: ['local', 'global'] } },
         ],
     },
