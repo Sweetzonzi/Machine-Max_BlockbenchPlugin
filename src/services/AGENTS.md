@@ -25,7 +25,7 @@ src/services/
 |---|---|---|
 | 导出前校验 | `export.js` → `canExport(config)` | `validate.js` 的 `collectIssues` + `doc.validate.validateTree(completeness:true)`，按 `path.field` 去重后返回 `{ok, errors, warnings, issues}` |
 | 导出前 partId 断言 | `safe_part_ids.js` → `assertSafePartIds(config)` | 任何 `mkdir` / `writeFile` 前调用；不安全 partId 直接抛错，不产生半个包 |
-| 执行导出 | `export.js` → `executeExport(...)` | 聚合自 `export_pipeline.js`；`export_dialog` 只从 `export.js` 进入 |
+| 执行导出 | `export.js` → `executeExport(...)` | 聚合自 `export_pipeline.js`；`export_dialog` 只从 `export.js` 进入。写盘范围：`parts` / `lang` / `meta` / `geo` 由生成器重写；`recipe` 只改 `$schema` 行（未知 `type` 跳过）；`connectors` / `subsystems` / `materials` 原地导出时原样不动；`docs/schemas` 仅给还没有 docs 的新包铺副本 |
 | 段数组转 Problem | `export.js` → `toProblem(error, config)` | 固定层级 `parts/<id>/variants/<v>/sub_parts/<sp>/<container>/<item>/<field...>` |
 | 问题合并 | `export.js` → `dedupeIssues(primary, schema)` | `collectIssues` 优先，`validateTree` 只补空缺；不同字段不合并 |
 | 导入文件读取 | `import.js` → `readTextFile` / `parseJSONWithComments` | 去 BOM、剥 `//` 注释；冲突对话框与 ops 编排仍在 `import/drag_import.js` |

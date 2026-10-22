@@ -76,7 +76,9 @@ function writeJSONFile(dir, filename, data) {
     try {
         ensureDir(dir);
         const filePath = path.join(dir, filename);
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+        // 末尾补换行：与仓库里手写的 JSON 保持一致，否则每个生成文件都会带
+        // "\ No newline at end of file" 的 diff 噪音
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n', 'utf-8');
         log.debug('writeJSONFile: 已写入 ' + filePath);
         return filePath;
     } catch (e) {
@@ -121,6 +123,28 @@ function fileExists(filePath) {
 }
 
 /**
+ * 判断两个路径是否指向同一文件（用于识别「原地导出」：源目录就是导出目标）。
+ *
+ * 不能依赖 `process.platform`：Blockbench 插件环境没有 Node 的 `process` 全局，
+ * 访问它会抛 `ReferenceError`。这里按路径形状判断是否 Windows 盘符路径
+ * （`C:\…` / `C:/…`），Windows 下大小写不敏感，其余平台按原样比较。
+ *
+ * @param {string} a - 路径 A
+ * @param {string} b - 路径 B
+ * @returns {boolean}
+ */
+function isSameFile(a, b) {
+    if (!a || !b) return false;
+    var ra = path.resolve(String(a));
+    var rb = path.resolve(String(b));
+    var looksWindows = /^[A-Za-z]:[\\/]/.test(ra) || ra.indexOf('\\') >= 0;
+    if (looksWindows) {
+        return ra.toLowerCase() === rb.toLowerCase();
+    }
+    return ra === rb;
+}
+
+/**
  * Windows 下使用 .NET API 永久删除单个文件（不进回收站）
  *
  * PowerShell 的 Remove-Item 底层使用 Shell API，默认附带 FOF_ALLOWUNDO
@@ -130,7 +154,8 @@ function fileExists(filePath) {
  * @param {string} filePath - 要删除的文件路径
  */
 function _deletePermanent(filePath) {
-    if (process.platform === 'win32') {
+    var isWindows = (typeof process !== 'undefined' && process.platform === 'win32');
+    if (isWindows) {
         try {
             var cp = require('child_process');
             var psCmd = 'try { [System.IO.File]::Delete("' + filePath.replace(/\\/g, '\\\\') + '") } catch {}';
@@ -203,7 +228,7 @@ function mergeJSONFile(dir, filename, newData) {
         }
     }
     try {
-        fs.writeFileSync(filePath, JSON.stringify(existing, null, 2), 'utf-8');
+        fs.writeFileSync(filePath, JSON.stringify(existing, null, 2) + '\n', 'utf-8');
         log.debug('mergeJSONFile: 已合并写入 ' + filePath + '（新增 ' + (Object.keys(newData).length) + ' 条，已有 ' + (Object.keys(existing).length) + ' 条）');
         return filePath;
     } catch (e) {
@@ -213,5 +238,5 @@ function mergeJSONFile(dir, filename, newData) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ensureDir, writeJSONFile, writeTextFile, readJSONFile, fileExists, deleteFile, extractResourceLocation, mergeJSONFile, stripJsonComments };
+    module.exports = { ensureDir, writeJSONFile, writeTextFile, readJSONFile, fileExists, isSameFile, deleteFile, extractResourceLocation, mergeJSONFile, stripJsonComments };
 }

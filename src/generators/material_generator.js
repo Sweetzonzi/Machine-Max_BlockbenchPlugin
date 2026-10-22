@@ -25,11 +25,19 @@ function copyMaterialDefs(packDir, ns, targetDir) {
         var fileName = files[i];
         if (!fileName.endsWith('.json')) continue;
         var srcFile = path.join(srcDir, fileName);
+        var id = fileName.slice(0, -5);
+        var loc = fileWriter.extractResourceLocation(id, ns);
+
+        // 原地导出（导出目标就是内容包自身）：源即目标，不做读—重排—写，
+        // 否则会把定义文件里的 `//` 注释与 CRLF 换掉。
+        if (fileWriter.isSameFile(path.join(targetDir, loc.path + '.json'), srcFile)) {
+            count++;
+            continue;
+        }
+
         try {
             var raw = fs.readFileSync(srcFile, 'utf8');
             var content = JSON.parse(fileWriter.stripJsonComments(raw));
-            var id = fileName.slice(0, -5);
-            var loc = fileWriter.extractResourceLocation(id, ns);
             fileWriter.writeJSONFile(targetDir, loc.path + '.json', content);
             count++;
         } catch (e) {
