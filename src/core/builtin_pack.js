@@ -2,7 +2,7 @@
  * builtin_pack.js — 内置基础内容包（machine_max:builtin）运行时提供器
  *
  * builtin 包提供通用连接点（6方向 fixed + 轻/中/重三级轮毂）、
- * 子系统模板（10种类型，33个型号）和基础材料（15种）。
+ * 子系统模板（按型号名索引，数量随包增长）和基础材料。
  * 这些是所有内容包共享的基类定义，由 Mod 自动提供。
  *
  * 读取构建时 esbuild define 注入的全局常量（__BUILTIN_PACK_META__、__BUILTIN_MATERIALS__ 等），

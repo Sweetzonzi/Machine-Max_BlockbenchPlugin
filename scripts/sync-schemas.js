@@ -2,7 +2,7 @@
 /**
  * sync-schemas.js — 把兄弟仓库的 JSON Schema 同步进插件的 vendored 快照
  *
- * 上游真值：../Machine-Max/src/main/resources/spark_modules/machine_max.builtin/machine_max/docs
+ * 上游真值：../Machine-Max/src/main/resources/spark_modules/Machine-Max_Builtin/machine_max/docs
  * 本地快照：src/builtin/builtin/machine_max/docs
  *
  * 用法:
@@ -26,7 +26,7 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 const LOCAL_DOCS = path.join(REPO_ROOT, 'src', 'builtin', 'builtin', 'machine_max', 'docs');
 const DEFAULT_SOURCE = path.resolve(
     REPO_ROOT, '..', 'Machine-Max',
-    'src', 'main', 'resources', 'spark_modules', 'machine_max.builtin', 'machine_max', 'docs'
+    'src', 'main', 'resources', 'spark_modules', 'Machine-Max_Builtin', 'machine_max', 'docs'
 );
 const LOCALES = ['zh_cn', 'en_us'];
 const SCHEMA_DIR = 'schemas';

@@ -84,8 +84,8 @@ function showCreatePackDialog(config, onSave) {
                     type: 'info',
                     text: '<span style="color:#888;font-size:11px">' +
                         '提示：创建完成后将立即进入依赖管理界面。' +
-                        '基础定义（通用连接点、子系统模板、材料）已内置，无需额外依赖。' +
-                        '如果需要官方车辆零件（如 AE86、Jeep 等车型），可添加 machine_max:official 作为依赖。' +
+                        '基础定义（通用连接点、子系统模板、材料、货箱与座椅）已内置，无需额外依赖。' +
+                        '需要官方内容时按范围添加依赖：民用载具是 machine_max:civilian，苏系共用武器是 machine_max:soviet_basic_kit，德系是 machine_max:german_basic_kit；具体车包（如 machine_max:k17）只有那一辆车的几何与接线。' +
                         '</span>',
                 },
             },
