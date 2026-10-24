@@ -1,28 +1,27 @@
 /**
- * drag_import.js — 拖拽导入入口
+ * drag_import.js — 导入编排（菜单「导入零件 JSON…」与拖拽共用）
  *
- * 在 plugin.js onload 时注册全局拖拽事件监听，拦截用户拖入的 .json 文件，
- * 尝试解析为 MachineMax 零件定义并导入到当前项目的 config.parts 中。
+ * 管线：文件选择/拖拽 → normalizeInputs（唯一 I/O 点）→ import_plan.planImports（纯策略）
+ *      → 一次冲突决议 → import_plan.resolvePlan → 一次 runConfigEdit → flushSave → 一条汇总 toast
  *
- * 仅在「零件定义」模式（machine_max_part）下响应拖拽。
- * 支持单文件和多文件批量拖入。
- *
- * 导入管线: 文件读取 → JSON 解析 → PartCodec.decode → 冲突检测 → 骨骼反查 → 写入配置
+ * 设计约束（docs/15 §4.3）：
+ *   - 整批只产生一条撤销记录，`runConfigEdit` 内只做同步写入；
+ *   - 冲突只询问一次，策略对整批生效；取消 = 整批不写；
+ *   - 同一时刻只允许一条导入流程（模块级 `_importing`）；
+ *   - 对话框是异步的：回调里重新取 `config` 并**重新规划**，避免用到过期快照。
  */
 
 'use strict';
 
-var path = require('path');
-
 const { createLogger } = require('../utils/logger.js');
 const { showToast } = require('../utils/notify.js');
-const { getConfig, saveConfig } = require('../utils/persistence.js');
-const { PartCodec } = require('../codec/codecs/part_codec.js');
+const { getConfig, flushSave } = require('../utils/persistence.js');
 const { resolveBoneReferences } = require('./bone_resolver.js');
 const { showConflictDialog } = require('./conflict_dialog.js');
-const keys = require('../doc/keys.js');
 const undo = require('../core/undo.js');
 const importService = require('../services/import.js');
+const importPlan = require('../services/import_plan.js');
+const ops = require('../ops/session.js');
 
 /** 模块日志 */
 var log = createLogger('DragImport');
@@ -30,278 +29,300 @@ var log = createLogger('DragImport');
 /** 模式 ID，用于判断是否在零件定义模式 */
 var MODE_ID = 'machine_max_part';
 
+const JSON_EXT_RE = /\.json$/i;
+const WRITABLE_ACTIONS = { create: true, overwrite: true, rename: true };
+
 /** 拖拽事件监听器引用（供 unregister 清理） */
 var _dragoverHandler = null;
 var _dropHandler = null;
 
+/** 并发 guard：true 表示有一条导入流程尚未结束（含等待冲突决议） */
+var _importing = false;
+
 // =============================================================================
-// 内部工具函数
+// 小工具
 // =============================================================================
 
-/**
- * 根据文件名生成唯一的零件 ID（冲突时追加数字后缀）
- * @param {string} baseId - 基础 ID
- * @param {Object} existingParts - 当前已存在的 parts 字典
- * @returns {string} 不冲突的唯一 ID
- */
-function generateUniqueId(baseId, existingParts) {
-    if (!existingParts || !existingParts[baseId]) {
-        return baseId;
-    }
-    var counter = 1;
-    var candidate;
-    do {
-        candidate = baseId + '_' + counter;
-        counter++;
-    } while (existingParts[candidate]);
-    return candidate;
+/** 取路径最后一段；无路径返回 ''。 */
+function basenameOf(filePath) {
+    if (!filePath) return '';
+    var s = String(filePath);
+    var slash = Math.max(s.lastIndexOf('/'), s.lastIndexOf('\\'));
+    return slash >= 0 ? s.slice(slash + 1) : s;
+}
+
+/** 汇总文案里的文件名列表：超过 3 个截断。 */
+function listFileNames(failures) {
+    var names = [];
+    for (var i = 0; i < failures.length; i++) names.push(failures[i].fileName || '(未命名)');
+    if (names.length <= 3) return names.join('、');
+    return names.slice(0, 3).join('、') + ' 等 ' + names.length + ' 个';
 }
 
 /**
- * 将单个 .json 文件内容导入为零件定义
- *
- * @param {string} filePath - 文件完整路径
- * @param {string} fileName - 文件名（含 .json 后缀）
- * @param {string} rawContent - 文件原始内容
- * @param {string} [batchAction] - 批量导入时的预设操作
- *   ('overwrite_all' | 'skip_all')，单文件导入时为 null
- * @returns {{ imported: boolean, partId: string, action: string, unresolvedCount: number }}
+ * 一条汇总提示的文案（docs/15 §4.3 文案矩阵）。
+ * @param {{written?: number, skipped?: number, failures?: Array, ignored?: number,
+ *          unresolved?: number}} info
+ * @returns {string}
  */
-function importSingleFile(filePath, fileName, rawContent, batchAction) {
-    // 1. 解析 JSON
-    var json;
-    try {
-        json = importService.parseJSONWithComments(rawContent);
-    } catch (e) {
-        log.warn('importSingleFile: JSON 解析失败', { fileName: fileName, error: e.message });
-        showToast('文件 ' + fileName + ' 不是有效的 JSON', 'error');
-        return { imported: false, partId: null, action: 'error', unresolvedCount: 0 };
+function summaryText(info) {
+    info = info || {};
+    var written = info.written || 0;
+    var skipped = info.skipped || 0;
+    var failures = info.failures || [];
+    var ignored = info.ignored || 0;
+    var unresolved = info.unresolved || 0;
+
+    if (written === 0 && skipped > 0) {
+        var skipNotes = [];
+        if (failures.length) skipNotes.push('失败 ' + failures.length + '：' + listFileNames(failures));
+        if (ignored) skipNotes.push('忽略 ' + ignored + ' 个非 JSON');
+        return '已跳过 ' + skipped + ' 个零件'
+            + (skipNotes.length ? '（' + skipNotes.join('；') + '）' : '');
     }
 
-    // 2. PartCodec.decode 解码（填充默认值、处理 Either 简写）
-    var partConfig;
-    try {
-        partConfig = PartCodec.decode(json);
-    } catch (e) {
-        log.warn('importSingleFile: PartCodec.decode 失败', { fileName: fileName, error: e.message });
-        showToast('文件 ' + fileName + ' 无法识别为零件定义', 'error');
-        return { imported: false, partId: null, action: 'error', unresolvedCount: 0 };
+    if (written === 0) {
+        if (failures.length) return '无法导入：' + failures.length + ' 个文件解析失败';
+        return '未导入任何零件';
     }
 
-    // 3. 提取零件 ID（文件名去 .json 后缀）
-    var partId = fileName.replace(/\.json$/i, '');
+    var notes = [];
+    if (failures.length) notes.push('失败 ' + failures.length + '：' + listFileNames(failures));
+    if (ignored) notes.push('忽略 ' + ignored + ' 个非 JSON');
+    if (skipped) notes.push('跳过 ' + skipped);
+    if (unresolved) notes.push(unresolved + ' 个骨骼未在大纲树中找到');
 
-    // 3.5 路径安全（docs/13 §5.1.3 / §11 #20）：非法 partId 不写任何文件
-    if (!keys.isSafePartId(partId)) {
-        log.warn('importSingleFile: partId 不合法，拒绝导入', { partId: partId });
-        showToast('零件 ID "' + partId + '" 不合法：只允许小写字母/数字/._-，且不能是 . / .. / '
-            + 'Windows 设备名', 'error');
-        return { imported: false, partId: partId, action: 'invalid_format', unresolvedCount: 0 };
-    }
-
-    log.info('importSingleFile: 解析成功', {
-        fileName: fileName,
-        partId: partId,
-        variantCount: partConfig.variants ? Object.keys(partConfig.variants).length : 0,
-    });
-
-    // 4. 获取当前配置，检查冲突
-    var config = getConfig();
-    if (!config) {
-        showToast('请先打开项目', 'warning');
-        return { imported: false, partId: partId, action: 'no_project', unresolvedCount: 0 };
-    }
-
-    if (!config.parts) {
-        config.parts = {};
-    }
-
-    var existingParts = config.parts;
-    var isConflict = !!existingParts[partId];
-
-    if (isConflict && !batchAction) {
-        // 有冲突且非批量模式 → 异步弹出对话框
-        log.info('importSingleFile: 零件 ID 冲突，等待用户选择', { partId: partId });
-        showConflictDialog(
-            { typeLabel: '零件', defId: partId, isBatch: false },
-            function (action) {
-                _applyImport(partId, partConfig, config, action, fileName);
-            }
-        );
-        // 异步处理，返回 pending 状态
-        return { imported: true, partId: partId, action: 'pending', unresolvedCount: 0 };
-    }
-
-    // 无冲突或批量模式已预设操作
-    var action = 'overwrite';
-    if (isConflict && batchAction) {
-        action = batchAction;
-        if (action === 'skip_all') {
-            log.info('importSingleFile: 批量跳过', { partId: partId });
-            return { imported: false, partId: partId, action: 'skip', unresolvedCount: 0 };
-        }
-    }
-    if (isConflict && action === 'overwrite_all') {
-        action = 'overwrite';
-    }
-
-    return _applyImport(partId, partConfig, config, action, fileName);
-}
-
-/**
- * 实际执行导入写入操作
- *
- * @param {string} partId - 零件 ID
- * @param {Object} partConfig - 解码后的零件配置
- * @param {Object} config - 当前项目配置（会被修改）
- * @param {string} action - 操作类型: 'overwrite' | 'skip' | 'rename'
- * @param {string} fileName - 原始文件名（用于日志）
- * @returns {{ imported: boolean, partId: string, action: string, unresolvedCount: number }}
- */
-function _applyImport(partId, partConfig, config, action, fileName) {
-    if (action === 'skip') {
-        log.info('_applyImport: 跳过', { partId: partId });
-        return { imported: false, partId: partId, action: 'skip', unresolvedCount: 0 };
-    }
-
-    if (action === 'rename') {
-        var newId = generateUniqueId(partId, config.parts);
-        log.info('_applyImport: 重命名', { from: partId, to: newId });
-        partId = newId;
-    }
-
-    // 5. 先写入配置（bone_resolver 中的 setMarker 需要通过 config.parts[partId] 查找零件）
-    // 6. 骨骼名反查 → 建立 element_markers + 未解析列表（传入完整 config 而非单独的 partConfig）
-    // 两步合并为一条撤销记录：一次 Ctrl+Z 回退整次导入（含批量标记）
-    undo.runConfigEdit('导入零件 ' + partId, function () {
-        config.parts[partId] = partConfig;
-        resolveBoneReferences(config, partId);
-    });
-
-    // 7. 持久化
-    try {
-        saveConfig();
-    } catch (e) {
-        log.error('_applyImport: saveConfig 失败', e);
-    }
-
-    var unresolvedCount = partConfig._unresolved_bones ? partConfig._unresolved_bones.length : 0;
-
-    // 8. 刷新大纲树图标（使新建的标记显示在 Outliner 中）
-    try {
-        var icons = require('../mode/icons.js');
-        icons.refreshOutlinerIcons();
-    } catch (e) {
-        log.debug('_applyImport: refreshOutlinerIcons 不可用（可能不在零件定义模式）', e.message);
-    }
-
-    // 9. 通知用户
-    if (unresolvedCount > 0) {
-        showToast(
-            '已导入零件 "' + partId + '"（' + unresolvedCount + ' 个骨骼未在大纲树中找到）',
-            'warning',
-            5000
-        );
-    } else {
-        showToast('已导入零件 "' + partId + '"', 'positive');
-    }
-
-    log.info('_applyImport: 导入完成', {
-        partId: partId,
-        unresolvedBones: unresolvedCount,
-    });
-
-    return { imported: true, partId: partId, action: 'overwrite', unresolvedCount: unresolvedCount };
+    return '已导入 ' + written + ' 个零件' + (notes.length ? '（' + notes.join('；') + '）' : '');
 }
 
 // =============================================================================
-// 批量导入
+// 归一化（唯一 I/O 点）
 // =============================================================================
 
 /**
- * 批量导入多个 .json 文件
+ * 把菜单 / 拖拽给的文件描述归一成纯输入，并就地收集 I/O 类失败。
  *
- * @param {Array<{path: string, name: string, content: string}>} files - 文件信息数组
+ * - 非 `.json` 只计数（`ignored`），不静默丢文件：汇总文案会写"忽略 N 个非 JSON"；
+ * - 缺 `name` 时用 `path` 的 basename 兜底；
+ * - `content` 缺失（非字符串）时按 `path` 读盘，读不到记 `read_failed`；
+ * - 读到空内容记 `empty_content`。
+ *
+ * @param {Array<{name?: string, path?: string, content?: string}>} files
+ * @returns {{inputs: Array<{name: string, path: string, content: string}>,
+ *            ignored: number, failures: Array<{fileName: string, reason: string}>}}
  */
-function importMultipleFiles(files) {
-    var config = getConfig();
-    if (!config) {
-        showToast('请先打开项目', 'warning');
-        return;
-    }
+function normalizeInputs(files) {
+    var list = Array.isArray(files) ? files : [];
+    var inputs = [];
+    var failures = [];
+    var ignored = 0;
 
-    var jsonFiles = [];
-    for (var i = 0; i < files.length; i++) {
-        if (files[i].name.toLowerCase().endsWith('.json')) {
-            jsonFiles.push(files[i]);
+    for (var i = 0; i < list.length; i++) {
+        var file = list[i] || {};
+        var name = file.name ? String(file.name) : basenameOf(file.path);
+        if (!name) {
+            failures.push({ fileName: '', reason: 'read_failed' });
+            continue;
         }
-    }
-
-    if (jsonFiles.length === 0) return;
-
-    log.info('importMultipleFiles: 批量导入 ' + jsonFiles.length + ' 个文件');
-
-    // 先检查哪些有冲突
-    var conflictIds = [];
-    if (!config.parts) config.parts = {};
-    for (var j = 0; j < jsonFiles.length; j++) {
-        var pid = jsonFiles[j].name.replace(/\.json$/i, '');
-        if (config.parts[pid]) {
-            conflictIds.push(pid);
+        if (!JSON_EXT_RE.test(name)) {
+            ignored++;
+            continue;
         }
-    }
 
-    // 无冲突 → 全部直接导入
-    if (conflictIds.length === 0) {
-        var imported = 0;
-        var unresolvedTotal = 0;
-        for (var k = 0; k < jsonFiles.length; k++) {
-            var raw;
-            try {
-                raw = importService.readTextFile(jsonFiles[k].path);
-            } catch (e) {
-                log.warn('importMultipleFiles: 读取文件失败', { path: jsonFiles[k].path, error: e.message });
+        var path = file.path ? String(file.path) : '';
+        var content = typeof file.content === 'string' ? file.content : null;
+        if (content === null) {
+            if (!path) {
+                failures.push({ fileName: name, reason: 'read_failed' });
                 continue;
             }
-            var result = importSingleFile(jsonFiles[k].path, jsonFiles[k].name, raw, null);
-            if (result.imported) imported++;
-            unresolvedTotal += result.unresolvedCount;
+            try {
+                content = importService.readTextFile(path);
+            } catch (err) {
+                log.warn('normalizeInputs: 读取文件失败', { path: path, error: err.message });
+                failures.push({ fileName: name, reason: 'read_failed' });
+                continue;
+            }
         }
-        showToast('已导入 ' + imported + ' 个零件', 'positive');
-        return;
+        if (content.trim() === '') {
+            failures.push({ fileName: name, reason: 'empty_content' });
+            continue;
+        }
+
+        inputs.push({ name: name, path: path, content: content });
     }
 
-    // 有冲突 → 弹出一个对话框统一处理
-    var conflictList = conflictIds.join(', ');
-    showConflictDialog(
-        {
-            typeLabel: '零件',
-            defId: conflictList + '（共 ' + conflictIds.length + ' 个）',
-            isBatch: true,
-        },
-        function (action) {
-            var importedCount = 0;
-            var unresolvedTotal = 0;
-            for (var m = 0; m < jsonFiles.length; m++) {
-                var rawContent;
-                try {
-                    rawContent = importService.readTextFile(jsonFiles[m].path);
-                } catch (e) {
-                    log.warn('importMultipleFiles: 读取文件失败', { path: jsonFiles[m].path, error: e.message });
-                    continue;
-                }
-                var res = importSingleFile(
-                    jsonFiles[m].path,
-                    jsonFiles[m].name,
-                    rawContent,
-                    action
-                );
-                if (res.imported) importedCount++;
-                unresolvedTotal += res.unresolvedCount;
-            }
-            showToast('已导入 ' + importedCount + ' / ' + jsonFiles.length + ' 个零件', 'positive');
+    return { inputs: inputs, ignored: ignored, failures: failures };
+}
+
+// =============================================================================
+// 编排
+// =============================================================================
+
+/**
+ * 导入一批零件 JSON（菜单与拖拽的唯一入口）。
+ *
+ * @param {Array<{name?: string, path?: string, content?: string}>} files
+ */
+function importParts(files) {
+    if (_importing) {
+        showToast('已有导入流程在进行中，请先完成或取消', 'warning');
+        return;
+    }
+    _importing = true;
+
+    try {
+        var config = getConfig();
+        if (!config) {
+            _importing = false;
+            showToast('请先打开项目', 'warning');
+            return;
         }
-    );
+
+        var norm = normalizeInputs(files);
+        if (!norm.inputs.length) {
+            // 空选择 / 全被扩展名过滤：静默；只有真失败才提示
+            _importing = false;
+            if (norm.failures.length) {
+                log.warn('importParts: 没有可导入的条目', { failures: norm.failures });
+                showToast(summaryText({ failures: norm.failures, ignored: norm.ignored }), 'error', 5000);
+            }
+            return;
+        }
+
+        var plan = importPlan.planImports(norm.inputs, config.parts || {});
+        if (!plan.entries.length) {
+            _importing = false;
+            var allFailures = norm.failures.concat(plan.failures);
+            log.warn('importParts: 所有文件都解析失败', { failures: allFailures });
+            showToast(summaryText({ failures: allFailures, ignored: norm.ignored }), 'error', 5000);
+            return;
+        }
+
+        if (plan.existingIds.length) {
+            var conflictIds = plan.existingIds;
+            log.info('importParts: 等待冲突决议', {
+                conflictIds: conflictIds,
+                entryCount: plan.entries.length,
+            });
+            showConflictDialog({
+                typeLabel: '零件',
+                conflictIds: conflictIds,
+                isBatch: plan.entries.length > 1 || conflictIds.length > 1,
+                entryCount: plan.entries.length,
+            }, function (action) {
+                applyPlan(norm.inputs, norm.failures, action, config, norm.ignored);
+            });
+            return; // guard 由 applyPlan 释放
+        }
+
+        applyPlan(norm.inputs, norm.failures, 'overwrite', config, norm.ignored);
+    } catch (err) {
+        _importing = false;
+        throw err;
+    }
+}
+
+/**
+ * 按用户决议真正写配置（一次撤销记录 + 一次落盘 + 一条汇总）。
+ *
+ * @param {Array} inputs - 归一化后的输入
+ * @param {Array} normFailures - normalizeInputs 产出的失败
+ * @param {string} action - 'overwrite' | 'skip' | 'rename' | 'cancel'
+ * @param {Object} entryConfig - 弹框前拿到的 config（用于引用比对）
+ * @param {number} ignored - 非 JSON 文件数
+ */
+function applyPlan(inputs, normFailures, action, entryConfig, ignored) {
+    try {
+        if (action === 'cancel') {
+            log.info('applyPlan: 用户取消导入');
+            showToast('已取消导入');
+            return;
+        }
+
+        // 对话框是异步的：项目可能已被关闭或切换
+        var config = getConfig();
+        if (!config) {
+            showToast('项目已关闭，导入取消', 'warning');
+            return;
+        }
+        if (config !== entryConfig) {
+            showToast('项目已切换，导入取消', 'warning');
+            return;
+        }
+
+        // 用最新 config.parts 重新规划：对话框期间新增的零件也要参与冲突/改名判断
+        var plan = importPlan.planImports(inputs, config.parts || {});
+        var failures = (normFailures || []).concat(plan.failures);
+        var resolved = importPlan.resolvePlan(plan, action);
+
+        var writable = [];
+        for (var i = 0; i < resolved.entries.length; i++) {
+            var entry = resolved.entries[i];
+            if (WRITABLE_ACTIONS[entry.action]) writable.push(entry);
+        }
+
+        if (!writable.length) {
+            log.info('applyPlan: 全部跳过', { skipped: resolved.entries.length, action: action });
+            showToast(summaryText({
+                skipped: resolved.entries.length,
+                failures: failures,
+                ignored: ignored,
+            }), 'info', 4000);
+            return;
+        }
+
+        if (typeof undo.isEditInProgress === 'function' && undo.isEditInProgress()) {
+            showToast('编辑器有未完成的操作，请稍后重试', 'warning');
+            return;
+        }
+
+        var unresolvedTotal = 0;
+        try {
+            undo.runConfigEdit('导入 ' + writable.length + ' 个零件', function () {
+                if (!config.parts) config.parts = {};
+                for (var k = 0; k < writable.length; k++) {
+                    var item = writable[k];
+                    // 先写入，骨骼反查要靠 config.parts[finalId] 找零件
+                    config.parts[item.finalId] = item.partConfig;
+                    resolveBoneReferences(config, item.finalId);
+                    unresolvedTotal += (item.partConfig._unresolved_bones || []).length;
+                }
+            });
+        } catch (err) {
+            log.error('applyPlan: 批量导入失败', err);
+            showToast('导入失败：' + (err && err.message ? err.message : '未知错误')
+                + '（若未自动回滚，请 Ctrl+Z 或重新打开项目）', 'error', 5000);
+            return; // 不 refresh / 不 setActive / 不落盘 / 不报成功
+        }
+
+        // 活动上下文：仅在当前为空或已失效时切到本批第一个零件（只改 _uiState，不落盘）
+        var activeId = config._uiState && config._uiState.activePartId;
+        if (!activeId || !config.parts[activeId]) {
+            var setResult = ops.setActive(config, { partId: writable[0].finalId, source: 'import' });
+            if (setResult && setResult.ok === false) {
+                log.debug('applyPlan: 切换活动零件失败', setResult.error);
+            }
+        }
+
+        flushSave(); // 清掉 mm_config_changed 排的防抖，整批只写一次盘
+        try {
+            require('../mode/icons.js').refreshOutlinerIcons();
+        } catch (e) {
+            log.debug('applyPlan: refreshOutlinerIcons 不可用', e && e.message);
+        }
+
+        if (failures.length) log.warn('applyPlan: 部分文件未导入', { failures: failures });
+        showToast(summaryText({
+            written: writable.length,
+            skipped: resolved.entries.length - writable.length,
+            failures: failures,
+            ignored: ignored,
+            unresolved: unresolvedTotal,
+        }), (failures.length || unresolvedTotal) ? 'warning' : 'positive', 5000);
+    } finally {
+        _importing = false;
+    }
 }
 
 // =============================================================================
@@ -314,27 +335,17 @@ var BB_DRAG_HANDLER_ID = 'machine_max_part_import';
 var _bbDragHandler = null;
 
 /**
- * 注册全局拖拽事件监听
- * 在 plugin.js onload 中调用
- *
- * 优先使用 Blockbench.addDragHandler API，
- * 不可用时回退到原生 DOM 事件。
+ * 注册全局拖拽事件监听（plugin.js onload）。
+ * 优先 Blockbench.addDragHandler，不可用时回退 DOM 事件。
  */
 function registerDragImport() {
-    // ★ 裸 console.log：不依赖任何模块，100% 可见
-    console.log('[MM][DragImport] registerDragImport() 被调用');
-
     if (_bbDragHandler || _dragoverHandler) {
         log.info('registerDragImport: 拖拽事件已注册，跳过');
         return;
     }
 
-    // 方案A：Blockbench.addDragHandler（签名: id, options, callback）
-    //   - condition 自动处理模式过滤，无需手动检查 Modes.id
-    //   - callback 接收 FileResult[]，已含 path/name/content
+    // 方案A：Blockbench.addDragHandler（condition 自动做模式过滤，callback 收 FileResult[]）
     if (typeof Blockbench !== 'undefined' && typeof Blockbench.addDragHandler === 'function') {
-        log.info('registerDragImport: 使用 Blockbench.addDragHandler API');
-
         _bbDragHandler = Blockbench.addDragHandler(
             BB_DRAG_HANDLER_ID,
             {
@@ -342,67 +353,19 @@ function registerDragImport() {
                 condition: { modes: [MODE_ID] },
                 readtype: 'text',
             },
-            function (files, event) {
-                console.log('[MM][DragImport][BBDrag] 回调触发！！！',
-                    { fileCount: files ? files.length : 0 });
-
+            function (files) {
                 if (!files || files.length === 0) return;
-
-                var jsonFiles = [];
-                for (var i = 0; i < files.length; i++) {
-                    var file = files[i];
-                    // FileResult 已含 name, path, content（Blockbench 预读取）
-                    log.debug('registerDragImport: [BB-API] 处理文件',
-                        { name: file.name, hasPath: !!file.path, hasContent: typeof file.content === 'string' });
-
-                    if (!file.name || !file.name.toLowerCase().endsWith('.json')) continue;
-
-                    var rawContent = typeof file.content === 'string' ? file.content : '';
-                    if (!rawContent && file.path) {
-                        try {
-                            rawContent = importService.readTextFile(file.path);
-                        } catch (e) {
-                            log.warn('registerDragImport: 读取文件失败', { path: file.path, error: e.message });
-                            continue;
-                        }
-                    }
-                    if (!rawContent) {
-                        log.warn('registerDragImport: 无法获取文件内容', { name: file.name });
-                        continue;
-                    }
-
-                    jsonFiles.push({
+                // FileResult 已含 name/path/content；content 缺失时交给 normalizeInputs 按 path 读盘
+                importParts(files.map(function (file) {
+                    return {
+                        name: file.name || '',
                         path: file.path || '',
-                        name: file.name,
-                        content: rawContent,
-                    });
-                }
-
-                if (jsonFiles.length === 0) return;
-
-                log.info('registerDragImport: 检测到 ' + jsonFiles.length + ' 个 JSON 文件拖入');
-
-                if (jsonFiles.length === 1) {
-                    importSingleFile(jsonFiles[0].path, jsonFiles[0].name, jsonFiles[0].content, null);
-                } else {
-                    // 批量导入：外层开一次编辑，内层 _applyImport 的编辑作为嵌套并入，
-                    // 因此一次 Ctrl+Z 回退整批导入
-                    undo.runConfigEdit('批量导入零件', function () {
-                        importMultipleFiles(jsonFiles);
-                    });
-                }
+                        content: typeof file.content === 'string' ? file.content : undefined,
+                    };
+                }));
             }
         );
-
-        // 验证注册是否成功：列出 drag_handlers 中的条目
-        var allIds = [];
-        try {
-            if (typeof Filesystem !== 'undefined' && Filesystem.drag_handlers) {
-                allIds = Object.keys(Filesystem.drag_handlers);
-            }
-        } catch (e) {}
-        log.info('registerDragImport: 已通过 Blockbench.addDragHandler 注册',
-            { ourId: BB_DRAG_HANDLER_ID, allDragHandlerIds: allIds, modeId: MODE_ID });
+        log.info('registerDragImport: 已通过 Blockbench.addDragHandler 注册', { modeId: MODE_ID });
         return;
     }
 
@@ -410,64 +373,36 @@ function registerDragImport() {
     log.info('registerDragImport: Blockbench.addDragHandler 不可用，回退到 DOM 事件');
 
     _dragoverHandler = function (e) {
-        console.log('[MM][DragImport][DOM] dragover 触发',
-            { modeId: Modes ? Modes.id : 'undefined' });
         if (typeof Modes === 'undefined' || !Modes || Modes.id !== MODE_ID) return;
         e.preventDefault();
         e.stopPropagation();
     };
 
     _dropHandler = function (e) {
-        console.log('[MM][DragImport][DOM] drop 触发！！！',
-            { modeId: Modes ? Modes.id : 'undefined', fileCount: e.dataTransfer && e.dataTransfer.files ? e.dataTransfer.files.length : 0 });
-
         if (typeof Modes === 'undefined' || !Modes || Modes.id !== MODE_ID) {
-            log.debug('registerDragImport: [DOM] 模式不匹配，忽略', { current: Modes ? Modes.id : 'undefined', expected: MODE_ID });
+            log.debug('registerDragImport: [DOM] 模式不匹配，忽略', {
+                current: Modes ? Modes.id : 'undefined',
+                expected: MODE_ID,
+            });
             return;
         }
         e.preventDefault();
         e.stopPropagation();
 
-        if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) {
-            return;
-        }
+        if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
 
         var droppedFiles = e.dataTransfer.files;
-        var jsonFiles = [];
-
-        for (var j = 0; j < droppedFiles.length; j++) {
-            var domFile = droppedFiles[j];
-            if (!domFile.name || !domFile.name.toLowerCase().endsWith('.json')) continue;
-
-            var domFilePath = domFile.path;
-            if (!domFilePath) {
-                log.warn('registerDragImport: 文件路径不可用（可能是 Electron 安全限制）', { name: domFile.name });
-                continue;
-            }
-
-            var domRawContent;
-            try {
-                domRawContent = importService.readTextFile(domFilePath);
-            } catch (readErr) {
-                log.warn('registerDragImport: 读取文件失败', { path: domFilePath, error: readErr.message });
-                continue;
-            }
-
-            jsonFiles.push({ path: domFilePath, name: domFile.name, content: domRawContent });
+        var files = [];
+        for (var i = 0; i < droppedFiles.length; i++) {
+            var domFile = droppedFiles[i];
+            if (!domFile.name || !JSON_EXT_RE.test(domFile.name)) continue;
+            // Electron ≥32 已不提供 File.path；这里不再自己读盘，统一交给 normalizeInputs 判 read_failed
+            files.push({ name: domFile.name, path: domFile.path || '', content: undefined });
         }
+        if (files.length === 0) return;
 
-        if (jsonFiles.length === 0) return;
-
-        log.info('registerDragImport: 检测到 ' + jsonFiles.length + ' 个 JSON 文件拖入');
-
-        if (jsonFiles.length === 1) {
-            importSingleFile(jsonFiles[0].path, jsonFiles[0].name, jsonFiles[0].content, null);
-        } else {
-            // 同上：批量导入合并为一条撤销记录
-            undo.runConfigEdit('批量导入零件', function () {
-                importMultipleFiles(jsonFiles);
-            });
-        }
+        log.info('registerDragImport: 检测到 ' + files.length + ' 个 JSON 文件拖入');
+        importParts(files);
     };
 
     document.addEventListener('dragover', _dragoverHandler);
@@ -475,10 +410,7 @@ function registerDragImport() {
     log.info('registerDragImport: 已通过 DOM 事件注册（仅零件定义模式下响应）');
 }
 
-/**
- * 注销全局拖拽事件监听
- * 在 plugin.js onunload 中调用
- */
+/** 注销全局拖拽事件监听（plugin.js onunload）。 */
 function unregisterDragImport() {
     if (_bbDragHandler) {
         if (typeof Blockbench !== 'undefined' && typeof Blockbench.removeDragHandler === 'function') {
@@ -498,40 +430,10 @@ function unregisterDragImport() {
     log.info('unregisterDragImport: DOM 事件已注销');
 }
 
-// =============================================================================
-// 公开 API（供菜单导入使用）
-// =============================================================================
-
-/**
- * 从文件路径导入单个零件 JSON（供菜单「导入零件 JSON…」使用）
- *
- * @param {string} filePath - 文件完整路径
- */
-function importPartFromPath(filePath) {
-    var fileName = path.basename(filePath);
-
-    if (!fileName.toLowerCase().endsWith('.json')) {
-        showToast('请选择 .json 文件', 'warning');
-        return;
-    }
-
-    var rawContent;
-    try {
-        rawContent = importService.readTextFile(filePath);
-    } catch (e) {
-        log.error('importPartFromPath: 读取文件失败', { path: filePath, error: e.message });
-        showToast('无法读取文件: ' + fileName, 'error');
-        return;
-    }
-
-    importSingleFile(filePath, fileName, rawContent, null);
-}
-
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
-        registerDragImport,
-        unregisterDragImport,
-        importPartFromPath,
-        importSingleFile,
+        registerDragImport: registerDragImport,
+        unregisterDragImport: unregisterDragImport,
+        importParts: importParts,
     };
 }

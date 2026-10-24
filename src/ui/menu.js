@@ -95,10 +95,11 @@ function registerMachineMaxMenu() {
                             log.debug('菜单导入: 用户取消选择');
                             return;
                         }
-                        var dragImport = require('../import/drag_import.js');
+                        var inputs = [];
                         for (var i = 0; i < result.filePaths.length; i++) {
-                            dragImport.importPartFromPath(result.filePaths[i]);
+                            inputs.push({ path: result.filePaths[i] });
                         }
+                        require('../import/drag_import.js').importParts(inputs);
                     }).catch(function (err) {
                         log.error('菜单导入: 文件选择失败', err);
                         showToast('文件选择失败', 'error');
@@ -111,13 +112,16 @@ function registerMachineMaxMenu() {
                         read_mode: 'text',
                     }, function (files) {
                         if (!files || files.length === 0) return;
-                        var dragImport = require('../import/drag_import.js');
+                        var inputs = [];
                         for (var i = 0; i < files.length; i++) {
-                            var filePath = files[i].path || files[i].name;
-                            if (filePath) {
-                                dragImport.importPartFromPath(filePath);
-                            }
+                            inputs.push({
+                                name: files[i].name || '',
+                                path: files[i].path || '',
+                                // 非字符串（如某些版本给 Buffer）不兜成 ''，交给 normalizeInputs 用 path 回退
+                                content: typeof files[i].content === 'string' ? files[i].content : undefined,
+                            });
                         }
+                        require('../import/drag_import.js').importParts(inputs);
                     });
                 }
             },
