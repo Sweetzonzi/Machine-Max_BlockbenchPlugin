@@ -1174,7 +1174,11 @@ bun test test/schema/field_specs.test.js
 - `export_pipeline` → `services/export_pipeline.js`；`services/export.js` 聚合导出 `canExport` + `executeExport`，调用方只从 `services/export.js` 进入。
 - `assertSafePartIds` 拆到 `services/safe_part_ids.js`，供 `export.js` 与 `export_pipeline.js` 共用，避免循环依赖。
 - `drag_import` 的文件读取 + 带注释 JSON 解析 → `services/import.js`（`readTextFile` / `parseJSONWithComments` / `readJsonFile`）；冲突对话框与 ops 编排仍留在 `import/`。
-- pack 三件套的 fs 部分 → `services/pack.js`：创建/打开/读取 meta 的薄包装 + `findPackInSiblings` / `resolveChainDependencies`；`dependency_editor` 不再 `require('fs')`。
+- pack 三件套的 fs 部分 → `services/pack.js`：创建/打开/读取 meta 的薄包装 + `findPackInSiblings` / `resolveChainDependencies` / `resolveDeclaredDependencies`；`dependency_editor` 不再 `require('fs')`。
+- 打开已有内容包（`pack_open_dialog`）静默解析依赖：`resolveDeclaredDependencies(meta.dependencies, 包父目录)` 把找到的直接依赖 + 一层间接依赖写入 `config.dependencyPaths`；未解析到的 id 由 `unresolved` 返回并弹 warning toast 提示手动选择（用户 2026-10-25 确认）。
+  - 解析出的依赖集合按「包的声明」替换 `dependencyPaths`（没声明 → 清空；声明了但一条都没找到 → 保留原依赖并只提示），由 `ui/dialogs/pack_common.js` 的 `dependencyPathsFor` 统一决定。
+  - 路径与依赖用一条撤销记录写入（`ops.setContentPack({ dependencyPaths })`），Ctrl+Z 不会出现「新包 + 旧依赖」的中间态。
+  - 项目管理对话框（`part_dialogs.showProjectSettingsDialog`）改内容包路径时复用同一个 `applyPackPath`（`strict:false`：路径无效也照写），两条入口行为一致。
 - `collectIssues` 从 `mode/validation.js` **移动**到 `services/validate.js`；`mode/validation.js` 删除，`mode/validation_check.js` 只做原生清单适配。**没有**下沉到 `core/validation.js`，因为那会让 core 反向依赖 `doc/refs.js`（用户 2026-10-21 确认改放 services）。
 - 所有 require 更新：`App.vue.js`、`plugin.js`、`services/export.js`、`mode/validation_check.js`、`test/ops/ops.test.js`。
 - P4 后补（用户实测）：碰撞箱 `material` 原为语义必填但无人校验，`''` 会直接进入导出。`collectIssues` 新增 `material_required` / `material_ref_missing`，`machine_max:default`（Java `MaterialAttr.DEFAULT` 兜底）放行；碰撞箱面板下拉补「（未选择）」/「默认材质」并显示红框提示。

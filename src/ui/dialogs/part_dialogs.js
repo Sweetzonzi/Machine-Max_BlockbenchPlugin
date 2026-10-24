@@ -11,6 +11,7 @@ var { showToast } = require('../../utils/notify.js');
 var { scheduleSave } = require('../../utils/persistence.js');
 var { createLogger } = require('../../utils/logger.js');
 var { refreshOutlinerIcons } = require('../../mode/icons.js');
+var { applyPackPath, buildUnresolvedMessage } = require('./pack_common.js');
 
 var log = createLogger('PartDialogs');
 
@@ -54,6 +55,9 @@ function showNewPartDialog(config, onCreated) {
 /**
  * 项目管理对话框（当前只改内容包路径）
  *
+ * 保存时会像"打开已有内容包"一样按 meta.json 的 dependencies 在内容包同级
+ * 目录自动解析依赖（`pack_common.applyPackPath`，非 strict：路径无效也照写）。
+ *
  * @param {Object} config - MM 项目配置
  * @param {Function} [onSaved] - 保存成功回调
  */
@@ -67,7 +71,7 @@ function showProjectSettingsDialog(config, onSaved) {
                     type: 'text',
                     label: '内容包路径',
                     value: config.contentPackPath || '',
-                    description: 'MachineMax 内容包的根目录路径',
+                    description: 'MachineMax 内容包的根目录路径；保存时按 meta.json 的依赖在同级目录自动解析',
                 },
                 info: {
                     type: 'display',
@@ -80,14 +84,52 @@ function showProjectSettingsDialog(config, onSaved) {
                 },
             },
             onConfirm: function (formData) {
-                var result = ops.setContentPackPath(config, formData.contentPackPath);
-                if (!result.ok) {
-                    showToast(result.error, 'error');
+                var newPath = (formData.contentPackPath || '').trim();
+
+                // 校验 + 解析依赖 + 单条撤销记录写入
+                var applied = applyPackPath(config, newPath, {
+                    strict: false,
+                    label: '修改内容包路径',
+                });
+                if (!applied.ok) {
+                    showToast(applied.error || '无法写入内容包路径', 'error');
                     return false;
                 }
-                log.info('项目管理: 内容包路径已更新', { contentPackPath: formData.contentPackPath });
+
+                log.info('项目管理: 内容包路径已更新', {
+                    contentPackPath: newPath,
+                    valid: applied.valid,
+                    dependencyPaths: applied.dependencyPaths,
+                });
                 scheduleSave();
-                showToast('内容包路径已更新', 'positive');
+
+                if (!applied.valid) {
+                    // 路径无效 / 已清空：只提示，保持"先填路径、再补 meta.json"的旧行为
+                    showToast(newPath
+                        ? '路径已写入，但该目录还没有有效的 meta.json，内容包当前无效'
+                        : '内容包路径已清空', 'warning', 6000);
+                    if (typeof onSaved === 'function') onSaved(config);
+                    this.hide();
+                    return;
+                }
+
+                var msg = '内容包已切换';
+                if (applied.resolution.direct.length > 0 || applied.resolution.indirect.length > 0) {
+                    msg += '，已解析 ' + applied.resolution.direct.length + ' 个直接依赖';
+                    if (applied.resolution.indirect.length > 0) {
+                        msg += '、' + applied.resolution.indirect.length + ' 个间接依赖';
+                    }
+                } else if (applied.dependencyPaths && applied.dependencyPaths.length === 0) {
+                    msg += '，该包未声明依赖，已清空本地依赖路径';
+                }
+                showToast(msg, 'positive', 5000);
+                if (applied.resolution.unresolved.length > 0) {
+                    showToast(
+                        buildUnresolvedMessage(applied.resolution.unresolved, applied.parentDir),
+                        'warning', 12000
+                    );
+                }
+
                 if (typeof onSaved === 'function') onSaved(config);
                 this.hide();
             },

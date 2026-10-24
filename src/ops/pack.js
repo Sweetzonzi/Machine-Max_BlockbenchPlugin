@@ -39,6 +39,21 @@ function stripBuiltinDeps(paths) {
     return result;
 }
 
+/**
+ * 切换内容包（路径 + namespace + meta，可选同时写入依赖路径）
+ *
+ * `dependencyPaths` 用于"打开已有内容包"：依赖解析结果要和内容包路径落在
+ * 同一条撤销记录里，否则 Ctrl+Z 一次会出现「新包 + 旧依赖」的不一致中间态。
+ *
+ * @param {Object} config - 完整配置对象
+ * @param {Object} options
+ * @param {string} options.path - 内容包根目录 / ZIP 路径
+ * @param {string} [options.namespace] - 命名空间
+ * @param {Object} [options.meta] - meta.json 内容
+ * @param {string[]} [options.dependencyPaths] - 同时替换依赖路径（内置包会被剔除）
+ * @param {string} [options.label] - 撤销记录标签
+ * @returns {Object} OpResult
+ */
 function setContentPack(config, options) {
     options = options || {};
     config = shared.configOrNull(config);
@@ -48,6 +63,7 @@ function setContentPack(config, options) {
     var namespace = options.namespace || '';
     var meta = options.meta || {};
     var label = options.label || '切换内容包';
+    var depPaths = options.dependencyPaths;
 
     if (namespace) {
         var keys = require('../doc/keys.js');
@@ -62,6 +78,9 @@ function setContentPack(config, options) {
         config.contentPackPath = path;
         config.namespace = namespace;
         config.packMeta = meta;
+        if (Array.isArray(depPaths)) {
+            config.dependencyPaths = stripBuiltinDeps(depPaths);
+        }
         invalidateDefsCache();
     }, { coalesce: false });
 

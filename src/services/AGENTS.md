@@ -31,7 +31,7 @@ src/services/
 | 问题合并 | `export.js` → `dedupeIssues(primary, schema)` | `collectIssues` 优先，`validateTree` 只补空缺；不同字段不合并 |
 | 导入文件读取 | `import.js` → `readTextFile` / `parseJSONWithComments` | 去 BOM、剥 `//` 注释（实现在 `src/lib/json_text.js`，无 fs）；冲突对话框与 ops 编排在 `import/drag_import.js` |
 | 导入计划与冲突决议 | `import_plan.js` → `planImports(inputs, parts)` / `resolvePlan(plan, action)` | 纯函数：`new/existing/duplicate` 判定、`takenIds`、两遍 `finalId` 分配；不读盘、不写配置、不弹框。编排与 I/O 在 `drag_import.importParts`（docs/15） |
-| 内容包 fs | `pack.js` | 创建/打开/读 meta 的薄包装；`findPackInSiblings` / `resolveChainDependencies`（跳过内置 `machine_max:builtin`） |
+| 内容包 fs | `pack.js` | 创建/打开/读 meta 的薄包装；`findPackInSiblings` / `resolveChainDependencies`（跳过内置 `machine_max:builtin`，返回 `unresolved`）/ `resolveDeclaredDependencies`（按 `meta.dependencies` 在父目录解析直接 + 一层间接依赖，返回 `declaredCount` 以区分"没声明"和"声明了但没找到"） |
 | 图标生成 | `icon_generator.js` | `generate(config, options)`：离屏渲染 + PNG 写盘；`icon_paths` / `icon_visibility` / `icon_fit` 为纯函数；`part.icon` 由 UI 调 `ops.setPartIcons` |
 | 唯一校验 | `validate.js` → `collectIssues(config)` | P4 从 `mode/validation.js` 迁入；`mode/validation_check.js` 只做原生清单适配 |
 

@@ -111,10 +111,12 @@ function findPackInSiblings(parentDir, packId) {
  *
  * @param {Array<{path: string, type: string}>} directDeps
  * @param {string} parentDir
- * @returns {{direct: Array, indirect: Array<{path: string, type: string, isIndirect: boolean}>}}
+ * @returns {{direct: Array, indirect: Array<{path: string, type: string, isIndirect: boolean}>,
+ *            unresolved: Array<{id: string, type: string, source: string}>}}
  */
 function resolveChainDependencies(directDeps, parentDir) {
     var indirect = [];
+    var unresolved = [];
     var processed = {};
     var i, j, dep, depMeta, depDeps, depDep, depId, found;
 
@@ -154,6 +156,12 @@ function resolveChainDependencies(directDeps, parentDir) {
                     isIndirect: true,
                 });
                 log.info('链式解析: 发现间接依赖 "' + depId + '" → ' + found);
+            } else if (!found) {
+                unresolved.push({
+                    id: depId,
+                    type: depDep.type || 'hard',
+                    source: dep.path,
+                });
             }
         }
     }
@@ -161,6 +169,89 @@ function resolveChainDependencies(directDeps, parentDir) {
     return {
         direct: directDeps,
         indirect: indirect,
+        unresolved: unresolved,
+    };
+}
+
+/**
+ * 按 meta.dependencies 声明的 id 解析出本地依赖路径。
+ *
+ * 用于"打开已有内容包"：内容包的 meta.json 只记录依赖 id，不含路径；
+ * 这里在内容包父目录下按 id 查找同级目录 / ZIP，再把找到的直接依赖做一层
+ * 链式解析（间接依赖）。
+ *
+ * 内置包 machine_max:builtin 由插件构建时注入，永远跳过；
+ * 自引用（meta.id 或解析回包自身）也跳过，避免把自己当依赖。
+ *
+ * @param {Array<string|{id: string, type?: string}>} declaredDeps - meta.dependencies
+ * @param {string} parentDir - 内容包所在父目录（同级搜索范围）
+ * @param {Object} [options]
+ * @param {string} [options.selfId] - 当前包 id，用于跳过自引用
+ * @param {string} [options.selfPath] - 当前包路径，用于跳过解析回自身的目录
+ * @returns {{direct: Array<{path: string, type: string}>,
+ *            indirect: Array<{path: string, type: string, isIndirect: boolean}>,
+ *            unresolved: Array<{id: string, type: string, source: string}>,
+ *            paths: string[],
+ *            declaredCount: number}}
+ *
+ * `declaredCount` 是去重后需要本地路径的声明数（不含内置包与自引用），
+ * 调用方用它区分「这个包没声明依赖」和「声明了但一条都没解析到」。
+ */
+function resolveDeclaredDependencies(declaredDeps, parentDir, options) {
+    options = options || {};
+    var direct = [];
+    var unresolved = [];
+    var seen = {};
+    var chain;
+    var paths = [];
+    var declaredCount = 0;
+
+    if (!Array.isArray(declaredDeps) || !parentDir) {
+        return {
+            direct: direct, indirect: [], unresolved: unresolved,
+            paths: paths, declaredCount: 0,
+        };
+    }
+
+    var i, entry, depId, depType, found;
+    for (i = 0; i < declaredDeps.length; i++) {
+        entry = declaredDeps[i];
+        if (!entry) continue;
+        depId = typeof entry === 'string' ? entry : (entry.id || '');
+        depType = (typeof entry === 'object' && entry.type) || 'hard';
+        if (!depId || seen[depId]) continue;
+        seen[depId] = true;
+
+        // 内置包由插件构建时注入，不是本地路径依赖
+        if (depId === BUILTIN_PACK_ID) continue;
+        // 自引用：包声明了自己的 id
+        if (options.selfId && depId === options.selfId) continue;
+
+        declaredCount++;
+
+        found = findPackInSiblings(parentDir, depId);
+        if (found && options.selfPath &&
+            path.resolve(found) === path.resolve(options.selfPath)) {
+            found = null;   // 解析回包自身，视为未找到
+        }
+        if (!found) {
+            unresolved.push({ id: depId, type: depType, source: 'direct' });
+            continue;
+        }
+        direct.push({ path: found, type: depType });
+    }
+
+    chain = resolveChainDependencies(direct, parentDir);
+
+    for (i = 0; i < direct.length; i++) paths.push(direct[i].path);
+    for (i = 0; i < chain.indirect.length; i++) paths.push(chain.indirect[i].path);
+
+    return {
+        direct: direct,
+        indirect: chain.indirect,
+        unresolved: unresolved.concat(chain.unresolved),
+        paths: paths,
+        declaredCount: declaredCount,
     };
 }
 
@@ -172,4 +263,5 @@ module.exports = {
     filterBuiltinDeps: filterBuiltinDeps,
     findPackInSiblings: findPackInSiblings,
     resolveChainDependencies: resolveChainDependencies,
+    resolveDeclaredDependencies: resolveDeclaredDependencies,
 };

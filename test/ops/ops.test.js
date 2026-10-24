@@ -531,3 +531,42 @@ describe('ops.updateDependencyPaths：内置包路径', () => {
         expect(cfg.dependencyPaths).toEqual([normalDir]);
     });
 });
+
+describe('ops.setContentPack：打开内容包时一并写入依赖', () => {
+    test('dependencyPaths 与路径同属一条撤销记录，并剔除内置包', () => {
+        const cfg = helpers.createConfig();
+        const builtinDir = makeTempPack('open_builtin', 'machine_max:builtin');
+        const depDir = makeTempPack('open_dep', 'machine_max:dep');
+
+        installFakeUndo(cfg);
+        const result = ops.setContentPack(cfg, {
+            path: 'D:/packs/app',
+            namespace: 'machine_max',
+            meta: { id: 'machine_max:app', version: '1.0' },
+            dependencyPaths: [builtinDir, depDir],
+            label: '打开内容包',
+        });
+
+        expect(result.ok).toBe(true);
+        expect(cfg.contentPackPath).toBe('D:/packs/app');
+        expect(cfg.dependencyPaths).toEqual([depDir]);
+        // 一条记录：Ctrl+Z 不会留下「新包 + 旧依赖」的中间态
+        expect(Undo.history.length).toBe(1);
+        expect(Undo.history[0].action).toBe('打开内容包');
+    });
+
+    test('不传 dependencyPaths 时保留原有依赖', () => {
+        const cfg = helpers.createConfig();
+        cfg.dependencyPaths = ['D:/packs/existing'];
+
+        installFakeUndo(cfg);
+        const result = ops.setContentPack(cfg, {
+            path: 'D:/packs/other',
+            namespace: 'machine_max',
+            meta: { id: 'machine_max:other', version: '1.0' },
+        });
+
+        expect(result.ok).toBe(true);
+        expect(cfg.dependencyPaths).toEqual(['D:/packs/existing']);
+    });
+});

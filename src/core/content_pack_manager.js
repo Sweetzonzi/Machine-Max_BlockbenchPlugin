@@ -337,12 +337,6 @@ function invalidateCache() {
     _cache.control_groups = null;
     _cache.projectiles = null;
     log.debug('invalidateCache: 缓存已清除');
-    // 检查调用栈（帮助定位谁触发了缓存失效）
-    try {
-        throw new Error('invalidateCache 调用栈');
-    } catch (e) {
-        log.debug('invalidateCache: 调用者', e.stack);
-    }
 }
 
 // =============================================================================
