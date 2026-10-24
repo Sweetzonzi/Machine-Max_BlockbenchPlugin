@@ -228,7 +228,7 @@ UI 层（对话框 onConfirm / 菜单 click / 工具栏 click）
 组件字段方法层（App.vue.js / SubsystemPanel / ConnectorPanel）
    └─ wrapMethodMap 包装 updateXxxField 等字段提交方法（字段编辑没有"对话框"这一层）
 批量场景（批量导入）
-   └─ 外层 runConfigEdit 开一次，内层操作作为嵌套编辑并入
+   └─ importParts：决议（冲突对话框）在开记录之前完成，整批写入在一次 runConfigEdit 内，无嵌套
 ```
 
 操作函数的形状（`src/core/operations.js`）：
@@ -349,8 +349,8 @@ MCP 插件暴露的 `MCP.runUndoableEdit(aspects, label, edit)` 是 `Undo.initEd
 | 面板：删除子系统 | [src/ui/App.vue.js](../src/ui/App.vue.js) | `ops.deleteSubsystem` |
 | 面板：variant `tags` | [src/ui/tag_dialog_helper.js](../src/ui/tag_dialog_helper.js) | `ops.setVariantTags` |
 | 对话框：新建子系统实例 | [src/ui/add_subsystem_dialog.js](../src/ui/add_subsystem_dialog.js) | `ops.createSubsystem` |
-| 导入：零件导入（含骨骼/碰撞箱/交互区/连接点回填） | [src/import/drag_import.js](../src/import/drag_import.js) | `runConfigEdit('导入零件 <id>', ...)` 包住 `parts[id] = ...` + `resolveBoneReferences()`（导入本身即操作函数） |
-| 导入：批量拖入 | [src/import/drag_import.js](../src/import/drag_import.js) | 外层 `runConfigEdit('批量导入零件', ...)`，内层导入作为嵌套编辑并入 |
+| 导入：零件导入（含骨骼/碰撞箱/交互区/连接点回填） | [src/import/drag_import.js](../src/import/drag_import.js) | 整批一次 `runConfigEdit('导入 N 个零件', ...)`，包住 `parts[finalId] = ...` + `resolveBoneReferences()` |
+| 导入：菜单多选 / 批量拖入 | [src/import/drag_import.js](../src/import/drag_import.js) | 同一入口 `importParts`：冲突只询问一次、决议对整批生效、无嵌套编辑（docs/15） |
 
 > 面板新建 sub_part 没有独立入口：子零件由右键菜单"标记为子零件"创建；
 > 计算属性里的"缺失配置自动补建"属于修复路径，不单独记录（会并入触发它的那次编辑）。
@@ -483,7 +483,7 @@ Vue 2 无法观测 `part.element_markers[variant][uuid] = ...` 这类直接赋�
 
 1. 改内容包路径/依赖/元数据 → 可撤销。
 2. 导入一个零件 → 一次撤销回退整次导入（含批量标记）。
-   无冲突的批量拖入合并为一条记录；有重名冲突时，用户在冲突对话框里逐个选择后各成一条。
+   菜单多选与批量拖入都合并为一条记录；冲突只询问一次，决议对整批生效（取消 = 整批不写）。
 
 ### 未覆盖 / 后续
 

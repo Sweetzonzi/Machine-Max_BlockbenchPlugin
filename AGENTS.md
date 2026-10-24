@@ -35,13 +35,19 @@ plugin.js                      # 插件入口（103行）
   │     ├── export.js            # canExport + executeExport 聚合出口
   │     ├── export_pipeline.js   # executeExport（生成器 + 写盘）
   │     ├── safe_part_ids.js     # 写盘前 partId 断言
-  │     ├── import.js            # 文件读取 + 带注释 JSON 解析
+  │     ├── import.js            # 文件读取 + 带注释 JSON 解析（解析在 lib/json_text.js）
+  │     │     └── lib/json_text.js  # 纯文本：去 BOM / 剥 // 注释后 JSON.parse（无 fs）
+  │     ├── import_plan.js       # 纯策略：导入计划（new/existing/duplicate）+ 整批冲突决议（无 I/O）
   │     ├── pack.js              # 内容包创建/打开 + 依赖链解析
   │     ├── icon_paths.js        # 纯 planner：图标三态 / resource location
   │     ├── icon_visibility.js   # 纯函数：start/end/auto_end → 可见 UUID 集
   │     ├── icon_fit.js          # 纯函数：AABB → 正交 zoom / target
   │     ├── icon_generator.js    # 离屏渲染 + PNG 写盘（不写 _uiState）
   │     └── validate.js          # collectIssues（P4 从 mode/ 下沉）
+  ├── import/                    # 导入编排（docs/15）
+  │     ├── drag_import.js       # importParts：菜单多选 + 拖拽共用（一次撤销 / 一次决议 / 一条提示）
+  │     ├── conflict_dialog.js   # 整批冲突决议（overwrite / skip / rename / cancel）
+  │     └── bone_resolver.js     # 骨骼名反查 → element_markers + _unresolved_bones
   ├── mcp/                       # MCP 工具层（P5；docs/12）
   │     ├── index.js             # MCP_QUEUE 注册/注销 + 生命周期
   │     ├── tools.js             # 14 个工具实现（只读/定义目录/细粒度/整件/validate）
@@ -71,6 +77,7 @@ plugin.js                      # 插件入口（103行）
   └── ui/menu.js                 # BarMenu（319行）
         ├── utils/persistence.js  # saveConfig / scheduleSave（300ms 防抖）
         ├── services/export.js    # canExport 闸门 + executeExport 聚合出口
+        ├── import/drag_import.js # 导入入口：importParts（菜单多选，docs/15）
         ├── utils/file_writer.js
         ├── core/content_pack.js
         ├── mode.js (runValidation)
@@ -112,6 +119,7 @@ if (typeof module !== 'undefined' && module.exports) {
 - **字段编辑**统一走 `ops.setField`；不再新增 `wrapMethodMap` 包装（旧入口若仍保留包装，
   必须保证内部只调用一次 `runConfigEdit`，避免双记录）。
 - **批量动作**（如批量导入）在外层用一次 `runConfigEdit`，内层操作作为嵌套编辑并入。
+  导入已在 0.5.5 收口为 `importParts`：冲突决议先于开记录，整批一次编辑、**无嵌套**（docs/15）。
 - **变更事件单一出口**：`runConfigEdit` 提交后派发 `mm_config_changed`；UI 只订阅一次做
   `refreshOutlinerIcons()` + `markerVersion.v++` + `scheduleSave()`。不要在 op 里 toast/落盘/刷新。
 - **计算属性只读**：`App.vue.js` 的 computed 不得 `$set` / `delete` 配置；缺失条目由

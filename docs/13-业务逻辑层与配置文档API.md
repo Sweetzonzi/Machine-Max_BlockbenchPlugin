@@ -104,7 +104,7 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 | `src/core/` | 12 | 4,430 |
 | `src/codec/` | 10 JS（11 含 AGENTS.md） | 1,282 |
 | `src/ops/` | 10（含 `shared.js` / `AGENTS.md`） | — |
-| `src/services/` | 10（export / export_pipeline / safe_part_ids / import / pack / icon_paths / icon_visibility / icon_fit / icon_generator / validate） | — |
+| `src/services/` | 11（export / export_pipeline / safe_part_ids / import / import_plan / pack / icon_paths / icon_visibility / icon_fit / icon_generator / validate） | — |
 | `src/mcp/` | 4（index / tools / params / result） | — |
 | `src/managers/` · `src/generators/` · `src/import/` | 5 · 6 · 3 | 330 · 440 · 859 |
 
@@ -1043,7 +1043,8 @@ src/services/
 ├── export.js          # canExport / dedupeIssues / toProblem + executeExport 聚合出口
 ├── export_pipeline.js # executeExport（P4 从 ui/export/export_pipeline.js 迁入）
 ├── safe_part_ids.js   # assertSafePartIds（写盘前 partId 断言）
-├── import.js          # 文件读取 + 带注释 JSON 解析（drag_import 的 IO 部分）
+├── import.js          # 文件读取 + 带注释 JSON 解析（drag_import 的 IO 部分，解析在 lib/json_text.js）
+├── import_plan.js     # 纯策略：导入计划（new/existing/duplicate）与整批冲突决议，无 I/O
 ├── pack.js            # 创建/打开/校验内容包、依赖链解析（三个 pack 对话框的 fs 部分）
 ├── icon_paths.js      # 纯 planner：part.icon 三态 / resource location / 文件名
 ├── icon_visibility.js # 纯函数：start_bone / end / auto_end → 可见 Group UUID 集
@@ -1451,7 +1452,7 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 | 删除计算属性写入后，存量「标记有、配置无」不再自动补建 | §15 的 load-time repair + 面板显式按钮 + `setField` 的 `ensure` |
 | 整件替换丢字段 | `reset_fields` / `dropped_fields` 回传 + 工具描述明示 |
 | 导出闸门改变现有行为（从「总是成功」到「被拦」） | P3 单独 commit；先跑一次全量校验看现有工程有多少 error |
-| 批量导入撤销粒度回退 | 冲突决策提前到开记录前（修 `drag_import` 既有缺陷） |
+| 批量导入撤销粒度回退 | **已修（0.5.5，docs/15）**：`importParts` 把冲突决议提前到开记录之前，整批一次 `runConfigEdit`，无嵌套 |
 | 端口未注入（早于 `plugin.js onload`） | 端口默认空实现 + `assertPorts()` 在 ops 入口做一次软检查 |
 | required 空串/空 map 在导出时仍是 `''`/`{}`，若绕过 `canExport` 直接调 generator，会产出空 required 值（`definition:''` 不是合法 ResourceLocation） | 导出只有一个入口 `services/export.js`；generator 不在 `ui/menu` 直接调用；P3 验收里加「直接调用 generator 的测试必须失败」 |
 | required map `emitEmpty` 让输出从「省略」变成 `{}`，可能与旧内容包逐字节不同 | 语义等价（schema required）；P3 用「旧工程导出 → 再导入 → 再导出」做 round-trip 对比，不要求与旧版本逐字节一致 |
