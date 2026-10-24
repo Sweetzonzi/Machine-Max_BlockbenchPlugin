@@ -78,52 +78,26 @@ function registerMachineMaxMenu() {
                     showToast('请先打开项目', 'warning');
                     return;
                 }
-                // 使用 Electron 原生文件选择器
-                var remote;
-                try {
-                    remote = require('electron').remote;
-                } catch (e) {
-                    remote = null;
-                }
-                if (remote && remote.dialog) {
-                    remote.dialog.showOpenDialog({
-                        title: '选择零件定义 JSON 文件',
-                        filters: [{ name: 'JSON 文件', extensions: ['json'] }],
-                        properties: ['openFile', 'multiSelections'],
-                    }).then(function (result) {
-                        if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
-                            log.debug('菜单导入: 用户取消选择');
-                            return;
-                        }
-                        var inputs = [];
-                        for (var i = 0; i < result.filePaths.length; i++) {
-                            inputs.push({ path: result.filePaths[i] });
-                        }
-                        require('../import/drag_import.js').importParts(inputs);
-                    }).catch(function (err) {
-                        log.error('菜单导入: 文件选择失败', err);
-                        showToast('文件选择失败', 'error');
-                    });
-                } else {
-                    // 回退：使用 Blockbench 的 import 机制
-                    Blockbench.import({
-                        extensions: ['json'],
-                        type: 'JSON 文件',
-                        read_mode: 'text',
-                    }, function (files) {
-                        if (!files || files.length === 0) return;
-                        var inputs = [];
-                        for (var i = 0; i < files.length; i++) {
-                            inputs.push({
-                                name: files[i].name || '',
-                                path: files[i].path || '',
-                                // 非字符串（如某些版本给 Buffer）不兜成 ''，交给 normalizeInputs 用 path 回退
-                                content: typeof files[i].content === 'string' ? files[i].content : undefined,
-                            });
-                        }
-                        require('../import/drag_import.js').importParts(inputs);
-                    });
-                }
+                // Blockbench.import 已支持桌面多选，并会按 resource_id 记住上次目录
+                Blockbench.import({
+                    type: 'JSON 文件',
+                    extensions: ['json'],
+                    multiple: true,
+                    readtype: 'text',
+                    resource_id: 'mm_part_import',
+                }, function (files) {
+                    if (!files || files.length === 0) return;
+                    var inputs = [];
+                    for (var i = 0; i < files.length; i++) {
+                        inputs.push({
+                            name: files[i].name || '',
+                            path: files[i].path || '',
+                            // 非字符串（如某些版本给 Buffer）不兜成 ''，交给 normalizeInputs 用 path 回退
+                            content: typeof files[i].content === 'string' ? files[i].content : undefined,
+                        });
+                    }
+                    require('../import/drag_import.js').importParts(inputs);
+                });
             },
         },
 

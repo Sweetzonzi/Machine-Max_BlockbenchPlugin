@@ -303,9 +303,42 @@ function formatSize(filePath) {
     }
 }
 
+/**
+ * 构建产物断言：确认已移除的历史噪音没有回流。
+ *
+ * - `require("electron")`：插件的 scoped require 白名单不含 electron，必然抛错；
+ * - `read_mode:`：Blockbench 的选项名是 `readtype`（`read_mode` 是笔误，曾静默无效）。
+ *
+ * 注意：不要断言 `readtype` 不存在 —— 拖拽处理器注册本来就合法使用它。
+ */
+const FORBIDDEN_PATTERNS = [
+    {
+        pattern: /__require\(\s*["']electron["']\s*\)|\brequire\(\s*["']electron["']\s*\)/,
+        label: 'require("electron")（scoped require 白名单不含 electron）',
+    },
+    {
+        pattern: /\bread_mode\s*:/,
+        label: 'read_mode（Blockbench 的选项名是 readtype）',
+    },
+];
+
+/**
+ * 检查一段文本是否含禁止模式，返回问题描述数组（空数组 = 通过）。
+ * dist 内嵌了约 1.9 MB 的内置 docs/schema 文本，因此源码也要单独断言。
+ */
+function findForbiddenPatterns(text, label) {
+    const problems = [];
+    for (const item of FORBIDDEN_PATTERNS) {
+        if (item.pattern.test(text)) problems.push(`${label} 仍含 ${item.label}`);
+    }
+    return problems;
+}
+
 /** 执行一次构建 */
 async function buildOnce() {
     console.log('\n🔨 构建 MachineMax Blockbench 插件...');
+
+    const tmpFile = OUT_FILE + '.tmp';
 
     try {
         if (!fs.existsSync(DIST)) {
@@ -315,8 +348,26 @@ async function buildOnce() {
         const config = getConfig();
         const packStats = config._packStats;
         delete config._packStats;
+
+        // 先写临时文件：断言通过后才落盘，避免坏产物覆盖 dist
+        config.outfile = tmpFile;
         const result = await esbuild.build(config);
         const warnings = result.warnings || [];
+
+        // 构建断言：dist 产物 + 菜单源码（dist 内嵌 docs 文本，源码断言兜底）
+        const problems = []
+            .concat(findForbiddenPatterns(fs.readFileSync(tmpFile, 'utf-8'), 'dist'))
+            .concat(findForbiddenPatterns(
+                fs.readFileSync(path.join(SRC, 'ui', 'menu.js'), 'utf-8'),
+                'src/ui/menu.js'
+            ));
+        if (problems.length > 0) {
+            console.error('❌ 构建断言失败：');
+            problems.forEach((p) => console.error('   ' + p));
+            fs.unlinkSync(tmpFile);
+            return false;
+        }
+        fs.renameSync(tmpFile, OUT_FILE);
 
         // 输出内置包统计
         if (packStats) {
@@ -344,6 +395,9 @@ async function buildOnce() {
 
         return true;
     } catch (e) {
+        if (fs.existsSync(tmpFile)) {
+            try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
+        }
         console.error('❌ 构建失败:', e.message);
         if (e.errors) {
             e.errors.forEach(err => {
