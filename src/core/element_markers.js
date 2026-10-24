@@ -478,13 +478,7 @@ function clearAllMarkers(projectConfig, partId, variantName) {
 function getMarkersForVariant(projectConfig, partId, variantName) {
     const part = getOrCreatePartConfig(projectConfig, partId);
     if (!part || !part.element_markers) return {};
-    var markers = part.element_markers[variantName] || {};
-    log.debug('getMarkersForVariant: 获取变体标记', {
-        partId: partId,
-        variant: variantName,
-        count: Object.keys(markers).length,
-    });
-    return markers;
+    return part.element_markers[variantName] || {};
 }
 
 /**

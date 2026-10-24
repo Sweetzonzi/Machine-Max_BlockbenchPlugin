@@ -11658,13 +11658,7 @@
       function getMarkersForVariant(projectConfig, partId, variantName) {
         const part = getOrCreatePartConfig(projectConfig, partId);
         if (!part || !part.element_markers) return {};
-        var markers = part.element_markers[variantName] || {};
-        log2.debug("getMarkersForVariant: \u83B7\u53D6\u53D8\u4F53\u6807\u8BB0", {
-          partId,
-          variant: variantName,
-          count: Object.keys(markers).length
-        });
-        return markers;
+        return part.element_markers[variantName] || {};
       }
       function clearMarkerScope(projectConfig, cleanup) {
         var removed = 0;
