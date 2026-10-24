@@ -15,6 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 const { createLogger } = require('../utils/logger.js');
+const { BUILTIN_PACK_ID } = require('./constants.js');
 const {
     ensureDir,
     writeJSONFile,
@@ -259,6 +260,22 @@ function readPackMeta(packPath) {
 }
 
 /**
+ * 判断路径是否指向内置基础内容包（machine_max:builtin）
+ *
+ * 内置包由插件构建时注入，不是本地依赖。链式解析 / 依赖编辑 / 合并视图都应
+ * 忽略指向它的目录或 ZIP，避免重复读取并把来源标成 dependency。
+ *
+ * @param {string} packPath - 内容包根目录或 ZIP 文件路径
+ * @returns {boolean}
+ */
+function isBuiltinPackPath(packPath) {
+    var meta;
+    if (!packPath || typeof packPath !== 'string') return false;
+    meta = readPackMeta(packPath);
+    return !!(meta && meta.id === BUILTIN_PACK_ID);
+}
+
+/**
  * 写入内容包的 meta.json
  * 写入失败时向上抛出异常（数据丢失风险，必须暴露）
  *
@@ -493,6 +510,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         resolveNamespace,
         readPackMeta,
+        isBuiltinPackPath,
         writePackMeta,
         createContentPack,
         openContentPack,

@@ -48,7 +48,10 @@ function showDependencyPathEditor(existingDeps, contextParentDir, options, onCom
     var opts = options || {};
     var defaultKeepAdding = opts.defaultKeepAdding !== false;
 
-    var selected = existingDeps ? existingDeps.slice() : [];
+    // 内置包不是本地依赖；旧工程里可能残留它的路径，进入编辑器时先忽略
+    var selected = (existingDeps ? existingDeps : []).filter(function (d) {
+        return d && d.path && !packService.isBuiltinPackPath(d.path);
+    });
     var stepNum = selected.length + 1;
 
     function _buildDepListHtml() {
@@ -154,6 +157,13 @@ function showDependencyPathEditor(existingDeps, contextParentDir, options, onCom
                             _showOneStep();
                             return;
                         }
+                        if (packService.isBuiltinPackPath(depPath)) {
+                            showToast('machine_max:builtin 由插件内置提供，无需添加为本地依赖', 'info');
+                            stepNum++;
+                            this.hide();
+                            _showOneStep();
+                            return;
+                        }
                         var dup = false;
                         for (var k = 0; k < selected.length; k++) {
                             if (selected[k].path === depPath) { dup = true; break; }
@@ -180,10 +190,10 @@ function showDependencyPathEditor(existingDeps, contextParentDir, options, onCom
                     var resolved = { direct: selected, indirect: [] };
                     if (selected.length > 0 && contextParentDir) {
                         resolved = packService.resolveChainDependencies(selected, contextParentDir);
-                        for (var j = 0; j < resolved.indirect.length; j++) {
-                            selected.push(resolved.indirect[j]);
-                        }
                     }
+                    // 注意：不要把 indirect 追加进 selected / resolved.direct。
+                    // 两者引用同一数组，追加后调用方会把间接依赖既算作直接依赖、
+                    // 又算作间接依赖，导致路径重复写入 dependencyPaths。
                     if (typeof onComplete === 'function') onComplete(resolved);
                 },
                 onCancel: function () {
@@ -224,9 +234,19 @@ function showManageDependenciesDialog(config, onSave) {
         return;
     }
 
-    var deps = config.dependencyPaths || [];
+    var rawDeps = config.dependencyPaths || [];
+    var deps = [];
+    var builtinDeps = [];
     var depsHtml = '';
     var i;
+    for (i = 0; i < rawDeps.length; i++) {
+        if (packService.isBuiltinPackPath(rawDeps[i])) {
+            builtinDeps.push(rawDeps[i]);
+        } else if (rawDeps[i]) {
+            deps.push(rawDeps[i]);
+        }
+    }
+
     if (deps.length === 0) {
         depsHtml = '（暂无依赖包）';
     } else {
@@ -235,6 +255,11 @@ function showManageDependenciesDialog(config, onSave) {
             depsHtml += '<li><code>' + deps[i] + '</code></li>';
         }
         depsHtml += '</ol>';
+    }
+    if (builtinDeps.length > 0) {
+        depsHtml += '<div style="margin-top:4px;color:#c9a227;font-size:11px">' +
+            '已忽略 ' + builtinDeps.length + ' 个内置包路径（machine_max:builtin 由插件内置提供，不是本地依赖）。' +
+            '下次编辑依赖时会自动从配置中移除。</div>';
     }
 
     try {
@@ -286,6 +311,10 @@ function showManageDependenciesDialog(config, onSave) {
                 // ---- 处理添加 ----
                 if (formData.newDepPath && formData.newDepPath.trim()) {
                     addPath = formData.newDepPath.trim();
+                    if (packService.isBuiltinPackPath(addPath)) {
+                        showToast('machine_max:builtin 由插件内置提供，无需添加为本地依赖', 'info');
+                        return false;
+                    }
                     res = ops.updateDependencyPaths(config, { add: [addPath] });
                     if (!res.ok) {
                         showToast(res.error, 'error');
@@ -303,6 +332,14 @@ function showManageDependenciesDialog(config, onSave) {
                     persistence.scheduleSave();
                     showToast('依赖包已更新', 'positive');
                     if (typeof onSave === 'function') onSave(config);
+                } else if (builtinDeps.length > 0) {
+                    // 只清理旧配置残留的内置包路径，不改动用户依赖
+                    res = ops.updateDependencyPaths(config, { replace: deps });
+                    if (res.ok) {
+                        persistence.scheduleSave();
+                        showToast('已移除内置包路径（machine_max:builtin 由插件内置提供）', 'positive');
+                        if (typeof onSave === 'function') onSave(config);
+                    }
                 } else if (!formData.depPathToRemove || !formData.depPathToRemove.trim()) {
                     // 既未添加也未移除
                     showToast('未做任何更改', 'info');

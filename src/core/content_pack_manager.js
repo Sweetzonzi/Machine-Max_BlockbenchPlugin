@@ -7,12 +7,14 @@
  * 设计原则:
  * - 只读合并层：不写入磁盘，仅合并读取
  * - 外部模块调用的错误均被捕获，优雅降级
- * - 简单缓存策略：按 type 缓存合并结果，调用方通过 invalidateCache() 主动失效
+ * - 简单缓存策略：按 type 缓存合并结果，并用「当前包路径 + 依赖路径」指纹做键；
+ *   来源变化自动失效，同一路径下改写磁盘文件需调用方显式 invalidateCache()
  * - 不依赖 config.js / persistence.js，config 由调用方传入
  */
 
 const content_pack = require('./content_pack.js');
 const builtin_pack = require('./builtin_pack.js');
+const { BUILTIN_PACK_ID } = require('./constants.js');
 const { createLogger } = require('../utils/logger.js');
 
 /** 模块日志 */
@@ -25,7 +27,14 @@ var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
 // 缓存
 // =============================================================================
 
-/** 按类型缓存合并结果，格式: { [type]: { defs: {...}, sources: {...} } | null } */
+/**
+ * 按类型缓存合并结果，格式:
+ *   { [type]: { sourceKey: string, defs: {...}, sources: {...} } | null }
+ *
+ * sourceKey 是「当前包路径 + 依赖包路径列表」的指纹。缓存命中时必须同时校验
+ * 指纹，否则切换内容包 / 增删依赖 / 切换工程后仍会返回上一个来源的旧定义
+ * （调用 invalidateCache 的地方只有撤销恢复，覆盖不到正常编辑路径）。
+ */
 var _cache = {
     materials: null,
     connectors: null,
@@ -33,6 +42,29 @@ var _cache = {
     control_groups: null,
     projectiles: null,
 };
+
+/**
+ * 计算内容包来源指纹（缓存键）
+ *
+ * 定义数据只取决于「当前包路径 + 依赖包路径及其顺序」，因此用这两项生成指纹。
+ * 路径顺序参与指纹：依赖数组越靠后优先级越高，顺序变化会改变覆盖结果。
+ *
+ * @param {Object|null} config - 项目配置对象
+ * @returns {string} 来源指纹；config 为空时返回 ''
+ */
+function computeSourceKey(config) {
+    var packPath, depPaths, deps, i;
+
+    if (!config) return '';
+
+    packPath = (typeof config.contentPackPath === 'string') ? config.contentPackPath : '';
+    depPaths = Array.isArray(config.dependencyPaths) ? config.dependencyPaths : [];
+    deps = [];
+    for (i = 0; i < depPaths.length; i++) {
+        if (typeof depPaths[i] === 'string') deps.push(depPaths[i]);
+    }
+    return packPath + '\u0000' + deps.join('\u0000');
+}
 
 // =============================================================================
 // 公开 API
@@ -73,18 +105,26 @@ function loadMergedDefs(config, type) {
     var curKey;
     var result;
     var defCount;
+    var sourceKey;
+    var cached;
 
-    // 缓存命中
-    if (_cache[type]) {
+    sourceKey = computeSourceKey(config);
+
+    // 缓存命中：来源指纹必须一致；不一致说明当前包 / 依赖已变化，丢弃旧缓存
+    cached = _cache[type];
+    if (cached && cached.sourceKey === sourceKey) {
         log.debug('loadMergedDefs: 缓存命中 ' + type);
-        return _cache[type];
+        return cached;
+    }
+    if (cached) {
+        log.debug('loadMergedDefs: 内容包来源已变化，丢弃 ' + type + ' 的旧缓存');
     }
 
-    // config 为空 → 返回空结果
+    // config 为空 → 返回空结果（带空指纹缓存，后续有 config 时不命中）
     if (!config) {
         log.warn('loadMergedDefs: config 为空，返回空结果');
         emptyResult = { defs: {}, sources: {} };
-        _cache[type] = emptyResult;
+        _cache[type] = { sourceKey: sourceKey, defs: emptyResult.defs, sources: emptyResult.sources };
         return emptyResult;
     }
 
@@ -139,6 +179,14 @@ function loadMergedDefs(config, type) {
                     metaId: openResult.meta ? openResult.meta.id : null,
                 });
 
+                // 内置包由插件构建时注入，始终以第 1 层（source=builtin）提供；
+                // 若旧工程/链式解析把它写进了 dependencyPaths，必须忽略，
+                // 否则同一批定义会被重新标记为 dependency:N。
+                if (openResult.meta && openResult.meta.id === BUILTIN_PACK_ID) {
+                    log.info('loadMergedDefs: 跳过内置包路径依赖 ' + depPath + '（由插件内置提供）');
+                    continue;
+                }
+
                 depDefs = content_pack.readAllDefs(depPath, openResult.namespace, type);
                 for (depKey in depDefs) {
                     if (hasOwn(depDefs, depKey)) {
@@ -175,17 +223,24 @@ function loadMergedDefs(config, type) {
                     namespace: curOpenResult.namespace,
                     metaId: curOpenResult.meta ? curOpenResult.meta.id : null,
                 });
-                curDefs = content_pack.readAllDefs(currentPath, curOpenResult.namespace, type);
-                for (curKey in curDefs) {
-                    if (hasOwn(curDefs, curKey)) {
-                        var namespacedCurKey = curOpenResult.namespace + ':' + curKey;
-                        var prevSource = sources[namespacedCurKey];
-                        defs[namespacedCurKey] = curDefs[curKey];
-                        sources[namespacedCurKey] = 'current';
-                        log.info('loadMergedDefs: 当前包添加 ' + namespacedCurKey + ' (source=current, 覆盖前=' + (prevSource || '无') + ')');
+
+                // 内置包不能作为「当前包」提供可编辑定义，否则内置快照会被覆盖
+                // 并批量标记为 current。仍按第 1 层只读提供。
+                if (curOpenResult.meta && curOpenResult.meta.id === BUILTIN_PACK_ID) {
+                    log.warn('loadMergedDefs: 当前内容包指向内置包 ' + currentPath + '，跳过 current 层');
+                } else {
+                    curDefs = content_pack.readAllDefs(currentPath, curOpenResult.namespace, type);
+                    for (curKey in curDefs) {
+                        if (hasOwn(curDefs, curKey)) {
+                            var namespacedCurKey = curOpenResult.namespace + ':' + curKey;
+                            var prevSource = sources[namespacedCurKey];
+                            defs[namespacedCurKey] = curDefs[curKey];
+                            sources[namespacedCurKey] = 'current';
+                            log.info('loadMergedDefs: 当前包添加 ' + namespacedCurKey + ' (source=current, 覆盖前=' + (prevSource || '无') + ')');
+                        }
                     }
+                    log.info('loadMergedDefs: 当前包 ' + currentPath + ' ' + type + ' 加载完成，共 ' + Object.keys(curDefs).length + ' 个定义');
                 }
-                log.info('loadMergedDefs: 当前包 ' + currentPath + ' ' + type + ' 加载完成，共 ' + Object.keys(curDefs).length + ' 个定义');
             }
         } catch (e) {
             log.error('loadMergedDefs: 当前内容包加载失败: ' + currentPath, e);
@@ -194,7 +249,7 @@ function loadMergedDefs(config, type) {
 
     // ── 组装结果并缓存 ──────────────────────────────────────────────
     result = { defs: defs, sources: sources };
-    _cache[type] = result;
+    _cache[type] = { sourceKey: sourceKey, defs: defs, sources: sources };
 
     defCount = Object.keys(defs).length;
     log.info('loadMergedDefs: ' + type + ' 合并完成，共 ' + defCount + ' 个定义');
@@ -272,8 +327,8 @@ function getFirstDefId(config, type) {
 /**
  * 清除内部缓存，强制下次 loadMergedDefs 从磁盘重新读取
  *
- * 当 config.contentPackPath 或 config.dependencyPaths 发生变化时，
- * 调用方必须调用此方法以确保后续查询使用最新数据。
+ * 内容包路径 / 依赖列表变化时缓存会按指纹自动失效；本方法用于「路径未变但
+ * 磁盘定义已改写」的场景（例如作者在外部编辑器保存 JSON 后重新选择同一目录）。
  */
 function invalidateCache() {
     _cache.materials = null;

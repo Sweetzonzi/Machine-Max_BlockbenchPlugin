@@ -3,7 +3,10 @@
 // ops 层验收测试（docs/13 §11 #7 / #18 / #19 / #20 / #22、§10 P2）
 // 使用真实 element_markers 作为 markers 端口，骨骼用 test/helpers 的 fake。
 
-const { describe, test, expect, beforeEach, afterEach } = require('bun:test');
+const { describe, test, expect, beforeEach, afterEach, afterAll } = require('bun:test');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const ports = require('../../src/doc/ports.js');
 const em = require('../../src/core/element_markers.js');
 const undo = require('../../src/core/undo.js');
@@ -11,6 +14,22 @@ const helpers = require('../helpers.js');
 const ops = require('../../src/ops/index.js');
 const projection = require('../../src/doc/projection.js');
 const { collectIssues } = require('../../src/services/validate.js');
+
+/** 依赖路径用例的临时目录（仅本文件使用） */
+const DEPS_TMP_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'mm-ops-deps-'));
+
+/**
+ * 创建只含 meta.json 的临时内容包目录
+ * @param {string} dirName
+ * @param {string} id
+ * @returns {string}
+ */
+function makeTempPack(dirName, id) {
+    const dir = path.join(DEPS_TMP_ROOT, dirName);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'meta.json'), JSON.stringify({ id: id, version: '1.0' }), 'utf-8');
+    return dir;
+}
 
 const BONES = [
     { name: 'hull', uuid: '11111111-1111-1111-1111-111111111111' },
@@ -75,6 +94,14 @@ beforeEach(function () {
 afterEach(function () {
     clearGlobals();
     ports.reset();
+});
+
+afterAll(function () {
+    try {
+        fs.rmSync(DEPS_TMP_ROOT, { recursive: true, force: true });
+    } catch (e) {
+        // 忽略临时目录清理失败
+    }
 });
 
 describe('ops.setField', () => {
@@ -487,5 +514,20 @@ describe('collectIssues：DANGLING_SIGNAL_TARGET', () => {
         const cfg = helpers.createConfig();
         const issues = collectIssues(cfg);
         expect(issues.some(function (p) { return p.code === 'dangling_signal_target'; })).toBe(false);
+    });
+});
+
+describe('ops.updateDependencyPaths：内置包路径', () => {
+    test('编辑依赖时剔除 machine_max:builtin 路径', () => {
+        const cfg = helpers.createConfig();
+        const builtinDir = makeTempPack('builtin_pack', 'machine_max:builtin');
+        const normalDir = makeTempPack('normal_pack', 'machine_max:normal');
+        cfg.dependencyPaths = [builtinDir];
+
+        installFakeUndo(cfg);
+        const result = ops.updateDependencyPaths(cfg, { add: [normalDir] });
+        expect(result.ok).toBe(true);
+        expect(result.changed).toBe(true);
+        expect(cfg.dependencyPaths).toEqual([normalDir]);
     });
 });

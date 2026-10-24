@@ -5,7 +5,39 @@
 'use strict';
 
 var { runConfigEdit } = require('../core/undo.js');
+var content_pack = require('../core/content_pack.js');
+var content_pack_manager = require('../core/content_pack_manager.js');
 var shared = require('./shared.js');
+
+/**
+ * 丢弃合并视图缓存。
+ *
+ * 切换内容包 / 修改依赖后必须重读磁盘；即使路径字符串没变（例如作者在外部
+ * 编辑了内容包 JSON 后又重新选择同一个目录），也要丢弃旧缓存。
+ */
+function invalidateDefsCache() {
+    content_pack_manager.invalidateCache();
+}
+
+/**
+ * 从依赖路径中剔除内置包（machine_max:builtin）。
+ *
+ * 内置包由插件构建时注入，不属于本地路径依赖；旧工程可能因为链式解析把
+ * 它的目录写进了 dependencyPaths，这里在每次依赖编辑时顺手清掉。
+ *
+ * @param {string[]} paths - 依赖路径列表
+ * @returns {string[]} 过滤后的列表（保序）
+ */
+function stripBuiltinDeps(paths) {
+    var result = [];
+    var i;
+    if (!Array.isArray(paths)) return result;
+    for (i = 0; i < paths.length; i++) {
+        if (typeof paths[i] !== 'string' || !paths[i]) continue;
+        if (!content_pack.isBuiltinPackPath(paths[i])) result.push(paths[i]);
+    }
+    return result;
+}
 
 function setContentPack(config, options) {
     options = options || {};
@@ -30,6 +62,7 @@ function setContentPack(config, options) {
         config.contentPackPath = path;
         config.namespace = namespace;
         config.packMeta = meta;
+        invalidateDefsCache();
     }, { coalesce: false });
 
     return shared.ok({ changed: true });
@@ -40,6 +73,7 @@ function setContentPackPath(config, path) {
     if (!config) return shared.fail('配置不可用，请先打开项目');
     runConfigEdit('修改内容包路径', function () {
         config.contentPackPath = path || '';
+        invalidateDefsCache();
     }, { coalesce: false });
     return shared.ok({ changed: true });
 }
@@ -73,12 +107,22 @@ function updateDependencyPaths(config, options) {
     var paths = [];
 
     runConfigEdit('编辑依赖包', function () {
+        var existing;
+        var cleaned;
+        var i;
+
         if (Array.isArray(replace)) {
-            config.dependencyPaths = replace.slice();
+            config.dependencyPaths = stripBuiltinDeps(replace);
             changed = true;
         } else {
+            existing = Array.isArray(config.dependencyPaths) ? config.dependencyPaths : [];
+            cleaned = stripBuiltinDeps(existing);
+            if (cleaned.length !== existing.length) {
+                // 旧配置里可能残留内置包路径，依赖编辑时顺手清理
+                config.dependencyPaths = cleaned;
+                changed = true;
+            }
             if (!Array.isArray(config.dependencyPaths)) config.dependencyPaths = [];
-            var i;
             for (i = 0; i < remove.length; i++) {
                 var idx = config.dependencyPaths.indexOf(remove[i]);
                 if (idx !== -1) {
@@ -94,6 +138,7 @@ function updateDependencyPaths(config, options) {
             }
         }
         paths = config.dependencyPaths.slice();
+        invalidateDefsCache();
     }, { coalesce: false });
 
     return shared.ok({ changed: changed, dependencyPaths: paths });

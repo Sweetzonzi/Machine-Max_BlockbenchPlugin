@@ -29,7 +29,7 @@ src/services/
 | 段数组转 Problem | `export.js` → `toProblem(error, config)` | 固定层级 `parts/<id>/variants/<v>/sub_parts/<sp>/<container>/<item>/<field...>` |
 | 问题合并 | `export.js` → `dedupeIssues(primary, schema)` | `collectIssues` 优先，`validateTree` 只补空缺；不同字段不合并 |
 | 导入文件读取 | `import.js` → `readTextFile` / `parseJSONWithComments` | 去 BOM、剥 `//` 注释；冲突对话框与 ops 编排仍在 `import/drag_import.js` |
-| 内容包 fs | `pack.js` | 创建/打开/读 meta 的薄包装；`findPackInSiblings` / `resolveChainDependencies` |
+| 内容包 fs | `pack.js` | 创建/打开/读 meta 的薄包装；`findPackInSiblings` / `resolveChainDependencies`（跳过内置 `machine_max:builtin`） |
 | 图标生成 | `icon_generator.js` | `generate(config, options)`：离屏渲染 + PNG 写盘；`icon_paths` / `icon_visibility` / `icon_fit` 为纯函数；`part.icon` 由 UI 调 `ops.setPartIcons` |
 | 唯一校验 | `validate.js` → `collectIssues(config)` | P4 从 `mode/validation.js` 迁入；`mode/validation_check.js` 只做原生清单适配 |
 

@@ -6,6 +6,15 @@
 const CONFIG_VERSION = 4;
 
 /**
+ * 内置基础内容包 ID
+ *
+ * 该包由构建脚本注入（__BUILTIN_*__），运行时始终可用，不属于本地路径依赖。
+ * 链式依赖解析与合并读取都必须跳过它，否则内置定义会被重复读取并标记为
+ * `dependency:N`（来源徽标错误），甚至覆盖插件内置的快照。
+ */
+const BUILTIN_PACK_ID = 'machine_max:builtin';
+
+/**
  * 常用信号频道名补全列表（唯一真源）
  *
  * 收敛 SubsystemPanel / ConnectorPanel / InteractBoxPanel 三处重复的 channelHints
@@ -30,5 +39,5 @@ const SIGNAL_CHANNEL_HINTS = [
 ];
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { CONFIG_VERSION, SIGNAL_CHANNEL_HINTS };
+    module.exports = { CONFIG_VERSION, BUILTIN_PACK_ID, SIGNAL_CHANNEL_HINTS };
 }

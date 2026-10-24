@@ -31,7 +31,7 @@ src/core/
 | 迁移 connector marker | `element_markers.js` → `migrateConnectorMarkerRefs()` | `config_ref` 从 definition → 连接点 key（§15.2.1），幂等 |
 | 读取内容包定义 | `content_pack.js` | `readAllDefs()`, `listDefIds()`, `defExists()` — 按类目分别处理 parts/subsystems/connectors/materials；定义文件由作者直接编辑 JSON（writeDef/deleteDef 已随只读化重构删除） |
 | 管理内容包 meta.json | `content_pack.js` | `openContentPack()`, `createContentPack()`, `readPackMeta()`, `writePackMeta()` |
-| 内容包合并视图 | `content_pack_manager.js` | 合并内置包 + 依赖包 + 当前包的定义列表，标注可编辑性 |
+| 内容包合并视图 | `content_pack_manager.js` | 合并内置包 + 依赖包 + 当前包的定义列表，标注可编辑性；缓存按「当前包路径 + 依赖路径」指纹自动失效，同一路径下改写磁盘定义需显式 `invalidateCache()` |
 | **新增一个业务动作（带撤销）** | `src/ops/` | 写 `createXxx/deleteXxx/markXxx`：校验前置 → `runConfigEdit(label, ...)` → 返回 `OpResult`；UI 只调用它 |
 | 让字段编辑可撤销 | `src/ops/field.js` | 统一 `ops.setField`；`runConfigEdit` 默认 `coalesce:false`，UI 连续数值编辑显式开 |
 | 排查撤销不生效 | `src/ops/` / `undo.js` | 确认动作走的是操作函数而不是裸 `$set`；确认 `registerUndoBridge()` 已调用、`Undo` 是 `Blockbench.Project?.undo` |

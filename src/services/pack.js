@@ -10,6 +10,7 @@
 var fs = require('fs');
 var path = require('path');
 var content_pack = require('../core/content_pack.js');
+var { BUILTIN_PACK_ID } = require('../core/constants.js');
 var { createLogger } = require('../utils/logger.js');
 
 var log = createLogger('PackService');
@@ -27,6 +28,36 @@ function openPack(dirPath) {
 /** 读取内容包 meta.json（委托 core/content_pack）。 */
 function readPackMeta(packPath) {
     return content_pack.readPackMeta(packPath);
+}
+
+/**
+ * 判断路径是否指向内置基础内容包（machine_max:builtin）。
+ *
+ * 内置包由插件构建时注入，不属于本地路径依赖：链式解析、依赖编辑器和合并视图
+ * 都应跳过它。
+ *
+ * @param {string} packPath - 内容包根目录或 ZIP 文件路径
+ * @returns {boolean}
+ */
+function isBuiltinPackPath(packPath) {
+    return content_pack.isBuiltinPackPath(packPath);
+}
+
+/**
+ * 从依赖路径列表中剔除内置包路径（保序，去重由调用方负责）。
+ *
+ * @param {string[]} deps - 依赖路径列表
+ * @returns {string[]} 过滤后的列表
+ */
+function filterBuiltinDeps(deps) {
+    var result = [];
+    var i;
+    if (!Array.isArray(deps)) return result;
+    for (i = 0; i < deps.length; i++) {
+        if (typeof deps[i] !== 'string' || !deps[i]) continue;
+        if (!isBuiltinPackPath(deps[i])) result.push(deps[i]);
+    }
+    return result;
 }
 
 /**
@@ -58,7 +89,7 @@ function findPackInSiblings(parentDir, packId) {
         // 目录形式
         if (stat.isDirectory()) {
             meta = content_pack.readPackMeta(fullPath);
-            if (meta && meta.id === packId) {
+            if (meta && meta.id === packId && meta.id !== BUILTIN_PACK_ID) {
                 return fullPath;
             }
         }
@@ -66,7 +97,7 @@ function findPackInSiblings(parentDir, packId) {
         // ZIP 文件形式
         if (stat.isFile() && fullPath.toLowerCase().endsWith('.zip')) {
             meta = content_pack.readPackMeta(fullPath);
-            if (meta && meta.id === packId) {
+            if (meta && meta.id === packId && meta.id !== BUILTIN_PACK_ID) {
                 return fullPath;
             }
         }
@@ -106,6 +137,13 @@ function resolveChainDependencies(directDeps, parentDir) {
             depDep = depDeps[j];
             depId = depDep.id || depDep;
 
+            // 内置包由插件构建时注入，运行时始终可用；meta.dependencies 里默认会
+            // 写一条 machine_max:builtin（导出时自动补），不能解析成本地路径依赖。
+            if (depId === BUILTIN_PACK_ID) {
+                log.info('链式解析: 跳过内置包 "' + depId + '"（由插件内置提供，无需本地依赖）');
+                continue;
+            }
+
             // 在公共父目录下搜索
             found = findPackInSiblings(parentDir, depId);
             if (found && !processed[found]) {
@@ -130,6 +168,8 @@ module.exports = {
     createPack: createPack,
     openPack: openPack,
     readPackMeta: readPackMeta,
+    isBuiltinPackPath: isBuiltinPackPath,
+    filterBuiltinDeps: filterBuiltinDeps,
     findPackInSiblings: findPackInSiblings,
     resolveChainDependencies: resolveChainDependencies,
 };
