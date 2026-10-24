@@ -1,5 +1,5 @@
 // 文件: src/codec/codecs/part_codec.js
-// 用途: Part 配置的 Codec 定义 — 12 字段（含 variants Either 简写）
+// 用途: Part 配置的 Codec 定义 — 9 字段（含 variants Either 简写）
 // 所属模块: MachineMax Blockbench 插件
 //
 // 数据链: SubPartCodec → VariantCodec.sub_parts → PartCodec.variants

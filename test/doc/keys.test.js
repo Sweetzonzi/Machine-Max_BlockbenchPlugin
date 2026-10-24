@@ -142,3 +142,48 @@ describe('doc/keys', () => {
         expect(result.errors.some((e) => e.path[e.path.length - 1] === '__new_p_1')).toBe(false);
     });
 });
+
+describe('doc/keys.reservePartId', () => {
+    test('base 空闲时原样返回', () => {
+        expect(keys.reservePartId('a', new Set())).toBe('a');
+        expect(keys.reservePartId('a', null)).toBe('a');
+    });
+
+    test('从 _1 起补号：预置 a、a_1..a_5 → a_6', () => {
+        const used = new Set(['a', 'a_1', 'a_2', 'a_3', 'a_4', 'a_5']);
+        expect(keys.reservePartId('a', used)).toBe('a_6');
+    });
+
+    test('连续 100 次结果唯一、合法，且不占用既有 key', () => {
+        const used = new Set(['hull']);
+        const got = [];
+        for (let i = 0; i < 100; i++) {
+            const id = keys.reservePartId('hull', used);
+            expect(keys.isSafePartId(id)).toBe(true);
+            expect(used.has(id)).toBe(false);
+            used.add(id);
+            got.push(id);
+        }
+        expect(new Set(got).size).toBe(100);
+        expect(got[0]).toBe('hull_1');
+    });
+
+    test('128 长度上限：截短前缀后仍合法且总长 ≤ 128', () => {
+        const base = 'a'.repeat(128);
+        const got = keys.reservePartId(base, new Set([base]));
+        expect(got).toBe('a'.repeat(126) + '_1');
+        expect(got.length).toBe(128);
+        expect(keys.isSafePartId(got)).toBe(true);
+    });
+
+    test('非法 base 抛 TypeError（含非字符串 / 设备名 / 超长）', () => {
+        for (const bad of ['', '..', 'con', 'con_hull', 'A', 'a'.repeat(129), null, undefined]) {
+            expect(() => keys.reservePartId(bad, new Set())).toThrow(TypeError);
+        }
+    });
+
+    test('用于改名的候选不落在批次外的既有 key 上', () => {
+        const used = new Set(['a', 'a_1']);
+        expect(keys.reservePartId('a', used)).toBe('a_2');
+    });
+});

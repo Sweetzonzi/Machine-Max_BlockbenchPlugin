@@ -325,6 +325,34 @@ function truncateNameForSuffix(name, suffix) {
 }
 
 /**
+ * 为一组已占用的 partId 预留一个空闲 id（导入改名 / 批内重名）。
+ *
+ * 契约：
+ * - `base` 必须已通过 `isSafePartId`，否则立即抛 `TypeError`（调用方应把非法 id 归入失败）；
+ * - `base` 未被占用时原样返回；否则从 `base_1` 起依次尝试；
+ * - 返回值**一定**合法（`isSafePartId`）且不在 `used` 中，**不会返回 null**；
+ * - 超长时用 `truncateNameForSuffix` 截短前缀，保证总长 ≤ 128；
+ * - 9999 个候选全部被占用属于调用方数据异常，直接抛错（此时尚未写配置，不会半写）。
+ *
+ * @param {string} base - 已通过 isSafePartId 的 partId
+ * @param {Set<string>} [used] - 已占用的 id（通常是 `Object.keys(parts)` + 本批已分配）
+ * @returns {string} 可用的 partId
+ */
+function reservePartId(base, used) {
+    if (!isSafePartId(base)) {
+        throw new TypeError('reservePartId: base 必须是安全的 partId，收到 "' + base + '"');
+    }
+    if (!used || !used.has(base)) return base;
+
+    for (var n = 1; n < 10000; n++) {
+        var suffix = '_' + n;
+        var candidate = truncateNameForSuffix(base, suffix) + suffix;
+        if (isSafePartId(candidate) && !used.has(candidate)) return candidate;
+    }
+    throw new Error('reservePartId: "' + base + '" 的候选用尽（9999）');
+}
+
+/**
  * 对候选 key 做唯一化：冲突时追加 `_2`、`_3`…；超长则截短名称段。
  * `usedKeys` / `usedNames` 由调用方在成功后追加。
  */
@@ -510,6 +538,10 @@ module.exports = {
     canonicalSubPartKey: canonicalSubPartKey,
     uniqueSubPartKey: uniqueSubPartKey,
     nextLegacyName: nextLegacyName,
+    truncateNameForSuffix: truncateNameForSuffix,
+
+    // partId 预留（导入改名 / 批内重名）
+    reservePartId: reservePartId,
 
     // 递归
     validateKeys: validateKeys,

@@ -10,7 +10,7 @@
 src/codec/
 ├── Codec.js                    # 核心组合子库：6 基元 + 3 字段规格 + 5 组合子（618行）
 ├── codecs/                     # 类型级 Codec 定义（8 个）
-│   ├── part_codec.js           # Part 配置（12 字段，含 variants Either 简写）
+│   ├── part_codec.js           # Part 配置（9 字段，含 variants Either 简写）
 │   ├── variant_codec.js        # Variant 配置
 │   ├── sub_part_codec.js       # SubPart 配置（含物理属性、碰撞箱、交互箱）
 │   ├── subsystem_codec.js      # 19 种子系统类型的独立 codec + DispatchCodec（约 295 行）
