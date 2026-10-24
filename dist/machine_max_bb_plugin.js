@@ -1,5 +1,5 @@
 // ============================================================
-// MachineMax Blockbench Plugin v0.5.5
+// MachineMax Blockbench Plugin v0.5.6
 // 打包文件 — 由 scripts/build.js 自动生成
 // 源文件在 src/ 目录，修改后运行 npm run build 重新生成
 // ============================================================
@@ -17867,11 +17867,6 @@
         _cache.control_groups = null;
         _cache.projectiles = null;
         log2.debug("invalidateCache: \u7F13\u5B58\u5DF2\u6E05\u9664");
-        try {
-          throw new Error("invalidateCache \u8C03\u7528\u6808");
-        } catch (e) {
-          log2.debug("invalidateCache: \u8C03\u7528\u8005", e.stack);
-        }
       }
       if (typeof module !== "undefined" && module.exports) {
         module.exports = {
@@ -22341,6 +22336,7 @@
         var namespace = options.namespace || "";
         var meta = options.meta || {};
         var label = options.label || "\u5207\u6362\u5185\u5BB9\u5305";
+        var depPaths = options.dependencyPaths;
         if (namespace) {
           var keys = require_keys();
           if (!keys.isValidNamespace(namespace)) {
@@ -22357,6 +22353,9 @@
           config.contentPackPath = path;
           config.namespace = namespace;
           config.packMeta = meta;
+          if (Array.isArray(depPaths)) {
+            config.dependencyPaths = stripBuiltinDeps(depPaths);
+          }
           invalidateDefsCache();
         }, { coalesce: false });
         return shared.ok({ changed: true });
@@ -22547,40 +22546,6 @@
     }
   });
 
-  // src/ui/dialogs/pack_common.js
-  var require_pack_common = __commonJS({
-    "src/ui/dialogs/pack_common.js"(exports, module) {
-      init_define_BUILTIN_CONNECTORS();
-      init_define_BUILTIN_CONTROL_GROUPS();
-      init_define_BUILTIN_MATERIALS();
-      init_define_BUILTIN_PACK_META();
-      init_define_BUILTIN_SUBSYSTEMS();
-      init_define_SCHEMAS();
-      var DEP_TYPES = ["hard", "soft", "override", "conflict"];
-      var DEP_TYPE_LABELS = {
-        hard: "\u786C\u4F9D\u8D56 (\u5FC5\u9700)",
-        soft: "\u8F6F\u4F9D\u8D56 (\u53EF\u9009)",
-        override: "\u8986\u76D6 (\u66FF\u6362)",
-        conflict: "\u51B2\u7A81 (\u4E0D\u517C\u5BB9)"
-      };
-      function isConfigValid(config) {
-        return config && typeof config === "object";
-      }
-      function sanitizeFolderName(name) {
-        if (!name) return "";
-        return String(name).replace(/[<>:"/\\|?*\s]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").substring(0, 64);
-      }
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = {
-          DEP_TYPES,
-          DEP_TYPE_LABELS,
-          isConfigValid,
-          sanitizeFolderName
-        };
-      }
-    }
-  });
-
   // src/services/pack.js
   var require_pack2 = __commonJS({
     "src/services/pack.js"(exports, module) {
@@ -22651,6 +22616,7 @@
       }
       function resolveChainDependencies(directDeps, parentDir) {
         var indirect = [];
+        var unresolved = [];
         var processed = {};
         var i, j, dep, depMeta, depDeps, depDep, depId, found;
         for (i = 0; i < directDeps.length; i++) {
@@ -22680,12 +22646,68 @@
                 isIndirect: true
               });
               log2.info('\u94FE\u5F0F\u89E3\u6790: \u53D1\u73B0\u95F4\u63A5\u4F9D\u8D56 "' + depId + '" \u2192 ' + found);
+            } else if (!found) {
+              unresolved.push({
+                id: depId,
+                type: depDep.type || "hard",
+                source: dep.path
+              });
             }
           }
         }
         return {
           direct: directDeps,
-          indirect
+          indirect,
+          unresolved
+        };
+      }
+      function resolveDeclaredDependencies(declaredDeps, parentDir, options) {
+        options = options || {};
+        var direct = [];
+        var unresolved = [];
+        var seen = {};
+        var chain;
+        var paths = [];
+        var declaredCount = 0;
+        if (!Array.isArray(declaredDeps) || !parentDir) {
+          return {
+            direct,
+            indirect: [],
+            unresolved,
+            paths,
+            declaredCount: 0
+          };
+        }
+        var i, entry, depId, depType, found;
+        for (i = 0; i < declaredDeps.length; i++) {
+          entry = declaredDeps[i];
+          if (!entry) continue;
+          depId = typeof entry === "string" ? entry : entry.id || "";
+          depType = typeof entry === "object" && entry.type || "hard";
+          if (!depId || seen[depId]) continue;
+          seen[depId] = true;
+          if (depId === BUILTIN_PACK_ID) continue;
+          if (options.selfId && depId === options.selfId) continue;
+          declaredCount++;
+          found = findPackInSiblings(parentDir, depId);
+          if (found && options.selfPath && path.resolve(found) === path.resolve(options.selfPath)) {
+            found = null;
+          }
+          if (!found) {
+            unresolved.push({ id: depId, type: depType, source: "direct" });
+            continue;
+          }
+          direct.push({ path: found, type: depType });
+        }
+        chain = resolveChainDependencies(direct, parentDir);
+        for (i = 0; i < direct.length; i++) paths.push(direct[i].path);
+        for (i = 0; i < chain.indirect.length; i++) paths.push(chain.indirect[i].path);
+        return {
+          direct,
+          indirect: chain.indirect,
+          unresolved: unresolved.concat(chain.unresolved),
+          paths,
+          declaredCount
         };
       }
       module.exports = {
@@ -22695,8 +22717,125 @@
         isBuiltinPackPath,
         filterBuiltinDeps,
         findPackInSiblings,
-        resolveChainDependencies
+        resolveChainDependencies,
+        resolveDeclaredDependencies
       };
+    }
+  });
+
+  // src/ui/dialogs/pack_common.js
+  var require_pack_common = __commonJS({
+    "src/ui/dialogs/pack_common.js"(exports, module) {
+      init_define_BUILTIN_CONNECTORS();
+      init_define_BUILTIN_CONTROL_GROUPS();
+      init_define_BUILTIN_MATERIALS();
+      init_define_BUILTIN_PACK_META();
+      init_define_BUILTIN_SUBSYSTEMS();
+      init_define_SCHEMAS();
+      var path = __require("path");
+      var packService = require_pack2();
+      var ops = require_ops();
+      var DEP_TYPES = ["hard", "soft", "override", "conflict"];
+      var DEP_TYPE_LABELS = {
+        hard: "\u786C\u4F9D\u8D56 (\u5FC5\u9700)",
+        soft: "\u8F6F\u4F9D\u8D56 (\u53EF\u9009)",
+        override: "\u8986\u76D6 (\u66FF\u6362)",
+        conflict: "\u51B2\u7A81 (\u4E0D\u517C\u5BB9)"
+      };
+      function isConfigValid(config) {
+        return config && typeof config === "object";
+      }
+      function sanitizeFolderName(name) {
+        if (!name) return "";
+        return String(name).replace(/[<>:"/\\|?*\s]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").substring(0, 64);
+      }
+      var MAX_LISTED_UNRESOLVED = 5;
+      function buildUnresolvedMessage(unresolved, searchedDir) {
+        var ids = [];
+        var listed;
+        var i;
+        for (i = 0; i < unresolved.length && i < MAX_LISTED_UNRESOLVED; i++) {
+          if (unresolved[i] && unresolved[i].id) ids.push(unresolved[i].id);
+        }
+        listed = ids.join("\u3001");
+        if (unresolved.length > ids.length) {
+          listed += " \u7B49 " + unresolved.length + " \u4E2A";
+        }
+        return "\u6709 " + unresolved.length + ' \u4E2A\u4F9D\u8D56\u672A\u80FD\u5728 "' + searchedDir + '" \u4E0B\u627E\u5230\uFF1A' + listed + "\u3002\u8BF7\u5148\u653E\u5165\u540C\u7EA7\u76EE\u5F55\uFF0C\u6216\u5728 MachineMax \u83DC\u5355 \u2192 \u5185\u5BB9\u5305\u8BBE\u7F6E \u2192 \u7BA1\u7406\u4F9D\u8D56\u5305 \u4E2D\u624B\u52A8\u9009\u62E9\u3002";
+      }
+      function dependencyPathsFor(resolution) {
+        if (!resolution) return void 0;
+        if (resolution.declaredCount === 0) return [];
+        if (resolution.paths.length > 0) return resolution.paths;
+        return void 0;
+      }
+      function applyPackPath(config, dirPath, options) {
+        options = options || {};
+        var label = options.label || "\u6253\u5F00\u5185\u5BB9\u5305";
+        var targetPath = dirPath ? String(dirPath).trim() : "";
+        var empty = {
+          ok: true,
+          valid: false,
+          error: null,
+          meta: null,
+          namespace: "",
+          parentDir: "",
+          resolution: null,
+          dependencyPaths: void 0
+        };
+        if (!targetPath) {
+          ops.setContentPackPath(config, "");
+          return empty;
+        }
+        var opened = packService.openPack(targetPath);
+        if (!opened.valid) {
+          if (options.strict) {
+            empty.ok = false;
+            empty.error = opened.error || null;
+            return empty;
+          }
+          ops.setContentPackPath(config, targetPath);
+          empty.error = opened.error || null;
+          return empty;
+        }
+        var meta = opened.meta || {};
+        var parentDir = path.dirname(path.resolve(targetPath));
+        var resolution = packService.resolveDeclaredDependencies(
+          meta.dependencies || [],
+          parentDir,
+          { selfId: meta.id, selfPath: targetPath }
+        );
+        var depPaths = dependencyPathsFor(resolution);
+        var result = ops.setContentPack(config, {
+          path: targetPath,
+          namespace: opened.namespace || "",
+          meta,
+          dependencyPaths: depPaths,
+          label
+        });
+        return {
+          ok: !!(result && result.ok),
+          valid: true,
+          error: result && result.error || null,
+          meta,
+          namespace: opened.namespace || "",
+          parentDir,
+          resolution,
+          dependencyPaths: depPaths
+        };
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+          DEP_TYPES,
+          DEP_TYPE_LABELS,
+          isConfigValid,
+          sanitizeFolderName,
+          MAX_LISTED_UNRESOLVED,
+          buildUnresolvedMessage,
+          dependencyPathsFor,
+          applyPackPath
+        };
+      }
     }
   });
 
@@ -23143,12 +23282,10 @@
       init_define_BUILTIN_SUBSYSTEMS();
       init_define_SCHEMAS();
       var path = __require("path");
-      var packService = require_pack2();
       var persistence = require_persistence();
       var { showToast: showToast2 } = require_notify();
       var { createLogger: createLogger2 } = require_logger();
-      var { isConfigValid } = require_pack_common();
-      var ops = require_ops();
+      var { isConfigValid, applyPackPath, buildUnresolvedMessage } = require_pack_common();
       var log2 = createLogger2("PackOpen");
       function showOpenPackDialog(config, onSave) {
         if (!isConfigValid(config)) {
@@ -23169,7 +23306,7 @@
               },
               depNote: {
                 type: "info",
-                text: '<span style="color:#888;font-size:11px">\u63D0\u793A\uFF1A\u6253\u5F00\u5185\u5BB9\u5305\u540E\uFF0C\u53EF\u5728 MachineMax \u83DC\u5355 \u2192 "\u7F16\u8F91\u5185\u5BB9\u5305\u4FE1\u606F"\u4E2D\u4FEE\u6539\u5143\u6570\u636E\uFF0C\u6216\u901A\u8FC7\u83DC\u5355\u9879\u7BA1\u7406\u672C\u5730\u4F9D\u8D56\u8DEF\u5F84\u3002</span>'
+                text: '<span style="color:#888;font-size:11px">\u63D0\u793A\uFF1A\u6253\u5F00\u540E\u4F1A\u6309 meta.json \u58F0\u660E\u7684\u4F9D\u8D56\uFF0C\u5728\u5185\u5BB9\u5305\u540C\u7EA7\u76EE\u5F55\u81EA\u52A8\u67E5\u627E\u5BF9\u5E94\u5185\u5BB9\u5305\uFF1B\u6CA1\u627E\u5230\u7684\u4F9D\u8D56\u4F1A\u5728\u52A0\u8F7D\u540E\u63D0\u793A\uFF0C\u53EF\u5728 MachineMax \u83DC\u5355 \u2192 \u5185\u5BB9\u5305\u8BBE\u7F6E \u2192 \u7BA1\u7406\u4F9D\u8D56\u5305 \u4E2D\u624B\u52A8\u9009\u62E9\u3002</span>'
               }
             },
             onConfirm: function(formData) {
@@ -23178,12 +23315,12 @@
                 return false;
               }
               var dirPath = formData.packDir.trim();
-              var result = packService.openPack(dirPath);
-              if (!result.valid) {
-                showToast2("\u5185\u5BB9\u5305\u65E0\u6548: " + (result.error || "\u76EE\u5F55\u4E2D\u7F3A\u5C11 meta.json \u6216\u5FC5\u8981\u5B50\u76EE\u5F55"), "error");
+              var applied = applyPackPath(config, dirPath, { strict: true, label: "\u6253\u5F00\u5185\u5BB9\u5305" });
+              if (!applied.ok) {
+                showToast2("\u5185\u5BB9\u5305\u65E0\u6548: " + (applied.error || "\u76EE\u5F55\u4E2D\u7F3A\u5C11 meta.json \u6216\u5FC5\u8981\u5B50\u76EE\u5F55"), "error");
                 return false;
               }
-              var meta = result.meta || {};
+              var meta = applied.meta || {};
               log2.debug("showOpenPackDialog: \u6253\u5F00\u5185\u5BB9\u5305\u7ED3\u679C", {
                 metaType: typeof meta,
                 metaKeys: Object.keys(meta),
@@ -23191,17 +23328,8 @@
                 descType: typeof meta.description,
                 nameExists: "name" in meta,
                 metaJSON: JSON.stringify(meta).substring(0, 500),
-                namespace: result.namespace
+                namespace: applied.namespace
               });
-              var opResult = ops.setContentPack(config, {
-                path: dirPath,
-                namespace: result.namespace || "",
-                meta
-              });
-              if (!opResult.ok) {
-                showToast2(opResult.error, "error");
-                return false;
-              }
               log2.debug("showOpenPackDialog: packMeta \u5DF2\u8BBE\u7F6E", {
                 packMetaType: typeof config.packMeta,
                 packMetaKeys: Object.keys(config.packMeta),
@@ -23210,10 +23338,35 @@
                 description: config.packMeta.description,
                 full: JSON.stringify(config.packMeta).substring(0, 500)
               });
+              log2.info("showOpenPackDialog: \u4F9D\u8D56\u89E3\u6790\u7ED3\u679C", {
+                parentDir: applied.parentDir,
+                direct: applied.resolution.direct.length,
+                indirect: applied.resolution.indirect.length,
+                unresolved: applied.resolution.unresolved.map(function(u) {
+                  return u.id;
+                }),
+                dependencyPaths: applied.dependencyPaths
+              });
               persistence.scheduleSave();
-              var displayName = path.basename(dirPath) || result.namespace || "";
-              showToast2("\u5185\u5BB9\u5305 " + displayName + " \u5DF2\u52A0\u8F7D", "positive", 5e3);
-              log2.info("\u5185\u5BB9\u5305\u5DF2\u6253\u5F00", { path: dirPath, namespace: result.namespace, id: meta.id });
+              var displayName = path.basename(dirPath) || applied.namespace || "";
+              var loadedMsg = "\u5185\u5BB9\u5305 " + displayName + " \u5DF2\u52A0\u8F7D";
+              if (applied.resolution.direct.length > 0 || applied.resolution.indirect.length > 0) {
+                loadedMsg += "\uFF0C\u5DF2\u89E3\u6790 " + applied.resolution.direct.length + " \u4E2A\u76F4\u63A5\u4F9D\u8D56";
+                if (applied.resolution.indirect.length > 0) {
+                  loadedMsg += "\u3001" + applied.resolution.indirect.length + " \u4E2A\u95F4\u63A5\u4F9D\u8D56";
+                }
+              } else if (applied.dependencyPaths && applied.dependencyPaths.length === 0) {
+                loadedMsg += "\uFF0C\u8BE5\u5305\u672A\u58F0\u660E\u4F9D\u8D56\uFF0C\u5DF2\u6E05\u7A7A\u672C\u5730\u4F9D\u8D56\u8DEF\u5F84";
+              }
+              showToast2(loadedMsg, "positive", 5e3);
+              if (applied.resolution.unresolved.length > 0) {
+                showToast2(
+                  buildUnresolvedMessage(applied.resolution.unresolved, applied.parentDir),
+                  "warning",
+                  12e3
+                );
+              }
+              log2.info("\u5185\u5BB9\u5305\u5DF2\u6253\u5F00", { path: dirPath, namespace: applied.namespace, id: meta.id });
               if (typeof onSave === "function") onSave(config);
               this.hide();
             }
@@ -27374,6 +27527,7 @@
       var { scheduleSave } = require_persistence();
       var { createLogger: createLogger2 } = require_logger();
       var { refreshOutlinerIcons } = require_icons();
+      var { applyPackPath, buildUnresolvedMessage } = require_pack_common();
       var log2 = createLogger2("PartDialogs");
       function showNewPartDialog(config, onCreated) {
         try {
@@ -27414,7 +27568,7 @@
                 type: "text",
                 label: "\u5185\u5BB9\u5305\u8DEF\u5F84",
                 value: config.contentPackPath || "",
-                description: "MachineMax \u5185\u5BB9\u5305\u7684\u6839\u76EE\u5F55\u8DEF\u5F84"
+                description: "MachineMax \u5185\u5BB9\u5305\u7684\u6839\u76EE\u5F55\u8DEF\u5F84\uFF1B\u4FDD\u5B58\u65F6\u6309 meta.json \u7684\u4F9D\u8D56\u5728\u540C\u7EA7\u76EE\u5F55\u81EA\u52A8\u89E3\u6790"
               },
               info: {
                 type: "display",
@@ -27427,14 +27581,44 @@
               }
             },
             onConfirm: function(formData) {
-              var result = ops.setContentPackPath(config, formData.contentPackPath);
-              if (!result.ok) {
-                showToast2(result.error, "error");
+              var newPath = (formData.contentPackPath || "").trim();
+              var applied = applyPackPath(config, newPath, {
+                strict: false,
+                label: "\u4FEE\u6539\u5185\u5BB9\u5305\u8DEF\u5F84"
+              });
+              if (!applied.ok) {
+                showToast2(applied.error || "\u65E0\u6CD5\u5199\u5165\u5185\u5BB9\u5305\u8DEF\u5F84", "error");
                 return false;
               }
-              log2.info("\u9879\u76EE\u7BA1\u7406: \u5185\u5BB9\u5305\u8DEF\u5F84\u5DF2\u66F4\u65B0", { contentPackPath: formData.contentPackPath });
+              log2.info("\u9879\u76EE\u7BA1\u7406: \u5185\u5BB9\u5305\u8DEF\u5F84\u5DF2\u66F4\u65B0", {
+                contentPackPath: newPath,
+                valid: applied.valid,
+                dependencyPaths: applied.dependencyPaths
+              });
               scheduleSave();
-              showToast2("\u5185\u5BB9\u5305\u8DEF\u5F84\u5DF2\u66F4\u65B0", "positive");
+              if (!applied.valid) {
+                showToast2(newPath ? "\u8DEF\u5F84\u5DF2\u5199\u5165\uFF0C\u4F46\u8BE5\u76EE\u5F55\u8FD8\u6CA1\u6709\u6709\u6548\u7684 meta.json\uFF0C\u5185\u5BB9\u5305\u5F53\u524D\u65E0\u6548" : "\u5185\u5BB9\u5305\u8DEF\u5F84\u5DF2\u6E05\u7A7A", "warning", 6e3);
+                if (typeof onSaved === "function") onSaved(config);
+                this.hide();
+                return;
+              }
+              var msg = "\u5185\u5BB9\u5305\u5DF2\u5207\u6362";
+              if (applied.resolution.direct.length > 0 || applied.resolution.indirect.length > 0) {
+                msg += "\uFF0C\u5DF2\u89E3\u6790 " + applied.resolution.direct.length + " \u4E2A\u76F4\u63A5\u4F9D\u8D56";
+                if (applied.resolution.indirect.length > 0) {
+                  msg += "\u3001" + applied.resolution.indirect.length + " \u4E2A\u95F4\u63A5\u4F9D\u8D56";
+                }
+              } else if (applied.dependencyPaths && applied.dependencyPaths.length === 0) {
+                msg += "\uFF0C\u8BE5\u5305\u672A\u58F0\u660E\u4F9D\u8D56\uFF0C\u5DF2\u6E05\u7A7A\u672C\u5730\u4F9D\u8D56\u8DEF\u5F84";
+              }
+              showToast2(msg, "positive", 5e3);
+              if (applied.resolution.unresolved.length > 0) {
+                showToast2(
+                  buildUnresolvedMessage(applied.resolution.unresolved, applied.parentDir),
+                  "warning",
+                  12e3
+                );
+              }
               if (typeof onSaved === "function") onSaved(config);
               this.hide();
             }
@@ -35275,7 +35459,7 @@
   var { registerUndoBridge, unregisterUndoBridge } = require_undo();
   var { showToast } = require_notify();
   var docPorts = require_ports();
-  var PLUGIN_VERSION = "0.5.5";
+  var PLUGIN_VERSION = "0.5.6";
   var log = createLogger("Plugin");
   Plugin.register("machine_max_bb_plugin", {
     title: "MachineMax \u96F6\u4EF6\u5B9A\u4E49",
