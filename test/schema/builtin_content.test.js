@@ -1,6 +1,6 @@
 'use strict';
 
-// 内置内容包同步回归：上游 53024908+worktree 的 53 个子系统定义 / 26 个连接点 / 新履带类型 / 已删 WIP 示例。
+// 内置内容包同步回归：上游 8a027167 的 58 个子系统定义 / 26 个连接点 / 观瞄重构。
 // 只检查 vendored 快照，不依赖构建注入的 __BUILTIN_*__ 常量。
 
 const { describe, test, expect } = require('bun:test');
@@ -21,9 +21,9 @@ function walk(dir) {
 }
 
 describe('builtin 内容包同步', () => {
-    test('53 个子系统定义，含 track_controller / track_drive', () => {
+    test('58 个子系统定义，含 track_controller / track_drive', () => {
         const files = walk(SUB);
-        expect(files).toHaveLength(53);
+        expect(files).toHaveLength(58);
         expect(fs.existsSync(path.join(SUB, 'track_controller', 'track_controller_standard.json')))
             .toBe(true);
         expect(fs.existsSync(path.join(SUB, 'track_drive', 'track_drive_heavy.json')))
@@ -54,5 +54,41 @@ describe('builtin 内容包同步', () => {
             path.join(SUB, 'track_drive', 'track_drive_heavy.json'), 'utf8');
         expect(driveRaw).toContain('"car_control"');
         expect(driveRaw).not.toContain('"track_control"');
+    });
+
+    test('观瞄重构：sight 是固定炮镜、camera 是可转镜头', () => {
+        const schemas = path.join(ROOT, 'docs', 'en_us', 'schemas', 'subsystem', 'static');
+        const sightSchema = JSON.parse(fs.readFileSync(
+            path.join(schemas, 'sight_static_attr.schema.json'), 'utf8'));
+        const cameraSchema = JSON.parse(fs.readFileSync(
+            path.join(schemas, 'camera_static_attr.schema.json'), 'utf8'));
+
+        // 固定炮镜没有独立观察转轴：行程与跟踪字段整体移除。
+        for (const removed of ['min_pitch', 'max_pitch', 'yaw_limit', 'tracking_target_inputs']) {
+            expect(sightSchema.properties).not.toHaveProperty(removed);
+            expect(cameraSchema.properties).toHaveProperty(removed);
+        }
+        // 可转镜头新增观察轴角速度。
+        expect(cameraSchema.properties.pitch_speed.default).toBe(90);
+        expect(cameraSchema.properties.yaw_speed.default).toBe(90);
+        // 发现握手默认频道改为 camera_sight。
+        expect(sightSchema.properties.discovery_inputs.default).toEqual(['camera_sight']);
+        expect(cameraSchema.properties.discovery_inputs.default).toEqual(['camera_sight']);
+
+        const gunner = JSON.parse(fs.readFileSync(
+            path.join(SUB, 'sight', 'gunner_sight.json'), 'utf8'));
+        expect(gunner.type).toBe('machine_max:sight');
+        expect(gunner).not.toHaveProperty('min_pitch');
+
+        // 车长镜是可转设备，定义落在 sight/ 目录但 type 必须是 camera。
+        const commander = JSON.parse(fs.readFileSync(
+            path.join(SUB, 'sight', 'commander_sight_dual_stb.json'), 'utf8'));
+        expect(commander.type).toBe('machine_max:camera');
+        expect(commander.pitch_speed).toBe(90);
+        expect(commander.yaw_speed).toBe(90);
+    });
+
+    test('封闭载具第三人称驾驶座定义已同步', () => {
+        expect(fs.existsSync(path.join(SUB, 'seat', 'default_3rd_driver_seat.json'))).toBe(true);
     });
 });

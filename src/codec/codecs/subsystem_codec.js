@@ -35,10 +35,16 @@ const WheelDriverCodec = Codec.record({
 /**
  * SeatCodec — 座位
  * 字段: definition, locator, control_group_preset, passenger_num_outputs,
- *       camera_discovery_targets, dismount_locators
+ *       camera_discovery_targets, dismount_locators,
+ *       first_hud_layout, third_hud_layout, allow_use_items
  *
  * dismount_locators 为有序的下车定位器名称列表（列表顺序即优先级），
  * 空列表表示该座位未声明下车点。
+ *
+ * 最后三个字段是安装级覆盖（上游 optional 无默认值）：缺省表示沿用型号定义
+ * 的 views.first_hud_layout / views.third_hud_layout / allow_use_items。
+ * 字符串用 '' 表示省略；allow_use_items 必须三态（null=省略），否则型号定义
+ * 为 true 时无法用 false 覆盖。
  */
 const SeatCodec = Codec.record({
     definition:               Codec.STRING.field(),
@@ -47,6 +53,9 @@ const SeatCodec = Codec.record({
     passenger_num_outputs:    Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     camera_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     dismount_locators:        Codec.STRING.list().default([]),
+    first_hud_layout:         Codec.STRING.default(''),
+    third_hud_layout:         Codec.STRING.default(''),
+    allow_use_items:          Codec.BOOL.nullable(),
 });
 
 /**

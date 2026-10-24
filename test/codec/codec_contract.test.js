@@ -26,6 +26,18 @@ describe('Codec 占位语义（docs/13 §4.4）', () => {
             .toEqual({ name: 'x', items: [], map: {} });
     });
 
+    test('nullable 字段接受显式 null（工程落盘后再读取）', () => {
+        const Nullable = Codec.record({
+            flag: Codec.BOOL.nullable(),
+        });
+        // 工程文件会把内部占位 null 原样写入；再读时与缺失同义，不能报类型错误。
+        expect(Nullable.decode({ flag: null })).toEqual({ flag: null });
+        expect(Nullable.decode({})).toEqual({ flag: null });
+        expect(Nullable.encode({ flag: null })).toBeUndefined();
+        // false 是有效覆盖值，不能被当成 null 丢弃。
+        expect(Nullable.encode({ flag: false })).toEqual({ flag: false });
+    });
+
     test('map emitEmpty：空 map 输出 {}，默认 map 仍省略', () => {
         const RequiredMap = Codec.record({
             bone: Codec.STRING.field(),

@@ -98,11 +98,25 @@ describe('field_specs.generated.js', () => {
             .toBe('rebuild_type_fields');
     });
 
-    test('provenance 记录 67 个 schema 与源 hash', () => {
-        expect(generated.PROVENANCE.source_revision).toBe('53024908+worktree');
-        expect(generated.PROVENANCE.source_files).toBe(67);
+    test('provenance 记录 70 个 schema 与源 hash', () => {
+        expect(generated.PROVENANCE.source_revision).toBe('8a027167');
+        expect(generated.PROVENANCE.source_files).toBe(70);
         expect(generated.PROVENANCE.source_sha256).toMatch(/^[0-9a-f]{64}$/);
         expect(generated.PROVENANCE.source_root)
             .toBe('src/builtin/builtin/machine_max/docs/en_us/schemas');
+    });
+
+    test('上游 8a027167 新增字段进入规格', () => {
+        // part_definition_schema 的 type=const regular（插件只编辑 regular，省略即默认）
+        expect(generated.SPECS.part.fields.type).toEqual({
+            type: 'string',
+            enum: ['regular'],
+        });
+
+        const seat = generated.SPECS.subsystem['machine_max:seat'].fields;
+        expect(seat.first_hud_layout.references).toBe('resource');
+        expect(seat.third_hud_layout.references).toBe('resource');
+        // Optional 无默认值的安装级覆盖：Codec 用 .nullable() 表达三态
+        expect(seat.allow_use_items).toEqual({ type: 'boolean', nullable: true });
     });
 });

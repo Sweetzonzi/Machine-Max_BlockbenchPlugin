@@ -1,5 +1,5 @@
 // ============================================================
-// MachineMax Blockbench Plugin v0.5.2
+// MachineMax Blockbench Plugin v0.5.3
 // 打包文件 — 由 scripts/build.js 自动生成
 // 源文件在 src/ 目录，修改后运行 npm run build 重新生成
 // ============================================================
@@ -55,7 +55,7 @@
   var define_BUILTIN_SUBSYSTEMS_default;
   var init_define_BUILTIN_SUBSYSTEMS = __esm({
     "<define:__BUILTIN_SUBSYSTEMS__>"() {
-      define_BUILTIN_SUBSYSTEMS_default = { default_glass: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:basic", basic_durability: 2, pass_damage: false, limit_damage: false, sounds: { on_destroyed: { sound_id: "machine_max:subsystem.baisc.glass.break", range: 32 } }, hidden: true }, targeting_pod: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:camera", basic_durability: 8, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 16.7, min_pitch: -80, max_pitch: 80, yaw_limit: 360, tracking_target_inputs: [], discovery_inputs: ["targeting_pod_sight"], allow_cycle: true }, default_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 150, min_steering_radius: 5, lateral_acceleration: 50, max_drift_angular_velocity: 2, manual_gear_shift: false, auto_hand_brake: true, drift_assist: true }, light_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 80, max_power: 8e4, max_torque: 175, idle_rpm: 850, max_torque_rpm: 4e3, red_line_rpm: 6300, red_line_torque_ratio: 0.75, inertia: 10, cylinder: 4, damping_factors: [2, 0.03, 2e-5] }, medium_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 150, max_power: 18e4, max_torque: 380, idle_rpm: 750, max_torque_rpm: 4e3, red_line_rpm: 6e3, red_line_torque_ratio: 0.65, inertia: 15, cylinder: 6, damping_factors: [2, 0.03, 2e-5] }, motorcycle_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 30, max_power: 6e3, max_torque: 9, idle_rpm: 500, max_torque_rpm: 7e3, red_line_rpm: 9500, red_line_torque_ratio: 0.7, inertia: 2, cylinder: 1, damping_factors: [1, 0.02, 1e-5] }, sport_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 100, max_power: 45e4, max_torque: 700, idle_rpm: 500, max_torque_rpm: 5500, red_line_rpm: 9e3, red_line_torque_ratio: 0.9, inertia: 20, cylinder: 8, damping_factors: [2, 0.03, 2e-5] }, truck_diesel_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 400, max_power: 37e4, max_torque: 2500, idle_rpm: 550, max_torque_rpm: 1500, red_line_rpm: 2200, red_line_torque_ratio: 0.9, inertia: 50, cylinder: 6, damping_factors: [5, 0.05, 1e-5] }, light_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 8, ratios: [-3.5, 3.5, 2.5, 1.75, 1.4, 1.15, 0.85], switch_time: 0.2 }, medium_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 150, final_ratio: 10, ratios: [-3.3, 4.71, 3.14, 2.1, 1.6, 1.29, 1.1, 0.88, 0.67], switch_time: 0.2 }, motorcycle_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 40, final_ratio: 15, ratios: [-3.5, 3.5, 2.8, 2, 1.4], switch_time: 0.15 }, simple_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 60, final_ratio: 8, ratios: [2, 1.3], switch_time: 0.1 }, sport_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 10, ratios: [-3.5, 3.5, 2.5, 1.8, 1.4, 1, 0.7, 0.5], switch_time: 0.05 }, truck_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 500, final_ratio: 3.7, ratios: [-12.3, 12.1, 9.41, 7.31, 5.71, 4.46, 3.4, 2.7, 2.11, 1.84, 1.3, 1, 0.78], switch_time: 0.3 }, container_16x16x32: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 600, rows: 6, columns: 9 }, container_16x16x8: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 1, columns: 9 }, container_16x32x32: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 800, rows: 9, columns: 12 }, default_trunk: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 6, columns: 9 }, glove_box: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 50, rows: 2, columns: 3 }, basic_launcher: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:launcher", basic_durability: 80, control_inputs: ["weapon_control"], breech: { fire_rate: 600 } }, beam_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "beam", range: 16, color: [255, 245, 210], intensity: 0.5, beam_angle: 24 }, dummy_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 0, intensity: 0 }, point_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 1, color: [255, 235, 180], intensity: 0.55, beam_angle: 24 }, high_power_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 120, max_power: 15e4, max_torque: 350, red_line_rpm: 15e3, red_line_power_ratio: 0.75, inertia: 8, damping_factors: [10, 0.1, 5e-5], generator_efficiency: 0.9 }, medium_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 80, max_power: 5e4, max_torque: 250, red_line_rpm: 1e4, red_line_power_ratio: 0.8, inertia: 5, damping_factors: [10, 0.1, 1e-4], generator_efficiency: 0.85 }, small_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 50, max_power: 2e4, max_torque: 85, red_line_rpm: 12e3, red_line_power_ratio: 0.8, inertia: 3, damping_factors: [5, 0.05, 5e-5], generator_efficiency: 0.85 }, default_motorbike_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motorbike_controller", basic_durability: 60, min_steering_radius: 3.5, lateral_acceleration: 20, max_drift_angular_velocity: 1.8, max_angle: 35, parking_angle: 5, correction_force_multiplier: 1 }, default_3rd_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: true, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 0.8, third_person_offset: [0, 1, 0], min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_3rd_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: true, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, follow_vehicle: false, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: false }, default_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_hud_layout: "machine_max:seat_dashboard", enable_third_person: true, third_hud_layout: "machine_max:seat_dashboard", follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, golden_closestool: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_hud_layout: "machine_max:seat_dashboard", enable_third_person: true, third_hud_layout: "machine_max:seat_dashboard", follow_vehicle: true, focus_on_center: true, distance_scale: 1.1 }, allow_use_items: true }, commander_sight_dual_stb: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 10, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, gunner_sight: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 10, vertical_stabilized: false, horizontal_stabilized: false, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, scope_hud_layout: "machine_max:scope_gunner", tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, gunner_sight_dual_stb: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 10, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, scope_hud_layout: "machine_max:scope_gunner_fixed", tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, gunner_sight_vert_stb: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 50, vertical_stabilized: true, horizontal_stabilized: false, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, scope_hud_layout: "machine_max:scope_gunner_fixed", tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true }, track_controller_standard: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:track_controller", basic_durability: 20, max_yaw_rate: { "0": 45, "10": 30, "30": 18, "50": 10 }, min_turning_radius: 4, max_lateral_acceleration: 6, yaw_p: 1, yaw_d: 0.05, steering_smoothing: 0.1, brake_smoothing: 0.2, auto_hand_brake: true, manual_gear_shift: false, separate_throttle_brake: false }, track_drive_heavy: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:track_drive", basic_durability: 30, max_drive_torque: 3e4, max_brake_torque: 2e4, max_hand_brake_torque: 2e4, max_speed: 120, control_inputs: ["car_control"] }, heavy_duty_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 800, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 15 }, locked_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 400, diff_lock: "true", diff_lock_sensitivity: 1 }, open_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "false", diff_lock_sensitivity: 0.85 }, sport_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "auto", diff_lock_sensitivity: 1.5, auto_diff_lock_threshold: 5 }, standard_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 300, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 10 }, basic_azimuth_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 30, yaw: { max_force: 8e4, max_speed: 90 }, control_inputs: ["weapon_control"] }, basic_elevation_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 30, pitch: { max_force: 35e3, max_speed: 30 }, control_inputs: ["weapon_control"] }, main_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 20, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["fire_input_p0", "fire_input_p1", "fire_input_p2", "fire_input_p3", "fire_input"], aim_tolerance_deg: 60 }, secondary_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 20, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["secondary_fire_input_p0", "secondary_fire_input_p1", "secondary_fire_input_p2", "secondary_fire_input_p3", "secondary_fire_input"], aim_tolerance_deg: 60 }, light_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 800, max_hand_brake_force: 0, max_rpm: 2500 }, steering: { max_force: 2e3, max_speed: 180 }, abs_enabled: true, abs_wheel_radius: 0.35 }, light_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 1500, max_brake_force: 800, max_hand_brake_force: 1e3, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.35 }, motorcycle_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 600, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 500, max_speed: 3.14 }, abs_enabled: true, abs_wheel_radius: 0.3 }, motorcycle_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 2500, max_brake_force: 300, max_hand_brake_force: 200, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.3 }, sport_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 0, max_brake_force: 2e3, max_hand_brake_force: 0, max_speed: 3e3 }, steering: { max_force: 5e3, max_speed: 6.28 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, sport_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 5e3, max_brake_force: 2e3, max_hand_brake_force: 3e3, max_speed: 3e3 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, standard_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 0, max_brake_force: 1500, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 4e3, max_speed: 3.14 }, abs_enabled: false, abs_wheel_radius: 0.4 }, standard_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 2500, max_brake_force: 1500, max_hand_brake_force: 2500, max_speed: 2500 }, abs_enabled: false, abs_wheel_radius: 0.4 }, truck_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 0, max_brake_force: 2e4, max_hand_brake_force: 0, max_speed: 1e3 }, steering: { max_force: 5e3, max_speed: 1.5 }, abs_enabled: true, abs_wheel_radius: 0.5 }, truck_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 28e3, max_brake_force: 2e4, max_hand_brake_force: 35e3, max_speed: 1e3 }, abs_enabled: true, abs_wheel_radius: 0.5 } };
+      define_BUILTIN_SUBSYSTEMS_default = { default_glass: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:basic", basic_durability: 2, pass_damage: false, limit_damage: false, sounds: { on_destroyed: { sound_id: "machine_max:subsystem.baisc.glass.break", range: 32 } }, hidden: true }, targeting_pod: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:camera", basic_durability: 8, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 16.7, min_pitch: -80, max_pitch: 80, yaw_limit: 360, tracking_target_inputs: [], discovery_inputs: ["targeting_pod_sight"], allow_cycle: true }, default_car_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:car_controller", basic_durability: 150, min_steering_radius: 5, lateral_acceleration: 50, max_drift_angular_velocity: 2, manual_gear_shift: false, auto_hand_brake: true, drift_assist: true }, light_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 80, max_power: 8e4, max_torque: 175, idle_rpm: 850, max_torque_rpm: 4e3, red_line_rpm: 6300, red_line_torque_ratio: 0.75, inertia: 10, cylinder: 4, damping_factors: [2, 0.03, 2e-5] }, medium_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 150, max_power: 18e4, max_torque: 380, idle_rpm: 750, max_torque_rpm: 4e3, red_line_rpm: 6e3, red_line_torque_ratio: 0.65, inertia: 15, cylinder: 6, damping_factors: [2, 0.03, 2e-5] }, motorcycle_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 30, max_power: 6e3, max_torque: 9, idle_rpm: 500, max_torque_rpm: 7e3, red_line_rpm: 9500, red_line_torque_ratio: 0.7, inertia: 2, cylinder: 1, damping_factors: [1, 0.02, 1e-5] }, sport_car_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 100, max_power: 45e4, max_torque: 700, idle_rpm: 500, max_torque_rpm: 5500, red_line_rpm: 9e3, red_line_torque_ratio: 0.9, inertia: 20, cylinder: 8, damping_factors: [2, 0.03, 2e-5] }, truck_diesel_engine: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:engine", basic_durability: 400, max_power: 37e4, max_torque: 2500, idle_rpm: 550, max_torque_rpm: 1500, red_line_rpm: 2200, red_line_torque_ratio: 0.9, inertia: 50, cylinder: 6, damping_factors: [5, 0.05, 1e-5] }, light_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 8, ratios: [-3.5, 3.5, 2.5, 1.75, 1.4, 1.15, 0.85], switch_time: 0.2 }, medium_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 150, final_ratio: 10, ratios: [-3.3, 4.71, 3.14, 2.1, 1.6, 1.29, 1.1, 0.88, 0.67], switch_time: 0.2 }, motorcycle_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 40, final_ratio: 15, ratios: [-3.5, 3.5, 2.8, 2, 1.4], switch_time: 0.15 }, simple_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 60, final_ratio: 8, ratios: [2, 1.3], switch_time: 0.1 }, sport_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 80, final_ratio: 10, ratios: [-3.5, 3.5, 2.5, 1.8, 1.4, 1, 0.7, 0.5], switch_time: 0.05 }, truck_gearbox: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:gearbox", basic_durability: 500, final_ratio: 3.7, ratios: [-12.3, 12.1, 9.41, 7.31, 5.71, 4.46, 3.4, 2.7, 2.11, 1.84, 1.3, 1, 0.78], switch_time: 0.3 }, container_16x16x32: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 600, rows: 6, columns: 9 }, container_16x16x8: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 1, columns: 9 }, container_16x32x32: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 800, rows: 9, columns: 12 }, default_trunk: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 100, rows: 6, columns: 9 }, glove_box: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:item_storage", basic_durability: 50, rows: 2, columns: 3 }, basic_launcher: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:launcher", basic_durability: 80, control_inputs: ["weapon_control"], breech: { fire_rate: 600 } }, beam_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "beam", range: 16, color: [255, 245, 210], intensity: 0.5, beam_angle: 24 }, dummy_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 0, intensity: 0 }, point_light: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:lighting", basic_durability: 2, hidden: true, light_type: "point", range: 1, color: [255, 235, 180], intensity: 0.55, beam_angle: 24 }, high_power_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 120, max_power: 15e4, max_torque: 350, red_line_rpm: 15e3, red_line_power_ratio: 0.75, inertia: 8, damping_factors: [10, 0.1, 5e-5], generator_efficiency: 0.9 }, medium_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 80, max_power: 5e4, max_torque: 250, red_line_rpm: 1e4, red_line_power_ratio: 0.8, inertia: 5, damping_factors: [10, 0.1, 1e-4], generator_efficiency: 0.85 }, small_motor: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motor", basic_durability: 50, max_power: 2e4, max_torque: 85, red_line_rpm: 12e3, red_line_power_ratio: 0.8, inertia: 3, damping_factors: [5, 0.05, 5e-5], generator_efficiency: 0.85 }, default_motorbike_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:motorbike_controller", basic_durability: 60, min_steering_radius: 3.5, lateral_acceleration: 20, max_drift_angular_velocity: 1.8, max_angle: 35, parking_angle: 5, correction_force_multiplier: 1 }, default_3rd_driver_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: true, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: false }, default_3rd_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: true, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 0.8, third_person_offset: [0, 1, 0], min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_3rd_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: true, render_passenger: false, views: { enable_first_person: false, enable_third_person: true, follow_vehicle: false, focus_on_center: true, distance_scale: 1.2, third_person_offset: [0, 2, 0], min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: false }, default_passenger_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, enable_third_person: true, follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -90, max_pitch: 90, yaw_limit: 360 }, allow_use_items: true }, default_seat: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_hud_layout: "machine_max:seat_dashboard", enable_third_person: true, third_hud_layout: "machine_max:seat_dashboard", follow_vehicle: true, focus_on_center: true, distance_scale: 1.2, min_pitch: -70, max_pitch: 45, yaw_limit: 270 }, allow_use_items: false }, golden_closestool: { $schema: "../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:seat", block_damage: false, render_passenger: true, passenger_scale: [1, 1, 1], views: { enable_first_person: true, first_hud_layout: "machine_max:seat_dashboard", enable_third_person: true, third_hud_layout: "machine_max:seat_dashboard", follow_vehicle: true, focus_on_center: true, distance_scale: 1.1 }, allow_use_items: true }, commander_sight_dual_stb: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:camera", basic_durability: 10, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 8, min_pitch: -15, max_pitch: 15, yaw_limit: 30, tracking_target_inputs: [], discovery_inputs: ["gunner_sight"], allow_cycle: true, pitch_speed: 90, yaw_speed: 90 }, gunner_sight: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 10, vertical_stabilized: false, horizontal_stabilized: false, base_zoom: 1, max_zoom: 8, scope_hud_layout: "machine_max:scope_gunner", discovery_inputs: ["gunner_sight"], allow_cycle: true }, gunner_sight_dual_stb: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 10, vertical_stabilized: true, horizontal_stabilized: true, base_zoom: 1, max_zoom: 8, scope_hud_layout: "machine_max:scope_gunner_fixed", discovery_inputs: ["gunner_sight"], allow_cycle: true }, gunner_sight_vert_stb: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:sight", basic_durability: 50, vertical_stabilized: true, horizontal_stabilized: false, base_zoom: 1, max_zoom: 8, scope_hud_layout: "machine_max:scope_gunner_fixed", discovery_inputs: ["gunner_sight"], allow_cycle: true }, track_controller_standard: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:track_controller", basic_durability: 20, max_yaw_rate: { "0": 45, "10": 30, "30": 18, "50": 10 }, min_turning_radius: 4, max_lateral_acceleration: 6, yaw_p: 1, yaw_d: 0.05, steering_smoothing: 0.1, brake_smoothing: 0.2, auto_hand_brake: true, manual_gear_shift: false, separate_throttle_brake: false }, track_drive_heavy: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:track_drive", basic_durability: 30, max_drive_torque: 3e4, max_brake_torque: 2e4, max_hand_brake_torque: 2e4, max_speed: 120, control_inputs: ["car_control"] }, heavy_duty_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 800, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 15 }, locked_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 400, diff_lock: "true", diff_lock_sensitivity: 1 }, open_differential: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "false", diff_lock_sensitivity: 0.85 }, sport_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 200, diff_lock: "auto", diff_lock_sensitivity: 1.5, auto_diff_lock_threshold: 5 }, standard_transmission: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:transmission", basic_durability: 300, diff_lock: "auto", diff_lock_sensitivity: 1, auto_diff_lock_threshold: 10 }, basic_azimuth_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 30, yaw: { max_force: 8e4, max_speed: 90 }, control_inputs: ["weapon_control"] }, basic_elevation_driver: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:turret_driver", basic_durability: 30, pitch: { max_force: 35e3, max_speed: 30 }, control_inputs: ["weapon_control"] }, main_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 20, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["fire_input_p0", "fire_input_p1", "fire_input_p2", "fire_input_p3", "fire_input"], aim_tolerance_deg: 60 }, secondary_weapon_controller: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:weapon_controller", basic_durability: 20, fire_mode: "SALVO", aim_inputs: ["aim_input_p0", "aim_input_p1", "aim_input_p2", "aim_input_p3", "aim_input"], fire_inputs: ["secondary_fire_input_p0", "secondary_fire_input_p1", "secondary_fire_input_p2", "secondary_fire_input_p3", "secondary_fire_input"], aim_tolerance_deg: 60 }, light_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 800, max_hand_brake_force: 0, max_rpm: 2500 }, steering: { max_force: 2e3, max_speed: 180 }, abs_enabled: true, abs_wheel_radius: 0.35 }, light_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 1500, max_brake_force: 800, max_hand_brake_force: 1e3, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.35 }, motorcycle_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 0, max_brake_force: 600, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 500, max_speed: 3.14 }, abs_enabled: true, abs_wheel_radius: 0.3 }, motorcycle_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 60, roll: { max_drive_force: 2500, max_brake_force: 300, max_hand_brake_force: 200, max_speed: 2500 }, abs_enabled: true, abs_wheel_radius: 0.3 }, sport_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 0, max_brake_force: 2e3, max_hand_brake_force: 0, max_speed: 3e3 }, steering: { max_force: 5e3, max_speed: 6.28 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, sport_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 150, roll: { max_drive_force: 5e3, max_brake_force: 2e3, max_hand_brake_force: 3e3, max_speed: 3e3 }, abs_enabled: true, abs_target_slip_ratio: 0.15, abs_wheel_radius: 0.4 }, standard_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 0, max_brake_force: 1500, max_hand_brake_force: 0, max_speed: 2500 }, steering: { max_force: 4e3, max_speed: 3.14 }, abs_enabled: false, abs_wheel_radius: 0.4 }, standard_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 200, roll: { max_drive_force: 2500, max_brake_force: 1500, max_hand_brake_force: 2500, max_speed: 2500 }, abs_enabled: false, abs_wheel_radius: 0.4 }, truck_front_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 0, max_brake_force: 2e4, max_hand_brake_force: 0, max_speed: 1e3 }, steering: { max_force: 5e3, max_speed: 1.5 }, abs_enabled: true, abs_wheel_radius: 0.5 }, truck_rear_wheel: { $schema: "../../docs/zh_cn/schemas/subsystem/subsystem_static_attr.schema.json", type: "machine_max:wheel_driver", basic_durability: 600, roll: { max_drive_force: 28e3, max_brake_force: 2e4, max_hand_brake_force: 35e3, max_speed: 1e3 }, abs_enabled: true, abs_wheel_radius: 0.5 } };
     }
   });
 
@@ -1610,11 +1610,14 @@
       "description": "Camera mount locator name, the bone in the model serves as the camera position."
     }
   },
-  "required": ["type", "definition"],
+  "required": [
+    "type",
+    "definition"
+  ],
   "examples": [
     {
       "type": "machine_max:camera",
-      "definition": "machine_max:camera/tank_gunners_sight",
+      "definition": "machine_max:targeting_pod",
       "locator": "optics_mount"
     }
   ]
@@ -1985,7 +1988,7 @@
       "type": "object",\r
       "minProperties": 1,\r
       "additionalProperties": { "type": "integer", "minimum": 1 },\r
-      "description": "Belt composition: keys are projectile resource addresses, values are how many rounds of that type the belt repeats. Each entry is expanded by count into an ordered belt ({\\"machine_max:7_62mm_ap\\": 3, \\"machine_max:7_62mm_tracer\\": 1} expands to AP, AP, AP, tracer), and firing consumes it cyclically in that order. Key order is belt order, so the first projectile decides the belt label when belt_label is left empty. The text shown for a projectile in the HUD comes from that projectile's own language key (spelled <namespace>.<path> from the projectile registry key, slashes in the path kept as-is), provided by the lang/<locale>.json of the pack that owns the projectile; when the key is missing the HUD shows the key itself, which surfaces the omission."\r
+      "description": "Belt composition: keys are projectile resource addresses, values are how many rounds of that type the belt repeats. Each entry is expanded by count into an ordered belt ({\\"machine_max:7_62x54r_ap\\": 3, \\"machine_max:7_62x54r_t\\": 1} expands to AP, AP, AP, tracer), and firing consumes it cyclically in that order. Key order is belt order, so the first projectile decides the belt label when belt_label is left empty. The text shown for a projectile in the HUD comes from that projectile's own language key (spelled <namespace>.<path> from the projectile registry key, slashes in the path kept as-is), provided by the lang/<locale>.json of the pack that owns the projectile; when the key is missing the HUD shows the key itself, which surfaces the omission."\r
     },\r
     "belt_label": {\r
       "type": "string",\r
@@ -2110,11 +2113,14 @@
       "description": "Sight mount locator name, the bone in the model serves as the sight position."
     }
   },
-  "required": ["type", "definition"],
+  "required": [
+    "type",
+    "definition"
+  ],
   "examples": [
     {
       "type": "machine_max:sight",
-      "definition": "machine_max:sight/tank_gunners_sight",
+      "definition": "machine_max:gunner_sight",
       "locator": "gunner_sight"
     }
   ]
@@ -2529,157 +2535,177 @@
       "description": "Complete example - includes all optional fields"\r
     }\r
   ]\r
-}`, "en_us/schemas/subsystem/static/camera_static_attr.schema.json": `{\r
-  "$schema": "http://json-schema.org/draft-07/schema#",\r
-  "$id": "https://machine_max.io/schemas/subsystem/static/camera_static_attr.json",\r
-  "title": "Camera Subsystem Static Attributes",\r
-  "description": "Camera-specific static attributes defining optical characteristics, stabilization, zoom range, and tracking capabilities.",\r
-  "properties": {\r
-    "type": {\r
-      "type": "string",\r
-      "const": "machine_max:camera",\r
-      "description": "Subsystem type, must be 'machine_max:camera'."\r
-    },\r
-    "basic_durability": {\r
-      "type": "number",\r
-      "default": 20.0,\r
-      "description": "Basic durability, subsystem is disabled when it drops to 0 and restored when repaired to 30%."\r
-    },\r
-    "pass_damage": {\r
-      "type": "boolean",\r
-      "default": true,\r
-      "description": "Whether to pass damage to the subsystem holder."\r
-    },\r
-    "limit_damage": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "Whether to limit the damage transfer value to the remaining durability."\r
-    },\r
-    "hidden": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "Whether to hide the subsystem in the HUD display."\r
-    },\r
-    "vertical_stabilized": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "Whether vertical stabilization is enabled (compensates for vehicle pitch)."\r
-    },\r
-    "horizontal_stabilized": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "Whether horizontal stabilization is enabled (compensates for vehicle yaw)."\r
-    },\r
-    "base_zoom": {\r
-      "type": "number",\r
-      "default": 1.0,\r
-      "description": "Minimum zoom multiplier (default 1.0, i.e., base FOV)."\r
-    },\r
-    "max_zoom": {\r
-      "type": "number",\r
-      "default": 1.0,\r
-      "description": "Maximum zoom multiplier (e.g., 8.0 for 8x)."\r
-    },\r
-    "min_pitch": {\r
-      "type": "number",\r
-      "default": -10.0,\r
-      "description": "Minimum pitch angle limit in degrees, positive = looking up, negative = looking down."\r
-    },\r
-    "max_pitch": {\r
-      "type": "number",\r
-      "default": 10.0,\r
-      "description": "Maximum pitch angle limit in degrees."\r
-    },\r
-    "yaw_limit": {\r
-      "type": "number",\r
-      "default": 5.0,\r
-      "description": "Yaw angle span limit in degrees, the actual range is [center - limit/2, center + limit/2]."\r
-    },\r
-    "scope_hud_layout": {\r
-      "allOf": [\r
-        { "$ref": "../../base/resource_location.schema.json" }\r
-      ],\r
-      "default": "machine_max:empty",\r
-      "description": "HUD layout resource location: a file under the content pack's hud_layouts/ directory, keyed as <namespace>:<relative path>. When absent, the scope view shows no HUD."\r
-    },\r
-    "tracking_target_inputs": {\r
-      "type": "array",\r
-      "items": {\r
-        "type": "string"\r
-      },\r
-      "default": [\r
-        "tracking_target"\r
-      ],\r
-      "description": "List of tracking target input channels."\r
-    },\r
-    "discovery_inputs": {\r
-      "type": "array",\r
-      "items": {\r
-        "type": "string"\r
-      },\r
-      "default": [\r
-        "camera_discovery"\r
-      ],\r
-      "description": "List of camera discovery handshake channels (ordered by priority)."\r
-    },\r
-    "allow_cycle": {\r
-      "type": "boolean",\r
-      "default": true,\r
-      "description": "Whether to allow this camera to appear in the F5 camera cycle."\r
-    },\r
-    "sounds": {\r
-      "type": "object",\r
-      "properties": {\r
-        "on_destroyed": {\r
-          "allOf": [\r
-            { "$ref": "../../base/sound_event.schema.json" }\r
-          ],\r
-          "description": "Sound event when the camera is destroyed.",\r
-          "default": {\r
-            "sound_id": "machine_max:empty_sound",\r
-            "range": 16\r
-          }\r
-        },\r
-        "on_activate": {\r
-          "allOf": [\r
-            { "$ref": "../../base/sound_event.schema.json" }\r
-          ],\r
-          "description": "Sound event when the camera is activated.",\r
-          "default": {\r
-            "sound_id": "machine_max:empty_sound",\r
-            "range": 16\r
-          }\r
-        },\r
-        "on_deactivate": {\r
-          "allOf": [\r
-            { "$ref": "../../base/sound_event.schema.json" }\r
-          ],\r
-          "description": "Sound event when the camera is deactivated.",\r
-          "default": {\r
-            "sound_id": "machine_max:empty_sound",\r
-            "range": 16\r
-          }\r
-        }\r
-      },\r
-      "additionalProperties": false,\r
-      "description": "Basic sound configuration for the camera."\r
-    }\r
-  },\r
-  "required": [\r
-    "type"\r
-  ],\r
-  "examples": [\r
-    {\r
-      "type": "machine_max:camera",\r
-      "basic_durability": 15.0,\r
-      "base_zoom": 1.0,\r
-      "max_zoom": 5.0,\r
-      "discovery_inputs": [\r
-        "gunner_optics"\r
-      ],\r
-      "scope_hud_layout": "machine_max:scope_gunner"\r
-    }\r
-  ]\r
+}`, "en_us/schemas/subsystem/static/camera_static_attr.schema.json": `{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://machine_max.io/schemas/subsystem/static/camera_static_attr.json",
+  "title": "Camera Subsystem Static Attributes",
+  "description": "Camera-specific static attributes defining optical characteristics, stabilization, zoom range, and tracking capabilities.",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "machine_max:camera",
+      "description": "Subsystem type, must be 'machine_max:camera'."
+    },
+    "basic_durability": {
+      "type": "number",
+      "default": 20.0,
+      "description": "Basic durability, subsystem is disabled when it drops to 0 and restored when repaired to 30%."
+    },
+    "pass_damage": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to pass damage to the subsystem holder."
+    },
+    "limit_damage": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to limit the damage transfer value to the remaining durability."
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to hide the subsystem in the HUD display."
+    },
+    "vertical_stabilized": {
+      "type": "boolean",
+      "default": false,
+      "description": "Hold the camera observation axis against its world target."
+    },
+    "horizontal_stabilized": {
+      "type": "boolean",
+      "default": false,
+      "description": "Hold the camera observation axis against its world target."
+    },
+    "base_zoom": {
+      "type": "number",
+      "default": 1.0,
+      "description": "Minimum zoom multiplier (default 1.0, i.e., base FOV)."
+    },
+    "max_zoom": {
+      "type": "number",
+      "default": 1.0,
+      "description": "Maximum zoom multiplier (e.g., 8.0 for 8x)."
+    },
+    "min_pitch": {
+      "type": "number",
+      "default": -10.0,
+      "description": "Minimum pitch angle limit in degrees, positive = looking up, negative = looking down."
+    },
+    "max_pitch": {
+      "type": "number",
+      "default": 10.0,
+      "description": "Maximum pitch angle limit in degrees."
+    },
+    "yaw_limit": {
+      "type": "number",
+      "default": 5.0,
+      "description": "Yaw angle span limit in degrees, the actual range is [center - limit/2, center + limit/2]."
+    },
+    "scope_hud_layout": {
+      "allOf": [
+        {
+          "$ref": "../../base/resource_location.schema.json"
+        }
+      ],
+      "default": "machine_max:empty",
+      "description": "HUD layout resource location: a file under the content pack's hud_layouts/ directory, keyed as <namespace>:<relative path>. When absent, the scope view shows no HUD."
+    },
+    "tracking_target_inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "tracking_target"
+      ],
+      "description": "List of tracking target input channels."
+    },
+    "discovery_inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "camera_sight"
+      ],
+      "description": "List of camera discovery handshake channels (ordered by priority)."
+    },
+    "allow_cycle": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to allow this camera to appear in the F5 camera cycle."
+    },
+    "sounds": {
+      "type": "object",
+      "properties": {
+        "on_destroyed": {
+          "allOf": [
+            {
+              "$ref": "../../base/sound_event.schema.json"
+            }
+          ],
+          "description": "Sound event when the camera is destroyed.",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        },
+        "on_activate": {
+          "allOf": [
+            {
+              "$ref": "../../base/sound_event.schema.json"
+            }
+          ],
+          "description": "Sound event when the camera is activated.",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        },
+        "on_deactivate": {
+          "allOf": [
+            {
+              "$ref": "../../base/sound_event.schema.json"
+            }
+          ],
+          "description": "Sound event when the camera is deactivated.",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Basic sound configuration for the camera."
+    },
+    "pitch_speed": {
+      "type": "number",
+      "minimum": 0,
+      "default": 90,
+      "description": "Observation axis speed in degrees per second."
+    },
+    "yaw_speed": {
+      "type": "number",
+      "minimum": 0,
+      "default": 90,
+      "description": "Observation axis speed in degrees per second."
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "examples": [
+    {
+      "type": "machine_max:camera",
+      "basic_durability": 15.0,
+      "base_zoom": 1.0,
+      "max_zoom": 5.0,
+      "discovery_inputs": [
+        "gunner_optics"
+      ],
+      "scope_hud_layout": "machine_max:scope_gunner"
+    }
+  ]
 }`, "en_us/schemas/subsystem/static/car_controller_static_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/static/car_controller_static_attr.json",\r
@@ -4373,157 +4399,140 @@
       "allow_use_items": true\r
     }\r
   ]\r
-}`, "en_us/schemas/subsystem/static/sight_static_attr.schema.json": `{\r
-  "$schema": "http://json-schema.org/draft-07/schema#",\r
-  "$id": "https://machine_max.io/schemas/subsystem/static/sight_static_attr.json",\r
-  "title": "Sight Subsystem Static Attributes",\r
-  "description": "Sight-specific static attributes defining optical characteristics, stabilization, zoom range, and tracking capabilities.",\r
-  "properties": {\r
-    "type": {\r
-      "type": "string",\r
-      "const": "machine_max:sight",\r
-      "description": "Subsystem type, must be 'machine_max:sight'."\r
-    },\r
-    "basic_durability": {\r
-      "type": "number",\r
-      "default": 20.0,\r
-      "description": "Basic durability, subsystem is disabled when it drops to 0 and restored when repaired to 30%."\r
-    },\r
-    "pass_damage": {\r
-      "type": "boolean",\r
-      "default": true,\r
-      "description": "Whether to pass damage to the subsystem holder."\r
-    },\r
-    "limit_damage": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "Whether to limit the damage transfer value to the remaining durability."\r
-    },\r
-    "hidden": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "Whether to hide the subsystem in the HUD display."\r
-    },\r
-    "vertical_stabilized": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "Whether vertical stabilization is enabled (compensates for vehicle pitch)."\r
-    },\r
-    "horizontal_stabilized": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "Whether horizontal stabilization is enabled (compensates for vehicle yaw)."\r
-    },\r
-    "base_zoom": {\r
-      "type": "number",\r
-      "default": 1.0,\r
-      "description": "Minimum zoom multiplier (default 1.0, i.e., base FOV)."\r
-    },\r
-    "max_zoom": {\r
-      "type": "number",\r
-      "default": 1.0,\r
-      "description": "Maximum zoom multiplier (e.g., 8.0 for 8x)."\r
-    },\r
-    "min_pitch": {\r
-      "type": "number",\r
-      "default": -10.0,\r
-      "description": "Minimum pitch angle limit in degrees, positive = looking up, negative = looking down."\r
-    },\r
-    "max_pitch": {\r
-      "type": "number",\r
-      "default": 10.0,\r
-      "description": "Maximum pitch angle limit in degrees."\r
-    },\r
-    "yaw_limit": {\r
-      "type": "number",\r
-      "default": 5.0,\r
-      "description": "Yaw angle span limit in degrees, the actual range is [center - limit/2, center + limit/2]."\r
-    },\r
-    "scope_hud_layout": {\r
-      "allOf": [\r
-        { "$ref": "../../base/resource_location.schema.json" }\r
-      ],\r
-      "default": "machine_max:empty",\r
-      "description": "HUD layout resource location: a file under the content pack's hud_layouts/ directory, keyed as <namespace>:<relative path>. When absent, the scope view shows no HUD."\r
-    },\r
-    "tracking_target_inputs": {\r
-      "type": "array",\r
-      "items": {\r
-        "type": "string"\r
-      },\r
-      "default": [\r
-        "tracking_target"\r
-      ],\r
-      "description": "List of tracking target input channels."\r
-    },\r
-    "discovery_inputs": {\r
-      "type": "array",\r
-      "items": {\r
-        "type": "string"\r
-      },\r
-      "default": [\r
-        "camera_discovery"\r
-      ],\r
-      "description": "List of sight discovery handshake channels (ordered by priority)."\r
-    },\r
-    "allow_cycle": {\r
-      "type": "boolean",\r
-      "default": true,\r
-      "description": "Whether to allow this sight to appear in the F5 camera cycle."\r
-    },\r
-    "sounds": {\r
-      "type": "object",\r
-      "properties": {\r
-        "on_destroyed": {\r
-          "allOf": [\r
-            { "$ref": "../../base/sound_event.schema.json" }\r
-          ],\r
-          "description": "Sound event when the sight is destroyed.",\r
-          "default": {\r
-            "sound_id": "machine_max:empty_sound",\r
-            "range": 16\r
-          }\r
-        },\r
-        "on_activate": {\r
-          "allOf": [\r
-            { "$ref": "../../base/sound_event.schema.json" }\r
-          ],\r
-          "description": "Sound event when the sight is activated.",\r
-          "default": {\r
-            "sound_id": "machine_max:empty_sound",\r
-            "range": 16\r
-          }\r
-        },\r
-        "on_deactivate": {\r
-          "allOf": [\r
-            { "$ref": "../../base/sound_event.schema.json" }\r
-          ],\r
-          "description": "Sound event when the sight is deactivated.",\r
-          "default": {\r
-            "sound_id": "machine_max:empty_sound",\r
-            "range": 16\r
-          }\r
-        }\r
-      },\r
-      "additionalProperties": false,\r
-      "description": "Basic sound configuration for the sight."\r
-    }\r
-  },\r
-  "required": [\r
-    "type"\r
-  ],\r
-  "examples": [\r
-    {\r
-      "type": "machine_max:sight",\r
-      "basic_durability": 15.0,\r
-      "base_zoom": 1.0,\r
-      "max_zoom": 5.0,\r
-      "discovery_inputs": [\r
-        "gunner_optics"\r
-      ],\r
-      "scope_hud_layout": "machine_max:scope_gunner"\r
-    }\r
-  ]\r
+}`, "en_us/schemas/subsystem/static/sight_static_attr.schema.json": `{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://machine_max.io/schemas/subsystem/static/sight_static_attr.json",
+  "title": "Sight Subsystem Static Attributes",
+  "description": "Fixed optics and weapon aim stabilization; no independent observation axes.",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "machine_max:sight",
+      "description": "Subsystem type, must be 'machine_max:sight'."
+    },
+    "basic_durability": {
+      "type": "number",
+      "default": 20.0,
+      "description": "Basic durability, subsystem is disabled when it drops to 0 and restored when repaired to 30%."
+    },
+    "pass_damage": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to pass damage to the subsystem holder."
+    },
+    "limit_damage": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to limit the damage transfer value to the remaining durability."
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to hide the subsystem in the HUD display."
+    },
+    "vertical_stabilized": {
+      "type": "boolean",
+      "default": false,
+      "description": "Hold the corresponding weapon aim axis against a world point."
+    },
+    "horizontal_stabilized": {
+      "type": "boolean",
+      "default": false,
+      "description": "Hold the corresponding weapon aim axis against a world point."
+    },
+    "base_zoom": {
+      "type": "number",
+      "default": 1.0,
+      "description": "Minimum zoom multiplier (default 1.0, i.e., base FOV)."
+    },
+    "max_zoom": {
+      "type": "number",
+      "default": 1.0,
+      "description": "Maximum zoom multiplier (e.g., 8.0 for 8x)."
+    },
+    "scope_hud_layout": {
+      "allOf": [
+        {
+          "$ref": "../../base/resource_location.schema.json"
+        }
+      ],
+      "default": "machine_max:empty",
+      "description": "HUD layout resource location: a file under the content pack's hud_layouts/ directory, keyed as <namespace>:<relative path>. When absent, the scope view shows no HUD."
+    },
+    "discovery_inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "camera_sight"
+      ],
+      "description": "List of sight discovery handshake channels (ordered by priority)."
+    },
+    "allow_cycle": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to allow this sight to appear in the F5 camera cycle."
+    },
+    "sounds": {
+      "type": "object",
+      "properties": {
+        "on_destroyed": {
+          "allOf": [
+            {
+              "$ref": "../../base/sound_event.schema.json"
+            }
+          ],
+          "description": "Sound event when the sight is destroyed.",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        },
+        "on_activate": {
+          "allOf": [
+            {
+              "$ref": "../../base/sound_event.schema.json"
+            }
+          ],
+          "description": "Sound event when the sight is activated.",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        },
+        "on_deactivate": {
+          "allOf": [
+            {
+              "$ref": "../../base/sound_event.schema.json"
+            }
+          ],
+          "description": "Sound event when the sight is deactivated.",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Basic sound configuration for the sight."
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "examples": [
+    {
+      "type": "machine_max:sight",
+      "basic_durability": 15.0,
+      "base_zoom": 1.0,
+      "max_zoom": 5.0,
+      "discovery_inputs": [
+        "gunner_optics"
+      ],
+      "scope_hud_layout": "machine_max:scope_gunner"
+    }
+  ]
 }`, "en_us/schemas/subsystem/static/track_controller_static_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/static/track_controller_static_attr.json",\r
@@ -6086,11 +6095,14 @@
       "description": "\u6444\u50CF\u673A\u6302\u8F7D\u5B9A\u4F4D\u5668\u540D\u79F0\uFF0C\u6A21\u578B\u4E2D\u7684\u9AA8\u9ABC\u4F5C\u4E3A\u6444\u50CF\u673A\u4F4D\u7F6E\u3002"
     }
   },
-  "required": ["type", "definition"],
+  "required": [
+    "type",
+    "definition"
+  ],
   "examples": [
     {
       "type": "machine_max:camera",
-      "definition": "machine_max:camera/tank_gunners_sight",
+      "definition": "machine_max:targeting_pod",
       "locator": "optics_mount"
     }
   ]
@@ -6461,7 +6473,7 @@
       "type": "object",\r
       "minProperties": 1,\r
       "additionalProperties": { "type": "integer", "minimum": 1 },\r
-      "description": "\u5F39\u94FE\u6784\u6210\uFF1A\u952E\u4E3A\u6295\u5C04\u7269\u8D44\u6E90\u5730\u5740\uFF0C\u503C\u4E3A\u8BE5\u5F39\u79CD\u5728\u5F39\u94FE\u4E2D\u91CD\u590D\u7684\u53D1\u6570\u3002\u9010\u9879\u6309\u53D1\u6570\u5C55\u5F00\u4E3A\u6709\u5E8F\u5F39\u94FE\uFF08\u5982 {\\"machine_max:7_62mm_ap\\": 3, \\"machine_max:7_62mm_tracer\\": 1} \u5C55\u5F00\u4E3A AP\u3001AP\u3001AP\u3001\u66F3\u5149\uFF09\uFF0C\u53D1\u5C04\u65F6\u6309\u8BE5\u987A\u5E8F\u5FAA\u73AF\u53D6\u7528\u3002\u952E\u7684\u4E66\u5199\u987A\u5E8F\u5C31\u662F\u5F39\u94FE\u987A\u5E8F\uFF0C\u56E0\u6B64\u7B2C\u4E00\u6761\u5F39\u79CD\u51B3\u5B9A\u672A\u586B\u5199 belt_label \u65F6\u7684\u5F39\u94FE\u540D\u3002\u5F39\u79CD\u5728\u754C\u9762\u4E0A\u663E\u793A\u7684\u6587\u672C\u53D6\u81EA\u8BE5\u5F39\u79CD\u81EA\u5DF1\u7684\u8BED\u8A00\u952E\uFF08\u6295\u5C04\u7269\u6CE8\u518C\u952E\u6309 <\u547D\u540D\u7A7A\u95F4>.<\u8DEF\u5F84> \u62FC\u5199\uFF0C\u8DEF\u5F84\u4E2D\u7684\u659C\u6760\u539F\u6837\u4FDD\u7559\uFF09\uFF0C\u952E\u5199\u5728\u8BE5\u5F39\u79CD\u6240\u5C5E\u5185\u5BB9\u5305\u7684 lang/<locale>.json \u91CC\uFF1B\u8BED\u8A00\u952E\u7F3A\u5931\u65F6\u754C\u9762\u663E\u793A\u952E\u540D\u672C\u8EAB\uFF0C\u7528\u4E8E\u66B4\u9732\u6F0F\u5199\u3002"\r
+      "description": "\u5F39\u94FE\u6784\u6210\uFF1A\u952E\u4E3A\u6295\u5C04\u7269\u8D44\u6E90\u5730\u5740\uFF0C\u503C\u4E3A\u8BE5\u5F39\u79CD\u5728\u5F39\u94FE\u4E2D\u91CD\u590D\u7684\u53D1\u6570\u3002\u9010\u9879\u6309\u53D1\u6570\u5C55\u5F00\u4E3A\u6709\u5E8F\u5F39\u94FE\uFF08\u5982 {\\"machine_max:7_62x54r_ap\\": 3, \\"machine_max:7_62x54r_t\\": 1} \u5C55\u5F00\u4E3A AP\u3001AP\u3001AP\u3001\u66F3\u5149\uFF09\uFF0C\u53D1\u5C04\u65F6\u6309\u8BE5\u987A\u5E8F\u5FAA\u73AF\u53D6\u7528\u3002\u952E\u7684\u4E66\u5199\u987A\u5E8F\u5C31\u662F\u5F39\u94FE\u987A\u5E8F\uFF0C\u56E0\u6B64\u7B2C\u4E00\u6761\u5F39\u79CD\u51B3\u5B9A\u672A\u586B\u5199 belt_label \u65F6\u7684\u5F39\u94FE\u540D\u3002\u5F39\u79CD\u5728\u754C\u9762\u4E0A\u663E\u793A\u7684\u6587\u672C\u53D6\u81EA\u8BE5\u5F39\u79CD\u81EA\u5DF1\u7684\u8BED\u8A00\u952E\uFF08\u6295\u5C04\u7269\u6CE8\u518C\u952E\u6309 <\u547D\u540D\u7A7A\u95F4>.<\u8DEF\u5F84> \u62FC\u5199\uFF0C\u8DEF\u5F84\u4E2D\u7684\u659C\u6760\u539F\u6837\u4FDD\u7559\uFF09\uFF0C\u952E\u5199\u5728\u8BE5\u5F39\u79CD\u6240\u5C5E\u5185\u5BB9\u5305\u7684 lang/<locale>.json \u91CC\uFF1B\u8BED\u8A00\u952E\u7F3A\u5931\u65F6\u754C\u9762\u663E\u793A\u952E\u540D\u672C\u8EAB\uFF0C\u7528\u4E8E\u66B4\u9732\u6F0F\u5199\u3002"\r
     },\r
     "belt_label": {\r
       "type": "string",\r
@@ -6586,11 +6598,14 @@
       "description": "\u7784\u51C6\u955C\u6302\u8F7D\u5B9A\u4F4D\u5668\u540D\u79F0\uFF0C\u6A21\u578B\u4E2D\u7684\u9AA8\u9ABC\u4F5C\u4E3A\u7784\u51C6\u955C\u4F4D\u7F6E\u3002"
     }
   },
-  "required": ["type", "definition"],
+  "required": [
+    "type",
+    "definition"
+  ],
   "examples": [
     {
       "type": "machine_max:sight",
-      "definition": "machine_max:sight/tank_gunners_sight",
+      "definition": "machine_max:gunner_sight",
       "locator": "gunner_sight"
     }
   ]
@@ -7005,157 +7020,177 @@
       "description": "\u5B8C\u6574\u793A\u4F8B - \u5305\u542B\u6240\u6709\u53EF\u9009\u5B57\u6BB5"\r
     }\r
   ]\r
-}`, "zh_cn/schemas/subsystem/static/camera_static_attr.schema.json": `{\r
-  "$schema": "http://json-schema.org/draft-07/schema#",\r
-  "$id": "https://machine_max.io/schemas/subsystem/static/camera_static_attr.json",\r
-  "title": "\u6444\u50CF\u673A\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027",\r
-  "description": "\u6444\u50CF\u673A\u4E13\u7528\u9759\u6001\u5C5E\u6027\uFF0C\u5B9A\u4E49\u5149\u5B66\u7279\u6027\u3001\u7A33\u5B9A\u6A21\u5F0F\u3001\u53D8\u7126\u8303\u56F4\u548C\u8DDF\u8E2A\u80FD\u529B\u3002",\r
-  "properties": {\r
-    "type": {\r
-      "type": "string",\r
-      "const": "machine_max:camera",\r
-      "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u5FC5\u987B\u4E3A 'machine_max:camera'\u3002"\r
-    },\r
-    "basic_durability": {\r
-      "type": "number",\r
-      "default": 20.0,\r
-      "description": "\u57FA\u7840\u8010\u4E45\u5EA6\uFF0C\u964D\u81F30\u65F6\u5B50\u7CFB\u7EDF\u762B\u75EA\uFF0C\u4FEE\u590D\u81F330%\u65F6\u6062\u590D\u3002"\r
-    },\r
-    "pass_damage": {\r
-      "type": "boolean",\r
-      "default": true,\r
-      "description": "\u662F\u5426\u4F20\u9012\u4F24\u5BB3\u81F3\u5B50\u7CFB\u7EDF\u6301\u6709\u8005\u3002"\r
-    },\r
-    "limit_damage": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "\u662F\u5426\u9650\u5236\u4F24\u5BB3\u4F20\u9012\u503C\u81F3\u5269\u4F59\u8010\u4E45\u5EA6\u3002"\r
-    },\r
-    "hidden": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "\u662F\u5426\u9690\u85CF\u5B50\u7CFB\u7EDF\u5728HUD\u4E2D\u7684\u663E\u793A\u3002"\r
-    },\r
-    "vertical_stabilized": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "\u662F\u5426\u542F\u7528\u5782\u76F4\u7A33\u5B9A\uFF08\u8865\u507F\u8F66\u4F53\u4FEF\u4EF0\u6643\u52A8\uFF09\u3002"\r
-    },\r
-    "horizontal_stabilized": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "\u662F\u5426\u542F\u7528\u6C34\u5E73\u7A33\u5B9A\uFF08\u8865\u507F\u8F66\u4F53\u504F\u822A\u6643\u52A8\uFF09\u3002"\r
-    },\r
-    "base_zoom": {\r
-      "type": "number",\r
-      "default": 1.0,\r
-      "description": "\u6700\u5C0F\u53D8\u7126\u500D\u7387\uFF08\u9ED8\u8BA4 1.0\uFF0C\u5373\u57FA\u51C6\u89C6\u91CE\uFF09\u3002"\r
-    },\r
-    "max_zoom": {\r
-      "type": "number",\r
-      "default": 1.0,\r
-      "description": "\u6700\u5927\u53D8\u7126\u500D\u7387\uFF08\u4F8B\u5982 8.0 \u8868\u793A 8\xD7\uFF09\u3002"\r
-    },\r
-    "min_pitch": {\r
-      "type": "number",\r
-      "default": -10.0,\r
-      "description": "\u6700\u5C0F\u4FEF\u4EF0\u89D2\u9650\u5236\uFF08\u5EA6\uFF09\uFF0C\u6B63\u503C=\u62AC\u5934\uFF0C\u8D1F\u503C=\u4F4E\u5934\u3002"\r
-    },\r
-    "max_pitch": {\r
-      "type": "number",\r
-      "default": 10.0,\r
-      "description": "\u6700\u5927\u4FEF\u4EF0\u89D2\u9650\u5236\uFF08\u5EA6\uFF09\u3002"\r
-    },\r
-    "yaw_limit": {\r
-      "type": "number",\r
-      "default": 5.0,\r
-      "description": "\u504F\u822A\u89D2\u5F20\u89D2\u9650\u5236\uFF08\u5EA6\uFF09\uFF0C\u5B9E\u9645\u8303\u56F4 [center - limit/2, center + limit/2]\u3002"\r
-    },\r
-    "scope_hud_layout": {\r
-      "allOf": [\r
-        { "$ref": "../../base/resource_location.schema.json" }\r
-      ],\r
-      "default": "machine_max:empty",\r
-      "description": "\u70AE\u955C\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u70AE\u955C\u4E0D\u663E\u793A\u8BE5\u5E03\u5C40\u63D0\u4F9B\u7684 HUD\u3002"\r
-    },\r
-    "tracking_target_inputs": {\r
-      "type": "array",\r
-      "items": {\r
-        "type": "string"\r
-      },\r
-      "default": [\r
-        "tracking_target"\r
-      ],\r
-      "description": "\u8DDF\u8E2A\u76EE\u6807\u7684\u8F93\u5165\u9891\u9053\u5217\u8868\u3002"\r
-    },\r
-    "discovery_inputs": {\r
-      "type": "array",\r
-      "items": {\r
-        "type": "string"\r
-      },\r
-      "default": [\r
-        "camera_discovery"\r
-      ],\r
-      "description": "\u6444\u50CF\u673A\u88AB\u53D1\u73B0\u7684\u63E1\u624B\u9891\u9053\u5217\u8868\uFF08\u987A\u5E8F=\u4F18\u5148\u7EA7\uFF09\u3002"\r
-    },\r
-    "allow_cycle": {\r
-      "type": "boolean",\r
-      "default": true,\r
-      "description": "\u662F\u5426\u5141\u8BB8\u5728 F5 \u89C6\u89D2\u5FAA\u73AF\u4E2D\u51FA\u73B0\u3002"\r
-    },\r
-    "sounds": {\r
-      "type": "object",\r
-      "properties": {\r
-        "on_destroyed": {\r
-          "allOf": [\r
-            { "$ref": "../../base/sound_event.schema.json" }\r
-          ],\r
-          "description": "\u6444\u50CF\u673A\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u3002",\r
-          "default": {\r
-            "sound_id": "machine_max:empty_sound",\r
-            "range": 16\r
-          }\r
-        },\r
-        "on_activate": {\r
-          "allOf": [\r
-            { "$ref": "../../base/sound_event.schema.json" }\r
-          ],\r
-          "description": "\u6444\u50CF\u673A\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u3002",\r
-          "default": {\r
-            "sound_id": "machine_max:empty_sound",\r
-            "range": 16\r
-          }\r
-        },\r
-        "on_deactivate": {\r
-          "allOf": [\r
-            { "$ref": "../../base/sound_event.schema.json" }\r
-          ],\r
-          "description": "\u6444\u50CF\u673A\u88AB\u7981\u7528\u65F6\u7684\u97F3\u6548\u3002",\r
-          "default": {\r
-            "sound_id": "machine_max:empty_sound",\r
-            "range": 16\r
-          }\r
-        }\r
-      },\r
-      "additionalProperties": false,\r
-      "description": "\u6444\u50CF\u673A\u57FA\u7840\u97F3\u6548\u914D\u7F6E\u3002"\r
-    }\r
-  },\r
-  "required": [\r
-    "type"\r
-  ],\r
-  "examples": [\r
-    {\r
-      "type": "machine_max:camera",\r
-      "basic_durability": 15.0,\r
-      "base_zoom": 1.0,\r
-      "max_zoom": 5.0,\r
-      "discovery_inputs": [\r
-        "gunner_optics"\r
-      ],\r
-      "scope_hud_layout": "machine_max:scope_gunner"\r
-    }\r
-  ]\r
+}`, "zh_cn/schemas/subsystem/static/camera_static_attr.schema.json": `{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://machine_max.io/schemas/subsystem/static/camera_static_attr.json",
+  "title": "\u6444\u50CF\u673A\u5B50\u7CFB\u7EDF\u9759\u6001\u5C5E\u6027",
+  "description": "\u6444\u50CF\u673A\u4E13\u7528\u9759\u6001\u5C5E\u6027\uFF0C\u5B9A\u4E49\u5149\u5B66\u7279\u6027\u3001\u7A33\u5B9A\u6A21\u5F0F\u3001\u53D8\u7126\u8303\u56F4\u548C\u8DDF\u8E2A\u80FD\u529B\u3002",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "machine_max:camera",
+      "description": "\u5B50\u7CFB\u7EDF\u7C7B\u578B\uFF0C\u5FC5\u987B\u4E3A 'machine_max:camera'\u3002"
+    },
+    "basic_durability": {
+      "type": "number",
+      "default": 20.0,
+      "description": "\u57FA\u7840\u8010\u4E45\u5EA6\uFF0C\u964D\u81F30\u65F6\u5B50\u7CFB\u7EDF\u762B\u75EA\uFF0C\u4FEE\u590D\u81F330%\u65F6\u6062\u590D\u3002"
+    },
+    "pass_damage": {
+      "type": "boolean",
+      "default": true,
+      "description": "\u662F\u5426\u4F20\u9012\u4F24\u5BB3\u81F3\u5B50\u7CFB\u7EDF\u6301\u6709\u8005\u3002"
+    },
+    "limit_damage": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u662F\u5426\u9650\u5236\u4F24\u5BB3\u4F20\u9012\u503C\u81F3\u5269\u4F59\u8010\u4E45\u5EA6\u3002"
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u662F\u5426\u9690\u85CF\u5B50\u7CFB\u7EDF\u5728HUD\u4E2D\u7684\u663E\u793A\u3002"
+    },
+    "vertical_stabilized": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u955C\u5934\u81EA\u8EAB\u89C2\u5BDF\u76EE\u6807\u7684\u5BF9\u5E94\u8F74\u6309\u4E16\u754C\u70B9\u4FDD\u6301\u3002"
+    },
+    "horizontal_stabilized": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u955C\u5934\u81EA\u8EAB\u89C2\u5BDF\u76EE\u6807\u7684\u5BF9\u5E94\u8F74\u6309\u4E16\u754C\u70B9\u4FDD\u6301\u3002"
+    },
+    "base_zoom": {
+      "type": "number",
+      "default": 1.0,
+      "description": "\u6700\u5C0F\u53D8\u7126\u500D\u7387\uFF08\u9ED8\u8BA4 1.0\uFF0C\u5373\u57FA\u51C6\u89C6\u91CE\uFF09\u3002"
+    },
+    "max_zoom": {
+      "type": "number",
+      "default": 1.0,
+      "description": "\u6700\u5927\u53D8\u7126\u500D\u7387\uFF08\u4F8B\u5982 8.0 \u8868\u793A 8\xD7\uFF09\u3002"
+    },
+    "min_pitch": {
+      "type": "number",
+      "default": -10.0,
+      "description": "\u6700\u5C0F\u4FEF\u4EF0\u89D2\u9650\u5236\uFF08\u5EA6\uFF09\uFF0C\u6B63\u503C=\u62AC\u5934\uFF0C\u8D1F\u503C=\u4F4E\u5934\u3002"
+    },
+    "max_pitch": {
+      "type": "number",
+      "default": 10.0,
+      "description": "\u6700\u5927\u4FEF\u4EF0\u89D2\u9650\u5236\uFF08\u5EA6\uFF09\u3002"
+    },
+    "yaw_limit": {
+      "type": "number",
+      "default": 5.0,
+      "description": "\u504F\u822A\u89D2\u5F20\u89D2\u9650\u5236\uFF08\u5EA6\uFF09\uFF0C\u5B9E\u9645\u8303\u56F4 [center - limit/2, center + limit/2]\u3002"
+    },
+    "scope_hud_layout": {
+      "allOf": [
+        {
+          "$ref": "../../base/resource_location.schema.json"
+        }
+      ],
+      "default": "machine_max:empty",
+      "description": "\u70AE\u955C\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u70AE\u955C\u4E0D\u663E\u793A\u8BE5\u5E03\u5C40\u63D0\u4F9B\u7684 HUD\u3002"
+    },
+    "tracking_target_inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "tracking_target"
+      ],
+      "description": "\u8DDF\u8E2A\u76EE\u6807\u7684\u8F93\u5165\u9891\u9053\u5217\u8868\u3002"
+    },
+    "discovery_inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "camera_sight"
+      ],
+      "description": "\u6444\u50CF\u673A\u88AB\u53D1\u73B0\u7684\u63E1\u624B\u9891\u9053\u5217\u8868\uFF08\u987A\u5E8F=\u4F18\u5148\u7EA7\uFF09\u3002"
+    },
+    "allow_cycle": {
+      "type": "boolean",
+      "default": true,
+      "description": "\u662F\u5426\u5141\u8BB8\u5728 F5 \u89C6\u89D2\u5FAA\u73AF\u4E2D\u51FA\u73B0\u3002"
+    },
+    "sounds": {
+      "type": "object",
+      "properties": {
+        "on_destroyed": {
+          "allOf": [
+            {
+              "$ref": "../../base/sound_event.schema.json"
+            }
+          ],
+          "description": "\u6444\u50CF\u673A\u88AB\u6467\u6BC1\u65F6\u7684\u97F3\u6548\u3002",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        },
+        "on_activate": {
+          "allOf": [
+            {
+              "$ref": "../../base/sound_event.schema.json"
+            }
+          ],
+          "description": "\u6444\u50CF\u673A\u88AB\u6FC0\u6D3B\u65F6\u7684\u97F3\u6548\u3002",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        },
+        "on_deactivate": {
+          "allOf": [
+            {
+              "$ref": "../../base/sound_event.schema.json"
+            }
+          ],
+          "description": "\u6444\u50CF\u673A\u88AB\u7981\u7528\u65F6\u7684\u97F3\u6548\u3002",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "\u6444\u50CF\u673A\u57FA\u7840\u97F3\u6548\u914D\u7F6E\u3002"
+    },
+    "pitch_speed": {
+      "type": "number",
+      "minimum": 0,
+      "default": 90,
+      "description": "\u955C\u5934\u81EA\u8EAB\u8F6C\u901F\uFF0C\u5EA6\uFF0F\u79D2\u3002"
+    },
+    "yaw_speed": {
+      "type": "number",
+      "minimum": 0,
+      "default": 90,
+      "description": "\u955C\u5934\u81EA\u8EAB\u8F6C\u901F\uFF0C\u5EA6\uFF0F\u79D2\u3002"
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "examples": [
+    {
+      "type": "machine_max:camera",
+      "basic_durability": 15.0,
+      "base_zoom": 1.0,
+      "max_zoom": 5.0,
+      "discovery_inputs": [
+        "gunner_optics"
+      ],
+      "scope_hud_layout": "machine_max:scope_gunner"
+    }
+  ]
 }`, "zh_cn/schemas/subsystem/static/car_controller_static_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/static/car_controller_static_attr.json",\r
@@ -8818,157 +8853,140 @@
       "allow_use_items": true\r
     }\r
   ]\r
-}`, "zh_cn/schemas/subsystem/static/sight_static_attr.schema.json": `{\r
-  "$schema": "http://json-schema.org/draft-07/schema#",\r
-  "$id": "https://machine_max.io/schemas/subsystem/static/sight_static_attr.json",\r
-  "title": "Sight Subsystem Static Attributes",\r
-  "description": "Sight-specific static attributes defining optical characteristics, stabilization, zoom range, and tracking capabilities.",\r
-  "properties": {\r
-    "type": {\r
-      "type": "string",\r
-      "const": "machine_max:sight",\r
-      "description": "Subsystem type, must be 'machine_max:sight'."\r
-    },\r
-    "basic_durability": {\r
-      "type": "number",\r
-      "default": 20.0,\r
-      "description": "Basic durability, subsystem is disabled when it drops to 0 and restored when repaired to 30%."\r
-    },\r
-    "pass_damage": {\r
-      "type": "boolean",\r
-      "default": true,\r
-      "description": "Whether to pass damage to the subsystem holder."\r
-    },\r
-    "limit_damage": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "Whether to limit the damage transfer value to the remaining durability."\r
-    },\r
-    "hidden": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "Whether to hide the subsystem in the HUD display."\r
-    },\r
-    "vertical_stabilized": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "Whether vertical stabilization is enabled (compensates for vehicle pitch)."\r
-    },\r
-    "horizontal_stabilized": {\r
-      "type": "boolean",\r
-      "default": false,\r
-      "description": "Whether horizontal stabilization is enabled (compensates for vehicle yaw)."\r
-    },\r
-    "base_zoom": {\r
-      "type": "number",\r
-      "default": 1.0,\r
-      "description": "Minimum zoom multiplier (default 1.0, i.e., base FOV)."\r
-    },\r
-    "max_zoom": {\r
-      "type": "number",\r
-      "default": 1.0,\r
-      "description": "Maximum zoom multiplier (e.g., 8.0 for 8x)."\r
-    },\r
-    "min_pitch": {\r
-      "type": "number",\r
-      "default": -10.0,\r
-      "description": "Minimum pitch angle limit in degrees, positive = looking up, negative = looking down."\r
-    },\r
-    "max_pitch": {\r
-      "type": "number",\r
-      "default": 10.0,\r
-      "description": "Maximum pitch angle limit in degrees."\r
-    },\r
-    "yaw_limit": {\r
-      "type": "number",\r
-      "default": 5.0,\r
-      "description": "Yaw angle span limit in degrees, the actual range is [center - limit/2, center + limit/2]."\r
-    },\r
-    "scope_hud_layout": {\r
-      "allOf": [\r
-        { "$ref": "../../base/resource_location.schema.json" }\r
-      ],\r
-      "default": "machine_max:empty",\r
-      "description": "\u70AE\u955C\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u70AE\u955C\u4E0D\u663E\u793A\u8BE5\u5E03\u5C40\u63D0\u4F9B\u7684 HUD\u3002"\r
-    },\r
-    "tracking_target_inputs": {\r
-      "type": "array",\r
-      "items": {\r
-        "type": "string"\r
-      },\r
-      "default": [\r
-        "tracking_target"\r
-      ],\r
-      "description": "List of tracking target input channels."\r
-    },\r
-    "discovery_inputs": {\r
-      "type": "array",\r
-      "items": {\r
-        "type": "string"\r
-      },\r
-      "default": [\r
-        "camera_discovery"\r
-      ],\r
-      "description": "List of sight discovery handshake channels (ordered by priority)."\r
-    },\r
-    "allow_cycle": {\r
-      "type": "boolean",\r
-      "default": true,\r
-      "description": "Whether to allow this sight to appear in the F5 camera cycle."\r
-    },\r
-    "sounds": {\r
-      "type": "object",\r
-      "properties": {\r
-        "on_destroyed": {\r
-          "allOf": [\r
-            { "$ref": "../../base/sound_event.schema.json" }\r
-          ],\r
-          "description": "Sound event when the sight is destroyed.",\r
-          "default": {\r
-            "sound_id": "machine_max:empty_sound",\r
-            "range": 16\r
-          }\r
-        },\r
-        "on_activate": {\r
-          "allOf": [\r
-            { "$ref": "../../base/sound_event.schema.json" }\r
-          ],\r
-          "description": "Sound event when the sight is activated.",\r
-          "default": {\r
-            "sound_id": "machine_max:empty_sound",\r
-            "range": 16\r
-          }\r
-        },\r
-        "on_deactivate": {\r
-          "allOf": [\r
-            { "$ref": "../../base/sound_event.schema.json" }\r
-          ],\r
-          "description": "Sound event when the sight is deactivated.",\r
-          "default": {\r
-            "sound_id": "machine_max:empty_sound",\r
-            "range": 16\r
-          }\r
-        }\r
-      },\r
-      "additionalProperties": false,\r
-      "description": "Basic sound configuration for the sight."\r
-    }\r
-  },\r
-  "required": [\r
-    "type"\r
-  ],\r
-  "examples": [\r
-    {\r
-      "type": "machine_max:sight",\r
-      "basic_durability": 15.0,\r
-      "base_zoom": 1.0,\r
-      "max_zoom": 5.0,\r
-      "discovery_inputs": [\r
-        "gunner_optics"\r
-      ],\r
-      "scope_hud_layout": "machine_max:scope_gunner"\r
-    }\r
-  ]\r
+}`, "zh_cn/schemas/subsystem/static/sight_static_attr.schema.json": `{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://machine_max.io/schemas/subsystem/static/sight_static_attr.json",
+  "title": "Sight Subsystem Static Attributes",
+  "description": "\u56FA\u5B9A\u70AE\u955C\u7684\u5149\u5B66\u4E0E\u6B66\u5668\u7784\u51C6\u7A33\u5B9A\u914D\u7F6E\uFF1B\u8BBE\u5907\u81EA\u8EAB\u6CA1\u6709\u72EC\u7ACB\u89C2\u5BDF\u8F6C\u8F74\u3002",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "machine_max:sight",
+      "description": "Subsystem type, must be 'machine_max:sight'."
+    },
+    "basic_durability": {
+      "type": "number",
+      "default": 20.0,
+      "description": "Basic durability, subsystem is disabled when it drops to 0 and restored when repaired to 30%."
+    },
+    "pass_damage": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to pass damage to the subsystem holder."
+    },
+    "limit_damage": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to limit the damage transfer value to the remaining durability."
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to hide the subsystem in the HUD display."
+    },
+    "vertical_stabilized": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u6B66\u5668\u671F\u671B\u76EE\u6807\u7684\u5BF9\u5E94\u8F74\u6309\u4E16\u754C\u70B9\u4FDD\u6301\u3002"
+    },
+    "horizontal_stabilized": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u6B66\u5668\u671F\u671B\u76EE\u6807\u7684\u5BF9\u5E94\u8F74\u6309\u4E16\u754C\u70B9\u4FDD\u6301\u3002"
+    },
+    "base_zoom": {
+      "type": "number",
+      "default": 1.0,
+      "description": "Minimum zoom multiplier (default 1.0, i.e., base FOV)."
+    },
+    "max_zoom": {
+      "type": "number",
+      "default": 1.0,
+      "description": "Maximum zoom multiplier (e.g., 8.0 for 8x)."
+    },
+    "scope_hud_layout": {
+      "allOf": [
+        {
+          "$ref": "../../base/resource_location.schema.json"
+        }
+      ],
+      "default": "machine_max:empty",
+      "description": "\u70AE\u955C\u89C6\u89D2\u4F7F\u7528\u7684 HUD \u5E03\u5C40\u8D44\u6E90\u5730\u5740\uFF1A\u5185\u5BB9\u5305 hud_layouts/ \u4E0B\u7684\u6587\u4EF6\uFF0C\u952E\u4E3A <\u547D\u540D\u7A7A\u95F4>:<\u76F8\u5BF9\u8DEF\u5F84>\uFF1B\u7F3A\u5931\u8868\u793A\u70AE\u955C\u4E0D\u663E\u793A\u8BE5\u5E03\u5C40\u63D0\u4F9B\u7684 HUD\u3002"
+    },
+    "discovery_inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "camera_sight"
+      ],
+      "description": "List of sight discovery handshake channels (ordered by priority)."
+    },
+    "allow_cycle": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to allow this sight to appear in the F5 camera cycle."
+    },
+    "sounds": {
+      "type": "object",
+      "properties": {
+        "on_destroyed": {
+          "allOf": [
+            {
+              "$ref": "../../base/sound_event.schema.json"
+            }
+          ],
+          "description": "Sound event when the sight is destroyed.",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        },
+        "on_activate": {
+          "allOf": [
+            {
+              "$ref": "../../base/sound_event.schema.json"
+            }
+          ],
+          "description": "Sound event when the sight is activated.",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        },
+        "on_deactivate": {
+          "allOf": [
+            {
+              "$ref": "../../base/sound_event.schema.json"
+            }
+          ],
+          "description": "Sound event when the sight is deactivated.",
+          "default": {
+            "sound_id": "machine_max:empty_sound",
+            "range": 16
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Basic sound configuration for the sight."
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "examples": [
+    {
+      "type": "machine_max:sight",
+      "basic_durability": 15.0,
+      "base_zoom": 1.0,
+      "max_zoom": 5.0,
+      "discovery_inputs": [
+        "gunner_optics"
+      ],
+      "scope_hud_layout": "machine_max:scope_gunner"
+    }
+  ]
 }`, "zh_cn/schemas/subsystem/static/track_controller_static_attr.schema.json": `{\r
   "$schema": "http://json-schema.org/draft-07/schema#",\r
   "$id": "https://machine_max.io/schemas/subsystem/static/track_controller_static_attr.json",\r
@@ -10051,7 +10069,7 @@
               return codec.encode(value, path);
             },
             decodeField: function(value, key, path) {
-              if (value === void 0) return null;
+              if (value === void 0 || value === null) return null;
               return codec.decode(value);
             }
           };
@@ -10515,7 +10533,10 @@
         control_group_preset: Codec.STRING.default(""),
         passenger_num_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
         camera_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
-        dismount_locators: Codec.STRING.list().default([])
+        dismount_locators: Codec.STRING.list().default([]),
+        first_hud_layout: Codec.STRING.default(""),
+        third_hud_layout: Codec.STRING.default(""),
+        allow_use_items: Codec.BOOL.nullable()
       });
       var GearboxCodec = Codec.record({
         definition: Codec.STRING.field(),
@@ -12055,14 +12076,20 @@
         "generator_version": 1,
         "source_locale": "en_us",
         "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
-        "source_revision": "53024908+worktree",
-        "source_files": 67,
-        "source_sha256": "ae11b269070b4d3bbf8b515b2ad7882140d50962bee6847e35b96e63aa87f436",
+        "source_revision": "8a027167",
+        "source_files": 70,
+        "source_sha256": "ec8c108d240e847e522f6f32410a690a4bb30c417486d6c2c2ee1dcad98b6dbc",
         "generated_from": "machine_max builtin JSON Schema"
       };
       var SPECS = {
         "part": {
           "fields": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "regular"
+              ]
+            },
             "icon": {
               "type": "string",
               "references": "resource"
@@ -13220,6 +13247,18 @@
                   "type": "string",
                   "references": "locator"
                 }
+              },
+              "first_hud_layout": {
+                "type": "string",
+                "references": "resource"
+              },
+              "third_hud_layout": {
+                "type": "string",
+                "references": "resource"
+              },
+              "allow_use_items": {
+                "type": "boolean",
+                "nullable": true
               }
             },
             "required": [
@@ -17300,7 +17339,7 @@
         // ===== experimental 分类 =====
         {
           id: "machine_max:camera",
-          displayName: "\u6444\u50CF\u673A",
+          displayName: "\u53EF\u8F6C\u955C\u5934",
           category: "experimental",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
@@ -17342,7 +17381,7 @@
         },
         {
           id: "machine_max:sight",
-          displayName: "\u7784\u51C6\u955C",
+          displayName: "\u56FA\u5B9A\u70AE\u955C",
           category: "experimental",
           dynamicFields: [
             { field: "definition", label: "\u578B\u53F7\u5B9A\u4E49", editor: "definition_selector", required: true, defaultValue: "" },
@@ -34990,7 +35029,7 @@
   var { registerUndoBridge, unregisterUndoBridge } = require_undo();
   var { showToast } = require_notify();
   var docPorts = require_ports();
-  var PLUGIN_VERSION = "0.5.2";
+  var PLUGIN_VERSION = "0.5.3";
   var log = createLogger("Plugin");
   Plugin.register("machine_max_bb_plugin", {
     title: "MachineMax \u96F6\u4EF6\u5B9A\u4E49",

@@ -3,7 +3,7 @@
 /**
  * 本文件由 scripts/gen-field-specs.js 自动生成，不要手工编辑。
  * 数据源：src/builtin/builtin/machine_max/docs/en_us/schemas
- * 上游快照：Machine-Max@53024908+worktree
+ * 上游快照：Machine-Max@8a027167
  * 重新生成：node scripts/gen-field-specs.js
  * 漂移检查：node scripts/gen-field-specs.js --check
  */
@@ -12,15 +12,21 @@ const PROVENANCE = {
     "generator_version": 1,
     "source_locale": "en_us",
     "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
-    "source_revision": "53024908+worktree",
-    "source_files": 67,
-    "source_sha256": "ae11b269070b4d3bbf8b515b2ad7882140d50962bee6847e35b96e63aa87f436",
+    "source_revision": "8a027167",
+    "source_files": 70,
+    "source_sha256": "ec8c108d240e847e522f6f32410a690a4bb30c417486d6c2c2ee1dcad98b6dbc",
     "generated_from": "machine_max builtin JSON Schema"
 };
 
 const SPECS = {
     "part": {
         "fields": {
+            "type": {
+                "type": "string",
+                "enum": [
+                    "regular"
+                ]
+            },
             "icon": {
                 "type": "string",
                 "references": "resource"
@@ -1178,6 +1184,18 @@ const SPECS = {
                         "type": "string",
                         "references": "locator"
                     }
+                },
+                "first_hud_layout": {
+                    "type": "string",
+                    "references": "resource"
+                },
+                "third_hud_layout": {
+                    "type": "string",
+                    "references": "resource"
+                },
+                "allow_use_items": {
+                    "type": "boolean",
+                    "nullable": true
                 }
             },
             "required": [

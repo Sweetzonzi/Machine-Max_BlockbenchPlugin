@@ -28,9 +28,10 @@ const DEFAULT_SOURCE = path.join(REPO_ROOT, SCHEMA_REL);
 const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 
 // vendored 快照的溯源 commit；同步 schema 时与 docs/13 §3.2 一起更新。
-// 上游 53024908 + 工作树（履带控制信号并入 car_control；含未提交的履带连接点与子系统调整）。
+// 上游 8a027167（观瞄重构：sight 固定炮镜去掉观察行程字段，camera 可转镜头新增
+// pitch_speed / yaw_speed，discovery 默认频道改为 camera_sight）。
 // 内容真值以 source_sha256 为准。
-const UPSTREAM_REVISION = '53024908+worktree';
+const UPSTREAM_REVISION = '8a027167';
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;
@@ -53,6 +54,13 @@ const SIDE_EFFECTS = {
     'variant.textures': 'ensure_object',
     'subsystem.type': 'rebuild_type_fields',
 };
+
+// 上游 optional 且无默认值的动态字段：语义是「不覆盖型号定义」，Codec 用
+// .nullable() 表达三态（null = 省略）。field_specs 必须同步标 nullable，
+// 否则 validateValues 会把三态里的 null 判成类型错误（docs/13 §5.2.5）。
+const OPTIONAL_NULLABLE = new Set([
+    'subsystem.allow_use_items',
+]);
 
 const RESOURCE_FIELDS = new Set([
     'icon', 'model', 'animations', 'definition', 'material', 'control_group_preset',
@@ -324,6 +332,8 @@ function applyFieldMeta(kind, field, spec) {
 
     const sideEffect = SIDE_EFFECTS[kind + '.' + field];
     if (sideEffect) spec.sideEffect = sideEffect;
+
+    if (OPTIONAL_NULLABLE.has(kind + '.' + field)) spec.nullable = true;
 
     // 上游 optionalFieldOf 无默认值 → Java Optional → null；required 字段禁止 nullable。
     if ((kind === 'hit_box' || kind === 'connector') && field === 'overwrite') {

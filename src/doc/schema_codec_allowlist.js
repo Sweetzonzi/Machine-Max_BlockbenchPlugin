@@ -18,10 +18,19 @@ module.exports = {
     // 2) 类型集合多余：Codec 有、schema 没有（D18 的 5 个 WIP 类型已删除）
     extra_types: [],
 
-    // 3) 字段集合缺口：Codec 缺字段（D12 修完后都应为空）
+    // 3) 字段集合缺口：Codec 缺字段
     //    D12 已补 hit_box.module、launcher.fire_animation、regen_loader.belt_label
-    //    与 weapon_controller 的 3 个 HUD layout 字段；字段集合差异应为 0。
-    missing_fields: [],
+    //    与 weapon_controller 的 3 个 HUD layout 字段；seat 的 3 个安装级覆盖已在
+    //    SeatCodec 补齐。仅剩 part.type 一个常量判别字段。
+    missing_fields: [
+        {
+            kind: 'part',
+            field: 'type',
+            owner: '上游 8a027167',
+            why: 'part_definition_schema 新增 type=const regular（default regular，非 required）。'
+                + '插件只编辑 regular 零件，省略即默认值，不把该常量写进工程配置。',
+        },
+    ],
 
     // 4) 字段集合多余：Codec 有、schema 没有的运行时字段（容器除外）
     extra_fields: [],

@@ -93,7 +93,9 @@ function createFieldDescriptor(codec, opts) {
                 return codec.encode(value, path);
             },
             decodeField: function (value, key, path) {
-                if (value === undefined) return null;
+                // 显式 null 与缺失同义：工程文件会把内部占位 `null` 原样落盘，
+                // 再读时必须仍得到 `null`，不能交给底层 codec 报类型错误。
+                if (value === undefined || value === null) return null;
                 return codec.decode(value);
             },
         };

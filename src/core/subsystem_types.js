@@ -170,7 +170,7 @@ var SUBSYSTEM_TYPES = [
     // ===== experimental 分类 =====
     {
         id: 'machine_max:camera',
-        displayName: '摄像机',
+        displayName: '可转镜头',
         category: 'experimental',
         dynamicFields: [
             { field: 'definition', label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
@@ -212,7 +212,7 @@ var SUBSYSTEM_TYPES = [
     },
     {
         id: 'machine_max:sight',
-        displayName: '瞄准镜',
+        displayName: '固定炮镜',
         category: 'experimental',
         dynamicFields: [
             { field: 'definition', label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },

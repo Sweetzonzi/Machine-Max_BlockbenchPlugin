@@ -94,7 +94,8 @@ describe('schema ↔ Codec 差异登记', () => {
     });
 
     test('D12 字段已补齐：Codec / registry / 默认值一致', () => {
-        expect(allow.missing_fields).toEqual([]);
+        // 仅剩 part.type：上游 const regular 的常量判别字段，省略即默认值。
+        expect(allow.missing_fields.map((e) => e.kind + '.' + e.field)).toEqual(['part.type']);
 
         expect(HitBoxCodec.schema.module.defaultValue).toBe('');
         const hitBox = HitBoxCodec.decode({ id: 'part', type: 'box' });
@@ -189,6 +190,37 @@ describe('schema ↔ Codec 差异登记', () => {
             .toEqual({ gear: ['local', 'global'] });
         expect(ssTypes.getTypeDefaults('machine_max:seat').passenger_num_outputs)
             .toEqual({ passenger_num: ['local', 'global'] });
+    });
+
+    test('上游 8a027167：seat 安装级覆盖保留三态并可往返', () => {
+        const seat = SubsystemDispatchCodec.decode({
+            type: 'machine_max:seat',
+            definition: 'machine_max:default_seat',
+        });
+        // 省略 = 沿用型号定义
+        expect(seat.first_hud_layout).toBe('');
+        expect(seat.third_hud_layout).toBe('');
+        expect(seat.allow_use_items).toBeNull();
+
+        const overridden = SubsystemDispatchCodec.decode({
+            type: 'machine_max:seat',
+            definition: 'machine_max:default_seat',
+            third_hud_layout: 'machine_max:k17_vehicle_hud',
+            allow_use_items: false,
+        });
+        expect(overridden.allow_use_items).toBe(false);
+        const encoded = SubsystemDispatchCodec.encode(overridden);
+        expect(encoded.third_hud_layout).toBe('machine_max:k17_vehicle_hud');
+        expect(encoded.allow_use_items).toBe(false);
+
+        // 未覆盖时导出省略这三个键
+        const plain = SubsystemDispatchCodec.encode(seat);
+        expect(plain).not.toHaveProperty('first_hud_layout');
+        expect(plain).not.toHaveProperty('third_hud_layout');
+        expect(plain).not.toHaveProperty('allow_use_items');
+
+        // 工程文件会原样保存内部占位 null；再次读取必须成功。
+        expect(() => SubsystemDispatchCodec.decode(JSON.parse(JSON.stringify(seat)))).not.toThrow();
     });
 
     test('每条 missing_fields 都指向真实缺口，且带 owner', () => {
