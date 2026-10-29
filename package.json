@@ -8,6 +8,8 @@
         "watch": "node scripts/build.js --watch",
         "gen:field-specs": "node scripts/gen-field-specs.js",
         "check:field-specs": "node scripts/gen-field-specs.js --check",
+        "check:skill-bundle": "node scripts/sync-skill-bundle.js",
+        "sync:skill-bundle": "node scripts/sync-skill-bundle.js --apply",
         "audit:stats": "node scripts/audit-stats.js",
         "test": "bun test"
     },

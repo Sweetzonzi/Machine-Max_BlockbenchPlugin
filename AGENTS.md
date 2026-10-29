@@ -139,6 +139,25 @@ if (typeof module !== 'undefined' && module.exports) {
 - Mock 层在 `test/mocks/blockbench.js`，模拟 Blockbench 全局对象
 - 夹具在 `test/helpers.js`
 
+### 版本发布与上游技能包
+
+插件 `dist/machine_max_bb_plugin.js` 会作为随包插件进入兄弟仓库 Machine-Max 的
+`skills/blockbench-content-pack`。三处内容必须与发布版一致：资产
+`assets/plugins/machine_max_bb_plugin.js`、`bundle-manifest.json` 的 `plugin` 块
+（revision / version / bytes / sha256）、`SKILL.md` 的版本与 schema 快照数量文案。
+
+- **触发时机**：`package.json` 版本号变更并重建 dist 后，同步一次；普通开发构建不动上游。
+- **同步命令**：`node scripts/sync-skill-bundle.js --apply`（默认写
+  `<repo>/../Machine-Max/skills/blockbench-content-pack`，可用 `--source` 指定）；
+  `node scripts/sync-skill-bundle.js` 为只读校验，零漂移退出 0。
+- **上游提交**：只含上面三个文件，提交信息沿用
+  `chore(skill): 随包 Blockbench 插件更新至 <version>`。
+- **schema 快照不归本脚本管**：`references/schemas/` 由上游 `./gradlew syncSchemas`
+  生成；本脚本只校验 `manifest.schemas.file_count` 与 SKILL.md 的数量文案一致。
+- **先问用户再动上游的情况**：上游仓库有他人未提交改动、这次版本号变更还属于 WIP
+  不确定是否对外发布、或无法确认是否应该跨仓库写盘/提交。跨仓库操作会碰到别人的
+  工作区，不要默认代为提交。
+
 ### 子模块文档
 - [src/ops/AGENTS.md](./src/ops/AGENTS.md) — 业务操作层
 - [src/core/AGENTS.md](./src/core/AGENTS.md) — 数据模型层
