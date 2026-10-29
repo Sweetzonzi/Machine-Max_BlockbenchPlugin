@@ -28,10 +28,11 @@ const DEFAULT_SOURCE = path.join(REPO_ROOT, SCHEMA_REL);
 const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 
 // vendored 快照的溯源 commit；同步 schema 时与 docs/13 §3.2 一起更新。
-// 上游 8a027167（观瞄重构：sight 固定炮镜去掉观察行程字段，camera 可转镜头新增
-// pitch_speed / yaw_speed，discovery 默认频道改为 camera_sight）。
+// 上游 06ba3627（新增 projectile/projectile.schema.json —— 投射物定义的顶层 schema；
+// material_attr 的 physics 新增 impact_min_speed 撞击门槛）。本次没有改动 part / connector /
+// subsystem 的可编辑字段，field_specs 只随 source_sha256 变化。
 // 内容真值以 source_sha256 为准。
-const UPSTREAM_REVISION = '8a027167';
+const UPSTREAM_REVISION = '06ba3627';
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;

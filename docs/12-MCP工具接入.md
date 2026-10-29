@@ -199,7 +199,7 @@ condition: { project: true, modes: ['machine_max_part'] }
 
 `validate` 复用 `collectIssues(config)`（[src/mode/validation.js:180](../src/mode/validation.js)）并合并 `validateTree(config, {completeness:true})`（枚举 / 范围 / key / required），与原生问题清单、导出闸门同源。`only_introduced` 与上一次工具调用的结果做 diff（§7.2）。
 
-`list_defs` / `read_def` 走 `core/content_pack_manager.loadMergedDefs()`：按「内置包 → 依赖包 → 当前包」优先级合并，`source` 为 `builtin` / `dependency:N` / `current`，只有 `current` 的 `editable` 为 `true`。`list_defs` 的 `summary` 是紧凑视图（材料带 `armor.rha` / `physics.friction`，连接点带 `type` / `direction`，子系统带型号字段）；要看完整属性用 `read_def` 取原样 JSON。`type` 取值：`materials` / `connectors` / `subsystems` / `control_groups` / `projectiles`。
+`list_defs` / `read_def` 走 `core/content_pack_manager.loadMergedDefs()`：按「内置包 → 依赖包 → 当前包」优先级合并，`source` 为 `builtin` / `dependency:N` / `current`，只有 `current` 的 `editable` 为 `true`。`list_defs` 的 `summary` 是紧凑视图（材料带 `armor.rha` / `physics.friction` / `physics.impact_min_speed`，连接点带 `type` / `direction`，子系统带型号字段）；要看完整属性用 `read_def` 取原样 JSON。`type` 取值：`materials` / `connectors` / `subsystems` / `control_groups` / `projectiles`。
 
 ### 5.2 细粒度编辑（4，全部进撤销栈）
 

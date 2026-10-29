@@ -610,6 +610,7 @@ function summarizeDef(type, def) {
                 friction: def.physics.friction,
                 rolling_friction: def.physics.rolling_friction,
                 restitution: def.physics.restitution,
+                impact_min_speed: def.physics.impact_min_speed,
             };
         }
     }

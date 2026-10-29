@@ -160,7 +160,7 @@ P2 之后两个面板不再直接写配置；P3 之后计算属性也不写配�
 
 ```
 兄弟仓库 Machine-Max（上游真值）
-  src/main/resources/spark_modules/machine_max.builtin/machine_max/docs/{zh_cn,en_us}/schemas/**
+  src/main/resources/spark_modules/Machine-Max_Builtin/machine_max/docs/{zh_cn,en_us}/schemas/**
         │  scripts/sync-schemas.js            # 手工/CI 触发，记录来源 commit + 日期
         ▼
 插件 src/builtin/builtin/machine_max/docs/{zh_cn,en_us}/schemas/**   （vendored 快照）
@@ -180,7 +180,7 @@ src/doc/field_specs.generated.js（含 provenance）
 
 ### 3.2 快照状态与类型真值
 
-**当前状态（P2 已完成）**：vendored 快照 161 个文件（schema JSON 140：中英各 70；其余 21 个为图文指南），与 `Machine-Max@8a027167` 逐文件 SHA256 一致，`node scripts/sync-schemas.js --check` 零漂移；内置内容包已重新拉取（17 materials / 26 connectors / **58** subsystems / 4 control_groups）。
+**当前状态（P2 已完成）**：vendored 快照 163 个文件（schema JSON 142：中英各 71；其余 21 个为图文指南），与 `Machine-Max@06ba3627` 逐文件 SHA256 一致，`node scripts/sync-schemas.js --check` 零漂移；内置内容包已重新拉取（17 materials / 28 connectors / **58** subsystems / 4 control_groups）。
 
 > 历史数字：同步**前**插件 67 个文件、上游 60 个（同 35 / 异 25 / 缺 7），已由全量替换解决；不要再把 60/67 当现状。
 
@@ -199,7 +199,7 @@ src/doc/field_specs.generated.js（含 provenance）
 
 顺带修掉的上游缺陷（`Machine-Max@9450a0f4`，已同步）：`motor_controller` 是 `motorbike_controller` 的错写——枚举中两种拼写并存，而 `if/then` 分支只用了错写那个且 `$ref` 指向 `motorbike_controller_*_attr.schema.json`，导致**正确的 `motorbike_controller` 匹配不到任何分支**（字段完全不校验）；此外 `subsystem_static_attr` 的枚举整体漏了 `motorbike_controller`。修复后 dynamic 与 static 枚举一致为 19 种。
 
-> vendored 快照的溯源为 **`8a027167`**（观瞄重构：`sight` 收敛为固定炮镜，去掉 `min_pitch` / `max_pitch` / `yaw_limit` / `tracking_target_inputs`；`camera` 收敛为可转镜头，新增 `pitch_speed` / `yaw_speed`，`discovery_inputs` 默认频道改为 `camera_sight`；`part_definition_schema` 新增 `type: const "regular"`；seat 动态属性新增 `first_hud_layout` / `third_hud_layout` / `allow_use_items` 三个安装级覆盖），内容真值以 `source_sha256` 为准；`sync-schemas.js --check` 当前零漂移。
+> vendored 快照的溯源为 **`06ba3627`**（新增 `projectile/projectile.schema.json`：投射物定义的顶层 schema，含 `external` / `terminal` / `warheads` / `cookoff` / `guidance` / `visual`；`material_attr` 的 `physics` 新增 `impact_min_speed` 撞击门槛，4 个轮胎材质写入 `5.0`；新增通用铰链连接点 `hinge_x` / `hinge_y` 与现代观瞄 HUD 组件，删除 `hud_layouts/weapon_live.json`）。本次**没有改动 part / connector / subsystem 的可编辑字段**，`field_specs` 只随 `source_sha256`（71 个 en_us schema）变化；投射物定义在插件里仍是只读查看，schema 仅随新内容包的 `docs/` 铺副本，不生成字段表。内容真值以 `source_sha256` 为准；`sync-schemas.js --check` 当前零漂移。
 
 **key 不是 schema 约束**：`variant_attr.schema.json` 的 `sub_parts` 只写了 `additionalProperties`，没有 `patternProperties`；它自己的 examples 还用短 key（`"turret_base"`）。因此「`sub_part.<ns>.<name>`」是**插件侧约定**（翻译键 + 面板/导出/l10n 共用），不是上游要求。严格的理由是可逆性（read → import 无损），不是合规性；迁移只是把插件自己的历史写法收敛到这套约定（§15）。
 
@@ -575,8 +575,8 @@ const { PROVENANCE, SPECS, CONTAINERS, SIDE_EFFECTS } = require('./field_specs.g
 
 PROVENANCE = {
   generator, generator_version, source_locale, source_root,
-  source_revision: '8a027167',
-  source_files: 70, source_sha256, generated_from,
+  source_revision: '06ba3627',
+  source_files: 71, source_sha256, generated_from,
 };
 
 SPECS = {
@@ -601,7 +601,7 @@ SIDE_EFFECTS = { 'sub_part.start_bone': 'migrate_sub_part_marker', ... };
 - `SPECS.<kind>.fields` 只含标量 / map / 数组字段；`CONTAINERS` 里的容器不生成规格，由 `doc/address` 处理。
 - 每个字段的 `required: true` 与 `SPECS.<kind>.required` 同时存在；后者只保留真实字段（容器字段由 `CONTAINERS` 表示）。上游本轮已把 `variant.required` 的 `models` 修正为 `model`，生成器不再需要别名归一化。
 - `SPECS.subsystem` 的 key 是完整 type id（`machine_max:engine`），不是短名；生成器从 `subsystem_dynamic_attr.schema.json` 的 `type.enum` + `if/then` 展开，并显式补齐无分支的 `machine_max:basic`。
-- `PROVENANCE.source_sha256` 是 70 个 en_us schema JSON 的路径 + 内容 hash；`--check` 同时比较生成文本，重复运行逐字节一致（不含时间戳）。
+- `PROVENANCE.source_sha256` 是 71 个 en_us schema JSON 的路径 + 内容 hash；`--check` 同时比较生成文本，重复运行逐字节一致（不含时间戳）。
 - 改 schema 或生成器后运行 `node scripts/gen-field-specs.js`；CI 用 `node scripts/gen-field-specs.js --check`。
 
 #### 5.2.2 类型清单与 `schema_codec_allowlist` 的职责
@@ -1475,6 +1475,6 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 - 撤销：[docs/11](./11-接入Blockbench原生撤销.md) · MCP：[docs/12](./12-MCP工具接入.md)
 - Codec：[docs/08](./08-序列化反序列化-Codec体系重构.md) / [src/codec/AGENTS.md](../src/codec/AGENTS.md)
 - 校验：[docs/10](./10-校验与错误提示重构实现计划.md) / [src/services/validate.js](../src/services/validate.js)
-- 上游 schema：`../../Machine-Max/src/main/resources/spark_modules/machine_max.builtin/machine_max/docs/zh_cn/schemas/`
+- 上游 schema：`../../Machine-Max/src/main/resources/spark_modules/Machine-Max_Builtin/machine_max/docs/zh_cn/schemas/`
 - 现有整件通道：[src/import/drag_import.js](../src/import/drag_import.js) + [src/import/bone_resolver.js](../src/import/bone_resolver.js)
 - 模组侧信号解析：[ISignalSender.java](../../Machine-Max/src/main/java/io/github/sweetzonzi/machine_max/common/mech/signal/ISignalSender.java)（`local` / `global` 的唯一依据）

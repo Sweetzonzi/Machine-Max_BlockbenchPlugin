@@ -619,7 +619,7 @@ describe('MCP 定义目录工具', () => {
                 return {
                     defs: {
                         'machine_max:structural_steel': {
-                            physics: { friction: [0.45, 0.45, 0.5], rolling_friction: 0.22, restitution: 0.12 },
+                            physics: { friction: [0.45, 0.45, 0.5], rolling_friction: 0.22, restitution: 0.12, impact_min_speed: 2.0 },
                             armor: { rha: 0.85, dmg_resist: 1.0, dmg_mult: 0.95, angle_effect: true },
                         },
                         'machine_max:glass': {
@@ -673,6 +673,8 @@ describe('MCP 定义目录工具', () => {
         expect(steel.editable).toBe(false);
         expect(steel.summary.armor.rha).toBe(0.85);
         expect(steel.summary.physics.rolling_friction).toBe(0.22);
+        // 上游 material_attr 新增的撞击门槛也进入紧凑摘要。
+        expect(steel.summary.physics.impact_min_speed).toBe(2.0);
         const glass = r.defs.filter(function (d) { return d.id === 'machine_max:glass'; })[0];
         expect(glass.editable).toBe(true);
     });

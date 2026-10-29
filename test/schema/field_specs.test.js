@@ -98,15 +98,15 @@ describe('field_specs.generated.js', () => {
             .toBe('rebuild_type_fields');
     });
 
-    test('provenance 记录 70 个 schema 与源 hash', () => {
-        expect(generated.PROVENANCE.source_revision).toBe('8a027167');
-        expect(generated.PROVENANCE.source_files).toBe(70);
+    test('provenance 记录 71 个 schema 与源 hash', () => {
+        expect(generated.PROVENANCE.source_revision).toBe('06ba3627');
+        expect(generated.PROVENANCE.source_files).toBe(71);
         expect(generated.PROVENANCE.source_sha256).toMatch(/^[0-9a-f]{64}$/);
         expect(generated.PROVENANCE.source_root)
             .toBe('src/builtin/builtin/machine_max/docs/en_us/schemas');
     });
 
-    test('上游 8a027167 新增字段进入规格', () => {
+    test('观瞄重构（8a027167）新增字段仍在规格中', () => {
         // part_definition_schema 的 type=const regular（插件只编辑 regular，省略即默认）
         expect(generated.SPECS.part.fields.type).toEqual({
             type: 'string',
