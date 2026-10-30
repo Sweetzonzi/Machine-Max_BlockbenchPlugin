@@ -28,12 +28,14 @@ const DEFAULT_SOURCE = path.join(REPO_ROOT, SCHEMA_REL);
 const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 
 // vendored 快照的溯源 commit；同步 schema 时与 docs/13 §3.2 一起更新。
-// 上游 fb2e2311（装弹机定义把送弹与存量字段收进 feed / magazine 两个必填块：
+// 上游 5e791082（装弹机定义把送弹与存量字段收进 feed / magazine 两个必填块：
 // reload_time / reload_round_by_round / can_supply_multiple 与 capacity /
 // regen_per_minute / regen_round_by_round / energy_cost_per_round / regen_delay；
-// 属子系统定义侧字段）。本次没有改动 part / connector / subsystem 实例的可编辑字段，
-// field_specs 只随 source_sha256 变化。内容真值以 source_sha256 为准。
-const UPSTREAM_REVISION = 'fb2e2311';
+// 属子系统定义侧字段。同一 revision 的全量内置包同步还带上了座位子系统的
+// pass_damage=false、`machinemax` → `machine_max` 的键名修正与过时语言键清理）。
+// 本次没有改动 part / connector / subsystem 实例的可编辑字段，field_specs 只随
+// source_sha256 变化。内容真值以 source_sha256 为准。
+const UPSTREAM_REVISION = '5e791082';
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;

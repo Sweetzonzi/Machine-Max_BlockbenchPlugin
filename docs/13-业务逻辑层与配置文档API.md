@@ -180,7 +180,7 @@ src/doc/field_specs.generated.js（含 provenance）
 
 ### 3.2 快照状态与类型真值
 
-**当前状态（P2 已完成）**：vendored schema 快照 142 个 JSON（中英各 71），与 `Machine-Max@fb2e2311` 逐文件 SHA256 一致，`node scripts/sync-schemas.js --check` 零漂移；内置内容包已重新拉取（17 materials / 28 connectors / **58** subsystems / 4 control_groups）。
+**当前状态（P2 已完成）**：vendored schema 快照 142 个 JSON（中英各 71），与 `Machine-Max@5e791082` 逐文件 SHA256 一致，`node scripts/sync-schemas.js --check` 零漂移；内置内容包已重新拉取（17 materials / 28 connectors / **58** subsystems / 4 control_groups）。
 
 > 历史数字：同步**前**插件 67 个文件、上游 60 个（同 35 / 异 25 / 缺 7），已由全量替换解决；不要再把 60/67 当现状。
 
@@ -199,7 +199,7 @@ src/doc/field_specs.generated.js（含 provenance）
 
 顺带修掉的上游缺陷（`Machine-Max@9450a0f4`，已同步）：`motor_controller` 是 `motorbike_controller` 的错写——枚举中两种拼写并存，而 `if/then` 分支只用了错写那个且 `$ref` 指向 `motorbike_controller_*_attr.schema.json`，导致**正确的 `motorbike_controller` 匹配不到任何分支**（字段完全不校验）；此外 `subsystem_static_attr` 的枚举整体漏了 `motorbike_controller`。修复后 dynamic 与 static 枚举一致为 19 种。
 
-> vendored schema 快照的溯源为 **`fb2e2311`**：`regen_loader_static_attr` 的 `feed`（非关键）与 `magazine`（唯一关键）成为必填字段块——送弹参数（`reload_time` / `reload_round_by_round` / `can_supply_multiple`）归 `feed`，存量与回充参数（`capacity` / `regen_per_minute` / `regen_round_by_round` / `energy_cost_per_round` / `regen_delay`）归 `magazine`，两块的 `durability_weight` 不变。这是**子系统定义侧**字段，不进入 `field_specs`——它只生成 part / connector / subsystem 实例的可编辑字段表；`field_specs` 只随 `source_sha256`（71 个 en_us schema）变化。更早的溯源 `002885fd` 首次为装弹机引入这两个模块对象，`06ba3627` 新增了投射物顶层 schema、`material_attr.physics.impact_min_speed`、铰链连接点与现代观瞄 HUD 组件。内容真值以 `source_sha256` 为准；`sync-schemas.js --check` 当前零漂移。
+> vendored schema 快照的溯源为 **`5e791082`**：`regen_loader_static_attr` 的 `feed`（非关键）与 `magazine`（唯一关键）成为必填字段块——送弹参数（`reload_time` / `reload_round_by_round` / `can_supply_multiple`）归 `feed`，存量与回充参数（`capacity` / `regen_per_minute` / `regen_round_by_round` / `energy_cost_per_round` / `regen_delay`）归 `magazine`，两块的 `durability_weight` 不变。这是**子系统定义侧**字段，不进入 `field_specs`——它只生成 part / connector / subsystem 实例的可编辑字段表；`field_specs` 只随 `source_sha256`（71 个 en_us schema）变化。更早的溯源 `002885fd` 首次为装弹机引入这两个模块对象，`06ba3627` 新增了投射物顶层 schema、`material_attr.physics.impact_min_speed`、铰链连接点与现代观瞄 HUD 组件。内容真值以 `source_sha256` 为准；`sync-schemas.js --check` 当前零漂移。
 
 **key 不是 schema 约束**：`variant_attr.schema.json` 的 `sub_parts` 只写了 `additionalProperties`，没有 `patternProperties`；它自己的 examples 还用短 key（`"turret_base"`）。因此「`sub_part.<ns>.<name>`」是**插件侧约定**（翻译键 + 面板/导出/l10n 共用），不是上游要求。严格的理由是可逆性（read → import 无损），不是合规性；迁移只是把插件自己的历史写法收敛到这套约定（§15）。
 
@@ -575,7 +575,7 @@ const { PROVENANCE, SPECS, CONTAINERS, SIDE_EFFECTS } = require('./field_specs.g
 
 PROVENANCE = {
   generator, generator_version, source_locale, source_root,
-  source_revision: 'fb2e2311',
+  source_revision: '5e791082',
   source_files: 71, source_sha256, generated_from,
 };
 

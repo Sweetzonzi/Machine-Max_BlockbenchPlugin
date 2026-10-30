@@ -73,10 +73,8 @@ describe('builtin 内容包同步', () => {
 
     test('观瞄重构：sight 是固定炮镜、camera 是可转镜头', () => {
         const schemas = path.join(ROOT, 'docs', 'en_us', 'schemas', 'subsystem', 'static');
-        const sightSchema = JSON.parse(fs.readFileSync(
-            path.join(schemas, 'sight_static_attr.schema.json'), 'utf8'));
-        const cameraSchema = JSON.parse(fs.readFileSync(
-            path.join(schemas, 'camera_static_attr.schema.json'), 'utf8'));
+        const sightSchema = readJsonc(path.join(schemas, 'sight_static_attr.schema.json'));
+        const cameraSchema = readJsonc(path.join(schemas, 'camera_static_attr.schema.json'));
 
         // 固定炮镜没有独立观察转轴：行程与跟踪字段整体移除。
         for (const removed of ['min_pitch', 'max_pitch', 'yaw_limit', 'tracking_target_inputs']) {
@@ -90,14 +88,12 @@ describe('builtin 内容包同步', () => {
         expect(sightSchema.properties.discovery_inputs.default).toEqual(['camera_sight']);
         expect(cameraSchema.properties.discovery_inputs.default).toEqual(['camera_sight']);
 
-        const gunner = JSON.parse(fs.readFileSync(
-            path.join(SUB, 'sight', 'gunner_sight.json'), 'utf8'));
+        const gunner = readJsonc(path.join(SUB, 'sight', 'gunner_sight.json'));
         expect(gunner.type).toBe('machine_max:sight');
         expect(gunner).not.toHaveProperty('min_pitch');
 
         // 车长镜是可转设备，定义落在 sight/ 目录但 type 必须是 camera。
-        const commander = JSON.parse(fs.readFileSync(
-            path.join(SUB, 'sight', 'commander_sight_dual_stb.json'), 'utf8'));
+        const commander = readJsonc(path.join(SUB, 'sight', 'commander_sight_dual_stb.json'));
         expect(commander.type).toBe('machine_max:camera');
         expect(commander.pitch_speed).toBe(90);
         expect(commander.yaw_speed).toBe(90);
