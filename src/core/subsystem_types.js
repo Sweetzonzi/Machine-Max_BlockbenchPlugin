@@ -23,6 +23,12 @@
  *       defaultValue: any,              //   创建实例时的默认值
  *       options: string[],              //   (仅 editor === 'enum_selector') 可选值列表
  *   }],
+ *   modules: [{                         // (仅模块化子系统) 耐久模块清单，与 Java defineModules() 一致
+ *       name: string,                   //   JSON 模块名，也是碰撞箱 module 字段的合法取值
+ *       label: string,                  //   面板中文标签
+ *       critical: boolean,              //   归零是否判整机摧毁
+ *       optional: boolean,              //   型号定义里可省略该模块（省略即不存在）
+ *   }],
  * }
  */
 
@@ -203,6 +209,12 @@ var SUBSYSTEM_TYPES = [
         id: 'machine_max:launcher',
         displayName: '发射器',
         category: 'experimental',
+        // 炮管 / 炮闩是定义里的固定模块，电容由型号自行声明（laser 类才有）
+        modules: [
+            { name: 'barrel',    label: '炮管', critical: false, optional: false },
+            { name: 'breech',    label: '炮闩', critical: true,  optional: false },
+            { name: 'capacitor', label: '电容', critical: false, optional: true },
+        ],
         dynamicFields: [
             { field: 'definition',     label: '型号定义',    editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'locator',        label: '发射点定位器', editor: 'locator_selector',    required: true,  defaultValue: '' },
@@ -223,6 +235,11 @@ var SUBSYSTEM_TYPES = [
         id: 'machine_max:regen_loader',
         displayName: '再生装弹机',
         category: 'experimental',
+        // 两个模块都可由型号省略并落到默认权重，因此 optional 均为 true
+        modules: [
+            { name: 'feed',     label: '输弹机构', critical: false, optional: true },
+            { name: 'magazine', label: '弹仓',     critical: true,  optional: true },
+        ],
         dynamicFields: [
             { field: 'definition',       label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'projectile_types',   label: '弹链构成',     editor: 'projectile_belt_editor', required: true,  defaultValue: {} },
@@ -293,6 +310,43 @@ function getTypesGroupedByCategory() {
 function getDynamicFields(typeId) {
     var meta = TYPE_MAP[typeId];
     return meta ? meta.dynamicFields.slice() : [];
+}
+
+/**
+ * 获取指定子系统类型的耐久模块清单
+ *
+ * 只有模块化子系统（把耐久拆成若干模块的类型）才有条目；其余类型返回空数组，
+ * 碰撞箱上的 module 字段对它们不生效。
+ *
+ * @param {string} typeId - 类型 ID
+ * @returns {Object[]} 模块描述符数组（浅拷贝），非模块化或未知类型返回空数组
+ */
+function getModules(typeId) {
+    var meta = TYPE_MAP[typeId];
+    return (meta && meta.modules) ? meta.modules.slice() : [];
+}
+
+/**
+ * 判断模块名是否是给定子系统类型声明的模块之一
+ * @param {string} typeId - 类型 ID
+ * @param {string} name - 碰撞箱 module 字段的取值
+ * @returns {boolean} 该类型声明了这个模块时返回 true
+ */
+function hasModule(typeId, name) {
+    var modules = getModules(typeId);
+    for (var i = 0; i < modules.length; i++) {
+        if (modules[i].name === name) return true;
+    }
+    return false;
+}
+
+/**
+ * 获取模块名候选列表，供碰撞箱面板的 module 输入做补全
+ * @param {string} typeId - 类型 ID
+ * @returns {string[]} 模块名数组，非模块化类型返回空数组
+ */
+function getModuleNames(typeId) {
+    return getModules(typeId).map(function (m) { return m.name; });
 }
 
 /**
@@ -442,6 +496,9 @@ if (typeof module !== 'undefined' && module.exports) {
         getTypesByCategory: getTypesByCategory,
         getTypesGroupedByCategory: getTypesGroupedByCategory,
         getDynamicFields: getDynamicFields,
+        getModules: getModules,
+        hasModule: hasModule,
+        getModuleNames: getModuleNames,
         getTypeDefaults: getTypeDefaults,
         getTypeSpecificFields: getTypeSpecificFields,
         needsLocator: needsLocator,

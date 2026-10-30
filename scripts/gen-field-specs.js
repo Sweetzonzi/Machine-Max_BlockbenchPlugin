@@ -28,11 +28,11 @@ const DEFAULT_SOURCE = path.join(REPO_ROOT, SCHEMA_REL);
 const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 
 // vendored 快照的溯源 commit；同步 schema 时与 docs/13 §3.2 一起更新。
-// 上游 06ba3627（新增 projectile/projectile.schema.json —— 投射物定义的顶层 schema；
-// material_attr 的 physics 新增 impact_min_speed 撞击门槛）。本次没有改动 part / connector /
-// subsystem 的可编辑字段，field_specs 只随 source_sha256 变化。
+// 上游 002885fd（regen_loader_static_attr 新增 feed / magazine 两个模块对象，各带
+// durability_weight；属子系统定义侧字段）。本次没有改动 part / connector / subsystem
+// 实例的可编辑字段，field_specs 只随 source_sha256 变化。
 // 内容真值以 source_sha256 为准。
-const UPSTREAM_REVISION = '06ba3627';
+const UPSTREAM_REVISION = '002885fd';
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;

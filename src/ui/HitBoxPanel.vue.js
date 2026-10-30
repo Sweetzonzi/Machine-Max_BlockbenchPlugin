@@ -3,6 +3,10 @@
  * 选中标记为 hit_box 的 Group 时在属性面板中显示
  */
 var fieldIssues = require('./components/field_issues.js');
+var ssTypes = require('../core/subsystem_types.js');
+
+/** 面板实例计数：每份面板拿一个独立的 datalist id，同页多实例不会撞 id */
+var MODULE_LIST_SEQ = 0;
 
 /** 旧版顶层 overwrite 字段 → schema 分组（docs/13 §5.2.2） */
 var OVERWRITE_GROUPS = {
@@ -27,6 +31,8 @@ Vue.component('mm-hit-box-panel', {
     data: function () {
         return {
             overwriteExpanded: false,
+            /** 本实例的模块候选 datalist id（模板里 input[list] 与 datalist[id] 共用） */
+            moduleListId: 'mm-hitbox-modules-' + (++MODULE_LIST_SEQ),
         };
     },
     computed: {
@@ -44,6 +50,22 @@ Vue.component('mm-hit-box-panel', {
                 }
             }
             return options;
+        },
+        /**
+         * 关联子系统的模块候选：只有模块化子系统（发射器、再生装弹机）才有。
+         * 来源是关联实例的 type，因此改关联子系统时候选跟着变；
+         * 非模块化类型返回空数组，模块名输入就退化成普通文本框。
+         */
+        moduleOptions: function () {
+            var name = this.config && this.config.subsystem;
+            if (!name) return [];
+            var target = this.parentSubsystems[name];
+            return target ? ssTypes.getModules(target.type) : [];
+        },
+        /** 模块名占位提示：列出该子系统类型的模块名，没有模块时提示"整个子系统" */
+        modulePlaceholder: function () {
+            var names = this.moduleOptions.map(function (m) { return m.name; });
+            return names.length ? '整个子系统，或 ' + names.join(' / ') : '（整个子系统）';
         },
         /**
          * 材质缺失 / 引用了不存在的材质时标红下拉框（不显示原因文案）。

@@ -42,6 +42,7 @@ src/services/
 - P4 已完成：`executeExport`、`drag_import` IO、pack fs 与 `collectIssues` 均已迁入本层；不再保留 `services → mode`。
 - `collectIssues` 落 `validate.js` 而不是 `core/validation.js`：它依赖 `doc/refs.js`，放 core 会反转 `core → doc` 分层（docs/13 D30）。
 - `hit_boxes` key 不是骨骼 UUID 时 `collectIssues` 报 `hit_box_key_not_uuid`；没有模型元素时跳过（测试 / 未加载模型不误报）。
+- 碰撞箱 `module` 只在关联到模块化子系统时生效：名字不在该类型的 `modules` 清单里报 `hit_box_module_unknown`，没关联子系统报 `hit_box_module_without_subsystem`，两者都是 warning（模组侧退回按模块最大耐久比例分摊，导出不阻断）。模块清单的真源是 `core/subsystem_types.js` 的 `modules`。
 - 新增服务后同步 `docs/13` §8 与根 `AGENTS.md` 的导入图。
 - 图标生成是独立写盘用例：`icon_generator` 不写 `_uiState`、不 toast、不刷新；字段更新由 UI 在写盘成功后调用 `ops.setPartIcons`。零件路径逐条用 `keys.isSafePartId`，不能复用整包 `assertSafePartIds`。
 

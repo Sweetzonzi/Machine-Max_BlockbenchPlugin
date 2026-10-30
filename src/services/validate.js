@@ -218,6 +218,57 @@ function _collectDanglingRefs(config, partId, vName, spKey, problems) {
 }
 
 /**
+ * 碰撞箱的模块名（`hit_box.module`）：只在关联到模块化子系统时有意义。
+ *
+ * 两条都是 warning：模组侧遇到对不上号的模块名会记一条日志、退回按模块最大耐久比例分摊，
+ * 命中不会丢失，但作者多半是打错了名字，导出前值得先看一眼。未知的子系统类型不判定——
+ * 拿不到它的模块清单，猜出来的提示只会误导。
+ *
+ * @param {string} partId
+ * @param {string} vName
+ * @param {string} spKey
+ * @param {string} hbKey - 碰撞箱 key（骨骼 UUID）
+ * @param {object} hb - 碰撞箱配置
+ * @param {object} subsystems - 同一子零件的子系统实例表
+ * @param {Array} problems
+ */
+function _collectModuleIssue(partId, vName, spKey, hbKey, hb, subsystems, problems) {
+    var moduleName = hb.module;
+    if (isMissingValue(moduleName)) return;
+    var where = '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '" 碰撞箱 "' + hbKey + '"';
+    var owner = hb.subsystem ? subsystems[hb.subsystem] : null;
+    if (!owner) {
+        problems.push(_makeProblem(
+            'warning', CODES.HIT_BOX_MODULE_WITHOUT_SUBSYSTEM,
+            where + '：填了模块名 "' + moduleName + '" 但没有关联子系统；模块名只在关联模块化子系统时生效',
+            _mkPath('hit_box', partId, vName, spKey, hbKey, hbKey, 'module')
+        ));
+        return;
+    }
+    var typeMeta = ssTypes.getTypeMeta(owner.type);
+    if (!typeMeta) return;
+    var available = ssTypes.getModuleNames(owner.type);
+    if (available.length === 0) {
+        problems.push(_makeProblem(
+            'warning', CODES.HIT_BOX_MODULE_UNKNOWN,
+            where + '：子系统 "' + hb.subsystem + '"（' + typeMeta.displayName + '）没有模块划分，模块名 "'
+            + moduleName + '" 会被忽略',
+            _mkPath('hit_box', partId, vName, spKey, hbKey, hbKey, 'module')
+        ));
+        return;
+    }
+    if (available.indexOf(moduleName) === -1) {
+        problems.push(_makeProblem(
+            'warning', CODES.HIT_BOX_MODULE_UNKNOWN,
+            where + '：子系统 "' + hb.subsystem + '"（' + typeMeta.displayName + '）没有模块 "'
+            + moduleName + '"；可用 ' + available.join(' / ')
+            + '，模组侧会按模块最大耐久比例分摊这次命中',
+            _mkPath('hit_box', partId, vName, spKey, hbKey, hbKey, 'module')
+        ));
+    }
+}
+
+/**
  * 唯一校验实现：收集所有问题的结构化 Problem 数组
  * @param {Object} config - MM 项目配置
  * @returns {Array} Problem[]
@@ -296,6 +347,7 @@ function collectIssues(config) {
                 }
 
                 // 碰撞箱材质：空值必须拦；machine_max:default 是模组内置兜底，不查表
+                var subsystems = sp.subsystems || {};
                 var hitBoxes = sp.hit_boxes || {};
                 for (var hbKey in hitBoxes) {
                     var hb = hitBoxes[hbKey] || {};
@@ -320,13 +372,13 @@ function collectIssues(config) {
                             _mkPath('hit_box', partId, vName, spKey, hbKey, hbKey, 'material')
                         ));
                     }
+                    _collectModuleIssue(partId, vName, spKey, hbKey, hb, subsystems, problems);
                 }
 
                 // 信号 / 功率引用完整性（DANGLING_SIGNAL_TARGET）
                 _collectDanglingRefs(config, partId, vName, spKey, problems);
 
                 // 子系统实例必填字段 + definition 引用存在性
-                var subsystems = sp.subsystems || {};
                 for (var ssName in subsystems) {
                     var ss = subsystems[ssName];
                     var meta = ssTypes.getTypeMeta(ss.type);

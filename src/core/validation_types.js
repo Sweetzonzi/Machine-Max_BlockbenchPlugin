@@ -39,6 +39,8 @@ var CODES = {
     MATERIAL_REQUIRED: 'material_required',               // 碰撞箱 material 未配置（空串/null/undefined）
     MATERIAL_REF_MISSING: 'material_ref_missing',         // 碰撞箱 material 引用的材质不存在（machine_max:default 为内置兜底，不查表）
     HIT_BOX_KEY_NOT_UUID: 'hit_box_key_not_uuid',         // hit_boxes 的 key 不是骨骼 UUID（内部树只认 UUID）
+    HIT_BOX_MODULE_UNKNOWN: 'hit_box_module_unknown',     // 碰撞箱 module 不是关联子系统类型声明的模块（含该类型没有模块划分）
+    HIT_BOX_MODULE_WITHOUT_SUBSYSTEM: 'hit_box_module_without_subsystem', // 碰撞箱填了 module 但没关联子系统
 };
 
 /** scope → byItem 桶名映射（仅对"可归属到某个 subpart 条目"的 scope 有意义） */

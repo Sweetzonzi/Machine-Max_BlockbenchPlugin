@@ -137,7 +137,7 @@ P2 之后两个面板不再直接写配置；P3 之后计算属性也不写配�
 
 ### 2.4 校验现状
 
-`services/validate.js → collectIssues(config)` 是唯一实现（`mode/validation_check.js` 调的也是它）：**18 个 error 产生点 / 3 个 warning 产生点**（P2 新增 `dangling_signal_target`，P3 为字段级问题补 `path.field`，P4 从 `mode/validation.js` 下沉到 `services/validate.js`，随后补 `material_required` / `material_ref_missing`），但 warning **只有 1 个 code**：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）。
+`services/validate.js → collectIssues(config)` 是唯一实现（`mode/validation_check.js` 调的也是它）：**18 个 error 产生点 / 5 个 warning 产生点**（P2 新增 `dangling_signal_target`，P3 为字段级问题补 `path.field`，P4 从 `mode/validation.js` 下沉到 `services/validate.js`，随后补 `material_required` / `material_ref_missing`；模块化子系统的碰撞箱 `module` 补 `hit_box_module_unknown` / `hit_box_module_without_subsystem`），warning 共 3 个 code：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）与上面两个模块名问题。
 
 重复的只有名称唯一性两套：`naming.validateNameUniqueness`（UI rename 调用）与 `services/validate._collectNameConflicts`；ops 的 key/存在性检查已收口到 `doc/keys` 与各动作前置校验。
 
@@ -180,7 +180,7 @@ src/doc/field_specs.generated.js（含 provenance）
 
 ### 3.2 快照状态与类型真值
 
-**当前状态（P2 已完成）**：vendored 快照 163 个文件（schema JSON 142：中英各 71；其余 21 个为图文指南），与 `Machine-Max@06ba3627` 逐文件 SHA256 一致，`node scripts/sync-schemas.js --check` 零漂移；内置内容包已重新拉取（17 materials / 28 connectors / **58** subsystems / 4 control_groups）。
+**当前状态（P2 已完成）**：vendored schema 快照 142 个 JSON（中英各 71），与 `Machine-Max@002885fd` 逐文件 SHA256 一致，`node scripts/sync-schemas.js --check` 零漂移；内置内容包已重新拉取（17 materials / 28 connectors / **58** subsystems / 4 control_groups）。
 
 > 历史数字：同步**前**插件 67 个文件、上游 60 个（同 35 / 异 25 / 缺 7），已由全量替换解决；不要再把 60/67 当现状。
 
@@ -199,7 +199,7 @@ src/doc/field_specs.generated.js（含 provenance）
 
 顺带修掉的上游缺陷（`Machine-Max@9450a0f4`，已同步）：`motor_controller` 是 `motorbike_controller` 的错写——枚举中两种拼写并存，而 `if/then` 分支只用了错写那个且 `$ref` 指向 `motorbike_controller_*_attr.schema.json`，导致**正确的 `motorbike_controller` 匹配不到任何分支**（字段完全不校验）；此外 `subsystem_static_attr` 的枚举整体漏了 `motorbike_controller`。修复后 dynamic 与 static 枚举一致为 19 种。
 
-> vendored 快照的溯源为 **`06ba3627`**（新增 `projectile/projectile.schema.json`：投射物定义的顶层 schema，含 `external` / `terminal` / `warheads` / `cookoff` / `guidance` / `visual`；`material_attr` 的 `physics` 新增 `impact_min_speed` 撞击门槛，4 个轮胎材质写入 `5.0`；新增通用铰链连接点 `hinge_x` / `hinge_y` 与现代观瞄 HUD 组件，删除 `hud_layouts/weapon_live.json`）。本次**没有改动 part / connector / subsystem 的可编辑字段**，`field_specs` 只随 `source_sha256`（71 个 en_us schema）变化；投射物定义在插件里仍是只读查看，schema 仅随新内容包的 `docs/` 铺副本，不生成字段表。内容真值以 `source_sha256` 为准；`sync-schemas.js --check` 当前零漂移。
+> vendored schema 快照的溯源为 **`002885fd`**：`regen_loader_static_attr` 新增 `feed`（非关键）与 `magazine`（唯一关键）两个模块对象，各带 `durability_weight`。这是**子系统定义侧**字段，不进入 `field_specs`——它只生成 part / connector / subsystem 实例的可编辑字段表；`field_specs` 只随 `source_sha256`（71 个 en_us schema）变化。上一版溯源 `06ba3627` 新增了投射物顶层 schema、`material_attr.physics.impact_min_speed`、铰链连接点与现代观瞄 HUD 组件。内容真值以 `source_sha256` 为准；`sync-schemas.js --check` 当前零漂移。
 
 **key 不是 schema 约束**：`variant_attr.schema.json` 的 `sub_parts` 只写了 `additionalProperties`，没有 `patternProperties`；它自己的 examples 还用短 key（`"turret_base"`）。因此「`sub_part.<ns>.<name>`」是**插件侧约定**（翻译键 + 面板/导出/l10n 共用），不是上游要求。严格的理由是可逆性（read → import 无损），不是合规性；迁移只是把插件自己的历史写法收敛到这套约定（§15）。
 
@@ -210,7 +210,7 @@ src/doc/field_specs.generated.js（含 provenance）
 | `sub_part.hit_boxes` | `required` + `minProperties: 1` | 无约束 | 由 `collectIssues` 负责（已实现，§4） |
 | `hit_box.id` | 有默认 `""`，非必填（`required` 只有 `type`） | `.default('')` | ✅ 已修：Codec `.default('')`，空 id 编码时省略（D12 结构性修复） |
 | `hit_box.material` | 有默认 `"machine_max:default"`，非必填；该 id **不是内容包材质定义**，而是 Java `MaterialAttr.DEFAULT` 的内置兜底 | `.default('machine_max:default')` | **语义必填**：`collectIssues` 对 `''`/`null`/`undefined` 报 `material_required`；非 `machine_max:default` 且不在可用材质表中报 `material_ref_missing`；`machine_max:default` 始终放行（§2.5、§4.3） |
-| `hit_box.module` | 可选，默认 `""` | **缺字段** | ✅ 已补：Codec `.default('')` + 碰撞箱面板「模块名」输入（D12 字段补齐） |
+| `hit_box.module` | 可选，默认 `""` | `.default('')` | ✅ 已补：Codec `.default('')` + 碰撞箱面板「模块名」输入。候选来自 `subsystem_types.js` 的 `modules`（发射器 `barrel`/`breech`/`capacitor`、再生装弹机 `feed`/`magazine`），仍可手填；`collectIssues` 对未知模块名报 warning（§2.4） |
 | `hit_box.type` | `enum: [box,sphere,cylinder,capsule,wheel]` | `STRING` | **constraint_diff**；写入、导入、导出三侧都由 `field_specs.enum` 报 `invalid_enum`（§4.3、§5.3.1） |
 | `hit_box.overwrite` | 结构化 **3 组**（`physics` / `armor` / `sounds`）、`additionalProperties:false` | `Codec.ANY.nullable()`（上游 `optionalFieldOf` 无默认 → Java `null`） | **constraint_diff**；`field_specs.nullable:true`（可选对象），`validateValues` 允许 `null`，导出省略；结构由 object 规格校验（§5.2） |
 | `interact_box.condition` | `enum: [AND,OR,NAND,NOR,XOR,XNOR]` | `STRING` 默认 `NOR` | **constraint_diff**；同上，由 `field_specs.enum` 拦，不改成 `Codec.ENUM`（避免存量非法值在 load 阶段失败） |
@@ -575,7 +575,7 @@ const { PROVENANCE, SPECS, CONTAINERS, SIDE_EFFECTS } = require('./field_specs.g
 
 PROVENANCE = {
   generator, generator_version, source_locale, source_root,
-  source_revision: '06ba3627',
+  source_revision: '002885fd',
   source_files: 71, source_sha256, generated_from,
 };
 
