@@ -99,7 +99,7 @@ describe('field_specs.generated.js', () => {
     });
 
     test('provenance 记录 71 个 schema 与源 hash', () => {
-        expect(generated.PROVENANCE.source_revision).toBe('5e791082');
+        expect(generated.PROVENANCE.source_revision).toBe('52745d74');
         expect(generated.PROVENANCE.source_files).toBe(71);
         expect(generated.PROVENANCE.source_sha256).toMatch(/^[0-9a-f]{64}$/);
         expect(generated.PROVENANCE.source_root)
