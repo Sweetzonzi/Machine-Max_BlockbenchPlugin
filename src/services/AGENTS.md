@@ -17,6 +17,7 @@ src/services/
 ├── icon_visibility.js # 纯函数：start/end/auto_end → 可见 UUID 集
 ├── icon_fit.js        # 纯函数：AABB → 正交 zoom / target
 ├── icon_generator.js  # 离屏渲染 + 128 PNG 写盘
+├── cube_uv.js         # clearCubeUv / resolveCubes：清空方块六面 UV（碰撞几何不可见化）
 └── validate.js        # collectIssues（唯一校验实现）
 ```
 
@@ -34,10 +35,11 @@ src/services/
 | 内容包 fs | `pack.js` | 创建/打开/读 meta 的薄包装；`findPackInSiblings` / `resolveChainDependencies`（跳过内置 `machine_max:builtin`，返回 `unresolved`）/ `resolveDeclaredDependencies`（按 `meta.dependencies` 在父目录解析直接 + 一层间接依赖，返回 `declaredCount` 以区分"没声明"和"声明了但没找到"） |
 | 图标生成 | `icon_generator.js` | `generate(config, options)`：离屏渲染 + PNG 写盘；`icon_paths` / `icon_visibility` / `icon_fit` 为纯函数；`part.icon` 由 UI 调 `ops.setPartIcons` |
 | 唯一校验 | `validate.js` → `collectIssues(config)` | P4 从 `mode/validation.js` 迁入；`mode/validation_check.js` 只做原生清单适配 |
+| 方块 UV | `cube_uv.js` → `resolveCubes(ids)` / `clearCubeUv(cubes)` | 清空六面 `texture=null` + `uv=[0,0,0,0]` 并调 `preview_controller.updateFaces(cube)`；走原生 `uv_only` 撤销，标签 `清空方块 UV`。MCP 工具 `clear_cube_uv` 是它的唯一调用方 |
 
 ## 约定
 
-- `services/` 可以 `require('fs')` / `require('path')`、可以 async，但**不进撤销栈**、**不暴露给 MCP**。
+- `services/` 可以 `require('fs')` / `require('path')`、可以 async，但**不进配置撤销栈**；工具层可以直接调用（`validate` / `export` / `cube_uv`），协议适配与信封留在 `src/mcp/`。
 - 导出闸门只做只读校验，不修改 `config`；提示文案由调用方（`export_dialog`）决定。
 - P4 已完成：`executeExport`、`drag_import` IO、pack fs 与 `collectIssues` 均已迁入本层；不再保留 `services → mode`。
 - `collectIssues` 落 `validate.js` 而不是 `core/validation.js`：它依赖 `doc/refs.js`，放 core 会反转 `core → doc` 分层（docs/13 D30）。

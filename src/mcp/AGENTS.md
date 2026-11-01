@@ -11,18 +11,20 @@
 ```
 src/mcp/
 ├── index.js   # registerMcpTools / unregisterMcpTools；MCP_QUEUE + 同名注销
-├── tools.js   # 14 个工具：get_context / read_node / list_defs / read_def /
+├── tools.js   # 15 个工具：get_context / read_node / list_defs / read_def /
 │              #   validate / set_node / remove_node / bind_marker / set_active /
 │              #   import_part / import_variant / import_sub_part /
-│              #   import_subsystem / add_instance
+│              #   import_subsystem / add_instance / clear_cube_uv
 ├── params.js  # build(z)，用 MCP.z 构造参数形状；注册时字段名是 parameters
 └── result.js  # OpResult → {ok,path,before,after,...}；MCP.createJsonResult 包装
 ```
 
 ## 契约
 
-- 工具名统一 `machine_max_bb_plugin_` 前缀；`condition` 固定
-  `{ project: true, modes: ['machine_max_part'] }`。
+- 工具名统一 `machine_max_bb_plugin_` 前缀。配置工具的 `condition` 固定
+  `{ project: true, modes: ['machine_max_part'] }`；模型编辑工具（`clear_cube_uv`）在
+  `tools.js` 里自带 `condition: { project: true }`，注册时取 `tool.condition || CONDITION`，
+  这样在「编辑」「UV」「绘制」模式也能用。
 - 所有编辑工具调用 ops 时固定传 `source:'mcp'`、`persist:false`、`strict:true`。
   `persist:false` 让 UI 订阅者不 `scheduleSave()`；`strict:true` 让「编辑器忙 / 快照超限」
   变成 `edit_in_progress` / `snapshot_too_large`，而不是静默执行。

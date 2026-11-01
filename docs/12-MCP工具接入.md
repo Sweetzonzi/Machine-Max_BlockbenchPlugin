@@ -5,7 +5,7 @@
 > 参照：[docs/11-接入Blockbench原生撤销.md](./11-接入Blockbench原生撤销.md) / [docs/08-序列化反序列化-Codec体系重构.md](./08-序列化反序列化-Codec体系重构.md) / [docs/10-校验与错误提示重构实现计划.md](./10-校验与错误提示重构实现计划.md)
 >
 > **实现备注（与设计稿的差异）**
-> - `src/mcp/` 四文件与工具矩阵按本文落地；`bun test` 覆盖只读、`list_defs` / `read_def`、`set_node`、`remove_node`、`bind_marker`、`set_active`、四个 `import_*`、`add_instance`、`validate`、注册/注销，共 42 例（`test/mcp/mcp.test.js`）。
+> - `src/mcp/` 四文件与工具矩阵按本文落地；`bun test` 覆盖只读、`list_defs` / `read_def`、`set_node`、`remove_node`、`bind_marker`、`set_active`、四个 `import_*`、`add_instance`、`clear_cube_uv`、`validate`、注册/注销，共 47 例（`test/mcp/mcp.test.js`）；清空方块 UV 的服务层另有 8 例（`test/services/cube_uv.test.js`）。
 > - MCP 插件可能先于本插件加载。`registerMcpTools()` 除了推进 `MCP_QUEUE`，在 `globalThis.MCP` 已存在时会立即 `setup` 一次；若 MCP 后加载，则监听 `loaded_plugin` 事件补注册。队列条目保留，后续 drain 会幂等重注册。
 > - 为满足 §5.3，本轮补齐了 ops：`persist:false` / `strict:true` 透传、`import_*` 的 `duplicate_name` 与 `mode:'rename'`、`add_instance` 的 key（配置键）与元素名（`definition.bone` / `definition.locator`）分离。
 > - `introduced_issues` 在 MCP 工具层用 `collectIssues` 前后 diff（正文 §7.2 的“同一撤销记录内”表述按实现收敛；不改变撤销粒度）。
@@ -179,11 +179,13 @@ config
 
 ## 5. 工具清单
 
-全部 14 个工具共用同一个可用性条件：
+14 个配置工具共用同一个可用性条件：
 
 ```js
 condition: { project: true, modes: ['machine_max_part'] }
 ```
+
+`clear_cube_uv` 是模型编辑工具，条件是 `{ project: true }`，不限模式：清 UV 常发生在「编辑」「UV」「绘制」这些页签，锁定「零件定义」模式反而用不上它。`registerTool` 时取 `tool.condition || CONDITION`（[src/mcp/index.js:110](../src/mcp/index.js#L110)）。
 
 工具名统一以插件 id 前缀开头（`machine_max_bb_plugin_`），避开 94 个内置工具的名字空间（重名会在注册时抛错）。下表省略前缀。
 
@@ -274,7 +276,21 @@ condition: { project: true, modes: ['machine_max_part'] }
 
 `add_instance` 内部调用 `ops.addInstance(parentPath, kind, key?, definition?)`：**一次** `runConfigEdit` 内完成「建配置条目 + 建标记 + 解析引用 + 写 definition」，因此只有一条撤销记录（docs/13 §6.3）。它要求目标元素已存在于模型里（`hit_box` 用骨骼名定位，`interact_box` 用骨骼、`connector` 用 Locator）；若元素不存在，返回 `code:not_found`，`hint` 提示先建模型元素或改用 `bind_marker`。
 
-### 5.5 返回信封
+### 5.5 几何辅助（1）
+
+碰撞箱骨骼里的方块只承担碰撞形状，不该被渲染。Bedrock 导出只有在**六个面都没有贴图**时才写 `"uv": {}`，所以「隐藏碰撞几何」= 逐面把 `texture` 置 null、`uv` 归零，并重建视口网格。
+
+| 工具 | 参数 | 行为 |
+|---|---|---|
+| `clear_cube_uv` | `cubes?: string[]` | 清空这些方块的六面 UV（`texture=null`、`uv=[0,0,0,0]`），随后调 `preview_controller.updateFaces(cube)` 重建网格。`cubes` 接受方块 uuid 或唯一方块名；方块默认都叫 `cube`，同名多于一个时返回 `ambiguous_name` 并要求改用 uuid。选中 Group 时递归取其子方块；省略 `cubes` 用当前选择 |
+
+- 落点是 `services/cube_uv.js`（`resolveCubes` + `clearCubeUv`）：解析方块属于几何层，不写配置，因此不经过 `runConfigEdit`。
+- 可用性条件只有 `{ project: true }`（§5）：它改的是模型几何，在「编辑」「UV」「绘制」页签里同样成立，不要求进入「零件定义」模式。
+- 撤销走 Blockbench 原生 `Undo.initEdit({elements, uv_only: true})`，与 UV 面板的 "Remove face" 同一条路径，记录标签 `清空方块 UV`。
+- 幂等：已经是空 UV 的面跳过，`cleared_faces` 只统计本次真正改动的面数；返回 `cubes[]` 逐方块列出改动面数。
+- 网格刷新失败（例如方块不在场景里）记进 `refresh_failed`，不中断其它方块：数据已经写入，只是视口可能仍显示旧网格。
+
+### 5.6 返回信封
 
 统一走 `OpResult`（完整契约见 **docs/13 §12**），工具层只做字段裁剪与 `MCP.createJsonResult` 包装：
 
@@ -402,7 +418,7 @@ AI 的正确用法是「`read_node(path, as='definition')` 拿全量 → 改 →
 - **监听范围**：MCP 插件默认只绑定 `127.0.0.1` 与 `::1`，非 loopback 的 `Origin` / `Host` 请求返回 403（含 DNS rebinding 防护）。把监听地址设为 `0.0.0.0` 会放开 `Host` 检查，属明确的风险操作，不建议。
 - **无鉴权**：任何能连上端口的本机进程都能调用全部工具，包括内置的 `risky_eval`。工具侧不能假设调用方可信，因此所有参数都在服务端（Blockbench 进程内）重新校验，路径与值的白名单不依赖客户端。
 - **`risky_eval`**：MCP 插件默认把它暴露给客户端。若不需要，在 Settings → General 清除 Enable risky_eval，客户端会看不到该工具。本插件的工具不依赖它。
-- **范围限制**：`condition` 限定在 `machine_max_part` 模式且必须有打开的项目，模式外调用不会被路由到执行体。
+- **范围限制**：配置工具的 `condition` 限定在 `machine_max_part` 模式且必须有打开的项目，模式外调用不会被路由到执行体；`clear_cube_uv` 只要求打开项目（§5）。
 - **写盘边界**：工具层与 `ops` 层都不含 fs 调用；`services/` 的写盘能力不注册为工具（docs/13 §8）。
 - **路径穿越**：`part_id` 是 AI 可直接传的参数，`../` 不在字符集里，但 `.` / `..` 在，`part_id.split('_')[0]` 还会成为目录段；`isSafePartId` 在写入口拒绝（完整值与目录段都查），导出管线在 `path.join` 前再断言一次。工具侧不能只依赖客户端校验或 `canExport`（docs/13 §5.1.3、D25）。
 
@@ -468,7 +484,7 @@ Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 | 17 | 连续 3 次 `set_node` 同一字段 → `Ctrl+Z` ×3 | **三条记录**逐条回退（MCP 强制 `coalesce:false`），面板同步 |
 | 18 | AI 编辑后不保存 → 关闭工程 | 弹出未保存提示（`Project.saved === false`） |
 | 19 | 拖拽元素过程中调用编辑工具 | `ok:false`，提示「有未完成的编辑」 |
-| 20 | 重载插件两次 | 工具仍只有 14 个，无重复注册报错 |
+| 20 | 重载插件两次 | 工具仍只有 15 个，无重复注册报错。配置工具的 `condition` 依赖 `machine_max_part` 模式：重载后编辑器会退回默认模式，须重新进入「零件定义」，这 14 个工具才会出现在 `tools/list` 里（注册本身已完成，`MCP.listTools()` 可见 `enabled:false`）；`clear_cube_uv` 不限模式，重载后即可用 |
 | 21 | `read_node(as='definition')` 读出的定义整件回传给 `import_*` | 结构等价（round-trip 无损），`reset_fields` 为空；覆盖含 `hit_boxes`、单变体、未解析骨骼、`definition:''`、`power_output:''`、`connector:''`、`locator:''`、`signal_targets:{}`、`power_outputs:{}`、`projectile_types:{}` 的输入；旧数据里的 `null`/`"null"` 由 `normalizeUnset` 归一化为 `''`/`{}` |
 | 22 | `import_sub_part` 建一个没有 hit_boxes 的子零件 | `ok:true`（合法中间态），`introduced_issues` 含「碰撞箱为空」；此时**导出被拦** |
 | 23 | 子系统未选型号就导出 | 导出被阻断，对话框列出该问题并可点击定位 |
@@ -485,6 +501,7 @@ Blockbench 里 File → Plugins 重载本插件，MCP 端点不变。
 | 34 | `import_part` 省略 `variants.default.tags` / `sub_part.hit_boxes` | `reset_fields` 只列顶层字段，不出现嵌套路径；`read_node` 显示默认值（docs/13 §11 #22） |
 | 35 | `import_part` 的 `part_id` 为 `".."` / `"."` / `".hull"` / `"hull."` / `"con"` / `"con.1"` / `"lpt9"` / `".._hull"` / `"a._b"` | `ok:false`，`code:invalid_format`；不写任何文件；`a.b.c` 仍 `ok:true`（docs/13 D25） |
 | 36 | 子系统 `machine_max:launcher` 的 `definition:''` 且 `locator:''` 的工程导出 | `canExport` 返回两条不同字段的 required 错误，`definition` 只出现一次（`collectIssues` 优先）；不因同一路径合并成一条（docs/13 §11 #21） |
+| 37 | 对一个带贴图的方块调 `clear_cube_uv` | `ok:true`，`cleared_faces:6`；六面 `texture === null` 且 `uv === [0,0,0,0]`；导出的该 cube 为 `"uv": {}`；视口方块变成无贴图外观；`Ctrl+Z` 一条记录还原贴图。再次调用返回 `cleared_faces:0`（幂等）。同名方块多于一个时传名字 → `code:ambiguous_name` |
 
 ---
 

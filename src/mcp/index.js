@@ -107,7 +107,8 @@ function setupTools(mcp) {
             description: tool.description,
             // MCP 1.10.1 读取的是 `parameters`（zod schema），不是 `params`
             parameters: schemas[tool.name],
-            condition: CONDITION,
+            // 工具可以自带 condition（几何类工具不限模式）；缺省锁定零件定义模式
+            condition: tool.condition || CONDITION,
             execute: function (args) {
                 return tools.execute(tool.name, args, mcp);
             },

@@ -83,6 +83,8 @@ function clearGlobals() {
     delete global.Undo;
     delete global.Group;
     delete global.Locator;
+    delete global.Cube;
+    delete global.Canvas;
     delete global.Blockbench;
     delete global.Outliner;
     delete globalThis.MCP_QUEUE;
@@ -609,6 +611,60 @@ describe('MCP 编辑后自检', () => {
     });
 });
 
+describe('MCP 清空方块 UV', () => {
+    function fakeCube(uuid) {
+        const cube = { uuid: uuid, name: 'cube', faces: {}, refreshed: 0, refreshArg: null };
+        ['north', 'east', 'south', 'west', 'up', 'down'].forEach(function (key) {
+            cube.faces[key] = { uv: [0, 0, 16, 16], texture: 0 };
+        });
+        cube.preview_controller = {
+            updateFaces: function (element) {
+                cube.refreshed++;
+                cube.refreshArg = element;
+            },
+        };
+        return cube;
+    }
+
+    function installCubes(cubes, selection) {
+        global.Cube = { all: cubes, selected: selection || cubes };
+        global.Undo = { initEdit: function () {}, finishEdit: function () {} };
+        global.Canvas = { updateSelectedFaces: function () {} };
+    }
+
+    test('clear_cube_uv 清空六面、刷新网格并回报面数', () => {
+        const cube = fakeCube('cube-1');
+        installCubes([cube]);
+        const r = run('clear_cube_uv', {});
+
+        expect(r.ok).toBe(true);
+        expect(r.cleared_faces).toBe(6);
+        expect(r.source).toBe('selection');
+        expect(r.cubes).toEqual([{ uuid: 'cube-1', name: 'cube', cleared_faces: 6 }]);
+        expect(cube.faces.north.texture).toBe(null);
+        expect(cube.faces.north.uv).toEqual([0, 0, 0, 0]);
+        expect(cube.refreshed).toBe(1);
+        expect(cube.refreshArg).toBe(cube);
+    });
+
+    test('按 uuid 指定方块，重复调用幂等', () => {
+        const cube = fakeCube('cube-1');
+        installCubes([cube]);
+        expect(run('clear_cube_uv', { cubes: ['cube-1'] }).changed).toBe(true);
+        const again = run('clear_cube_uv', { cubes: ['cube-1'] });
+        expect(again.ok).toBe(true);
+        expect(again.changed).toBe(false);
+        expect(again.cleared_faces).toBe(0);
+    });
+
+    test('找不到方块时返回 not_found，不抛异常', () => {
+        installCubes([]);
+        const r = run('clear_cube_uv', { cubes: ['nope'] });
+        expect(r.ok).toBe(false);
+        expect(r.errors[0].code).toBe('not_found');
+    });
+});
+
 describe('MCP 定义目录工具', () => {
     var originalLoad;
 
@@ -738,7 +794,7 @@ describe('MCP 注册生命周期', () => {
         };
     }
 
-    test('setup 注册 14 个带前缀工具，condition 限定模式', () => {
+    test('setup 注册 15 个带前缀工具，condition 默认限定模式', () => {
         globalThis.MCP_QUEUE = [];
         const registered = [];
         const unregistered = [];
@@ -754,19 +810,27 @@ describe('MCP 注册生命周期', () => {
         expect(globalThis.MCP_QUEUE).toHaveLength(1);
         globalThis.MCP_QUEUE[0].setup(mcp);
 
-        expect(registered).toHaveLength(14);
+        expect(registered).toHaveLength(15);
         expect(registered[0].name).toBe('machine_max_bb_plugin_get_context');
         expect(registered[0].parameters).toBeTruthy();
         expect(registered[0].params).toBeUndefined();
-        expect(registered.every(function (s) {
+
+        const byName = {};
+        registered.forEach(function (spec) { byName[spec.name] = spec; });
+        // 配置工具锁定“零件定义”模式
+        expect(registered.filter(function (s) {
+            return s.name !== 'machine_max_bb_plugin_clear_cube_uv';
+        }).every(function (s) {
             return s.condition.project === true
                 && s.condition.modes[0] === 'machine_max_part';
         })).toBe(true);
+        // 模型编辑工具不限模式：编辑 / UV / 绘制模式都要能清 UV
+        expect(byName.machine_max_bb_plugin_clear_cube_uv.condition).toEqual({ project: true });
 
         mcpIndex.unregisterMcpTools();
         expect(globalThis.MCP_QUEUE).toHaveLength(0);
-        // setup 前先按名字注销同名工具（14），unregister 再注销一次（14）
-        expect(unregistered.length).toBe(28);
+        // setup 前先按名字注销同名工具（15），unregister 再注销一次（15）
+        expect(unregistered.length).toBe(30);
     });
 
     test('重复 register 不重复入队', () => {
@@ -788,13 +852,13 @@ describe('MCP 注册生命周期', () => {
         };
 
         mcpIndex.registerMcpTools();
-        expect(registered).toHaveLength(14);
+        expect(registered).toHaveLength(15);
         expect(registered[0].name).toBe('machine_max_bb_plugin_get_context');
 
         // 队列条目仍在；MCP 后续 drain 时会幂等重注册
         expect(globalThis.MCP_QUEUE).toHaveLength(1);
         globalThis.MCP_QUEUE[0].setup(globalThis.MCP);
-        expect(registered).toHaveLength(28);
+        expect(registered).toHaveLength(30);
         mcpIndex.unregisterMcpTools();
     });
 
@@ -821,7 +885,7 @@ describe('MCP 注册生命周期', () => {
             createJsonResult: function (obj) { return obj; },
         };
         loadedHandler({ plugin: { id: 'mcp' } });
-        expect(registered).toHaveLength(14);
+        expect(registered).toHaveLength(15);
         mcpIndex.unregisterMcpTools();
     });
 });

@@ -16,6 +16,7 @@ var defs = require('../core/content_pack_manager.js');
 var params = require('./params.js');
 var { collectIssues } = require('../services/validate.js');
 var { canExport } = require('../services/export.js');
+var cubeUv = require('../services/cube_uv.js');
 var result = require('./result.js');
 
 var DEF_TYPE = params.DEF_TYPE;
@@ -583,6 +584,21 @@ function addInstance(args) {
     });
 }
 
+function clearCubeUv(args) {
+    var resolved = cubeUv.resolveCubes(args.cubes);
+    if (!resolved.ok) return result.error(resolved.error, resolved.errors);
+
+    var r = cubeUv.clearCubeUv(resolved.cubes);
+    if (!r.ok) return result.error(r.error, r.errors);
+
+    return result.from(r, {
+        source: resolved.source,
+        cubes: r.cubes,
+        cleared_faces: r.cleared_faces,
+        refresh_failed: r.refresh_failed,
+    });
+}
+
 // ── 内容包定义目录 ──────────────────────────────────────────────
 
 function summarizeDef(type, def) {
@@ -809,6 +825,13 @@ var TOOLS = [
         name: 'add_instance',
         description: 'Create one small instance (hit_box / interact_box / connector) under a sub_part. Requires an existing Group/Locator; config_ref is bound automatically.',
         run: addInstance,
+    },
+    {
+        name: 'clear_cube_uv',
+        description: 'Clear the six-face UV of cubes (texture=null, uv=[0,0,0,0]) so the Bedrock export writes "uv": {} and the geometry stays invisible in game; also rebuilds the viewport mesh. Target cube UUIDs or unique cube names, or select Groups and their cubes are used; omit cubes to use the current selection.',
+        // 模型编辑工具：只在“零件定义”模式之外也常用（编辑 / UV / 绘制都可能改碰撞盒），不限模式
+        condition: { project: true },
+        run: clearCubeUv,
     },
 ];
 

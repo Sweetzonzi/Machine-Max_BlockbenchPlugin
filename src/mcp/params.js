@@ -92,6 +92,10 @@ function build(z) {
             definition: z.any().optional(),
         }),
 
+        clear_cube_uv: z.object({
+            cubes: z.array(z.string()).optional(),
+        }),
+
         list_defs: z.object({
             type: z.enum(DEF_TYPE),
             search: z.string().optional(),

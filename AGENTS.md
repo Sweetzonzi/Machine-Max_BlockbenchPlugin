@@ -31,7 +31,7 @@ plugin.js                      # 插件入口（103行）
   │           ├── doc/                # 路径 / 投影 / 引用 / 值校验
   │           └── core/undo.js        # 每个操作内部 runConfigEdit
   ├── utils/notify.js            # 用户通知（Toast）
-  ├── services/                  # 文件系统 / 导出闸门 / 图标渲染（不进撤销、不暴露 MCP）
+  ├── services/                  # 文件系统 / 导出闸门 / 图标渲染 / 方块 UV（不进配置撤销；MCP 工具层可调用）
   │     ├── export.js            # canExport + executeExport 聚合出口
   │     ├── export_pipeline.js   # executeExport（生成器 + 写盘）
   │     ├── safe_part_ids.js     # 写盘前 partId 断言
@@ -43,6 +43,7 @@ plugin.js                      # 插件入口（103行）
   │     ├── icon_visibility.js   # 纯函数：start/end/auto_end → 可见 UUID 集
   │     ├── icon_fit.js          # 纯函数：AABB → 正交 zoom / target
   │     ├── icon_generator.js    # 离屏渲染 + PNG 写盘（不写 _uiState）
+  │     ├── cube_uv.js           # 清空方块六面 UV（碰撞几何不可见化，原生 uv_only 撤销）
   │     └── validate.js          # collectIssues（P4 从 mode/ 下沉）
   ├── import/                    # 导入编排（docs/15）
   │     ├── drag_import.js       # importParts：菜单多选 + 拖拽共用（一次撤销 / 一次决议 / 一条提示）
@@ -50,7 +51,7 @@ plugin.js                      # 插件入口（103行）
   │     └── bone_resolver.js     # 骨骼名反查 → element_markers + _unresolved_bones
   ├── mcp/                       # MCP 工具层（P5；docs/12）
   │     ├── index.js             # MCP_QUEUE 注册/注销 + 生命周期
-  │     ├── tools.js             # 14 个工具实现（只读/定义目录/细粒度/整件/validate）
+  │     ├── tools.js             # 15 个工具实现（只读/定义目录/细粒度/整件/validate/方块 UV）
   │     ├── params.js            # MCP.z 参数形状
   │     └── result.js            # OpResult → MCP 返回信封
   ├── mode.js                    # 模式生命周期 + 注册（344行）
