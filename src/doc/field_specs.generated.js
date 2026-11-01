@@ -14,7 +14,7 @@ const PROVENANCE = {
     "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
     "source_revision": "52745d74",
     "source_files": 71,
-    "source_sha256": "067371faf9b2a375db9cfcdf9f4fd4268e858ea4123775fdcd2f37773893eac4",
+    "source_sha256": "9fbab6ff2e61f915c9b649be62808301fdd897280606b8c25863772173128e3b",
     "generated_from": "machine_max builtin JSON Schema"
 };
 
@@ -154,7 +154,8 @@ const SPECS = {
                 "enum": [
                     "true",
                     "false",
-                    "ground"
+                    "ground",
+                    "ground_hard"
                 ]
             },
             "collision_height": {

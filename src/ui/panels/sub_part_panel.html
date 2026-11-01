@@ -101,15 +101,16 @@
     <div class="mm-section">
         <h4 class="mm-section-title">地形碰撞</h4>
         <div class="mm-field">
-            <label title="地形碰撞模式：true=与所有方块碰撞，ground=仅与地面碰撞，false=不与任何方块碰撞">碰撞模式</label>
+            <label title="地形碰撞模式：true=与所有方块碰撞，ground=仅与地面碰撞（接触由平滑高度场接管），ground_hard=仅与地面碰撞且立面接触按竖直抬升，false=不与任何方块碰撞">碰撞模式</label>
             <select class="mm-select" :value="config.block_collision" @change="onFieldChange('block_collision', $event.target.value)">
                 <option value="true">true（所有方块）</option>
                 <option value="ground">ground（仅地面）</option>
+                <option value="ground_hard">ground_hard（仅地面·立面抬升）</option>
                 <option value="false">false（无碰撞）</option>
             </select>
         </div>
         <div class="mm-field">
-            <label title="碰撞检测高度(m)，障碍小于此高度时不发生碰撞（仅ground模式有效）。默认-1.0表示所有障碍均碰撞">碰撞高度 (m)</label>
+            <label title="碰撞检测高度(m)，障碍小于此高度时不发生碰撞（仅ground / ground_hard模式有效）。默认-1.0表示所有障碍均碰撞">碰撞高度 (m)</label>
             <input type="number" class="mm-input" :value="config.collision_height" @change="onFieldChange('collision_height', parseFloat($event.target.value) || -1)" step="0.5" />
         </div>
         <div class="mm-field mm-field-row">

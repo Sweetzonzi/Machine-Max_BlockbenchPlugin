@@ -38,6 +38,8 @@ const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 // 本次没有改动 part / connector / subsystem 实例的可编辑字段，field_specs 只随
 // source_sha256 变化。内容真值以 source_sha256 为准。
 const UPSTREAM_REVISION = '52745d74';
+// sub_part.block_collision 的 ground_hard 取值是 52745d74 之后的上游工作树改动
+// （中英两份 sub_part_attr.schema.json）；上游提交后把这里与 docs/13 §3.2 的溯源一起更新。
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;

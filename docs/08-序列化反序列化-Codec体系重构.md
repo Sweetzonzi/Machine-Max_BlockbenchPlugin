@@ -198,7 +198,7 @@ const SubPartCodec = Codec.record({
     mass:               Codec.FLOAT.default(25.0),
     mass_center:        Codec.STRING.default('mass_center'),
     projected_area:     Codec.FLOAT.list(3).default([0, 0, 0]),
-    block_collision:    Codec.ENUM(['true', 'false', 'ground']).default('true'),
+    block_collision:    Codec.ENUM(['true', 'false', 'ground', 'ground_hard']).default('true'),
     collision_height:   Codec.FLOAT.default(-1.0),
     climb_assist:       Codec.BOOL.default(false),
     hydro_priority:     Codec.INT.default(0),
