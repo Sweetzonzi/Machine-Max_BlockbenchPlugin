@@ -6,7 +6,7 @@ const { describe, test, expect } = require('bun:test');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const generatedPath = path.join(REPO_ROOT, 'src', 'doc', 'field_specs.generated.js');
-const { buildManifest, render, DEFAULT_SOURCE } = require('../../scripts/gen-field-specs.js');
+const { buildManifest, render, DEFAULT_SOURCE, UPSTREAM_REVISION } = require('../../scripts/gen-field-specs.js');
 const generated = require(generatedPath);
 
 describe('field_specs.generated.js', () => {
@@ -99,7 +99,7 @@ describe('field_specs.generated.js', () => {
     });
 
     test('provenance 记录 71 个 schema 与源 hash', () => {
-        expect(generated.PROVENANCE.source_revision).toBe('52745d74');
+        expect(generated.PROVENANCE.source_revision).toBe(UPSTREAM_REVISION);
         expect(generated.PROVENANCE.source_files).toBe(71);
         expect(generated.PROVENANCE.source_sha256).toMatch(/^[0-9a-f]{64}$/);
         expect(generated.PROVENANCE.source_root)
