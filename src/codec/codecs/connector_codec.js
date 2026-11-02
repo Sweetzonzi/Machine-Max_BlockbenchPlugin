@@ -17,7 +17,7 @@ const { Codec } = require('../Codec.js');
  *     （空字符串 → encode 时跳过，与 _cleanConnectors() 的 if (conn.definition) 行为一致）
  *   - signal_targets 值类型为 List<String>（对应 Java SIGNAL_TARGETS_CODEC）
  *   - signal_translations 值类型为 String（对应 Java unboundedMap(STRING, STRING)）
- *   - overwrite 使用 ANY.nullable() 透传对象，对应 Java OverwriteAttr 的 12 个可选字段
+ *   - overwrite 使用 ANY.nullable() 透传对象，对应 Java OverwriteAttr 的 11 个可选字段
  */
 const ConnectorCodec = Codec.record({
     locator:              Codec.STRING.field(),                                      // 关联 Locator（必填）
@@ -27,7 +27,7 @@ const ConnectorCodec = Codec.record({
     signal_translations:  Codec.map(Codec.STRING, Codec.STRING).default({}),
     power_target:         Codec.STRING.default(''),
     internal:             Codec.BOOL.default(false),
-    // overwrite：透传对象（对应 Java ConnectorAttr.OverwriteAttr — 12 个可选字段）
+    // overwrite：透传对象（对应 Java ConnectorAttr.OverwriteAttr — 11 个可选字段）
     // 使用 ANY.nullable() 宽松传递，encode 时 null/undefined 跳过
     overwrite:            Codec.ANY.nullable(),
 });

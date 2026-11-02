@@ -1,5 +1,5 @@
 // 文件: src/codec/codecs/sub_part_codec.js
-// 用途: SubPart 配置的 Codec 定义 — 15 字段（14 常规 + 1 nullable），与 Java SubPart.CODEC 对齐
+// 用途: SubPart 配置的 Codec 定义 — 16 字段（15 常规 + 1 nullable），与 Java SubPart.CODEC 对齐
 // 所属模块: MachineMax Blockbench 插件
 //
 // 瞬态字段:
@@ -20,7 +20,7 @@ const { HydroCodec } = require('./hydrodynamic_codec.js');
 /**
  * SubPartCodec — 子零件配置的序列化/反序列化 Codec
  *
- * 15 个 schema 字段对应 Java SubPart.CODEC（RecordCodecBuilder）:
+ * 16 个 schema 字段对应 Java SubPart.CODEC（RecordCodecBuilder）:
  *
  *   骨骼范围:
  *     start_bone         — 起始骨骼名
@@ -34,6 +34,7 @@ const { HydroCodec } = require('./hydrodynamic_codec.js');
  *     block_collision    — 方块碰撞模式（true/false/ground/ground_hard）
  *     collision_height   — 碰撞高度（-1 表示自动计算）
  *     climb_assist       — 攀爬辅助
+ *     collide_in_assembly — 是否与同装配体内未直接相连的零件碰撞
  *     hydro_priority     — 流体优先级
  *
  *   子对象映射（Map<String, Codec>）:
@@ -67,6 +68,7 @@ const SubPartCodec = Codec.record({
     block_collision:    Codec.ENUM(['true', 'false', 'ground', 'ground_hard']).default('true'),
     collision_height:   Codec.FLOAT.default(-1.0),
     climb_assist:       Codec.BOOL.default(false),
+    collide_in_assembly: Codec.BOOL.default(false),
     hydro_priority:     Codec.INT.default(0),
 
     // ── 子对象映射 ──

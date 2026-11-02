@@ -31,6 +31,7 @@ function createSubPart(overrides) {
         block_collision: 'true',
         collision_height: -1,
         climb_assist: false,
+        collide_in_assembly: false,
         hydro_priority: 0,
         hit_boxes: {
             '11111111-1111-1111-1111-111111111111': {

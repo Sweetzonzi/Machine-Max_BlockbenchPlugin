@@ -37,7 +37,8 @@ const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 // commander_sight，车长镜只由车长座握手可见。
 // 本次没有改动 part / connector / subsystem 实例的可编辑字段，field_specs 只随
 // source_sha256 变化。内容真值以 source_sha256 为准。
-const UPSTREAM_REVISION = '8fd4b519';
+// 8223ead4：sub_part 新增 collide_in_assembly；连接点 collide_between_parts 移除。
+const UPSTREAM_REVISION = '8223ead4';
 // 8fd4b519 在 52745d74 基线上把 sub_part.block_collision 扩为 true/false/ground/ground_hard
 // （中英两份 sub_part_attr.schema.json），field_specs 的该字段随之为四项。
 

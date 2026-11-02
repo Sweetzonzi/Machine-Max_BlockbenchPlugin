@@ -120,6 +120,15 @@
     </div>
 
     <div class="mm-section">
+        <h4 class="mm-section-title">同装配体碰撞</h4>
+        <div class="mm-field mm-field-row">
+            <label title="是否允许该子零件与同一装配体内、未通过连接点直接相连的其他子零件发生碰撞。只有双方都开启时才生效">同装配体碰撞</label>
+            <input type="checkbox" :checked="config.collide_in_assembly" @change="onFieldChange('collide_in_assembly', $event.target.checked)" />
+        </div>
+        <span class="mm-element-info" style="font-size:10px;color:#888">默认关闭；开启后重叠的碰撞箱会产生真实接触，可能抖动</span>
+    </div>
+
+    <div class="mm-section">
         <h4 class="mm-section-title">流体动力优先级</h4>
         <div class="mm-field">
             <label title="空气阻力计算优先级，值越大优先级越高。优先级高或相等的部件会遮挡优先级低或相等的部件">hydro_priority</label>

@@ -121,7 +121,7 @@ config
           └─ sub_parts { <spKey> → SubPartConfig
                ├─ start_bone, end_bones[], durability, mass, mass_center,
                │  projected_area[3], block_collision, collision_height,
-               │  climb_assist, hydro_priority
+               │  climb_assist, collide_in_assembly, hydro_priority
                ├─ hit_boxes { <uuid|骨骼名> → HitBoxConfig }
                ├─ interact_boxes { <interact.<ns>.<name>> → InteractBoxConfig }
                ├─ connectors { <connector.<ns>.<name>> → ConnectorConfig }

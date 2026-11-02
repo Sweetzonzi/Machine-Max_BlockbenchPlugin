@@ -29,4 +29,11 @@ describe('sub_part_panel.html', () => {
             SPECS.sub_part.fields.block_collision.enum.slice().sort()
         );
     });
+
+    test('同装配体碰撞 checkbox 绑定 collide_in_assembly', () => {
+        const html = fs.readFileSync(TEMPLATE, 'utf8');
+        expect(html).toContain(':checked="config.collide_in_assembly"');
+        expect(html).toContain("onFieldChange('collide_in_assembly'");
+        expect(SPECS.sub_part.fields.collide_in_assembly).toEqual({ type: 'boolean' });
+    });
 });

@@ -3,7 +3,7 @@
 /**
  * 本文件由 scripts/gen-field-specs.js 自动生成，不要手工编辑。
  * 数据源：src/builtin/builtin/machine_max/docs/en_us/schemas
- * 上游快照：Machine-Max@8fd4b519
+ * 上游快照：Machine-Max@8223ead4
  * 重新生成：node scripts/gen-field-specs.js
  * 漂移检查：node scripts/gen-field-specs.js --check
  */
@@ -12,9 +12,9 @@ const PROVENANCE = {
     "generator_version": 1,
     "source_locale": "en_us",
     "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
-    "source_revision": "8fd4b519",
+    "source_revision": "8223ead4",
     "source_files": 71,
-    "source_sha256": "9fbab6ff2e61f915c9b649be62808301fdd897280606b8c25863772173128e3b",
+    "source_sha256": "c20126417731fc7bc1160ab0be3f2136d1941fc87479e5381aa02790d078f72f",
     "generated_from": "machine_max builtin JSON Schema"
 };
 
@@ -163,6 +163,9 @@ const SPECS = {
                 "integer": false
             },
             "climb_assist": {
+                "type": "boolean"
+            },
+            "collide_in_assembly": {
                 "type": "boolean"
             },
             "hydro_priority": {
@@ -714,9 +717,6 @@ const SPECS = {
                         "type": "number",
                         "integer": false,
                         "minimum": 0
-                    },
-                    "collide_between_parts": {
-                        "type": "boolean"
                     },
                     "required_tags": {
                         "type": "array",

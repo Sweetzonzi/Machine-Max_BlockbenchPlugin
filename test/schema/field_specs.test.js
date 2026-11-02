@@ -39,6 +39,7 @@ describe('field_specs.generated.js', () => {
         expect(generated.SPECS.sub_part.fields.start_bone.references).toBe('bone');
         expect(generated.SPECS.sub_part.fields.end_bones.items.references).toBe('bone');
         expect(generated.SPECS.sub_part.fields.mass_center.references).toBe('locator');
+        expect(generated.SPECS.sub_part.fields.collide_in_assembly).toEqual({ type: 'boolean' });
         expect(generated.SPECS.interact_box.fields.bone.references).toBe('bone');
         expect(generated.SPECS.connector.fields.definition.references).toBe('resource');
         expect(generated.SPECS.interact_box.fields.signal_targets
@@ -53,7 +54,7 @@ describe('field_specs.generated.js', () => {
         ]);
         expect(Object.keys(generated.SPECS.hit_box.fields.overwrite.properties.armor.properties))
             .toContain('impact_modifiers');
-        expect(Object.keys(generated.SPECS.connector.fields.overwrite.properties)).toHaveLength(12);
+        expect(Object.keys(generated.SPECS.connector.fields.overwrite.properties)).toHaveLength(11);
         expect(generated.SPECS.connector.fields.overwrite.properties)
             .toHaveProperty('impact_absorption_destroyed');
         expect(generated.SPECS.connector.fields.overwrite.properties.impact_absorption.maximum)

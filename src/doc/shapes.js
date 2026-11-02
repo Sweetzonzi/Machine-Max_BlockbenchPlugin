@@ -28,6 +28,7 @@ var SubPartShape = Codec.record({
     block_collision:    Codec.ENUM(['true', 'false', 'ground', 'ground_hard']).default('true'),
     collision_height:   Codec.FLOAT.default(-1.0),
     climb_assist:       Codec.BOOL.default(false),
+    collide_in_assembly: Codec.BOOL.default(false),
     hydro_priority:     Codec.INT.default(0),
     hit_boxes:          Codec.map(Codec.STRING, HitBoxCodec).default({}),
     interact_boxes:     Codec.map(Codec.STRING, InteractBoxCodec).default({}),

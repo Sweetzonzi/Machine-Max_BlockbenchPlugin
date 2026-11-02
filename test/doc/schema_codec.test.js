@@ -93,6 +93,16 @@ describe('schema ↔ Codec 差异登记', () => {
         }
     });
 
+    test('collide_in_assembly 默认 false 且可往返', () => {
+        const defaults = SubPartCodec.decode({});
+        expect(defaults.collide_in_assembly).toBe(false);
+
+        const encoded = SubPartCodec.encode(Object.assign({}, defaults, {
+            collide_in_assembly: true,
+        }));
+        expect(encoded.collide_in_assembly).toBe(true);
+    });
+
     test('D12 字段已补齐：Codec / registry / 默认值一致', () => {
         // 仅剩 part.type：上游 const regular 的常量判别字段，省略即默认值。
         expect(allow.missing_fields.map((e) => e.kind + '.' + e.field)).toEqual(['part.type']);
