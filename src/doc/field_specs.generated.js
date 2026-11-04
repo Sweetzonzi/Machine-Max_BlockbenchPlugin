@@ -14,7 +14,7 @@ const PROVENANCE = {
     "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
     "source_revision": "8223ead4",
     "source_files": 71,
-    "source_sha256": "c20126417731fc7bc1160ab0be3f2136d1941fc87479e5381aa02790d078f72f",
+    "source_sha256": "74d0b5dae33083ecada56f036a83d392c436eeb0404b60141fa4ccef9f4af3d1",
     "generated_from": "machine_max builtin JSON Schema"
 };
 
