@@ -31,7 +31,7 @@ const { HydroCodec } = require('./hydrodynamic_codec.js');
  *     mass               — 质量
  *     mass_center        — 质心骨骼名
  *     projected_area     — 投影面积 [x, y, z]
- *     block_collision    — 方块碰撞模式（true/false/ground/ground_hard）
+ *     block_collision    — 方块碰撞模式（true/false/ground）
  *     collision_height   — 碰撞高度（-1 表示自动计算）
  *     climb_assist       — 攀爬辅助
  *     collide_in_assembly — 是否与同装配体内未直接相连的零件碰撞
@@ -65,7 +65,7 @@ const SubPartCodec = Codec.record({
     mass:               Codec.FLOAT.default(25.0),
     mass_center:        Codec.STRING.default('mass_center'),
     projected_area:     Codec.FLOAT.list(3).default([-1, -1, -1]),
-    block_collision:    Codec.ENUM(['true', 'false', 'ground', 'ground_hard']).default('true'),
+    block_collision:    Codec.ENUM(['true', 'false', 'ground']).default('true'),
     collision_height:   Codec.FLOAT.default(-1.0),
     climb_assist:       Codec.BOOL.default(false),
     collide_in_assembly: Codec.BOOL.default(false),

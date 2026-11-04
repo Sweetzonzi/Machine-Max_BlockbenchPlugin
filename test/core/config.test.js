@@ -147,6 +147,38 @@ describe('core/config 旧占位归一化', () => {
         expect(migrated2.parts.hull.variants.default).toBeUndefined();
     });
 
+    test('退役枚举 block_collision: "ground_hard" 折成 ground + climb_assist', () => {
+        const raw = legacyConfig();
+        const sp = raw.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.block_collision = 'ground_hard';
+
+        const normalized = normalizeLegacyPlaceholders(raw);
+        const outSp = normalized.parts.hull.variants.default
+            .sub_parts['sub_part.machine_max.main'];
+        expect(outSp.block_collision).toBe('ground');
+        expect(outSp.climb_assist).toBe(true);
+
+        // 走完整加载链路（decode 的 ENUM 只认三项，未归一化会抛错）
+        const migrated = migrateIfNeeded(raw);
+        const loaded = migrated.parts.hull.variants.default
+            .sub_parts['sub_part.machine_max.main'];
+        expect(loaded.block_collision).toBe('ground');
+        expect(loaded.climb_assist).toBe(true);
+        expect(PartCodec.encode(migrated.parts.hull)).toBeTruthy();
+    });
+
+    test('ground 与 climb_assist 的现有取值不被归一化改动', () => {
+        const raw = legacyConfig();
+        const sp = raw.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.block_collision = 'ground';
+        sp.climb_assist = false;
+
+        const outSp = normalizeLegacyPlaceholders(raw).parts.hull.variants.default
+            .sub_parts['sub_part.machine_max.main'];
+        expect(outSp.block_collision).toBe('ground');
+        expect(outSp.climb_assist).toBe(false);
+    });
+
     test('createHitBoxConfig 使用 HitBoxCodec 作为默认值唯一真源', () => {
         const hb = createHitBoxConfig();
         const decoded = HitBoxCodec.decode({ id: 'part', type: 'box' });

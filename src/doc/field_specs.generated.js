@@ -3,7 +3,7 @@
 /**
  * 本文件由 scripts/gen-field-specs.js 自动生成，不要手工编辑。
  * 数据源：src/builtin/builtin/machine_max/docs/en_us/schemas
- * 上游快照：Machine-Max@8223ead4
+ * 上游快照：Machine-Max@fa593c2e
  * 重新生成：node scripts/gen-field-specs.js
  * 漂移检查：node scripts/gen-field-specs.js --check
  */
@@ -12,9 +12,9 @@ const PROVENANCE = {
     "generator_version": 1,
     "source_locale": "en_us",
     "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
-    "source_revision": "8223ead4",
+    "source_revision": "fa593c2e",
     "source_files": 71,
-    "source_sha256": "74d0b5dae33083ecada56f036a83d392c436eeb0404b60141fa4ccef9f4af3d1",
+    "source_sha256": "2348a58de5c1de07410a05003fd8b139e09320ec97582c48c3b312f47a0db30e",
     "generated_from": "machine_max builtin JSON Schema"
 };
 
@@ -154,8 +154,7 @@ const SPECS = {
                 "enum": [
                     "true",
                     "false",
-                    "ground",
-                    "ground_hard"
+                    "ground"
                 ]
             },
             "collision_height": {

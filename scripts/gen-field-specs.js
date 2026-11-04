@@ -28,19 +28,20 @@ const DEFAULT_SOURCE = path.join(REPO_ROOT, SCHEMA_REL);
 const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 
 // vendored 快照的溯源 commit；同步 schema 时与 docs/13 §3.2 一起更新。
-// 上游 52745d74（承接 50102727 的全量内置包同步，20 个文件）：fitting 顶层 `sounds` 块被
-// 移除，履带命中音改由 material / overwrite.sounds 合并后取值——属 fitting 数据模型，
-// 不进入 field_specs；52745d74 把三处中英分歧收敛（material_attr 的 rolling_friction
-// 无量纲 C_rr／默认 0.02 补齐到 en_us、view_attr.yaw_limit 英文默认改回代码真值 90、
-// wheel_driver 中文侧补 top-level additionalProperties:false）；其中
-// `commander_sight_dual_stb.discovery_inputs` 在 c3d61f3a 改为 gunner_sight →
-// commander_sight，车长镜只由车长座握手可见。
-// 本次没有改动 part / connector / subsystem 实例的可编辑字段，field_specs 只随
-// source_sha256 变化。内容真值以 source_sha256 为准。
-// 8223ead4：sub_part 新增 collide_in_assembly；连接点 collide_between_parts 移除。
-const UPSTREAM_REVISION = '8223ead4';
-// 8fd4b519 在 52745d74 基线上把 sub_part.block_collision 扩为 true/false/ground/ground_hard
-// （中英两份 sub_part_attr.schema.json），field_specs 的该字段随之为四项。
+// 内容真值以 source_sha256 为准。历次溯源：
+//   52745d74 — fitting 顶层 `sounds` 块移除，履带命中音改由 material / overwrite.sounds
+//              合并后取值（属 fitting 数据模型，不进 field_specs）；三处中英分歧收敛
+//              （material_attr.rolling_friction 的无量纲 C_rr 与默认 0.02、view_attr.yaw_limit
+//              英文默认 90、wheel_driver 中文侧补 additionalProperties:false）；
+//              commander_sight_dual_stb.discovery_inputs 在 c3d61f3a 由 gunner_sight 改为
+//              commander_sight，车长镜只由车长座握手可见。
+//   8223ead4 — sub_part 新增 collide_in_assembly；连接点 collide_between_parts 移除。
+//   8fd4b519 — sub_part.block_collision 扩为 true/false/ground/ground_hard。
+//   fa593c2e — sub_part.block_collision 为 true/false/ground：台阶立面的抬升归 climb_assist
+//              （ground + climb_assist 承担原 ground_hard 的行为），collision_height 只在
+//              ground 下生效；field_specs 的该字段随之为三项，block_collision /
+//              climb_assist / collision_height 的 description 一并重写。
+const UPSTREAM_REVISION = 'fa593c2e';
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;

@@ -24,6 +24,7 @@ src/core/
 | 定义新字段默认值 | `src/codec/codecs/*` | 默认值以 Codec 为准；`config_defaults.js` 仅作历史快照，**不要**再新增默认值 |
 | 处理配置版本迁移 | `config.js` → `MIGRATIONS` 对象 | 按版本号键值存储；`migrateIfNeeded()` 循环补齐间隙 |
 | 归一化旧工程占位 | `config.js` → `normalizeLegacyPlaceholders()` | required 字符串 `null`/`"null"` → `''`，map `null`/`[]` → `{}`；`migrateIfNeeded()` 在 decode 前调用 |
+| 归一化单个零件（导入用） | `config.js` → `normalizePartConfig(part)` | 与项目加载同一套归一化；退役枚举 `block_collision: "ground_hard"` 折成 `ground` + `climb_assist: true`。`services/import_plan.js` 在 `PartCodec.decode` 前调用 |
 | 修复缺失的标记配置 | `element_markers.js` → `repairMarkerConfigs()` | `loadConfig` 调用一次：补 sub_parts / hit_boxes / interact_boxes / connectors，幂等；渲染期不再补 |
 | 添加新标记类型 | `element_markers.js` → `MARKER_TYPES` | 添加 `{ label, icon, color }` 条目；更新 `getMarkerTypesForElement()` |
 | 重算自动排除骨骼 | `element_markers.js` → `recalcAutoEndBones()` | 子零件标记起始骨骼变更时调用 |

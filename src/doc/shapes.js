@@ -25,7 +25,7 @@ var SubPartShape = Codec.record({
     mass:               Codec.FLOAT.default(25.0),
     mass_center:        Codec.STRING.default('mass_center'),
     projected_area:     Codec.FLOAT.list(3).default([-1, -1, -1]),
-    block_collision:    Codec.ENUM(['true', 'false', 'ground', 'ground_hard']).default('true'),
+    block_collision:    Codec.ENUM(['true', 'false', 'ground']).default('true'),
     collision_height:   Codec.FLOAT.default(-1.0),
     climb_assist:       Codec.BOOL.default(false),
     collide_in_assembly: Codec.BOOL.default(false),

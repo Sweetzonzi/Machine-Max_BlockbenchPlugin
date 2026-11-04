@@ -6,13 +6,15 @@
 // I/O（读文件 / 归一化失败）在 import/drag_import.js 的 normalizeInputs；
 // 写配置与撤销边界在 drag_import.js 的 applyPlan。
 //
-// 依赖：lib/json_text.js（纯文本）、doc/keys.js（key 规范）、codec（PartCodec.decode）。
+// 依赖：lib/json_text.js（纯文本）、doc/keys.js（key 规范）、codec（PartCodec.decode）、
+// core/config.js（decode 前的旧值归一化）。
 
 'use strict';
 
 var jsonText = require('../lib/json_text.js');
 var keys = require('../doc/keys.js');
 var PartCodec = require('../codec/codecs/part_codec.js').PartCodec;
+var normalizePartConfig = require('../core/config.js').normalizePartConfig;
 
 var JSON_SUFFIX_RE = /\.json$/i;
 
@@ -94,7 +96,8 @@ function planImports(inputs, existingParts) {
 
         var partConfig;
         try {
-            partConfig = PartCodec.decode(raw);
+            // raw 是本次解析出来的局部对象，就地归一化（退役枚举 / 旧占位）后再 decode
+            partConfig = PartCodec.decode(normalizePartConfig(raw));
         } catch (err) {
             failures.push({
                 fileName: fileName,

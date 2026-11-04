@@ -101,20 +101,19 @@
     <div class="mm-section">
         <h4 class="mm-section-title">地形碰撞</h4>
         <div class="mm-field">
-            <label title="地形碰撞模式：true=与所有方块碰撞，ground=仅与地面碰撞（接触由平滑高度场接管），ground_hard=仅与地面碰撞且立面接触按竖直抬升，false=不与任何方块碰撞">碰撞模式</label>
+            <label title="地形碰撞模式：true=与所有方块碰撞，ground=仅与部件之下的地面方块碰撞（接触面取一块侵蚀平滑后的地形），false=不与任何方块碰撞">碰撞模式</label>
             <select class="mm-select" :value="config.block_collision" @change="onFieldChange('block_collision', $event.target.value)">
                 <option value="true">true（所有方块）</option>
                 <option value="ground">ground（仅地面）</option>
-                <option value="ground_hard">ground_hard（仅地面·立面抬升）</option>
                 <option value="false">false（无碰撞）</option>
             </select>
         </div>
         <div class="mm-field">
-            <label title="碰撞检测高度(m)，障碍小于此高度时不发生碰撞（仅ground / ground_hard模式有效）。默认-1.0表示所有障碍均碰撞">碰撞高度 (m)</label>
+            <label title="碰撞检测高度(m)，障碍小于此高度时不发生碰撞（仅 ground 模式有效）。默认 -1.0 表示所有障碍均碰撞">碰撞高度 (m)</label>
             <input type="number" class="mm-input" :value="config.collision_height" @change="onFieldChange('collision_height', parseFloat($event.target.value) || -1)" step="0.5" />
         </div>
         <div class="mm-field mm-field-row">
-            <label title="是否启用攀爬辅助功能">攀爬辅助</label>
+            <label title="攀爬辅助（配合 ground 模式）：部件插进了方块但地形面判定没碰到它时，是否把它抬上去。开启后立柱侧面接触按竖直法线匀速抬升，适合需要爬 1 格台阶的轮胎、履带；关闭后这类接触直接放行，部件完全跟着侵蚀平滑后的地形走，下坡更连续、不会整格掉落，适合底盘、车壳下缘等易剐蹭结构">攀爬辅助</label>
             <input type="checkbox" :checked="config.climb_assist" @change="onFieldChange('climb_assist', $event.target.checked)" />
         </div>
     </div>

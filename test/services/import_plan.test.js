@@ -133,6 +133,25 @@ describe('import_plan.planImports', () => {
         expect(p.failures[0].fileName).toBe('connector.json');
     });
 
+    test('旧导出里的 block_collision: "ground_hard" 导入后折成 ground + climb_assist', () => {
+        const legacy = JSON.stringify({
+            variants: {
+                model: 'machine_max:model/hull',
+                textures: { default: 'machine_max:block/hull' },
+                tags: [],
+                sub_parts: {
+                    'sub_part.machine_max.hull': { block_collision: 'ground_hard' },
+                },
+            },
+        });
+        const p = plan.planImports([input('hull.json', legacy)], {});
+        expect(p.failures).toEqual([]);
+        const subPart = p.entries[0].partConfig.variants.default
+            .sub_parts['sub_part.machine_max.hull'];
+        expect(subPart.block_collision).toBe('ground');
+        expect(subPart.climb_assist).toBe(true);
+    });
+
     test('单变体简写（variants 内层）被接受', () => {
         const p = plan.planImports([input('hull.json')], {});
         expect(p.entries.length).toBe(1);

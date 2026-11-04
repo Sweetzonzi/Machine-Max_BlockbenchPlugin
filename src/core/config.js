@@ -237,7 +237,18 @@ function normalizeSubsystem(subsystem) {
     });
 }
 
+/**
+ * 方块碰撞模式里的退役枚举值：`ground_hard` 并入 `ground`，
+ * 台阶立面的抬升改由 `climb_assist` 单独表达。
+ */
+function normalizeBlockCollision(subPart) {
+    if (subPart.block_collision !== 'ground_hard') return;
+    subPart.block_collision = 'ground';
+    subPart.climb_assist = true;
+}
+
 function normalizeSubPart(subPart) {
+    normalizeBlockCollision(subPart);
     normalizeMapField(subPart, 'hit_boxes');
     normalizeMapField(subPart, 'interact_boxes');
     normalizeMapField(subPart, 'connectors');
@@ -253,7 +264,30 @@ function normalizeVariant(variant) {
 }
 
 /**
- * 在 decode 前把旧占位归一化为内部合法值，返回深拷贝（不修改入参）。
+ * 归一化单个零件配置（原地修改）：逐变体归一化其子零件的旧值/旧占位。
+ *
+ * @param {Object} part - 零件配置（形如 parts[partId]）
+ * @returns {Object} 同一个对象
+ */
+function normalizePartConfig(part) {
+    var variants = part && part.variants;
+    if (!variants || typeof variants !== 'object') return part;
+    // 单变体简写：model 是字符串；多变体 map 的值是对象（即使变体名恰好叫 model）
+    if (typeof variants.model === 'string') {
+        normalizeVariant(variants);
+    } else {
+        Object.keys(variants).forEach(function (name) {
+            var variant = variants[name];
+            if (variant && typeof variant === 'object' && !Array.isArray(variant)) {
+                normalizeVariant(variant);
+            }
+        });
+    }
+    return part;
+}
+
+/**
+ * 在 decode 前把旧占位 / 退役枚举归一化为内部合法值，返回深拷贝（不修改入参）。
  *
  * @param {Object} config - 原始项目配置
  * @returns {Object} 归一化后的配置
@@ -265,20 +299,7 @@ function normalizeLegacyPlaceholders(config) {
     if (!parts || typeof parts !== 'object' || Array.isArray(parts)) return result;
 
     Object.keys(parts).forEach(function (partId) {
-        var part = parts[partId];
-        var variants = part && part.variants;
-        if (!variants || typeof variants !== 'object') return;
-        // 单变体简写：model 是字符串；多变体 map 的值是对象（即使变体名恰好叫 model）
-        if (typeof variants.model === 'string') {
-            normalizeVariant(variants);
-        } else {
-            Object.keys(variants).forEach(function (name) {
-                var variant = variants[name];
-                if (variant && typeof variant === 'object' && !Array.isArray(variant)) {
-                    normalizeVariant(variant);
-                }
-            });
-        }
+        normalizePartConfig(parts[partId]);
     });
 
     return result;
@@ -431,6 +452,7 @@ if (typeof module !== 'undefined' && module.exports) {
         ensureDefaults,
         migrateIfNeeded,
         normalizeLegacyPlaceholders,
+        normalizePartConfig,
         getActivePart,
         getActiveVariant,
     };
