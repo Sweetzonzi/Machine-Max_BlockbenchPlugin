@@ -40,6 +40,7 @@ function createSubPart(overrides) {
                 material: 'machine_max:default',
                 thickness: 1,
                 condition: 'true',
+                lockable: false,
                 subsystem: '',
                 module: '',
                 overwrite: null,

@@ -75,6 +75,10 @@
             <label title="Molang条件表达式，为空则始终生效">条件表达式</label>
             <input type="text" class="mm-input" :value="config.condition" @change="onFieldChange('condition', $event.target.value)" placeholder="true" />
         </div>
+        <div class="mm-field mm-field-row">
+            <label title="显式准入：勾选后该碰撞箱才参与目标锁定与传感器候选集，且仍需关联子系统存活。默认不勾">可锁定</label>
+            <input type="checkbox" :checked="config.lockable === true" @change="onFieldChange('lockable', $event.target.checked)" />
+        </div>
     </div>
 
     <div class="mm-section">

@@ -41,7 +41,11 @@ const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 //              （ground + climb_assist 承担原 ground_hard 的行为），collision_height 只在
 //              ground 下生效；field_specs 的该字段随之为三项，block_collision /
 //              climb_assist / collision_height 的 description 一并重写。
-const UPSTREAM_REVISION = 'fa593c2e';
+//   b69ae014 — fitting 新增 tags（创造页类别/系列）与 link_bones（逐节骨骼名）；hit_box_attr
+//              新增 lockable（真值默认 false）；projectile.external 的 thrust 元素新增
+//              propellant_mass，mass 的口径写明"不含推进剂"。三处里只有 lockable 是实例
+//              可编辑字段，field_specs 因此只多这一项（fitting 与 projectile 都不进 SPECS）。
+const UPSTREAM_REVISION = 'b69ae014';
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;

@@ -180,7 +180,9 @@ src/doc/field_specs.generated.js（含 provenance）
 
 ### 3.2 快照状态与类型真值
 
-**当前状态（P2 已完成）**：vendored schema 快照 142 个 JSON（中英各 71），与 `Machine-Max` 工作树的 builtin 快照逐文件 SHA256 一致，`node scripts/sync-builtin.js --check` 与 `node scripts/sync-schemas.js --check` 零漂移；内置内容包已重新拉取（17 materials / 28 connectors / **58** subsystems / 4 control_groups）。当前溯源为 **`fa593c2e`**：`sub_part.block_collision` 的枚举是 `true/false/ground`（中英两份 `sub_part_attr.schema.json`），台阶立面的抬升由同级的 `climb_assist` 表达——`ground` + `climb_assist: true` 就是原 `ground_hard` 的行为，`collision_height` 只在 `ground` 下生效；`field_specs` 的该字段随之为三项，`source_sha256` 为 `2348a58de5c1…`。旧工程与旧导出文件里的 `ground_hard` 由 `core/config.js` 的 `normalizeBlockCollision()` 在 decode 前折成 `ground` + `climb_assist: true`（项目加载与零件导入共用这条归一化）。
+**当前状态（P2 已完成）**：vendored schema 快照 142 个 JSON（中英各 71），与 `Machine-Max` 工作树的 builtin 快照逐文件 SHA256 一致，`node scripts/sync-builtin.js --check` 与 `node scripts/sync-schemas.js --check` 零漂移；内置内容包已重新拉取（17 materials / 28 connectors / **58** subsystems / 4 control_groups）。当前溯源为 **`b69ae014`**（`source_sha256` `84dd9af56a05…`），三处上游变更：`fitting.schema.json` 新增 `tags`（创造页类别/系列）与 `link_bones`（逐节骨骼名）；`hit_box_attr.schema.json` 新增 `lockable`（默认 `false` 的显式准入，不是存活判定）；`projectile.schema.json` 的 `external.thrust` 元素新增 `propellant_mass`，`external.mass` 的口径写明"不含推进剂"。三者里只有 `lockable` 是实例可编辑字段：`HitBoxCodec` 加同名字段（`Codec.BOOL.default(false)`，等于默认值时导出省略），碰撞箱面板在"条件表达式"下方多一个"可锁定"勾选框；`field_specs` 因此只多这一项，fitting 与 projectile 都不进 `SPECS`。
+
+> 上一版溯源 `fa593c2e`：`sub_part.block_collision` 的枚举是 `true/false/ground`（中英两份 `sub_part_attr.schema.json`），台阶立面的抬升由同级的 `climb_assist` 表达——`ground` + `climb_assist: true` 就是原 `ground_hard` 的行为，`collision_height` 只在 `ground` 下生效；`field_specs` 的该字段随之为三项。旧工程与旧导出文件里的 `ground_hard` 由 `core/config.js` 的 `normalizeBlockCollision()` 在 decode 前折成 `ground` + `climb_assist: true`（项目加载与零件导入共用这条归一化）。
 
 > 历史数字：同步**前**插件 67 个文件、上游 60 个（同 35 / 异 25 / 缺 7），已由全量替换解决；不要再把 60/67 当现状。
 
