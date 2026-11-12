@@ -8,20 +8,16 @@
  *
  * 支持编辑器类型：definition_selector, locator_selector, locator_list, connector_selector,
  * enum_selector, power_target, power_outputs_map, signal_targets,
- * text_input, json_textarea, control_group_selector, projectile_belt_editor.
+ * text_input, json_textarea, control_group_selector,
+ * channel_list, belt_definition_editor.
  */
 var ssTypes = require('../core/subsystem_types.js');
 var nameUtils = require('../utils/name_utils.js');
-var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
+var { SIGNAL_CHANNEL_HINTS, AMMO_SERVICE_CHANNEL_HINTS } = require('../core/constants.js');
 var { createLogger } = require('../utils/logger.js');
 var fieldIssues = require('./components/field_issues.js');
 
 var log = createLogger('SubsystemPanel');
-
-/** 弹链编辑器占位键前缀（模块常量，非 methods 属性） */
-var PLACEHOLDER_PREFIX = '__new_p_';
-/** 弹链编辑器 do-while 最大迭代次数，防止无限循环卡死 */
-var MAX_PLACEHOLDER_ITERATIONS = 1000;
 
 /**
  * 组件选项。methods 定义完后先包撤销（wrapMethodMap），再注册到 Vue：
@@ -46,8 +42,6 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
     data: function () {
         return {
             editingName: nameUtils.extractShortName(this.subsystemKey, this.namespace),
-            /** 弹链占位键自增计数器（注意：不能以 _ 开头，Vue 2 会剥离） */
-            projectilePlaceholderCounter: 0,
         };
     },
     watch: {
@@ -130,6 +124,16 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
         /** 常用频道名补全列表（统一来自 constants.js 唯一真源） */
         channelHints: function () {
             return SIGNAL_CHANNEL_HINTS;
+        },
+        /** 供弹服务频道补全列表（弹药架 / 自动装弹机共用） */
+        ammoChannelHints: function () {
+            return AMMO_SERVICE_CHANNEL_HINTS;
+        },
+        /** 可用投射物 ID 列表，供配弹下拉与新增配弹的初值使用 */
+        projectileIds: function () {
+            var all = this.projectileTypes;
+            if (!all || typeof all !== 'object') return [];
+            return Object.keys(all);
         },
     },
     methods: {
@@ -290,129 +294,131 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
             this.onFieldChange(field, entries);
         },
 
-        // ─── 弹链编辑器（projectile_belt_editor，Map<projectileId, count>） ─
+        // ─── 服务频道列表编辑器（channel_list，string[]） ─────────────────
 
         /**
-         * 获取弹链条目（用于 v-for 显示和修改操作）：对象 { projectileId: count }
-         * 键按插入序排列，onProjectileIdChange 通过原地重建保证位置不变（所见即所得）。
+         * 读取供弹服务频道列表（容错：非数组一律视为空列表）
+         * @param {string} field - 字段名（如 ammo_discovery_inputs）
+         * @returns {string[]}
          */
-        getProjectileEntries: function (field) {
+        getChannelListEntries: function (field) {
             var val = this.config[field];
-            if (val && typeof val === 'object' && !Array.isArray(val)) return val;
-            return {};
+            return Array.isArray(val) ? val : [];
         },
-        /**
-         * 获取所有投射物选项，已用于其他行的选项会被标记 disabled（当前行除外）。
-         * 占位键（__new_p_*）不计入"已使用"，不阻塞真实弹种的选择。
-         * @param {string} field - 字段名
-         * @param {string} currentId - 当前行 projectileId
-         * @returns {{value: string, label: string, disabled: boolean}[]}
-         */
-        getProjectileOptions: function (field, currentId) {
-            var all = this.projectileTypes;
-            var result = [];
-            if (!all || typeof all !== 'object') return result;
-            var entries = this.getProjectileEntries(field);
-            // 过滤掉占位键（__new_p_*），占位条目不应阻塞真实弹种的选择
-            var usedIds = Object.keys(entries).filter(function (k) {
-                return k.indexOf(PLACEHOLDER_PREFIX) !== 0;
-            });
-            for (var id in all) {
-                if (!all.hasOwnProperty(id)) continue;
-                var isUsed = usedIds.indexOf(id) !== -1;
-                var isCurrent = id === currentId;
-                result.push({
-                    value: id,
-                    label: id,
-                    disabled: isUsed && !isCurrent,
-                });
-            }
-            return result;
-        },
-        /**
-         * 添加一个空弹链占位条目。使用自增占位键 __new_p_N 确保可无限添加，
-         * 与 power_outputs_map 的 new_target_N 模式一致。
-         * 含 do-while 迭代上限（MAX_PLACEHOLDER_ITERATIONS）防止无限循环卡死。
-         */
-        addProjectileEntry: function (field) {
-            log.debug('[addProjectileEntry] 开始，field=' + field);
-            var entries = this.getProjectileEntries(field);
-            var counter = this.projectilePlaceholderCounter;
-            log.debug('[addProjectileEntry] 当前占位计数器=' + counter + ', 已有条目=' + Object.keys(entries).join(','));
-
-            var newKey;
-            var watchdog = 0;
-            do {
-                newKey = PLACEHOLDER_PREFIX + (counter++);
-                watchdog++;
-                if (watchdog > MAX_PLACEHOLDER_ITERATIONS) {
-                    log.error('[addProjectileEntry] 超出最大迭代次数！counter=' + counter + ', newKey=' + newKey + ', entries=' + JSON.stringify(Object.keys(entries)));
-                    return;
-                }
-            } while (entries.hasOwnProperty(newKey));
-
-            log.debug('[addProjectileEntry] 生成新占位键=' + newKey + ', counter=' + counter + ', 迭代次数=' + watchdog);
-            this.projectilePlaceholderCounter = counter;
-            var next = Object.assign({}, entries);
-            next[newKey] = 1;
+        /** 追加一条空频道；改成空串即删除该行 */
+        addChannelListEntry: function (field) {
+            var next = this.getChannelListEntries(field).slice();
+            next.push('');
             this.onFieldChange(field, next);
-            log.debug('[addProjectileEntry] 完成');
         },
-        removeProjectileEntry: function (field, projectileId) {
-            log.debug('[removeProjectileEntry] field=' + field + ', id=' + projectileId);
-            var entries = Object.assign({}, this.getProjectileEntries(field));
-            delete entries[projectileId];
-            this.onFieldChange(field, entries);
+        removeChannelListEntry: function (field, index) {
+            var next = this.getChannelListEntries(field).slice();
+            next.splice(index, 1);
+            this.onFieldChange(field, next);
+        },
+        onChannelListChange: function (field, index, value) {
+            var next = this.getChannelListEntries(field).slice();
+            if (!value) next.splice(index, 1);
+            else next[index] = value;
+            this.onFieldChange(field, next);
+        },
+
+        // ─── 交付规格编辑器（belt_definition_editor） ─────────────────────
+        //
+        // 规格是逐实例的弹链模板：pattern 有序（取弹位置按书写顺序展开）、length 是一份
+        // 的发数、recharge 可选。container_id 与 recharge 的空值用 null 表达省略
+        // （对应 Java 侧 Optional），写回时统一经过 setBelt。
+
+        /**
+         * 读取交付规格并补齐可编辑所需的默认形状
+         * @param {string} field - 字段名（belt_definition）
+         * @returns {Object} { label?, container_id?, pattern: Array, length: number, recharge?: Object }
+         */
+        getBeltDefinition: function (field) {
+            var val = this.config[field];
+            var belt = (val && typeof val === 'object' && !Array.isArray(val)) ? val : {};
+            var out = Object.assign({}, belt);
+            out.pattern = Array.isArray(belt.pattern) ? belt.pattern : [];
+            out.length = (typeof belt.length === 'number') ? belt.length : 1;
+            out.recharge = (belt.recharge && typeof belt.recharge === 'object') ? belt.recharge : null;
+            out.container_id = (typeof belt.container_id === 'string' && belt.container_id) ? belt.container_id : null;
+            return out;
         },
         /**
-         * 弹链条目切换投射物。
-         * 通过按原始键序重建对象实现"原位替换"——选择第 N 个条目，新弹种仍然在第 N 位，
-         * 而非被排到对象末尾（所见即所得）。
-         * - 占位键 → 真实ID：原位替换
-         * - 真实ID → ""（取消选择）：原位替换为占位键
-         * - 真实ID → 另一真实ID：若目标ID已存在则合并数量（保留已存在条目的位置），否则原位替换
-         * - 占位键 → ""：无操作
+         * 写入交付规格：在现有值上打补丁，整对象交给 ops.setField
+         * @param {string} field - 字段名
+         * @param {Object} patch - 要覆盖的键
          */
-        onProjectileIdChange: function (field, oldId, newId) {
-            log.debug('[onProjectileIdChange] field=' + field + ', oldId=' + oldId + ', newId=' + newId);
-            if (oldId === newId) return;
-            var entries = this.getProjectileEntries(field);
-            var count = entries[oldId];
-            if (count === undefined) return;
-
-            if (!newId) {
-                // 取消选择：原位替换为占位键
-                if (oldId.indexOf(PLACEHOLDER_PREFIX) === 0) return;
-                newId = PLACEHOLDER_PREFIX + (this.projectilePlaceholderCounter++);
-                log.debug('[onProjectileIdChange] 取消选择，原位替换为占位键=' + newId);
-            } else if (entries.hasOwnProperty(newId)) {
-                // 合并到已存在的同ID条目（保留已存在条目的位置）
-                log.debug('[onProjectileIdChange] 合并数量：' + entries[newId] + ' + ' + count);
-                var merged = Object.assign({}, entries);
-                merged[newId] = entries[newId] + count;
-                delete merged[oldId];
-                this.onFieldChange(field, merged);
-                return;
+        setBeltDefinition: function (field, patch) {
+            var next = Object.assign(this.getBeltDefinition(field), patch);
+            this.onFieldChange(field, next);
+        },
+        onBeltTextChange: function (field, key, value) {
+            var patch = {};
+            patch[key] = (key === 'container_id' && !value) ? null : value;
+            this.setBeltDefinition(field, patch);
+        },
+        onBeltLengthChange: function (field, value) {
+            this.setBeltDefinition(field, { length: Math.max(1, Math.floor(value) || 1) });
+        },
+        onBeltPatternAmmoChange: function (field, index, ammo) {
+            var pattern = this.getBeltDefinition(field).pattern.slice();
+            if (!pattern[index]) return;
+            pattern[index] = Object.assign({}, pattern[index], { ammo: ammo });
+            this.setBeltDefinition(field, { pattern: pattern });
+        },
+        onBeltPatternCountChange: function (field, index, count) {
+            var pattern = this.getBeltDefinition(field).pattern.slice();
+            if (!pattern[index]) return;
+            pattern[index] = Object.assign({}, pattern[index], {
+                count: Math.max(1, Math.floor(count) || 1),
+            });
+            this.setBeltDefinition(field, { pattern: pattern });
+        },
+        /**
+         * 追加一条配弹：初值取第一个尚未被本规格使用的投射物（都用过则取第一个），
+         * 因此新增的行永远带着合法弹种，不必在导出前清理空行。
+         */
+        addBeltPatternEntry: function (field) {
+            var ids = this.projectileIds;
+            if (ids.length === 0) return;
+            var pattern = this.getBeltDefinition(field).pattern.slice();
+            var used = {};
+            var i;
+            for (i = 0; i < pattern.length; i++) {
+                if (pattern[i] && pattern[i].ammo) used[pattern[i].ammo] = true;
             }
-
-            // 按原始键序重建对象，oldId 的位置替换为 newId
-            var rebuilt = {};
-            var allKeys = Object.keys(entries);
-            for (var i = 0; i < allKeys.length; i++) {
-                var k = allKeys[i];
-                if (k === oldId) {
-                    rebuilt[newId] = count;
-                } else {
-                    rebuilt[k] = entries[k];
+            var pick = ids[0];
+            for (i = 0; i < ids.length; i++) {
+                if (!used[ids[i]]) {
+                    pick = ids[i];
+                    break;
                 }
             }
-            this.onFieldChange(field, rebuilt);
+            pattern.push({ ammo: pick, count: 1 });
+            this.setBeltDefinition(field, { pattern: pattern });
         },
-        onProjectileCountChange: function (field, projectileId, count) {
-            var entries = Object.assign({}, this.getProjectileEntries(field));
-            if (entries[projectileId] === undefined) return;
-            entries[projectileId] = count;
-            this.onFieldChange(field, entries);
+        removeBeltPatternEntry: function (field, index) {
+            var pattern = this.getBeltDefinition(field).pattern.slice();
+            pattern.splice(index, 1);
+            this.setBeltDefinition(field, { pattern: pattern });
+        },
+        /** 启用/停用自身回充：启用时给一份默认值，停用时写回 null（省略） */
+        switchBeltRecharge: function (field, enabled) {
+            this.setBeltDefinition(field, {
+                recharge: enabled
+                    ? { regen_per_minute: 0, regen_delay: 0, energy_cost_per_round: 0 }
+                    : null,
+            });
+        },
+        onBeltRechargeChange: function (field, key, value) {
+            var recharge = Object.assign({
+                regen_per_minute: 0,
+                regen_delay: 0,
+                energy_cost_per_round: 0,
+            }, this.getBeltDefinition(field).recharge);
+            recharge[key] = Math.max(0, value) || 0;
+            this.setBeltDefinition(field, { recharge: recharge });
         },
 
         // ─── JSON 编辑框（json_textarea） ────────────────────────────────

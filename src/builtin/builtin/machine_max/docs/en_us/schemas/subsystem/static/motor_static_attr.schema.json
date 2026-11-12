@@ -122,6 +122,26 @@
             "range": 16
           }
         },
+        "fmod": {
+          "type": "object",
+          "description": "Motor running event. Playback integration pending.",
+          "properties": {
+            "bank": {
+              "description": "FMOD bank ID",
+              "type": "string"
+            },
+            "drive": {
+              "type": "string",
+              "pattern": "^event:/.+",
+              "description": "drive"
+            }
+          },
+          "required": [
+            "bank",
+            "drive"
+          ],
+          "additionalProperties": false
+        },
         "working_sounds": {
           "type": "object",
           "description": "Manual working sound map. Keys are RPM strings (e.g. \"800\", \"4500.0\"), values are sound events. Uses auto synthesis when empty.",
@@ -135,7 +155,7 @@
         }
       },
       "additionalProperties": false,
-      "description": "Basic sound configuration for the subsystem."
+      "description": "Lifecycle and operating sounds for the motor."
     }
   },
   "required": ["type", "max_power"],

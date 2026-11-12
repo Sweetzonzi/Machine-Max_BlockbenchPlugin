@@ -41,11 +41,10 @@
       "default": ["weapon_control"],
       "description": "Fire signal input channel list, ordered by priority (highest first). Naming follows a 'class + optional model' convention: base channel is weapon.<class> (e.g. weapon.autocannon, weapon.mg machine gun, weapon.gun direct-fire cannon), optional model channel is weapon.<class>.<model> (e.g. weapon.autocannon.2a42) for dedicated fire-control computers. List order determines priority; the main/secondary weapon role is determined by the seat's control group wiring, not reflected in the channel name."
     },
-    "ammo_inputs": {
-      "type": "array",
-      "items": { "type": "string" },
-      "default": [],
-      "description": "Ammunition supply discovery channel list. Empty list means universal receive mode (accepts any channel signal)."
+    "single_round_loading": {
+      "type": "boolean",
+      "default": false,
+      "description": "How many rounds one take loads: true puts a single round into the chamber and keeps no loaded stock; false loads the whole belt into the loaded stock. Fill it by how the weapon actually loads, independent of caliber, rate of fire and supplier type: weapons that push one round into the chamber at a time (main guns, missile tubes, autocannons taking one round per shot) use true; machine guns and autocannons fed by a belt or magazine as a whole use false."
     },
     "sounds": {
       "type": "object",
@@ -89,10 +88,30 @@
             "sound_id": "machine_max:subsystem.launcher.dry_fire",
             "range": 16
           }
+        },
+        "fmod": {
+          "type": "object",
+          "description": "Firing event. Machine gun single shots, bursts and tails use firing. Playback integration pending.",
+          "properties": {
+            "bank": {
+              "description": "FMOD bank ID",
+              "type": "string"
+            },
+            "fire": {
+              "type": "string",
+              "pattern": "^event:/.+",
+              "description": "fire"
+            }
+          },
+          "required": [
+            "bank",
+            "fire"
+          ],
+          "additionalProperties": false
         }
       },
       "additionalProperties": false,
-      "description": "Launcher sound attributes, including basic sounds and dry fire sound."
+      "description": "Launcher sound attributes, including basic sounds, dry fire and an optional FMOD firing event reference."
     },
     "barrel": {
       "type": "object",
@@ -263,7 +282,6 @@
       "type": "machine_max:launcher",
       "basic_durability": 80,
       "control_inputs": ["weapon_control"],
-      "ammo_inputs": ["ammo_main"],
       "description": "Standard example - basic launcher configuration"
     }
   ]

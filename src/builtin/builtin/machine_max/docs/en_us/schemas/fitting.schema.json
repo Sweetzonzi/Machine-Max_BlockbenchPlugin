@@ -163,9 +163,12 @@
           "additionalProperties": false
         },
         "sounds": {
-          "type": "object",
-          "description": "Hit sound overwrite. Track hit sounds come from the merged material, so values written here apply to tracks.",
-          "additionalProperties": true
+          "allOf": [
+            {
+              "$ref": "base/material_sound_override.schema.json"
+            }
+          ],
+          "description": "Overrides hit sounds and reserved FMOD bank of the track material per field."
         }
       },
       "additionalProperties": false

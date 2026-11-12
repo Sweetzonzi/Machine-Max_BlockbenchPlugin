@@ -129,16 +129,20 @@ describe('schema ↔ Codec 差异登记', () => {
         });
         expect(launcher.fire_animation).toBe('fire');
 
-        const regenLoader = SubsystemDispatchCodec.decode({
-            type: 'machine_max:regen_loader',
-            definition: 'machine_max:2a42_regen_loader',
-            projectile_types: { 'machine_max:30mm_ap': 1 },
+        const rack = SubsystemDispatchCodec.decode({
+            type: 'machine_max:regen_ammo_rack',
+            definition: 'machine_max:30mm_2a42_regen_ammo_rack',
+            belt_definition: { pattern: [], length: 150 },
         });
-        expect(regenLoader.belt_label).toBe('');
+        // label 有默认值；container_id / recharge 是 Optional 无默认值 → null
+        expect(rack.belt_definition.label).toBe('');
+        expect(rack.belt_definition.container_id).toBeNull();
+        expect(rack.belt_definition.recharge).toBeNull();
 
         const registryFields = [
             ['machine_max:launcher', 'fire_animation'],
-            ['machine_max:regen_loader', 'belt_label'],
+            ['machine_max:regen_ammo_rack', 'belt_definition'],
+            ['machine_max:ammo_loader', 'ammo_discovery_targets'],
             ['machine_max:weapon_controller', 'first_hud_layout'],
             ['machine_max:weapon_controller', 'third_hud_layout'],
             ['machine_max:weapon_controller', 'scope_hud_layout'],
@@ -155,16 +159,21 @@ describe('schema ↔ Codec 差异登记', () => {
             'machine_max:signal_convert',
             'machine_max:joint',
             'machine_max:javascript',
-            'machine_max:ammo_loader',
+            'machine_max:motor_controller',
         ];
         expect(allow.extra_types).toEqual([]);
-        expect(Object.keys(SubsystemDispatchCodec.codecs)).toHaveLength(19);
-        expect(ssTypes.getAllTypes()).toHaveLength(19);
+        // 上游 2829863a 把 regen_loader 拆成 regen_ammo_rack / ammo_rack / ammo_loader，
+        // 19 - 1 + 3 = 21；ammo_loader 因此重新成为正式类型，不再算 WIP。
+        expect(Object.keys(SubsystemDispatchCodec.codecs)).toHaveLength(21);
+        expect(ssTypes.getAllTypes()).toHaveLength(21);
         for (const type of removed) {
             expect(SubsystemDispatchCodec.codecs[type]).toBeUndefined();
             expect(ssTypes.getTypeMeta(type)).toBeNull();
             expect(() => SubsystemDispatchCodec.decode({ type: type })).toThrow();
         }
+        // 退役的 regen_loader 同理：旧工程里的实例按未知类型处理
+        expect(SubsystemDispatchCodec.codecs['machine_max:regen_loader']).toBeUndefined();
+        expect(ssTypes.getTypeMeta('machine_max:regen_loader')).toBeNull();
     });
 
     test('D13：track_controller / track_drive 已补齐', () => {

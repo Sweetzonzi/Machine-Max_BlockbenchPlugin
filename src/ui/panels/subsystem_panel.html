@@ -127,28 +127,106 @@
                 <button class="mm-btn" style="font-size:11px" @click="addPowerOutput(field.field)">+ 添加输出目标</button>
             </div>
 
-            <!-- 弹链编辑器（projectile_belt_editor，Map<projectileId, count>） -->
-            <div v-else-if="field.editor === 'projectile_belt_editor'" class="mm-projectile-belt-editor">
-                <div v-if="Object.keys(projectileTypes).length === 0" style="color:#ff6b6b;font-size:11px;padding:4px 0">
-                    当前内容包中无可用投射物定义
+            <!-- 服务频道列表编辑器（channel_list，string[]）：供弹发现用的服务频道 -->
+            <div v-else-if="field.editor === 'channel_list'" class="mm-channel-list-editor">
+                <div v-for="(name, ci) in getChannelListEntries(field.field)" :key="ci"
+                    style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+                    <input type="text" class="mm-input" style="flex:1;font-size:11px"
+                        :list="'mm-ammo-channel-hints-' + field.field"
+                        :value="name"
+                        @change="onChannelListChange(field.field, ci, $event.target.value)"
+                        placeholder="ammo_30mm" />
+                    <button class="mm-btn mm-btn-sm mm-btn-danger-light"
+                        @click="removeChannelListEntry(field.field, ci)" title="删除该频道">×</button>
                 </div>
-                <div v-for="(count, projectileId, pi) in getProjectileEntries(field.field)" :key="pi" style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+                <datalist :id="'mm-ammo-channel-hints-' + field.field">
+                    <option v-for="hint in ammoChannelHints" :key="hint" :value="hint"></option>
+                </datalist>
+                <button class="mm-btn" style="font-size:11px" @click="addChannelListEntry(field.field)">+ 添加频道</button>
+                <span class="mm-element-info" style="font-size:10px;color:#888">
+                    上游按这些频道做只读发现；频道只表达服务类别，不承载业务信号
+                </span>
+            </div>
+
+            <!-- 交付规格编辑器（belt_definition_editor）：弹链模板 -->
+            <div v-else-if="field.editor === 'belt_definition_editor'" class="mm-belt-definition-editor">
+                <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+                    <span style="font-size:10px;color:#888;width:52px">显示名</span>
+                    <input type="text" class="mm-input" style="flex:1;font-size:11px"
+                        :value="getBeltDefinition(field.field).label"
+                        @change="onBeltTextChange(field.field, 'label', $event.target.value)"
+                        placeholder="留空取首发弹种名" />
+                </div>
+                <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+                    <span style="font-size:10px;color:#888;width:52px">容器型号</span>
+                    <input type="text" class="mm-input" style="flex:1;font-size:11px"
+                        :value="getBeltDefinition(field.field).container_id || ''"
+                        @change="onBeltTextChange(field.field, 'container_id', $event.target.value)"
+                        placeholder="（虚拟供弹）" />
+                </div>
+                <div style="display:flex;gap:4px;align-items:center;margin-bottom:6px">
+                    <span style="font-size:10px;color:#888;width:52px">一份发数</span>
+                    <input type="number" class="mm-input" style="width:80px;font-size:11px;text-align:right"
+                        step="1" min="1"
+                        :value="getBeltDefinition(field.field).length"
+                        @change="onBeltLengthChange(field.field, parseInt($event.target.value, 10))"
+                        placeholder="发数" />
+                    <span style="font-size:10px;color:#888">单次交付上限，不得超过型号容量</span>
+                </div>
+
+                <div v-if="getBeltDefinition(field.field).pattern.length === 0"
+                    style="color:#ff6b6b;font-size:11px;padding:2px 0">
+                    配弹为空：至少需要一条，否则导出会被拦下
+                </div>
+                <div v-for="(entry, bi) in getBeltDefinition(field.field).pattern" :key="bi"
+                    style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+                    <span style="font-size:10px;color:#888;width:14px">{{ bi + 1 }}</span>
                     <select class="mm-select" style="flex:1;min-width:120px;font-size:11px"
-                        :value="projectileId"
-                        @change="onProjectileIdChange(field.field, projectileId, $event.target.value)">
+                        :value="entry.ammo"
+                        @change="onBeltPatternAmmoChange(field.field, bi, $event.target.value)">
                         <option value="">（选择投射物）</option>
-                        <option v-for="opt in getProjectileOptions(field.field, projectileId)" :key="opt.value" :value="opt.value" :disabled="opt.disabled">
-                            {{ opt.label }}{{ opt.disabled ? '（已使用）' : '' }}
-                        </option>
+                        <option v-for="id in projectileIds" :key="id" :value="id">{{ id }}</option>
                     </select>
                     <input type="number" class="mm-input" style="width:60px;font-size:11px;text-align:right"
-                        step="1" min="1" max="999"
-                        :value="count"
-                        @change="onProjectileCountChange(field.field, projectileId, parseInt($event.target.value) || 1)"
-                        placeholder="数量" />
-                    <button class="mm-btn mm-btn-sm mm-btn-danger-light" @click="removeProjectileEntry(field.field, projectileId)" title="删除">×</button>
+                        step="1" min="1"
+                        :value="entry.count"
+                        @change="onBeltPatternCountChange(field.field, bi, parseInt($event.target.value, 10))"
+                        placeholder="发数" />
+                    <button class="mm-btn mm-btn-sm mm-btn-danger-light"
+                        @click="removeBeltPatternEntry(field.field, bi)" title="删除该条目">×</button>
                 </div>
-                <button class="mm-btn" style="font-size:11px" @click="addProjectileEntry(field.field)" :disabled="Object.keys(projectileTypes).length === 0">+ 添加投射物</button>
+                <button class="mm-btn" style="font-size:11px" @click="addBeltPatternEntry(field.field)"
+                    :disabled="projectileIds.length === 0">+ 添加配弹</button>
+                <div v-if="projectileIds.length === 0" style="color:#ff6b6b;font-size:11px;padding:2px 0">
+                    当前内容包中无可用投射物定义
+                </div>
+
+                <div style="margin-top:6px">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#ccc;cursor:pointer">
+                        <input type="checkbox"
+                            :checked="!!getBeltDefinition(field.field).recharge"
+                            @change="switchBeltRecharge(field.field, $event.target.checked)" />
+                        自身回充（补满已装弹链）
+                    </label>
+                    <div v-if="getBeltDefinition(field.field).recharge"
+                        style="display:flex;gap:4px;align-items:center;margin-top:4px">
+                        <input type="number" class="mm-input" style="width:70px;font-size:11px;text-align:right"
+                            step="0.1" min="0"
+                            :value="getBeltDefinition(field.field).recharge.regen_per_minute"
+                            @change="onBeltRechargeChange(field.field, 'regen_per_minute', parseFloat($event.target.value))"
+                            placeholder="发/分" title="回充速率（发／分钟）" />
+                        <input type="number" class="mm-input" style="width:70px;font-size:11px;text-align:right"
+                            step="0.1" min="0"
+                            :value="getBeltDefinition(field.field).recharge.regen_delay"
+                            @change="onBeltRechargeChange(field.field, 'regen_delay', parseFloat($event.target.value))"
+                            placeholder="延迟(s)" title="成功射击后暂停回充的秒数" />
+                        <input type="number" class="mm-input" style="width:70px;font-size:11px;text-align:right"
+                            step="1" min="0"
+                            :value="getBeltDefinition(field.field).recharge.energy_cost_per_round"
+                            @change="onBeltRechargeChange(field.field, 'energy_cost_per_round', parseFloat($event.target.value))"
+                            placeholder="焦/发" title="每补一发的能源费用" />
+                    </div>
+                </div>
             </div>
 
             <!-- 信号频道编辑器（signal_targets，值类型为 <string, string[]>） -->

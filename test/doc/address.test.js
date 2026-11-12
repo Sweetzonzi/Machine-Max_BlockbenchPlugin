@@ -165,24 +165,48 @@ describe('doc/address §5.1.5 测试向量', () => {
         expect(result.errors[0].code).toBe('invalid_format');
     });
 
-    test('#16 projectile_types 的资源地址 key', () => {
+    test('#16 交付规格的嵌套路径：配弹条目里的资源地址', () => {
         const config = helpers.createConfig();
         const sp = config.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
         sp.subsystems = {
-            'subsystem.machine_max.regen_loader': {
-                type: 'machine_max:regen_loader',
-                definition: 'machine_max:regen_loader',
-                projectile_types: { 'machine_max:30mm_ap': 1 },
-                discovery_outputs: {},
+            'subsystem.machine_max.rack': {
+                type: 'machine_max:regen_ammo_rack',
+                definition: 'machine_max:30mm_2a42_regen_ammo_rack',
+                belt_definition: {
+                    label: 'AP/HE',
+                    pattern: [
+                        { ammo: 'machine_max:30mm_3ubr6_ap', count: 1 },
+                        { ammo: 'machine_max:30mm_3uof8_he', count: 1 },
+                    ],
+                    length: 150,
+                    recharge: { regen_per_minute: 100, regen_delay: 0.3, energy_cost_per_round: 0 },
+                },
+                ammo_discovery_inputs: ['ammo_30mm'],
             },
         };
-        const result = doc.read(config, [
+        const base = [
             'parts', 'hull', 'variants', 'default', 'sub_parts',
-            'sub_part.machine_max.main', 'subsystems',
-            'subsystem.machine_max.regen_loader', 'projectile_types', 'machine_max:30mm_ap',
-        ]);
-        expect(result.ok).toBe(true);
-        expect(result.value).toBe(1);
+            'sub_part.machine_max.main', 'subsystems', 'subsystem.machine_max.rack',
+        ];
+
+        // 数组下标与对象字段可以混用；资源地址是值，不需要转义 `:`
+        const ammo = doc.read(config, base.concat([
+            'belt_definition', 'pattern', '1', 'ammo',
+        ]));
+        expect(ammo.ok).toBe(true);
+        expect(ammo.value).toBe('machine_max:30mm_3uof8_he');
+
+        // nullable 子块照常可读
+        const regen = doc.read(config, base.concat([
+            'belt_definition', 'recharge', 'regen_per_minute',
+        ]));
+        expect(regen.ok).toBe(true);
+        expect(regen.value).toBe(100);
+
+        // 频道列表按名段寻址
+        const channel = doc.read(config, base.concat(['ammo_discovery_inputs', '0']));
+        expect(channel.ok).toBe(true);
+        expect(channel.value).toBe('ammo_30mm');
     });
 
     test('#17 变体名恰好是 model 时不被简写吞掉', () => {

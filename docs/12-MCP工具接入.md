@@ -166,7 +166,7 @@ config
 | `part` | `PartCodec` | `read_node` | `import_part` | `remove_node` |
 | `variant` | `VariantCodec` | `read_node` | `import_variant` | `remove_node` |
 | `sub_part` | `SubPartCodec` | `read_node` | `import_sub_part` | `remove_node` |
-| `subsystem` | `SubsystemDispatchCodec`（**19 种**，`type` 形如 `machine_max:engine`；D18 已删除 5 个 WIP，D13 已补 `track_controller`/`track_drive`；与上游 builtin 一致，见 docs/13 §3.2） | `read_node` | `import_subsystem` / `add_instance` | `remove_node` |
+| `subsystem` | `SubsystemDispatchCodec`（**21 种**，`type` 形如 `machine_max:engine`；D18 已删除 5 个 WIP，D13 已补 `track_controller`/`track_drive`；与上游 builtin 一致，见 docs/13 §3.2） | `read_node` | `import_subsystem` / `add_instance` | `remove_node` |
 | `hit_box` | `HitBoxCodec` | `read_node` | `add_instance` | `remove_node` |
 | `interact_box` | `InteractBoxCodec` | `read_node` | `add_instance` | `remove_node` |
 | `connector` | `ConnectorCodec` | `read_node` | `add_instance` | `remove_node` |
@@ -403,7 +403,7 @@ AI 的正确用法是「`read_node(path, as='definition')` 拿全量 → 改 →
 | `hit_box`/`interact_box`/`connector` 的整件通道 | 字段少、key 与 UUID 纠缠（决策 D9） | `add_instance` + `set_node` |
 | 改 `_uiState` 之外的视图状态（相机、模式） | 与工程内容无关 | 用内置的 `set_mode` / `set_camera_angle` |
 | 内容包定义 JSON 的读写 | 定义文件由作者直接编辑；写盘不可撤销（决策 Q1） | 人在编辑器外改；工具只读合并视图 |
-| 5 个 WIP 子系统类型 | D18 已删除（不在 Codec / registry / 面板），调用返回 `unknown_type` | 用 19 种正式类型；需要旧类型只能停留旧版本 |
+| 5 个 WIP 子系统类型 | D18 已删除（不在 Codec / registry / 面板），调用返回 `unknown_type` | 用 21 种正式类型；需要旧类型只能停留旧版本 |
 
 > 与旧版差异：`import_part` 由「不做」改为「做」，但边界从「按文件路径」收紧为「内联 JSON」——不触达 fs，仍落在原来的安全模型内。
 
@@ -563,7 +563,7 @@ validate   { only_introduced: true }
 | `apply_patch` | 一次调用改多个节点、一条撤销记录（跨节点批量） | `docs/13` 的投影 + 事务嵌套；先有 §11.3 的稳定性 |
 | `signal_graph` | 导出信号拓扑（nodes/edges），审查 SignalChannel 路由 | 复用 `extractSignalGraph`（[src/lib/signal_graph.js:23](../src/lib/signal_graph.js)） |
 | `hit_box`/`interact_box`/`connector` 整件通道 | 三小件也能整件替换 | 先解决 key↔UUID 投影的易用性（决策 D9 的回访点） |
-| `track_controller` / `track_drive` 支持 | 与上游 builtin 对齐（19 种） | **已完成（D13）**：Codec、`subsystem_types.js` 与面板动态字段已补齐；D18 删除 5 个 WIP 后 Codec 17，补完 `track_*` 回到 19 |
+| `track_controller` / `track_drive` 支持 | 与上游 builtin 对齐（当前 21 种） | **已完成（D13）**：Codec、`subsystem_types.js` 与面板动态字段已补齐；D18 删除 5 个 WIP 后 Codec 17，补完 `track_*` 回到 19 |
 | 修改前快照对比 | 编辑前后整树 diff，供 AI 自查 | 复用 `doc/projection` + diff |
 
 ---

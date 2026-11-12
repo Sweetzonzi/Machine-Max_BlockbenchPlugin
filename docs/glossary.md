@@ -95,12 +95,13 @@
 ### Subsystem（子系统）
 
 - **职责**：零件内部的功能模块，提供动力、控制、存储、照明等能力
-- **描述**：子系统是子零件 JSON 配置中的纯数据条目（位于 `sub_parts[].subsystems` 键值对映射中），每个条目引用一个全局子系统静态定义（`subsystem_defs`）。子系统**不与任何 3D 元素（Group/Locator）强绑定**，只有少数类型（如 `seat` 需要 `locator` 指定乘坐位置、`wheel_driver` 需要 `connector` 引用控制连接点）才有可选的空间引用字段。支持 19 种类型：`basic`, `engine`, `motor`, `gearbox`, `wheel_driver`, `seat`, `car_controller`, `motorbike_controller`, `transmission`, `lighting`, `item_storage`, `motor_controller`, `battery`, `joint`, `signal_convert`, `camera`, `javascript`, `turret`, `launcher`。每种类型有其专属字段和信号输出配置。
+- **描述**：子系统是子零件 JSON 配置中的纯数据条目（位于 `sub_parts[].subsystems` 键值对映射中），每个条目引用一个全局子系统静态定义（`subsystem_defs`）。子系统**不与任何 3D 元素（Group/Locator）强绑定**，只有少数类型（如 `seat` 需要 `locator` 指定乘坐位置、`wheel_driver` 需要 `connector` 引用控制连接点）才有可选的空间引用字段。支持 21 种类型：`basic`, `engine`, `motor`, `gearbox`, `wheel_driver`, `seat`, `car_controller`, `motorbike_controller`, `transmission`, `lighting`, `item_storage`, `camera`, `turret_driver`, `weapon_controller`, `launcher`, `sight`, `regen_ammo_rack`, `ammo_rack`, `ammo_loader`, `track_controller`, `track_drive`。每种类型有其专属字段和信号输出配置。
 - **关键类**：
-  - `src/core/subsystem_types.js` — 子系统类型注册表（待创建），定义每种类型的元数据（显示名、专属字段默认值、needsLocator/needsConnector）
+  - `src/core/subsystem_types.js` — 子系统类型注册表，定义每种类型的元数据（显示名、专属字段默认值、编辑器类型、模块清单）
+  - `src/codec/codecs/subsystem_codec.js` — 每种类型的 Codec 与按 `type` 路由的 `SubsystemDispatchCodec`
   - `src/core/config_defaults.js` — `SUBSYSTEM_INSTANCE_DEFAULTS`（子系统实例的基础默认值）
   - `src/core/config.js` — `createSubsystemDef()` 创建子系统静态定义
-  - `src/generators/subsystem_generator.js` — `generateSubsystemJSON()` 与 `getTypeSpecificFields()` 处理 19 种子系统类型的专属字段序列化
+  - `src/generators/subsystem_generator.js` — `copySubsystemDefs()` 把内容包里的子系统定义复制到导出目标
 
 ---
 

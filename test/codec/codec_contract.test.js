@@ -82,14 +82,14 @@ describe('Codec 占位语义（docs/13 §4.4）', () => {
             expect(encoded.control_outputs).toEqual({});
         }
 
-        const regen = SubsystemDispatchCodec.encode({
-            type: 'machine_max:regen_loader',
+        const rack = SubsystemDispatchCodec.encode({
+            type: 'machine_max:regen_ammo_rack',
             definition: '',
-            projectile_types: {},
-            belt_label: '',
-            discovery_outputs: {},
+            belt_definition: { pattern: [], length: 1 },
+            ammo_discovery_inputs: [],
         });
-        expect(regen.projectile_types).toEqual({});
+        // required 对象字段的编辑期占位必须仍然输出，键不能整个被跳过
+        expect(rack.belt_definition).toEqual({ pattern: [], length: 1 });
     });
 
     test('optional locator 缺失时 decode 为 ""，encode 省略', () => {
@@ -109,6 +109,77 @@ describe('Codec 占位语义（docs/13 §4.4）', () => {
         expect(ssTypes.getTypeDefaults('machine_max:seat').locator).toBe('');
         expect(ssTypes.getTypeDefaults('machine_max:launcher').locator).toBe('');
         expect(ssTypes.getTypeDefaults('machine_max:camera').locator).toBe('');
-        expect(ssTypes.getTypeDefaults('machine_max:regen_loader').projectile_types).toEqual({});
+        // 交付规格是必填对象：新建实例给结构完整的占位，而不是 null / []
+        expect(ssTypes.getTypeDefaults('machine_max:regen_ammo_rack').belt_definition)
+            .toEqual({ pattern: [], length: 1 });
+    });
+
+    test('交付规格：Optional 子块省略、必填子块保留', () => {
+        const decoded = SubsystemDispatchCodec.decode({
+            type: 'machine_max:regen_ammo_rack',
+            definition: 'machine_max:30mm_2a42_regen_ammo_rack',
+            belt_definition: {
+                label: 'AP/HE',
+                pattern: [
+                    { ammo: 'machine_max:30mm_3ubr6_ap', count: 1 },
+                    { ammo: 'machine_max:30mm_3uof8_he', count: 2 },
+                ],
+                length: 150,
+            },
+        });
+
+        // container_id / recharge 是 Optional 无默认值：解码为 null，导出时省略
+        expect(decoded.belt_definition.container_id).toBeNull();
+        expect(decoded.belt_definition.recharge).toBeNull();
+        expect(decoded.belt_definition.label).toBe('AP/HE');
+
+        const encoded = SubsystemDispatchCodec.encode(decoded);
+        expect(encoded.belt_definition).toEqual({
+            label: 'AP/HE',
+            pattern: [
+                { ammo: 'machine_max:30mm_3ubr6_ap', count: 1 },
+                { ammo: 'machine_max:30mm_3uof8_he', count: 2 },
+            ],
+            length: 150,
+        });
+        expect(encoded.belt_definition).not.toHaveProperty('container_id');
+        expect(encoded.belt_definition).not.toHaveProperty('recharge');
+
+        // 往返稳定：decode(encode(decode(x))) 形状不变
+        expect(SubsystemDispatchCodec.decode(encoded)).toEqual(decoded);
+    });
+
+    test('交付规格的自身回充：存在时原样往返，缺省子字段按默认值省略', () => {
+        const decoded = SubsystemDispatchCodec.decode({
+            type: 'machine_max:regen_ammo_rack',
+            definition: 'machine_max:30mm_2a42_regen_ammo_rack',
+            belt_definition: {
+                pattern: [{ ammo: 'machine_max:30mm_3ubr6_ap', count: 1 }],
+                length: 150,
+                recharge: { regen_per_minute: 120, regen_delay: 0.3 },
+            },
+        });
+        expect(decoded.belt_definition.recharge).toEqual({
+            regen_per_minute: 120,
+            regen_delay: 0.3,
+            energy_cost_per_round: 0,
+        });
+
+        const encoded = SubsystemDispatchCodec.encode(decoded);
+        expect(encoded.belt_definition.recharge).toEqual({
+            regen_per_minute: 120,
+            regen_delay: 0.3,
+        });
+    });
+
+    test('交付规格的整数子字段拒绝浮点', () => {
+        expect(() => SubsystemDispatchCodec.decode({
+            type: 'machine_max:regen_ammo_rack',
+            definition: 'machine_max:30mm_2a42_regen_ammo_rack',
+            belt_definition: {
+                pattern: [{ ammo: 'machine_max:30mm_3ubr6_ap', count: 1.5 }],
+                length: 150,
+            },
+        })).toThrow();
     });
 });

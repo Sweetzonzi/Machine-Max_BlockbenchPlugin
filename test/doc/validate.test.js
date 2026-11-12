@@ -52,21 +52,44 @@ describe('doc/validate', () => {
         expect(strict.errors.filter((e) => e.code === 'missing_required').length).toBe(2);
     });
 
-    test('projectile_types 的 minProperties', () => {
-        const node = {
-            type: 'machine_max:regen_loader',
-            definition: 'machine_max:regen_loader',
-            projectile_types: {},
-            discovery_outputs: {},
+    test('交付规格的必填子块与空配弹', () => {
+        const emptyBelt = {
+            type: 'machine_max:regen_ammo_rack',
+            definition: 'machine_max:30mm_2a42_regen_ammo_rack',
+            belt_definition: { pattern: [], length: 150 },
         };
-        const result = validate.validateValues(node, {
+        // pattern 的 minItems 与 length 的 minimum 编辑期就拦
+        const relaxed = validate.validateValues(emptyBelt, {
             kind: 'subsystem',
-            typeId: 'machine_max:regen_loader',
+            typeId: 'machine_max:regen_ammo_rack',
+            path: [],
+            completeness: false,
+        });
+        expect(relaxed.errors.some((e) => e.path.join('.') === 'belt_definition.pattern')).toBe(true);
+
+        // length 缺失只在完整性模式（导出闸门）报，编辑期的空占位不算错
+        const degraded = {
+            type: 'machine_max:regen_ammo_rack',
+            definition: 'machine_max:30mm_2a42_regen_ammo_rack',
+            belt_definition: {},
+        };
+        const edit = validate.validateValues(degraded, {
+            kind: 'subsystem',
+            typeId: 'machine_max:regen_ammo_rack',
+            path: [],
+            completeness: false,
+        });
+        expect(edit.errors).toEqual([]);
+
+        const strict = validate.validateValues(degraded, {
+            kind: 'subsystem',
+            typeId: 'machine_max:regen_ammo_rack',
             path: [],
             completeness: true,
         });
-        expect(result.errors.some((e) => e.code === 'missing_required'
-            && e.path.join('.') === 'projectile_types')).toBe(true);
+        const missing = strict.errors.filter((e) => e.code === 'missing_required');
+        expect(missing.map((e) => e.path.join('.')).sort())
+            .toEqual(['belt_definition.length', 'belt_definition.pattern']);
     });
 
     test('overwrite 允许 null；对象结构按 schema 校验', () => {
@@ -95,35 +118,39 @@ describe('doc/validate', () => {
         expect(badResult.errors.some((e) => e.code === 'type_mismatch')).toBe(true);
     });
 
-    test('validateTree 跳过内部字段与 __new_p_ 占位', () => {
+    test('validateTree 跳过内部字段，不因未知字段报错', () => {
         const config = helpers.createConfig();
         const sp = config.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
         sp.subsystems = {
-            'subsystem.machine_max.regen_loader': {
-                type: 'machine_max:regen_loader',
-                definition: 'machine_max:regen_loader',
-                projectile_types: { 'machine_max:30mm_ap': 1, __new_p_1: 0 },
-                discovery_outputs: {},
+            'subsystem.machine_max.rack': {
+                type: 'machine_max:regen_ammo_rack',
+                definition: 'machine_max:30mm_2a42_regen_ammo_rack',
+                belt_definition: {
+                    pattern: [{ ammo: 'machine_max:30mm_3ubr6_ap', count: 1 }],
+                    length: 150,
+                },
+                ammo_discovery_inputs: ['ammo_30mm'],
             },
         };
         const errors = validate.validateTree(config, { completeness: true });
-        expect(errors.some((e) => e.path[e.path.length - 1] === '__new_p_1')).toBe(false);
+        expect(errors.some((e) => e.path.indexOf('_uiState') >= 0)).toBe(false);
+        expect(errors.some((e) => e.code === 'unknown_field'
+            && e.path.join('.').indexOf('belt_definition') >= 0)).toBe(false);
     });
 
     test('validateTree 同时跑 key 与值校验', () => {
         const config = helpers.createConfig();
         const sp = config.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
         sp.subsystems = {
-            'subsystem.machine_max.regen_loader': {
-                type: 'machine_max:regen_loader',
-                definition: 'machine_max:regen_loader',
-                projectile_types: { 'Machine_Max:30mm_ap': 1 },
-                discovery_outputs: {},
+            'subsystem.machine_max.loader': {
+                type: 'machine_max:ammo_loader',
+                definition: 'machine_max:30mm_2a90_ammo_loader',
+                ammo_discovery_targets: { 'ammo 30mm': ['subsystem.machine_max.rack'] },
             },
         };
         const errors = validate.validateTree(config, { completeness: true });
         expect(errors.some((e) => e.code === 'invalid_format'
-            && e.path.join('/') === 'parts/hull/variants/default/sub_parts/sub_part.machine_max.main/subsystems/subsystem.machine_max.regen_loader/projectile_types/Machine_Max:30mm_ap'))
+            && e.path.join('/') === 'parts/hull/variants/default/sub_parts/sub_part.machine_max.main/subsystems/subsystem.machine_max.loader/ammo_discovery_targets/ammo 30mm'))
             .toBe(true);
     });
 

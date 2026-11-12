@@ -141,7 +141,7 @@ var SUBSYSTEM_TYPES = [
         category: 'utility',
         dynamicFields: [
             { field: 'definition',              label: '型号定义',          editor: 'definition_selector',   required: true,  defaultValue: '' },
-            { field: 'locator',                 label: '关联定位器',        editor: 'locator_selector',      required: true,  defaultValue: '' },
+            { field: 'locator',                 label: '关联定位器',        editor: 'locator_selector',      required: false, defaultValue: '' },
             { field: 'control_group_preset',    label: '控制组预设',        editor: 'control_group_selector', required: false, defaultValue: '' },
             { field: 'passenger_num_outputs',   label: '乘客数信号输出',    editor: 'signal_targets',        required: false, defaultValue: { passenger_num: ['local', 'global'] } },
             { field: 'camera_discovery_targets', label: '摄像机发现握手目标', editor: 'signal_targets',      required: false, defaultValue: {} },
@@ -154,7 +154,7 @@ var SUBSYSTEM_TYPES = [
         category: 'utility',
         dynamicFields: [
             { field: 'definition', label: '型号定义',   editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'locator',    label: '光源定位器', editor: 'locator_selector',    required: false, defaultValue: '' },
+            { field: 'locator',    label: '光源定位器', editor: 'locator_selector',    required: true,  defaultValue: '' },
         ],
     },
     {
@@ -220,6 +220,7 @@ var SUBSYSTEM_TYPES = [
             { field: 'locator',        label: '发射点定位器', editor: 'locator_selector',    required: true,  defaultValue: '' },
             { field: 'fire_animation', label: '开火动画名',   editor: 'text_input',          required: false, defaultValue: 'fire' },
             { field: 'ammo_outputs',   label: '弹药反馈输出', editor: 'signal_targets',      required: false, defaultValue: {} },
+            { field: 'ammo_discovery_targets', label: '装弹机查询', editor: 'signal_targets', required: false, defaultValue: {} },
         ],
     },
     {
@@ -232,19 +233,36 @@ var SUBSYSTEM_TYPES = [
         ],
     },
     {
-        id: 'machine_max:regen_loader',
-        displayName: '再生装弹机',
+        id: 'machine_max:regen_ammo_rack',
+        displayName: '再生弹药架',
         category: 'experimental',
-        // 两个模块都可由型号省略并落到默认权重，因此 optional 均为 true
-        modules: [
-            { name: 'feed',     label: '输弹机构', critical: false, optional: true },
-            { name: 'magazine', label: '弹仓',     critical: true,  optional: true },
-        ],
+        // 交付规格是逐实例的必填块：pattern 与 length 由面板的结构化编辑器写入，
+        // 新建实例给一份空配弹（pattern 为空由完整性规则判错，直到作者填入弹种）
         dynamicFields: [
-            { field: 'definition',       label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
-            { field: 'projectile_types',   label: '弹链构成',     editor: 'projectile_belt_editor', required: true,  defaultValue: {} },
-            { field: 'belt_label',       label: '弹链标签',     editor: 'text_input',          required: false, defaultValue: '' },
-            { field: 'discovery_outputs', label: '弹药发现频道', editor: 'signal_targets',       required: false, defaultValue: {} },
+            { field: 'definition',            label: '型号定义', editor: 'definition_selector',  required: true,  defaultValue: '' },
+            { field: 'belt_definition',       label: '交付规格', editor: 'belt_definition_editor', required: true,  defaultValue: { pattern: [], length: 1 } },
+            { field: 'ammo_discovery_inputs', label: '供弹服务频道', editor: 'channel_list',      required: false, defaultValue: [] },
+        ],
+    },
+    {
+        id: 'machine_max:ammo_rack',
+        displayName: '物品弹药架',
+        category: 'experimental',
+        // 物品往返尚未实现，实例上只有型号引用
+        dynamicFields: [
+            { field: 'definition', label: '型号定义', editor: 'definition_selector', required: true, defaultValue: '' },
+        ],
+    },
+    {
+        id: 'machine_max:ammo_loader',
+        displayName: '自动装弹机',
+        category: 'experimental',
+        // 机构同时是发射器的提供方与弹药架的需求方：输入频道对外声明，
+        // 查询表按子系统名指向上游弹药架
+        dynamicFields: [
+            { field: 'definition',            label: '型号定义',   editor: 'definition_selector', required: true,  defaultValue: '' },
+            { field: 'ammo_discovery_inputs', label: '供弹服务频道', editor: 'channel_list',      required: false, defaultValue: [] },
+            { field: 'ammo_discovery_targets', label: '上游弹药架查询', editor: 'signal_targets', required: false, defaultValue: {} },
         ],
     },
 ];
@@ -441,6 +459,8 @@ var EDITOR_LABELS = {
     enum_selector: '枚举下拉菜单',
     text_input: '文本输入框',
     json_textarea: 'JSON 编辑框',
+    channel_list: '服务频道列表编辑器',
+    belt_definition_editor: '交付规格编辑器',
 };
 
 /**

@@ -19,9 +19,9 @@ module.exports = {
     extra_types: [],
 
     // 3) 字段集合缺口：Codec 缺字段
-    //    D12 已补 hit_box.module、launcher.fire_animation、regen_loader.belt_label
-    //    与 weapon_controller 的 3 个 HUD layout 字段；seat 的 3 个安装级覆盖已在
-    //    SeatCodec 补齐。仅剩 part.type 一个常量判别字段。
+    //    D12 已补 hit_box.module、launcher.fire_animation 与 weapon_controller 的
+    //    3 个 HUD layout 字段；seat 的 3 个安装级覆盖已在 SeatCodec 补齐。
+    //    仅剩 part.type 一个常量判别字段。
     missing_fields: [
         {
             kind: 'part',
@@ -43,8 +43,8 @@ module.exports = {
         { kind: 'interact_box', field: 'condition', schema: 'enum', codec: 'string', enforcedBy: 'field_specs.enum' },
         { kind: 'connector', field: 'definition', schema: 'required', codec: "default('')", enforcedBy: 'collectIssues' },
         { kind: 'sub_part', field: 'hit_boxes', schema: 'required+minProperties', codec: 'map', enforcedBy: 'collectIssues' },
+        { kind: 'subsystem', field: 'locator', types: ['machine_max:lighting'], schema: 'required', codec: "default('')", enforcedBy: 'field_specs.completeness' },
         { kind: 'sub_part', field: 'hydrodynamics', schema: 'default {""}', codec: 'default {}', enforcedBy: 'decode_tolerance' },
-        { kind: 'subsystem', field: 'projectile_types', types: ['machine_max:regen_loader'], schema: 'required+minProperties', codec: 'default({}) + emitEmpty', enforcedBy: 'codec.emitEmpty+minProperties' },
     ],
 
     // 6) decode 比 schema 宽松、但 encode 不会产出非法 JSON 的字段

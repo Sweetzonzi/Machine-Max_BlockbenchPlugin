@@ -45,7 +45,7 @@
 | 4 | `canonicalSubPartKey` 会产出非法 key：`default` → `sub_part.<ns>.default`；`.main` / `main.` 首尾点；`chassis!`；超长名 | **确认**。§15.1 的算法只查「非 ASCII / 空白 / `* / ~ :` / 控制字符」，没复用 §5.1.3 的完整校验 | 算法改为**先复用** `isValidSubPartKey`：规范 key 原样返回；裸 `default` → `main`；其余名称段不合法 → `legacy_<n>`；碰撞后缀保持 ≤128 且不产生首尾点。迁移测试覆盖 `default` / `.main` / `main.` / `chassis!` / 中文 / 超长 / 跨 namespace（§15.1） |
 | 5 | `variants` 的合法 map key `model` 被简写判定吞掉 | **确认**。§5.3.1 第 1 步写「对象自身含 `model` 字段」；变体名 `model` 合法（D17） | 判据改为 `typeof variants.model === 'string'`（单变体的 `model` 是字符串，map 的 `model` 值是对象）；补「变体名恰好是 `model`」的 round-trip 向量。`sub_parts` 的简写判定同步改为**看 `hit_boxes` 的值形状**，避免 subpart 名恰好叫 `mass` / `hit_boxes` 时被吞 |
 | 6 | `hydrodynamics[""]` 是 schema 默认值，却被「元素名只拒绝空串」误判 | **确认**。`sub_part_attr.schema.json` 的 default 是 `{"":{}}`；§5.1 也写明空段表示空字符串 key | `hit_boxes` 拒绝 `""` 与 `*`；`hydrodynamics` **允许 `""`**、只拒绝 `*`。路径层允许空段仅限 `hydrodynamics`；补读取/写入向量（§5.1.5 #14、#15） |
-| 7 | `validateKeys` 只查 `sub_parts` 和三个翻译键 map，漏了 `textures` / `signal_targets` / `signal_translations` / `power_outputs` / `projectile_types` | **确认**。这些 map 的 key 同样是 D17 配置 key；`setField` 的 `allowMissingLeaf` 可新建非法 key | `validateKeys` 改为按节点 kind 递归，覆盖全部 map 层；`projectile_types` 是**资源地址 key**，允许 `:` `/` 且要求小写（§5.1.3 表）。`setField` 新建 key 与 `import_*` 共用同一函数 |
+| 7 | `validateKeys` 只查 `sub_parts` 和三个翻译键 map，漏了 `textures` / `signal_targets` / `signal_translations` / `power_outputs` / `ammo_discovery_targets` | **确认**。这些 map 的 key 同样是 D17 配置 key；`setField` 的 `allowMissingLeaf` 可新建非法 key | `validateKeys` 改为按节点 kind 递归，覆盖全部 map 层；供弹服务频道的 key 按名称段校验（§5.1.3 表）。`setField` 新建 key 与 `import_*` 共用同一函数 |
 | 8 | D17 强制入口矩阵不闭合：`importPart` / `importVariant` 只做「非空 + 保留字符」；`createSubsystem.instanceName`、`setField` 新建的 `textures.*` / `signal_targets.*` 不在强制点列表 | **确认**。§6.1 与 docs/12 的 `[a-z0-9_.-]+` / `[A-Za-z0-9_.-]+` 两套说法冲突 | 新增 §5.1.3.1「强制入口矩阵」：列出全部 key 类别 × 全部入口（create/rename/import/mark/setField/loadConfig），每行给正则、失败码、是否自动迁移；§6.1 改为引用该表 |
 | 9 | `_uiState` 测试路径写成 `['parts','hull','_uiState','activePartId']`，实际 `_uiState` 在配置根 | **确认**。`_setUiState(config, …)` 写 `config._uiState`；part 下没有该字段 | 向量 #7 改为 `['_uiState','activePartId']`；另补 `['parts','hull','element_markers']` 的不可寻址向量（element_markers 在 part 级，也是内部字段） |
 | 10 | `loadConfig` 的迁移顺序不清：§15 说「迁移在解码之后」，§15.2 又要求「decode 前处理旧值」 | **确认**。WIP 类型删除后，旧条目会在 decode 阶段按 `unknown_type` 失败 | §15 开头明确三段式：**raw 预处理（占位清洗 + 简写归一化）→ decode → key/marker 迁移**；raw 预处理必须发生在任何 `PartCodec.decode` 之前 |
@@ -56,8 +56,8 @@
 
 **上游 optionality 复核（2026-10-21，`Machine-Max` 兄弟仓库）**：
 
-- **required（`fieldOf`）**：所有 dynamic attr 的 `definition`（`ResourceLocation.CODEC`）；engine/motor/gearbox 的 `power_output`；wheel_driver/turret_driver 的 `connector`；launcher/joint 的 `locator`；car_controller/motorbike_controller 的 `control_outputs`；transmission 的 `power_outputs`；regen_loader 的 `projectile_types`。
-- **optional（`optionalFieldOf` + 默认值）**：seat/camera/lighting/sight 的 `locator`；各 `*_outputs` 映射；`fire_animation`、`belt_label`、`script`、`dismount_locators`、`control_group_preset`。
+- **required（`fieldOf`）**：所有 dynamic attr 的 `definition`（`ResourceLocation.CODEC`）；engine/motor/gearbox 的 `power_output`；wheel_driver/turret_driver 的 `connector`；launcher/joint 的 `locator`；car_controller/motorbike_controller 的 `control_outputs`；transmission 的 `power_outputs`；`regen_ammo_rack` 的 `belt_definition`（对象必填，内部 `pattern` / `length` 亦必填）。
+- **optional（`optionalFieldOf` + 默认值）**：seat/camera/lighting/sight 的 `locator`；各 `*_outputs` 映射；`fire_animation`、`belt_definition` 的 `container_id` / `recharge`、`script`、`dismount_locators`、`control_group_preset`。
 - **optional（`optionalFieldOf` 无默认值 → `Optional` → Java `null`）**：`hit_box.overwrite`、`connector.overwrite`、`seat.allow_use_items`、`seat.first_hud_layout` / `seat.third_hud_layout`。插件里 `overwrite` / `allow_use_items` 用 `null` 表示省略；两个 HUD layout 用 `''` 哨兵（空串本来就不是合法 ResourceLocation，避免三态字符串）。
 
 `optionalFieldOf` 的语义是「**键可以缺失**」：缺失时用默认值（或 `Optional.empty`），**不是**「JSON 值可以是 `null`」。显式 `null` 仍会交给底层 `Codec.STRING` / `ResourceLocation.CODEC` / map codec，通常直接报错。因此插件内部不能把 `null` 当作 required 字段的通用占位；`null` 只适合 `Optional` 型字段（`overwrite`、`seat.allow_use_items`）。
@@ -145,7 +145,7 @@ P2 之后两个面板不再直接写配置；P3 之后计算属性也不写配�
 
 - **默认值双源已清（P3）**：`createHitBoxConfig()` 改为 `HitBoxCodec.decode({ id:'part', type:'box' })`，删除 `config.js` 内联 `HIT_BOX_DEFAULTS`；新建碰撞箱 `material` 与导入默认值统一为 `machine_max:default`。`config_defaults.js` 仍标记 `@deprecated` 且无人引用。
 - **碰撞箱材质补校验**：`machine_max:default` 是 Java `MaterialAttr.DEFAULT` 的兜底 id，不在内容包材质表里，**不能按“不存在”处理**；但 `''` 不是合法 ResourceLocation，`material_ref_missing` 只对“非 default 且不在材质表”的 id 报。面板下拉补「（未选择）」与「默认材质」两项，空值/未知值在面板内红框提示，`collectIssues` 与导出闸门同步拦截。
-- **子系统类型数**：上游 builtin schema **19** 种（权威）；插件 Codec **19** 种（D13 已补 `track_controller` / `track_drive`，5 个 WIP 已按 D18 删除）；Java 枚举 24 种（19 + 5 个 WIP，不作依据）。见 §3.2。
+- **子系统类型数**：上游 builtin schema **21** 种（权威）；插件 Codec **21** 种（D13 已补 `track_controller` / `track_drive`，5 个 WIP 已按 D18 删除，装弹机拆分后 `regen_loader` → `regen_ammo_rack` / `ammo_rack` / `ammo_loader`）；Java 枚举另含 WIP 占位，不作依据。见 §3.2。
 - **信号默认值已切换**：`subsystem_types.js` 的 `speed_outputs` / `gear_outputs` / 履带 `force_outputs` 等默认目标已改为 `['local','global']`（D19）；新建子系统不再产生 `subpart` / `vehicle` 无效目标。
 - **单子零件简写的落点错误**：`VariantCodec.sub_parts` 用 `Codec.either`，单对象会包成 `{ default: sp }`，而 schema 规定单子零件应落到 `sub_part.<ns>.main`；导出时 `default` 又满足 unwrap 条件，形成「内存 key 非法、文件形态却正确」的隐性错误（§5.3）。P2 未改 `either` 的 sub_parts 分支（P1 的 `projection.in` 已显式包 `sub_part.<ns>.main`）。
 - **默认名命名空间已修**：`generateDefaultName('sub_part', …)` 现在使用 `context.namespace`（P2）。
@@ -190,18 +190,19 @@ src/doc/field_specs.generated.js（含 provenance）
 
 | 来源 | 数量 | 相对上游的差异 |
 |---|---|---|
-| **上游 builtin schema**（`docs/{zh_cn,en_us}/schemas/subsystem/`，权威） | **19** | —（dynamic 与 static 枚举一致） |
-| 插件 `SubsystemDispatchCodec` | **19** | 与上游一致；5 个 WIP 已按 D18 删除，D13 已补 `track_controller` / `track_drive` |
-| Java `SubsystemTypes` 枚举 | 24 | 上游 19 + 5 个 WIP 占位；**不能作为类型清单依据** |
+| **上游 builtin schema**（`docs/{zh_cn,en_us}/schemas/subsystem/`，权威） | **21** | —（dynamic 与 static 枚举一致） |
+| 插件 `SubsystemDispatchCodec` | **21** | 与上游一致；5 个 WIP 已按 D18 删除，D13 已补 `track_controller` / `track_drive`，装弹机拆分后为 21（见下） |
+| Java `SubsystemTypes` 枚举 | 24 | 上游类型 + 若干 WIP 占位；**不能作为类型清单依据** |
 
 结论：
 
 - **D13 已完成**：`track_controller` / `track_drive` 已进 Codec、`subsystem_types.js` 与面板动态字段；`missing_types` 已清空；
 - **D18 已完成**：5 个 WIP 类型已从 `SubsystemDispatchCodec`、`subsystem_types.js`、内置内容包定义与类型清单删除；不保留 decode/read、不告警、不提供兼容层，遇到这些 type 一律 `unknown_type`；
+- **装弹机拆分（`Machine-Max@2829863a`）**：`machine_max:regen_loader` 退役，拆成三个类型——`regen_ammo_rack`（再生弹药架：持有库存与交付规格 `belt_definition`）、`ammo_rack`（物品弹药架：物品往返尚未实现，实例上只有型号引用）、`ammo_loader`（自动装弹机：机械装填段的时序与产能）。耐久不再按 `feed` / `magazine` 拆模块，碰撞箱 `module` 对这三个类型不生效；送弹发现改由发射器在 `launcher.ammo_discovery_targets` 发起，机构用 `ammo_loader.ammo_discovery_targets` 指向自己的上游弹药架。因此类型数 `19 - 1 + 3 = 21`，退役类型的实例按未知类型处理（与 D18 同口径）。
 
-顺带修掉的上游缺陷（`Machine-Max@9450a0f4`，已同步）：`motor_controller` 是 `motorbike_controller` 的错写——枚举中两种拼写并存，而 `if/then` 分支只用了错写那个且 `$ref` 指向 `motorbike_controller_*_attr.schema.json`，导致**正确的 `motorbike_controller` 匹配不到任何分支**（字段完全不校验）；此外 `subsystem_static_attr` 的枚举整体漏了 `motorbike_controller`。修复后 dynamic 与 static 枚举一致为 19 种。
+顺带修掉的上游缺陷（`Machine-Max@9450a0f4`，已同步）：`motor_controller` 是 `motorbike_controller` 的错写——枚举中两种拼写并存，而 `if/then` 分支只用了错写那个且 `$ref` 指向 `motorbike_controller_*_attr.schema.json`，导致**正确的 `motorbike_controller` 匹配不到任何分支**（字段完全不校验）；此外 `subsystem_static_attr` 的枚举整体漏了 `motorbike_controller`。修复后 dynamic 与 static 枚举一致。
 
-> 更早的溯源 `52745d74`（承接 `50102727` 的全量内置包同步，共 20 个文件）：`fitting.schema.json` 移除顶层 `sounds` 块，履带命中音改由 `material` 与 `overwrite.sounds` 合并后取值；`52745d74` 把三处中英分歧收敛到代码真值——`material_attr.physics.rolling_friction` 的无量纲 C_rr 语义与默认 0.02 补齐到 en_us、`view_attr.yaw_limit` 英文默认由 180 改回 90、`wheel_driver_static_attr` 中文侧补上 top-level `additionalProperties: false` 与 `$schema` 路径层数，71 对 schema 除 locale 路径外已无语义差异；`commander_sight_dual_stb.discovery_inputs` 在 `c3d61f3a` 改为 `commander_sight`，车长镜只由车长座握手可见。这些都不改 part / connector / subsystem 实例的可编辑字段，`field_specs` 只随 `source_sha256`（71 个 en_us schema）变化——本次一并带上的 `view_attr.yaw_limit` 与 `wheel_driver` 严格性属静态属性 schema，同样不进 `field_specs`。`8fd4b519` 接着把 `sub_part.block_collision` 的枚举扩为 `true/false/ground/ground_hard`（中英两份 `sub_part_attr.schema.json`）；该字段属实例可编辑字段，`field_specs` 随之增加 `ground_hard`，`source_sha256` 为 `9fbab6ff2e61…`。上一版溯源 `5e791082` 让 `regen_loader_static_attr` 的 `feed`（非关键）与 `magazine`（唯一关键）成为必填字段块——送弹参数（`reload_time` / `reload_round_by_round` / `can_supply_multiple`）归 `feed`，存量与回充参数（`capacity` / `regen_per_minute` / `regen_round_by_round` / `energy_cost_per_round` / `regen_delay`）归 `magazine`，两块的 `durability_weight` 不变。更早的溯源 `002885fd` 首次为装弹机引入这两个模块对象，`06ba3627` 新增了投射物顶层 schema、`material_attr.physics.impact_min_speed`、铰链连接点与现代观瞄 HUD 组件。内容真值以 `source_sha256` 为准；`sync-schemas.js --check` 当前零漂移。
+> 当前溯源 `2829863a`（装弹机拆分与 FMOD 音效接线）：schema 快照 78 份、field_specs 的 `source_sha256` 为 `e4f78114…`。装弹机一侧见上面的结论；实例可编辑字段的增删共四项——`regen_ammo_rack.belt_definition`（交付规格，含 `pattern` 有序配弹、`length` 一份发数、可选的 `recharge` 自身回充）取代 `regen_loader.projectile_types` / `belt_label`，`ammo_loader` 与 `regen_ammo_rack` 各自多出 `ammo_discovery_inputs`（供弹服务频道），`launcher` 多出 `ammo_discovery_targets`（发射器发起的上游查询），`hit_box.overwrite.sounds` 改引用 `material_sound_override` 而多出 `fmod.bank`。型号静态属性里的 `sounds.fmod`（engine / motor / gearbox / car_controller / launcher / ammo_loader）与 `launcher.single_round_loading`（取代 `ammo_inputs`）不进 field_specs，因为 static attr 不是实例字段。`belt_definition` 的 `container_id` / `recharge` 对应 Java `AmmoBelt` 的两个 `optionalFieldOf` 无默认值字段，Codec 与 field_specs 都用 nullable（null = 省略）；`pattern` / `length` 是必填子块，导出闸门的完整性模式会拦下缺失。<br>> 更早的溯源 `52745d74`（承接 `50102727` 的全量内置包同步，共 20 个文件）：`fitting.schema.json` 移除顶层 `sounds` 块，履带命中音改由 `material` 与 `overwrite.sounds` 合并后取值；`52745d74` 把三处中英分歧收敛到代码真值——`material_attr.physics.rolling_friction` 的无量纲 C_rr 语义与默认 0.02 补齐到 en_us、`view_attr.yaw_limit` 英文默认由 180 改回 90、`wheel_driver_static_attr` 中文侧补上 top-level `additionalProperties: false` 与 `$schema` 路径层数，71 对 schema 除 locale 路径外已无语义差异；`commander_sight_dual_stb.discovery_inputs` 在 `c3d61f3a` 改为 `commander_sight`，车长镜只由车长座握手可见。这些都不改 part / connector / subsystem 实例的可编辑字段，`field_specs` 只随 `source_sha256`（71 个 en_us schema）变化——本次一并带上的 `view_attr.yaw_limit` 与 `wheel_driver` 严格性属静态属性 schema，同样不进 `field_specs`。`8fd4b519` 接着把 `sub_part.block_collision` 的枚举扩为 `true/false/ground/ground_hard`（中英两份 `sub_part_attr.schema.json`）；该字段属实例可编辑字段，`field_specs` 随之增加 `ground_hard`，`source_sha256` 为 `9fbab6ff2e61…`。上一版溯源 `5e791082` 让 `regen_loader_static_attr` 的 `feed`（非关键）与 `magazine`（唯一关键）成为必填字段块——送弹参数（`reload_time` / `reload_round_by_round` / `can_supply_multiple`）归 `feed`，存量与回充参数（`capacity` / `regen_per_minute` / `regen_round_by_round` / `energy_cost_per_round` / `regen_delay`）归 `magazine`，两块的 `durability_weight` 不变。更早的溯源 `002885fd` 首次为装弹机引入这两个模块对象，`06ba3627` 新增了投射物顶层 schema、`material_attr.physics.impact_min_speed`、铰链连接点与现代观瞄 HUD 组件。内容真值以 `source_sha256` 为准；`sync-schemas.js --check` 当前零漂移。
 
 **key 不是 schema 约束**：`variant_attr.schema.json` 的 `sub_parts` 只写了 `additionalProperties`，没有 `patternProperties`；它自己的 examples 还用短 key（`"turret_base"`）。因此「`sub_part.<ns>.<name>`」是**插件侧约定**（翻译键 + 面板/导出/l10n 共用），不是上游要求。严格的理由是可逆性（read → import 无损），不是合规性；迁移只是把插件自己的历史写法收敛到这套约定（§15）。
 
@@ -212,7 +213,7 @@ src/doc/field_specs.generated.js（含 provenance）
 | `sub_part.hit_boxes` | `required` + `minProperties: 1` | 无约束 | 由 `collectIssues` 负责（已实现，§4） |
 | `hit_box.id` | 有默认 `""`，非必填（`required` 只有 `type`） | `.default('')` | ✅ 已修：Codec `.default('')`，空 id 编码时省略（D12 结构性修复） |
 | `hit_box.material` | 有默认 `"machine_max:default"`，非必填；该 id **不是内容包材质定义**，而是 Java `MaterialAttr.DEFAULT` 的内置兜底 | `.default('machine_max:default')` | **语义必填**：`collectIssues` 对 `''`/`null`/`undefined` 报 `material_required`；非 `machine_max:default` 且不在可用材质表中报 `material_ref_missing`；`machine_max:default` 始终放行（§2.5、§4.3） |
-| `hit_box.module` | 可选，默认 `""` | `.default('')` | ✅ 已补：Codec `.default('')` + 碰撞箱面板「模块名」输入。候选来自 `subsystem_types.js` 的 `modules`（发射器 `barrel`/`breech`/`capacitor`、再生装弹机 `feed`/`magazine`），仍可手填；`collectIssues` 对未知模块名报 warning（§2.4） |
+| `hit_box.module` | 可选，默认 `""` | `.default('')` | ✅ 已补：Codec `.default('')` + 碰撞箱面板「模块名」输入。候选来自 `subsystem_types.js` 的 `modules`（目前只有发射器：`barrel`/`breech`/`capacitor`），仍可手填；`collectIssues` 对未知模块名报 warning（§2.4） |
 | `hit_box.type` | `enum: [box,sphere,cylinder,capsule,wheel]` | `STRING` | **constraint_diff**；写入、导入、导出三侧都由 `field_specs.enum` 报 `invalid_enum`（§4.3、§5.3.1） |
 | `hit_box.overwrite` | 结构化 **3 组**（`physics` / `armor` / `sounds`）、`additionalProperties:false` | `Codec.ANY.nullable()`（上游 `optionalFieldOf` 无默认 → Java `null`） | **constraint_diff**；`field_specs.nullable:true`（可选对象），`validateValues` 允许 `null`，导出省略；结构由 object 规格校验（§5.2） |
 | `interact_box.condition` | `enum: [AND,OR,NAND,NOR,XOR,XNOR]` | `STRING` 默认 `NOR` | **constraint_diff**；同上，由 `field_specs.enum` 拦，不改成 `Codec.ENUM`（避免存量非法值在 load 阶段失败） |
@@ -223,9 +224,11 @@ src/doc/field_specs.generated.js（含 provenance）
 | `sub_part.hydrodynamics` | 默认 `{"":{}}`；允许空字符串 key | 默认 `{}`（空 map 跳过） | **constraint_diff / decode_tolerance**；导出省略 `{}` 依赖模组默认值；若内部有 `""` 条目则原样输出（§5.1.3） |
 | `car_controller` / `motorbike_controller.control_outputs` | `required` | `.default({})` + `emitEmpty` | ✅ 已修：required map + `emitEmpty` |
 | `transmission.power_outputs` | `required` | `.default({})` + `emitEmpty` | ✅ 已修：required map + `emitEmpty` |
-| `regen_loader.projectile_types` | `required` + `minProperties: 1`，key 是资源地址 | `.default({})` + `emitEmpty`；`subsystem_types.js` 默认值 `{}` | ✅ 已修：required map + `emitEmpty`；registry 默认改 `{}`；空 map 由完整性规则判 error（§4.3） |
+| `regen_ammo_rack.belt_definition` | `required`；内部 `pattern`（`minItems: 1`）与 `length`（`minimum: 1`）必填，`container_id` / `recharge` 是可选的 `optionalFieldOf` 无默认值字段 | `.field()`；`pattern` / `length` 用 `.field()`，`container_id` / `recharge` 用 `.nullable()` | ✅ 已适配：Codec 与 field_specs 的 nullable 对齐（`OPTIONAL_NULLABLE` 的嵌套路径），空 `pattern` 由 `minItems` 在写入/导入/导出三侧拦，`pattern` / `length` 缺失由完整性模式拦（§4.3、§5.2） |
+| `launcher.ammo_discovery_targets` | 可选 map（供弹服务频道 → 目标名列表），`additionalProperties: {string[]}` | `.default({})` | ✅ 已补：发射器自己发起的上游发现表；`subsystem_types.js`（`signal_targets` 编辑器），key 按频道名段校验（§5.1.3） |
 | `launcher.fire_animation` | 可选，默认 `"fire"` | **缺字段** | ✅ 已补：Codec `.default('fire')` + `subsystem_types.js`（`text_input`） |
-| `regen_loader.belt_label` | 可选，默认 `""` | **缺字段** | ✅ 已补：Codec `.default('')` + `subsystem_types.js`（`text_input`） |
+| `ammo_loader.ammo_discovery_inputs` / `regen_ammo_rack.ammo_discovery_inputs` | 可选，默认 `[]` | `.default([])` | ✅ 已补：`subsystem_types.js` 的 `channel_list` 编辑器（补全来自 `AMMO_SERVICE_CHANNEL_HINTS`） |
+| `lighting.locator` | `required` | `.default('')`（上游 `LightingSubsystemAttr` 是 `optionalFieldOf("locator", "")`） | **constraint_diff**；field_specs 按 schema 记为 required，导出闸门的完整性模式拦空串；registry 同步标必填（§5.2.2） |
 | `weapon_controller.first_hud_layout` / `third_hud_layout` / `scope_hud_layout` | 可选，默认 `"machine_max:empty"` | **缺字段** | ✅ 已补：Codec 三个 `.default('machine_max:empty')` + `subsystem_types.js`（`text_input`） |
 | `seat.locator` / `camera.locator` / `sight.locator` | 可选，默认 `""` | `.default('')` | ✅ 已修：与上游 `optionalFieldOf("locator", "")` 一致；registry `null → ''`；不 nullable |
 | 多数对象 | `additionalProperties: false` | 宽松保留 | **unknown_fields 例外**：`unknown_fields: 'preserve'`；导出时由 Codec 剥离 schema 外字段 |
@@ -242,8 +245,8 @@ src/doc/field_specs.generated.js（含 provenance）
 | 上游类别 | 字段 | Codec | 内部「未配置」 | 导出 |
 |---|---|---|---|---|
 | required 字符串（`fieldOf`） | `definition`（全部）；`engine/motor/gearbox.power_output`；`wheel_driver/turret_driver.connector`；`launcher/joint.locator` | `.field()` | `''`（空串占位） | 键存在、值为 `""`；`collectIssues` 判 required 缺失，闸门阻断 |
-| required map（`fieldOf`） | `interact_box.signal_targets`；`car_controller/motorbike_controller.control_outputs`；`transmission.power_outputs`；`regen_loader.projectile_types` | `.default({})` + `emitEmpty`（decode 缺失→`{}`、encode 恒输出） | `{}` | 键存在、值为 `{}`；`projectile_types` 再由 `minProperties:1` 阻断 |
-| optional + 默认值（`optionalFieldOf(name, default)`） | `seat/camera/lighting/sight.locator`；`speed_outputs` / `gear_outputs` / …；`fire_animation`；`belt_label`；`script`；`dismount_locators` | `.default(默认值)` | 缺失（decode 补默认） | 等于默认值时省略；`locator:''` 与上游默认一致 |
+| required map（`fieldOf`） | `interact_box.signal_targets`；`car_controller/motorbike_controller.control_outputs`；`transmission.power_outputs` | `.default({})` + `emitEmpty`（decode 缺失→`{}`、encode 恒输出） | `{}` | 键存在、值为 `{}` |
+| optional + 默认值（`optionalFieldOf(name, default)`） | `seat/camera/lighting/sight.locator`；`speed_outputs` / `gear_outputs` / …；`fire_animation`；`script`；`dismount_locators` | `.default(默认值)` | 缺失（decode 补默认） | 等于默认值时省略；`locator:''` 与上游默认一致 |
 | optional 无默认值（`optionalFieldOf(name)` → `Optional` → Java `null`） | `hit_box.overwrite`；`connector.overwrite`；`seat.allow_use_items` | `.nullable()` | `null` | 省略；schema 可选 |
 
 **关键区别**：
@@ -338,10 +341,10 @@ Codec.STRING.encode(null) = String(null) = "null"       Codec.js:74-77 / 254-256
 修法（五项一起，**不引入 required nullable**）：
 
 1. ✅ **required 字符串占位改为 `''`**：`createSubsystem` 写 `definition: ''`；`subsystem_types.js` 的 `power_output` / `connector` / `locator` 默认值 `null → ''`；Codec 保持 `.field()`（`STRING` 接受空串）。`projection.in` 与 `loadConfig → migrateIfNeeded` 都在 decode 前把 `null`/`"null"` 归一化为 `''`（`normalizeLegacyPlaceholders`）。
-2. ✅ **required map**：`signal_targets` / `control_outputs` / `power_outputs` / `projectile_types` 用 `Codec.map(..., {emitEmpty:true})`，`{}` 也输出；decode 缺失仍补 `{}`（解码宽容，不是 nullable）。
+2. ✅ **required map**：`signal_targets` / `control_outputs` / `power_outputs` 用 `Codec.map(..., {emitEmpty:true})`，`{}` 也输出；decode 缺失仍补 `{}`（解码宽容，不是 nullable）。
 3. ✅ `Codec.STRING.encode` 对非 string 抛错，去掉 `String(v)` 隐式强制；`STRING.decode` 已有类型断言。
 4. ✅ `projectile_types` 的 registry 默认值 `[]` → `{}`；`fire_animation` / `belt_label` / `weapon_controller` 的 3 个 HUD layout 已补（§3.3 #13）。
-5. ✅ 导出闸门（§4.3）兜底：`collectIssues` 把 `definition` / required 字段的 `''` 判 error，`validateTree(completeness:true)` 把空 `projectile_types` 判 error（P3 已实现）。
+5. ✅ 导出闸门（§4.3）兜底：`collectIssues` 把 `definition` / required 字段的 `''` 判 error，`validateTree(completeness:true)` 把空的必填子块（如交付规格的 `pattern` / `length`）判 error（P3 已实现）。
 
 > **为什么不用 nullable**：上游 required 字段是 `fieldOf`，`null` 不是合法值；`.nullable()` 虽然能让插件 round-trip，却会让“未配置”在导出时变成**缺键**，与 required 契约相反。`''`/`{}` 至少保持键存在，同时让校验器能定位“值为空”。只有 `overwrite` 与 `seat.allow_use_items` 这类上游 `Optional` 且无默认值的字段才使用 `null`。
 >
@@ -386,7 +389,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 | 当前节点 | 下一段的含义 | 说明 |
 |---|---|---|
 | 配置根 / 零件 / 变体 / 子零件 / 碰撞箱 / 交互区 / 连接点 / 子系统（record） | **字段名** | 必须在 `field_specs` 或内部字段表里；否则 `unknown_field` |
-| `parts` / `variants` / `sub_parts` / `hit_boxes` / `interact_boxes` / `connectors` / `subsystems` / `hydrodynamics` / `textures` / `signal_targets` / `signal_translations` / `overwrite` / `power_outputs` / `projectile_types`（map） | **key** | 即使这个 key 叫 `mass`、`variants`、`parts`，也仍然是 key；不参与关键字判断 |
+| `parts` / `variants` / `sub_parts` / `hit_boxes` / `interact_boxes` / `connectors` / `subsystems` / `hydrodynamics` / `textures` / `signal_targets` / `signal_translations` / `overwrite` / `power_outputs` / `ammo_discovery_targets`（map） | **key** | 即使这个 key 叫 `mass`、`variants`、`parts`，也仍然是 key；不参与关键字判断 |
 | 数组（`end_bones` / `projected_area` / `dismount_locators` / 各种 `*_outputs` 的值） | **整数下标** | 非整数或越界 → `not_found` |
 
 因此 v2 的「固定段名优先」「最长已存在 key 前缀」「多种切分 → `ambiguous_path`」全部删除：
@@ -399,7 +402,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 
 - `*` 是**整段 token**，至多一个；只允许出现在 **map 层**（数组层用 `*` 返回 `invalid_format`，因为数组没有 key 语义）；结果按该层 key 收起。
 - **`*` 不能作为字面 key**：插件创建的 map key（partId / variant / 子零件 / 连接点 / 子系统 / 交互区 / 纹理名 / 频道名 / 弹种资源地址）在创建、重命名、导入时拒绝 `*`，存量数据迁移时报 `key_reserved`。`hit_boxes` / `hydrodynamics` 的 key 是模型元素名，只禁止 `*`，其余字符原样保留；`hydrodynamics` 额外允许空字符串（`""` 表示质心），`hit_boxes` 不允许空串。这样「字面量 `*`」不需要转义规则，也不会与通配符冲突。
-- `~` 与 `/` 只影响 JSON Pointer 形式：它们由 `~0` / `~1` 转义；段数组形式不需要转义。翻译键（子零件/连接点/子系统/交互区）额外禁止这两个字符，元素名不受限（Pointer 里照常转义即可）。`projectile_types` 的 key 是资源地址，允许 `/`，但在 Pointer 里仍按 `~1` 转义。
+- `~` 与 `/` 只影响 JSON Pointer 形式：它们由 `~0` / `~1` 转义；段数组形式不需要转义。翻译键（子零件/连接点/子系统/交互区）额外禁止这两个字符，元素名不受限（Pointer 里照常转义即可）。配弹的弹种是**值**（`belt_definition.pattern[].ammo`），不参与 key 规则。
 
 #### 5.1.3 key 规范（D16 / D17）
 
@@ -433,14 +436,13 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 | `variantName` | `variants` 的 key | `^[A-Za-z0-9_.-]+$`，非空，长度 ≤ 128 | 否 | `invalid_format` |
 | 子零件 key | `sub_parts` 的 key | `^sub_part\.<ns>\.[A-Za-z0-9_.-]+$`；名称段 1–128、不以 `.` 开头/结尾 | 否 | `invalid_format` |
 | 翻译键（连接点/交互区/子系统） | `connectors` / `interact_boxes` / `subsystems` 的 key | 名称段 `^[A-Za-z0-9_.-]+$`、1–128、不以 `.` 开头/结尾；**前缀形态只告警** `non_canonical_key` | 否 | `invalid_format`（字符集）/ warning（前缀） |
-| 纹理名 / 信号频道名 | `textures` / `signal_targets` / `signal_translations` 的 key | `^[A-Za-z0-9_.-]+$`，1–128，不以 `.` 开头/结尾 | 否 | `invalid_format` |
+| 纹理名 / 信号频道名 / 供弹服务频道名 | `textures` / `signal_targets` / `signal_translations` / `ammo_discovery_targets` 的 key | `^[A-Za-z0-9_.-]+$`，1–128，不以 `.` 开头/结尾 | 否 | `invalid_format` |
 | 功率输出目标名 | `power_outputs` 的 key | 目标完整 key，`^[A-Za-z0-9_.-]+$`，1–128 | 否 | `invalid_format` |
-| 弹种资源地址 | `projectile_types` 的 key | `^[a-z0-9_.-]+:[a-z0-9_./-]+$`（允许 `:` `/`，禁止大写、空白、`*`） | 是 | `invalid_format` |
 | 模型元素名 | `hit_boxes` 的 key | 任意字符串，**非空**，不含 `*`（允许中文、`:`、`/`、`~`） | 否 | `key_reserved`（仅 `*`）/ `invalid_format`（空串） |
 | 模型元素名（可空） | `hydrodynamics` 的 key | 任意字符串，**允许 `""`**，不含 `*` | 否 | 同上 |
 | namespace | `config.namespace`；子零件 key 的 `<ns>` 段 | `^[a-z0-9_-]+$`，无点 | 是 | `invalid_format` |
 
-**`projectile_types` 是唯一允许 `:` `/` 的配置 key**：它的 key 本身就是资源地址（如 `machine_max:7_62mm_ap`），不是翻译键；值才是整数。`textures` 的 **value** 也是资源地址（`machine_max:textures/...`），但 key 是纹理名，仍用上一行的规则。
+**没有配置 key 使用资源地址形态**：资源地址只出现在**值**上（`textures` 的值、`definition`、`belt_definition.pattern[].ammo` 等），按 `resource_location` 校验；map 的 key 一律是名称段或完整翻译键。交付规格的配弹是有序数组，弹种写在条目的 `ammo` 值里。
 
 `config.namespace` 自身必须是 `[a-z0-9_-]+`（进 resource location），在内容包设置入口校验；`loadConfig` 发现非法 namespace 时不改 key，记 `key_reserved`，导出闸门阻断。
 
@@ -468,7 +470,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 | `ops.createSubsystem` / `ops.importSubsystem` / `ops.renameSubsystem` | 子系统实例 key | 上表第 4 行（允许完整 `subsystem.<ns>.<name>` 形态；前缀不规范仅 warning） | `invalid_format` |
 | `ops.markConnector` / `ops.renameConnector` | 连接点 key | 上表第 4 行；自动名由 Locator 名 `toSnakeCase` 后校验 | `invalid_format`；自动名非法时 `legacy_<n>` |
 | `ops.markInteractBox` / `ops.renameInteractBox` | 交互区 key | 同上（骨骼名来源） | 同上 |
-| `ops.setField`（`allowMissingLeaf` 新建） | `textures.*` / `signal_targets.*` / `signal_translations.*` / `power_outputs.*` / `projectile_types.*` | 按路径所在 map 层查上表 | `invalid_format`；不写入 |
+| `ops.setField`（`allowMissingLeaf` 新建） | `textures.*` / `signal_targets.*` / `signal_translations.*` / `power_outputs.*` / `ammo_discovery_targets.*` | 按路径所在 map 层查上表 | `invalid_format`；不写入 |
 | `ops.setField` / `ops.import*` | `hit_boxes.*` / `hydrodynamics.*` | 元素名规则（`hydrodynamics` 允许 `""`） | `key_reserved` / `invalid_format` |
 | `ops.setContentPack` / `setContentPackPath` | `namespace` | 上表最后一行 | `invalid_format`；不落盘 |
 | `ops.importPart` / `importVariant` / `importSubPart` / `importSubsystem` 的嵌套 map | 上述全部 | `projection.in` 的 `validateKeys` 递归执行 | 一次返回全部违规 key，不写半截 |
@@ -507,7 +509,7 @@ v2 在 §4.1 要求「引用能解析成节点，违反即拒绝」，又在 §5
 | 13 | `['parts','hull','element_markers']`（part 级内部字段，不可寻址） | `unknown_field` |
 | 14 | `['parts','hull','variants','default','sub_parts','sub_part.machine_max.main','hydrodynamics','']`（空字符串 key 表示质心） | 命中；写入同路径也允许 |
 | 15 | `[... 'hit_boxes','']`（空字符串不是合法骨骼名） | `invalid_format` |
-| 16 | `['parts','hull','variants','default','sub_parts','sub_part.machine_max.main','subsystems','subsystem.machine_max.regen_loader','projectile_types','machine_max:30mm_ap']`（资源地址 key 含 `:`） | 命中；`projectile_types` 只在该子系统类型下存在 |
+| 16 | `['parts','hull','variants','default','sub_parts','sub_part.machine_max.main','subsystems','subsystem.machine_max.rack','belt_definition','pattern','0','ammo']`（对象字段 + 数组下标混用） | 命中；资源地址是值，不需要转义 `:` |
 | 17 | `['parts','hull','variants','model','model']`（变体名恰好是 `model`） | 命中（不得被单变体简写判定吞掉） |
 
 **`_uiState` / `element_markers` 的位置**：`_uiState` 是配置根字段（`config._uiState`），`element_markers` 是 part 字段（`part.element_markers`）。两者都只属于内部树，`projection.in/out` 都会剥离；路径解析必须在 record 字段白名单阶段返回 `unknown_field`，不能因为「名字像字段」而放行。
@@ -539,7 +541,7 @@ v2 只有 `type: 'number'` + `items/minItems/maxItems`，表达不了 `textures`
   additionalProperties: null,// object 的值规格；false 表示封闭
   items: null,               // array 的元素规格
   minItems: null, maxItems: null,
-  minProperties: null,       // required map 的最小条目数（如 regen_loader.projectile_types = 1）
+  minProperties: null,       // required map 的最小条目数（如 sub_part.hit_boxes = 1）
   tuple: null,               // tuple 的逐位规格，如 projected_area: [number, number, number]
   references: null,          // 'bone' | 'locator' | 'subsystem' | 'connector' | 'signal' | 'resource'
   required: false,           // 完整性用；写入/导入不阻断，导出闸门阻断
@@ -590,7 +592,7 @@ SPECS = {
   connector:   { fields: {...}, required: ['locator', 'definition'] },
   subsystem: {
     'machine_max:basic': { fields: {...}, required: ['type', 'definition'], schema: '...' },
-    // …共 19 种
+    // …共 21 种
   },
 };
 
@@ -609,7 +611,7 @@ SIDE_EFFECTS = { 'sub_part.start_bone': 'migrate_sub_part_marker', ... };
 #### 5.2.2 类型清单与 `schema_codec_allowlist` 的职责
 
 - 普通 kind 的规格来自对应 schema；
-- `subsystem` 按 `typeId` 分组，**只生成上游 19 种**（由 `subsystem_dynamic_attr.schema.json` 的 `if/then` + 各类型 schema 展开）；
+- `subsystem` 按 `typeId` 分组，**只生成上游 21 种**（由 `subsystem_dynamic_attr.schema.json` 的 `if/then` + 各类型 schema 展开）；
 - **D18 已完成**：5 个 WIP 类型从 `SubsystemDispatchCodec` 与 `subsystem_types.js` 删除（22→17）；不保留 decode/read、不告警、不提供兼容层，遇到这些 type 一律 `unknown_type`；
 - **required 字段没有 nullable override**；只有上游 `Optional` 且无默认值的字段——`hit_box.overwrite` / `connector.overwrite` / `subsystem.allow_use_items`——在 `field_specs` 里标 `nullable: true`。`subsystem` 的 required 字段（`definition` / `power_output` / `connector` / 必填 `locator`）使用 `''` 占位，optional `locator` 使用 `.default('')`，都不标 nullable。
 
@@ -624,8 +626,8 @@ module.exports = {
   extra_types: [],
 
   // 3) 字段集合缺口：Codec 缺字段
-  // hit_box.module、launcher.fire_animation、regen_loader.belt_label、
-  // weapon_controller 的 3 个 HUD layout 与 seat 的 3 个安装级覆盖已补进 Codec；
+  // hit_box.module、launcher.fire_animation 与 weapon_controller 的 3 个 HUD layout
+  // 与 seat 的 3 个安装级覆盖已补进 Codec；
   // 仅剩 part.type（const regular，省略即默认值，插件不把常量写进配置）。
   missing_fields: [
     { kind: 'part', field: 'type', owner: '上游 8a027167', why: '只编辑 regular 零件' },
@@ -641,7 +643,7 @@ module.exports = {
     { kind: 'connector', field: 'definition', schema: 'required', codec: "default('')", enforcedBy: 'collectIssues' },
     { kind: 'sub_part', field: 'hit_boxes', schema: 'required+minProperties', codec: 'map', enforcedBy: 'collectIssues' },
     { kind: 'sub_part', field: 'hydrodynamics', schema: 'default {""}', codec: 'default {}', enforcedBy: 'decode_tolerance' },
-    { kind: 'subsystem', field: 'projectile_types', types: ['machine_max:regen_loader'], schema: 'required+minProperties', codec: 'default({}) + emitEmpty', enforcedBy: 'codec.emitEmpty+minProperties' },
+    { kind: 'subsystem', field: 'locator', types: ['machine_max:lighting'], schema: 'required', codec: "default('')", enforcedBy: 'field_specs.completeness' },
   ],
 
   // 5) decode 比 schema 宽松、但 encode 不会产出非法 JSON 的字段
@@ -657,8 +659,8 @@ module.exports = {
 
 测试规则：
 
-1. **类型集合**：`SubsystemDispatchCodec` 的 key 集合 ∪ `missing_types` = schema 19 种 ∪ `extra_types`；`missing_types` / `extra_types` 均为空（D13 / D18 完成）。
-2. **字段集合**：对 19 种类型逐类型比较 schema `properties`（去掉 `type`）与 Codec record 字段；差异只能来自 `missing_fields` / `extra_fields`。`constraint_diffs` **不能**用来掩盖字段缺失——字段不存在时，配置它只会得到 `unknown_field`。
+1. **类型集合**：`SubsystemDispatchCodec` 的 key 集合 ∪ `missing_types` = schema 21 种 ∪ `extra_types`；`missing_types` / `extra_types` 均为空（D13 / D18 完成）。
+2. **字段集合**：对 21 种类型逐类型比较 schema `properties`（去掉 `type`）与 Codec record 字段；差异只能来自 `missing_fields` / `extra_fields`。`constraint_diffs` **不能**用来掩盖字段缺失——字段不存在时，配置它只会得到 `unknown_field`。
 3. **约束条目有效性**：每条 `constraint_diffs` / `decode_tolerance` 必须同时指向真实存在的 schema 字段与 Codec 字段；`missing_fields` 必须带 `owner`。D12 放行的 6 条真实缺口已全部补齐；当前仅保留 `part.type` 一条（插件只编辑 regular 零件，省略即 schema 默认值），其余留在 `missing_fields` 的条目视为**过期条目**，测试失败。D13 补齐后仍留在 `missing_types` 的条目、已删除类型仍留在 `extra_types` 的条目同样失败。
 4. **encode 合规**：对 `decode_tolerance` 的字段，构造「缺失输入」，断言 `encode(decode(x))` 要么满足 schema，要么被 `canExport` 阻断；不能出现「既不满足 schema、闸门又放行」。
 5. **`unknown_fields`** 是唯一允许的全局例外，不按字段登记；导出时由 Codec 剥离未知字段，`field_specs` 不把未知字段当错误。
@@ -713,13 +715,13 @@ validateTree(config, { completeness: true }) → [{ path, code, expected, got, h
 2. `oneOf`：逐个尝试，全失败报 `type_mismatch`，`expected` 列出分支；
 3. `type` 基础校验：`string` / `number` / `integer` / `boolean` / `array` / `object` / `tuple` / `any`；
 4. `enum`：`hit_box.type`、`interact_box.condition`、`sub_part.block_collision` 等；报 `invalid_enum`，`expected` 给完整枚举；
-5. `minimum` / `maximum`：`thickness`、`mass`、`projectile_types` 的值等；报 `out_of_range`；
+5. `minimum` / `maximum`：`thickness`、`mass`、`belt_definition.length` 等；报 `out_of_range`；
 6. `tuple` / `items` / `minItems` / `maxItems`：`projected_area`、`end_bones`、`dismount_locators`；
 7. `properties` / `additionalProperties`：`overwrite`（`hit_box` 的 physics/armor/sounds 分组、`connector` 12 字段、`additionalProperties:false`）；
 8. `completeness:true` 时：`required` 缺失（`isMissingValue`）报 `missing_required`；`minProperties` 不足报 `missing_required`；
 9. 递归子节点：`hit_boxes` / `interact_boxes` / `connectors` / `subsystems` 按各自 kind 继续走 1–8。
 
-`validateTree` 在遍历前先按 §5.3.1 第 2 步的 `stripInternal` 同一张表跳过内部字段（`element_markers`、`_uuid`、`_marker_uuid`、`_unresolved_bones`、`auto_end_bones`）以及 `projectile_types` 里 `__new_p_*` 前缀的临时弹种 key；否则 UI 的占位 key 会被资源地址规则误判为 `invalid_format`，导致合法工程无法导出。`__new_p_*` 的清理只发生在 `projection.out`，`validateTree` 必须与它同口径。
+`validateTree` 在遍历前先按 §5.3.1 第 2 步的 `stripInternal` 同一张表跳过内部字段（`element_markers`、`_uuid`、`_marker_uuid`、`_unresolved_bones`、`auto_end_bones`）。
 
 **key 校验与值校验分开**：`validateKeys` 只负责 §5.1.3 的 key 字符集/形态，返回 `invalid_format` / `key_reserved`；`validateValues` 不重复查 key。`projection.in` 先 `validateKeys`（第 3 步）再 `decode`（第 4 步）再 `validateValues`（第 5 步），顺序不能反：key 非法时应在 decode 之前就拒绝，避免把非法 key 带进错误信息或 Vue 响应式对象。
 
@@ -738,7 +740,7 @@ validateTree(config, { completeness: true }) → [{ path, code, expected, got, h
 | `variants` | 仅当唯一 key 恰为 `default` 时才是单对象简写 | map |
 | `sub_parts` | 单对象简写**没有 key**（schema 规定落到 `sub_part.machine_max.main`） | map，key 必须是规范 key |
 | 默认值字段 | 可省略 | 全量（decode 补齐） |
-| `auto_end_bones` / `_unresolved_bones` / `element_markers` / `_uuid` / `_marker_uuid` / `__new_p_*` | 无 | 有 |
+| `auto_end_bones` / `_unresolved_bones` / `element_markers` / `_uuid` / `_marker_uuid` | 无 | 有 |
 | `textures` | `string` 或 map | map（`{default: string}`） |
 
 #### 5.3.1 `projection.in(definition, ctx)` — 顺序不可乱
@@ -752,22 +754,20 @@ validateTree(config, { completeness: true }) → [{ path, code, expected, got, h
    - `hit_boxes` / `interact_boxes` / `connectors` / `subsystems` **不做简写归一化**（key 就是身份）。
 1.5. **归一化未配置占位**（`normalizeUnset`，必须早于 decode）
    - required 字符串（`definition`、`power_output`、`connector`、`launcher|joint.locator`）：显式 `null` / `"null"` → `''`；**缺失不补**，留给 `.field()` 报 `missing_required`（`read_node` 总会带字段，所以 round-trip 不受影响）；
-   - required map（`interact_box.signal_targets`、`control_outputs`、`power_outputs`、`projectile_types`）：显式 `null` → `{}`；缺失由 `.default({})` 补（解码宽容）；
+   - required map（`interact_box.signal_targets`、`control_outputs`、`power_outputs`）：显式 `null` → `{}`；缺失由 `.default({})` 补（解码宽容）；
    - optional 字段（`seat/camera/lighting/sight.locator` 等带默认值的）：`null` → 删除，让 `.default(...)` 生效；
-   - `projectile_types: []` → `{}`（旧版 registry 的脏默认值）；
    - 归一化只发生在 `projection.in`，不写回调用方对象；`reset_fields` 按“归一化后实际提供的字段”计算，显式 `null` 视为提供。
 2. **剥内部字段**（`stripInternal`）
    - part: `element_markers`、`_unresolved_bones`；
    - sub_part: `auto_end_bones`；
    - interact_box: `_uuid`；
    - connector: `_marker_uuid`；
-   - subsystem(regen_loader): `projectile_types` 里 `__new_p_*` 前缀项；
    - 所有层级：`_uiState`（不属于任何导出节点）。
 3. **校验 key**（`validateKeys`，递归，覆盖全部 map 层）
    - `parts` / `variants` / `sub_parts`：按 §5.1.3 的 partId / variant / 子零件规则；`sub_parts` 还要求 namespace 等于 `ctx.namespace`；
    - 翻译键 map（`interact_boxes` / `connectors` / `subsystems`）：名称段 ASCII；字符集违规 → `invalid_format`；前缀不合规范只记 warning `non_canonical_key`；
    - `textures` / `signal_targets` / `signal_translations` / `power_outputs`：`^[A-Za-z0-9_.-]+$`、1–128、不以 `.` 开头/结尾；
-   - `projectile_types`：**资源地址 key** `^[a-z0-9_.-]+:[a-z0-9_./-]+$`（允许 `:` `/`，要求小写）；
+   - `ammo_discovery_targets`：服务频道名，与 `signal_targets` 同规则；
    - `hit_boxes`：非空、不含 `*`，其余字符（中文 / `:` / `/` / `~`）原样允许；
    - `hydrodynamics`：**允许 `""`**、不含 `*`，其余同上；
    - 一次返回全部违规 key（`errors[]`），不写半截。
@@ -824,7 +824,7 @@ validateTree(config, { completeness: true }) → [{ path, code, expected, got, h
 `opts.for = 'read' | 'export'`（默认 `read`）。
 
 1. **深拷贝**，不修改内部树；
-2. **剥内部字段**：与 `in` 第 2 步同一张表；`__new_p_*` 一并清理；
+2. **剥内部字段**：与 `in` 第 2 步同一张表；
 3. **`hit_boxes` key 反转**：key 命中元素 UUID → `ports.bones.findNameByUuid` 换成骨骼名；key 本身是骨骼名或未命中 → 原样保留（未命中记 `unresolved_bone`）；
 4. **去内部键**：`interact_boxes[*]._uuid`、`connectors[*]._marker_uuid`；
 5. **简写策略**：`variants` 在 `read` 模式下**保持 map**（保证 round-trip 的 key 不丢）；`export` 模式交给 `Codec.either.encode`（唯一 key 为 `default` 时才折叠）。`sub_parts` **永不折叠**（schema 的简写没有 key，折叠会丢 `sub_part.<ns>.*` 身份；单条目 map 同样合法）；
@@ -837,7 +837,7 @@ validateTree(config, { completeness: true }) → [{ path, code, expected, got, h
 in(out(node, 'read'), { existing: node }) ≡ node   （结构等价，reset_fields 为空）
 ```
 
-含 `hit_boxes`（UUID↔骨骼名）、单变体/单子零件、未解析骨骼、`definition:''`、`power_output:''`、`connector:''`、`locator:''`、`signal_targets:{}`、`power_outputs:{}`、`projectile_types:{}` 的节点都必须成立。`out('read')` 保留 `''` 与空 map 的形状；`in` 的 `validateValues(completeness:false)` 允许这些占位，因此 `reset_fields` 为空；导出时 `out('export')` 对 required 字段输出 `""` / `{}`（键仍在），再由 `canExport` 阻断。
+含 `hit_boxes`（UUID↔骨骼名）、单变体/单子零件、未解析骨骼、`definition:''`、`power_output:''`、`connector:''`、`locator:''`、`signal_targets:{}`、`power_outputs:{}`、交付规格（`belt_definition.pattern` 非空）的节点都必须成立。`out('read')` 保留 `''` 与空 map 的形状；`in` 的 `validateValues(completeness:false)` 允许这些占位，因此 `reset_fields` 为空；导出时 `out('export')` 对 required 字段输出 `""` / `{}`（键仍在），再由 `canExport` 阻断。
 
 #### 5.3.3 单子零件简写的落点（v3 修正）
 
@@ -852,7 +852,7 @@ in(out(node, 'read'), { existing: node }) ≡ node   （结构等价，reset_fie
 - 非规范 `sub_parts` key → **改写为规范 key**（唯一性冲突加后缀），同步更新 `element_markers` 的 `sub_part` / `hit_box` `config_ref`；
 - 单变体 / 单子零件简写、缺失 `hit_boxes` 容器 → 归一化为 map；
 - `definition: null` / `power_output: null` / `connector: null` / `locator: null` → **归一化为 `''`**（required 字段）；`seat/camera` 等 optional `locator: null` → 删除，让默认值生效；
-- `definition: "null"`（字符串）→ `''`；`projectile_types: []` → `{}`；`interact_box.signal_targets` 缺失 → 补 `{}`；
+- `definition: "null"`（字符串）→ `''`；`interact_box.signal_targets` 缺失 → 补 `{}`；
 - `connector` marker 的 `config_ref` 存着 definition → 按 §15.2.1 的定序匹配统一为连接点 key；无法唯一匹配时保留 `legacy_config_ref`、`config_ref:null` 并记 warning；
 - `_uuid` / `_marker_uuid` 缺失或指向不存在元素 → 按骨骼名 / Locator 名重建；
 - 悬空 marker → `cleanGhostMarkers`（已有）；
@@ -1091,9 +1091,9 @@ src/services/
 - ✅ vendored 快照全量替换：`src/builtin/builtin/machine_max/docs` 由 139 → 153 文件，与 `Machine-Max@a1460ce1` 逐文件 SHA256 一致；`--check` 零漂移
 - ✅ 本轮 schema 更新：`variant.required` 的 `models` → `model`、`connector.overwrite` 补 `impact_absorption_destroyed`（11→12）、`variant.textures` 对象分支补 `minProperties:1`、`part_definition_schema` 的 examples 同步
 - ✅ 7 个缺失 schema 到位（`track_controller` / `track_drive` 的 static+dynamic、`launcher` / `regen_loader` dynamic、`part_fabricating_recipe`）
-- ✅ `scripts/gen-field-specs.js`（codegen；按 §5.2 的类型模型生成 19 种，含 provenance；`--check` 可做漂移检查）
+- ✅ `scripts/gen-field-specs.js`（codegen；按 §5.2 的类型模型生成 21 种，含 provenance；`--check` 可做漂移检查）
 - ✅ `scripts/audit-stats.js`（数字审计；47 项基线，输出与 §2 一致）
-- ✅ `test/schema/field_specs.test.js`（生成物逐字节同步、19 种类型、关键字段、required map、容器/内部字段、副作用表、provenance 共 8 个测试）
+- ✅ `test/schema/field_specs.test.js`（生成物逐字节同步、21 种类型、关键字段、required map、容器/内部字段、副作用表、provenance 共 8 个测试）
 
 验收命令：
 
@@ -1216,13 +1216,13 @@ test/
 6. `coalesce:false`：不同目标不合并、结构动作不合并；
 7. 投影剥离内部字段（注入 `element_markers` / `_uuid` / `_marker_uuid` 后不可见）；
 8. `"null"` 清洗（`definition:null` / `"null"` 归一化为 `''`，不出现字符串 `"null"`；required 字符串导出时允许 `""` 但被闸门拦）；
-9. 导出闸门：空 `hit_boxes` 拦截、`orphan_element` 放行、`invalid_enum` 拦截、`projectile_types:{}` 的 `minProperties` 拦截；
+9. 导出闸门：空 `hit_boxes` 拦截、`orphan_element` 放行、`invalid_enum` 拦截、空的 `belt_definition.pattern` 拦截；
 10. `schema` 漂移：manifest ↔ schema、dispatch map ⊇ schema 类型集合（D13 后两者均为 19）；`missing_types` / `missing_fields` / `extra_fields` / `constraint_diffs` / `decode_tolerance` 各自校验，过期条目失败；
 11. 严格 key：非规范 `import_sub_part` 返回 `invalid_format`；中文/空白 key、中文或大写 `partId` 同样 `invalid_format`；`loadConfig` 迁移后**子零件**旧 key 全部规范化（`default` → `main`；`.main` / `main.` / `chassis!` / 中文 / 超长 → `legacy_<n>`），marker 同步；
 12. 哨兵：只有 `local`/`global` 放行；`part`/`subpart`/`vehicle` 一律 `unresolved_config_ref`（不告警、不迁移）；
 13. **required 占位**：新建 basic / engine / wheel_driver / seat / transmission 后立即 `read_node → import_*`；`definition` / `power_output` / `connector` / `locator` 为 `''`，required map 为 `{}`，`reset_fields` 为空；旧数据传 `null` / `"null"` 在 `normalizeUnset` 后同样成功；
-14. **required 空 map**：`interact_box.signal_targets`、`transmission.power_outputs`、`car_controller.control_outputs`、`regen_loader.projectile_types` 的 `encode` 必须保留 `{}` 键；decode 缺失 → `{}`；`decode(encode(x))` 回环；
-15. **值校验**：`import_*` 传 `hit_box.type:"banana"` / `interact_box.condition:"WHATEVER"` 返回 `invalid_enum`；`projectile_types` 的值 `0` 返回 `out_of_range`；已有非法值的工程 `canExport` 返回 `ok:false`，但 `loadConfig` 能打开；
+14. **required 空 map**：`interact_box.signal_targets`、`transmission.power_outputs`、`car_controller.control_outputs` 的 `encode` 必须保留 `{}` 键；decode 缺失 → `{}`；`decode(encode(x))` 回环；
+15. **值校验**：`import_*` 传 `hit_box.type:"banana"` / `interact_box.condition:"WHATEVER"` 返回 `invalid_enum`；`belt_definition.length` 传 `0` 返回 `out_of_range`；已有非法值的工程 `canExport` 返回 `ok:false`，但 `loadConfig` 能打开；
 16. **key 矩阵**：`import_part` 的 `part_id:"Hull"` / `import_variant` 的 `variant:"门"` / `createSubsystem` 的 `instanceName:"引擎"` / `setField` 新建 `textures.纹理` 全部 `invalid_format`；`projectile_types` 的 `machine_max:30mm_ap` 合法，`Machine_Max:30mm_ap` 非法（大写）；
 17. **投影边界**：`variants` 的 key 恰好是 `model` 时不得被简写吞掉；`hydrodynamics[""]` 可读可写、`hit_boxes[""]` 报 `invalid_format`；`_uiState` 在根、`element_markers` 在 part，均返回 `unknown_field`；`projectile_types` 里残留 `__new_p_*` 时 `validateTree` 不报错（内部占位键）。
 18. **replace 的 marker 清理**：`import_part` / `import_variant` / `import_sub_part` 替换成更少的 `sub_parts` / `hit_boxes` / `interact_boxes` / `connectors` 后，旧 marker 不残留、`config_ref` 不指向旧 key；同形替换后每个元素仍只有一个 marker；旧 connector marker 的 `config_ref` 仍是 `definition`（迁移未完成）时，也要靠 `uuids` 被清掉；`Ctrl+Z` 同时恢复配置与 marker。测试至少覆盖一个“骨骼还在、配置条目被删”的场景，证明 `cleanGhostMarkers` 单独拦不住。
@@ -1288,7 +1288,7 @@ test/
 | D9 | 小件整件通道 | 本期不做 `hit_box`/`interact_box`/`connector` | 用户 |
 | D10 | 路径语法 | `string[]` 主 + JSON Pointer 从；`*` 为整段 token；**按位置解析** | 推荐（v3 收口） |
 | D11 | 字段规格来源 | 兄弟仓库 schema → vendored → codegen | 推荐（v2） |
-| D12 | schema↔Codec 漂移 | 以 schema/上游为准：结构性修复已完成（`hit_box.id` 改 `.default('')`、`STRING.encode` 严格化、required 字段保持 `.field()` + `''` 占位、optional locator 改 `.default('')`、required map `emitEmpty`）+ **字段补齐 6 项已完成**（`launcher.fire_animation`、`regen_loader.belt_label`、`hit_box.module`、`weapon_controller.first_hud_layout` / `third_hud_layout` / `scope_hud_layout`；`missing_fields` 已清空）+ 默认值 1 项（`projectile_types: []` → `{}`）；`hit_box.overwrite` 的 `physics` / `armor` / `sounds` 分组由 `field_specs.object` 校验；枚举/结构差异由 `field_specs` 在写入/导入/导出三侧拦，其余进 allowlist | 推荐（v3.1 扩，P1 校；D12 结构性修复在 P2 完成） |
+| D12 | schema↔Codec 漂移 | 以 schema/上游为准：结构性修复已完成（`hit_box.id` 改 `.default('')`、`STRING.encode` 严格化、required 字段保持 `.field()` + `''` 占位、optional locator 改 `.default('')`、required map `emitEmpty`）+ **字段补齐 6 项已完成**（`launcher.fire_animation`、`regen_loader.belt_label`、`hit_box.module`、`weapon_controller.first_hud_layout` / `third_hud_layout` / `scope_hud_layout`；`missing_fields` 已清空）+ 默认值 1 项（当时是 `regen_loader.projectile_types: []` → `{}`，该类型已在 `2829863a` 拆分退役，现由 `belt_definition` 的必填子块承担同一职责）；`hit_box.overwrite` 的 `physics` / `armor` / `sounds` 分组由 `field_specs.object` 校验；枚举/结构差异由 `field_specs` 在写入/导入/导出三侧拦，其余进 allowlist | 推荐（v3.1 扩，P1 校；D12 结构性修复在 P2 完成） |
 | D13 | `track_*` 两种类型 | **已完成（P2）**：Codec + `subsystem_types.js` + 面板动态字段；`missing_types` 清空，Codec 与 schema 均为 19 | 用户 |
 | D14 | 可空字段清单 | **撤销「用户可选清单」**；固定内部占位：required 字符串 `''`、required map `{}`；`null` 只用于 upstream `Optional` 无默认值字段（`overwrite`、`seat.allow_use_items`）；编辑不拦、导出阻断 | 用户（§4） |
 | D15 | 导出闸门 | `severity==='error'` 阻断导出 | 用户 |
@@ -1413,7 +1413,7 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 | 缺失 `hit_boxes` / `connectors` 等容器 | 补空 map（不改语义） |
 | `subsystems[*].definition === null` / `power_output: null` / `connector: null` / `locator: null` | **归一到 `''`**（required 字段；`definition` 对所有类型，`power_output/connector` 仅 required 类型）；optional `locator` 也归一到 `''`，与 `.default('')` 等价 |
 | `subsystems[*].definition === "null"`（字符串） | raw 阶段转 `''`，避免被当成合法资源地址 |
-| `subsystems[*].regen_loader.projectile_types === []` | raw 阶段转 `{}`；空 map 由 `minProperties` 闸门拦截 |
+| `subsystems[*].belt_definition.pattern` 为空数组 | 不归一化；`minItems:1` 在导入（`projection.in`）与导出闸门两侧都判 error |
 | `connector` marker 的 `config_ref` 存着 definition | 统一为连接点 key；按 §15.2.1 的定序匹配，匹配不到保留 `legacy_config_ref` + `config_ref:null` 并记 warning，不猜测 |
 | `_uuid` / `_marker_uuid` 缺失或失效 | 按骨骼名 / Locator 名重建 |
 | 悬空 marker | `cleanGhostMarkers`（已有） |
@@ -1421,7 +1421,7 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 | 标记存在、配置条目缺失（sub_part / hit_box / interact_box / connector） | `loadConfig.repairMarkerConfigs` 一次性补建；运行时仍缺时面板显示「创建配置」按钮，走 `ops.mark*` |
 | 5 个 WIP 子系统实例（`battery`/`signal_convert`/`joint`/`javascript`/`ammo_loader`） | **不迁移、不剔除**；D18 删除类型后导出按 `unknown_type` 拒绝，用户手动删除对应条目 |
 | 连接点/子系统/交互区的非 ASCII key | 不改名，记 `key_reserved`（导出期 error），由用户手动重建/重命名；子零件之外不做自动迁移 |
-| 零件 / 变体 / 纹理 / 频道名 / `projectile_types` 的非 ASCII key，或非小写 `partId` | **不自动改名**（`partId` 会牵动文件名、resource location 与存档），记 `key_reserved`（导出期 error），由用户手动重建 |
+| 零件 / 变体 / 纹理 / 频道名 / `ammo_discovery_targets` 的非 ASCII key，或非小写 `partId` | **不自动改名**（`partId` 会牵动文件名、resource location 与存档），记 `key_reserved`（导出期 error），由用户手动重建 |
 | `partId` 为 `.` / `..` / 首尾点 / Windows 设备名 | **不自动改名**；记 `key_reserved`（导出期 error），提示用户重建；导出管线另有 `isSafePartId` 断言（§5.1.3） |
 | key 含 `*`（任意 map），或翻译键含 `/` `~` | 记 `key_reserved`，导出期 error；不自动改写；`hit_boxes` / `hydrodynamics` 的元素名不受 `/` `~` 限制 |
 | `config.namespace` 非法 | 不自动改；子零件 key 迁移用 `machine_max` 兜底并记录 `namespace_fallback`；导出期 error |

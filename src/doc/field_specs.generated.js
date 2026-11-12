@@ -3,7 +3,7 @@
 /**
  * 本文件由 scripts/gen-field-specs.js 自动生成，不要手工编辑。
  * 数据源：src/builtin/builtin/machine_max/docs/en_us/schemas
- * 上游快照：Machine-Max@b69ae014
+ * 上游快照：Machine-Max@2829863a
  * 重新生成：node scripts/gen-field-specs.js
  * 漂移检查：node scripts/gen-field-specs.js --check
  */
@@ -12,9 +12,9 @@ const PROVENANCE = {
     "generator_version": 1,
     "source_locale": "en_us",
     "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
-    "source_revision": "b69ae014",
-    "source_files": 71,
-    "source_sha256": "bf4212c32077ac8dcd185e1e4e0a3c86685783605bb54aed7c9654b3548b0d6b",
+    "source_revision": "2829863a",
+    "source_files": 78,
+    "source_sha256": "e4f78114612e79317804a22a2f961dc891552d87d93428d4d464e5cc2ecede88",
     "generated_from": "machine_max builtin JSON Schema"
 };
 
@@ -593,6 +593,16 @@ const SPECS = {
                                         "type": "number",
                                         "integer": false,
                                         "minimum": 0
+                                    }
+                                },
+                                "additionalProperties": false
+                            },
+                            "fmod": {
+                                "type": "object",
+                                "properties": {
+                                    "bank": {
+                                        "type": "string",
+                                        "required": true
                                     }
                                 },
                                 "additionalProperties": false
@@ -1449,44 +1459,8 @@ const SPECS = {
                             "type": "string"
                         }
                     }
-                }
-            },
-            "required": [
-                "type",
-                "definition",
-                "locator"
-            ],
-            "schema": "subsystem/dynamic/launcher_dynamic_attr.schema.json"
-        },
-        "machine_max:regen_loader": {
-            "fields": {
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "machine_max:regen_loader"
-                    ],
-                    "required": true,
-                    "sideEffect": "rebuild_type_fields"
                 },
-                "definition": {
-                    "type": "string",
-                    "required": true,
-                    "references": "resource"
-                },
-                "projectile_types": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer",
-                        "integer": true,
-                        "minimum": 1
-                    },
-                    "minProperties": 1,
-                    "required": true
-                },
-                "belt_label": {
-                    "type": "string"
-                },
-                "discovery_outputs": {
+                "ammo_discovery_targets": {
                     "type": "object",
                     "additionalProperties": {
                         "type": "array",
@@ -1499,9 +1473,161 @@ const SPECS = {
             "required": [
                 "type",
                 "definition",
-                "projectile_types"
+                "locator"
             ],
-            "schema": "subsystem/dynamic/regen_loader_dynamic_attr.schema.json"
+            "schema": "subsystem/dynamic/launcher_dynamic_attr.schema.json"
+        },
+        "machine_max:regen_ammo_rack": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:regen_ammo_rack"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                },
+                "belt_definition": {
+                    "type": "object",
+                    "properties": {
+                        "container_id": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "label": {
+                            "type": "string"
+                        },
+                        "pattern": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "ammo": {
+                                        "type": "string",
+                                        "required": true
+                                    },
+                                    "count": {
+                                        "type": "integer",
+                                        "integer": true,
+                                        "minimum": 1,
+                                        "required": true
+                                    }
+                                },
+                                "additionalProperties": false
+                            },
+                            "minItems": 1,
+                            "required": true
+                        },
+                        "length": {
+                            "type": "integer",
+                            "integer": true,
+                            "minimum": 1,
+                            "required": true
+                        },
+                        "recharge": {
+                            "type": "object",
+                            "properties": {
+                                "regen_per_minute": {
+                                    "type": "number",
+                                    "integer": false,
+                                    "minimum": 0,
+                                    "required": true
+                                },
+                                "regen_delay": {
+                                    "type": "number",
+                                    "integer": false,
+                                    "minimum": 0
+                                },
+                                "energy_cost_per_round": {
+                                    "type": "number",
+                                    "integer": false,
+                                    "minimum": 0
+                                }
+                            },
+                            "additionalProperties": false,
+                            "nullable": true
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": true
+                },
+                "ammo_discovery_inputs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "type",
+                "definition",
+                "belt_definition"
+            ],
+            "schema": "subsystem/dynamic/regen_ammo_rack_dynamic_attr.schema.json"
+        },
+        "machine_max:ammo_rack": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:ammo_rack"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                }
+            },
+            "required": [
+                "type",
+                "definition"
+            ],
+            "schema": "subsystem/dynamic/ammo_rack_dynamic_attr.schema.json"
+        },
+        "machine_max:ammo_loader": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:ammo_loader"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                },
+                "ammo_discovery_inputs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ammo_discovery_targets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "required": [
+                "type",
+                "definition"
+            ],
+            "schema": "subsystem/dynamic/ammo_loader_dynamic_attr.schema.json"
         },
         "machine_max:track_controller": {
             "fields": {

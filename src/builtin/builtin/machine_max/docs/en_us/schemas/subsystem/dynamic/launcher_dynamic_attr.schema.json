@@ -28,6 +28,13 @@
       ],
       "default": {},
       "description": "Remaining ammo feedback output channels and targets. Optional."
+    },
+    "ammo_discovery_targets": {
+      "allOf": [
+        { "$ref": "../base/signal_targets.json" }
+      ],
+      "default": {},
+      "description": "Feed source query table: service channel to target names. The launcher runs a read-only discovery over this table on structure changes and finds autoloaders in the same assembly; pointing straight at an ammo rack is the manual path and is only a candidate when the model defines a human stage."
     }
   },
   "required": ["type", "definition", "locator"],
@@ -35,7 +42,7 @@
   "examples": [
     {
       "type": "machine_max:launcher",
-      "definition": "machine_max:2a42_launcher",
+      "definition": "machine_max:30mm_2a42_launcher",
       "locator": "2a42_launch_point",
       "fire_animation": "recoil_2a42"
     }

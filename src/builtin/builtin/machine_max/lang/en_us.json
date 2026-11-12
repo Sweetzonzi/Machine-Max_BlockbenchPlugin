@@ -1,7 +1,6 @@
 {
   "machine_max.ammo.ap": "AP",
   "machine_max.ammo.apfsds": "APFSDS",
-  "machine_max.ammo.heat": "HEAT",
   "machine_max.ammo.he": "HE",
   "machine_max.ammo.tracer": "TRACER",
   "machine_max.ammo.atgm": "ATGM",
@@ -35,6 +34,7 @@
   "subsystem.machine_max.gunner_sight": "Gunner Sight",
   "subsystem.machine_max.main_weapon": "Main Weapon",
   "subsystem.machine_max.secondary_weapon": "Secondary Weapon",
+  "subsystem.machine_max.pktm_weapon": "7.62 MM / PKTM",
   "interact.machine_max.driver_hatch_interact": "Driver Hatch Interact",
   "subsystem.machine_max.gun_elevation_driver": "Gun Elevation Driver",
   "sub_part.machine_max.gun": "Gun",

@@ -113,10 +113,18 @@
           ],
           "description": "Sound event when hit box is hit and penetrated.",
           "default": { "sound_id": "machine_max:hit_box.hit.pen.metal", "range": 64 }
+        },
+        "fmod": {
+          "allOf": [
+            {
+              "$ref": "material_fmod_sound.schema.json"
+            }
+          ],
+          "description": "FMOD bank reserved for material sounds."
         }
       },
       "additionalProperties": false,
-      "description": "Material hit sound configuration."
+      "description": "Material hit sounds and reserved FMOD bank configuration."
     },
     "particles": {
       "type": "object",

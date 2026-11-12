@@ -38,6 +38,25 @@ const SIGNAL_CHANNEL_HINTS = [
     'button_press', 'door_interact', 'switch_toggle', 'interact_custom',
 ];
 
+/**
+ * 弹药供弹服务频道补全列表
+ *
+ * 供弹发现用的频道只表达服务类别（按口径命名），不承载业务信号，因此与
+ * SIGNAL_CHANNEL_HINTS 分开维护：弹药架与自动装弹机的「供弹服务频道」
+ * 输入框引用本常量。清单取自第一方内容包在用的频道。
+ */
+const AMMO_SERVICE_CHANNEL_HINTS = [
+    'ammo_7_62mm', 'ammo_7_92mm', 'ammo_12_7mm',
+    'ammo_30mm', 'ammo_50mm', 'ammo_57mm',
+    'ammo_100mm', 'ammo_120mm', 'ammo_125mm',
+    'ammo_atgm',
+];
+
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { CONFIG_VERSION, BUILTIN_PACK_ID, SIGNAL_CHANNEL_HINTS };
+    module.exports = {
+        CONFIG_VERSION,
+        BUILTIN_PACK_ID,
+        SIGNAL_CHANNEL_HINTS,
+        AMMO_SERVICE_CHANNEL_HINTS,
+    };
 }

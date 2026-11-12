@@ -39,7 +39,7 @@ var MAP_KEY_KIND = {
     signal_targets: 'channelKey',
     signal_translations: 'channelKey',
     power_outputs: 'powerOutputKey',
-    projectile_types: 'projectileTypeKey',
+    ammo_discovery_targets: 'channelKey',
     overwrite: 'objectField',
 };
 
@@ -220,13 +220,6 @@ function validateMapKey(map, key, ctx) {
             if (!isValidNameSegment(key)) {
                 return fail('invalid_format', '^[A-Za-z0-9_.-]{1,128}$', key,
                     '名称段只允许 ASCII 字母、数字、`_`、`.`、`-`，长度 1–128，且不以点开头或结尾');
-            }
-            return ok();
-
-        case 'projectileTypeKey':
-            if (!isValidResourceLocation(key)) {
-                return fail('invalid_format', '^[a-z0-9_.-]+:[a-z0-9_./-]+$', key,
-                    '弹种 key 是资源地址（如 machine_max:30mm_ap），要求小写，可含 `:` 与 `/`');
             }
             return ok();
 
@@ -411,7 +404,7 @@ var VALUE_MAPS = {
     sub_part: ['hydrodynamics'],
     interact_box: ['signal_targets'],
     connector: ['signal_targets', 'signal_translations'],
-    subsystem: ['signal_targets', 'signal_translations', 'power_outputs', 'projectile_types'],
+    subsystem: ['signal_targets', 'signal_translations', 'power_outputs', 'ammo_discovery_targets'],
 };
 
 function childKindForMap(map) {
@@ -489,7 +482,6 @@ function validateKeys(kind, node, ctx) {
             var valueKeys = Object.keys(valueEntries);
             for (var vj = 0; vj < valueKeys.length; vj++) {
                 var vKey = valueKeys[vj];
-                if (valueMap === 'projectile_types' && vKey.indexOf('__new_p_') === 0) continue;
                 var valueResult = validateMapKey(valueMap, vKey, { namespace: namespace });
                 if (!valueResult.ok) {
                     errors.push({

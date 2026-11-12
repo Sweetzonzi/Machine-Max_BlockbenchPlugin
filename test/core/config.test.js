@@ -43,11 +43,11 @@ function legacyConfig() {
                                         definition: 'machine_max:transmission',
                                         power_outputs: [],
                                     },
-                                    'subsystem.machine_max.regen_loader': {
-                                        type: 'machine_max:regen_loader',
-                                        definition: 'machine_max:regen_loader',
-                                        projectile_types: [],
-                                        belt_label: null,
+                                    'subsystem.machine_max.loader': {
+                                        type: 'machine_max:ammo_loader',
+                                        definition: 'machine_max:ammo_loader',
+                                        ammo_discovery_inputs: null,
+                                        ammo_discovery_targets: [],
                                     },
                                 },
                             },
@@ -79,7 +79,7 @@ describe('core/config 旧占位归一化', () => {
         expect(engine.power_output).toBe('');
         expect(engine.speed_outputs).toEqual({});
         expect(sp.subsystems['subsystem.machine_max.transmission'].power_outputs).toEqual({});
-        expect(sp.subsystems['subsystem.machine_max.regen_loader'].projectile_types).toEqual({});
+        expect(sp.subsystems['subsystem.machine_max.loader'].ammo_discovery_targets).toEqual({});
     });
 
     test('migrateIfNeeded 后 PartCodec.encode 不再因旧 null 抛错', () => {

@@ -101,20 +101,23 @@ describe('services/export.canExport', () => {
         expect(defs[0].code).toBe('definition_required');
     });
 
-    test('projectile_types:{} 被 minProperties 拦截', () => {
+    test('空的交付规格被必填子块拦下', () => {
         const cfg = baseConfig();
         const sp = cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
         sp.subsystems = {
-            'subsystem.machine_max.loader': {
-                type: 'machine_max:regen_loader',
-                definition: 'machine_max:regen_loader',
-                projectile_types: {},
+            'subsystem.machine_max.rack': {
+                type: 'machine_max:regen_ammo_rack',
+                definition: 'machine_max:30mm_2a42_regen_ammo_rack',
+                belt_definition: {},
             },
         };
 
         const gate = canExport(cfg);
+        // 导出闸门按完整性模式跑：pattern / length 缺失时整体拦下，
+        // path.field 是字段路径（belt_definition 或 belt_definition.xxx）
         const hit = gate.issues.filter(function (p) {
-            return p.path && p.path.field === 'projectile_types';
+            return p.path && typeof p.path.field === 'string'
+                && p.path.field.indexOf('belt_definition') === 0;
         });
         expect(hit.length).toBeGreaterThan(0);
         expect(hit[0].code).toBe('missing_required');

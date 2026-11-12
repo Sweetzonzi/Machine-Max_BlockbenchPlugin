@@ -59,7 +59,6 @@ var VALUE_MAP_FIELDS = {
     signal_targets: 'array',
     signal_translations: 'string',
     power_outputs: 'number',
-    projectile_types: 'integer',
     hydrodynamics: 'object',
     overwrite: 'object',
 };

@@ -8,6 +8,7 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const generatedPath = path.join(REPO_ROOT, 'src', 'doc', 'field_specs.generated.js');
 const { buildManifest, render, DEFAULT_SOURCE, UPSTREAM_REVISION } = require('../../scripts/gen-field-specs.js');
 const generated = require(generatedPath);
+const ssTypes = require('../../src/core/subsystem_types.js');
 
 describe('field_specs.generated.js', () => {
     test('生成物与当前 schema 逐字节一致', () => {
@@ -16,10 +17,14 @@ describe('field_specs.generated.js', () => {
         expect(actual).toBe(expected);
     });
 
-    test('覆盖上游 19 种 subsystem 类型', () => {
-        expect(Object.keys(generated.SPECS.subsystem).length).toBe(19);
+    test('覆盖上游 21 种 subsystem 类型', () => {
+        expect(Object.keys(generated.SPECS.subsystem).length).toBe(21);
         expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:track_controller');
         expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:track_drive');
+        expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:regen_ammo_rack');
+        expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:ammo_rack');
+        expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:ammo_loader');
+        expect(Object.keys(generated.SPECS.subsystem)).not.toContain('machine_max:regen_loader');
     });
 
     test('关键字段规格符合 docs/13 §5.2', () => {
@@ -67,13 +72,18 @@ describe('field_specs.generated.js', () => {
     test('required map / 必填字段进入规格', () => {
         expect(generated.SPECS.interact_box.required).toEqual(['bone', 'signal_targets']);
         expect(generated.SPECS.interact_box.fields.signal_targets.required).toBe(true);
-        expect(generated.SPECS.subsystem['machine_max:regen_loader']
-            .fields.projectile_types.minProperties).toBe(1);
-        expect(generated.SPECS.subsystem['machine_max:regen_loader'].required)
-            .toContain('projectile_types');
+        const rack = generated.SPECS.subsystem['machine_max:regen_ammo_rack'];
+        expect(rack.required).toContain('belt_definition');
+        expect(rack.fields.belt_definition.properties.pattern.minItems).toBe(1);
+        // 交付规格里的 Optional 子块（Java AmmoBelt 的 container_id / recharge）
+        expect(rack.fields.belt_definition.properties.container_id.nullable).toBe(true);
+        expect(rack.fields.belt_definition.properties.recharge.nullable).toBe(true);
         expect(generated.SPECS.subsystem['machine_max:launcher'].required).toEqual([
             'type', 'definition', 'locator',
         ]);
+        // 发射器自己发起供弹发现：查询表是实例字段
+        expect(generated.SPECS.subsystem['machine_max:launcher']
+            .fields.ammo_discovery_targets.additionalProperties.items.type).toBe('string');
     });
 
     test('容器与内部字段不进入字段表', () => {
@@ -99,12 +109,28 @@ describe('field_specs.generated.js', () => {
             .toBe('rebuild_type_fields');
     });
 
-    test('provenance 记录 71 个 schema 与源 hash', () => {
+    test('provenance 记录 78 个 schema 与源 hash', () => {
         expect(generated.PROVENANCE.source_revision).toBe(UPSTREAM_REVISION);
-        expect(generated.PROVENANCE.source_files).toBe(71);
+        expect(generated.PROVENANCE.source_files).toBe(78);
         expect(generated.PROVENANCE.source_sha256).toMatch(/^[0-9a-f]{64}$/);
         expect(generated.PROVENANCE.source_root)
             .toBe('src/builtin/builtin/machine_max/docs/en_us/schemas');
+    });
+
+    test('注册表与 schema 的类型集合、字段必填性一致', () => {
+        const registryTypes = ssTypes.getAllTypes().map((t) => t.id).sort();
+        expect(registryTypes).toEqual(Object.keys(generated.SPECS.subsystem).sort());
+
+        for (const type of ssTypes.getAllTypes()) {
+            const spec = generated.SPECS.subsystem[type.id];
+            const specFields = Object.keys(spec.fields);
+            const required = spec.required || [];
+            for (const field of type.dynamicFields || []) {
+                // 注册表不能凭空造字段：面板写下去的值必须过得了 schema 校验
+                expect(specFields).toContain(field.field);
+                expect(required.indexOf(field.field) >= 0).toBe(!!field.required);
+            }
+        }
     });
 
     test('观瞄重构（8a027167）新增字段仍在规格中', () => {

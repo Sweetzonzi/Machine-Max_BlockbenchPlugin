@@ -19,8 +19,6 @@ var validate = require('./validate.js');
 var refs = require('./refs.js');
 var ports = require('./ports.js');
 
-var PLACEHOLDER_PREFIX = '__new_p_';
-
 function isObject(v) {
     return v !== null && typeof v === 'object' && !Array.isArray(v);
 }
@@ -114,8 +112,7 @@ function normalizeUnset(kind, definition) {
                 node[field] = '';
                 return;
             }
-            if (isRequiredMapSpec(fieldSpec)
-                && (value === null || (field === 'projectile_types' && Array.isArray(value)))) {
+            if (isRequiredMapSpec(fieldSpec) && value === null) {
                 node[field] = {};
                 return;
             }
@@ -157,12 +154,6 @@ function stripInternal(kind, definition) {
             entries[key] = stripInternal(childKind, entries[key]);
         });
     });
-
-    if (kind === 'subsystem' && isObject(node.projectile_types)) {
-        Object.keys(node.projectile_types).forEach(function (key) {
-            if (key.indexOf(PLACEHOLDER_PREFIX) === 0) delete node.projectile_types[key];
-        });
-    }
 
     return node;
 }

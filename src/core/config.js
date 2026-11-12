@@ -181,11 +181,11 @@ function createConnectorInstanceConfig() {
 
 var REQUIRED_STRING_FIELDS = ['definition', 'power_output', 'connector', 'locator'];
 var SUBSYSTEM_MAP_FIELDS = [
-    'signal_targets', 'power_outputs', 'control_outputs', 'projectile_types',
+    'signal_targets', 'power_outputs', 'control_outputs',
     'speed_outputs', 'gear_outputs', 'roll_speed_outputs', 'steering_angle_outputs',
     'passenger_num_outputs', 'camera_discovery_targets', 'throttle_outputs',
     'steering_outputs', 'brake_outputs', 'handbrake_outputs', 'rotation_outputs',
-    'discovery_outputs', 'ammo_outputs', 'force_outputs',
+    'ammo_outputs', 'ammo_discovery_targets', 'force_outputs',
 ];
 
 function hasOwn(obj, key) {

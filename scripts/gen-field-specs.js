@@ -45,7 +45,13 @@ const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 //              新增 lockable（真值默认 false）；projectile.external 的 thrust 元素新增
 //              propellant_mass，mass 的口径写明"不含推进剂"。三处里只有 lockable 是实例
 //              可编辑字段，field_specs 因此只多这一项（fitting 与 projectile 都不进 SPECS）。
-const UPSTREAM_REVISION = 'b69ae014';
+//   2829863a — 装弹机拆分：regen_loader 退役，改为 regen_ammo_rack（再生弹药架，交付规格
+//              belt_definition 取代 projectile_types / belt_label）、ammo_rack（物品弹药架）
+//              与 ammo_loader（自动装弹机）；提交边由发射器发起发现，launcher 因此多出
+//              ammo_discovery_targets，送弹频道 ammo_inputs 由型号侧的 single_round_loading
+//              取代。hit_box.overwrite.sounds 改引用 material_sound_override（多出 fmod.bank）。
+//              实例可编辑字段的增删即上面四项；sounds.fmod 只出现在型号静态属性里。
+const UPSTREAM_REVISION = '2829863a';
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;
@@ -72,8 +78,11 @@ const SIDE_EFFECTS = {
 // 上游 optional 且无默认值的动态字段：语义是「不覆盖型号定义」，Codec 用
 // .nullable() 表达三态（null = 省略）。field_specs 必须同步标 nullable，
 // 否则 validateValues 会把三态里的 null 判成类型错误（docs/13 §5.2.5）。
+// 顶层条目是 kind.field；子系统内部的子块写成 subsystem.<类型 ID>.字段.子字段。
 const OPTIONAL_NULLABLE = new Set([
     'subsystem.allow_use_items',
+    'subsystem.machine_max:regen_ammo_rack.belt_definition.container_id',
+    'subsystem.machine_max:regen_ammo_rack.belt_definition.recharge',
 ]);
 
 const RESOURCE_FIELDS = new Set([
@@ -386,7 +395,28 @@ function buildKind(store, file, kind) {
     return { fields, required: requiredFields };
 }
 
-/** 从 subsystem_dynamic_attr 的 if/then 与 enum 展开 19 种类型 */
+/**
+ * 把 OPTIONAL_NULLABLE 里的嵌套子块路径标到对应字段规格上。
+ * 路径形如 subsystem.<类型>.<字段>.<子字段>…；顶层 kind.field 由 applyFieldMeta 处理。
+ */
+function applyNestedNullable(typeId, fields) {
+    for (const entry of OPTIONAL_NULLABLE) {
+        const segs = entry.split('.');
+        if (segs.length < 4 || segs[0] !== 'subsystem' || segs[1] !== typeId) continue;
+        let spec = { properties: fields };
+        let found = true;
+        for (const seg of segs.slice(2)) {
+            if (!spec || !spec.properties || !spec.properties[seg]) {
+                found = false;
+                break;
+            }
+            spec = spec.properties[seg];
+        }
+        if (found) spec.nullable = true;
+    }
+}
+
+/** 从 subsystem_dynamic_attr 的 if/then 与 enum 展开全部子系统类型 */
 function buildSubsystems(store) {
     const dispatchFile = path.join(store.root, 'subsystem', 'subsystem_dynamic_attr.schema.json');
     const dispatch = store.load(dispatchFile);
@@ -416,6 +446,7 @@ function buildSubsystems(store) {
         }
         const requiredFields = normalizeRequired(Array.from(required), fields);
         for (const field of requiredFields) fields[field].required = true;
+        applyNestedNullable(typeId, fields);
         byType[typeId] = {
             fields,
             required: requiredFields,

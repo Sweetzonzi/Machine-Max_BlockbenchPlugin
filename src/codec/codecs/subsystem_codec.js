@@ -1,5 +1,5 @@
 // 文件: src/codec/codecs/subsystem_codec.js
-// 用途: 19 种正式子系统类型的独立 codec + SubsystemDispatchCodec（按 type 字段路由）
+// 用途: 21 种正式子系统类型的独立 codec + SubsystemDispatchCodec（按 type 字段路由）
 // 所属模块: MachineMax Blockbench 插件
 //
 // 字段定义与 src/core/subsystem_types.js 中 dynamicFields 一一对应。
@@ -178,13 +178,17 @@ const WeaponControllerCodec = Codec.record({
 
 /**
  * LauncherCodec — 发射器
- * 字段: definition, locator, fire_animation, ammo_outputs
+ * 字段: definition, locator, fire_animation, ammo_outputs, ammo_discovery_targets
+ *
+ * ammo_discovery_targets 是发射器自己的上游查询表（频道 → 目标名）：
+ * 结构变化时按它只读发现同一装配体内的自动装弹机。
  */
 const LauncherCodec = Codec.record({
-    definition:      Codec.STRING.field(),
-    locator:         Codec.STRING.field(),
-    fire_animation:  Codec.STRING.default('fire'),
-    ammo_outputs:    Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    definition:             Codec.STRING.field(),
+    locator:                Codec.STRING.field(),
+    fire_animation:         Codec.STRING.default('fire'),
+    ammo_outputs:           Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    ammo_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
 });
 
 /**
@@ -197,14 +201,54 @@ const SightCodec = Codec.record({
 });
 
 /**
- * RegenLoaderCodec — 再生装弹机
- * 字段: definition, projectile_types, belt_label, discovery_outputs
+ * RegenAmmoRackCodec — 再生弹药架
+ * 字段: definition, belt_definition, ammo_discovery_inputs
+ *
+ * belt_definition 是逐实例的交付规格。Java 侧 AmmoBelt 的 container_id 与 recharge
+ * 都是 optionalFieldOf 无默认值（Optional → null），因此这两个用 .nullable()：
+ * null 表示省略，encode 时跳过。
  */
-const RegenLoaderCodec = Codec.record({
-    definition:        Codec.STRING.field(),
-    projectile_types:  Codec.map(Codec.STRING, Codec.INT, { emitEmpty: true }).default({}),
-    belt_label:        Codec.STRING.default(''),
-    discovery_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+const BeltPatternEntryCodec = Codec.record({
+    ammo:   Codec.STRING.field(),
+    count:  Codec.INT.field(),
+});
+
+const BeltRechargeCodec = Codec.record({
+    regen_per_minute:       Codec.FLOAT.field(),
+    regen_delay:            Codec.FLOAT.default(0),
+    energy_cost_per_round:  Codec.FLOAT.default(0),
+});
+
+const BeltDefinitionCodec = Codec.record({
+    container_id:  Codec.STRING.nullable(),
+    label:         Codec.STRING.default(''),
+    pattern:       BeltPatternEntryCodec.list().field(),
+    length:        Codec.INT.field(),
+    recharge:      BeltRechargeCodec.nullable(),
+});
+
+const RegenAmmoRackCodec = Codec.record({
+    definition:             Codec.STRING.field(),
+    belt_definition:        BeltDefinitionCodec.field(),
+    ammo_discovery_inputs:  Codec.STRING.list().default([]),
+});
+
+/**
+ * AmmoRackCodec — 物品弹药架
+ * 字段: definition（物品往返尚未实现，实例上没有别的字段）
+ */
+const AmmoRackCodec = Codec.record({
+    definition: Codec.STRING.field(),
+});
+
+/**
+ * AmmoLoaderCodec — 自动装弹机
+ * 字段: definition, ammo_discovery_inputs, ammo_discovery_targets
+ */
+const AmmoLoaderCodec = Codec.record({
+    definition:             Codec.STRING.field(),
+    ammo_discovery_inputs:  Codec.STRING.list().default([]),
+    ammo_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
 });
 
 /**
@@ -253,7 +297,9 @@ const SubsystemDispatchCodec = Codec.dispatch('type', {
     'machine_max:weapon_controller':    WeaponControllerCodec,
     'machine_max:launcher':             LauncherCodec,
     'machine_max:sight':                SightCodec,
-    'machine_max:regen_loader':         RegenLoaderCodec,
+    'machine_max:regen_ammo_rack':      RegenAmmoRackCodec,
+    'machine_max:ammo_rack':            AmmoRackCodec,
+    'machine_max:ammo_loader':          AmmoLoaderCodec,
     'machine_max:track_controller':     TrackControllerCodec,
     'machine_max:track_drive':          TrackDriveCodec,
 });
@@ -279,7 +325,9 @@ if (typeof module !== 'undefined' && module.exports) {
         WeaponControllerCodec,
         LauncherCodec,
         SightCodec,
-        RegenLoaderCodec,
+        RegenAmmoRackCodec,
+        AmmoRackCodec,
+        AmmoLoaderCodec,
         TrackControllerCodec,
         TrackDriveCodec,
     };

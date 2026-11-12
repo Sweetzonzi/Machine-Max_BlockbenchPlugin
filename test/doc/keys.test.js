@@ -39,9 +39,14 @@ describe('doc/keys', () => {
             namespace: 'machine_max',
         }).code).toBe('invalid_format');
 
-        expect(keys.validateMapKey('projectile_types', 'machine_max:30mm_ap', {}).ok).toBe(true);
-        expect(keys.validateMapKey('projectile_types', 'Machine_Max:30mm_ap', {}).code)
+        // 供弹服务频道是名称段（与信号频道同规则）
+        expect(keys.validateMapKey('ammo_discovery_targets', 'ammo_30mm', {}).ok).toBe(true);
+        expect(keys.validateMapKey('ammo_discovery_targets', 'Ammo 30mm', {}).code)
             .toBe('invalid_format');
+
+        // 资源地址仍作为字段值校验（图标 / 型号定义等）
+        expect(keys.isValidResourceLocation('machine_max:30mm_3ubr6_ap')).toBe(true);
+        expect(keys.isValidResourceLocation('Machine_Max:30mm_ap')).toBe(false);
     });
 
     test('map key 的保留字符与空段', () => {
@@ -119,9 +124,9 @@ describe('doc/keys', () => {
             interact_boxes: { 'interact.machine_max.door': {} },
             connectors: { 'connector.machine_max.bad key': {} },
             subsystems: {
-                'subsystem.machine_max.regen_loader': {
-                    type: 'machine_max:regen_loader',
-                    projectile_types: { 'Machine_Max:30mm_ap': 1, __new_p_1: 0 },
+                'subsystem.machine_max.loader': {
+                    type: 'machine_max:ammo_loader',
+                    ammo_discovery_targets: { 'ammo 30mm': ['subsystem.machine_max.rack'] },
                 },
             },
             hydrodynamics: { '': { scale: 1 } },
@@ -137,9 +142,8 @@ describe('doc/keys', () => {
         expect(result.errors.some((e) => e.path.join('.')
             === 'parts.hull.connectors.connector.machine_max.bad key')).toBe(true);
         expect(result.errors.some((e) => e.path.join('.')
-            === 'parts.hull.subsystems.subsystem.machine_max.regen_loader.projectile_types.Machine_Max:30mm_ap'))
+            === 'parts.hull.subsystems.subsystem.machine_max.loader.ammo_discovery_targets.ammo 30mm'))
             .toBe(true);
-        expect(result.errors.some((e) => e.path[e.path.length - 1] === '__new_p_1')).toBe(false);
     });
 });
 

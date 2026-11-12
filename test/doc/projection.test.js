@@ -129,12 +129,11 @@ describe('doc/projection.in', () => {
         expect(result.node.power_output).toBe('');
     });
 
-    test('required map 的 null / [] 归一化与默认值', () => {
+    test('required map 的 null 归一化；可选 map 缺失补空表', () => {
         const definition = {
-            type: 'machine_max:regen_loader',
-            definition: 'machine_max:regen_loader',
-            projectile_types: [],
-            discovery_outputs: {},
+            type: 'machine_max:transmission',
+            definition: 'machine_max:simple_transmission',
+            power_outputs: null,
         };
         const result = projection.projectIn(definition, {
             kind: 'subsystem',
@@ -145,7 +144,24 @@ describe('doc/projection.in', () => {
             mode: 'create',
         });
         expect(result.ok).toBe(true);
-        expect(result.node.projectile_types).toEqual({});
+        expect(result.node.power_outputs).toEqual({});
+
+        // 可选 map（装弹机的上游查询表）缺失时由 Codec 默认补 {}，
+        // decode 出来的对象因此总是带键，避免下游按 undefined 分支
+        const loader = projection.projectIn({
+            type: 'machine_max:ammo_loader',
+            definition: 'machine_max:30mm_2a90_ammo_loader',
+        }, {
+            kind: 'subsystem',
+            namespace: 'machine_max',
+            partId: 'hull',
+            variantName: 'default',
+            subPartKey: 'sub_part.machine_max.main',
+            mode: 'create',
+        });
+        expect(loader.ok).toBe(true);
+        expect(loader.node.ammo_discovery_targets).toEqual({});
+        expect(loader.node.ammo_discovery_inputs).toEqual([]);
     });
 
     test('hit_boxes 骨骼名 → UUID；未解析保留并进 unresolved', () => {
@@ -371,12 +387,19 @@ describe('doc/projection.out / round-trip', () => {
                 definition: '',
                 power_outputs: {},
             },
-            'subsystem.machine_max.regen_loader': {
-                type: 'machine_max:regen_loader',
+            'subsystem.machine_max.rack': {
+                type: 'machine_max:regen_ammo_rack',
                 definition: '',
-                projectile_types: {},
-                belt_label: '',
-                discovery_outputs: {},
+                // 导入按 minItems 校验配弹：空 pattern 会被判非法，这里给一条；
+                // 其余键按 decode 后的形状写全（Optional 子块是 null）
+                belt_definition: {
+                    container_id: null,
+                    label: '',
+                    pattern: [{ ammo: 'machine_max:30mm_3ubr6_ap', count: 1 }],
+                    length: 150,
+                    recharge: null,
+                },
+                ammo_discovery_inputs: [],
             },
             'subsystem.machine_max.launcher': {
                 type: 'machine_max:launcher',
@@ -384,6 +407,7 @@ describe('doc/projection.out / round-trip', () => {
                 locator: '',
                 fire_animation: 'fire',
                 ammo_outputs: {},
+                ammo_discovery_targets: {},
             },
         };
 
@@ -423,12 +447,10 @@ describe('doc/projection.out / round-trip', () => {
                 definition: '',
                 control_outputs: {},
             },
-            'subsystem.machine_max.regen_loader': {
-                type: 'machine_max:regen_loader',
+            'subsystem.machine_max.rack': {
+                type: 'machine_max:regen_ammo_rack',
                 definition: '',
-                projectile_types: {},
-                belt_label: '',
-                discovery_outputs: {},
+                belt_definition: { pattern: [], length: 1 },
             },
         };
 
@@ -441,7 +463,8 @@ describe('doc/projection.out / round-trip', () => {
         expect(subsystems['subsystem.machine_max.basic'].definition).toBe('');
         expect(subsystems['subsystem.machine_max.transmission'].power_outputs).toEqual({});
         expect(subsystems['subsystem.machine_max.car_controller'].control_outputs).toEqual({});
-        expect(subsystems['subsystem.machine_max.regen_loader'].projectile_types).toEqual({});
+        expect(subsystems['subsystem.machine_max.rack'].belt_definition)
+            .toEqual({ pattern: [], length: 1 });
     });
 
     test('out 不修改内部树', () => {

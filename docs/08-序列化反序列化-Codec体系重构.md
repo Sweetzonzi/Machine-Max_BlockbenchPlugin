@@ -78,7 +78,7 @@ public static final Codec<AbstractSubsystemAttr> CODEC = MMDataRegistries
     .dispatch(AbstractSubsystemAttr::codec, Function.identity());
 ```
 
-18 种子系统类型按 `type` 字段分派到不同子 Codec。每个子类型只定义自己的特有字段。
+21 种子系统类型按 `type` 字段分派到不同子 Codec。每个子类型只定义自己的特有字段。
 
 → JS 对应：`Codec.dispatch('type', { 'machine_max:engine': EngineCodec, ... })`
 
@@ -110,7 +110,7 @@ src/codec/
 │   ├── variant_codec.js      # VariantAttr 级别（model/textures/animations/tags + sub_parts）
 │   ├── sub_part_codec.js     # SubPartAttr 级别（物理、碰撞、连接点、子系统、流体动力）
 │   ├── connector_codec.js    # ConnectorAttr 级别（locator/definition/signal/power/overwrite）
-│   ├── subsystem_codec.js    # AbstractSubsystemAttr 级别（dispatch × 18 种 + BaseSubsystemCodec）
+│   ├── subsystem_codec.js    # AbstractSubsystemAttr 级别（dispatch × 21 种 + BaseSubsystemCodec）
 │   ├── hit_box_codec.js      # HitBoxAttr 级别（shape/material/thickness/condition/overwrite）
 │   ├── interact_box_codec.js # InteractBoxAttr 级别（bone/mode/condition/signal_targets）
 │   └── hydrodynamic_codec.js # HydrodynamicAttr 级别
@@ -273,10 +273,10 @@ const SubsystemDispatchCodec = Codec.dispatch('type', {
 });
 ```
 
-**公共基础字段**：经过验证，Java 端所有 18 种子系统 Attr 的 CODEC 都以 `ResourceLocation.CODEC.fieldOf("definition")` 开头。因此提取一个公共 `BaseSubsystemCodec` 来避免重复：
+**公共基础字段**：经过验证，Java 端所有子系统 Attr 的 CODEC 都以 `ResourceLocation.CODEC.fieldOf("definition")` 开头。因此提取一个公共 `BaseSubsystemCodec` 来避免重复：
 
 ```javascript
-// 所有 18 种子系统共有的 definition 字段
+// 所有子系统共有的 definition 字段
 const BaseSubsystemCodec = Codec.record({
     definition: Codec.STRING.field(),
 });
@@ -410,7 +410,7 @@ Blockbench 有全局 `dragAndDrop` 事件系统。拖入文件后可通过 `Bloc
 | `src/codec/codecs/variant_codec.js` | Variant 字段 + SubPartMap(Either) |
 | `src/codec/codecs/sub_part_codec.js` | SubPart 全字段（物理/碰撞/连接点/子系统/流体），不包含 `auto_end_bones`（瞬态字段） |
 | `src/codec/codecs/connector_codec.js` | ConnectorAttr + Overwrite |
-| `src/codec/codecs/subsystem_codec.js` | BaseSubsystemCodec + Dispatch × 18 种子系统 Codec |
+| `src/codec/codecs/subsystem_codec.js` | BaseSubsystemCodec + Dispatch × 21 种子系统 Codec |
 | `src/codec/codecs/hit_box_codec.js` | HitBoxAttr + Overwrite |
 | `src/codec/codecs/interact_box_codec.js` | InteractBoxAttr，schema 不含 `_uuid`（瞬态字段，encode 自动剥离） |
 | `src/codec/codecs/hydrodynamic_codec.js` | HydrodynamicAttr |
@@ -485,7 +485,7 @@ config.js                    config_defaults.js
 | 1.3 | 实现 `dispatch()` 组合子 | 核心 |
 | 1.4 | 实现 `HitBoxCodec` + `InteractBoxCodec` + `HydroCodec`（叶子 codec） | 基础 |
 | 1.5 | 实现 `ConnectorCodec` | 基础 |
-| 1.6 | 实现 18 种子系统 Codec + `SubsystemDispatchCodec` | 中 |
+| 1.6 | 实现子系统 Codec + `SubsystemDispatchCodec` | 中 |
 | 1.7 | 实现 `SubPartCodec` | 中 |
 | 1.8 | 实现 `VariantCodec`（含 Either 简写） | 中 |
 | 1.9 | 实现 `PartCodec`（含 Either 简写） | 中 |
@@ -495,7 +495,7 @@ config.js                    config_defaults.js
 - 每个 codec 的 `decode(encode(x))` 等价于 `x`（内部字段如 `_uuid` 除外）
 - 每个 codec 的 `encode({})` 返回包含所有非默认字段的输出
 - 每个 codec 的 `decode({})` 返回全部默认值填充的对象
-- 子系统 dispatch codec 能正确路由 18 种类型
+- 子系统 dispatch codec 能正确路由全部类型
 - Either codec 能正确处理单 key 简写和多 key 完整格式
 
 ### 阶段 2：替换导出管线

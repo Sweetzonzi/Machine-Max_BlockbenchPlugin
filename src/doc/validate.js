@@ -165,9 +165,24 @@ function validateValue(spec, value, path, opts) {
         }
 
         var known = spec.properties || null;
+        // 嵌套必填与顶层同口径：只有 completeness 模式（导出闸门）才要求，
+        // 编辑期的空占位不算错。
+        if (opts.completeness && known) {
+            var knownKeys = Object.keys(known);
+            for (var ri = 0; ri < knownKeys.length; ri++) {
+                var reqKey = knownKeys[ri];
+                if (!known[reqKey].required) continue;
+                var reqPresent = Object.prototype.hasOwnProperty.call(value, reqKey);
+                if (!reqPresent || isMissingValue(known[reqKey], value[reqKey])) {
+                    errors.push(makeError(path.concat([reqKey]), 'missing_required',
+                        known[reqKey].type || 'any', value[reqKey],
+                        '必填字段' + (reqPresent ? '不能为空' : '缺失')));
+                }
+            }
+        }
+
         for (var oi = 0; oi < objectKeys.length; oi++) {
             var key = objectKeys[oi];
-            if (opts.field === 'projectile_types' && key.indexOf('__new_p_') === 0) continue;
             if (known && Object.prototype.hasOwnProperty.call(known, key)) {
                 errors = errors.concat(validateValue(known[key], value[key],
                     path.concat([key]), { field: key, completeness: opts.completeness }));

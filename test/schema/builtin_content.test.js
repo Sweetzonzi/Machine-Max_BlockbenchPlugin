@@ -148,4 +148,40 @@ describe('builtin 内容包同步', () => {
         expect(fs.existsSync(path.join(ROOT, 'documents', 'modern_optics', 'reticle.html')))
             .toBe(true);
     });
+
+    test('FMOD 音效接线：base 三份 sound schema 与 fmod 文档已同步', () => {
+        for (const locale of ['en_us', 'zh_cn']) {
+            for (const name of ['fmod_sound', 'material_fmod_sound', 'material_sound_override']) {
+                expect(fs.existsSync(path.join(
+                    ROOT, 'docs', locale, 'schemas', 'base', name + '.schema.json')))
+                    .toBe(true);
+            }
+            // 型号静态属性的 sounds 段现在可以带 fmod 子块
+            const engine = JSON.parse(fs.readFileSync(path.join(
+                ROOT, 'docs', locale, 'schemas', 'subsystem', 'static', 'engine_static_attr.schema.json'),
+            'utf8'));
+            expect(engine.properties.sounds.properties.fmod).toBeTruthy();
+        }
+        expect(fs.existsSync(path.join(ROOT, 'docs', 'zh_cn', 'fmod.md'))).toBe(true);
+        expect(fs.existsSync(path.join(ROOT, 'fmod'))).toBe(true);
+        // 材质命中音可以覆盖 FMOD bank
+        const hitBox = JSON.parse(fs.readFileSync(path.join(
+            ROOT, 'docs', 'zh_cn', 'schemas', 'part', 'subpart', 'hit_box', 'hit_box_attr.schema.json'),
+        'utf8'));
+        expect(JSON.stringify(hitBox.properties.overwrite.properties.sounds))
+            .toContain('material_sound_override');
+    });
+
+    test('座位图与第三人称 HUD 布局已同步', () => {
+        expect(fs.existsSync(path.join(ROOT, 'documents', 'vehicle_seat_map', 'index.html'))).toBe(true);
+        expect(fs.existsSync(path.join(ROOT, 'huds', 'vehicle_seat_map.json'))).toBe(true);
+        for (const layout of ['vehicle_seat_map', 'seat_dashboard_third', 'morden_ground_basic_third']) {
+            expect(fs.existsSync(path.join(ROOT, 'hud_layouts', layout + '.json'))).toBe(true);
+        }
+        // 第三人称驾驶座定义在 seat/ 目录下：第三人称视图改走座位图布局
+        const thirdDriver = readJsonc(
+            path.join(SUB, 'seat', 'default_3rd_driver_seat.json'));
+        expect(thirdDriver.type).toBe('machine_max:seat');
+        expect(thirdDriver.views.third_hud_layout).toBe('machine_max:vehicle_seat_map');
+    });
 });

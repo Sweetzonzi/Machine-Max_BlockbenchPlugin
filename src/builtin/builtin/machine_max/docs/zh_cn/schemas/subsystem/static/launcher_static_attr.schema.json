@@ -41,11 +41,10 @@
       "default": ["weapon_control"],
       "description": "开火信号输入频道列表，优先级从高到低。"
     },
-    "ammo_inputs": {
-      "type": "array",
-      "items": { "type": "string" },
-      "default": [],
-      "description": "弹药供给发现频道列表。空列表表示万能接收模式（接受任意频道信号）。"
+    "single_round_loading": {
+      "type": "boolean",
+      "default": false,
+      "description": "一次拉取装多少发：true 只把一发推进膛室，不建立已装数据；false 把整份 Belt 装进已装数据。按武器实际怎么装填填写，与口径、射速和供给者类型无关：一次只把一发推进膛室的武器（主炮、导弹发射管、逐发取弹的机关炮）填 true，由弹链或弹匣整份供弹的机枪、机关炮填 false。"
     },
     "sounds": {
       "type": "object",
@@ -89,19 +88,26 @@
             "sound_id": "machine_max:subsystem.launcher.dry_fire",
             "range": 16
           }
-        }
-      },
-      "additionalProperties": false,
-      "description": "发射器音效属性，包含基础音效和空膛击发音效。"
-    },
-    "barrel": {
-      "type": "object",
-      "properties": {
-        "durability_weight": {
-          "type": "number",
-          "minimum": 0,
-          "default": 1.0,
-          "description": "模块耐久权重。子系统总耐久按各模块权重比例分配。"
+        },
+        "fmod": {
+          "type": "object",
+          "description": "开火事件。机枪单发、连射和尾音由 firing 参数控制，播放接线待实现。",
+          "properties": {
+            "bank": {
+              "description": "FMOD bank ID",
+              "type": "string"
+            },
+            "fire": {
+              "type": "string",
+              "pattern": "^event:/.+",
+              "description": "fire"
+            }
+          },
+          "required": [
+            "bank",
+            "fire"
+          ],
+          "additionalProperties": false
         },
         "decay_power": {
           "type": "number",
@@ -263,7 +269,6 @@
       "type": "machine_max:launcher",
       "basic_durability": 80,
       "control_inputs": ["weapon.autocannon"],
-      "ammo_inputs": ["ammo_main"],
       "description": "标准示例——基础发射器配置（类型级火控频道）"
     }
   ]
