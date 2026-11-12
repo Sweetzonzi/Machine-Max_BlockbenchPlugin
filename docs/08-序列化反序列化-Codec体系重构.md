@@ -289,6 +289,8 @@ const BaseSubsystemCodec = Codec.record({
 - **encode** 时：dispatch codec 从数据中取出 `type` 值做路由匹配，**将 `type` 字段从传给子 codec 的数据中剥离**后调用子 codec.encode()。输出时，先写 `{ type: 'machine_max:engine' }`，再浅合并子 codec 的输出。这样 EngineCodec 的 record schema 不需要定义 `type` 字段。
 - **decode** 时：dispatch codec 从原始数据中读取 `type`，路由到对应子 codec 进行 decode。`type` 字段保留在传给子 codec 的数据中（子 codec 的宽松模式会忽略多余的 `type`）。decode 输出的对象中包含 `type` 字段。
 
+**未知判别值的两种处置**：默认实例对未知 `type` 抛 `Unknown dispatch type`，用于导入 part JSON 与导出编码；工程加载用同一张表构造的加载实例（`Codec.dispatch(key, map, { onUnknown: 'keep' })`），把整条条目原样保留——工程文件里可能留着上游已退役的类型，让它在 decode 抛错等于整个工程打不开。`encode` 不受该选项影响，写出未知类型永远抛错。两个实例与提示链路的说明见 `src/codec/codecs/subsystem_codec.js` 与 docs/13 §15.3。
+
 **每种子系统 Codec 只定义自己的特有字段**（不包含 `definition` 和 `type`，它们由 BaseSubsystemCodec 和 dispatch 处理）：
 
 ```javascript

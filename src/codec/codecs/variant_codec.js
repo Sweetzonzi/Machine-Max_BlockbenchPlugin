@@ -11,20 +11,34 @@
 'use strict';
 
 const { Codec } = require('../Codec.js');
-const { SubPartCodec } = require('./sub_part_codec.js');
+const { SubPartCodec, SubPartLoadCodec } = require('./sub_part_codec.js');
 
-const VariantCodec = Codec.record({
-    model:      Codec.STRING.field(),
-    // textures: either(单值字符串, 完整 map{名称→路径})
-    // — 单值时编码为裸字符串，解码时包装为 {default: 值}
-    // — 多值时编码为完整 map，解码时保持 map
-    // — 默认值 '' 表示未设置，encode 时跳过字段 → Java 端 fallback 到 missingno
-    textures:   Codec.either(Codec.STRING, Codec.map(Codec.STRING, Codec.STRING)).default(''),
-    // animations: 单个资源路径字符串（对应 Java ResourceLocation）
-    // — 默认值 '' 表示未设置，encode 时跳过字段 → Java 端 fallback 到 machine_max:empty
-    animations: Codec.STRING.default(''),
-    tags:       Codec.STRING.list().default([]),
-    sub_parts:  Codec.either(SubPartCodec, Codec.map(Codec.STRING, SubPartCodec)).default({}),
-});
+/**
+ * 构造变体 codec，`sub_parts` 用传入的子零件 codec。
+ *
+ * @param {object} subPartCodec
+ * @returns {object} 变体 codec
+ */
+function buildVariantCodec(subPartCodec) {
+    return Codec.record({
+        model:      Codec.STRING.field(),
+        // textures: either(单值字符串, 完整 map{名称→路径})
+        // — 单值时编码为裸字符串，解码时包装为 {default: 值}
+        // — 多值时编码为完整 map，解码时保持 map
+        // — 默认值 '' 表示未设置，encode 时跳过字段 → Java 端 fallback 到 missingno
+        textures:   Codec.either(Codec.STRING, Codec.map(Codec.STRING, Codec.STRING)).default(''),
+        // animations: 单个资源路径字符串（对应 Java ResourceLocation）
+        // — 默认值 '' 表示未设置，encode 时跳过字段 → Java 端 fallback 到 machine_max:empty
+        animations: Codec.STRING.default(''),
+        tags:       Codec.STRING.list().default([]),
+        sub_parts:  Codec.either(subPartCodec, Codec.map(Codec.STRING, subPartCodec)).default({}),
+    });
+}
 
-module.exports = { VariantCodec };
+/** 严格实例：导入 part JSON、导出编码 */
+const VariantCodec = buildVariantCodec(SubPartCodec);
+
+/** 加载实例：读盘时保留已退役 / 未知的子系统类型 */
+const VariantLoadCodec = buildVariantCodec(SubPartLoadCodec);
+
+module.exports = { VariantCodec, VariantLoadCodec };

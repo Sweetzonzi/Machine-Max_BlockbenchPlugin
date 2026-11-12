@@ -15,10 +15,39 @@
 'use strict';
 
 const { Codec } = require('../Codec.js');
-const { VariantCodec } = require('./variant_codec.js');
+const { VariantCodec, VariantLoadCodec } = require('./variant_codec.js');
 
 /**
- * PartCodec — 零件配置的序列化/反序列化 Codec
+ * 构造零件 codec，`variants` 用传入的变体 codec。
+ *
+ * @param {object} variantCodec
+ * @returns {object} 零件 codec
+ */
+function buildPartCodec(variantCodec) {
+    return Codec.record({
+        // ── 基础 ──
+        icon:                         Codec.STRING.default(''),
+
+        // ── 物理 ──
+        vehicle_durability_rate:      Codec.FLOAT.default(0.8),
+        vehicle_damage_rate:          Codec.FLOAT.default(1.0),
+        vehicle_damage_rate_destroyed: Codec.FLOAT.default(0.1),
+        functional_threshold:         Codec.FLOAT.default(0.3),
+
+        // ── 行为 ──
+        share_durability:             Codec.BOOL.default(true),
+        max_stack_size:               Codec.INT.default(1),
+
+        // ── 变体 ──
+        variants:                     Codec.either(variantCodec, Codec.map(Codec.STRING, variantCodec)).default({}),
+
+        // ── 编辑器内部状态（encode 时空对象跳过，不影响导出）──
+        element_markers:              Codec.record({}).default({}),
+    });
+}
+
+/**
+ * PartCodec — 零件配置的序列化/反序列化 Codec（严格）
  *
  * 9 个字段，与 Java PartType.CODEC 一一对齐，不含 id / namespace 等运行时字段。
  * 零件 ID 由文件名决定，不写入 JSON 体。
@@ -33,26 +62,16 @@ const { VariantCodec } = require('./variant_codec.js');
  *   - 空对象输入 → 返回全默认值 PartConfig
  *   - 未知字段保留（宽松模式）
  *   - 单 variant 简写 → 自动包装为 { default: variant }
+ *   - 未知的子系统类型 → 报错（导入 / 导出用这个实例）
  */
-const PartCodec = Codec.record({
-    // ── 基础 ──
-    icon:                         Codec.STRING.default(''),
+const PartCodec = buildPartCodec(VariantCodec);
 
-    // ── 物理 ──
-    vehicle_durability_rate:      Codec.FLOAT.default(0.8),
-    vehicle_damage_rate:          Codec.FLOAT.default(1.0),
-    vehicle_damage_rate_destroyed: Codec.FLOAT.default(0.1),
-    functional_threshold:         Codec.FLOAT.default(0.3),
+/**
+ * PartLoadCodec — 工程加载专用
+ *
+ * 与 PartCodec 的唯一差别在子系统容器：已退役或未知的类型原样保留，
+ * 使留着历史条目的工程仍能打开。读盘（core/config.js）用它，写入链路用 PartCodec。
+ */
+const PartLoadCodec = buildPartCodec(VariantLoadCodec);
 
-    // ── 行为 ──
-    share_durability:             Codec.BOOL.default(true),
-    max_stack_size:               Codec.INT.default(1),
-
-    // ── 变体 ──
-    variants:                     Codec.either(VariantCodec, Codec.map(Codec.STRING, VariantCodec)).default({}),
-
-    // ── 编辑器内部状态（encode 时空对象跳过，不影响导出）──
-    element_markers:              Codec.record({}).default({}),
-});
-
-module.exports = { PartCodec };
+module.exports = { PartCodec, PartLoadCodec };

@@ -87,3 +87,57 @@ describe('core/validation_types 字段匹配', () => {
         }
     });
 });
+
+describe('collectIssues：已退役 / 未知的子系统类型', () => {
+    const SP_KEY = 'sub_part.machine_max.main';
+
+    function configWith(subsystem) {
+        const cfg = helpers.createConfig();
+        cfg.parts.hull.variants.default.sub_parts[SP_KEY]
+            .subsystems['subsystem.machine_max.loader'] = subsystem;
+        return cfg;
+    }
+
+    function findTypeIssue(issues) {
+        return issues.find(function (p) { return p.code === 'subsystem_type_unknown'; });
+    }
+
+    test('已退役类型：报错并指出拆分后的两个替代类型', () => {
+        const issues = collectIssues(configWith({
+            type: 'machine_max:regen_loader',
+            definition: 'machine_max:regen_loader/standard',
+            projectile_types: {},
+            discovery_outputs: {},
+        }));
+        const p = findTypeIssue(issues);
+        expect(p).toBeTruthy();
+        expect(p.severity).toBe('error');
+        expect(p.message).toContain('machine_max:regen_loader');
+        expect(p.message).toContain('已退役');
+        expect(p.message).toContain('machine_max:regen_ammo_rack');
+        expect(p.message).toContain('machine_max:ammo_loader');
+        expect(p.path.scope).toBe('subsystem');
+        expect(p.path.itemKey).toBe('subsystem.machine_max.loader');
+        expect(p.path.subPartKey).toBe(SP_KEY);
+    });
+
+    test('拼写错误 / 更新版本的类型：按未知类型报，不冒充退役说明', () => {
+        const p = findTypeIssue(collectIssues(configWith({
+            type: 'machine_max:regen_loader_typo',
+            definition: '',
+        })));
+        expect(p).toBeTruthy();
+        expect(p.message).toContain('不是本插件支持的子系统类型');
+        expect(p.message).not.toContain('已退役');
+    });
+
+    test('已登记类型不触发该问题', () => {
+        const issues = collectIssues(configWith({
+            type: 'machine_max:ammo_loader',
+            definition: '',
+            ammo_discovery_inputs: [],
+            ammo_discovery_targets: {},
+        }));
+        expect(findTypeIssue(issues)).toBeUndefined();
+    });
+});

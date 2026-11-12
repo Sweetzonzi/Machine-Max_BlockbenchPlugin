@@ -179,13 +179,18 @@ Vue.component('mm-sub-part-panel', {
         },
         /**
          * 解析子系统类型的中文显示名
+         *
+         * 类型不在注册表里时：已退役的类型用退役表的中文名（工程里还可能留着），
+         * 其余（拼写错误 / 来自更新版本）直接显示 id，让作者看见原始值。
          */
         resolveSubsystemTypeName: function (ssKey) {
             var ss = this.config.subsystems && this.config.subsystems[ssKey];
             if (!ss || !ss.type) return '未指定类型';
             var ssTypes = require('../core/subsystem_types.js');
             var meta = ssTypes.getTypeMeta(ss.type);
-            return meta ? meta.displayName : ss.type;
+            if (meta) return meta.displayName;
+            var retired = ssTypes.getRetiredTypeInfo(ss.type);
+            return retired ? retired.displayName : ss.type;
         },
         resolveSubsystemShortName: function (ssKey) {
             return nameUtils.extractShortName(ssKey);

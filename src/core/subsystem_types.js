@@ -276,6 +276,38 @@ var TYPE_MAP = {};
 })();
 
 // =============================================================================
+// 已退役类型
+// =============================================================================
+
+/**
+ * 曾经发布、但已从 SUBSYSTEM_TYPES 移除的类型。
+ *
+ * 工程文件里可能还留着这些 id（加载时会原样保留，见
+ * codec/codecs/subsystem_codec.js 的 SubsystemLoadCodec），校验据此给出
+ * 「已退役 + 替代类型」的提示，面板据此显示中文名而不是一串 id。
+ *
+ * 只登记确实发布过的类型。拼写错误、来自更新版本的类型不在此列——那种情况
+ * 归入「未知类型」。
+ */
+var RETIRED_TYPES = {
+    'machine_max:regen_loader': {
+        displayName: '再生装弹机（已退役）',
+        detail: '上游把它拆成了弹药架 machine_max:regen_ammo_rack 与自动装弹机 machine_max:ammo_loader，' +
+            '旧的配弹表与发现配置没有等价字段，无法自动换算',
+        replacements: ['machine_max:regen_ammo_rack', 'machine_max:ammo_loader'],
+    },
+};
+
+/**
+ * 获取已退役类型的说明
+ * @param {string} typeId - 类型 ID
+ * @returns {{displayName: string, detail: string, replacements: string[]}|null} 未退役返回 null
+ */
+function getRetiredTypeInfo(typeId) {
+    return RETIRED_TYPES[typeId] || null;
+}
+
+// =============================================================================
 // 公共工具函数
 // =============================================================================
 
@@ -512,6 +544,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         SUBSYSTEM_TYPES: SUBSYSTEM_TYPES,
         getTypeMeta: getTypeMeta,
+        getRetiredTypeInfo: getRetiredTypeInfo,
         getAllTypes: getAllTypes,
         getTypesByCategory: getTypesByCategory,
         getTypesGroupedByCategory: getTypesGroupedByCategory,

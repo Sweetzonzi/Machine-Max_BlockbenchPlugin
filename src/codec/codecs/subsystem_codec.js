@@ -274,13 +274,8 @@ const TrackDriveCodec = Codec.record({
 
 // ==================== Dispatch Codec ====================
 
-/**
- * SubsystemDispatchCodec — 按 type 字段路由到各子系统 codec
- *
- * encode: 读取 obj.type → 路由到子 codec → 输出 { type, ...fields }
- * decode: 读取 raw.type → 路由到子 codec → 输出完整对象（含 type）
- */
-const SubsystemDispatchCodec = Codec.dispatch('type', {
+/** 类型判别值 → 子 codec。严格与加载两个实例共用这一张表。 */
+const SUBSYSTEM_CODECS = {
     'machine_max:engine':               EngineCodec,
     'machine_max:motor':                MotorCodec,
     'machine_max:gearbox':              GearboxCodec,
@@ -302,13 +297,37 @@ const SubsystemDispatchCodec = Codec.dispatch('type', {
     'machine_max:ammo_loader':          AmmoLoaderCodec,
     'machine_max:track_controller':     TrackControllerCodec,
     'machine_max:track_drive':          TrackDriveCodec,
-});
+};
+
+/**
+ * SubsystemDispatchCodec — 按 type 字段路由到各子系统 codec（严格）
+ *
+ * encode: 读取 obj.type → 路由到子 codec → 输出 { type, ...fields }
+ * decode: 读取 raw.type → 路由到子 codec → 输出完整对象（含 type）
+ *
+ * 未知 type 一律报错。导入 part JSON（doc/shapes.js）与导出编码走这个实例：
+ * 写出一个模组不认识的类型没有意义，宁可在写入前拒绝。
+ */
+const SubsystemDispatchCodec = Codec.dispatch('type', SUBSYSTEM_CODECS);
+
+/**
+ * SubsystemLoadCodec — 工程加载专用（onUnknown: 'keep'）
+ *
+ * 工程文件里可能留着上游已退役的类型（例如 machine_max:regen_loader 在
+ * 0.6.0 被拆成弹药架与自动装弹机），或由更新版本插件写入的类型。条目原样
+ * 保留进内部树：工程照常打开，校验把它报成错误并指出退役后的替代类型，
+ * 导出闸门仍然拦下，作者自己决定删掉还是重建。
+ *
+ * 只用读盘（core/config.js 的 ensureDefaults）。写入链路继续用严格实例。
+ */
+const SubsystemLoadCodec = Codec.dispatch('type', SUBSYSTEM_CODECS, { onUnknown: 'keep' });
 
 // ==================== 导出 ====================
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         SubsystemDispatchCodec,
+        SubsystemLoadCodec,
         EngineCodec,
         WheelDriverCodec,
         SeatCodec,

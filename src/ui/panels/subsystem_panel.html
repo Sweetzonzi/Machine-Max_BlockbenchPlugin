@@ -35,6 +35,16 @@
                 <span style="font-size:12px;color:#ccc">{{ typeDisplayName }} ({{ typeId }})</span>
             </div>
         </div>
+        <!-- 类型不在注册表里：说明它是什么、该怎么处理（字段表为空，没有可编辑项） -->
+        <div v-if="typeMissing" class="mm-element-info" style="font-size:10px;color:#ff6b6b;line-height:1.5">
+            <template v-if="retiredTypeInfo">
+                该类型已退役：{{ retiredTypeInfo.detail }}。请删除该条目后按
+                {{ retiredTypeInfo.replacements.join(' / ') }} 重新添加。
+            </template>
+            <template v-else>
+                本插件不支持该类型（可能是拼写错误，或工程来自更新版本的插件）。请改选类型或删除该条目。
+            </template>
+        </div>
         <div class="mm-field" :class="fieldClass('definition')">
             <label title="从 subsystem_defs 中选择型号定义">型号定义</label>
             <select class="mm-select" :value="config.definition" @change="onFieldChange('definition', $event.target.value)">

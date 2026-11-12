@@ -160,6 +160,26 @@ describe('services/export.canExport', () => {
         expect(materialIssues).toHaveLength(0);
     });
 
+    test('已退役子系统类型拦下导出，且同一节点只报一条（带退役说明）', () => {
+        const cfg = baseConfig();
+        const sp = cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.subsystems['subsystem.machine_max.regen_loader'] = {
+            type: 'machine_max:regen_loader',
+            definition: 'machine_max:regen_loader/standard',
+        };
+
+        const gate = canExport(cfg);
+        expect(gate.ok).toBe(false);
+
+        const hits = gate.issues.filter(function (p) {
+            return p.code === 'subsystem_type_unknown'
+                || (p.code === 'unknown_type' && p.path.itemKey === 'subsystem.machine_max.regen_loader');
+        });
+        expect(hits).toHaveLength(1);
+        expect(hits[0].code).toBe('subsystem_type_unknown');
+        expect(hits[0].message).toContain('已退役');
+    });
+
     test('hit_boxes key 不是骨骼 UUID 时校验拦截', () => {
         const cfg = baseConfig();
         const sp = cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];

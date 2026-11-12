@@ -67,9 +67,9 @@ const BASELINE = {
     '2.3.fs_path_require.files': 14,
     '2.3.write_file_sync.calls': 8,
     '2.3.write_file_sync.files': 4,
-    '2.4.validation.error_points': 18,
-    '2.4.validation.warning_points': 3,
-    '2.4.validation.warning_codes': 1,
+    '2.4.validation.error_points': 19,
+    '2.4.validation.warning_points': 6,
+    '2.4.validation.warning_codes': 3,
 };
 
 function listFiles(root, extension) {

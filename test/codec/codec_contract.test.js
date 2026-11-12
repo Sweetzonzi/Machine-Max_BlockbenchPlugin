@@ -4,7 +4,7 @@ const { describe, test, expect } = require('bun:test');
 const { Codec } = require('../../src/codec/Codec.js');
 const { HitBoxCodec } = require('../../src/codec/codecs/hit_box_codec.js');
 const { InteractBoxCodec } = require('../../src/codec/codecs/interact_box_codec.js');
-const { SubsystemDispatchCodec } = require('../../src/codec/codecs/subsystem_codec.js');
+const { SubsystemDispatchCodec, SubsystemLoadCodec } = require('../../src/codec/codecs/subsystem_codec.js');
 const ssTypes = require('../../src/core/subsystem_types.js');
 
 describe('Codec 占位语义（docs/13 §4.4）', () => {
@@ -181,5 +181,37 @@ describe('Codec 占位语义（docs/13 §4.4）', () => {
                 length: 150,
             },
         })).toThrow();
+    });
+});
+
+describe('未知 / 已退役类型的 dispatch 语义', () => {
+    const RETIRED = {
+        type: 'machine_max:regen_loader',
+        definition: 'machine_max:regen_loader/standard',
+        projectile_types: { 'machine_max:ap': ['machine_max:ap'] },
+        discovery_outputs: { ammo: ['local'] },
+    };
+
+    test('严格实例：未知类型 decode / encode 都报错', () => {
+        expect(() => SubsystemDispatchCodec.decode(RETIRED)).toThrow(/Unknown dispatch type/);
+        expect(() => SubsystemDispatchCodec.encode(RETIRED)).toThrow(/Unknown dispatch type/);
+    });
+
+    test('加载实例：未知类型原样保留，不改写任何字段', () => {
+        const decoded = SubsystemLoadCodec.decode(RETIRED);
+        expect(decoded).toEqual(RETIRED);
+        // 深拷贝：内部树不与被保留的原始对象共享引用
+        expect(decoded).not.toBe(RETIRED);
+        expect(decoded.projectile_types).not.toBe(RETIRED.projectile_types);
+    });
+
+    test('加载实例对已登记类型与严格实例等价', () => {
+        // 两个实例共用同一张表；这条测试防止只往一边加类型
+        const ids = ssTypes.getAllTypes().map((t) => t.id);
+        expect(ids.length).toBe(Object.keys(SubsystemDispatchCodec.codecs).length);
+        for (const id of ids) {
+            const raw = Object.assign({ type: id, definition: 'machine_max:x' }, ssTypes.getTypeDefaults(id));
+            expect(SubsystemLoadCodec.decode(raw)).toEqual(SubsystemDispatchCodec.decode(raw));
+        }
     });
 });

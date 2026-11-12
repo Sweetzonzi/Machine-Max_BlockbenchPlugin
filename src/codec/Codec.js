@@ -456,13 +456,20 @@ function record(schema) {
  *   3. 子 codec decode 时 discriminator key 仍在数据中（宽松模式保留）
  *   4. discriminator key 保留在输出对象中
  *   5. 缺失 key → 报错
- *   6. 未知 type 值 → 报错
+ *   6. 未知 type 值 → 报错，onUnknown:'keep' 时原样保留
+ *
+ * onUnknown:'keep' 只用于「读盘」链路（工程加载）：工程里可能留着上游已退役、
+ * 或由更新版本的插件写入的类型，一条历史条目不该让整个工程解不出来。保留的
+ * 条目原样进入内部树，由校验报错、由面板提示，导出闸门照样拦下。写入链路
+ * （导入 part JSON、导出编码）必须用默认的严格模式。
  *
  * @param {string} key - 判别器字段名（如 'type'）
  * @param {object} codecMap - 类型到子 codec 的映射 { typeValue: codec }
+ * @param {object} [opts] - { onUnknown: 'throw' | 'keep' }
  * @returns {object} dispatch codec 对象
  */
-function dispatch(key, codecMap) {
+function dispatch(key, codecMap, opts) {
+    var keepUnknown = !!(opts && opts.onUnknown === 'keep');
     var codec = {
         type: 'dispatch',
         encode: function (obj, path) {
@@ -472,6 +479,7 @@ function dispatch(key, codecMap) {
                 throw new Error((path ? path + ': ' : '') + 'Missing dispatch key: ' + key);
             }
             subCodec = codecMap[type];
+            // encode 不受 onUnknown 影响：写出未知类型永远算 bug，宁可抛错
             if (!subCodec) {
                 throw new Error((path ? path + ': ' : '') + 'Unknown dispatch type: ' + type);
             }
@@ -506,6 +514,7 @@ function dispatch(key, codecMap) {
             }
             var subCodec = codecMap[type];
             if (!subCodec) {
+                if (keepUnknown) return JSON.parse(JSON.stringify(raw));
                 throw new Error('Unknown dispatch type: ' + type);
             }
             // 子 codec decode 时 discriminator key 仍在数据中（宽松模式保留）

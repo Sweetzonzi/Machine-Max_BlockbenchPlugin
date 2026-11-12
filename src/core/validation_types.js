@@ -28,6 +28,7 @@ var SEVERITY_WARNING = 'warning';
  */
 var CODES = {
     SUBSYSTEM_REQUIRED_FIELD: 'subsystem_required_field', // 子系统 required 字段缺失（含 ''/null/undefined）
+    SUBSYSTEM_TYPE_UNKNOWN: 'subsystem_type_unknown',     // 子系统 type 不是插件支持的类型（含已退役类型）
     DEFINITION_REQUIRED: 'definition_required',           // 子系统/连接点的 definition 未配置（空串）
     DEFINITION_REF_MISSING: 'definition_ref_missing',     // definition 引用的型号定义不存在（引用断裂）
     ORPHAN_ELEMENT: 'orphan_element',                     // 连接点/碰撞箱/交互区游离（无归属 subpart）

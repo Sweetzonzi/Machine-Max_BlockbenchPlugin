@@ -65,7 +65,18 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
         },
         typeDisplayName: function () {
             var meta = this.typeMeta;
-            return meta ? meta.displayName : '未知';
+            if (meta) return meta.displayName;
+            var retired = ssTypes.getRetiredTypeInfo(this.typeId);
+            return retired ? retired.displayName : '未知';
+        },
+        /** 类型不在注册表里（已退役或未知）：面板显示说明而不是字段表 */
+        typeMissing: function () {
+            return !!this.typeId && !this.typeMeta;
+        },
+        /** 已退役类型的说明，未知类型返回 null */
+        retiredTypeInfo: function () {
+            if (this.typeMeta) return null;
+            return ssTypes.getRetiredTypeInfo(this.typeId);
         },
         typeColor: function () {
             return ssTypes.getTypeColor(this.typeId);

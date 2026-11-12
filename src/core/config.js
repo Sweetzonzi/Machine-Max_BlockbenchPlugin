@@ -8,7 +8,7 @@
 'use strict';
 
 const { CONFIG_VERSION } = require('./constants.js');
-const { PartCodec } = require('../codec/codecs/part_codec.js');
+const { PartCodec, PartLoadCodec } = require('../codec/codecs/part_codec.js');
 const { VariantCodec } = require('../codec/codecs/variant_codec.js');
 const { SubPartCodec } = require('../codec/codecs/sub_part_codec.js');
 const { HitBoxCodec } = require('../codec/codecs/hit_box_codec.js');
@@ -307,7 +307,12 @@ function normalizeLegacyPlaceholders(config) {
 
 /**
  * 填充配置的缺失默认值：顶层字段用 createBlankConfig 合并，
- * 每个零件用 PartCodec.decode 填充 codec 定义的字段默认值
+ * 每个零件用 PartLoadCodec.decode 填充 codec 定义的字段默认值
+ *
+ * 用 PartLoadCodec 而不是 PartCodec：工程里可能留着上游已退役的子系统类型
+ * （machine_max:regen_loader 在 0.6.0 被拆分），严格的 dispatch 会抛
+ * "Unknown dispatch type"，整个工程便打不开了。加载实例把这些条目原样保留，
+ * 由校验报错、由面板提示；导入 part JSON 与导出编码仍走严格的 PartCodec。
  *
  * 注意：PartCodec 的 variants 字段使用 either codec（单 variant 简写 vs map 展开），
  * either 的启发式检测会将非空的 variant map 误判为单个 variant 对象。
@@ -335,15 +340,15 @@ function ensureDefaults(config) {
         result._uiState.iconCamera.assemblyDirection = null;
     }
 
-    // 用 PartCodec.decode 填充每个零件（含 variants / sub_parts / 各条目）的默认值。
+    // 用 PartLoadCodec.decode 填充每个零件（含 variants / sub_parts / 各条目）的默认值。
     // 单变体简写由 either 的「model 是字符串」判据识别，多 key map（包括键名恰好为
-    // model 的变体）走 map 解码，不再需要临时移走 variants。
+    // model 的变体）走 map 解码，因此不用先把 variants 摘出来。
     var partKeys, i, pk, part;
     partKeys = Object.keys(result.parts);
     for (i = 0; i < partKeys.length; i++) {
         pk = partKeys[i];
         part = result.parts[pk];
-        result.parts[pk] = PartCodec.decode(part);
+        result.parts[pk] = PartLoadCodec.decode(part);
     }
 
     log.debug('ensureDefaults: 完成');

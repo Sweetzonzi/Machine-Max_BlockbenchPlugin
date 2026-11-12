@@ -269,6 +269,41 @@ function _collectModuleIssue(partId, vName, spKey, hbKey, hb, subsystems, proble
 }
 
 /**
+ * 子系统类型既不在注册表里、也不是已退役类型 → 报一条说明它是什么、该怎么办的问题。
+ *
+ * 这条条目能出现在工程里有两个来源：工程来自更新版本的插件，或者加载时原样保留了
+ * 上游已退役的类型（见 codec/codecs/subsystem_codec.js 的 SubsystemLoadCodec）。
+ * 两种情况都不能导出（模组侧加载不了这个类型），所以按 error 报。
+ *
+ * path.field 留空：与 doc/validate 的 unknown_type 问题同键，导出闸门去重后只留本条
+ * （带退役说明的那条），不会一个条目报两遍。
+ *
+ * @param {string} partId
+ * @param {string} vName
+ * @param {string} spKey
+ * @param {string} ssName - 子系统实例名
+ * @param {*} ssType - 实例上的 type 值
+ * @param {Object} problems
+ */
+function _collectUnknownSubsystemTypeIssue(partId, vName, spKey, ssName, ssType, problems) {
+    var where = '子系统 "' + ssName + '" 在零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"';
+    var retired = ssTypes.getRetiredTypeInfo(ssType);
+    var message;
+    if (retired) {
+        message = where + '：类型 "' + ssType + '" 是' + retired.displayName + '。'
+            + retired.detail + '。请删除该条目后按 '
+            + retired.replacements.join(' / ') + ' 重新添加';
+    } else {
+        message = where + '：类型 "' + String(ssType) + '" 不是本插件支持的子系统类型'
+            + '（可能是拼写错误，或该工程来自更新版本的插件）。请改选类型或删除该条目';
+    }
+    problems.push(_makeProblem(
+        'error', CODES.SUBSYSTEM_TYPE_UNKNOWN, message,
+        _mkPath('subsystem', partId, vName, spKey, ssName, null, '')
+    ));
+}
+
+/**
  * 唯一校验实现：收集所有问题的结构化 Problem 数组
  * @param {Object} config - MM 项目配置
  * @returns {Array} Problem[]
@@ -382,6 +417,9 @@ function collectIssues(config) {
                 for (var ssName in subsystems) {
                     var ss = subsystems[ssName];
                     var meta = ssTypes.getTypeMeta(ss.type);
+                    if (!meta) {
+                        _collectUnknownSubsystemTypeIssue(partId, vName, spKey, ssName, ss.type, problems);
+                    }
 
                     // definition 校验（所有子系统类型均必含 definition）
                     if (isMissingValue(ss.definition)) {

@@ -44,7 +44,8 @@ src/core/
 - **默认值唯一真源**: 各自 Codec 的 `.default(...)`；工厂用 `Codec.decode` 填充
 - **标记存储**: 按 `(partId, variantName)` 存储在 `part.element_markers[variantName][elementUuid]`
 - **工厂签名**: `createXConfig(config, parentId)` 返回填充了默认值的新对象——绝不修改输入
-- **ensureDefaults**: 通过 `Object.assign({}, blank, config)` 合并缺失字段——在每次读取配置前调用
+- **ensureDefaults**: 通过 `Object.assign({}, blank, config)` 合并缺失字段——在每次读取配置前调用；每个零件用 `PartLoadCodec.decode` 补默认值
+- **子系统类型退役**: 上游退役类型（如 `regen_loader`）后，把 id 加进 `subsystem_types.js` 的 `RETIRED_TYPES`（旧名 / 原因 / 替代类型）。工程里遗留的条目由加载链路整条保留、由 `collectIssues` 报 `subsystem_type_unknown`；不登记就只能按「未知类型」提示（docs/13 §15.3）
 
 ## Vue 2 响应式说明
 

@@ -13,7 +13,7 @@ src/codec/
 │   ├── part_codec.js           # Part 配置（9 字段，含 variants Either 简写）
 │   ├── variant_codec.js        # Variant 配置
 │   ├── sub_part_codec.js       # SubPart 配置（含物理属性、碰撞箱、交互箱）
-│   ├── subsystem_codec.js      # 21 种子系统类型的独立 codec + DispatchCodec（约 340 行）
+│   ├── subsystem_codec.js      # 21 种子系统类型的独立 codec + 严格/加载两个 DispatchCodec（约 350 行）
 │   ├── connector_codec.js      # 连接点配置
 │   ├── hit_box_codec.js        # 碰撞箱配置
 │   ├── interact_box_codec.js   # 交互箱配置
@@ -29,7 +29,8 @@ src/codec/
 | 添加新基元类型 | `Codec.js` → `createPrimitiveCodec()` | 注册到 `module.exports`，调用 `withFieldMethods()` |
 | 添加新组合子 | `Codec.js` | 实现 create 函数 + 注册到 `withFieldMethods()` 链式接口 |
 | 为现有类型添加新字段 | `codecs/<type>_codec.js` | 在 `Codec.record({...})` 中添加行，遵循字段规格 `.field()` / `.default()` / `.nullable()` |
-| 添加新子系统类型 codec | `codecs/subsystem_codec.js` | 定义新 codec 并注册到 `SubsystemDispatchCodec` 映射表 |
+| 添加新子系统类型 codec | `codecs/subsystem_codec.js` | 定义新 codec 并注册到 `SUBSYSTEM_CODECS` 映射表（严格/加载两个实例共用） |
+| 退役子系统类型 | `codecs/subsystem_codec.js` + `core/subsystem_types.js` | 从两张表移除 codec / 类型，并把 id 加进 `RETIRED_TYPES` |
 | 在导出流程中使用 Codec | `generators/*.js` | 调用 `XCodec.encode(config)` 输出 JSON |
 
 ## 设计架构
@@ -61,7 +62,21 @@ src/codec/
 | `.list(len)` | 固定/可变长度数组 | `speed_outputs: Codec.STRING.list()` |
 | `.map(keyC, valC, {emitEmpty})` | 键值对对象；`emitEmpty` 时空对象输出 `{}`（required map） | `sub_parts: Codec.map(Codec.STRING, SubPartCodec)` |
 | `Codec.either(a, b)` | 单值/对象二选一 | Variant 简写：单变体 vs 多变体 |
-| `Codec.dispatch(key, map)` | 按判别字段路由 | 子系统按 `type` 字段分发 |
+| `Codec.dispatch(key, map, {onUnknown})` | 按判别字段路由；`onUnknown: 'keep'` 时未知判别值原样保留（读盘专用） | 子系统按 `type` 字段分发 |
+
+## 严格链路与加载链路
+
+同一张类型表带两个 dispatch 实例（见 `codecs/subsystem_codec.js`）：
+
+| 实例 | 用途 | 未知 `type` 的行为 |
+|------|------|------------------|
+| `SubsystemDispatchCodec` / `PartCodec` / `VariantCodec` / `SubPartCodec` | 导入 part JSON、导出编码 | 抛 `Unknown dispatch type`，写入前拒绝 |
+| `SubsystemLoadCodec` / `PartLoadCodec` / `VariantLoadCodec` / `SubPartLoadCodec` | 工程加载（`core/config.js` 的 `ensureDefaults`） | 原样保留整条条目，工程照常打开 |
+
+- **加载链路只放宽 decode**：`encode` 不受 `onUnknown` 影响，写出未知类型永远抛错。
+- **为什么要有加载链路**：上游会退役类型（`machine_max:regen_loader` 在 0.6.0 拆成弹药架与自动装弹机），工程文件里留着的旧条目若在 decode 抛错，`loadConfig()` 会让整个工程打不开、`零件定义` 模式也进不去。保留条目后由 `services/validate.js` 报 `subsystem_type_unknown`（已退役类型附替代类型），导出闸门照样拦。
+- **新增子系统类型**只改 `SUBSYSTEM_CODECS` 一张表，两个实例自动同步；`codec_contract.test.js` 有「加载实例对已登记类型与严格实例等价」的用例守着。
+- **退役类型要登记**：从 `core/subsystem_types.js` 的 `SUBSYSTEM_TYPES` 删除后，把 id、旧名、说明与替代类型加进同文件的 `RETIRED_TYPES`，否则面板与校验只能把它当「未知类型」提示。
 
 ## 约定
 

@@ -4,6 +4,7 @@ const { describe, test, expect } = require('bun:test');
 const { normalizeLegacyPlaceholders, migrateIfNeeded, createHitBoxConfig } = require('../../src/core/config.js');
 const { HitBoxCodec } = require('../../src/codec/codecs/hit_box_codec.js');
 const { PartCodec } = require('../../src/codec/codecs/part_codec.js');
+const { createConfig } = require('../helpers.js');
 
 function legacyConfig() {
     return {
@@ -186,5 +187,60 @@ describe('core/config 旧占位归一化', () => {
         expect(hb.material).toBe('machine_max:default');
         expect(hb.type).toBe('box');
         expect(hb.overwrite).toBeNull();
+    });
+});
+
+describe('core/config 已退役 / 未知的子系统类型', () => {
+    /** 上游 0.6.0 退役的 regen_loader，带着当时的字段 */
+    function configWithRetiredSubsystem() {
+        const raw = legacyConfig();
+        const sp = raw.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.subsystems['subsystem.machine_max.regen_loader'] = {
+            type: 'machine_max:regen_loader',
+            definition: 'machine_max:regen_loader/standard',
+            projectile_types: { 'machine_max:ap': ['machine_max:ap'] },
+            discovery_outputs: { ammo: ['local'] },
+        };
+        return raw;
+    }
+
+    test('加载不抛错，条目连同退役字段原样保留', () => {
+        const raw = configWithRetiredSubsystem();
+        const migrated = migrateIfNeeded(raw);
+        const sp = migrated.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        // 保留的是原始对象，未被任何 codec 改写
+        expect(sp.subsystems['subsystem.machine_max.regen_loader'])
+            .toEqual(raw.parts.hull.variants.default.sub_parts['sub_part.machine_max.main']
+                .subsystems['subsystem.machine_max.regen_loader']);
+        // 同一子零件里其余条目照常补默认值
+        expect(sp.subsystems['subsystem.machine_max.engine'].definition).toBe('');
+        expect(sp.start_bone).toBe('hull');
+    });
+
+    test('拼写错误 / 更新版本的类型同样保留，不影响其它零件', () => {
+        const raw = configWithRetiredSubsystem();
+        raw.parts.turret = JSON.parse(JSON.stringify(raw.parts.hull));
+        const sp = raw.parts.turret.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.subsystems['subsystem.machine_max.future_thing'] = {
+            type: 'machine_max:future_thing',
+            definition: 'machine_max:future_thing/x',
+            some_new_field: 1,
+        };
+
+        const migrated = migrateIfNeeded(raw);
+        expect(migrated.parts.turret.variants.default.sub_parts['sub_part.machine_max.main']
+            .subsystems['subsystem.machine_max.future_thing'].some_new_field).toBe(1);
+        expect(migrated.parts.hull.variants.default.sub_parts['sub_part.machine_max.main']
+            .subsystems['subsystem.machine_max.regen_loader'].type).toBe('machine_max:regen_loader');
+    });
+
+    test('写入链路仍严格：PartCodec 拒绝未知类型', () => {
+        const config = createConfig();
+        const sp = config.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.subsystems['subsystem.machine_max.regen_loader'] = {
+            type: 'machine_max:regen_loader',
+            definition: 'machine_max:regen_loader/standard',
+        };
+        expect(() => PartCodec.decode(config.parts.hull)).toThrow(/Unknown dispatch type/);
     });
 });
