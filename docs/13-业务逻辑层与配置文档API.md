@@ -100,7 +100,7 @@ docs/11 落地了「改配置必须走业务函数、撤销边界在业务函数
 | 目录 | 文件 | 行数 |
 |---|---|---|
 | `src/ui/` | 27 JS + 7 模板 | 6,478 + 1,147 |
-| `src/mode/` | 5 | 1,155 |
+| `src/mode/` | 5 | 1,156 |
 | `src/core/` | 12 | 4,430 |
 | `src/codec/` | 10 JS（11 含 AGENTS.md） | 1,282 |
 | `src/ops/` | 10（含 `shared.js` / `AGENTS.md`） | — |
@@ -137,7 +137,9 @@ P2 之后两个面板不再直接写配置；P3 之后计算属性也不写配�
 
 ### 2.4 校验现状
 
-`services/validate.js → collectIssues(config)` 是唯一实现（`mode/validation_check.js` 调的也是它）：**19 个 error 产生点 / 6 个 warning 产生点**（P2 新增 `dangling_signal_target`，P3 为字段级问题补 `path.field`，P4 从 `mode/validation.js` 下沉到 `services/validate.js`，随后补 `material_required` / `material_ref_missing`；模块化子系统的碰撞箱 `module` 补 `hit_box_module_unknown` / `hit_box_module_without_subsystem`；`subsystem_type_unknown` 在装弹机拆分后补上），warning 共 3 个 code：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）与上面两个模块名问题。
+`services/validate.js → collectIssues(config)` 是业务规则的唯一实现（`mode/validation_check.js` 与面板调的也是它）：**22 个 error 产生点 / 6 个 warning 产生点**（P2 新增 `dangling_signal_target`，P3 为字段级问题补 `path.field`，P4 从 `mode/validation.js` 下沉到 `services/validate.js`，随后补 `material_required` / `material_ref_missing`；模块化子系统的碰撞箱 `module` 补 `hit_box_module_unknown` / `hit_box_module_without_subsystem`；装弹机拆分后补 `subsystem_type_unknown`；读盘宽容解码之后，`零件 / 变体 / 子零件` 不是对象时各补一条可定位的问题），warning 共 3 个 code：`orphan_element`（分布在 `hit_box` / `connector` / `interact_box` 三个分支）与上面两个模块名问题。
+
+业务规则之外还有一层 schema 值与 key 校验（`doc/validate.js` 的 `validateTree`）。两层由 `services/issues.js` 的 `collectAllIssues` 合并成同一份清单，面板徽章、Blockbench 原生校验、导出闸门看到的是同一个结果（§4.3）。
 
 重复的只有名称唯一性两套：`naming.validateNameUniqueness`（UI rename 调用）与 `services/validate._collectNameConflicts`；ops 的 key/存在性检查已收口到 `doc/keys` 与各动作前置校验。
 
@@ -298,23 +300,31 @@ src/doc/field_specs.generated.js（含 provenance）
 ### 4.3 导出闸门
 
 ```js
-// services/export.js
-function canExport(config) {
+// services/issues.js —— 面板 / 原生校验 / 闸门共用的同一条清单
+function collectAllIssues(config) {
     var primary = collectIssues(config);                  // 业务规则，path 已是 Problem 对象
     var schema = validateTree(config, { completeness: true })
         .map(function (e) { return toProblem(e, config); }); // 段数组 → 同一 path 口径 + severity
-    var issues = dedupeIssues(primary, schema);           // 同一字段只留一条
+    return dedupeIssues(primary, schema);                 // 同一字段只留一条
+}
+
+// services/export.js —— 闸门 = 上面的清单 + 编码试跑
+function canExport(config) {
+    var issues = collectAllIssues(config);
+    issues = issues.concat(probeEncodable(config, issues)); // 编码器真的能写出这些数据吗
     var errors = issues.filter(function (p) { return p.severity === 'error'; });
-    return { ok: errors.length === 0, errors: errors, warnings: issues.filter(isWarning) };
+    return { ok: errors.length === 0, errors: errors, warnings: issues.filter(isWarning), issues: issues };
 }
 ```
 
 - `export_dialog.onConfirm`：`canExport` 失败 → `showToast` + 列出问题（复用现有 `buildValidationInfo` 的按 path 分组渲染，改为接收 `canExport` 返回的合并数组，每条挂 `__mmNavigator.selectByIssue` 定位按钮），`return false` 不关对话框。
-- **P3 已实现**：`src/services/export.js` 提供 `canExport` / `dedupeIssues` / `toProblem` / `assertSafePartIds`；`export_dialog` 打开时与 `onConfirm` 时各跑一次闸门，失败时对话框保持打开。`services/export_pipeline.executeExport` 在**任何 mkdir/writeFile 之前**调用 `assertSafePartIds`。
-- `collectIssues` 的 19 个 error 产生点逐条确认可定位（都带 `path`，字段级问题带 `path.field`）；`orphan_element` 放行；`validateTree` 的每条错误也带同样的 `path` 口径。
-- **两条闸门缺一不可**：`collectIssues` 负责业务完整性（型号是否存在、名称冲突、信号目标断裂），`validateTree` 负责 schema 值与 key。第三轮审阅的 `"banana"` / `condition:"WHATEVER"` 属于后者；`projectile_types:{}` 的 `minProperties` 也由后者报。
+- **P3 已实现**：`src/services/export.js` 提供 `canExport` / `assertSafePartIds`；`export_dialog` 打开时与 `onConfirm` 时各跑一次闸门，失败时对话框保持打开。`services/export_pipeline.executeExport` 在**任何 mkdir/writeFile 之前**调用 `assertSafePartIds`。
+- **单一清单**：`toProblem` / `dedupeIssues` 落在 `services/issues.js`，`services/export.js` 仍导出它们以保持既有调用方。面板（`App.vue.js` 的 `validationIssues`）与 Blockbench 原生校验（`mode/validation_check.js`）都调 `collectAllIssues`，所以界面上看到的每一条错误都会挡住导出，反之亦然。
+- `collectIssues` 的 22 个 error 产生点逐条确认可定位（都带 `path`，字段级问题带 `path.field`）；`orphan_element` 放行；`validateTree` 的每条错误也带同样的 `path` 口径。
+- **两条闸门缺一不可**：`collectIssues` 负责业务完整性（型号是否存在、名称冲突、信号目标断裂、未知/已退役类型），`validateTree` 负责 schema 值与 key（类型、枚举、范围、必填、容器必须是对象）。第三轮审阅的 `"banana"` / `condition:"WHATEVER"` 属于后者。
+- **编码试跑**：`probeEncodable` 对每个零件做一次 `PartCodec.encode`（深拷贝，不写盘），抛错就报 `encode_failed`。schema 表达不了、只有 codec 才拒的形状靠它兜住——否则 `executeExport` 会在写到一半时抛错，留下半个内容包。该零件已有 error 时跳过试跑，避免重复报错盖住真正原因。
 - **去重按字段，不按 code**：同一路径可能同时被两层报（例如 `definition:''`：`collectIssues` 报 `definition_required`，`validateTree` 报 `missing_required`）。输出前统一 `Problem.path` 为对象并补 `field`，去重键为 `scope|partId|variantName|subPartKey|itemKey|field`；`collectIssues` 优先，`validateTree` 只补空缺。同一字段只留一条；不同字段（如 `definition` 与 `locator`）各自保留，不能因为路径相同就合并。
-- `Problem.path.field` 是本次新增的可选字段；不带字段的条目（名称冲突、孤立元素等）用空串作 key，仍参与去重。`collectIssues` 的字段级问题必须补上 `field`（`definition` / `locator` / `hit_boxes` / `mass` 等），entry 级问题留空；`validateTree` 的段数组在 `toProblem` 里按 `parts / variants / sub_parts / subsystems|connectors|interact_boxes|hit_boxes` 固定层级转成同一对象，不靠猜 key。
+- `Problem.path.field` 是可选字段；不带字段的条目（名称冲突、孤立元素等）用空串作 key，仍参与去重。`collectIssues` 的字段级问题必须补上 `field`（`definition` / `locator` / `hit_boxes` / `mass` 等），entry 级问题留空；`validateTree` 的段数组在 `toProblem` 里按 `parts / variants / sub_parts / subsystems|connectors|interact_boxes|hit_boxes` 固定层级转成同一对象，不靠猜 key。
 
 ### 4.4 占位符不得变成脏数据（前置修复）
 
@@ -347,7 +357,7 @@ Codec.STRING.encode(null) = String(null) = "null"       Codec.js:74-77 / 254-256
 
 > **为什么不用 nullable**：上游 required 字段是 `fieldOf`，`null` 不是合法值；`.nullable()` 虽然能让插件 round-trip，却会让“未配置”在导出时变成**缺键**，与 required 契约相反。`''`/`{}` 至少保持键存在，同时让校验器能定位“值为空”。只有 `overwrite` 与 `seat.allow_use_items` 这类上游 `Optional` 且无默认值的字段才使用 `null`。
 >
-> **P2 已完成**：`ensureDefaults` 现在直接完整 `PartLoadCodec.decode`（含 `variants` / `sub_parts` / 各条目默认值），`variants` 不需要先摘出；`Codec.either` 的单变体判定改为「`model` 是字符串」，变体名恰好为 `model` 时仍走 map。required `null` 仍由 `normalizeLegacyPlaceholders` 在 raw 阶段归一化，避免工程打不开。加载链路与严格链路的差别只在未知子系统类型（§15.3），其余解码行为一致。
+> **P2 已完成**：`ensureDefaults` 现在直接完整 `PartLoadCodec.decode`（含 `variants` / `sub_parts` / 各条目默认值），`variants` 不需要先摘出；`Codec.either` 的单变体判定改为「`model` 是字符串」，变体名恰好为 `model` 时仍走 map。required `null` 仍由 `normalizeLegacyPlaceholders` 在 raw 阶段归一化，避免工程打不开。读盘链路另外两层宽容：未知子系统类型整条保留（§15.3）、解不出来的条目逐条剥离并原样塞回（§15.4）。
 
 ### 4.5 两类「未解析」必须分开
 
@@ -1235,6 +1245,7 @@ test/
 26. **碰撞箱材质**：`material:''` 报 `material_required`，`machine_max:not_a_material` 报 `material_ref_missing`，两者都进 `canExport.errors` 并阻断；`machine_max:default` 放行（Java 兜底，不查内容包表）；面板下拉同时展示「（未选择）」与「默认材质」，空值/未知值显示红框与提示。
 27. **终端字段标注**：`subsystem.definition:''` 的 `path.field` 为 `definition`，`filterFieldIssues` 能命中且不误命中 `power_output`；`signal_targets.engine_speed.0` 这类嵌套字段归到 `signal_targets`；面板 `fieldClass` 返回 `mm-field-error` / `mm-field-warning`，只改变 label / 控件颜色，不插入原因文案。
 28. **已退役 / 未知子系统类型**：工程里带 `machine_max:regen_loader` 时 `migrateIfNeeded` 不抛错、条目连退役字段原样保留、同子零件其余条目照常补默认值；`PartCodec.decode` 对同一输入仍抛 `Unknown dispatch type`（写入链路不回退）；`SubsystemLoadCodec` 对全部已登记类型与 `SubsystemDispatchCodec` 解码结果一致；`collectIssues` 报 `subsystem_type_unknown`（退役类型带替代类型，未知类型不冒充退役说明）；`canExport` 拦下且同一节点只留一条（与 `validateTree` 的 `unknown_type` 去重）。
+29. **读盘宽容解码**：`sub_parts` 里一个子零件 `mass: "25"` 时只有它整条保留，兄弟子零件仍拿到默认值；坏碰撞箱条目保留原始值、好条目照常解出；`hit_boxes: []` 与坏的 `element_markers` 整块保留、零件其余字段照常解出；单变体简写 / 变体名恰好为 `model` 的配置与严格解码结果一致；完整闸门上 `collectAllIssues` 既报业务问题也报 schema 值问题，`probeEncodable` 对编码会抛错的零件报 `encode_failed`（该零件已有 error 时跳过）。
 
 ---
 
@@ -1337,7 +1348,7 @@ A. raw 预处理（必须早于任何 PartLoadCodec.decode）
    2) 已删除 WIP 类型与上游退役类型的旧条目**不自动剔除**：读盘整条保留，导入/导出按 unknown_type 拒绝（§15.3）
    3) required 字符串 null/"null" → ''；required/可选 map null/[] → {}；optional 字段 null 由 .default() 兜底（已实现：normalizeLegacyPlaceholders）
    4) 单变体 / 单子零件简写归一化（按 §5.3.1 第 1 步的判据；必须在 decode 前完成，避免 either 的启发式把 `variants.model` 当成单变体）
-B. decode（`PartLoadCodec`：与 `PartCodec` 同一套 shape，只对未知子系统类型改为整条保留；已由 A 段归一化，`either` 不需要猜）
+B. decode（读盘走 `doc/load.js` 的宽容解码：坏条目剥离后原样塞回、其余走 `PartLoadCodec`；已由 A 段归一化，`either` 不需要猜）
 C. key / marker 迁移（子零件 key 规范化、marker.config_ref 改写、容器补全、幽灵清理）
 ```
 
@@ -1471,6 +1482,34 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 
 **测试**：`test/core/config.test.js`（加载保留 + 严格链路不回退）、`test/codec/codec_contract.test.js`（两个实例的严格性差异与已登记类型等价）、`test/core/validation_types.test.js`（问题码与文案）、`test/services/export.test.js`（闸门与去重），见 §11 #28。
 
+#### 15.4 读盘的宽容解码：非法数据不挡加载
+
+工程文件是信任边界外的输入（作者手改、更早的插件写、第三方工具生成）。任何一处类型不对都不该让工程打不开：`loadConfig()` 在「零件定义」模式的 `onSelect` 里调用，解码一抛错，整个模式就进不去。
+
+**分层**（`doc/load.js`）：
+
+| 函数 | 链路 | 行为 |
+|---|---|---|
+| `doc/load.js#decodePart` | 读盘（`utils/persistence.js` → `migrateIfNeeded(config, { decodePart })`） | 逐层剥离解不出来的条目，其余照常走 codec 补默认值；剥掉的条目原样塞回，问题只记日志 |
+| `doc/shapes.js#decodeStrict` | 写入（导入 part JSON、`projectIn`） | 解不出来就拒绝写入 |
+
+剥离粒度按容器走（`fieldSpecs.getContainers`：`variants` / `sub_parts` / `hit_boxes` / `interact_boxes` / `connectors` / `subsystems`）：一个坏碰撞箱只保留它自己，父级子零件仍拿到默认值。容器本身不是对象（`hit_boxes: []`）、`element_markers` 不是对象、`parts[x]` 不是对象，都按同样的方式整块保留。
+
+简写形态（`variants.model` 是字符串、`sub_parts` 的 key 不含 `.` / `:`）整块交给 codec，不逐条遍历——判定与 `Codec.either` 的启发式一致，逐条走会把单变体简写当成变体名。
+
+**非法值怎么让人看见**：加载只保留、不修复，报告交给校验：
+
+- `doc/validate.js` 的值校验在 `collectIssues` 之外独立跑（`services/issues.js` 合并两者）。容器不是对象会被判 `type_mismatch`；因此「加载保留 + 校验报错」是配对的，不能只留一半。
+- `services/validate.js` 遍历时不再假设 `parts[x]` / `variants[x]` / `sub_parts[x]` / 容器是对象，坏节点各自报一条可定位的问题，不抛异常。
+- 导出闸门在这份清单之外再做一次编码试跑（§4.3），闸门放行的数据一定写得出文件。
+- **不改掉就无法导出**：`canExport` 里既有 schema 值错误、也有业务错误与试跑错误，任一 error 都让 `export_dialog` 保持打开。
+
+**为什么保留原件而不是自动填一个合法值**：自动填值等于替作者改数据——`mass: "25"` 到底该是 25、250 还是别的，插件猜不出来；静默覆盖还会让「原本写错了什么」永久消失。保留原文 + 面板上可直接编辑的输入框 + 明确的错误信息，是唯一不丢信息的修法。宿主提供的「重置为默认值」不属于加载流程，需要时按条目显式触发。
+
+**归一化只碰「空占位」**：`normalizeLegacyPlaceholders` 把 `null` / `"null"` / **空数组**当「未配置」处理（`''` / `{}`）；有内容的数组原样留着，由校验报错——把数组换成 `{}` 等于把作者的数据删掉。
+
+**测试**：`test/doc/load.test.js`（粒度、保留、简写 parity）、`test/core/config.test.js`（默认与注入解码器两条路）、`test/services/issues.test.js`（合并清单、容器形状、编码试跑）、`test/doc/validate.test.js`（容器类型错），见 §11 #29。
+
 ---
 
 ## 16. 风险与回滚
@@ -1479,6 +1518,7 @@ function canonicalSubPartKey(key, ns, usedKeys, usedNames) {
 |---|---|
 | 子零件 key 迁移改变模组侧可见名称（存档/引用可能按名匹配） | 仅迁移非规范 key；中文名改 `legacy_<n>` 并在迁移报告中保留原名；`_lastMigration` 明细 + 加载后确认；迁移前自动生成一份 `.mm_project.json.bak`（`services/pack` 提供） |
 | 删除 WIP 类型或上游退役类型后，含这些类型的存量工程无法解析 | 加载链路用 `SubsystemLoadCodec` 原样保留条目（工程照常打开、能进零件定义模式）；校验报 `subsystem_type_unknown`，导出闸门按 `unknown_type` 拦住；不自动剔除、不自动换算（§15.3） |
+| 工程里有类型不对的字段（`mass: "25"`、`hit_boxes: []`）导致整个工程打不开 | 读盘走 `doc/load.js` 的宽容解码：坏条目原样保留、其余照常补默认值（§15.4）；`collectAllIssues` 把 schema 值问题与业务问题并成一份清单，面板 / Blockbench 原生校验都能看到，修好之前 `canExport` 不放行 |
 | 旧哨兵 `part`/`subpart`/`vehicle` 变成未知目标错误 | D19 的明确选择：不告警、不迁移；导出闸门拦住，用户改成 `local`/`global` 或真实节点 key |
 | 严格配置引用会拒绝手工写的悬空目标 | `errors[]` 带完整 path 与候选值；`mode:'replace'` 可先修引用再导入；MCP 返回 `unresolved_config_ref` 提示 |
 | 删除计算属性写入后，存量「标记有、配置无」不再自动补建 | §15 的 load-time repair + 面板显式按钮 + `setField` 的 `ensure` |

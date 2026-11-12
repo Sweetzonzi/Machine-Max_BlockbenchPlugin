@@ -44,8 +44,9 @@ src/core/
 - **默认值唯一真源**: 各自 Codec 的 `.default(...)`；工厂用 `Codec.decode` 填充
 - **标记存储**: 按 `(partId, variantName)` 存储在 `part.element_markers[variantName][elementUuid]`
 - **工厂签名**: `createXConfig(config, parentId)` 返回填充了默认值的新对象——绝不修改输入
-- **ensureDefaults**: 通过 `Object.assign({}, blank, config)` 合并缺失字段——在每次读取配置前调用；每个零件用 `PartLoadCodec.decode` 补默认值
-- **子系统类型退役**: 上游退役类型（如 `regen_loader`）后，把 id 加进 `subsystem_types.js` 的 `RETIRED_TYPES`（旧名 / 原因 / 替代类型）。工程里遗留的条目由加载链路整条保留、由 `collectIssues` 报 `subsystem_type_unknown`；不登记就只能按「未知类型」提示（docs/13 §15.3）
+- **ensureDefaults**: 通过 `Object.assign({}, blank, config)` 合并缺失字段——在每次读取配置前调用；每个零件用 `opts.decodePart` 解码（默认 `PartLoadCodec`，`utils/persistence.js` 传 `doc/load.js` 的宽容解码）。解码仍抛错时保留原始零件，不让读盘失败。
+- **子系统类型退役**: 上游退役类型（如 `regen_loader`）后，把 id 加进 `subsystem_types.js` 的 `RETIRED_TYPES`（旧名 / 原因 / 替代类型）。工程里遗留的条目由加载链路整条保留、由 `collectIssues` 报 `subsystem_type_unknown`；不登记就只能按「未知类型」提示（docs/13 §15.3）。
+- **归一化只碰空占位**: `normalizeLegacyPlaceholders` 把 `null` / `"null"` / 空数组当「未配置」；有内容的坏形状原样留着，由校验报错。悄悄改成 `{}` 等于删作者的数据（docs/13 §15.4）。
 
 ## Vue 2 响应式说明
 

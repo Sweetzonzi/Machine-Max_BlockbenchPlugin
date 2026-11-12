@@ -4,9 +4,34 @@ const { migrateIfNeeded, createBlankConfig } = require('../core/config.js');
 const { cleanGhostMarkers, migrateConnectorMarkerRefs, repairMarkerConfigs } = require('../core/element_markers.js');
 const { createLogger } = require('./logger.js');
 const docProjection = require('../doc/projection.js');
+const docLoad = require('../doc/load.js');
 
 /** 模块日志 */
 var log = createLogger('Persistence');
+
+/**
+ * 读盘用的零件解码器：坏条目原样保留、其余照常填默认值。
+ *
+ * 工程文件是信任边界外的输入（作者手改、旧版本插件写、第三方工具生成），
+ * 一处类型不对不该让整个工程打不开；非法值由校验报、由导出闸门拦。
+ *
+ * @param {*} part
+ * @param {string} partId
+ * @returns {*}
+ */
+function _decodePartForLoad(part, partId) {
+    var result = docLoad.decodePart(part, { partId: partId });
+    if (result.issues && result.issues.length > 0) {
+        log.warn('loadConfig: 零件 "' + partId + '" 有 ' + result.issues.length
+            + ' 处结构非法，已原样保留（校验会报出具体字段）', result.issues);
+    }
+    return result.node;
+}
+
+/** 迁移 + 补默认值，解码走数据宽容的加载链路 */
+function _migrateForLoad(rawConfig) {
+    return migrateIfNeeded(rawConfig, { decodePart: _decodePartForLoad });
+}
 
 /**
  * 在插件 onload 时调用。注册 Property 到 ModelProject，
@@ -68,7 +93,7 @@ function loadConfig() {
 
     if (propData && propData.$schema_version) {
         log.info('从 Property 加载配置，版本: ' + propData.$schema_version);
-        var migrated = migrateIfNeeded(propData);
+        var migrated = _migrateForLoad(propData);
         Project[PROPERTY_NAME] = migrated;
         result = migrated;
         log.debug('loadConfig: 从 Property 加载完成', {
@@ -81,7 +106,7 @@ function loadConfig() {
     } else if (propData && typeof propData === 'object' && Object.keys(propData).length > 0) {
         // 备用方案1：Property 数据存在但无版本号 — 尝试 ensureDefaults 修复
         log.info('从 Property 加载配置（无版本号，尝试修复），键: ' + Object.keys(propData).join(','));
-        var repaired = migrateIfNeeded(propData);
+        var repaired = _migrateForLoad(propData);
         Project[PROPERTY_NAME] = repaired;
         result = repaired;
     } else {
@@ -95,7 +120,7 @@ function loadConfig() {
                     const raw = JSON.parse(fs.readFileSync(standalonePath, 'utf-8'));
                     const config = raw.config || raw;
                     log.info('从独立文件加载配置: ' + standalonePath);
-                    Project[PROPERTY_NAME] = migrateIfNeeded(config);
+                    Project[PROPERTY_NAME] = _migrateForLoad(config);
                     result = Project[PROPERTY_NAME];
                 }
             } catch (e) {

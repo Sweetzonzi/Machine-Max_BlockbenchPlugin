@@ -28,7 +28,7 @@ const BASELINE = {
     '2.1.ui.js_lines': 6478,
     '2.1.ui.template_lines': 1147,
     '2.1.mode.files': 5,
-    '2.1.mode.lines': 1155,
+    '2.1.mode.lines': 1156,
     '2.1.core.files': 12,
     '2.1.core.lines': 4430,
     '2.1.codec.files': 10,
@@ -67,7 +67,7 @@ const BASELINE = {
     '2.3.fs_path_require.files': 14,
     '2.3.write_file_sync.calls': 8,
     '2.3.write_file_sync.files': 4,
-    '2.4.validation.error_points': 19,
+    '2.4.validation.error_points': 22,
     '2.4.validation.warning_points': 6,
     '2.4.validation.warning_codes': 3,
 };

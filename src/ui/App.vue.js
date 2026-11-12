@@ -18,7 +18,7 @@ const { showToast } = require('../utils/notify.js');
 const content_pack_manager = require('../core/content_pack_manager.js');
 const nameUtils = require('../utils/name_utils.js');
 const { buildSignalTargetOptions } = require('../utils/signal_target_options.js');
-const { collectIssues } = require('../services/validate.js');
+const { collectAllIssues } = require('../services/issues.js');
 const { aggregate, resolveIssueLevel, filterFieldIssues } = require('../core/validation_types.js');
 var { showAddTagDialog, _hashTagColor } = require('./tag_dialog_helper.js');
 var undo = require('../core/undo.js');
@@ -142,13 +142,13 @@ const MM_MAIN_PANEL_OPTIONS = {
                 .map(function (l) { return l.name; });
         },
         /**
-         * 校验问题全集（单一校验源 collectIssues）
+         * 校验问题全集（单一来源 services/issues.js：业务规则 + schema 值）
          * 依赖 config（字段编辑响应式）+ markerVersion.v（非响应式删除兜底）
          */
         validationIssues: function () {
             if (!this.config || !this.markerVersion) return [];
             void this.markerVersion.v;
-            return collectIssues(this.config);
+            return collectAllIssues(this.config);
         },
         /**
          * 按当前零件/变体过滤后的聚合结果（bySubPart / byItem / byPartVariant）

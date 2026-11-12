@@ -14,7 +14,7 @@ var ports = require('../doc/ports.js');
 var em = require('../core/element_markers.js');
 var defs = require('../core/content_pack_manager.js');
 var params = require('./params.js');
-var { collectIssues } = require('../services/validate.js');
+var { collectAllIssues } = require('../services/issues.js');
 var { canExport } = require('../services/export.js');
 var cubeUv = require('../services/cube_uv.js');
 var result = require('./result.js');
@@ -121,7 +121,7 @@ function diffIssues(after, before) {
 
 function safeIssues(config) {
     try {
-        return collectIssues(config) || [];
+        return collectAllIssues(config) || [];
     } catch (e) {
         return [];
     }

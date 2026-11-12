@@ -270,7 +270,14 @@ function validateValues(node, opts) {
     fieldSpecs.getContainers(kind).forEach(function (container) {
         var childKind = fieldSpecs.getContainerChildKind(container);
         var entries = node[container];
-        if (!entries || typeof entries !== 'object' || Array.isArray(entries)) return;
+        if (entries === undefined || entries === null) return;
+        // 容器必须是「key → 条目」的对象：数组 / 字符串会让加载时整体保留原始数据，
+        // 在这里报出来，否则导出闸门看不到它，编码阶段才炸
+        if (!isPlainObject(entries)) {
+            errors.push(makeError(path.concat([container]), 'type_mismatch',
+                'object（key → 条目）', typeName(entries), '容器必须是对象'));
+            return;
+        }
         Object.keys(entries).forEach(function (key) {
             var child = entries[key];
             var childErrors = validateValues(child, {

@@ -244,3 +244,57 @@ describe('core/config 已退役 / 未知的子系统类型', () => {
         expect(() => PartCodec.decode(config.parts.hull)).toThrow(/Unknown dispatch type/);
     });
 });
+
+describe('core/config 结构非法也不挡加载', () => {
+    function brokenConfig() {
+        const config = createConfig();
+        const sp = config.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.mass = '25';                                        // 应为数字
+        sp.hit_boxes = ['junk'];                               // 应为 key → 条目 的对象
+        config.parts.turret = createConfig().parts.hull;        // 另一件正常零件
+        return config;
+    }
+
+    test('默认解码器抛错时保留原始零件，不影响其它零件', () => {
+        const config = brokenConfig();
+        const decoded = migrateIfNeeded(config);
+        const sp = decoded.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        expect(sp.mass).toBe('25');
+        expect(sp.hit_boxes).toEqual(['junk']);
+        // 正常零件照常补默认值
+        expect(decoded.parts.turret.variants.default.sub_parts['sub_part.machine_max.main']
+            .projected_area).toEqual([-1, -1, -1]);
+    });
+
+    test('传入 decodePart 时走该解码器（persistence 用 doc/load 的宽容解码）', () => {
+        const config = brokenConfig();
+        const docLoad = require('../../src/doc/load.js');
+        const issues = [];
+        const decoded = migrateIfNeeded(config, {
+            decodePart: function (part, partId) {
+                const result = docLoad.decodePart(part, { partId: partId });
+                issues.push.apply(issues, result.issues);
+                return result.node;
+            },
+        });
+        // 坏的子零件整条保留，坏碰撞箱容器原样保留
+        const sp = decoded.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        expect(sp.mass).toBe('25');
+        expect(sp.hit_boxes).toEqual(['junk']);
+        expect(issues.length).toBeGreaterThanOrEqual(1);
+        expect(issues.every(function (i) { return i.code === 'load_decode_failed'; })).toBe(true);
+    });
+
+    test('空数组占位仍归一成 {}，非空数组不再被悄悄改写', () => {
+        const raw = legacyConfig();
+        raw.parts.hull.variants.default.sub_parts['sub_part.machine_max.main']
+            .subsystems['subsystem.machine_max.transmission'].power_outputs = [];
+        raw.parts.hull.variants.default.sub_parts['sub_part.machine_max.main']
+            .connectors['connector.machine_max.hatch'].signal_targets = ['local'];
+
+        const normalized = normalizeLegacyPlaceholders(raw);
+        const sp = normalized.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        expect(sp.subsystems['subsystem.machine_max.transmission'].power_outputs).toEqual({});
+        expect(sp.connectors['connector.machine_max.hatch'].signal_targets).toEqual(['local']);
+    });
+});

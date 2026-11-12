@@ -1,13 +1,14 @@
 /**
  * validation_check.js — 接入 Blockbench 原生 ValidatorCheck
  *
- * 与插件自身校验共享同一 collectIssues 实现（单一真源，非共享可变缓存）。
- * run() 现场调用 collectIssues(getConfig()) 并 warn/fail；
+ * 与插件自身校验共享同一份问题清单（`services/issues.js` 的 `collectAllIssues`：
+ * 业务规则 + schema 值 + partId 安全），单一真源、非共享可变缓存。
+ * run() 现场调用 `collectAllIssues(getConfig())` 并 warn/fail；
  * 暴露 registerValidation() / unregisterValidation() 供 mode.js 接线。
  */
 var { createLogger } = require('../utils/logger.js');
 var { getConfig } = require('../utils/persistence.js');
-var { collectIssues } = require('../services/validate.js');
+var { collectAllIssues } = require('../services/issues.js');
 
 var log = createLogger('ValidationCheck');
 
@@ -67,7 +68,7 @@ function registerValidation() {
                 this.errors.empty();
                 return;
             }
-            var problems = collectIssues(config);
+            var problems = collectAllIssues(config);
             var warnings = [];
             var errors = [];
             for (var i = 0; i < problems.length; i++) {

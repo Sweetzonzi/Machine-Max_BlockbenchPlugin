@@ -26,6 +26,16 @@ function _makeProblem(severity, code, message, path) {
     return { severity: severity, code: code, message: message, path: path };
 }
 
+/**
+ * 严格的对象判定（排除 null 与数组）。
+ *
+ * 加载链路会原样保留读不出来的节点（doc/load.js），校验遍历时不能假设
+ * `parts[x]` / `variants[x]` / `sub_parts[x]` 一定是对象。
+ */
+function _isObject(v) {
+    return v !== null && typeof v === 'object' && !Array.isArray(v);
+}
+
 /** 构造 path，仅填充有值的可选字段以免污染聚合 */
 function _mkPath(scope, partId, variantName, subPartKey, itemKey, elementUuid, field) {
     var path = { scope: scope, partId: partId, variantName: variantName, field: field || '' };
@@ -331,7 +341,15 @@ function collectIssues(config) {
     for (var i = 0; i < partIds.length; i++) {
         var partId = partIds[i];
         var part = parts[partId];
-        var variants = part.variants || {};
+        // 加载时会把解不出来的节点原样保留，这里不能假设它们一定是对象
+        if (!_isObject(part)) {
+            problems.push(_makeProblem(
+                'error', CODES.MISSING_REQUIRED, '零件 "' + partId + '"：数据不是对象，无法读取变体',
+                _mkPath('part', partId, '', null, null, null, '')
+            ));
+            continue;
+        }
+        var variants = _isObject(part.variants) ? part.variants : {};
         var variantNames = Object.keys(variants);
 
         if (variantNames.length === 0) {
@@ -345,6 +363,14 @@ function collectIssues(config) {
         for (var vi = 0; vi < variantNames.length; vi++) {
             var vName = variantNames[vi];
             var variant = variants[vName];
+            if (!_isObject(variant)) {
+                problems.push(_makeProblem(
+                    'error', CODES.MISSING_REQUIRED,
+                    '零件 "' + partId + '" 变体 "' + vName + '"：数据不是对象，无法读取子零件',
+                    _mkPath('variant', partId, vName, null, null, null, '')
+                ));
+                continue;
+            }
 
             if (!variant.model) {
                 problems.push(_makeProblem(
@@ -353,7 +379,7 @@ function collectIssues(config) {
                 ));
             }
 
-            var subParts = variant.sub_parts || {};
+            var subParts = _isObject(variant.sub_parts) ? variant.sub_parts : {};
             var spKeys = Object.keys(subParts);
             if (spKeys.length === 0) {
                 problems.push(_makeProblem(
@@ -365,8 +391,23 @@ function collectIssues(config) {
             for (var si = 0; si < spKeys.length; si++) {
                 var spKey = spKeys[si];
                 var sp = subParts[spKey];
+                if (!_isObject(sp)) {
+                    problems.push(_makeProblem(
+                        'error', CODES.MISSING_REQUIRED,
+                        '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：数据不是对象，无法读取碰撞箱与子系统',
+                        _mkPath('subpart', partId, vName, spKey, null, null, '')
+                    ));
+                    continue;
+                }
 
-                if (Object.keys(sp.hit_boxes || {}).length === 0) {
+                // 碰撞箱：没写 / 写了空表才算「为空」。
+                // 形状非法（数组、字符串…）不在这里报「为空」——那会盖掉 schema
+                // 值校验给出的真实原因，且两者 path 相同，去重后只剩误导性的那条。
+                var hitBoxes = _isObject(sp.hit_boxes) ? sp.hit_boxes : {};
+                var hitBoxesEmpty = _isObject(sp.hit_boxes)
+                    ? Object.keys(hitBoxes).length === 0
+                    : isMissingValue(sp.hit_boxes);
+                if (hitBoxesEmpty) {
                     problems.push(_makeProblem(
                         'error', CODES.MISSING_REQUIRED,
                         '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：碰撞箱为空',
@@ -382,8 +423,7 @@ function collectIssues(config) {
                 }
 
                 // 碰撞箱材质：空值必须拦；machine_max:default 是模组内置兜底，不查表
-                var subsystems = sp.subsystems || {};
-                var hitBoxes = sp.hit_boxes || {};
+                var subsystems = _isObject(sp.subsystems) ? sp.subsystems : {};
                 for (var hbKey in hitBoxes) {
                     var hb = hitBoxes[hbKey] || {};
                     if (boneCount > 0 && !ports.get().bones.findByUuid(hbKey)) {
@@ -457,7 +497,7 @@ function collectIssues(config) {
                 }
 
                 // 连接点实例 definition 校验
-                var conns = sp.connectors || {};
+                var conns = _isObject(sp.connectors) ? sp.connectors : {};
                 for (var connKey in conns) {
                     var conn = conns[connKey];
                     if (isMissingValue(conn.definition)) {

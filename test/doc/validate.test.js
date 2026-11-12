@@ -165,4 +165,15 @@ describe('doc/validate', () => {
         });
         expect(result.errors[0].code).toBe('unknown_type');
     });
+
+    test('容器不是对象报 type_mismatch（加载会原样保留它，闸门必须看见）', () => {
+        const config = helpers.createConfig();
+        const sp = config.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.hit_boxes = ['junk'];
+        const errors = validate.validateTree(config, { completeness: true });
+        const hit = errors.filter((e) => e.code === 'type_mismatch'
+            && e.path[e.path.length - 1] === 'hit_boxes');
+        expect(hit).toHaveLength(1);
+        expect(hit[0].got).toBe('array');
+    });
 });

@@ -8,7 +8,7 @@
 > - `src/mcp/` 四文件与工具矩阵按本文落地；`bun test` 覆盖只读、`list_defs` / `read_def`、`set_node`、`remove_node`、`bind_marker`、`set_active`、四个 `import_*`、`add_instance`、`clear_cube_uv`、`validate`、注册/注销，共 47 例（`test/mcp/mcp.test.js`）；清空方块 UV 的服务层另有 8 例（`test/services/cube_uv.test.js`）。
 > - MCP 插件可能先于本插件加载。`registerMcpTools()` 除了推进 `MCP_QUEUE`，在 `globalThis.MCP` 已存在时会立即 `setup` 一次；若 MCP 后加载，则监听 `loaded_plugin` 事件补注册。队列条目保留，后续 drain 会幂等重注册。
 > - 为满足 §5.3，本轮补齐了 ops：`persist:false` / `strict:true` 透传、`import_*` 的 `duplicate_name` 与 `mode:'rename'`、`add_instance` 的 key（配置键）与元素名（`definition.bone` / `definition.locator`）分离。
-> - `introduced_issues` 在 MCP 工具层用 `collectIssues` 前后 diff（正文 §7.2 的“同一撤销记录内”表述按实现收敛；不改变撤销粒度）。
+> - `introduced_issues` 在 MCP 工具层用 `collectAllIssues` 前后 diff（业务规则 + schema 值，与导出闸门同一份清单）（正文 §7.2 的“同一撤销记录内”表述按实现收敛；不改变撤销粒度）。
 > - MCP 插件未安装时 `registerMcpTools()` 只创建一个空的 `MCP_QUEUE` 条目，插件其它功能不受影响。
 
 ---
@@ -358,7 +358,7 @@ async execute({ path, value }) {
 
 每次编辑完成后（撤销记录已提交），立即跑两件事：
 
-1. 用 `collectIssues(config)` 重新收集问题；
+1. 用 `collectAllIssues(config)` 重新收集问题（`services/issues.js`：业务规则 + schema 值）；
 2. 与编辑前的问题集合 diff，只回本次**新引入**的问题（按键 `severity|code|path|message` 判等）。
 
 实现位置是 `src/mcp/tools.js` 的 `beginEdit` / `finishEdit`：工具层在调用 ops 前后各收集一次，结果写入 `introduced_issues`；不改变撤销粒度，也不把校验写进 op。

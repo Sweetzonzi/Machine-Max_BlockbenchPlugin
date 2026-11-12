@@ -7,7 +7,8 @@
 
 ```
 src/services/
-├── export.js          # canExport / dedupeIssues / toProblem + executeExport 聚合出口
+├── issues.js          # collectAllIssues / dedupeIssues / toProblem / probeEncodable（问题清单单一真源）
+├── export.js          # canExport（清单 + 编码试跑） + executeExport 聚合出口
 ├── export_pipeline.js # executeExport（生成器 + 写盘 + schema 注入）
 ├── safe_part_ids.js   # assertSafePartIds
 ├── import.js          # readTextFile / parseJSONWithComments / readJsonFile（解析在 lib/json_text.js）
@@ -25,16 +26,16 @@ src/services/
 
 | 任务 | 文件 | 说明 |
 |---|---|---|
-| 导出前校验 | `export.js` → `canExport(config)` | `validate.js` 的 `collectIssues` + `doc.validate.validateTree(completeness:true)`，按 `path.field` 去重后返回 `{ok, errors, warnings, issues}` |
+| 导出前校验 | `export.js` → `canExport(config)` | `issues.js` 的 `collectAllIssues`（`collectIssues` + `validateTree` 去重）+ `probeEncodable` 编码试跑，返回 `{ok, errors, warnings, issues}` |
 | 导出前 partId 断言 | `safe_part_ids.js` → `assertSafePartIds(config)` | 任何 `mkdir` / `writeFile` 前调用；不安全 partId 直接抛错，不产生半个包 |
 | 执行导出 | `export.js` → `executeExport(...)` | 聚合自 `export_pipeline.js`；`export_dialog` 只从 `export.js` 进入。写盘范围：`parts` / `lang` / `meta` / `geo` 由生成器重写；`recipe` 只改 `$schema` 行（未知 `type` 跳过）；`connectors` / `subsystems` / `materials` 原地导出时原样不动；`docs/schemas` 仅给还没有 docs 的新包铺副本 |
-| 段数组转 Problem | `export.js` → `toProblem(error, config)` | 固定层级 `parts/<id>/variants/<v>/sub_parts/<sp>/<container>/<item>/<field...>` |
-| 问题合并 | `export.js` → `dedupeIssues(primary, schema)` | `collectIssues` 优先，`validateTree` 只补空缺；不同字段不合并 |
+| 段数组转 Problem | `issues.js` → `toProblem(error, config)`（`export.js` 仍转出） | 固定层级 `parts/<id>/variants/<v>/sub_parts/<sp>/<container>/<item>/<field...>` |
+| 问题合并 | `issues.js` → `dedupeIssues(primary, schema)`（`export.js` 仍转出） | `collectIssues` 优先，`validateTree` 只补空缺；不同字段不合并 |
 | 导入文件读取 | `import.js` → `readTextFile` / `parseJSONWithComments` | 去 BOM、剥 `//` 注释（实现在 `src/lib/json_text.js`，无 fs）；冲突对话框与 ops 编排在 `import/drag_import.js` |
 | 导入计划与冲突决议 | `import_plan.js` → `planImports(inputs, parts)` / `resolvePlan(plan, action)` | 纯函数：`new/existing/duplicate` 判定、`takenIds`、两遍 `finalId` 分配；不读盘、不写配置、不弹框。编排与 I/O 在 `drag_import.importParts`（docs/15） |
 | 内容包 fs | `pack.js` | 创建/打开/读 meta 的薄包装；`findPackInSiblings` / `resolveChainDependencies`（跳过内置 `machine_max:builtin`，返回 `unresolved`）/ `resolveDeclaredDependencies`（按 `meta.dependencies` 在父目录解析直接 + 一层间接依赖，返回 `declaredCount` 以区分"没声明"和"声明了但没找到"） |
 | 图标生成 | `icon_generator.js` | `generate(config, options)`：离屏渲染 + PNG 写盘；`icon_paths` / `icon_visibility` / `icon_fit` 为纯函数；`part.icon` 由 UI 调 `ops.setPartIcons` |
-| 唯一校验 | `validate.js` → `collectIssues(config)` | P4 从 `mode/validation.js` 迁入；`mode/validation_check.js` 只做原生清单适配 |
+| 业务校验 | `validate.js` → `collectIssues(config)` | P4 从 `mode/validation.js` 迁入，只覆盖业务规则；面板 / 原生校验 / 闸门统一取 `issues.js` 的 `collectAllIssues` |
 | 方块 UV | `cube_uv.js` → `resolveCubes(ids)` / `clearCubeUv(cubes)` | 清空六面 `texture=null` + `uv=[0,0,0,0]` 并调 `preview_controller.updateFaces(cube)`；走原生 `uv_only` 撤销，标签 `清空方块 UV`。MCP 工具 `clear_cube_uv` 是它的唯一调用方 |
 
 ## 约定
@@ -46,6 +47,8 @@ src/services/
 - `hit_boxes` key 不是骨骼 UUID 时 `collectIssues` 报 `hit_box_key_not_uuid`；没有模型元素时跳过（测试 / 未加载模型不误报）。
 - 碰撞箱 `module` 只在关联到模块化子系统时生效：名字不在该类型的 `modules` 清单里报 `hit_box_module_unknown`，没关联子系统报 `hit_box_module_without_subsystem`，两者都是 warning（模组侧退回按模块最大耐久比例分摊，导出不阻断）。模块清单的真源是 `core/subsystem_types.js` 的 `modules`。
 - 子系统 `type` 不在注册表里时报 `subsystem_type_unknown`（error）：已退役类型从 `RETIRED_TYPES` 取中文名与替代类型，其余按未知类型提示。`path.field` 留空，与 `validateTree` 的 `unknown_type` 同键，导出闸门去重后只留带退役说明的一条（docs/13 §15.3）。
+- **面板 / 原生校验 / 闸门共用 `issues.js` 的 `collectAllIssues`**：只调 `collectIssues` 会让 schema 值问题（类型、枚举、容器不是对象）在界面上看不见、只有导出时才暴露。`canExport` 再叠加 `probeEncodable`（编码试跑），保证放行的数据写得出去（docs/13 §4.3、§15.4）。
+- **加载会原样保留坏节点**（`doc/load.js`）：遍历配置时不要假设 `parts[x]` / `variants[x]` / `sub_parts[x]` / 容器是对象，用 `_isObject` 先判形状并按条目报问题，不要抛异常。
 - 新增服务后同步 `docs/13` §8 与根 `AGENTS.md` 的导入图。
 - 图标生成是独立写盘用例：`icon_generator` 不写 `_uiState`、不 toast、不刷新；字段更新由 UI 在写盘成功后调用 `ops.setPartIcons`。零件路径逐条用 `keys.isSafePartId`，不能复用整包 `assertSafePartIds`。
 

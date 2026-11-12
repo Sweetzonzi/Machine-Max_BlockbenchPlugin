@@ -28,11 +28,12 @@ plugin.js                      # 插件入口（103行）
   │           ├── core/config.js      # 零件/变体/子零件等工厂
   │           ├── core/element_markers.js
   │           ├── core/naming.js
-  │           ├── doc/                # 路径 / 投影 / 引用 / 值校验
+  │           ├── doc/                # 路径 / 投影 / 引用 / 值校验 / 读盘宽容解码（load.js）
   │           └── core/undo.js        # 每个操作内部 runConfigEdit
   ├── utils/notify.js            # 用户通知（Toast）
   ├── services/                  # 文件系统 / 导出闸门 / 图标渲染 / 方块 UV（不进配置撤销；MCP 工具层可调用）
-  │     ├── export.js            # canExport + executeExport 聚合出口
+  │     ├── issues.js            # collectAllIssues / dedupeIssues / toProblem / probeEncodable（问题清单单一真源）
+  │     ├── export.js            # canExport（清单 + 编码试跑） + executeExport 聚合出口
   │     ├── export_pipeline.js   # executeExport（生成器 + 写盘）
   │     ├── safe_part_ids.js     # 写盘前 partId 断言
   │     ├── import.js            # 文件读取 + 带注释 JSON 解析（解析在 lib/json_text.js）
@@ -44,7 +45,7 @@ plugin.js                      # 插件入口（103行）
   │     ├── icon_fit.js          # 纯函数：AABB → 正交 zoom / target
   │     ├── icon_generator.js    # 离屏渲染 + PNG 写盘（不写 _uiState）
   │     ├── cube_uv.js           # 清空方块六面 UV（碰撞几何不可见化，原生 uv_only 撤销）
-  │     └── validate.js          # collectIssues（P4 从 mode/ 下沉）
+  │     └── validate.js          # collectIssues（业务规则；P4 从 mode/ 下沉）
   ├── import/                    # 导入编排（docs/15）
   │     ├── drag_import.js       # importParts：菜单多选 + 拖拽共用（一次撤销 / 一次决议 / 一条提示）
   │     ├── conflict_dialog.js   # 整批冲突决议（overwrite / skip / rename / cancel）
@@ -77,7 +78,7 @@ plugin.js                      # 插件入口（103行）
   │                 └── connector_dialog.js     (506行)
   └── ui/menu.js                 # BarMenu（319行）
         ├── utils/persistence.js  # saveConfig / scheduleSave（300ms 防抖）
-        ├── services/export.js    # canExport 闸门 + executeExport 聚合出口
+        ├── services/issues.js    # 问题清单单一真源（面板 / 原生校验 / 闸门）
         ├── import/drag_import.js # 导入入口：importParts（菜单多选，docs/15）
         ├── utils/file_writer.js
         ├── core/content_pack.js

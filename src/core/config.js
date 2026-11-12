@@ -199,7 +199,12 @@ function normalizeStringField(obj, field) {
 
 function normalizeMapField(obj, field) {
     if (!obj || typeof obj !== 'object' || !hasOwn(obj, field)) return;
-    if (obj[field] === null || Array.isArray(obj[field])) obj[field] = {};
+    // 空数组是旧工程「未配置」的占位，归一成 {}。
+    // 非空数组不在这里改写：那是有内容的坏形状，由加载解码原样保留、由校验报错，
+    // 悄悄换成 {} 等于把作者的数据删了。
+    if (obj[field] === null || (Array.isArray(obj[field]) && obj[field].length === 0)) {
+        obj[field] = {};
+    }
 }
 
 function forEachEntry(obj, field, fn) {
@@ -307,21 +312,30 @@ function normalizeLegacyPlaceholders(config) {
 
 /**
  * 填充配置的缺失默认值：顶层字段用 createBlankConfig 合并，
- * 每个零件用 PartLoadCodec.decode 填充 codec 定义的字段默认值
+ * 每个零件用 `opts.decodePart` 解码以填充 codec 定义的字段默认值。
  *
- * 用 PartLoadCodec 而不是 PartCodec：工程里可能留着上游已退役的子系统类型
+ * 默认解码器是 PartLoadCodec：工程里可能留着上游已退役的子系统类型
  * （machine_max:regen_loader 在 0.6.0 被拆分），严格的 dispatch 会抛
- * "Unknown dispatch type"，整个工程便打不开了。加载实例把这些条目原样保留，
- * 由校验报错、由面板提示；导入 part JSON 与导出编码仍走严格的 PartCodec。
+ * "Unknown dispatch type"，整个工程便打不开了。加载实例把这些条目原样保留。
+ *
+ * `opts.decodePart(part, partId)` 允许调用方换成更宽容的解码器（utils/persistence
+ * 传 doc/load.js 的 decodePart：坏条目原样保留、其余照常解出）。解码仍抛错时
+ * 这件零件保留原始数据，绝不让读盘失败。导入 part JSON 与导出编码走严格的 PartCodec。
  *
  * 注意：PartCodec 的 variants 字段使用 either codec（单 variant 简写 vs map 展开），
  * either 的启发式检测会将非空的 variant map 误判为单个 variant 对象。
  * 因此处理时临时移除 variants，decode 完成后恢复。
  *
  * @param {Object} config - 要修复的配置
+ * @param {Object} [opts] - { decodePart(part, partId) → part, onDecodeError(partId, err) }
  * @returns {Object} 修复后的配置
  */
-function ensureDefaults(config) {
+function ensureDefaults(config, opts) {
+    opts = opts || {};
+    var decodePart = typeof opts.decodePart === 'function'
+        ? opts.decodePart
+        : function (part) { return PartLoadCodec.decode(part); };
+
     if (!config || typeof config !== 'object') {
         log.warn('ensureDefaults: 配置无效，返回空白配置');
         return createBlankConfig();
@@ -340,7 +354,7 @@ function ensureDefaults(config) {
         result._uiState.iconCamera.assemblyDirection = null;
     }
 
-    // 用 PartLoadCodec.decode 填充每个零件（含 variants / sub_parts / 各条目）的默认值。
+    // 用解码器填充每个零件（含 variants / sub_parts / 各条目）的默认值。
     // 单变体简写由 either 的「model 是字符串」判据识别，多 key map（包括键名恰好为
     // model 的变体）走 map 解码，因此不用先把 variants 摘出来。
     var partKeys, i, pk, part;
@@ -348,7 +362,14 @@ function ensureDefaults(config) {
     for (i = 0; i < partKeys.length; i++) {
         pk = partKeys[i];
         part = result.parts[pk];
-        result.parts[pk] = PartLoadCodec.decode(part);
+        try {
+            result.parts[pk] = decodePart(part, pk);
+        } catch (e) {
+            // 兜底：解码器自己失败也不能让读盘失败（宽容解码器不抛错，这里只防回归）
+            log.warn('ensureDefaults: 零件 "' + pk + '" 解码失败，保留原始数据', e);
+            if (typeof opts.onDecodeError === 'function') opts.onDecodeError(pk, e);
+            result.parts[pk] = part;
+        }
     }
 
     log.debug('ensureDefaults: 完成');
@@ -368,12 +389,13 @@ function ensureDefaults(config) {
  * 迁移完成后调用 ensureDefaults 填充新版本字段的默认值
  *
  * @param {Object} config - 原始配置
+ * @param {Object} [opts] - 透传给 ensureDefaults 的 { decodePart, onDecodeError }
  * @returns {Object} 迁移并修复后的配置
  */
-function migrateIfNeeded(config) {
+function migrateIfNeeded(config, opts) {
     if (!config || typeof config !== 'object') {
         log.info('migrateIfNeeded: 无版本号，应用默认值');
-        return ensureDefaults(config);
+        return ensureDefaults(config, opts);
     }
 
     // 先归一化旧占位，再做版本迁移与 decode（docs/13 §15：raw → decode → key 迁移）
@@ -381,13 +403,13 @@ function migrateIfNeeded(config) {
 
     if (!config.$schema_version) {
         log.info('migrateIfNeeded: 无版本号，应用默认值');
-        return ensureDefaults(config);
+        return ensureDefaults(config, opts);
     }
 
     var version = config.$schema_version;
     if (version === CONFIG_VERSION) {
         log.debug('migrateIfNeeded: 配置已是最新版本 v' + version);
-        return ensureDefaults(config);
+        return ensureDefaults(config, opts);
     }
 
     log.info('migrateIfNeeded: 配置需要迁移', { from: version, to: CONFIG_VERSION });
@@ -400,7 +422,7 @@ function migrateIfNeeded(config) {
         }
     }
     // 迁移可能移动 parts 的位置（如 v1 的 project 包装），迁移后再归一化一次
-    return ensureDefaults(normalizeLegacyPlaceholders(migrated));
+    return ensureDefaults(normalizeLegacyPlaceholders(migrated), opts);
 }
 
 /**
