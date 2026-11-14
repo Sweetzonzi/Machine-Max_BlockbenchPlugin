@@ -36,10 +36,12 @@ function variantOptionsOf(config) {
 
 function cameraDefaults(config) {
     var stored = config && config._uiState && config._uiState.iconCamera;
+    var size = stored && Number(stored.outputSize);
     return {
         camera: stored && Array.isArray(stored.direction) ? 'project' : 'project',
         framing: stored && stored.framing === 'fit' ? 'fit' : 'uniform',
         fill: stored && isFinite(Number(stored.fill)) ? Number(stored.fill) : 0.9,
+        outputSize: String([128, 256, 512].indexOf(size) >= 0 ? size : 128),
     };
 }
 
@@ -52,6 +54,7 @@ function persistCamera(config, result) {
         assemblyDirection: old.assemblyDirection || null,
         fill: result.cameraUsed.fill,
         framing: result.cameraUsed.framing === 'current' ? (old.framing || 'uniform') : result.cameraUsed.framing,
+        outputSize: result.cameraUsed.outputSize || 128,
         conventionVersion: 2,
     };
     if (Array.isArray(result.cameraUsed.direction) && result.cameraUsed.direction.length >= 3) {
@@ -328,9 +331,20 @@ function showIconGeneratorDialog(config) {
                     label: '隐藏碰撞箱/交互区/连接点',
                     value: true,
                 },
+                outputSize: {
+                    type: 'select',
+                    label: '输出尺寸',
+                    value: defaults.outputSize,
+                    options: {
+                        128: '128×128（默认，其余内容包惯例）',
+                        256: '256×256',
+                        512: '512×512（与 M1A2 包现有图标一致）',
+                    },
+                    description: '渲染固定 512，按这里采样写盘；512 不缩放',
+                },
                 resolution: {
                     type: 'info',
-                    text: '输出：128×128 RGBA 透明 PNG（P1 固定）',
+                    text: '输出：RGBA 透明 PNG，尺寸按上面的选择（默认 128）',
                 },
             },
             onConfirm: function (formData) {
@@ -346,6 +360,7 @@ function showIconGeneratorDialog(config) {
                     overwrite: !!formData.overwrite,
                     rewriteExternalIcon: !!formData.rewriteExternalIcon,
                     hideMarkers: formData.hideMarkers !== false,
+                    outputSize: Number(formData.outputSize) || 128,
                     write: false,
                 };
                 if (settings.scope === 'current' && !settings.partId) {

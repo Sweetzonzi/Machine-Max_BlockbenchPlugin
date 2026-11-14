@@ -3,7 +3,7 @@
 /**
  * 本文件由 scripts/gen-field-specs.js 自动生成，不要手工编辑。
  * 数据源：src/builtin/builtin/machine_max/docs/en_us/schemas
- * 上游快照：Machine-Max@2829863a
+ * 上游快照：Machine-Max@b220cde2
  * 重新生成：node scripts/gen-field-specs.js
  * 漂移检查：node scripts/gen-field-specs.js --check
  */
@@ -12,9 +12,9 @@ const PROVENANCE = {
     "generator_version": 1,
     "source_locale": "en_us",
     "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
-    "source_revision": "2829863a",
-    "source_files": 78,
-    "source_sha256": "e4f78114612e79317804a22a2f961dc891552d87d93428d4d464e5cc2ecede88",
+    "source_revision": "b220cde2",
+    "source_files": 80,
+    "source_sha256": "5ef22e64c605525154f93268ac95b9a830d8de8dc53f412dcf9f4268c4eb5eec",
     "generated_from": "machine_max builtin JSON Schema"
 };
 
@@ -835,12 +835,12 @@ const SPECS = {
             ],
             "schema": "subsystem/dynamic/basic_dynamic_attr.schema.json"
         },
-        "machine_max:camera": {
+        "machine_max:seat": {
             "fields": {
                 "type": {
                     "type": "string",
                     "enum": [
-                        "machine_max:camera"
+                        "machine_max:seat"
                     ],
                     "required": true,
                     "sideEffect": "rebuild_type_fields"
@@ -853,13 +853,156 @@ const SPECS = {
                 "locator": {
                     "type": "string",
                     "references": "locator"
+                },
+                "control_group_preset": {
+                    "type": "string",
+                    "references": "resource"
+                },
+                "passenger_num_outputs": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "camera_discovery_targets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "reload_operator_discovery_inputs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "dismount_locators": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "references": "locator"
+                    }
+                },
+                "first_hud_layout": {
+                    "type": "string",
+                    "references": "resource"
+                },
+                "third_hud_layout": {
+                    "type": "string",
+                    "references": "resource"
+                },
+                "allow_use_items": {
+                    "type": "boolean",
+                    "nullable": true
                 }
             },
             "required": [
                 "type",
                 "definition"
             ],
-            "schema": "subsystem/dynamic/camera_dynamic_attr.schema.json"
+            "schema": "subsystem/dynamic/seat_dynamic_attr.schema.json"
+        },
+        "machine_max:item_storage": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:item_storage"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                }
+            },
+            "required": [
+                "type",
+                "definition"
+            ],
+            "schema": "subsystem/dynamic/item_storage_dynamic_attr.schema.json"
+        },
+        "machine_max:engine": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:engine"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                },
+                "power_output": {
+                    "type": "string",
+                    "required": true,
+                    "references": "signal"
+                },
+                "speed_outputs": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "required": [
+                "type",
+                "definition",
+                "power_output"
+            ],
+            "schema": "subsystem/dynamic/engine_dynamic_attr.schema.json"
+        },
+        "machine_max:motor": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:motor"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                },
+                "power_output": {
+                    "type": "string",
+                    "required": true,
+                    "references": "signal"
+                },
+                "speed_outputs": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "required": [
+                "type",
+                "definition",
+                "power_output"
+            ],
+            "schema": "subsystem/dynamic/motor_dynamic_attr.schema.json"
         },
         "machine_max:car_controller": {
             "fields": {
@@ -1017,12 +1160,12 @@ const SPECS = {
             ],
             "schema": "subsystem/dynamic/motorbike_controller_dynamic_attr.schema.json"
         },
-        "machine_max:engine": {
+        "machine_max:track_controller": {
             "fields": {
                 "type": {
                     "type": "string",
                     "enum": [
-                        "machine_max:engine"
+                        "machine_max:track_controller"
                     ],
                     "required": true,
                     "sideEffect": "rebuild_type_fields"
@@ -1032,10 +1175,15 @@ const SPECS = {
                     "required": true,
                     "references": "resource"
                 },
-                "power_output": {
-                    "type": "string",
-                    "required": true,
-                    "references": "signal"
+                "control_outputs": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "required": true
                 },
                 "speed_outputs": {
                     "type": "object",
@@ -1050,9 +1198,55 @@ const SPECS = {
             "required": [
                 "type",
                 "definition",
-                "power_output"
+                "control_outputs"
             ],
-            "schema": "subsystem/dynamic/engine_dynamic_attr.schema.json"
+            "schema": "subsystem/dynamic/track_controller_dynamic_attr.schema.json"
+        },
+        "machine_max:track_drive": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:track_drive"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                },
+                "connector": {
+                    "type": "string",
+                    "required": true,
+                    "references": "connector"
+                },
+                "speed_outputs": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "force_outputs": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "required": [
+                "type",
+                "definition",
+                "connector"
+            ],
+            "schema": "subsystem/dynamic/track_drive_dynamic_attr.schema.json"
         },
         "machine_max:gearbox": {
             "fields": {
@@ -1090,158 +1284,6 @@ const SPECS = {
                 "power_output"
             ],
             "schema": "subsystem/dynamic/gearbox_dynamic_attr.schema.json"
-        },
-        "machine_max:item_storage": {
-            "fields": {
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "machine_max:item_storage"
-                    ],
-                    "required": true,
-                    "sideEffect": "rebuild_type_fields"
-                },
-                "definition": {
-                    "type": "string",
-                    "required": true,
-                    "references": "resource"
-                }
-            },
-            "required": [
-                "type",
-                "definition"
-            ],
-            "schema": "subsystem/dynamic/item_storage_dynamic_attr.schema.json"
-        },
-        "machine_max:motor": {
-            "fields": {
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "machine_max:motor"
-                    ],
-                    "required": true,
-                    "sideEffect": "rebuild_type_fields"
-                },
-                "definition": {
-                    "type": "string",
-                    "required": true,
-                    "references": "resource"
-                },
-                "power_output": {
-                    "type": "string",
-                    "required": true,
-                    "references": "signal"
-                },
-                "speed_outputs": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "required": [
-                "type",
-                "definition",
-                "power_output"
-            ],
-            "schema": "subsystem/dynamic/motor_dynamic_attr.schema.json"
-        },
-        "machine_max:seat": {
-            "fields": {
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "machine_max:seat"
-                    ],
-                    "required": true,
-                    "sideEffect": "rebuild_type_fields"
-                },
-                "definition": {
-                    "type": "string",
-                    "required": true,
-                    "references": "resource"
-                },
-                "locator": {
-                    "type": "string",
-                    "references": "locator"
-                },
-                "control_group_preset": {
-                    "type": "string",
-                    "references": "resource"
-                },
-                "passenger_num_outputs": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "camera_discovery_targets": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "dismount_locators": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "references": "locator"
-                    }
-                },
-                "first_hud_layout": {
-                    "type": "string",
-                    "references": "resource"
-                },
-                "third_hud_layout": {
-                    "type": "string",
-                    "references": "resource"
-                },
-                "allow_use_items": {
-                    "type": "boolean",
-                    "nullable": true
-                }
-            },
-            "required": [
-                "type",
-                "definition"
-            ],
-            "schema": "subsystem/dynamic/seat_dynamic_attr.schema.json"
-        },
-        "machine_max:sight": {
-            "fields": {
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "machine_max:sight"
-                    ],
-                    "required": true,
-                    "sideEffect": "rebuild_type_fields"
-                },
-                "definition": {
-                    "type": "string",
-                    "required": true,
-                    "references": "resource"
-                },
-                "locator": {
-                    "type": "string",
-                    "references": "locator"
-                }
-            },
-            "required": [
-                "type",
-                "definition"
-            ],
-            "schema": "subsystem/dynamic/sight_dynamic_attr.schema.json"
         },
         "machine_max:transmission": {
             "fields": {
@@ -1320,34 +1362,6 @@ const SPECS = {
             ],
             "schema": "subsystem/dynamic/wheel_driver_dynamic_attr.schema.json"
         },
-        "machine_max:lighting": {
-            "fields": {
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "machine_max:lighting"
-                    ],
-                    "required": true,
-                    "sideEffect": "rebuild_type_fields"
-                },
-                "definition": {
-                    "type": "string",
-                    "required": true,
-                    "references": "resource"
-                },
-                "locator": {
-                    "type": "string",
-                    "required": true,
-                    "references": "locator"
-                }
-            },
-            "required": [
-                "type",
-                "definition",
-                "locator"
-            ],
-            "schema": "subsystem/dynamic/lighting_dynamic_attr.schema.json"
-        },
         "machine_max:turret_driver": {
             "fields": {
                 "type": {
@@ -1384,6 +1398,174 @@ const SPECS = {
                 "connector"
             ],
             "schema": "subsystem/dynamic/turret_driver_dynamic_attr.schema.json"
+        },
+        "machine_max:lighting": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:lighting"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                },
+                "locator": {
+                    "type": "string",
+                    "required": true,
+                    "references": "locator"
+                }
+            },
+            "required": [
+                "type",
+                "definition",
+                "locator"
+            ],
+            "schema": "subsystem/dynamic/lighting_dynamic_attr.schema.json"
+        },
+        "machine_max:launcher": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:launcher"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                },
+                "locator": {
+                    "type": "string",
+                    "required": true,
+                    "references": "locator"
+                },
+                "fire_animation": {
+                    "type": "string"
+                },
+                "ammo_outputs": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "ammo_discovery_targets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "reload_operator_discovery_targets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "reload_operator_time_multipliers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number",
+                        "integer": false
+                    }
+                }
+            },
+            "required": [
+                "type",
+                "definition",
+                "locator"
+            ],
+            "schema": "subsystem/dynamic/launcher_dynamic_attr.schema.json"
+        },
+        "machine_max:ammo_loader": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:ammo_loader"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                },
+                "ammo_discovery_inputs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ammo_discovery_targets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "reload_operator_discovery_targets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "reload_operator_time_multipliers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number",
+                        "integer": false
+                    }
+                }
+            },
+            "required": [
+                "type",
+                "definition"
+            ],
+            "schema": "subsystem/dynamic/ammo_loader_dynamic_attr.schema.json"
+        },
+        "machine_max:ammo_rack": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:ammo_rack"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                }
+            },
+            "required": [
+                "type",
+                "definition"
+            ],
+            "schema": "subsystem/dynamic/ammo_rack_dynamic_attr.schema.json"
         },
         "machine_max:weapon_controller": {
             "fields": {
@@ -1428,12 +1610,12 @@ const SPECS = {
             ],
             "schema": "subsystem/dynamic/weapon_controller_dynamic_attr.schema.json"
         },
-        "machine_max:launcher": {
+        "machine_max:camera": {
             "fields": {
                 "type": {
                     "type": "string",
                     "enum": [
-                        "machine_max:launcher"
+                        "machine_max:camera"
                     ],
                     "required": true,
                     "sideEffect": "rebuild_type_fields"
@@ -1445,37 +1627,40 @@ const SPECS = {
                 },
                 "locator": {
                     "type": "string",
-                    "required": true,
                     "references": "locator"
-                },
-                "fire_animation": {
-                    "type": "string"
-                },
-                "ammo_outputs": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "ammo_discovery_targets": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
                 }
             },
             "required": [
                 "type",
-                "definition",
-                "locator"
+                "definition"
             ],
-            "schema": "subsystem/dynamic/launcher_dynamic_attr.schema.json"
+            "schema": "subsystem/dynamic/camera_dynamic_attr.schema.json"
+        },
+        "machine_max:sight": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:sight"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                },
+                "locator": {
+                    "type": "string",
+                    "references": "locator"
+                }
+            },
+            "required": [
+                "type",
+                "definition"
+            ],
+            "schema": "subsystem/dynamic/sight_dynamic_attr.schema.json"
         },
         "machine_max:regen_ammo_rack": {
             "fields": {
@@ -1570,12 +1755,12 @@ const SPECS = {
             ],
             "schema": "subsystem/dynamic/regen_ammo_rack_dynamic_attr.schema.json"
         },
-        "machine_max:ammo_rack": {
+        "machine_max:reactive_armor": {
             "fields": {
                 "type": {
                     "type": "string",
                     "enum": [
-                        "machine_max:ammo_rack"
+                        "machine_max:reactive_armor"
                     ],
                     "required": true,
                     "sideEffect": "rebuild_type_fields"
@@ -1590,132 +1775,7 @@ const SPECS = {
                 "type",
                 "definition"
             ],
-            "schema": "subsystem/dynamic/ammo_rack_dynamic_attr.schema.json"
-        },
-        "machine_max:ammo_loader": {
-            "fields": {
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "machine_max:ammo_loader"
-                    ],
-                    "required": true,
-                    "sideEffect": "rebuild_type_fields"
-                },
-                "definition": {
-                    "type": "string",
-                    "required": true,
-                    "references": "resource"
-                },
-                "ammo_discovery_inputs": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "ammo_discovery_targets": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "required": [
-                "type",
-                "definition"
-            ],
-            "schema": "subsystem/dynamic/ammo_loader_dynamic_attr.schema.json"
-        },
-        "machine_max:track_controller": {
-            "fields": {
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "machine_max:track_controller"
-                    ],
-                    "required": true,
-                    "sideEffect": "rebuild_type_fields"
-                },
-                "definition": {
-                    "type": "string",
-                    "required": true,
-                    "references": "resource"
-                },
-                "control_outputs": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "required": true
-                },
-                "speed_outputs": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "required": [
-                "type",
-                "definition",
-                "control_outputs"
-            ],
-            "schema": "subsystem/dynamic/track_controller_dynamic_attr.schema.json"
-        },
-        "machine_max:track_drive": {
-            "fields": {
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "machine_max:track_drive"
-                    ],
-                    "required": true,
-                    "sideEffect": "rebuild_type_fields"
-                },
-                "definition": {
-                    "type": "string",
-                    "required": true,
-                    "references": "resource"
-                },
-                "connector": {
-                    "type": "string",
-                    "required": true,
-                    "references": "connector"
-                },
-                "speed_outputs": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "force_outputs": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "required": [
-                "type",
-                "definition",
-                "connector"
-            ],
-            "schema": "subsystem/dynamic/track_drive_dynamic_attr.schema.json"
+            "schema": "subsystem/dynamic/reactive_armor_dynamic_attr.schema.json"
         }
     }
 };

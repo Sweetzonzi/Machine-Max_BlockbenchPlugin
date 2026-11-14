@@ -51,7 +51,7 @@ const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 //              ammo_discovery_targets，送弹频道 ammo_inputs 由型号侧的 single_round_loading
 //              取代。hit_box.overwrite.sounds 改引用 material_sound_override（多出 fmod.bank）。
 //              实例可编辑字段的增删即上面四项；sounds.fmod 只出现在型号静态属性里。
-const UPSTREAM_REVISION = '2829863a';
+const UPSTREAM_REVISION = 'b220cde2';
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;
@@ -416,12 +416,26 @@ function applyNestedNullable(typeId, fields) {
     }
 }
 
-/** 从 subsystem_dynamic_attr 的 if/then 与 enum 展开全部子系统类型 */
+/**
+ * 取 type 的内置枚举。
+ * 上游把 type 从顶层 enum 改成 anyOf: [enum 内置类型, pattern 扩展命名空间]，
+ * 这里只认带 enum 的那一支；扩展类型没有固定字段清单，不展开。
+ */
+function builtinTypeEnum(typeSchema) {
+    if (!typeSchema) return null;
+    if (Array.isArray(typeSchema.enum)) return typeSchema.enum;
+    for (const branch of typeSchema.anyOf || []) {
+        if (Array.isArray(branch.enum)) return branch.enum;
+    }
+    return null;
+}
+
+/** 从 subsystem_dynamic_attr 的 if/then 与 type 枚举展开全部内置子系统类型 */
 function buildSubsystems(store) {
     const dispatchFile = path.join(store.root, 'subsystem', 'subsystem_dynamic_attr.schema.json');
     const dispatch = store.load(dispatchFile);
-    const typeEnum = dispatch.properties && dispatch.properties.type && dispatch.properties.type.enum;
-    if (!Array.isArray(typeEnum)) throw new Error('subsystem_dynamic_attr 缺少 type enum');
+    const typeEnum = builtinTypeEnum(dispatch.properties && dispatch.properties.type);
+    if (!Array.isArray(typeEnum)) throw new Error('subsystem_dynamic_attr 缺少 type 内置类型枚举');
 
     const byType = {};
     for (const typeId of typeEnum) {

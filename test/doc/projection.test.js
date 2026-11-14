@@ -408,6 +408,8 @@ describe('doc/projection.out / round-trip', () => {
                 fire_animation: 'fire',
                 ammo_outputs: {},
                 ammo_discovery_targets: {},
+                reload_operator_discovery_targets: {},
+                reload_operator_time_multipliers: {},
             },
         };
 

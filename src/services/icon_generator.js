@@ -23,7 +23,9 @@ var log = createLogger('IconGenerator');
 
 var PREVIEW_ID = 'mm_icon_render';
 var RENDER_SIZE = 512;
-var OUTPUT_SIZE = 128;
+// 渲染固定 512，写盘尺寸从 RENDER_SIZE 采样：512 时不做缩放，128/256 逐级缩小。
+var OUTPUT_SIZES = [128, 256, 512];
+var DEFAULT_OUTPUT_SIZE = 128;
 var DEFAULT_FILL = 0.9;
 
 var _preview = null;
@@ -235,27 +237,52 @@ function isElementVisible(el) {
     return true;
 }
 
-function applyAutoVisibility(visibleSet, hidden) {
-    var visibleMap = {};
-    if (Array.isArray(visibleSet)) {
-        visibleSet.forEach(function (uuid) { visibleMap[uuid] = true; });
-    } else if (visibleSet && typeof visibleSet === 'object') {
-        visibleMap = visibleSet;
+function asUuidMap(set) {
+    if (!set) return null;
+    if (Array.isArray(set)) {
+        var map = {};
+        set.forEach(function (uuid) { map[uuid] = true; });
+        return map;
     }
+    return (typeof set === 'object') ? set : null;
+}
+
+/**
+ * 元素级显隐判据：只有直接父组属于零件自身的可见子树时才留下。
+ *
+ * 祖先组必须亮着，子树才画得出来（three.js 的 visible 只往下级联），但祖先组自己
+ * 直接挂着的方块/网格属于同一模型里的其它零件，不属于本零件，不能入镜。
+ * retainedMap 为 null 表示没有可用的 sub_parts（整棵模型的回退），沿用旧判据。
+ */
+function elementRetained(el, retainedMap) {
+    if (!retainedMap) return true;
+    var parent = el.parent;
+    if (!parent || parent === 'root') return false;
+    return !!retainedMap[parent.uuid];
+}
+
+/** 回退（整棵模型）时返回 null，让元素级显隐不做过滤。 */
+function retainedOf(visibility) {
+    return (visibility && !visibility.fallback) ? visibility.retained : null;
+}
+
+function applyAutoVisibility(visibleSet, hidden, retainedSet) {
+    var visibleMap = asUuidMap(visibleSet) || {};
+    var retainedMap = asUuidMap(retainedSet);
     groupList().forEach(function (g) {
         if (!g.mesh) return;
         g.mesh.visible = !!visibleMap[g.uuid] && !hidden[g.uuid];
     });
     cubeList().forEach(function (c) {
         if (!c.mesh) return;
-        c.mesh.visible = !hidden[c.uuid];
+        c.mesh.visible = !hidden[c.uuid] && elementRetained(c, retainedMap);
     });
     meshElements().forEach(function (m) {
         if (!m.mesh || m.type === 'cube') return;
-        m.mesh.visible = !hidden[m.uuid];
+        m.mesh.visible = !hidden[m.uuid] && elementRetained(m, retainedMap);
     });
     locatorList().forEach(function (l) {
-        if (l.mesh) l.mesh.visible = !hidden[l.uuid];
+        if (l.mesh) l.mesh.visible = !hidden[l.uuid] && elementRetained(l, retainedMap);
     });
 }
 
@@ -573,8 +600,14 @@ function directionFor(config, options, kind) {
     return defaultDirection(kind);
 }
 
-function renderToDataUrl(preview) {
+function normalizeOutputSize(value) {
+    var size = Number(value);
+    return OUTPUT_SIZES.indexOf(size) >= 0 ? size : DEFAULT_OUTPUT_SIZE;
+}
+
+function renderToDataUrl(preview, outputSize) {
     if (typeof Canvas === 'undefined' || !Canvas) throw new Error('Canvas API 不可用');
+    var size = normalizeOutputSize(outputSize);
     var oldBg = Canvas.scene.background;
     var oldFog = Canvas.scene.fog;
     Canvas.scene.background = null;
@@ -588,11 +621,11 @@ function renderToDataUrl(preview) {
         var source = preview.canvas.toDataURL('image/png');
         if (!source || source.indexOf('data:image/png') !== 0) throw new Error('无法编码 PNG');
         var canvas = document.createElement('canvas');
-        canvas.width = OUTPUT_SIZE;
-        canvas.height = OUTPUT_SIZE;
+        canvas.width = size;
+        canvas.height = size;
         var ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = true;
-        ctx.drawImage(preview.canvas, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+        ctx.imageSmoothingEnabled = size < RENDER_SIZE;
+        ctx.drawImage(preview.canvas, 0, 0, size, size);
         return canvas.toDataURL('image/png');
     } finally {
         Canvas.scene.background = oldBg;
@@ -601,6 +634,7 @@ function renderToDataUrl(preview) {
 }
 
 function renderSpec(preview, spec, cameraInfo) {
+    var outputSize = normalizeOutputSize(cameraInfo.outputSize);
     if (cameraInfo.current) {
         if (typeof Preview === 'undefined' || !Preview.selected) {
             throw new Error('没有可用的主视口，无法使用当前视角');
@@ -636,7 +670,7 @@ function renderSpec(preview, spec, cameraInfo) {
         preview.camOrtho.updateProjectionMatrix();
         preview.controls.update();
     }
-    return renderToDataUrl(preview);
+    return renderToDataUrl(preview, outputSize);
 }
 
 function dataUrlToBuffer(dataUrl) {
@@ -878,6 +912,8 @@ function generate(config, options) {
             : (storedCamera && storedCamera.framing === 'fit' ? 'fit' : 'uniform'));
     var partDirection = camera === 'current' ? null : directionFor(config, { camera: camera }, 'part');
     var assemblyDirection = camera === 'current' ? null : directionFor(config, { camera: camera }, 'assembly');
+    var storedOutput = storedCamera ? normalizeOutputSize(storedCamera.outputSize) : DEFAULT_OUTPUT_SIZE;
+    var outputSize = normalizeOutputSize(isFinite(Number(options.outputSize)) ? Number(options.outputSize) : storedOutput);
     var cameraInfo = {
         current: false,
         direction: partDirection,
@@ -885,6 +921,7 @@ function generate(config, options) {
         assemblyDirection: assemblyDirection,
         fill: fill,
         framing: framing,
+        outputSize: outputSize,
     };
     var hideMarkers = options.hideMarkers !== false;
 
@@ -908,7 +945,7 @@ function generate(config, options) {
             allSpecs.forEach(function (spec) {
                 if (spec.failed) return;
                 var hidden = collectMarkerHidden(config, hideMarkers);
-                if (spec.visibility) applyAutoVisibility(spec.visibility.visible, hidden);
+                if (spec.visibility) applyAutoVisibility(spec.visibility.visible, hidden, retainedOf(spec.visibility));
                 else applyManualVisibility(hidden);
                 var measured = measureAabb();
                 if (!measured.aabb) {
@@ -952,7 +989,7 @@ function generate(config, options) {
         allSpecs.forEach(function (spec) {
             if (spec.failed) return;
             var hidden = collectMarkerHidden(config, hideMarkers);
-            if (spec.visibility) applyAutoVisibility(spec.visibility.visible, hidden);
+            if (spec.visibility) applyAutoVisibility(spec.visibility.visible, hidden, retainedOf(spec.visibility));
             else applyManualVisibility(hidden);
             var measured = measureAabb();
             if (!measured.aabb) {
@@ -1044,6 +1081,7 @@ function generate(config, options) {
             assemblyDirection: camera === 'current' ? null : assemblyDirection,
             fill: fill,
             framing: camera === 'current' ? 'current' : framing,
+            outputSize: outputSize,
         },
         fieldUpdates: fieldUpdates,
     };

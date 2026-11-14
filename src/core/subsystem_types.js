@@ -146,6 +146,7 @@ var SUBSYSTEM_TYPES = [
             { field: 'passenger_num_outputs',   label: '乘客数信号输出',    editor: 'signal_targets',        required: false, defaultValue: { passenger_num: ['local', 'global'] } },
             { field: 'camera_discovery_targets', label: '摄像机发现握手目标', editor: 'signal_targets',      required: false, defaultValue: {} },
             { field: 'dismount_locators',       label: '下车定位器（按优先级）', editor: 'locator_list', required: false, defaultValue: [] },
+            { field: 'reload_operator_discovery_inputs', label: '被装填方发现频道', editor: 'channel_list', required: false, defaultValue: [] },
         ],
     },
     {
@@ -169,6 +170,15 @@ var SUBSYSTEM_TYPES = [
         id: 'machine_max:basic',
         displayName: '基础（无额外面板）',
         category: 'utility',
+        dynamicFields: [
+            { field: 'definition', label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
+        ],
+    },
+    {
+        id: 'machine_max:reactive_armor',
+        displayName: '爆反附加装甲',
+        category: 'utility',
+        // 灵敏度阈值 trigger_penetration 在型号定义的静态属性里，安装级只有型号
         dynamicFields: [
             { field: 'definition', label: '型号定义', editor: 'definition_selector', required: true,  defaultValue: '' },
         ],
@@ -221,6 +231,8 @@ var SUBSYSTEM_TYPES = [
             { field: 'fire_animation', label: '开火动画名',   editor: 'text_input',          required: false, defaultValue: 'fire' },
             { field: 'ammo_outputs',   label: '弹药反馈输出', editor: 'signal_targets',      required: false, defaultValue: {} },
             { field: 'ammo_discovery_targets', label: '装弹机查询', editor: 'signal_targets', required: false, defaultValue: {} },
+            { field: 'reload_operator_discovery_targets', label: '装填人员查询', editor: 'signal_targets', required: false, defaultValue: {} },
+            { field: 'reload_operator_time_multipliers', label: '装填岗位时间倍率', editor: 'channel_number_map', required: false, defaultValue: {} },
         ],
     },
     {
@@ -263,6 +275,8 @@ var SUBSYSTEM_TYPES = [
             { field: 'definition',            label: '型号定义',   editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'ammo_discovery_inputs', label: '供弹服务频道', editor: 'channel_list',      required: false, defaultValue: [] },
             { field: 'ammo_discovery_targets', label: '上游弹药架查询', editor: 'signal_targets', required: false, defaultValue: {} },
+            { field: 'reload_operator_discovery_targets', label: '装填人员查询', editor: 'signal_targets', required: false, defaultValue: {} },
+            { field: 'reload_operator_time_multipliers', label: '装填岗位时间倍率', editor: 'channel_number_map', required: false, defaultValue: {} },
         ],
     },
 ];
@@ -492,6 +506,7 @@ var EDITOR_LABELS = {
     text_input: '文本输入框',
     json_textarea: 'JSON 编辑框',
     channel_list: '服务频道列表编辑器',
+    channel_number_map: '频道数值映射编辑器',
     belt_definition_editor: '交付规格编辑器',
 };
 

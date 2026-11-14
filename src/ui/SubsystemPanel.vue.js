@@ -334,6 +334,49 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
             this.onFieldChange(field, next);
         },
 
+        // ─── 频道数值映射编辑器（channel_number_map，Map<string, number>） ──
+
+        /** 读取"频道 → 系数"映射（容错：非对象一律视为空） */
+        getChannelNumberEntries: function (field) {
+            var val = this.config[field];
+            return (val && typeof val === 'object' && !Array.isArray(val)) ? val : {};
+        },
+        /** 追加一条默认倍率的频道；键重名时自动加后缀 */
+        addChannelNumberEntry: function (field) {
+            var entries = Object.assign({}, this.getChannelNumberEntries(field));
+            var name = 'crew.reload.loader';
+            var idx = 1;
+            while (entries[name] !== undefined) {
+                name = 'crew.reload.loader_' + idx;
+                idx++;
+            }
+            entries[name] = 1.0;
+            this.onFieldChange(field, entries);
+        },
+        removeChannelNumberEntry: function (field, channel) {
+            var entries = Object.assign({}, this.getChannelNumberEntries(field));
+            delete entries[channel];
+            this.onFieldChange(field, entries);
+        },
+        /** 改键名：保留原倍率；与既有键重名时放弃这次改名 */
+        onChannelNumberChannelChange: function (field, oldName, newName) {
+            var entries = Object.assign({}, this.getChannelNumberEntries(field));
+            if (!newName || oldName === newName || entries[oldName] === undefined) return;
+            if (entries[newName] !== undefined) return;
+            var value = entries[oldName];
+            delete entries[oldName];
+            entries[newName] = value;
+            this.onFieldChange(field, entries);
+        },
+        /** 改倍率：上游只接受有限正数，非法输入直接丢弃 */
+        onChannelNumberValueChange: function (field, channel, value) {
+            var entries = Object.assign({}, this.getChannelNumberEntries(field));
+            if (entries[channel] === undefined) return;
+            if (!isFinite(value) || value <= 0) return;
+            entries[channel] = value;
+            this.onFieldChange(field, entries);
+        },
+
         // ─── 交付规格编辑器（belt_definition_editor） ─────────────────────
         //
         // 规格是逐实例的弹链模板：pattern 有序（取弹位置按书写顺序展开）、length 是一份

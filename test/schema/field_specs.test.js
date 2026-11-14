@@ -17,8 +17,9 @@ describe('field_specs.generated.js', () => {
         expect(actual).toBe(expected);
     });
 
-    test('覆盖上游 21 种 subsystem 类型', () => {
-        expect(Object.keys(generated.SPECS.subsystem).length).toBe(21);
+    test('覆盖上游 22 种 subsystem 类型', () => {
+        expect(Object.keys(generated.SPECS.subsystem).length).toBe(22);
+        expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:reactive_armor');
         expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:track_controller');
         expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:track_drive');
         expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:regen_ammo_rack');
@@ -109,9 +110,9 @@ describe('field_specs.generated.js', () => {
             .toBe('rebuild_type_fields');
     });
 
-    test('provenance 记录 78 个 schema 与源 hash', () => {
+    test('provenance 记录 80 个 schema 与源 hash', () => {
         expect(generated.PROVENANCE.source_revision).toBe(UPSTREAM_REVISION);
-        expect(generated.PROVENANCE.source_files).toBe(78);
+        expect(generated.PROVENANCE.source_files).toBe(80);
         expect(generated.PROVENANCE.source_sha256).toMatch(/^[0-9a-f]{64}$/);
         expect(generated.PROVENANCE.source_root)
             .toBe('src/builtin/builtin/machine_max/docs/en_us/schemas');

@@ -164,8 +164,9 @@ describe('schema ↔ Codec 差异登记', () => {
         expect(allow.extra_types).toEqual([]);
         // 上游 2829863a 把 regen_loader 拆成 regen_ammo_rack / ammo_rack / ammo_loader，
         // 19 - 1 + 3 = 21；ammo_loader 因此重新成为正式类型，不再算 WIP。
-        expect(Object.keys(SubsystemDispatchCodec.codecs)).toHaveLength(21);
-        expect(ssTypes.getAllTypes()).toHaveLength(21);
+        // 上游 b220cde2 起 reactive_armor 正式开放，21 + 1 = 22。
+        expect(Object.keys(SubsystemDispatchCodec.codecs)).toHaveLength(22);
+        expect(ssTypes.getAllTypes()).toHaveLength(22);
         for (const type of removed) {
             expect(SubsystemDispatchCodec.codecs[type]).toBeUndefined();
             expect(ssTypes.getTypeMeta(type)).toBeNull();
@@ -174,6 +175,35 @@ describe('schema ↔ Codec 差异登记', () => {
         // 退役的 regen_loader 同理：旧工程里的实例按未知类型处理
         expect(SubsystemDispatchCodec.codecs['machine_max:regen_loader']).toBeUndefined();
         expect(ssTypes.getTypeMeta('machine_max:regen_loader')).toBeNull();
+    });
+
+    test('上游 b220cde2：装填人员握手字段与爆反装甲可往返', () => {
+        const launcher = SubsystemDispatchCodec.decode({
+            type: 'machine_max:launcher',
+            definition: 'machine_max:basic_launcher',
+            locator: 'muzzle',
+            reload_operator_discovery_targets: { 'crew.reload.loader': ['local'] },
+            reload_operator_time_multipliers: { 'crew.reload.loader': 1.5 },
+        });
+        const encoded = SubsystemDispatchCodec.encode(launcher);
+        expect(encoded.reload_operator_discovery_targets).toEqual({ 'crew.reload.loader': ['local'] });
+        expect(encoded.reload_operator_time_multipliers).toEqual({ 'crew.reload.loader': 1.5 });
+
+        const seat = SubsystemDispatchCodec.encode(SubsystemDispatchCodec.decode({
+            type: 'machine_max:seat',
+            definition: 'machine_max:default_seat',
+            reload_operator_discovery_inputs: ['crew.reload.loader'],
+        }));
+        expect(seat.reload_operator_discovery_inputs).toEqual(['crew.reload.loader']);
+
+        const armor = SubsystemDispatchCodec.encode(SubsystemDispatchCodec.decode({
+            type: 'machine_max:reactive_armor',
+            definition: 'm1a2_sep:m1a2_era_cassette',
+        }));
+        expect(armor).toEqual({
+            type: 'machine_max:reactive_armor',
+            definition: 'm1a2_sep:m1a2_era_cassette',
+        });
     });
 
     test('D13：track_controller / track_drive 已补齐', () => {

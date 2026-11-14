@@ -8,6 +8,11 @@
 //   - end = end_bones ∪ auto_end_bones
 //   - end 骨骼自身及子树都排除
 //   - 多个 sub_part 的可见集取并集，再补祖先
+//
+// 返回值区分两组 UUID：
+//   - visible：并集 + 补进来的祖先。祖先必须亮着，子树才画得出来，用于设置 Group 显隐；
+//   - retained：并集本身，不含祖先。元素级显隐（Cube / Mesh / Locator）按"直接父组是否 retained"
+//     判断，避免挂在祖先组上的同级几何混进零件图。
 
 'use strict';
 
@@ -83,6 +88,7 @@ function warning(code, message, extra) {
  * @param {{strictStartBone?:boolean}} [options]
  * @returns {{
  *   visible: string[],
+ *   retained: string[],
  *   warnings: Array,
  *   errors: Array,
  *   unresolvedStart: string[],
@@ -102,13 +108,14 @@ function buildVisibility(nodes, subParts, options) {
     var unresolvedEnd = [];
     var duplicateStart = [];
     var visible = {};
+    var retained = {};
     var anySubPart = false;
     var allStartEmpty = true;
 
     if (parts.length === 0) {
-        allUuids.forEach(function (uuid) { visible[uuid] = true; });
+        allUuids.forEach(function (uuid) { visible[uuid] = true; retained[uuid] = true; });
         warnings.push(warning('no_sub_parts', '变体没有 sub_parts，按整棵模型生成'));
-        return finish(visible, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart, true);
+        return finish(visible, retained, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart, true);
     }
 
     parts.forEach(function (subPart, partIndex) {
@@ -170,26 +177,29 @@ function buildVisibility(nodes, subParts, options) {
 
         anySubPart = true;
         Object.keys(startSet).forEach(function (uuid) {
-            if (!excluded[uuid]) visible[uuid] = true;
+            if (excluded[uuid]) return;
+            visible[uuid] = true;
+            retained[uuid] = true;
         });
     });
 
     if (!anySubPart) {
         if (allStartEmpty) {
-            allUuids.forEach(function (uuid) { visible[uuid] = true; });
+            allUuids.forEach(function (uuid) { visible[uuid] = true; retained[uuid] = true; });
             errors.push(warning('no_visible_sub_parts', '所有 start_bone 为空，按整棵模型生成'));
-            return finish(visible, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart, true);
+            return finish(visible, retained, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart, true);
         }
         // 所有 start_bone 都解析失败：不要静默生成整机图，返回空可见集让调用方跳过。
         errors.push(warning('no_resolved_start_bones', '所有 start_bone 都无法解析，跳过该图标'));
-        return finish(visible, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart, false);
+        return finish(visible, retained, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart, false);
     }
 
+    // 祖先只补进 visible：组必须亮着子树才画得出来，但它们不属于零件的几何。
     Object.keys(visible).forEach(function (uuid) {
         collectAncestors(uuid, index.byUuid, visible);
     });
 
-    var result = finish(visible, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart,
+    var result = finish(visible, retained, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart,
         parts.length === 0 || allStartEmpty);
     if (result.visible.length === 0) {
         errors.push(warning('empty_visibility', '可见集为空，可能 start_bone 与 end_bones 互相抵消'));
@@ -197,13 +207,16 @@ function buildVisibility(nodes, subParts, options) {
     return result;
 }
 
-function finish(visibleMap, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart, fallback) {
+function finish(visibleMap, retainedMap, allUuids, warnings, errors, unresolvedStart, unresolvedEnd, duplicateStart, fallback) {
     var visible = [];
+    var retained = [];
     allUuids.forEach(function (uuid) {
         if (visibleMap[uuid]) visible.push(uuid);
+        if (retainedMap[uuid]) retained.push(uuid);
     });
     return {
         visible: visible,
+        retained: retained,
         warnings: warnings,
         errors: errors,
         unresolvedStart: unresolvedStart,

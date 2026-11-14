@@ -15,9 +15,9 @@ src/services/
 ├── import_plan.js     # 纯策略：planImports / resolvePlan（导入计划与整批冲突决议，无 I/O）
 ├── pack.js            # createPack / openPack / readPackMeta / 依赖链解析
 ├── icon_paths.js      # 纯 planner：part.icon 三态 / resource location
-├── icon_visibility.js # 纯函数：start/end/auto_end → 可见 UUID 集
+├── icon_visibility.js # 纯函数：start/end/auto_end → visible（含祖先）/ retained（不含祖先）
 ├── icon_fit.js        # 纯函数：AABB → 正交 zoom / target
-├── icon_generator.js  # 离屏渲染 + 128 PNG 写盘
+├── icon_generator.js  # 离屏渲染 + PNG 写盘（128 / 256 / 512，默认 128）
 ├── cube_uv.js         # clearCubeUv / resolveCubes：清空方块六面 UV（碰撞几何不可见化）
 └── validate.js        # collectIssues（唯一校验实现）
 ```
@@ -34,7 +34,7 @@ src/services/
 | 导入文件读取 | `import.js` → `readTextFile` / `parseJSONWithComments` | 去 BOM、剥 `//` 注释（实现在 `src/lib/json_text.js`，无 fs）；冲突对话框与 ops 编排在 `import/drag_import.js` |
 | 导入计划与冲突决议 | `import_plan.js` → `planImports(inputs, parts)` / `resolvePlan(plan, action)` | 纯函数：`new/existing/duplicate` 判定、`takenIds`、两遍 `finalId` 分配；不读盘、不写配置、不弹框。编排与 I/O 在 `drag_import.importParts`（docs/15） |
 | 内容包 fs | `pack.js` | 创建/打开/读 meta 的薄包装；`findPackInSiblings` / `resolveChainDependencies`（跳过内置 `machine_max:builtin`，返回 `unresolved`）/ `resolveDeclaredDependencies`（按 `meta.dependencies` 在父目录解析直接 + 一层间接依赖，返回 `declaredCount` 以区分"没声明"和"声明了但没找到"） |
-| 图标生成 | `icon_generator.js` | `generate(config, options)`：离屏渲染 + PNG 写盘；`icon_paths` / `icon_visibility` / `icon_fit` 为纯函数；`part.icon` 由 UI 调 `ops.setPartIcons` |
+| 图标生成 | `icon_generator.js` | `generate(config, options)`：离屏渲染 + PNG 写盘（`outputSize` 128/256/512，默认 128）；元素级显隐按 `icon_visibility.buildVisibility` 的 `retained` 判定；`icon_paths` / `icon_visibility` / `icon_fit` 为纯函数；`part.icon` 由 UI 调 `ops.setPartIcons` |
 | 业务校验 | `validate.js` → `collectIssues(config)` | P4 从 `mode/validation.js` 迁入，只覆盖业务规则；面板 / 原生校验 / 闸门统一取 `issues.js` 的 `collectAllIssues` |
 | 方块 UV | `cube_uv.js` → `resolveCubes(ids)` / `clearCubeUv(cubes)` | 清空六面 `texture=null` + `uv=[0,0,0,0]` 并调 `preview_controller.updateFaces(cube)`；走原生 `uv_only` 撤销，标签 `清空方块 UV`。MCP 工具 `clear_cube_uv` 是它的唯一调用方 |
 

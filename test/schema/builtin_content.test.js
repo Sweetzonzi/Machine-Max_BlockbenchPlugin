@@ -1,6 +1,6 @@
 'use strict';
 
-// 内置内容包同步回归：上游 06ba3627 的 58 个子系统定义 / 28 个连接点 / 投射物顶层 schema。
+// 内置内容包同步回归：上游 84b08182 的 59 个子系统定义 / 28 个连接点 / 投射物顶层 schema。
 // 只检查 vendored 快照，不依赖构建注入的 __BUILTIN_*__ 常量。
 
 const { describe, test, expect } = require('bun:test');
@@ -27,12 +27,14 @@ function walk(dir) {
 }
 
 describe('builtin 内容包同步', () => {
-    test('58 个子系统定义，含 track_controller / track_drive', () => {
+    test('59 个子系统定义，含 track_controller / track_drive / reactive_armor', () => {
         const files = walk(SUB);
-        expect(files).toHaveLength(58);
+        expect(files).toHaveLength(59);
         expect(fs.existsSync(path.join(SUB, 'track_controller', 'track_controller_standard.json')))
             .toBe(true);
         expect(fs.existsSync(path.join(SUB, 'track_drive', 'track_drive_heavy.json')))
+            .toBe(true);
+        expect(fs.existsSync(path.join(SUB, 'reactive_armor', 'reactive_armor_brick.json')))
             .toBe(true);
     });
 
@@ -172,16 +174,25 @@ describe('builtin 内容包同步', () => {
             .toContain('material_sound_override');
     });
 
-    test('座位图与第三人称 HUD 布局已同步', () => {
+    test('第三人称 HUD 布局与座位定义已同步', () => {
         expect(fs.existsSync(path.join(ROOT, 'documents', 'vehicle_seat_map', 'index.html'))).toBe(true);
-        expect(fs.existsSync(path.join(ROOT, 'huds', 'vehicle_seat_map.json'))).toBe(true);
-        for (const layout of ['vehicle_seat_map', 'seat_dashboard_third', 'morden_ground_basic_third']) {
-            expect(fs.existsSync(path.join(ROOT, 'hud_layouts', layout + '.json'))).toBe(true);
+        for (const name of ['vehicle_seat_map', 'vehicle_seat_list', 'vehicle_status_heading',
+            'vehicle_status_camera', 'vehicle_status_topdown']) {
+            expect(fs.existsSync(path.join(ROOT, 'huds', name + '.json'))).toBe(true);
+            expect(fs.existsSync(path.join(ROOT, 'hud_layouts', name + '.json'))).toBe(true);
         }
-        // 第三人称驾驶座定义在 seat/ 目录下：第三人称视图改走座位图布局
-        const thirdDriver = readJsonc(
-            path.join(SUB, 'seat', 'default_3rd_driver_seat.json'));
-        expect(thirdDriver.type).toBe('machine_max:seat');
-        expect(thirdDriver.views.third_hud_layout).toBe('machine_max:vehicle_seat_map');
+        // 三人称座位统一走状态 HUD 的航向布局；车内座位各用自己的仪表布局
+        const thirdLayout = {};
+        for (const name of ['default_seat', 'default_passenger_seat', 'default_3rd_seat',
+            'default_3rd_driver_seat', 'default_3rd_passenger_seat']) {
+            const seat = readJsonc(path.join(SUB, 'seat', name + '.json'));
+            expect(seat.type).toBe('machine_max:seat');
+            thirdLayout[name] = seat.views.third_hud_layout;
+        }
+        expect(thirdLayout.default_seat).toBe('machine_max:seat_dashboard_third');
+        expect(thirdLayout.default_passenger_seat).toBe('machine_max:vehicle_seat_list');
+        for (const name of ['default_3rd_seat', 'default_3rd_driver_seat', 'default_3rd_passenger_seat']) {
+            expect(thirdLayout[name]).toBe('machine_max:vehicle_status_heading');
+        }
     });
 });

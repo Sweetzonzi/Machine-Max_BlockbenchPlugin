@@ -158,6 +158,29 @@
                 </span>
             </div>
 
+            <!-- 频道数值映射编辑器（channel_number_map，Map<string, number>）：
+                 装填岗位时间倍率这类"频道 → 系数"字段，键由作者填频道名 -->
+            <div v-else-if="field.editor === 'channel_number_map'" class="mm-channel-number-map-editor">
+                <div v-for="(factor, channel, ci) in getChannelNumberEntries(field.field)" :key="ci"
+                    style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+                    <input type="text" class="mm-input" style="flex:1;font-size:11px"
+                        :value="channel"
+                        @change="onChannelNumberChannelChange(field.field, channel, $event.target.value)"
+                        placeholder="crew.reload.loader" />
+                    <input type="number" class="mm-input" style="width:70px;font-size:11px;text-align:right"
+                        step="0.1" min="0.1"
+                        :value="factor"
+                        @change="onChannelNumberValueChange(field.field, channel, parseFloat($event.target.value))"
+                        placeholder="1.0" />
+                    <button class="mm-btn mm-btn-sm mm-btn-danger-light"
+                        @click="removeChannelNumberEntry(field.field, channel)" title="删除该频道">×</button>
+                </div>
+                <button class="mm-btn" style="font-size:11px" @click="addChannelNumberEntry(field.field)">+ 添加频道</button>
+                <span class="mm-element-info" style="font-size:10px;color:#888">
+                    未列出的频道按 1.0 计算；值必须是正数
+                </span>
+            </div>
+
             <!-- 交付规格编辑器（belt_definition_editor）：弹链模板 -->
             <div v-else-if="field.editor === 'belt_definition_editor'" class="mm-belt-definition-editor">
                 <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">

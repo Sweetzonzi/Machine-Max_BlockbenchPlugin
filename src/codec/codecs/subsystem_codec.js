@@ -1,5 +1,5 @@
 // 文件: src/codec/codecs/subsystem_codec.js
-// 用途: 21 种正式子系统类型的独立 codec + SubsystemDispatchCodec（按 type 字段路由）
+// 用途: 22 种正式子系统类型的独立 codec + SubsystemDispatchCodec（按 type 字段路由）
 // 所属模块: MachineMax Blockbench 插件
 //
 // 字段定义与 src/core/subsystem_types.js 中 dynamicFields 一一对应。
@@ -53,6 +53,7 @@ const SeatCodec = Codec.record({
     passenger_num_outputs:    Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     camera_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     dismount_locators:        Codec.STRING.list().default([]),
+    reload_operator_discovery_inputs: Codec.STRING.list().default([]),
     first_hud_layout:         Codec.STRING.default(''),
     third_hud_layout:         Codec.STRING.default(''),
     allow_use_items:          Codec.BOOL.nullable(),
@@ -178,10 +179,14 @@ const WeaponControllerCodec = Codec.record({
 
 /**
  * LauncherCodec — 发射器
- * 字段: definition, locator, fire_animation, ammo_outputs, ammo_discovery_targets
+ * 字段: definition, locator, fire_animation, ammo_outputs, ammo_discovery_targets,
+ *       reload_operator_discovery_targets, reload_operator_time_multipliers
  *
  * ammo_discovery_targets 是发射器自己的上游查询表（频道 → 目标名）：
  * 结构变化时按它只读发现同一装配体内的自动装弹机。
+ *
+ * reload_operator_* 是人工装填的用人查询：前者把装填人员频道指向座位，
+ * 后者给同一批频道标岗位时间倍率（键取前者的频道名，缺省按 1.0）。
  */
 const LauncherCodec = Codec.record({
     definition:             Codec.STRING.field(),
@@ -189,6 +194,8 @@ const LauncherCodec = Codec.record({
     fire_animation:         Codec.STRING.default('fire'),
     ammo_outputs:           Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     ammo_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    reload_operator_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    reload_operator_time_multipliers:  Codec.map(Codec.STRING, Codec.FLOAT).default({}),
 });
 
 /**
@@ -234,6 +241,14 @@ const RegenAmmoRackCodec = Codec.record({
 });
 
 /**
+ * ReactiveArmorCodec — 爆反附加装甲
+ * 字段: definition（灵敏度阈值在型号定义的静态属性里，安装级没有别的字段）
+ */
+const ReactiveArmorCodec = Codec.record({
+    definition: Codec.STRING.field(),
+});
+
+/**
  * AmmoRackCodec — 物品弹药架
  * 字段: definition（物品往返尚未实现，实例上没有别的字段）
  */
@@ -243,12 +258,17 @@ const AmmoRackCodec = Codec.record({
 
 /**
  * AmmoLoaderCodec — 自动装弹机
- * 字段: definition, ammo_discovery_inputs, ammo_discovery_targets
+ * 字段: definition, ammo_discovery_inputs, ammo_discovery_targets,
+ *       reload_operator_discovery_targets, reload_operator_time_multipliers
+ *
+ * reload_operator_* 与发射器同形：机构的人工段按这张查询表找装填人员座位。
  */
 const AmmoLoaderCodec = Codec.record({
     definition:             Codec.STRING.field(),
     ammo_discovery_inputs:  Codec.STRING.list().default([]),
     ammo_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    reload_operator_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    reload_operator_time_multipliers:  Codec.map(Codec.STRING, Codec.FLOAT).default({}),
 });
 
 /**
@@ -297,6 +317,7 @@ const SUBSYSTEM_CODECS = {
     'machine_max:ammo_loader':          AmmoLoaderCodec,
     'machine_max:track_controller':     TrackControllerCodec,
     'machine_max:track_drive':          TrackDriveCodec,
+    'machine_max:reactive_armor':       ReactiveArmorCodec,
 };
 
 /**
@@ -349,5 +370,6 @@ if (typeof module !== 'undefined' && module.exports) {
         AmmoLoaderCodec,
         TrackControllerCodec,
         TrackDriveCodec,
+        ReactiveArmorCodec,
     };
 }

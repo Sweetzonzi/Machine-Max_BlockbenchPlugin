@@ -23,6 +23,23 @@ describe('icon_visibility.buildVisibility', () => {
         expect(r.errors).toEqual([]);
     });
 
+    test('retained 只含 sub_part 子树，不含补进来的祖先', () => {
+        const r = vis.buildVisibility(NODES, [{ start_bone: 'Hull' }]);
+        expect(sorted(r.retained)).toEqual(['hull', 'wheel1', 'wheel2']);
+        expect(r.visible).toContain('root');
+    });
+
+    test('end 子树同时从 retained 里排除', () => {
+        const r = vis.buildVisibility(NODES, [{ start_bone: 'Turret', end_bones: ['Gun'] }]);
+        expect(sorted(r.retained)).toEqual(['turret']);
+        expect(sorted(r.visible)).toEqual(['root', 'turret']);
+    });
+
+    test('无 sub_parts 回退时 retained = 整棵模型', () => {
+        const r = vis.buildVisibility(NODES, []);
+        expect(sorted(r.retained)).toEqual(sorted(NODES.map(n => n.uuid)));
+    });
+
     test('end 自身及子树排除，祖先保留', () => {
         const r = vis.buildVisibility(NODES, [{ start_bone: 'Hull', end_bones: ['Wheel_1'] }]);
         expect(sorted(r.visible)).toEqual(['hull', 'root', 'wheel2']);
