@@ -53,7 +53,7 @@ const HIT_BOX_DEFAULTS = {
 const INTERACT_BOX_DEFAULTS = {
     bone: '',
     interact_mode: 'fast',
-    condition: 'NOR',
+    condition: 'true',
     signal_targets: {},
 };
 

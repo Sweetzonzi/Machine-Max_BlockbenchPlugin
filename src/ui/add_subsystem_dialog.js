@@ -68,8 +68,8 @@ function showAddSubsystemDialog(options) {
             // 自动生成名称（生成规则属于 UI 便利功能，去重仍需在这里做）
             if (!instanceName || instanceName.trim() === '') {
                 var { generateDefaultName, ensureUniqueName } = require('../core/naming.js');
-                var ns = (config && config.namespace) || 'machine_max';
-                var baseName = generateDefaultName('subsystem', { namespace: ns, typeShortName: typeId.split(':').pop() || 'ss' });
+                // 默认落共享词汇 machine_max（译名多由内置包提供），作者可在键名编辑器里改
+                var baseName = generateDefaultName('subsystem', { typeShortName: typeId.split(':').pop() || 'ss' });
                 instanceName = ensureUniqueName('subsystem', variant, spKey, baseName);
             } else {
                 instanceName = instanceName.trim();

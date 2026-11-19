@@ -23,6 +23,23 @@ var log = createLogger('ContentPackManager');
 /** hasOwnProperty 快捷调用，避免触发生物检查规则 */
 var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
 
+/**
+ * 取 openContentPack 结果中的命名空间列表
+ *
+ * 正常情况下带 `namespaces`；老调用方或桩对象只有 `namespace` 时退回单元素列表，
+ * 避免因为缺字段把整个包当成空包。
+ *
+ * @param {Object} openResult - openContentPack 返回值
+ * @returns {string[]}
+ */
+function namespacesOf(openResult) {
+    if (!openResult) return [];
+    if (Array.isArray(openResult.namespaces) && openResult.namespaces.length > 0) {
+        return openResult.namespaces;
+    }
+    return openResult.namespace ? [openResult.namespace] : [];
+}
+
 // =============================================================================
 // 缓存
 // =============================================================================
@@ -42,6 +59,9 @@ var _cache = {
     control_groups: null,
     projectiles: null,
 };
+
+/** 命名空间候选缓存（同样按来源指纹失效） */
+var _nsCache = { key: null, list: [] };
 
 /**
  * 计算内容包来源指纹（缓存键）
@@ -176,6 +196,7 @@ function loadMergedDefs(config, type) {
                 log.info('loadMergedDefs: 依赖包打开成功', {
                     path: depPath,
                     namespace: openResult.namespace,
+                    namespaces: openResult.namespaces,
                     metaId: openResult.meta ? openResult.meta.id : null,
                 });
 
@@ -187,15 +208,14 @@ function loadMergedDefs(config, type) {
                     continue;
                 }
 
-                depDefs = content_pack.readAllDefs(depPath, openResult.namespace, type);
+                depDefs = content_pack.readAllDefsByNamespace(depPath, namespacesOf(openResult), type);
                 for (depKey in depDefs) {
                     if (hasOwn(depDefs, depKey)) {
-                        var namespacedDepKey = openResult.namespace + ':' + depKey;
-                        // 检查是否已被更早的层定义（内置包或更早的依赖包）
-                        var prevSource = sources[namespacedDepKey];
-                        defs[namespacedDepKey] = depDefs[depKey];
-                        sources[namespacedDepKey] = 'dependency:' + i;
-                        log.info('loadMergedDefs: 依赖包添加 ' + namespacedDepKey + ' (source=dependency:' + i + ', 覆盖前=' + (prevSource || '无') + ')');
+                        // 键已由 readAllDefsByNamespace 带上命名空间前缀
+                        var prevSource = sources[depKey];
+                        defs[depKey] = depDefs[depKey];
+                        sources[depKey] = 'dependency:' + i;
+                        log.info('loadMergedDefs: 依赖包添加 ' + depKey + ' (source=dependency:' + i + ', 覆盖前=' + (prevSource || '无') + ')');
                     }
                 }
                 log.info('loadMergedDefs: 依赖包 ' + depPath + ' ' + type + ' 加载完成，共 ' + Object.keys(depDefs).length + ' 个定义');
@@ -221,6 +241,7 @@ function loadMergedDefs(config, type) {
                 log.info('loadMergedDefs: 当前包打开成功', {
                     path: currentPath,
                     namespace: curOpenResult.namespace,
+                    namespaces: curOpenResult.namespaces,
                     metaId: curOpenResult.meta ? curOpenResult.meta.id : null,
                 });
 
@@ -229,14 +250,14 @@ function loadMergedDefs(config, type) {
                 if (curOpenResult.meta && curOpenResult.meta.id === BUILTIN_PACK_ID) {
                     log.warn('loadMergedDefs: 当前内容包指向内置包 ' + currentPath + '，跳过 current 层');
                 } else {
-                    curDefs = content_pack.readAllDefs(currentPath, curOpenResult.namespace, type);
+                    curDefs = content_pack.readAllDefsByNamespace(currentPath, namespacesOf(curOpenResult), type);
                     for (curKey in curDefs) {
                         if (hasOwn(curDefs, curKey)) {
-                            var namespacedCurKey = curOpenResult.namespace + ':' + curKey;
-                            var prevSource = sources[namespacedCurKey];
-                            defs[namespacedCurKey] = curDefs[curKey];
-                            sources[namespacedCurKey] = 'current';
-                            log.info('loadMergedDefs: 当前包添加 ' + namespacedCurKey + ' (source=current, 覆盖前=' + (prevSource || '无') + ')');
+                            // 键已由 readAllDefsByNamespace 带上命名空间前缀
+                            var prevSource = sources[curKey];
+                            defs[curKey] = curDefs[curKey];
+                            sources[curKey] = 'current';
+                            log.info('loadMergedDefs: 当前包添加 ' + curKey + ' (source=current, 覆盖前=' + (prevSource || '无') + ')');
                         }
                     }
                     log.info('loadMergedDefs: 当前包 ' + currentPath + ' ' + type + ' 加载完成，共 ' + Object.keys(curDefs).length + ' 个定义');
@@ -336,7 +357,67 @@ function invalidateCache() {
     _cache.subsystems = null;
     _cache.control_groups = null;
     _cache.projectiles = null;
+    _nsCache.key = null;
+    _nsCache.list = [];
     log.debug('invalidateCache: 缓存已清除');
+}
+
+/**
+ * 键名可选的命名空间：`machine_max`（共享词汇）+ 本包 + 各依赖包。
+ *
+ * 新建实体的键默认落 `machine_max`（见 `core/naming.js`），但作者可以改成
+ * 本包导出命名空间或任一依赖包已有的命名空间，所以键名编辑器需要一个候选表。
+ * 只读一级内容目录名，结果按来源指纹缓存；拿不到的包跳过，不抛错。
+ *
+ * @param {Object|null} config - 项目配置对象
+ * @returns {string[]} 去重后的候选命名空间，首个恒为 machine_max
+ */
+function namespaceCandidates(config) {
+    var key;
+    var list;
+    var seen;
+    var deps;
+    var i;
+
+    if (!config) return ['machine_max'];
+
+    key = computeSourceKey(config);
+    if (_nsCache.key === key) return _nsCache.list.slice();
+
+    list = [];
+    seen = {};
+
+    function add(names) {
+        var j;
+        var ns;
+        for (j = 0; j < (names || []).length; j++) {
+            ns = names[j];
+            if (typeof ns !== 'string' || !ns || seen[ns]) continue;
+            seen[ns] = true;
+            list.push(ns);
+        }
+    }
+
+    add(['machine_max']);
+
+    try {
+        add(content_pack.listNamespaces(config.contentPackPath));
+    } catch (e) {
+        log.warn('namespaceCandidates: 读取本包命名空间失败', e);
+    }
+
+    deps = Array.isArray(config.dependencyPaths) ? config.dependencyPaths : [];
+    for (i = 0; i < deps.length; i++) {
+        try {
+            add(content_pack.listNamespaces(deps[i]));
+        } catch (e2) {
+            log.warn('namespaceCandidates: 读取依赖命名空间失败 ' + deps[i], e2);
+        }
+    }
+
+    _nsCache.key = key;
+    _nsCache.list = list;
+    return list.slice();
 }
 
 // =============================================================================
@@ -350,6 +431,7 @@ if (typeof module !== 'undefined' && module.exports) {
         isDefEditable,
         getAvailableDefsForType,
         getFirstDefId,
+        namespaceCandidates,
         invalidateCache,
     };
 }

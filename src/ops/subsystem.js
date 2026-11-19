@@ -36,6 +36,13 @@ function createSubsystem(config, options) {
     if (sp && sp.subsystems && sp.subsystems[instanceName]) {
         return shared.fail('子系统 "' + instanceName + '" 已存在');
     }
+    // 名字在零件内唯一（跨子零件）：别的子零件已有同名子系统时，上游解码会整份拒收
+    var conflict = shared.checkPartUniqueName(variant, instanceName, {
+        subPartKey: spKey,
+        path: ['parts', partId, 'variants', variantName, 'sub_parts', spKey,
+            'subsystems', instanceName],
+    });
+    if (conflict) return conflict;
 
     var defaults = ssTypes.getTypeDefaults(typeId) || {};
     runConfigEdit('添加子系统', function () {
@@ -113,6 +120,14 @@ function importSubsystem(config, options) {
     if (!modeResult.ok) return modeResult;
 
     var effectiveExisting = modeResult.mode === 'rename' ? oldExisting : existing;
+    // 名字在零件内唯一（跨子零件）：目标子零件之外已经有了同名子系统就拒绝
+    var conflict = shared.checkPartUniqueName(variant, instanceName, {
+        subPartKey: spKey,
+        excludeKey: instanceName,
+        path: ['parts', partId, 'variants', variantName, 'sub_parts', spKey,
+            'subsystems', instanceName],
+    });
+    if (conflict) return conflict;
     var ctx = {
         kind: 'subsystem',
         mode: modeResult.mode,
@@ -158,6 +173,14 @@ function renameSubsystem(config, options) {
         ['parts', partId, 'variants', variantName, 'sub_parts', spKey, 'subsystems', newKey]);
     if (keyError) return shared.fail(keyError.hint, [keyError]);
     if (sp.subsystems[newKey]) return shared.fail('子系统 "' + newKey + '" 已存在');
+    // 重名的作用域是整个零件（跨子零件）：上游解码会整份拒收
+    var conflict = shared.checkPartUniqueName(shared.variantOf(config, partId, variantName),
+        newKey, {
+            subPartKey: spKey,
+            path: ['parts', partId, 'variants', variantName, 'sub_parts', spKey,
+                'subsystems', newKey],
+        });
+    if (conflict) return conflict;
 
     var renamed = null;
     runConfigEdit('重命名子系统', function () {

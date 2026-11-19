@@ -33,38 +33,41 @@ function extractType(fullKey) {
 }
 
 /**
- * 从完整键提取短名（namespace 后的部分）
+ * 把完整键拆成三段：`{ type, namespace, name }`
+ * "sub_part.machine_max.main" → { type: 'sub_part', namespace: 'machine_max', name: 'main' }
+ * 不是 `<type>.<ns>.<name>` 形态（缺少类型、段为空）时返回 null。
+ */
+function parseKey(fullKey) {
+    if (!fullKey || typeof fullKey !== 'string') return null;
+    var type = extractType(fullKey);
+    if (!type) return null;
+    var rest = fullKey.slice(type.length + 1);
+    var dot = rest.indexOf('.');
+    if (dot <= 0 || dot === rest.length - 1) return null;
+    return { type: type, namespace: rest.slice(0, dot), name: rest.slice(dot + 1) };
+}
+
+/**
+ * 从完整键提取短名（命名空间后的部分）
  * "subsystem.machine_max.engine" → "engine"
- * "connector.machine_max.front_wheel" → "front_wheel"
+ * "subsystem.2s38.engine"        → "engine"（不依赖传入的工程命名空间）
+ * 不是完整键（没有类型前缀）时原样返回。
  */
 function extractShortName(fullKey, ns) {
     if (!fullKey || typeof fullKey !== 'string') return fullKey || '';
-    ns = ns || 'machine_max';
-    var prefix = '.' + ns + '.';
-    var idx = fullKey.indexOf(prefix);
-    if (idx >= 0) {
-        return fullKey.substring(idx + prefix.length);
-    }
+    var parsed = parseKey(fullKey);
+    if (parsed) return parsed.name;
+    void ns;
     return fullKey;
 }
 
 /**
- * 构建完整键
- * 如果 shortName 已经是完整键格式，则提取短名后重建，防止二次拼接
- * "subsystem", "engine", "machine_max" → "subsystem.machine_max.engine"
+ * 按三段拼接完整键（不做任何归一化）。
+ * "sub_part", "m1a2_sep", "hull" → "sub_part.m1a2_sep.hull"
  */
-function buildFullKey(type, shortName, ns) {
-    if (!shortName) return '';
-    ns = ns || 'machine_max';
-    /* 防御: 如果 shortName 已经是完整键，提取短名后重建 */
-    var existingType = extractType(shortName);
-    if (existingType) {
-        shortName = extractShortName(shortName, ns);
-    }
-    if (type) {
-        return type + '.' + ns + '.' + shortName;
-    }
-    return shortName;
+function buildKey(type, ns, name) {
+    if (!type || !ns || !name) return '';
+    return type + '.' + ns + '.' + name;
 }
 
 /**
@@ -122,5 +125,5 @@ function getTargetOptions(variant, ns) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { extractType, extractShortName, buildFullKey, displayLabel, getTargetOptions, TYPE_LABELS, TYPE_PREFIXES };
+    module.exports = { extractType, parseKey, extractShortName, buildKey, displayLabel, getTargetOptions, TYPE_LABELS, TYPE_PREFIXES };
 }

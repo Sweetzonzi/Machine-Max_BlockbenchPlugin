@@ -52,11 +52,25 @@ const AMMO_SERVICE_CHANNEL_HINTS = [
     'ammo_atgm',
 ];
 
+/**
+ * 视点发现频道补全列表
+ *
+ * `camera_discovery_targets`（座位 / 武器控制器）的频道是**视点自己声明的
+ * discovery_inputs**：上游 `resolveViewpoints` 按频道名查终端，视点没声明该频道
+ * 就发现不到。清单取自第一方内容包在用的频道（builtin 的 sight / camera 定义）。
+ * `camera_sight` 是视点未声明时的默认接受频道，写进发现表等于全车所有视点，
+ * 上游因此禁止，这里也不列。
+ */
+const CAMERA_DISCOVERY_CHANNEL_HINTS = [
+    'gunner_sight', 'commander_sight', 'targeting_pod_sight',
+];
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         CONFIG_VERSION,
         BUILTIN_PACK_ID,
         SIGNAL_CHANNEL_HINTS,
         AMMO_SERVICE_CHANNEL_HINTS,
+        CAMERA_DISCOVERY_CHANNEL_HINTS,
     };
 }

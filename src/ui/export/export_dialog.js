@@ -447,7 +447,8 @@ function showExportDialog() {
                     var stats = executeExport(config, overriddenMeta, exportDir, packFolderName);
                     saveConfig();
                     showToast(
-                        '导出成功！\n零件: ' + stats.parts +
+                        '导出成功！\n命名空间: ' + stats.namespace +
+                        '（' + stats.namespaceDir + '）\n零件: ' + stats.parts +
                         ', 连接点: ' + stats.connectors +
                         ', 子系统: ' + stats.subsystems +
                         ', 材料: ' + stats.materials +

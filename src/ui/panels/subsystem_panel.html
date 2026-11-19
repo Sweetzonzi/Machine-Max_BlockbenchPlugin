@@ -2,14 +2,8 @@
     <div class="mm-sticky-title">
         <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
             <span class="mm-marker-badge" :style="{ background: typeColor }">SS</span>
-            <span style="color:#888;font-size:11px;white-space:nowrap;flex-shrink:0">{{ namePrefix }}</span>
-            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:80px;border:1px solid transparent;background:transparent;"
-                v-model="editingName"
-                @focus="$event.target.style.border='1px solid #555';$event.target.style.background='#2a2a2a'"
-                @blur="onNameBlur($event)"
-                @change="onNameChange($event.target.value)"
-                placeholder="engine"
-                title="子系统名称短名，保存后自动补全为完整键" />
+            <mm-key-name-editor type="subsystem" :key-value="subsystemKey" placeholder="engine"
+                @name-change="onNameChange" />
             <span v-if="itemIssueLevel !== 'none'" class="mm-issue-badge" :class="itemIssueLevel">{{ itemIssueCount }}</span>
         </h3>
     </div>
@@ -109,16 +103,16 @@
                 <option v-for="(preset, presetId) in availableControlGroupPresets" :key="presetId" :value="presetId">{{ presetId }}</option>
             </select>
 
-            <!-- 单目标功率输出选择器（如 power_output） -->
+            <!-- 单目标功率输出选择器（如 power_output）：只在同子零件内解析 -->
             <select v-else-if="field.editor === 'power_target'" class="mm-select"
                 :value="config[field.field]"
                 @change="onFieldChange(field.field, $event.target.value)">
                 <option value="">（无）</option>
-                <option v-for="(target, si) in signalTargetOptions" :key="si" :value="target.value">{{ target.label }}</option>
+                <option v-for="(target, si) in powerTargetOptions" :key="si" :value="target.value">{{ target.label }}</option>
             </select>
 
             <!-- 功率输出映射编辑器（power_outputs_map，值类型为 <string, number>）
-                 目标名从 signalTargetOptions 下拉选择，同 power_target 的选项来源 -->
+                 目标名从 powerTargetOptions 下拉选择（同 power_target 的选项来源，只含本子零件） -->
             <div v-else-if="field.editor === 'power_outputs_map'" class="mm-power-outputs-editor">
                 <div v-for="(ratio, targetName, pi) in getPowerOutputEntries(field.field)" :key="pi" style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
                     <select class="mm-select" style="flex:1;min-width:80px"
@@ -266,7 +260,7 @@
             <mm-signal-target-editor v-else-if="field.editor === 'signal_targets'"
                 :entries="getSignalEntries(field.field)"
                 :target-options="signalTargetOptions"
-                :channel-hints="channelHints"
+                :channel-hints="channelHintsFor(field.field)"
                 @change="onSignalTargetsChange(field.field, $event)" />
 
             <!-- 文本输入 -->

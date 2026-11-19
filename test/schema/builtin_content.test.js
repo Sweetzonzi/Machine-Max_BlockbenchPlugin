@@ -1,6 +1,6 @@
 'use strict';
 
-// 内置内容包同步回归：上游 84b08182 的 59 个子系统定义 / 28 个连接点 / 投射物顶层 schema。
+// 内置内容包同步回归：上游 8e9a5263 的 61 个子系统定义 / 28 个连接点 / 投射物顶层 schema。
 // 只检查 vendored 快照，不依赖构建注入的 __BUILTIN_*__ 常量。
 
 const { describe, test, expect } = require('bun:test');
@@ -27,9 +27,9 @@ function walk(dir) {
 }
 
 describe('builtin 内容包同步', () => {
-    test('59 个子系统定义，含 track_controller / track_drive / reactive_armor', () => {
+    test('61 个子系统定义，含 track_controller / track_drive / reactive_armor', () => {
         const files = walk(SUB);
-        expect(files).toHaveLength(59);
+        expect(files).toHaveLength(61);
         expect(fs.existsSync(path.join(SUB, 'track_controller', 'track_controller_standard.json')))
             .toBe(true);
         expect(fs.existsSync(path.join(SUB, 'track_drive', 'track_drive_heavy.json')))
@@ -194,5 +194,62 @@ describe('builtin 内容包同步', () => {
         for (const name of ['default_3rd_seat', 'default_3rd_driver_seat', 'default_3rd_passenger_seat']) {
             expect(thirdLayout[name]).toBe('machine_max:vehicle_status_heading');
         }
+    });
+
+    test('炮塔双机：动力型与手摇型各带自己的 FMOD 轴事件', () => {
+        const az = readJsonc(path.join(SUB, 'turret_driver', 'basic_azimuth_driver.json'));
+        const el = readJsonc(path.join(SUB, 'turret_driver', 'basic_elevation_driver.json'));
+        const manualAz = readJsonc(path.join(SUB, 'turret_driver', 'basic_manual_azimuth_driver.json'));
+        const manualEl = readJsonc(path.join(SUB, 'turret_driver', 'basic_manual_elevation_driver.json'));
+
+        expect(az.sounds.fmod.horizontal).toContain('horizontal_hydraulic');
+        expect(el.sounds.fmod.vertical).toContain('vertical_hydraulic');
+        expect(manualAz.sounds.fmod.horizontal).toContain('horizontal_manual');
+        expect(manualEl.sounds.fmod.vertical).toContain('vertical_manual');
+        // 手摇型转速远低于动力型（方向机 20 vs 90，高低机 8 vs 30）
+        expect(manualAz.yaw.max_speed).toBe(20.0);
+        expect(manualEl.pitch.max_speed).toBe(8.0);
+
+        const schema = readJsonc(path.join(
+            ROOT, 'docs', 'zh_cn', 'schemas', 'subsystem', 'static',
+            'turret_driver_static_attr.schema.json'));
+        const sounds = schema.properties.sounds.properties;
+        expect(sounds.fmod.required).toEqual(['bank']);
+        expect(sounds.fmod.properties.horizontal.pattern).toBe('^event:/.+');
+        // 该轴没有 FMOD 事件时按角速度升调播放电机音
+        expect(sounds.turn.default.sound_id).toBe('machine_max:subsystem.motor.elec_3000');
+    });
+
+    test('交互区门控改成 MoLang 表达式（默认 true，不再是逻辑枚举）', () => {
+        for (const locale of ['en_us', 'zh_cn']) {
+            const schema = readJsonc(path.join(
+                ROOT, 'docs', locale, 'schemas', 'part', 'subpart',
+                'interact_box_attr.schema.json'));
+            const condition = schema.properties.condition;
+            expect(condition.type).toBe('string');
+            expect(condition.default).toBe('true');
+            expect(condition).not.toHaveProperty('enum');
+        }
+    });
+
+    test('音效子块去掉 _sounds 后缀，履带 fitting 补 fmod', () => {
+        const staticDir = path.join(ROOT, 'docs', 'zh_cn', 'schemas', 'subsystem', 'static');
+        const ammoLoader = readJsonc(path.join(staticDir, 'ammo_loader_static_attr.schema.json'));
+        const launcher = readJsonc(path.join(staticDir, 'launcher_static_attr.schema.json'));
+        const engine = readJsonc(path.join(staticDir, 'engine_static_attr.schema.json'));
+
+        expect(Object.keys(ammoLoader.properties.sounds.properties))
+            .toEqual(expect.arrayContaining(['progress', 'human_progress', 'fmod']));
+        expect(Object.keys(launcher.properties.sounds.properties))
+            .toEqual(expect.arrayContaining(['fire', 'cease_fire', 'shell', 'human_progress']));
+        expect(engine.properties.sounds.properties).toHaveProperty('working');
+        expect(engine.properties.sounds.properties).not.toHaveProperty('working_sounds');
+        // 发射器型号新增炮管耐久权重
+        expect(launcher.properties.barrel.properties.durability_weight.default).toBe(1.0);
+
+        const fitting = readJsonc(path.join(ROOT, 'docs', 'zh_cn', 'schemas', 'fitting.schema.json'));
+        expect(fitting.properties.fmod.required).toEqual(['bank']);
+        const defaultFitting = readJsonc(path.join(ROOT, 'fittings', 'default.json'));
+        expect(defaultFitting.fmod.roll).toContain('tracks_muted');
     });
 });

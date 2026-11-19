@@ -2,14 +2,8 @@
     <div class="mm-sticky-title">
         <h3 class="mm-section-title" style="margin:0;border:none;padding:0;display:flex;align-items:center;gap:6px;">
             <span class="mm-marker-badge" :style="{ background: badgeColor }">{{ badgeLabel }}</span>
-            <span style="color:#888;font-size:11px;white-space:nowrap;flex-shrink:0">{{ namePrefix }}</span>
-            <input type="text" class="mm-input" style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:80px;border:1px solid transparent;background:transparent;"
-                v-model="editingName"
-                @focus="$event.target.style.border='1px solid #555';$event.target.style.background='#2a2a2a'"
-                @blur="onNameBlur($event)"
-                @change="onNameChange($event.target.value)"
-                placeholder="seat"
-                title="交互区名称短名，保存后自动补全为完整键" />
+            <mm-key-name-editor type="interact" :key-value="interactBoxName" placeholder="seat"
+                @name-change="onNameChange" />
             <span v-if="itemIssueLevel !== 'none'" class="mm-issue-badge" :class="itemIssueLevel">{{ itemIssueCount }}</span>
         </h3>
     </div>
@@ -58,15 +52,18 @@
             </select>
         </div>
         <div class="mm-field">
-            <label title="交互区启用条件逻辑。AND：所有输入信号都不为0时启用；NOR：任意一个输入信号为0时启用（默认）">条件逻辑</label>
-            <select class="mm-select" :value="config.condition" @change="onFieldChange('condition', $event.target.value)">
-                <option value="AND">AND（全真则真）</option>
-                <option value="OR">OR（有真则真）</option>
-                <option value="NAND">NAND（全真则假）</option>
-                <option value="NOR">NOR（有真则假）</option>
-                <option value="XOR">XOR（奇真则真）</option>
-                <option value="XNOR">XNOR（偶真则真）</option>
-            </select>
+            <label title="交互区门控表达式（MoLang）：求值大于 0 表示此刻可用，不写或写 true 表示不门控。上下文是宿主部件的 local.* 与 global.*（可读子系统状态、信号存储、装配体数值）；表达式写错不阻止加载，但该交互区会恒不可用。">门控表达式</label>
+            <input type="text" class="mm-input"
+                :value="config.condition"
+                @change="onFieldChange('condition', $event.target.value)"
+                :list="conditionListId"
+                placeholder="true" />
+            <datalist :id="conditionListId">
+                <option v-for="(expr, idx) in conditionHints" :key="idx" :value="expr" />
+            </datalist>
+            <p class="mm-element-info" style="font-size:10px;color:#888">
+                上游已由逻辑枚举（AND/OR/…）改为 MoLang 表达式；留空或 <code>true</code> 即不门控。
+            </p>
         </div>
     </div>
 

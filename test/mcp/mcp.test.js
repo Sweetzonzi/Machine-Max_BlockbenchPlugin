@@ -467,6 +467,27 @@ describe('MCP 整件通道', () => {
             .config_ref).toBe('sub_part.machine_max.chassis');
     });
 
+    test('import_sub_part rename 支持跨命名空间（引用与 marker 一起迁移）', () => {
+        const cfg = helpers.createConfig();
+        installGlobals(cfg);
+        const definition = run('read_node', {
+            path: ['sub_parts', spKey()],
+            as: 'definition',
+        }).value;
+        const r = run('import_sub_part', {
+            key: 'sub_part.m1a2_sep.chassis',
+            old_key: spKey(),
+            mode: 'rename',
+            definition: definition,
+        });
+        expect(r.ok).toBe(true);
+        const variant = cfg.parts.hull.variants.default;
+        expect(variant.sub_parts[spKey()]).toBeUndefined();
+        expect(variant.sub_parts['sub_part.m1a2_sep.chassis']).toBeTruthy();
+        expect(cfg.parts.hull.element_markers.default['11111111-1111-1111-1111-111111111111']
+            .config_ref).toBe('sub_part.m1a2_sep.chassis');
+    });
+
     test('import_variant 在指定零件下新建变体', () => {
         const cfg = helpers.createConfig();
         cfg.parts.second = helpers.createPart();
@@ -564,6 +585,20 @@ describe('MCP 整件通道', () => {
         expect(r.ok).toBe(true);
         const sp = cfg.parts.hull.variants.default.sub_parts[spKey()];
         expect(sp.connectors['connector.machine_max.rear'].locator).toBe('wheel');
+    });
+
+    test('add_instance 接受跨命名空间的连接点 key', () => {
+        const cfg = helpers.createConfig();
+        installGlobals(cfg);
+        const r = run('add_instance', {
+            parent_path: ['sub_parts', spKey()],
+            kind: 'connector',
+            key: 'connector.2s38.rear',
+            definition: { locator: 'wheel', definition: 'machine_max:fixed_back' },
+        });
+        expect(r.ok).toBe(true);
+        const sp = cfg.parts.hull.variants.default.sub_parts[spKey()];
+        expect(sp.connectors['connector.2s38.rear'].locator).toBe('wheel');
     });
 
     test('add_instance 找不到骨骼返回 not_found', () => {
@@ -758,6 +793,27 @@ describe('MCP 定义目录工具', () => {
         expect(r.source).toBe('builtin');
         expect(r.definition.physics.friction[0]).toBe(0.45);
         expect(r.definition.armor.rha).toBe(0.85);
+    });
+
+    test('read_def 裸 id 在其它命名空间下唯一时按后缀解析', () => {
+        // 一个包可以有多个命名空间（D31）：config.namespace 是 machine_max，
+        // 但定义只在 m1a2_sep 下存在时，裸 id 仍应能读到。
+        defManager.loadMergedDefs = function () {
+            return {
+                defs: {
+                    'machine_max:structural_steel': { armor: { rha: 0.85 } },
+                    'm1a2_sep:turret_steel': { armor: { rha: 0.9 } },
+                },
+                sources: {
+                    'machine_max:structural_steel': 'builtin',
+                    'm1a2_sep:turret_steel': 'current',
+                },
+            };
+        };
+        const r = run('read_def', { type: 'materials', id: 'turret_steel' });
+        expect(r.ok).toBe(true);
+        expect(r.id).toBe('m1a2_sep:turret_steel');
+        expect(r.definition.armor.rha).toBe(0.9);
     });
 
     test('read_def 缺失返回 not_found', () => {

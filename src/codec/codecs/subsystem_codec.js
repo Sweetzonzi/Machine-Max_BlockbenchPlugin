@@ -35,11 +35,15 @@ const WheelDriverCodec = Codec.record({
 /**
  * SeatCodec — 座位
  * 字段: definition, locator, control_group_preset, passenger_num_outputs,
- *       camera_discovery_targets, dismount_locators,
- *       first_hud_layout, third_hud_layout, allow_use_items
+ *       camera_discovery_targets, loader_discovery_inputs, interact_inputs,
+ *       dismount_locators, first_hud_layout, third_hud_layout, allow_use_items
  *
  * dismount_locators 为有序的下车定位器名称列表（列表顺序即优先级），
  * 空列表表示该座位未声明下车点。
+ *
+ * loader_discovery_inputs 是装载方发现频道（上游 2026-11 由
+ * reload_operator_discovery_inputs 改名）；interact_inputs 是安装级追加的
+ * 交互输入频道，与型号定义的 interact_inputs 取并集。
  *
  * 最后三个字段是安装级覆盖（上游 optional 无默认值）：缺省表示沿用型号定义
  * 的 views.first_hud_layout / views.third_hud_layout / allow_use_items。
@@ -52,8 +56,9 @@ const SeatCodec = Codec.record({
     control_group_preset:     Codec.STRING.default(''),
     passenger_num_outputs:    Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     camera_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    loader_discovery_inputs:  Codec.STRING.list().default([]),
+    interact_inputs:          Codec.STRING.list().default([]),
     dismount_locators:        Codec.STRING.list().default([]),
-    reload_operator_discovery_inputs: Codec.STRING.list().default([]),
     first_hud_layout:         Codec.STRING.default(''),
     third_hud_layout:         Codec.STRING.default(''),
     allow_use_items:          Codec.BOOL.nullable(),
@@ -112,10 +117,10 @@ const ItemStorageCodec = Codec.record({
 });
 
 /**
- * LightingCodec — 灯光
+ * LightCodec — 灯光（`machine_max:light`，上游 2026-11 由 `lighting` 改名）
  * 字段: definition, locator
  */
-const LightingCodec = Codec.record({
+const LightCodec = Codec.record({
     definition: Codec.STRING.field(),
     locator:    Codec.STRING.default(''),
 });
@@ -167,26 +172,33 @@ const TurretDriverCodec = Codec.record({
 
 /**
  * WeaponControllerCodec — 武器控制器
- * 字段: definition, control_outputs, first_hud_layout, third_hud_layout, scope_hud_layout
+ * 字段: definition, control_outputs, camera_discovery_targets,
+ *       first_hud_layout, third_hud_layout, scope_hud_layout
+ *
+ * camera_discovery_targets 是本火控负责的视点发现表（频道 → 目标名），与
+ * control_outputs 分开：那张表是命令输出，这张只做只读发现，不写信号槽、
+ * 也不赋予对镜头的控制权。缺省空表表示本火控不声明任何视点。
  */
 const WeaponControllerCodec = Codec.record({
-    definition:        Codec.STRING.field(),
-    control_outputs:   Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
-    first_hud_layout:  Codec.STRING.default('machine_max:empty'),
-    third_hud_layout:  Codec.STRING.default('machine_max:empty'),
-    scope_hud_layout:  Codec.STRING.default('machine_max:empty'),
+    definition:               Codec.STRING.field(),
+    control_outputs:          Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    camera_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    first_hud_layout:         Codec.STRING.default('machine_max:empty'),
+    third_hud_layout:         Codec.STRING.default('machine_max:empty'),
+    scope_hud_layout:         Codec.STRING.default('machine_max:empty'),
 });
 
 /**
  * LauncherCodec — 发射器
  * 字段: definition, locator, fire_animation, ammo_outputs, ammo_discovery_targets,
- *       reload_operator_discovery_targets, reload_operator_time_multipliers
+ *       loader_discovery_targets, loader_time_multipliers
  *
  * ammo_discovery_targets 是发射器自己的上游查询表（频道 → 目标名）：
  * 结构变化时按它只读发现同一装配体内的自动装弹机。
  *
- * reload_operator_* 是人工装填的用人查询：前者把装填人员频道指向座位，
- * 后者给同一批频道标岗位时间倍率（键取前者的频道名，缺省按 1.0）。
+ * loader_* 是人工装填的用人查询（上游 2026-11 由 reload_operator_* 改名）：
+ * 前者把装填人员频道指向座位，后者给同一批频道标岗位时间倍率
+ * （键取前者的频道名，缺省按 1.0）。
  */
 const LauncherCodec = Codec.record({
     definition:             Codec.STRING.field(),
@@ -194,8 +206,8 @@ const LauncherCodec = Codec.record({
     fire_animation:         Codec.STRING.default('fire'),
     ammo_outputs:           Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
     ammo_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
-    reload_operator_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
-    reload_operator_time_multipliers:  Codec.map(Codec.STRING, Codec.FLOAT).default({}),
+    loader_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    loader_time_multipliers:  Codec.map(Codec.STRING, Codec.FLOAT).default({}),
 });
 
 /**
@@ -259,16 +271,17 @@ const AmmoRackCodec = Codec.record({
 /**
  * AmmoLoaderCodec — 自动装弹机
  * 字段: definition, ammo_discovery_inputs, ammo_discovery_targets,
- *       reload_operator_discovery_targets, reload_operator_time_multipliers
+ *       loader_discovery_targets, loader_time_multipliers
  *
- * reload_operator_* 与发射器同形：机构的人工段按这张查询表找装填人员座位。
+ * loader_* 与发射器同形（上游 2026-11 由 reload_operator_* 改名）：
+ * 机构的人工段按这张查询表找装填人员座位。
  */
 const AmmoLoaderCodec = Codec.record({
     definition:             Codec.STRING.field(),
     ammo_discovery_inputs:  Codec.STRING.list().default([]),
     ammo_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
-    reload_operator_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
-    reload_operator_time_multipliers:  Codec.map(Codec.STRING, Codec.FLOAT).default({}),
+    loader_discovery_targets: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    loader_time_multipliers:  Codec.map(Codec.STRING, Codec.FLOAT).default({}),
 });
 
 /**
@@ -304,7 +317,7 @@ const SUBSYSTEM_CODECS = {
     'machine_max:motorbike_controller': MotorbikeControllerCodec,
     'machine_max:wheel_driver':         WheelDriverCodec,
     'machine_max:seat':                 SeatCodec,
-    'machine_max:lighting':             LightingCodec,
+    'machine_max:light':                LightCodec,
     'machine_max:item_storage':         ItemStorageCodec,
     'machine_max:basic':                BasicCodec,
     'machine_max:camera':               CameraCodec,
@@ -357,7 +370,7 @@ if (typeof module !== 'undefined' && module.exports) {
         MotorCodec,
         BasicCodec,
         ItemStorageCodec,
-        LightingCodec,
+        LightCodec,
         MotorbikeControllerCodec,
         TransmissionCodec,
         CameraCodec,

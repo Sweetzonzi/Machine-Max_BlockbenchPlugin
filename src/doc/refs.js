@@ -12,6 +12,10 @@
 //   13    power_outputs 的 key
 //
 // `signal_translations` 是频道名 → 频道名，不计入配置引用。
+//
+// 解析作用域分两档（docs/13 §5.4）：第 5-7 行的信号目标是**整个 Part**（同变体全部子零件），
+// 其余引用只在所属子零件内解析 —— 与上游 `ISignalSender#setTargetFromNames`（Part 域）
+// 和 `findOwnSubsystem`（子零件域）的分工一致。
 // 纯函数层，不 require Blockbench / Vue；骨骼查询走 ports。
 
 'use strict';
@@ -19,6 +23,16 @@
 var ports = require('./ports.js');
 
 var SENTINELS = ['local', 'global'];
+
+/**
+ * 名字表：容器字段 → 名字类别。
+ * 三类名字（子系统 / 连接点 / 交互区）共用一套命名空间，Part 内唯一。
+ */
+var TARGET_CONTAINERS = {
+    subsystems: 'subsystem',
+    connectors: 'connector',
+    interact_boxes: 'interact_box',
+};
 
 function own(obj, key) {
     return Object.prototype.hasOwnProperty.call(obj, key);
@@ -73,27 +87,144 @@ function targetsOf(subPart) {
         subsystem: {},
         connector: {},
         interact_box: {},
+        owner: {},
     };
-    ['subsystems', 'connectors', 'interact_boxes'].forEach(function (map) {
+    Object.keys(TARGET_CONTAINERS).forEach(function (map) {
         var entries = subPart && subPart[map];
         if (!isObject(entries)) return;
-        var kind = map === 'subsystems' ? 'subsystem'
-            : (map === 'connectors' ? 'connector' : 'interact_box');
+        var kind = TARGET_CONTAINERS[map];
         Object.keys(entries).forEach(function (key) {
+            if (targets.owner[key]) return; // 重名由 duplicate_name 报；这里只保留一条
             targets[kind][key] = true;
+            targets.owner[key] = '';
         });
     });
     return targets;
 }
 
-function targetExists(targets, target) {
+/**
+ * 把同一变体的全部子零件摊平成一张名字表。
+ *
+ * 信号目标（`signal_targets` 系列）的作用域是整个 Part —— 上游
+ * `ISignalSender#setTargetFromNames` 建首跳表时一趟遍历 `subParts`，把子系统与连接点
+ * 聚合成 Part 级名字表，所以跨子零件的具名目标可达；名字在 Part 内唯一
+ * （`VariantAttr#validateUniqueNames` 与插件 `_collectNameConflicts` 都按变体判重）。
+ *
+ * 其它配置引用（`power_output` / `power_outputs` 的 key / `power_target` /
+ * `hit_boxes[*].subsystem`）不在这一域内：模组侧用 `findOwnSubsystem`
+ * （`MechPowerPort`、`HitBox`、`TransmissionSubsystem` 等）只在所属子零件里查。
+ *
+ * `owner` 记录每个名字的声明子零件（先声明者胜），供 UI 标注跨子零件候选。
+ *
+ * @param {object} subParts - { spKey: subPart }
+ * @returns {{subsystem:object, connector:object, interact_box:object, owner:object}}
+ */
+function partTargetsOf(subParts) {
+    var targets = {
+        subsystem: {},
+        connector: {},
+        interact_box: {},
+        owner: {},
+    };
+    if (!isObject(subParts)) return targets;
+    Object.keys(subParts).forEach(function (spKey) {
+        var sp = subParts[spKey];
+        if (!isObject(sp)) return;
+        var own = targetsOf(sp);
+        Object.keys(TARGET_CONTAINERS).forEach(function (map) {
+            var kind = TARGET_CONTAINERS[map];
+            Object.keys(own[kind]).forEach(function (name) {
+                if (targets.owner[name]) return;
+                targets[kind][name] = true;
+                targets.owner[name] = spKey;
+            });
+        });
+    });
+    return targets;
+}
+
+/**
+ * 非信号引用的判定：只看同一子零件的条目表，按引用类别限定目标种类。
+ *
+ * 上游各条解析路径能认的只有：
+ * - `power_target` / `power_output` / `power_outputs` 的 key → `MechPowerPort` 的
+ *   `findOwnSubsystem` 或 `connectors.get`（子系统或连接点）
+ * - `hit_boxes[*].subsystem` → `HitBox` 只接子系统
+ * - `subsystems[*].connector` → 只接连接点
+ *
+ * 交互区哪一条都不认（它只发不收），所以这里不再把它算作命中；`local`/`global`
+ * 仍放行（存量容忍，新内容不该用）。
+ */
+function nonSignalTargetExists(targets, kind, target) {
     if (SENTINELS.indexOf(target) >= 0) return true;
-    return !!(targets.subsystem[target] || targets.connector[target] || targets.interact_box[target]);
+    if (kind === 'hit_box_subsystem') return !!targets.subsystem[target];
+    if (kind === 'connector') return !!targets.connector[target];
+    return !!(targets.subsystem[target] || targets.connector[target]);
+}
+
+/**
+ * 具名信号目标的判定（Part 域）。
+ *
+ * @returns {'resolved'|'interact_box'|'dangling'}
+ *   `resolved`   子系统 / 连接点 / local / global
+ *   `interact_box` 命中交互区 —— 交互区只发不收（`InteractBox implements ISignalSender`），
+ *                 上游解析时记 ERROR 日志并丢弃这一跳，所以它不是合法接收者
+ *   `dangling`   整个 Part 内都没有这个名字
+ */
+function classifySignalTarget(partTargets, target) {
+    if (SENTINELS.indexOf(target) >= 0) return 'resolved';
+    if (!isObject(partTargets)) return 'dangling';
+    if (partTargets.subsystem[target] || partTargets.connector[target]) return 'resolved';
+    if (partTargets.interact_box[target]) return 'interact_box';
+    return 'dangling';
+}
+
+/** 从配置取某个变体（不存在时返回 null）。 */
+function variantOf(config, partId, variantName) {
+    var part = config && config.parts && config.parts[partId];
+    var variant = part && part.variants && part.variants[variantName];
+    return isObject(variant) ? variant : null;
+}
+
+/**
+ * 从配置路径取同一变体的子零件表，供整件投影把「同 Part」的视图交给 `projection.in`。
+ * 路径形如 `parts/<id>/variants/<v>[/sub_parts/<sp>…]`；取不到变体时返回 null。
+ *
+ * @param {object} config
+ * @param {string[]} segments
+ * @returns {object|null} { spKey: subPart }
+ */
+function siblingSubParts(config, segments) {
+    if (!Array.isArray(segments)) return null;
+    if (segments[0] !== 'parts' || segments[2] !== 'variants') return null;
+    var variant = variantOf(config, segments[1], segments[3]);
+    return variant && isObject(variant.sub_parts) ? variant.sub_parts : null;
 }
 
 function isPlaceholder(value) {
     return value === null || value === undefined || value === '';
 }
+
+/**
+ * 不是信号表的对象字段。
+ *
+ * `isSignalMap` 按形状识别信号表（对象且每个值都是数组），这会误伤
+ * `connector.overwrite = { required_tags: [...] }`：它的值也是字符串数组，
+ * 但 `required_tags` 是标签、不是节点 key。误判的代价是把标签当成引用——
+ * 删除/重命名一个同名条目会顺手改掉 `overwrite` 里的标签，所以按字段名排除。
+ */
+var NON_SIGNAL_FIELDS = {
+    overwrite: true,
+    textures: true,
+    hit_boxes: true,
+    connectors: true,
+    subsystems: true,
+    interact_boxes: true,
+    power_outputs: true,
+    dismount_locators: true,
+    // 信号表本身不是「频道 → 目标数组」，但同名字段先排除，避免将来形状变化误判
+    signal_translations: true,
+};
 
 /**
  * 子系统 / 连接点 / 交互区的信号输出字段并不都叫 `signal_targets`：
@@ -112,7 +243,7 @@ function isSignalMap(value) {
 function eachSignalMap(node, fn) {
     if (!isObject(node)) return;
     Object.keys(node).forEach(function (field) {
-        if (field === 'signal_translations') return;
+        if (NON_SIGNAL_FIELDS[field]) return;
         if (isSignalMap(node[field])) fn(node[field], field);
     });
 }
@@ -191,18 +322,26 @@ function collectRefs(subPart, basePath) {
 /**
  * 解析一个子零件的配置引用。
  *
+ * 作用域按引用类型分开：
+ * - `signal_target`（`signal_targets` / `control_outputs` / `speed_outputs` 等信号表）→ 整个 Part：
+ *   同变体任一子零件的子系统或连接点都算命中，`local` / `global` 放行；命中交互区记进
+ *   `invalid`（交互区只发不收，上游丢弃这一跳）；
+ * - 其它引用（`power_output` / `power_outputs` 的 key / `power_target` / `hit_boxes[*].subsystem` /
+ *   `subsystems[*].connector`）→ 同子零件。
+ *
  * @param {object} config
- * @param {object} scope - { partId, variantName, subPartKey } 或 { subPart, basePath, partId, variantName }
- * @returns {{ok:boolean, resolved:Array, dangling:Array, errors:Array}}
+ * @param {object} scope - { partId, variantName, subPartKey } 或
+ *   { subPart, basePath, partId, variantName, partTargets? }
+ * @returns {{ok:boolean, resolved:Array, dangling:Array, invalid:Array, errors:Array}}
  */
 function resolveConfigRefs(config, scope) {
     scope = scope || {};
     var subPart = scope.subPart;
     var basePath = scope.basePath;
+    var variant = null;
 
     if (!subPart) {
-        var part = config && config.parts && config.parts[scope.partId];
-        var variant = part && part.variants && part.variants[scope.variantName];
+        variant = variantOf(config, scope.partId, scope.variantName);
         subPart = variant && variant.sub_parts && variant.sub_parts[scope.subPartKey];
         basePath = ['parts', scope.partId, 'variants', scope.variantName,
             'sub_parts', scope.subPartKey];
@@ -213,6 +352,7 @@ function resolveConfigRefs(config, scope) {
             ok: false,
             resolved: [],
             dangling: [],
+            invalid: [],
             errors: [{
                 path: basePath || [],
                 code: 'not_found',
@@ -224,16 +364,30 @@ function resolveConfigRefs(config, scope) {
     }
 
     var collected = collectRefs(subPart, basePath || []);
+    var partTargets = scope.partTargets;
+    if (!partTargets) {
+        if (!variant) variant = variantOf(config, scope.partId, scope.variantName);
+        // 没有整件视图时退回本子零件：宁可少判，也不把同子零件能解析的引用判成断裂
+        partTargets = (variant && isObject(variant.sub_parts))
+            ? partTargetsOf(variant.sub_parts)
+            : collected.targets;
+    }
+
     var resolved = [];
     var dangling = [];
+    var invalid = [];
     collected.refs.forEach(function (ref) {
-        if (targetExists(collected.targets, ref.target)) {
-            resolved.push(ref);
-        } else {
-            dangling.push(ref);
+        if (ref.kind === 'signal_target') {
+            var verdict = classifySignalTarget(partTargets, ref.target);
+            if (verdict === 'resolved') resolved.push(ref);
+            else if (verdict === 'interact_box') invalid.push(Object.assign({}, ref, { reason: 'interact_box_only_sends' }));
+            else dangling.push(ref);
+            return;
         }
+        if (nonSignalTargetExists(collected.targets, ref.kind, ref.target)) resolved.push(ref);
+        else dangling.push(ref);
     });
-    return { ok: dangling.length === 0, resolved: resolved, dangling: dangling, errors: [] };
+    return { ok: dangling.length === 0, resolved: resolved, dangling: dangling, invalid: invalid, errors: [] };
 }
 
 // ── 清理 ────────────────────────────────────────────────────────
@@ -603,7 +757,12 @@ function resolveBones(kind, node, portsObj) {
 
 module.exports = {
     SENTINELS: SENTINELS,
+    TARGET_CONTAINERS: TARGET_CONTAINERS,
     collectRefs: collectRefs,
+    targetsOf: targetsOf,
+    partTargetsOf: partTargetsOf,
+    classifySignalTarget: classifySignalTarget,
+    siblingSubParts: siblingSubParts,
     resolveConfigRefs: resolveConfigRefs,
     cleanDangling: cleanDangling,
     renameRefs: renameRefs,

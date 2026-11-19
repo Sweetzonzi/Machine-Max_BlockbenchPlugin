@@ -2,6 +2,7 @@ const PROPERTY_NAME = 'machine_max_plugin';
 const { CONFIG_VERSION } = require('../core/constants.js');
 const { migrateIfNeeded, createBlankConfig } = require('../core/config.js');
 const { cleanGhostMarkers, migrateConnectorMarkerRefs, repairMarkerConfigs } = require('../core/element_markers.js');
+const content_pack = require('../core/content_pack.js');
 const { createLogger } = require('./logger.js');
 const docProjection = require('../doc/projection.js');
 const docLoad = require('../doc/load.js');
@@ -31,6 +32,44 @@ function _decodePartForLoad(part, partId) {
 /** 迁移 + 补默认值，解码走数据宽容的加载链路 */
 function _migrateForLoad(rawConfig) {
     return migrateIfNeeded(rawConfig, { decodePart: _decodePartForLoad });
+}
+
+/**
+ * 纠正配置里与内容包目录不符的命名空间（原地修改）
+ *
+ * 内容包的命名空间由包内一级目录决定，与 meta.id 无关；一个包可以没有
+ * `machine_max/` 目录，而用 `m1a2_sep/` 之类与包名同名的目录。旧工程可能存着
+ * 按 id 前缀推出来的值，会导致新建零件、生成语言键与导出都写进错误目录。
+ *
+ * 判定很窄：**只有**当前值不在包内命名空间列表里（空串 / 旧 id 前缀 / 目录已删）
+ * 才改成主命名空间；作者手选的非主命名空间（在列表里）一律不动。
+ * 包内读不到任何内容目录时也不动——那多半是还没建内容，猜出来的值只会更糟。
+ *
+ * @param {Object} config - 项目配置
+ * @returns {boolean} 是否发生了修改
+ */
+function healNamespace(config) {
+    var opened, current;
+    if (!config || typeof config !== 'object') return false;
+    if (!config.contentPackPath || typeof config.contentPackPath !== 'string') return false;
+
+    try {
+        opened = content_pack.openContentPack(config.contentPackPath);
+    } catch (e) {
+        log.warn('healNamespace: 读取内容包命名空间失败，保留原值', e);
+        return false;
+    }
+    if (!opened.valid || !opened.namespaces || opened.namespaces.length === 0) return false;
+    // 主命名空间为空或非法时没有可写入的目标，保留原值等作者处理
+    if (!content_pack.isValidNamespace(opened.namespace)) return false;
+
+    current = typeof config.namespace === 'string' ? config.namespace : '';
+    if (opened.namespaces.indexOf(current) >= 0) return false;
+
+    log.warn('healNamespace: 命名空间 "' + current + '" 不在内容包内（'
+        + opened.namespaces.join('、') + '），改为 "' + opened.namespace + '"');
+    config.namespace = opened.namespace;
+    return true;
 }
 
 /**
@@ -134,6 +173,13 @@ function loadConfig() {
             Project[PROPERTY_NAME] = blank;
             result = blank;
         }
+    }
+
+    // 内容包的命名空间以包内目录为准（包 id 与命名空间无关）。旧工程里可能存着
+    // 按 id 前缀推出来的错误值（例如 machine_max:m1a2_sep 被记成 machine_max），
+    // 那会让新建内容与导出都写进错误目录，这里在加载时纠正一次。
+    if (healNamespace(result)) {
+        saveConfig();
     }
 
     // 修复存量 hit_boxes 用骨骼名当 key 的条目（幂等；内部树只认 UUID）
@@ -335,5 +381,8 @@ if (typeof module !== 'undefined' && module.exports) {
         setPackPath,
         addDependencyPath,
         removeDependencyPath,
+        _internals: {
+            healNamespace,
+        },
     };
 }

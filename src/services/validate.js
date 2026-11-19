@@ -186,7 +186,7 @@ function _collectNameConflicts(partId, vName, subParts, problems) {
 /**
  * 配置引用完整性（docs/13 §5.4 / §4.3）：signal_targets / power_output /
  * power_target / power_outputs 的 key / hit_box.subsystem / connector 等
- * 必须指向同子零件内真实条目或 local/global。
+ * 必须指向真实条目（信号目标是整个 Part 域，其余同子零件）或 local/global。
  *
  * @param {Object} config
  * @param {string} partId
@@ -201,30 +201,56 @@ function _collectDanglingRefs(config, partId, vName, spKey, problems) {
         subPartKey: spKey,
     });
     (result.dangling || []).forEach(function (ref) {
-        var p = ref.path || [];
-        var baseLen = 6; // parts/<id>/variants/<v>/sub_parts/<sp>
-        var container = p[baseLen];
-        var itemKey = p[baseLen + 1];
-        var scope = 'subpart';
-        if (container === 'subsystems') scope = 'subsystem';
-        else if (container === 'connectors') scope = 'connector';
-        else if (container === 'interact_boxes') scope = 'interact_box';
-        else if (container === 'hit_boxes') scope = 'hit_box';
-
-        var what = ref.kind === 'power_output_key'
-            ? '功率输出目标（power_outputs 的 key）'
-            : (ref.kind === 'hit_box_subsystem' ? '碰撞箱子系统'
-                : (ref.kind === 'power_target' ? '连接点功率目标'
-                    : (ref.kind === 'power_output' ? '子系统功率输出'
-                        : (ref.kind === 'connector' ? '子系统关联连接点' : '信号目标'))));
-        var field = p[baseLen + 2] || '';
         problems.push(_makeProblem(
             'error', CODES.DANGLING_SIGNAL_TARGET,
-            '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：' + what
-            + ' "' + ref.target + '" 指向不存在的节点（只允许同子零件条目或 local/global）',
-            _mkPath(scope, partId, vName, spKey, itemKey, null, field)
+            _whereRef(partId, vName, spKey, ref) + ' "' + ref.target + '" '
+            + (ref.kind === 'signal_target'
+                // 具名目标的解析域是整个 Part（上游 setTargetFromNames 遍历全部 subParts）
+                ? '在本零件（同变体的全部子零件）内找不到同名的子系统或连接点，也不是 local/global'
+                : '在同子零件内找不到同名条目（该引用只在所属子零件内解析）'),
+            _pathOfRef(ref, partId, vName, spKey)
         ));
     });
+    (result.invalid || []).forEach(function (ref) {
+        problems.push(_makeProblem(
+            'warning', CODES.INTERACT_BOX_AS_SIGNAL_TARGET,
+            _whereRef(partId, vName, spKey, ref) + ' "' + ref.target + '" '
+            + '是交互区：交互区只发不收（门、舱盖这类点击入口），信号不会送达它；'
+            + '请改指向真正收信号的子系统或连接点',
+            _pathOfRef(ref, partId, vName, spKey)
+        ));
+    });
+}
+
+/** 引用所在子零件的描述前缀（零件 / 变体 / 子零件 + 引用类别） */
+function _whereRef(partId, vName, spKey, ref) {
+    return '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"：'
+        + _refWhat(ref.kind);
+}
+
+/** 引用类别 → 中文名 */
+function _refWhat(kind) {
+    if (kind === 'power_output_key') return '功率输出目标（power_outputs 的 key）';
+    if (kind === 'hit_box_subsystem') return '碰撞箱子系统';
+    if (kind === 'power_target') return '连接点功率目标';
+    if (kind === 'power_output') return '子系统功率输出';
+    if (kind === 'connector') return '子系统关联连接点';
+    return '信号目标';
+}
+
+/** 引用路径 → Problem.path */
+function _pathOfRef(ref, partId, vName, spKey) {
+    var p = ref.path || [];
+    var baseLen = 6; // parts/<id>/variants/<v>/sub_parts/<sp>
+    var container = p[baseLen];
+    var itemKey = p[baseLen + 1];
+    var field = p[baseLen + 2] || '';
+    var scope = 'subpart';
+    if (container === 'subsystems') scope = 'subsystem';
+    else if (container === 'connectors') scope = 'connector';
+    else if (container === 'interact_boxes') scope = 'interact_box';
+    else if (container === 'hit_boxes') scope = 'hit_box';
+    return _mkPath(scope, partId, vName, spKey, itemKey, null, field);
 }
 
 /**
@@ -278,9 +304,149 @@ function _collectModuleIssue(partId, vName, spKey, hbKey, hb, subsystems, proble
     }
 }
 
+/** 交互区 condition 的历史枚举字面量（上游已改为 MoLang 表达式） */
+var LEGACY_CONDITION_TOKENS = ['AND', 'OR', 'NAND', 'NOR', 'XOR', 'XNOR'];
+
+/**
+ * 交互区的门控表达式（`interact_box.condition`）：上游 8e9a5263 把逻辑枚举
+ * （AND / OR / NAND / NOR / XOR / XNOR，默认 NOR）改成 MoLang 表达式
+ * （求值 > 0 表示可用，默认 true）。旧值仍是合法字符串，Codec 照样解出来，
+ * 但模组侧会把它当表达式求值失败——该交互区恒不可用且只留一条错误日志，
+ * 手感上表现为"点了没反应"。所以认得出旧枚举值时按 warning 提示改写。
+ *
+ * 只认六个旧枚举字面量：其余字符串可能是作者写的表达式，插件不执行 MoLang，
+ * 判断不了对错，也不该猜。
+ *
+ * @param {string} partId
+ * @param {string} vName
+ * @param {string} spKey
+ * @param {string} ibKey - 交互区 key
+ * @param {object} ib - 交互区配置
+ * @param {Array} problems
+ */
+function _collectLegacyConditionIssue(partId, vName, spKey, ibKey, ib, problems) {
+    var condition = ib.condition;
+    if (typeof condition !== 'string') return;
+    if (LEGACY_CONDITION_TOKENS.indexOf(condition) === -1) return;
+    problems.push(_makeProblem(
+        'warning', CODES.INTERACT_BOX_CONDITION_LEGACY_ENUM,
+        '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '" 交互区 "' + ibKey + '"：门控写的是旧逻辑枚举 "'
+        + condition + '"；上游已把它改成 MoLang 表达式（求值 > 0 表示可用，默认 true），'
+        + '这个值会被当成写错的表达式、使该交互区恒不可用。改成 true 或换成表达式'
+        + "（如 local.subsystem_active('subsystem.machine_max.engine') == 0）",
+        _mkPath('interact_box', partId, vName, spKey, ibKey, ibKey, 'condition')
+    ));
+}
+
+/**
+ * 视点发现表（`camera_discovery_targets`，座位与武器控制器）的取值域与频道。
+ *
+ * 这张表决定座位 / 火控能发现哪些视点，上游 `AbstractSubsystem#resolveViewpoints`
+ * 只按名字查终端、按接收侧 `discovery_inputs` 筛频道。三种写法会静默失效——
+ * 都只表现为"少一个视角"，没有日志，所以在这里按 warning 提示：
+ *
+ * 1. 频道写成 `camera_sight`：那是视点未声明接受频道时的默认值，等于把全车所有
+ *    视点都算进来（上游 `content-check.gradle` 第 16 节同样禁止）；
+ * 2. 具名目标指向的不是 camera / sight：按名解析不报错，但发现结果只留视点，
+ *    这条线路等于不通；
+ * 3. 走 `local` / `global` 广播的频道没有任何一台 camera / sight 声明：接收侧按
+ *    自己的接受频道筛选，这条线路永远命中不了。
+ *
+ * 具名目标"不存在"由 `_collectDanglingRefs` 报 error，这里不重复。
+ *
+ * @param {string} partId
+ * @param {string} vName
+ * @param {Object} subParts - 同变体全部子零件（作用域是整个 Part）
+ * @param {Object} subsystemDefs - 合并后的子系统定义
+ * @param {Array} problems
+ */
+function _collectViewpointDiscoveryIssues(partId, vName, subParts, subsystemDefs, problems) {
+    // 所有 camera / sight 型号声明过的接受频道（并集）
+    var declaredChannels = {};
+    var hasViewpointDefs = false;
+    Object.keys(subsystemDefs || {}).forEach(function (defId) {
+        var def = subsystemDefs[defId];
+        if (!_isObject(def)) return;
+        if (def.type !== 'machine_max:camera' && def.type !== 'machine_max:sight') return;
+        hasViewpointDefs = true;
+        var inputs = Array.isArray(def.discovery_inputs) ? def.discovery_inputs : [];
+        for (var i = 0; i < inputs.length; i++) {
+            if (typeof inputs[i] === 'string') declaredChannels[inputs[i]] = true;
+        }
+    });
+
+    // 具名目标 → 子系统类型（整个 Part 域，与信号目标同作用域）
+    var typeOfSubsystem = {};
+    Object.keys(subParts || {}).forEach(function (spKey) {
+        var sp = subParts[spKey];
+        if (!_isObject(sp) || !_isObject(sp.subsystems)) return;
+        Object.keys(sp.subsystems).forEach(function (name) {
+            var ss = sp.subsystems[name];
+            if (_isObject(ss)) typeOfSubsystem[name] = ss.type;
+        });
+    });
+
+    Object.keys(subParts || {}).forEach(function (spKey) {
+        var sp = subParts[spKey];
+        if (!_isObject(sp) || !_isObject(sp.subsystems)) return;
+        Object.keys(sp.subsystems).forEach(function (ssName) {
+            var ss = sp.subsystems[ssName];
+            if (!_isObject(ss) || !_isObject(ss.camera_discovery_targets)) return;
+            var table = ss.camera_discovery_targets;
+            Object.keys(table).forEach(function (channel) {
+                var targets = table[channel];
+                if (!Array.isArray(targets)) return;
+                var where = '子系统 "' + ssName + '" 在零件 "' + partId + '"/' + vName
+                    + ' 子零件 "' + spKey + '" 的视点发现频道 "' + channel + '"';
+                var field = 'camera_discovery_targets';
+
+                if (channel === 'camera_sight') {
+                    problems.push(_makeProblem(
+                        'warning', CODES.VIEWPOINT_DISCOVERY_DEFAULT_CHANNEL,
+                        where + '：camera_sight 是视点未声明接受频道时的默认值，'
+                        + '写它等于把全车所有视点都算进来。要表达"这台视点归谁"，'
+                        + '频道名必须是内容自己的设备词（gunner_sight / commander_sight …）',
+                        _mkPath('subsystem', partId, vName, spKey, ssName, null, field)
+                    ));
+                }
+
+                var broadcast = false;
+                for (var ti = 0; ti < targets.length; ti++) {
+                    var target = targets[ti];
+                    if (typeof target !== 'string') continue;
+                    if (target === 'local' || target === 'global') {
+                        broadcast = true;
+                        continue;
+                    }
+                    if (target.indexOf('subsystem.') !== 0) continue;
+                    var targetType = typeOfSubsystem[target];
+                    if (targetType === undefined) continue; // 不存在由 dangling 报
+                    if (targetType !== 'machine_max:camera' && targetType !== 'machine_max:sight') {
+                        problems.push(_makeProblem(
+                            'warning', CODES.VIEWPOINT_DISCOVERY_NOT_VIEWPOINT,
+                            where + ' 的目标 "' + target + '" 类型是 ' + targetType
+                            + '：按名解析不报错，但发现结果只留视点，这条线路等于不通',
+                            _mkPath('subsystem', partId, vName, spKey, ssName, null, field)
+                        ));
+                    }
+                }
+
+                if (broadcast && hasViewpointDefs && !declaredChannels[channel]) {
+                    problems.push(_makeProblem(
+                        'warning', CODES.VIEWPOINT_DISCOVERY_CHANNEL_UNDECLARED,
+                        where + ' 走 local / global 广播，但没有一台 camera / sight 在 '
+                        + 'discovery_inputs 里声明它——接收侧按自己的接受频道筛选，'
+                        + '这条线路永远命中不了',
+                        _mkPath('subsystem', partId, vName, spKey, ssName, null, field)
+                    ));
+                }
+            });
+        });
+    });
+}
+
 /**
  * 子系统类型既不在注册表里、也不是已退役类型 → 报一条说明它是什么、该怎么办的问题。
- *
  * 这条条目能出现在工程里有两个来源：工程来自更新版本的插件，或者加载时原样保留了
  * 上游已退役的类型（见 codec/codecs/subsystem_codec.js 的 SubsystemLoadCodec）。
  * 两种情况都不能导出（模组侧加载不了这个类型），所以按 error 报。
@@ -450,6 +616,13 @@ function collectIssues(config) {
                     _collectModuleIssue(partId, vName, spKey, hbKey, hb, subsystems, problems);
                 }
 
+                // 交互区门控表达式：旧逻辑枚举值提醒改写（上游改成 MoLang 表达式）
+                var interactBoxes = _isObject(sp.interact_boxes) ? sp.interact_boxes : {};
+                for (var ibKey in interactBoxes) {
+                    var ib = interactBoxes[ibKey];
+                    if (_isObject(ib)) _collectLegacyConditionIssue(partId, vName, spKey, ibKey, ib, problems);
+                }
+
                 // 信号 / 功率引用完整性（DANGLING_SIGNAL_TARGET）
                 _collectDanglingRefs(config, partId, vName, spKey, problems);
 
@@ -518,6 +691,9 @@ function collectIssues(config) {
 
             // 单变体内名称唯一性 + 信号保留地址（Part 级按名寻址）
             _collectNameConflicts(partId, vName, subParts, problems);
+
+            // 视点发现表（camera_discovery_targets）的取值域与频道
+            _collectViewpointDiscoveryIssues(partId, vName, subParts, subsystemDefs, problems);
 
             // 游离标记 / 幽灵标记
             _collectMarkerIssues(config, partId, vName, problems);

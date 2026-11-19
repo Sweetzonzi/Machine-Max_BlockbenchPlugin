@@ -70,7 +70,8 @@ function extractSignalGraph(variant) {
             }
         }
 
-        // 交互区 — 既是信号发送者也是接收者，纳入信号流图
+        // 交互区 — 只发不收（门、舱盖这类点击入口），它的 signal_targets 是出边；
+        // 边上若指到交互区说明目标写错了（上游丢弃这一跳，collectIssues 会提示）
         if (sp.interact_boxes) {
             for (var ibKey in sp.interact_boxes) {
                 var ib = sp.interact_boxes[ibKey];
@@ -272,6 +273,7 @@ function _getSignalOutputFields(ss) {
         'gear_outputs', 'move_outputs',
         'regular_outputs', 'aim_outputs',
         'passenger_num_outputs',
+        'camera_discovery_targets', 'ammo_discovery_targets', 'loader_discovery_targets',
     ];
     var result = [];
     for (var i = 0; i < knownOutputs.length; i++) {
@@ -284,10 +286,16 @@ function _getSignalOutputFields(ss) {
 
 /**
  * 根据信号输出字段名判断边的类型
+ *
+ * `*_discovery_targets`（`camera_discovery_targets` / `ammo_discovery_targets` /
+ * `loader_discovery_targets`）是**只读发现**：上游 `resolveViewpoints` /
+ * `resolveTargets` 只按名字查终端，不写信号槽、也不下发命令。画成控制边会让人
+ * 以为这条线在传值，所以单列一类。
  */
 function _edgeTypeForField(field) {
     if (field === 'power_output' || field === 'power_outputs') return 'power';
     if (field === 'speed_outputs' || field === 'speed_output') return 'speed';
+    if (/_discovery_targets$/.test(field)) return 'discovery';
     return 'control';
 }
 

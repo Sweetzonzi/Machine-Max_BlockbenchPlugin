@@ -35,6 +35,12 @@ src/ops/
   `markInteractBox` 支持显式 `key`，供面板「创建配置」按钮复用。
 - `setField` 整表写 `hit_boxes` 时，骨骼名 key 由 `doc.write` 归一化为 UUID；无法解析的名字返回
   `not_found`，不写半截。存量脏 key 由 `loadConfig` 的 `repairHitBoxKeys` 修复。
+- **三类名字的唯一性按 Part 判**：新增 / 导入 / 改名都在写入前调
+  `shared.checkPartUniqueName(variant, name, { subPartKey, excludeKey, path })`（内部用
+  `core/naming.findNamedEntry`，跨全部子零件、跨三类名字查同名键）。冲突返回
+  `{ ok:false, errors:[{ code:'duplicate_name' }] }`，`error` 里指明冲突所在的子零件。
+  `excludeKey` 用于「正在编辑的自身」与同子零件复用；`mark*` 显式 key 命中同子零件同名条目
+  是复用，不报错。依据：上游解码期重名即抛 `PackContentException`，整份定义双端消失（docs/13 D34）。
 - 整件通道（`importPart` / `importVariant` / `importSubPart`）固定顺序：
   `clearScope(markerCleanup)` → 替换节点 → `set(markerPlan)` → `recalc auto_end_bones`。
 - marker 能力通过 `doc/ports` 注入；测试可换 fake，生产在 `plugin.js onload` 安装。

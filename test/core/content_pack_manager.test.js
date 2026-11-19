@@ -167,3 +167,38 @@ describe('content_pack_manager 合并视图缓存', function () {
         expect(cpm.loadMergedDefs(config, 'materials').defs['machine_max:steel'].rha).toBe(9);
     });
 });
+
+describe('content_pack_manager 命名空间候选', function () {
+    test('machine_max 恒在首位，并带上本包与各依赖包的命名空间', function () {
+        var cur = makePack('ns_cur', 'k17:cur_pack', { materials: { a: {} } });
+        // 本包再加一个副命名空间目录
+        fs.mkdirSync(path.join(cur, 'shared_extras', 'materials'), { recursive: true });
+        var dep = makePack('ns_dep', 'sdkfz234:dep_pack', { materials: { b: {} } });
+
+        var list = cpm.namespaceCandidates({ contentPackPath: cur, dependencyPaths: [dep] });
+        expect(list[0]).toBe('machine_max');
+        expect(list).toContain('k17');
+        expect(list).toContain('shared_extras');
+        expect(list).toContain('sdkfz234');
+        // 去重
+        expect(list.filter(function (x) { return x === 'machine_max'; })).toHaveLength(1);
+    });
+
+    test('路径无效 / config 为空时只返回 machine_max，不抛错', function () {
+        expect(cpm.namespaceCandidates(null)).toEqual(['machine_max']);
+        expect(cpm.namespaceCandidates({ contentPackPath: '', dependencyPaths: ['/nope/missing'] }))
+            .toEqual(['machine_max']);
+    });
+
+    test('来源变化后候选缓存按指纹失效', function () {
+        var a = makePack('ns_a', 'aa:pack_a', { materials: { m: {} } });
+        var cfg = { contentPackPath: a, dependencyPaths: [] };
+        expect(cpm.namespaceCandidates(cfg)).toContain('aa');
+
+        var b = makePack('ns_b', 'bb:pack_b', { materials: { m: {} } });
+        cfg.contentPackPath = b;
+        var list = cpm.namespaceCandidates(cfg);
+        expect(list).toContain('bb');
+        expect(list).not.toContain('aa');
+    });
+});

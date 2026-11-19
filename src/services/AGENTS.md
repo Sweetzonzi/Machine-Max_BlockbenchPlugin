@@ -33,7 +33,7 @@ src/services/
 | 问题合并 | `issues.js` → `dedupeIssues(primary, schema)`（`export.js` 仍转出） | `collectIssues` 优先，`validateTree` 只补空缺；不同字段不合并 |
 | 导入文件读取 | `import.js` → `readTextFile` / `parseJSONWithComments` | 去 BOM、剥 `//` 注释（实现在 `src/lib/json_text.js`，无 fs）；冲突对话框与 ops 编排在 `import/drag_import.js` |
 | 导入计划与冲突决议 | `import_plan.js` → `planImports(inputs, parts)` / `resolvePlan(plan, action)` | 纯函数：`new/existing/duplicate` 判定、`takenIds`、两遍 `finalId` 分配；不读盘、不写配置、不弹框。编排与 I/O 在 `drag_import.importParts`（docs/15） |
-| 内容包 fs | `pack.js` | 创建/打开/读 meta 的薄包装；`findPackInSiblings` / `resolveChainDependencies`（跳过内置 `machine_max:builtin`，返回 `unresolved`）/ `resolveDeclaredDependencies`（按 `meta.dependencies` 在父目录解析直接 + 一层间接依赖，返回 `declaredCount` 以区分"没声明"和"声明了但没找到"） |
+| 内容包 fs | `pack.js` | 创建/打开/读 meta 的薄包装；`createPack(dirPath, meta, { namespace })` 的命名空间是导出目录名（省略时按 id 后缀推断，非法值在 mkdir 前拒绝）；`findPackInSiblings` / `resolveChainDependencies`（跳过内置 `machine_max:builtin`，返回 `unresolved`）/ `resolveDeclaredDependencies`（按 `meta.dependencies` 在父目录解析直接 + 一层间接依赖，返回 `declaredCount` 以区分"没声明"和"声明了但没找到"） |
 | 图标生成 | `icon_generator.js` | `generate(config, options)`：离屏渲染 + PNG 写盘（`outputSize` 128/256/512，默认 128）；元素级显隐按 `icon_visibility.buildVisibility` 的 `retained` 判定；`icon_paths` / `icon_visibility` / `icon_fit` 为纯函数；`part.icon` 由 UI 调 `ops.setPartIcons` |
 | 业务校验 | `validate.js` → `collectIssues(config)` | P4 从 `mode/validation.js` 迁入，只覆盖业务规则；面板 / 原生校验 / 闸门统一取 `issues.js` 的 `collectAllIssues` |
 | 方块 UV | `cube_uv.js` → `resolveCubes(ids)` / `clearCubeUv(cubes)` | 清空六面 `texture=null` + `uv=[0,0,0,0]` 并调 `preview_controller.updateFaces(cube)`；走原生 `uv_only` 撤销，标签 `清空方块 UV`。MCP 工具 `clear_cube_uv` 是它的唯一调用方 |
@@ -48,6 +48,10 @@ src/services/
 - 碰撞箱 `module` 只在关联到模块化子系统时生效：名字不在该类型的 `modules` 清单里报 `hit_box_module_unknown`，没关联子系统报 `hit_box_module_without_subsystem`，两者都是 warning（模组侧退回按模块最大耐久比例分摊，导出不阻断）。模块清单的真源是 `core/subsystem_types.js` 的 `modules`。
 - 子系统 `type` 不在注册表里时报 `subsystem_type_unknown`（error）：已退役类型从 `RETIRED_TYPES` 取中文名与替代类型，其余按未知类型提示。`path.field` 留空，与 `validateTree` 的 `unknown_type` 同键，导出闸门去重后只留带退役说明的一条（docs/13 §15.3）。
 - **面板 / 原生校验 / 闸门共用 `issues.js` 的 `collectAllIssues`**：只调 `collectIssues` 会让 schema 值问题（类型、枚举、容器不是对象）在界面上看不见、只有导出时才暴露。`canExport` 再叠加 `probeEncodable`（编码试跑），保证放行的数据写得出去（docs/13 §4.3、§15.4）。
+- **配置引用的解析域分两档**（docs/13 §5.4、D34）：`signal_targets` 系列在**整个 Part**（同变体全部子零件）内解析，合法目标 = 子系统 / 连接点 / `local` / `global`；`power_output`、`power_outputs` 的 key、`power_target`、`hit_boxes[*].subsystem`、`subsystems[*].connector` 只在所属子零件内解析。依据是上游 `ISignalSender#setTargetFromNames`（遍历 `subParts`）与 `findOwnSubsystem` 的分工。
+- **交互区不是信号接收者**：`InteractBox` 只实现 `ISignalSender`（只发不收），上游记 ERROR 并丢弃这一跳。`refs.resolveConfigRefs` 把命中交互区的信号目标放进 `invalid`，`collectIssues` 报 warning `interact_box_as_signal_target`（不阻断导出；导入也不因它整件失败）。
+- **视点发现表（`camera_discovery_targets`）另有三条 warning**：`_collectViewpointDiscoveryIssues` 检查频道与取值域——频道写成 `camera_sight`（视点未声明时的默认值，等于全车所有视点）、具名目标不是 `machine_max:camera` / `machine_max:sight`、走 `local`/`global` 广播的频道没有任何视点在自己的 `discovery_inputs` 里声明。三种失效在上游都只表现为"少一个视角"且没有日志，所以只能提示、不阻断；上游 `content-check.gradle` 第 16 节按同一口径检查内容包。目标不存在仍由 `dangling_signal_target` 报 error，不重复报。
+- **三类名字（子系统 / 连接点 / 交互区）的唯一性按 Part 判**：`_collectNameConflicts` 一次遍历全部子零件、三类名字共用一张表，报 `duplicate_name`（error）。上游解码期同样判重，重名会让整份零件定义在双端消失。
 - **加载会原样保留坏节点**（`doc/load.js`）：遍历配置时不要假设 `parts[x]` / `variants[x]` / `sub_parts[x]` / 容器是对象，用 `_isObject` 先判形状并按条目报问题，不要抛异常。
 - 新增服务后同步 `docs/13` §8 与根 `AGENTS.md` 的导入图。
 - 图标生成是独立写盘用例：`icon_generator` 不写 `_uiState`、不 toast、不刷新；字段更新由 UI 在写盘成功后调用 `ops.setPartIcons`。零件路径逐条用 `keys.isSafePartId`，不能复用整包 `assertSafePartIds`。

@@ -23,7 +23,6 @@ var MM_CONNECTOR_PANEL_OPTIONS = {
         config: { type: Object, required: true },
         elementName: { type: String, default: '' },
         connectorName: { type: String, default: '' },
-        namespace: { type: String, default: 'machine_max' },
         parentSubPartKey: { type: String, default: '' },
         connectorDefs: { type: Object, default: function() { return {}; } },
         allLocatorNames: { type: Array, default: function() { return []; } },
@@ -34,17 +33,10 @@ var MM_CONNECTOR_PANEL_OPTIONS = {
     },
     data: function () {
         return {
-            editingName: nameUtils.extractShortName(this.connectorName, this.namespace),
             editingLocator: this.config.locator || this.elementName || '',
         };
     },
     watch: {
-        connectorName: function (val) {
-            var short = nameUtils.extractShortName(val, this.namespace);
-            if (short !== this.editingName) {
-                this.editingName = short;
-            }
-        },
         'config.locator': function (val) {
             if (val !== this.editingLocator) {
                 this.editingLocator = val;
@@ -52,9 +44,6 @@ var MM_CONNECTOR_PANEL_OPTIONS = {
         },
     },
     computed: {
-        namePrefix: function () {
-            return 'connector.' + this.namespace + '.';
-        },
         hasDefinition: function () {
             return !!(this.config && this.config.definition);
         },
@@ -96,16 +85,8 @@ var MM_CONNECTOR_PANEL_OPTIONS = {
         displayLabel: function (fullKey) {
             return nameUtils.displayLabel(fullKey, 'zh', 'machine_max');
         },
-        onNameChange: function (value) {
-            var oldKey = this.connectorName;
-            var newKey = nameUtils.buildFullKey('connector', value, this.namespace);
-            if (newKey !== oldKey) {
-                this.$emit('name-change', oldKey, newKey);
-            }
-        },
-        onNameBlur: function (event) {
-            event.target.style.border = '1px solid transparent';
-            event.target.style.background = 'transparent';
+        onNameChange: function (oldKey, newKey) {
+            this.$emit('name-change', oldKey, newKey);
         },
         onLocatorChange: function (value) {
             // 同步本地编辑值（共享组件单向绑定，输入时组件 emit 更新）

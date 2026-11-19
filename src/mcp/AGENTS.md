@@ -47,6 +47,10 @@ src/mcp/
   元素名取自 `definition.bone` / `definition.locator`。
 - `import_*` 的 `mode`：`create` 重名拒绝、`replace` 整体替换、`rename` 需 `old_key`、
   `reject` 与 `create` 同义；省略时按目标是否存在自动选择。
+- 子零件 / 连接点 / 交互区 / 子系统的 key 与 UI 共用 `doc/keys`：命名空间由创作者选择，
+  可与 `config.namespace` 不同（跨包引用 `machine_max` 共享词条），MCP 不额外限制。
+- `list_defs` 返回的 id 带 `{ns}:` 前缀（内容包可有多命名空间）；`read_def` 的裸 id
+  先按 `config.namespace` 补前缀，唯一时再按命名空间后缀解析。
 
 ## 注册时序
 

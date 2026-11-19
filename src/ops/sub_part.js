@@ -11,7 +11,8 @@ var doc = require('../doc/index.js');
 var shared = require('./shared.js');
 
 function ensureSubPartName(config, variant, namespace) {
-    var base = generateDefaultName('sub_part', { namespace: namespace });
+    // 默认落共享词汇 machine_max（sub_part.machine_max.main 是模组简写 codec 认的键）
+    var base = generateDefaultName('sub_part', { namespace: namespace || undefined });
     var keys = Object.keys((variant && variant.sub_parts) || {});
     if (keys.indexOf(base) < 0) return base;
     var n = 2;
@@ -31,9 +32,8 @@ function markSubPart(config, options) {
     var element = options.element;
     if (!element || !element.uuid) return shared.fail('未选中任何元素');
 
-    var ns = shared.namespaceOf(config);
     var spKey = String(options.spKey || '').trim();
-    if (!spKey) spKey = ensureSubPartName(config, variant, ns);
+    if (!spKey) spKey = ensureSubPartName(config, variant);
     var keyError = shared.validateKey('sub_parts', spKey, config,
         ['parts', options.partId, 'variants', options.variantName, 'sub_parts', spKey]);
     if (keyError) return shared.fail(keyError.hint, [keyError]);

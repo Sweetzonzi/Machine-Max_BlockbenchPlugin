@@ -32,6 +32,98 @@ var log = createLogger('ContentPack');
 const ROOT = path.join(__dirname, '..', '..');
 const SCHEMAS_DIR = path.join(ROOT, 'schemas');
 
+/**
+ * 内容命名空间下会出现的一级子目录名。
+ *
+ * 用于判断包内的某个一级目录是不是命名空间：Spark-Core 的规则是「文件路径的
+ * 第一段即命名空间」，一个包可以有多个命名空间（与原版资源包 / 数据包一致），
+ * 命名空间名与包 id 无关。因此只能看目录里有没有内容子目录，不能拿 id 推。
+ */
+const CONTENT_DIR_NAMES = {
+    materials: true,
+    connectors: true,
+    subsystems: true,
+    control_groups: true,
+    projectiles: true,
+    parts: true,
+    models: true,
+    animations: true,
+    particles: true,
+    textures: true,
+    documents: true,
+    lang: true,
+    huds: true,
+    hud_layouts: true,
+    fittings: true,
+    templates: true,
+    assemblies: true,
+    blueprints: true,
+    recipe: true,
+    sounds: true,
+    fmod: true,
+    tooltips: true,
+    font: true,
+};
+
+/**
+ * 合法命名空间：小写 ASCII 字母、数字、`_`、`-`（进 resource location，不含点）。
+ *
+ * core 层不能 require `doc/keys.js`（会反转 core → doc 的分层），所以这里保留
+ * 一份字符集判据；`doc/keys.isValidNamespace` 与它同源，测试里两边对齐。
+ */
+const NAMESPACE_RE = /^[a-z0-9_-]+$/;
+
+/**
+ * 判断命名空间名是否合法。
+ * @param {*} ns
+ * @returns {boolean}
+ */
+function isValidNamespace(ns) {
+    return typeof ns === 'string' && NAMESPACE_RE.test(ns);
+}
+
+/**
+ * 由包 id 推断创建新包时的默认导出命名空间。
+ *
+ * 顺序：冒号后的后缀（`k17:my_pack` → `my_pack`）→ 冒号前的前缀 → 空串。
+ * 只返回合法名字；不合法就当没有候选，由调用方报错。
+ *
+ * @param {string} packId - meta.id
+ * @returns {string} 合法命名空间或 ''
+ */
+function defaultExportNamespace(packId) {
+    var str = packId || '';
+    var i = str.indexOf(':');
+    var suffix = i >= 0 ? str.substring(i + 1) : '';
+    if (isValidNamespace(suffix)) return suffix;
+    var prefix = resolveNamespace(str);
+    return isValidNamespace(prefix) ? prefix : '';
+}
+
+/**
+ * 解析本次导出要写入的命名空间目录。
+ *
+ * 顺序：`config.namespace`（合法时）→ 包内已有目录按 `meta.id` 选主命名空间
+ * （`pickPrimaryNamespace`）→ `machine_max`。返回的目录就是
+ * `{导出目录}/{包文件夹}/{ns}/` 里的那一段，导出对话框会显示出来。
+ *
+ * @param {string} packPath - 当前内容包目录
+ * @param {string} configured - config.namespace
+ * @returns {string} 命名空间
+ */
+function pickExportNamespace(packPath, configured) {
+    var meta;
+    var picked;
+    if (isValidNamespace(configured)) return configured;
+    if (packPath) {
+        meta = readPackMeta(packPath);
+        picked = pickPrimaryNamespace(listNamespaces(packPath), meta && meta.id);
+        if (picked) return picked;
+    }
+    return 'machine_max';
+}
+
+
 // =============================================================================
 // 内部工具函数
 // =============================================================================
@@ -124,6 +216,167 @@ function _isZipPath(p) {
 }
 
 /**
+ * 判断目录是否像一个内容命名空间（内部至少有一个内容子目录）
+ *
+ * @param {string} dirPath - 候选目录
+ * @returns {boolean}
+ */
+function _looksLikeContentDir(dirPath) {
+    var entries, i, stat, name;
+    try {
+        entries = fs.readdirSync(dirPath);
+    } catch (e) {
+        return false;
+    }
+    for (i = 0; i < entries.length; i++) {
+        name = entries[i];
+        if (!CONTENT_DIR_NAMES[name]) continue;
+        try {
+            stat = fs.statSync(path.join(dirPath, name));
+        } catch (e) {
+            continue;
+        }
+        if (stat.isDirectory()) return true;
+    }
+    return false;
+}
+
+/**
+ * 列出目录形式内容包的命名空间（包内一级子目录，且内部有内容子目录）
+ *
+ * @param {string} packDir - 内容包根目录
+ * @returns {string[]} 命名空间名（未排序）
+ */
+function _listDirNamespaces(packDir) {
+    var result = [];
+    var entries, i, name, fullPath, stat;
+    try {
+        entries = fs.readdirSync(packDir);
+    } catch (e) {
+        log.warn('listNamespaces: 无法读取目录 ' + packDir, e);
+        return result;
+    }
+    for (i = 0; i < entries.length; i++) {
+        name = entries[i];
+        if (name.charAt(0) === '.') continue;
+        // 目录名不是合法命名空间（大写、空格、点…）时跳过：它不可能被 `{ns}:path` 引用，
+        // 当候选只会让导出 / 主命名空间选择写出非法目录
+        if (!isValidNamespace(name)) continue;
+        fullPath = path.join(packDir, name);
+        try {
+            stat = fs.statSync(fullPath);
+        } catch (e) {
+            continue;
+        }
+        if (!stat.isDirectory()) continue;
+        if (_looksLikeContentDir(fullPath)) result.push(name);
+    }
+    return result;
+}
+
+/**
+ * 列出 ZIP 形式内容包的命名空间（条目路径的第一段）
+ *
+ * 只统计 `{ns}/{内容子目录}/...` 形式的条目，因此根目录的 meta.json、
+ * 说明文档等不会被误当命名空间。
+ *
+ * @param {string} zipPath - ZIP 内容包路径
+ * @returns {string[]} 命名空间名（未排序）
+ */
+function _listZipNamespaces(zipPath) {
+    var result = [];
+    var seen = {};
+    var handle, files, i, parts;
+    handle = zip_reader.openZip(zipPath);
+    if (!handle) {
+        log.warn('listNamespaces: 无法打开 ZIP ' + zipPath);
+        return result;
+    }
+    files = handle.listFiles();
+    for (i = 0; i < files.length; i++) {
+        parts = files[i].split('/');
+        if (parts.length < 3) continue;
+        if (!CONTENT_DIR_NAMES[parts[1]]) continue;
+        if (!parts[0] || seen[parts[0]]) continue;
+        if (!isValidNamespace(parts[0])) continue;
+        seen[parts[0]] = true;
+        result.push(parts[0]);
+    }
+    return result;
+}
+
+/**
+ * 列出内容包实际拥有的命名空间
+ *
+ * 命名空间由包内目录结构决定，与 meta.id 无关：`machine_max:m1a2_sep` 的包
+ * 内容可以放在 `m1a2_sep/` 目录里（本项目就是这样），也可以放 `machine_max/`。
+ *
+ * @param {string} packPath - 内容包根目录或 ZIP 路径
+ * @returns {string[]} 排序后的命名空间名；读不到时返回 []
+ */
+function listNamespaces(packPath) {
+    var result;
+    if (!packPath) return [];
+    result = _isZipPath(packPath)
+        ? _listZipNamespaces(packPath)
+        : _listDirNamespaces(packPath);
+    result.sort();
+    return result;
+}
+
+/**
+ * 从多个命名空间中选一个「主命名空间」
+ *
+ * 新建零件、生成语言键、导出都只写一个命名空间目录，所以要有一个确定的默认值。
+ * 选择顺序：
+ *   1. 与包 id 冒号后的名字同名（machine_max:m1a2_sep → m1a2_sep）
+ *   2. 唯一的一个命名空间
+ *   3. machine_max（共享定义池）
+ *   4. 字典序第一个
+ *
+ * @param {string[]} namespaces - listNamespaces 的结果
+ * @param {string} packId - meta.id
+ * @returns {string} 主命名空间，没有候选时返回 ''
+ */
+function pickPrimaryNamespace(namespaces, packId) {
+    var suffix = '';
+    var i;
+    if (!namespaces || namespaces.length === 0) return '';
+    if (packId && typeof packId === 'string') {
+        i = packId.indexOf(':');
+        if (i >= 0) suffix = packId.substring(i + 1);
+    }
+    if (suffix && namespaces.indexOf(suffix) >= 0) return suffix;
+    if (namespaces.length === 1) return namespaces[0];
+    if (namespaces.indexOf('machine_max') >= 0) return 'machine_max';
+    return namespaces[0];
+}
+
+/**
+ * 由包路径与 meta 计算命名空间列表与主命名空间
+ *
+ * 包内一个内容目录都没有时退回包 id 前缀（旧包 / 只有 meta.json 的空壳），
+ * 这样「先填路径、稍后再补内容」的流程仍然可用。
+ *
+ * @param {string} packPath - 内容包路径
+ * @param {Object|null} meta - meta.json
+ * @returns {{namespaces: string[], namespace: string}}
+ */
+function _resolvePackNamespaces(packPath, meta) {
+    var namespaces = listNamespaces(packPath);
+    var id = meta && typeof meta.id === 'string' ? meta.id : '';
+    var fallback = resolveNamespace(id);
+    if (namespaces.length === 0 && fallback) {
+        log.warn('openContentPack: 包内没有内容目录，回退到 id 前缀命名空间 ' + fallback + '（' + packPath + '）');
+        namespaces = [fallback];
+    }
+    return {
+        namespaces: namespaces,
+        namespace: pickPrimaryNamespace(namespaces, id),
+    };
+}
+
+/**
  * 从 ZIP 内容包中递归收集指定类型的所有定义文件
  *
  * 列出 ZIP 中所有文件，筛选路径匹配 {namespace}/{type}/ 前缀且
@@ -193,13 +446,18 @@ function _readZipDefs(zipPath, namespace, type) {
 // =============================================================================
 
 /**
- * 从内容包 ID 中提取 namespace（冒号前的部分）
+ * 从内容包 ID 中取冒号前的部分
+ *
+ * 注意：这**不是**内容命名空间，只是包 id 的前缀。包 id 与命名空间无关
+ * （见 CONTENT_DIR_NAMES 与 listNamespaces），这里只作为「包内没有任何内容
+ * 目录」时的兜底，以及创建新包时决定初始目录名。
+ *
  * "my_pack:vehicles" → "my_pack"
  * "simple_name" → "simple_name"
  * "" → ""
  *
  * @param {string} packId - 内容包 ID，如 "machine_max:builtin"
- * @returns {string} namespace
+ * @returns {string} 包 id 前缀
  */
 function resolveNamespace(packId) {
     var str = packId || '';
@@ -297,15 +555,24 @@ function writePackMeta(dirPath, meta) {
 /**
  * 创建新的内容包目录结构
  *
- * 在指定目录下创建 namespace 子目录（materials/、connectors/、subsystems/、control_groups/），
+ * 在指定目录下创建命名空间子目录（materials/、connectors/、subsystems/、parts/、lang/），
  * 写入 meta.json，并从项目的 schemas/ 目录复制 Schema 文件到 {ns}/docs/。
+ *
+ * 命名空间目录由 `options.namespace` 指定（创建对话框里的「导出命名空间」），
+ * 它和包 id 是两个概念：`k17:my_pack` 的包默认写到 `my_pack/`。省略时按
+ * `defaultExportNamespace(meta.id)` 推断（id 后缀 → id 前缀）。名字非法时
+ * **在创建任何目录之前**返回错误，不留半个包。
+ *
+ * 打开已有包时不这样推：以包内实际目录为准（见 listNamespaces），作者可以自行
+ * 添加更多命名空间目录，`machine_max:m1a2_sep` + `m1a2_sep/` 这种组合是合法的。
  *
  * @param {string} dirPath - 内容包根目录（必须不存在 meta.json）
  * @param {Object} meta - 元数据对象（必须包含 id 字段，id 格式为 "namespace:packname"）
+ * @param {{namespace?: string}} [options]
  * @returns {{success: boolean, namespace: string, error: string|null}} 操作结果
  */
-function createContentPack(dirPath, meta) {
-    var metaPath, namespace, nsDir, docsDir;
+function createContentPack(dirPath, meta, options) {
+    var metaPath, namespace, nsDir, docsDir, requested;
 
     try {
         // 防止意外覆盖已有内容包
@@ -314,10 +581,18 @@ function createContentPack(dirPath, meta) {
             throw new Error('目录已包含 meta.json，为防止覆盖请使用其他目录: ' + dirPath);
         }
 
-        // 解析 namespace
-        namespace = resolveNamespace(meta.id || '');
+        // 解析命名空间：显式传入的优先，且必须是合法名字（在 mkdir 之前校验）
+        requested = options && typeof options.namespace === 'string' ? options.namespace : '';
+        namespace = requested ? requested : defaultExportNamespace(meta.id || '');
         if (!namespace) {
-            return { success: false, namespace: '', error: 'meta.id 为空或无法解析 namespace' };
+            return { success: false, namespace: '', error: 'meta.id 为空或无法解析命名空间，请显式指定导出命名空间' };
+        }
+        if (!isValidNamespace(namespace)) {
+            return {
+                success: false,
+                namespace: '',
+                error: '导出命名空间 "' + namespace + '" 不合法：只允许小写字母、数字、下划线或连字符',
+            };
         }
 
         // 创建目录结构
@@ -326,6 +601,8 @@ function createContentPack(dirPath, meta) {
         ensureDir(path.join(nsDir, 'materials'));
         ensureDir(path.join(nsDir, 'connectors'));
         ensureDir(path.join(nsDir, 'subsystems'));
+        ensureDir(path.join(nsDir, 'parts'));
+        ensureDir(path.join(nsDir, 'lang'));
 
         // 写入 meta.json
         writePackMeta(dirPath, meta);
@@ -349,11 +626,16 @@ function createContentPack(dirPath, meta) {
  * 支持目录形式和 ZIP 文件形式的内容包。
  * 验证 meta.json 可读且 id 有效，只要根目录有 meta.json 即视为合法内容包。
  *
+ * 返回的 `namespaces` 是包内实际存在的内容命名空间（可能多个），`namespace`
+ * 只是供新建内容使用的默认值。两者都由目录结构决定，不由 meta.id 推导：
+ * 包 id 为 `machine_max:m1a2_sep` 而内容放在 `m1a2_sep/` 目录是合法且常见的。
+ *
  * @param {string} packPath - 内容包根目录或 ZIP 文件路径
- * @returns {{valid: boolean, meta: Object|null, namespace: string, error: string|null}} 校验结果
+ * @returns {{valid: boolean, meta: Object|null, namespace: string,
+ *            namespaces: string[], error: string|null}} 校验结果
  */
 function openContentPack(packPath) {
-    var meta, namespace;
+    var meta, resolved;
 
     // ZIP 形式
     if (_isZipPath(packPath)) {
@@ -361,54 +643,70 @@ function openContentPack(packPath) {
             // 校验 meta.json
             meta = readPackMeta(packPath);
             if (meta === null) {
-                return { valid: false, meta: null, namespace: '', error: 'ZIP 中 meta.json 读取失败或不存在' };
+                return { valid: false, meta: null, namespace: '', namespaces: [], error: 'ZIP 中 meta.json 读取失败或不存在' };
             }
 
             if (!meta.id) {
-                return { valid: false, meta: meta, namespace: '', error: 'meta.id 为空' };
+                return { valid: false, meta: meta, namespace: '', namespaces: [], error: 'meta.id 为空' };
             }
 
-            namespace = resolveNamespace(meta.id);
-            if (!namespace) {
-                return { valid: false, meta: meta, namespace: '', error: '无法从 meta.id 解析 namespace' };
+            resolved = _resolvePackNamespaces(packPath, meta);
+            if (!resolved.namespace) {
+                return { valid: false, meta: meta, namespace: '', namespaces: [], error: 'ZIP 中找不到内容命名空间目录' };
             }
 
-            // 只要根目录有 meta.json 即视为合法内容包，不再检查子目录
-            log.info('openContentPack: ZIP 内容包验证通过', { path: packPath, namespace: namespace });
-            return { valid: true, meta: meta, namespace: namespace, error: null };
+            log.info('openContentPack: ZIP 内容包验证通过', {
+                path: packPath,
+                namespace: resolved.namespace,
+                namespaces: resolved.namespaces,
+            });
+            return {
+                valid: true, meta: meta,
+                namespace: resolved.namespace, namespaces: resolved.namespaces,
+                error: null,
+            };
         } catch (e) {
             log.error('openContentPack: 打开 ZIP 失败 ' + packPath, e);
-            return { valid: false, meta: null, namespace: '', error: e.message };
+            return { valid: false, meta: null, namespace: '', namespaces: [], error: e.message };
         }
     }
 
-    // 目录形式（原有逻辑）
+    // 目录形式
     try {
         meta = readPackMeta(packPath);
         if (meta === null) {
             log.warn('openContentPack: meta.json 读取失败或不存在: ' + packPath);
-            return { valid: false, meta: null, namespace: '', error: 'meta.json 读取失败或不存在' };
+            return { valid: false, meta: null, namespace: '', namespaces: [], error: 'meta.json 读取失败或不存在' };
         }
 
         if (!meta.id) {
             log.warn('openContentPack: meta.id 为空，路径=' + packPath);
-            return { valid: false, meta: meta, namespace: '', error: 'meta.id 为空' };
+            return { valid: false, meta: meta, namespace: '', namespaces: [], error: 'meta.id 为空' };
         }
 
-        namespace = resolveNamespace(meta.id);
-        if (!namespace) {
-            log.warn('openContentPack: 无法从 meta.id 解析 namespace: ' + meta.id);
-            return { valid: false, meta: meta, namespace: '', error: '无法从 meta.id 解析 namespace' };
+        resolved = _resolvePackNamespaces(packPath, meta);
+        if (!resolved.namespace) {
+            log.warn('openContentPack: 找不到内容命名空间目录: ' + packPath);
+            return { valid: false, meta: meta, namespace: '', namespaces: [], error: '包内找不到内容命名空间目录' };
         }
 
-        log.debug('openContentPack: meta.id=' + meta.id + ' -> namespace=' + namespace);
+        log.debug('openContentPack: meta.id=' + meta.id + ' -> namespace=' + resolved.namespace
+            + ', namespaces=' + resolved.namespaces.join(','));
 
         // 只要根目录有 meta.json 即视为合法内容包，不再检查子目录
-        log.info('openContentPack: 内容包验证通过', { path: packPath, namespace: namespace });
-        return { valid: true, meta: meta, namespace: namespace, error: null };
+        log.info('openContentPack: 内容包验证通过', {
+            path: packPath,
+            namespace: resolved.namespace,
+            namespaces: resolved.namespaces,
+        });
+        return {
+            valid: true, meta: meta,
+            namespace: resolved.namespace, namespaces: resolved.namespaces,
+            error: null,
+        };
     } catch (e) {
         log.error('openContentPack: 打开失败 ' + packPath, e);
-        return { valid: false, meta: null, namespace: '', error: e.message };
+        return { valid: false, meta: null, namespace: '', namespaces: [], error: e.message };
     }
 }
 
@@ -462,6 +760,33 @@ function readAllDefs(packDir, namespace, type) {
 }
 
 /**
+ * 读取内容包中**所有命名空间**的指定类型定义，键带命名空间前缀
+ *
+ * 一个包可以有多个命名空间，定义 id 只在命名空间内唯一，所以合并时必须带前缀，
+ * 否则两个命名空间里的同名定义会互相覆盖。
+ *
+ * @param {string} packDir - 内容包根目录或 ZIP 文件路径
+ * @param {string[]|string} namespaces - 命名空间列表（或单个）
+ * @param {'materials'|'connectors'|'subsystems'|'control_groups'|'projectiles'} type - 定义类型
+ * @returns {Object<string, Object>} { "namespace:defId": parsedData }
+ */
+function readAllDefsByNamespace(packDir, namespaces, type) {
+    var list = Array.isArray(namespaces) ? namespaces : (namespaces ? [namespaces] : []);
+    var result = {};
+    var i, j, ns, defs, ids;
+    for (i = 0; i < list.length; i++) {
+        ns = list[i];
+        if (!ns) continue;
+        defs = readAllDefs(packDir, ns, type);
+        ids = Object.keys(defs);
+        for (j = 0; j < ids.length; j++) {
+            result[ns + ':' + ids[j]] = defs[ids[j]];
+        }
+    }
+    return result;
+}
+
+/**
  * 递归列出指定类型的所有定义 ID
  *
  * @param {string} packDir - 内容包根目录
@@ -508,13 +833,19 @@ function defExists(packDir, namespace, type, defId) {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        isValidNamespace,
+        defaultExportNamespace,
+        pickExportNamespace,
         resolveNamespace,
+        listNamespaces,
+        pickPrimaryNamespace,
         readPackMeta,
         isBuiltinPackPath,
         writePackMeta,
         createContentPack,
         openContentPack,
         readAllDefs,
+        readAllDefsByNamespace,
         listDefIds,
         defExists,
     };

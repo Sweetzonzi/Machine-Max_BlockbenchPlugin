@@ -121,6 +121,8 @@ describe('schema ↔ Codec 差异登记', () => {
         expect(weapon.first_hud_layout).toBe('machine_max:empty');
         expect(weapon.third_hud_layout).toBe('machine_max:empty');
         expect(weapon.scope_hud_layout).toBe('machine_max:empty');
+        // 上游 e48a275c 工作树：视点发现表与 control_outputs 分开，缺省空表
+        expect(weapon.camera_discovery_targets).toEqual({});
 
         const launcher = SubsystemDispatchCodec.decode({
             type: 'machine_max:launcher',
@@ -146,6 +148,7 @@ describe('schema ↔ Codec 差异登记', () => {
             ['machine_max:weapon_controller', 'first_hud_layout'],
             ['machine_max:weapon_controller', 'third_hud_layout'],
             ['machine_max:weapon_controller', 'scope_hud_layout'],
+            ['machine_max:weapon_controller', 'camera_discovery_targets'],
         ];
         for (const [type, field] of registryFields) {
             const names = ssTypes.getDynamicFields(type).map((f) => f.field);
@@ -177,24 +180,26 @@ describe('schema ↔ Codec 差异登记', () => {
         expect(ssTypes.getTypeMeta('machine_max:regen_loader')).toBeNull();
     });
 
-    test('上游 b220cde2：装填人员握手字段与爆反装甲可往返', () => {
+    test('上游 b220cde2 / 0b9561bf：装填人员握手字段（loader_*）与爆反装甲可往返', () => {
         const launcher = SubsystemDispatchCodec.decode({
             type: 'machine_max:launcher',
             definition: 'machine_max:basic_launcher',
             locator: 'muzzle',
-            reload_operator_discovery_targets: { 'crew.reload.loader': ['local'] },
-            reload_operator_time_multipliers: { 'crew.reload.loader': 1.5 },
+            loader_discovery_targets: { 'crew_loader_reload': ['local'] },
+            loader_time_multipliers: { 'crew_loader_reload': 1.5 },
         });
         const encoded = SubsystemDispatchCodec.encode(launcher);
-        expect(encoded.reload_operator_discovery_targets).toEqual({ 'crew.reload.loader': ['local'] });
-        expect(encoded.reload_operator_time_multipliers).toEqual({ 'crew.reload.loader': 1.5 });
+        expect(encoded.loader_discovery_targets).toEqual({ 'crew_loader_reload': ['local'] });
+        expect(encoded.loader_time_multipliers).toEqual({ 'crew_loader_reload': 1.5 });
 
         const seat = SubsystemDispatchCodec.encode(SubsystemDispatchCodec.decode({
             type: 'machine_max:seat',
             definition: 'machine_max:default_seat',
-            reload_operator_discovery_inputs: ['crew.reload.loader'],
+            loader_discovery_inputs: ['crew_loader_reload'],
+            interact_inputs: ['interact_left_door'],
         }));
-        expect(seat.reload_operator_discovery_inputs).toEqual(['crew.reload.loader']);
+        expect(seat.loader_discovery_inputs).toEqual(['crew_loader_reload']);
+        expect(seat.interact_inputs).toEqual(['interact_left_door']);
 
         const armor = SubsystemDispatchCodec.encode(SubsystemDispatchCodec.decode({
             type: 'machine_max:reactive_armor',
@@ -204,6 +209,27 @@ describe('schema ↔ Codec 差异登记', () => {
             type: 'machine_max:reactive_armor',
             definition: 'm1a2_sep:m1a2_era_cassette',
         });
+    });
+
+    test('上游 e48a275c：weapon_controller.camera_discovery_targets 可往返', () => {
+        const decoded = SubsystemDispatchCodec.decode({
+            type: 'machine_max:weapon_controller',
+            definition: 'machine_max:basic_weapon_controller',
+            camera_discovery_targets: { camera_sight: ['subsystem.machine_max.gunner_sight'] },
+        });
+        expect(decoded.camera_discovery_targets)
+            .toEqual({ camera_sight: ['subsystem.machine_max.gunner_sight'] });
+
+        const encoded = SubsystemDispatchCodec.encode(decoded);
+        expect(encoded.camera_discovery_targets)
+            .toEqual({ camera_sight: ['subsystem.machine_max.gunner_sight'] });
+
+        // 空表等于默认值，导出省略
+        const empty = SubsystemDispatchCodec.encode(SubsystemDispatchCodec.decode({
+            type: 'machine_max:weapon_controller',
+            definition: 'machine_max:basic_weapon_controller',
+        }));
+        expect(empty).not.toHaveProperty('camera_discovery_targets');
     });
 
     test('D13：track_controller / track_drive 已补齐', () => {

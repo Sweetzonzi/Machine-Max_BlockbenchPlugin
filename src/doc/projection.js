@@ -75,8 +75,11 @@ function normalizeShorthand(kind, definition, ctx) {
             node.textures = { default: node.textures };
         }
         if (isObject(node.sub_parts) && looksLikeSubPartShorthand(node.sub_parts)) {
+            // 模组侧单子零件简写的默认键是硬编码的：VariantAttr.java 的
+            // SUB_PART_MAP_CODEC 把简写包成 `sub_part.machine_max.main`（含回写折叠），
+            // 所以这里也用同一个键，与本包导出命名空间无关。
             var wrapped = {};
-            wrapped['sub_part.' + ns + '.main'] = node.sub_parts;
+            wrapped['sub_part.machine_max.main'] = node.sub_parts;
             node.sub_parts = wrapped;
         }
         if (isObject(node.sub_parts)) {
@@ -479,23 +482,44 @@ function buildMarkerCleanup(kind, ctx) {
 
 // ── 配置引用 ────────────────────────────────────────────────────
 
+/**
+ * 收集本次投影后的断裂配置引用。
+ *
+ * 作用域与 `refs.resolveConfigRefs` 一致：信号目标是整个 Part（同变体全部子零件），
+ * 其它引用只看所属子零件。整件投影时同一变体的兄弟子零件由 `ctx.siblingSubParts` 传入
+ * （`doc.apply` / `ops.shared.applyProjection` 从配置里取）；没传就退回「只有本次节点」，
+ * 此时跨子零件的信号目标会判成断裂 —— 调用方有配置树时必须传。
+ *
+ * 命中交互区的信号目标不在这里拒绝：写入一个只发不收的目标仍能编码，由
+ * `collectIssues` 报 `interact_box_as_signal_target`（导入不因它整件失败）。
+ */
 function collectDanglingConfigRefs(kind, node, ctx, basePath) {
     var dangling = [];
     var prefix = basePath || [];
 
-    function checkSubPart(spKey, sp, path) {
+    function isResolvable(ref, ownTargets, partTargets) {
+        if (refs.SENTINELS.indexOf(ref.target) >= 0) return true;
+        if (ref.kind === 'signal_target') {
+            var table = partTargets || ownTargets;
+            // 交互区算「能解析」：目标写错了由 collectIssues 报 warning，不让导入整件失败
+            return !!(table.subsystem[ref.target] || table.connector[ref.target]
+                || table.interact_box[ref.target]);
+        }
+        // 非信号引用按类别限定目标种类（交互区一律不认，与 refs.resolveConfigRefs 同口径）
+        if (ref.kind === 'hit_box_subsystem') return !!ownTargets.subsystem[ref.target];
+        if (ref.kind === 'connector') return !!ownTargets.connector[ref.target];
+        return !!(ownTargets.subsystem[ref.target] || ownTargets.connector[ref.target]);
+    }
+
+    function checkSubPart(spKey, sp, path, partSubParts) {
         if (!isObject(sp)) return;
         var collected = refs.collectRefs(sp, path);
+        var partTargets = refs.partTargetsOf(partSubParts);
         collected.refs.forEach(function (ref) {
-            if (!targetsHas(collected.targets, ref.target)) {
+            if (!isResolvable(ref, collected.targets, partTargets)) {
                 dangling.push(ref);
             }
         });
-    }
-
-    function targetsHas(targets, target) {
-        if (refs.SENTINELS.indexOf(target) >= 0) return true;
-        return !!(targets.subsystem[target] || targets.connector[target] || targets.interact_box[target]);
     }
 
     if (kind === 'part' && isObject(node.variants)) {
@@ -504,16 +528,20 @@ function collectDanglingConfigRefs(kind, node, ctx, basePath) {
             if (!isObject(variant) || !isObject(variant.sub_parts)) return;
             Object.keys(variant.sub_parts).forEach(function (spKey) {
                 checkSubPart(spKey, variant.sub_parts[spKey],
-                    prefix.concat(['variants', vName, 'sub_parts', spKey]));
+                    prefix.concat(['variants', vName, 'sub_parts', spKey]), variant.sub_parts);
             });
         });
     } else if (kind === 'variant' && isObject(node.sub_parts)) {
         Object.keys(node.sub_parts).forEach(function (spKey) {
             checkSubPart(spKey, node.sub_parts[spKey],
-                prefix.concat(['sub_parts', spKey]));
+                prefix.concat(['sub_parts', spKey]), node.sub_parts);
         });
     } else if (kind === 'sub_part') {
-        checkSubPart(ctx.subPartKey || ctx.key || '', node, prefix);
+        var spKey = ctx.subPartKey || ctx.key || '';
+        var siblings = isObject(ctx.siblingSubParts) ? Object.assign({}, ctx.siblingSubParts) : {};
+        // 本次写入的节点覆盖同名旧条目：解析要按写完之后的树算
+        if (spKey) siblings[spKey] = node;
+        checkSubPart(spKey, node, prefix, siblings);
     }
 
     return dangling;
@@ -650,7 +678,7 @@ function projectIn(definition, ctx) {
             return {
                 path: ref.path,
                 code: 'unresolved_config_ref',
-                expected: '同变体内的 subsystem / connector / interact_box key，或 local / global',
+                expected: '同变体内的 subsystem / connector key（或 local / global）；功率与碰撞箱引用须落在同一子零件',
                 got: ref.target,
                 hint: '配置引用断裂，整件写入已拒绝',
             };

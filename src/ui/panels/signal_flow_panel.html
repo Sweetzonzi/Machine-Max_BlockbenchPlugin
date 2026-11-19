@@ -53,6 +53,10 @@
                     <marker id="mm-flow-arrow-control" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
                         <polygon points="0 0, 10 4, 0 8" fill="#2ecc71" />
                     </marker>
+                    <!-- 发现箭头（紫色，虚线）：只读握手，不传值 -->
+                    <marker id="mm-flow-arrow-discovery" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+                        <polygon points="0 0, 10 4, 0 8" fill="#9b59b6" />
+                    </marker>
                 </defs>
                 <g :transform="'translate('+panX+','+panY+') scale('+zoom+')'">
                     <!-- 连线层 -->
@@ -62,6 +66,7 @@
                                 :stroke="edgeColor(edge)"
                                 :stroke-width="hoveredEdge === edge ? 3 : 1.5"
                                 :marker-end="'url(#mm-flow-arrow-' + edge.type + ')'"
+                                :stroke-dasharray="edge.type === 'discovery' ? '5,3' : null"
                                 fill="none" stroke-opacity="0.7"
                                 :class="{ 'mm-flow-edge-hovered': hoveredEdge === edge }"
                                 @mouseenter="hoveredEdge = edge"
@@ -156,6 +161,7 @@
         <span class="mm-flow-legend-item" title="动力传输"><span class="mm-flow-legend-line" style="background:#e67e22"></span>动力</span>
         <span class="mm-flow-legend-item" title="转速信号"><span class="mm-flow-legend-line" style="background:#3498db"></span>转速</span>
         <span class="mm-flow-legend-item" title="控制信号"><span class="mm-flow-legend-line" style="background:#2ecc71"></span>控制</span>
+        <span class="mm-flow-legend-item" title="只读发现握手（视点 / 弹药 / 装填人员查询，不传值）"><span class="mm-flow-legend-line" style="background:#9b59b6"></span>发现</span>
     </div>
 </div>
 <div class="mm-signal-flow mm-signal-flow-empty" v-else>

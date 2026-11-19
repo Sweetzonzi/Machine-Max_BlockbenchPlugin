@@ -141,3 +141,109 @@ describe('collectIssues：已退役 / 未知的子系统类型', () => {
         expect(findTypeIssue(issues)).toBeUndefined();
     });
 });
+
+describe('collectIssues：交互区门控表达式的旧枚举值', () => {
+    const SP_KEY = 'sub_part.machine_max.main';
+    const IB_KEY = 'interact.machine_max.door';
+
+    function configWithCondition(condition) {
+        const cfg = helpers.createConfig();
+        const ib = cfg.parts.hull.variants.default.sub_parts[SP_KEY].interact_boxes[IB_KEY];
+        ib.condition = condition;
+        return cfg;
+    }
+
+    function conditionIssues(cfg) {
+        return collectIssues(cfg).filter(function (p) {
+            return p.code === 'interact_box_condition_legacy_enum';
+        });
+    }
+
+    test('旧逻辑枚举（NOR 等）报 warning 并指向 condition 字段', () => {
+        const issues = conditionIssues(configWithCondition('NOR'));
+        expect(issues).toHaveLength(1);
+        expect(issues[0].severity).toBe('warning');
+        expect(issues[0].message).toContain('NOR');
+        expect(issues[0].message).toContain('MoLang');
+        expect(issues[0].path.field).toBe('condition');
+        expect(issues[0].path.scope).toBe('interact_box');
+        expect(issues[0].path.itemKey).toBe(IB_KEY);
+        expect(issues[0].path.subPartKey).toBe(SP_KEY);
+    });
+
+    test('六个旧枚举字面量都报，不是只认 NOR', () => {
+        for (const token of ['AND', 'OR', 'NAND', 'NOR', 'XOR', 'XNOR']) {
+            expect(conditionIssues(configWithCondition(token))).toHaveLength(1);
+        }
+    });
+
+    test('默认 true / 表达式 / 空串都不报（插件不执行 MoLang，不猜对错）', () => {
+        for (const condition of ['true', '', "local.subsystem_active('subsystem.machine_max.engine') == 0"]) {
+            expect(conditionIssues(configWithCondition(condition))).toHaveLength(0);
+        }
+    });
+});
+
+describe('collectIssues：视点发现表（camera_discovery_targets）', () => {
+    const SP_KEY = 'sub_part.machine_max.main';
+    const WC_KEY = 'subsystem.machine_max.wc';
+
+    /** 在默认子零件上挂一个武器控制器，发现表由参数给出 */
+    function configWithDiscovery(table) {
+        const cfg = helpers.createConfig();
+        const sp = cfg.parts.hull.variants.default.sub_parts[SP_KEY];
+        sp.subsystems[WC_KEY] = {
+            type: 'machine_max:weapon_controller',
+            definition: 'machine_max:basic_weapon_controller',
+            control_outputs: {},
+            camera_discovery_targets: table,
+            first_hud_layout: 'machine_max:empty',
+            third_hud_layout: 'machine_max:empty',
+            scope_hud_layout: 'machine_max:empty',
+        };
+        return cfg;
+    }
+
+    function issuesOfCode(cfg, code) {
+        return collectIssues(cfg).filter(function (p) { return p.code === code; });
+    }
+
+    test('频道写成 camera_sight 报 warning（等于全车所有视点）', () => {
+        const issues = issuesOfCode(configWithDiscovery({ camera_sight: ['global'] }),
+            'viewpoint_discovery_default_channel');
+        expect(issues).toHaveLength(1);
+        expect(issues[0].severity).toBe('warning');
+        expect(issues[0].path.field).toBe('camera_discovery_targets');
+        expect(issues[0].path.itemKey).toBe(WC_KEY);
+        expect(issues[0].message).toContain('camera_sight');
+    });
+
+    test('具名目标不是 camera / sight 报 warning（发现结果只留视点）', () => {
+        const issues = issuesOfCode(
+            configWithDiscovery({ gunner_sight: ['subsystem.machine_max.engine'] }),
+            'viewpoint_discovery_not_viewpoint');
+        expect(issues).toHaveLength(1);
+        expect(issues[0].severity).toBe('warning');
+        expect(issues[0].message).toContain('machine_max:engine');
+    });
+
+    test('正常写法（视点子系统 / local / global）不报', () => {
+        const cfg = configWithDiscovery({ gunner_sight: ['subsystem.machine_max.sight', 'global'] });
+        const sp = cfg.parts.hull.variants.default.sub_parts[SP_KEY];
+        sp.subsystems['subsystem.machine_max.sight'] = {
+            type: 'machine_max:sight',
+            definition: 'machine_max:gunner_sight',
+            locator: '',
+        };
+        const codes = collectIssues(cfg).map(function (p) { return p.code; });
+        expect(codes).not.toContain('viewpoint_discovery_default_channel');
+        expect(codes).not.toContain('viewpoint_discovery_not_viewpoint');
+    });
+
+    test('目标不存在仍由 dangling_signal_target 报 error，不重复报发现类问题', () => {
+        const cfg = configWithDiscovery({ gunner_sight: ['subsystem.machine_max.missing'] });
+        const codes = collectIssues(cfg).map(function (p) { return p.code; });
+        expect(codes).toContain('dangling_signal_target');
+        expect(codes).not.toContain('viewpoint_discovery_not_viewpoint');
+    });
+});

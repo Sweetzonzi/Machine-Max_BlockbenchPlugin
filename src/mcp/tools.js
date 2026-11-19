@@ -737,6 +737,16 @@ function readDef(args) {
         && Object.prototype.hasOwnProperty.call(all, config.namespace + ':' + key)) {
         key = config.namespace + ':' + key;
     }
+    // 一个包可以有多个命名空间：裸 id 在其它命名空间下唯一时按后缀解析，
+    // 否则 AI 必须自己拼出 list_defs 返回的完整 id。
+    if (!Object.prototype.hasOwnProperty.call(all, key) && key.indexOf(':') < 0) {
+        var suffix = ':' + key;
+        var matches = Object.keys(all).filter(function (candidate) {
+            return candidate.length > suffix.length
+                && candidate.slice(-suffix.length) === suffix;
+        });
+        if (matches.length === 1) key = matches[0];
+    }
     if (!Object.prototype.hasOwnProperty.call(all, key)) {
         return result.error('定义不存在: ' + type + ':' + id, [{
             path: [], code: 'not_found', expected: '已合并的内置 / 依赖 / 当前包定义',
@@ -773,7 +783,7 @@ var TOOLS = [
     },
     {
         name: 'read_def',
-        description: 'Read one merged content-pack definition by namespaced id (e.g. machine_max:structural_steel). Returns source, editable, and the full definition JSON. Use list_defs first to discover ids.',
+        description: 'Read one merged content-pack definition by id (e.g. machine_max:structural_steel). A bare id is resolved by config.namespace, or by a unique namespaced suffix when the pack has several namespaces. Returns source, editable, and the full definition JSON. Use list_defs first to discover ids.',
         run: readDef,
     },
     {
@@ -813,7 +823,7 @@ var TOOLS = [
     },
     {
         name: 'import_sub_part',
-        description: 'Replace a whole sub_part definition. The key must be canonical: sub_part.<namespace>.<name>. Omitted fields reset to defaults.',
+        description: 'Replace a whole sub_part definition. The key must be canonical: sub_part.<namespace>.<name> (the namespace may be any valid namespace, e.g. machine_max for shared vocabulary). Omitted fields reset to defaults.',
         run: importSubPart,
     },
     {

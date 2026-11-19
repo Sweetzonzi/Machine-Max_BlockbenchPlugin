@@ -40,6 +40,7 @@ var MAP_KEY_KIND = {
     signal_translations: 'channelKey',
     power_outputs: 'powerOutputKey',
     ammo_discovery_targets: 'channelKey',
+    camera_discovery_targets: 'channelKey',
     overwrite: 'objectField',
 };
 
@@ -118,6 +119,19 @@ function isValidSubPartKey(key, namespace) {
     return isValidNameSegment(key.slice(prefix.length));
 }
 
+/**
+ * 子零件 key 的结构判据：`sub_part.<合法命名空间>.<合法名称段>`。
+ *
+ * 命名空间不限定为本包的哪个值——子零件 key 同时是翻译键，模组自带的共享词条
+ * （如 `sub_part.machine_max.main`）可以被任意包引用，作者也可以把它改成自己的命名空间。
+ */
+function isWellFormedSubPartKey(key) {
+    var parsed = parseSubPartKey(key);
+    if (!parsed) return false;
+    if (!isValidNamespace(parsed.namespace)) return false;
+    return isValidNameSegment(parsed.name);
+}
+
 /** 解析子零件 key；格式不符返回 null。 */
 function parseSubPartKey(key) {
     if (!isString(key) || key.indexOf('sub_part.') !== 0) return null;
@@ -125,15 +139,6 @@ function parseSubPartKey(key) {
     var dot = rest.indexOf('.');
     if (dot < 0) return { namespace: '', name: rest };
     return { namespace: rest.slice(0, dot), name: rest.slice(dot + 1) };
-}
-
-/** 翻译键的规范前缀形态（只告警，不阻断）。 */
-function isCanonicalTranslationKey(kind, key, namespace) {
-    var prefix = TRANSLATION_PREFIX[kind];
-    if (!prefix || !isString(key) || !isValidNamespace(namespace)) return false;
-    var head = prefix + '.' + namespace + '.';
-    if (key.indexOf(head) !== 0) return false;
-    return isValidNameSegment(key.slice(head.length));
 }
 
 /** 取最后一个点之后的名称段（翻译键 / 普通 map key 共用）。 */
@@ -201,9 +206,10 @@ function validateMapKey(map, key, ctx) {
             return ok();
 
         case 'subPartKey':
-            if (!isValidSubPartKey(key, ns)) {
-                return fail('invalid_format', 'sub_part.' + ns + '.<name>', key,
-                    '子零件 key 必须是 `sub_part.' + ns + '.<name>`，name 为 1–128 位 ASCII 字母/数字/`_`/`.`/`-`，且不以点开头或结尾');
+            if (!isWellFormedSubPartKey(key)) {
+                return fail('invalid_format', 'sub_part.<namespace>.<name>', key,
+                    '子零件 key 必须是 `sub_part.<namespace>.<name>`：命名空间为小写 ASCII 字母/数字/`_`/`-`，' +
+                    'name 为 1–128 位 ASCII 字母/数字/`_`/`.`/`-`，且不以点开头或结尾');
             }
             return ok();
 
@@ -246,7 +252,10 @@ function validateMapKey(map, key, ctx) {
 }
 
 /**
- * 翻译键的字符集强制 ASCII；前缀形态不合规范只返回 warning `non_canonical_key`。
+ * 翻译键只校验格式：ASCII、无空白、无 `* / ~ :`，名称段合法。
+ *
+ * 前缀命名空间不做限定——共享词表（`machine_max.*`）与跨包复用都依赖这一点，
+ * 作者也可以把某个键改到自己的命名空间。
  */
 function validateTranslationKey(kind, key, namespace) {
     var prefix = TRANSLATION_PREFIX[kind];
@@ -271,10 +280,7 @@ function validateTranslationKey(kind, key, namespace) {
         return fail('invalid_format', expected, key,
             '翻译键的名称段必须是 1–128 位 ASCII 字母/数字/`_`/`.`/`-`，且不以点开头或结尾');
     }
-    if (!isCanonicalTranslationKey(kind, key, namespace)) {
-        return ok('non_canonical_key', expected,
-            '翻译键前缀不是 `' + expected + '`；仅告警，不阻断');
-    }
+    void namespace;
     return ok();
 }
 
@@ -373,14 +379,17 @@ function uniqueSubPartKey(candidate, usedKeys, usedNames) {
 
 /**
  * 把任意子零件 key 归一化为规范 key（不修改入参，不写配置）。
- * 已规范 → 原样；裸 default → main；非法名称段 → legacy_<n>；冲突 → _2。
+ *
+ * 已经是「结构合法」的 key 原样保留，**包括命名空间不等于本包的 key**：
+ * 命名空间由创作者选择（可能引用模组共享词条），迁移不能把它改回本包。
+ * 裸 `default` → `main`；其余非法名称段 → `legacy_<n>`；冲突 → `_2`。
  */
 function canonicalSubPartKey(key, namespace, usedKeys, usedNames) {
     var ns = isValidNamespace(namespace) ? namespace : 'machine_max';
     usedKeys = usedKeys || [];
     usedNames = usedNames || [];
 
-    if (isValidSubPartKey(key, ns)) return key;
+    if (isWellFormedSubPartKey(key)) return key;
 
     var name = extractSubPartName(key);
     if (name === 'default') name = 'main';
@@ -404,7 +413,8 @@ var VALUE_MAPS = {
     sub_part: ['hydrodynamics'],
     interact_box: ['signal_targets'],
     connector: ['signal_targets', 'signal_translations'],
-    subsystem: ['signal_targets', 'signal_translations', 'power_outputs', 'ammo_discovery_targets'],
+    subsystem: ['signal_targets', 'signal_translations', 'power_outputs', 'ammo_discovery_targets',
+        'camera_discovery_targets'],
 };
 
 function childKindForMap(map) {
@@ -456,15 +466,6 @@ function validateKeys(kind, node, ctx) {
                         hint: result.hint,
                     });
                     continue;
-                }
-                if (result.warning === 'non_canonical_key') {
-                    warnings.push({
-                        path: path.concat([map, key]),
-                        code: 'non_canonical_key',
-                        expected: result.expected,
-                        got: key,
-                        hint: result.hint,
-                    });
                 }
                 var child = entries[key];
                 var childKind = childKindForMap(map);
@@ -519,8 +520,8 @@ module.exports = {
     isValidVariantName: isValidVariantName,
     isValidResourceLocation: isValidResourceLocation,
     isValidSubPartKey: isValidSubPartKey,
+    isWellFormedSubPartKey: isWellFormedSubPartKey,
     parseSubPartKey: parseSubPartKey,
-    isCanonicalTranslationKey: isCanonicalTranslationKey,
     validateMapKey: validateMapKey,
     validateTranslationKey: validateTranslationKey,
     isValidMapKey: isValidMapKey,

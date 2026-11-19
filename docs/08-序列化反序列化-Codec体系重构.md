@@ -261,7 +261,7 @@ const SubsystemDispatchCodec = Codec.dispatch('type', {
     'machine_max:signal_convert':     SignalConvertCodec,
     'machine_max:wheel_driver':       WheelDriverCodec,
     'machine_max:seat':               SeatCodec,
-    'machine_max:lighting':           LightingCodec,
+    'machine_max:light':              LightCodec,
     'machine_max:item_storage':       ItemStorageCodec,
     'machine_max:basic':              BasicCodec,
     'machine_max:joint':              JointDriverCodec,

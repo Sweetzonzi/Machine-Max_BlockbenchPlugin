@@ -1,0 +1,24 @@
+<span class="mm-key-name-editor" style="display:flex;align-items:center;gap:2px;flex:1;min-width:0;">
+    <span style="color:#888;font-size:11px;white-space:nowrap;flex-shrink:0;">{{ type }}.</span>
+    <input type="text" class="mm-input"
+        style="width:92px;font-size:12px;padding:2px 6px;height:auto;border:1px solid transparent;background:transparent;"
+        v-model="editingNamespace"
+        @focus="onFocus($event)"
+        @blur="onBlur($event)"
+        @change="commit()"
+        :list="nsListId"
+        placeholder="machine_max"
+        title="命名空间：小写字母、数字、下划线或连字符。machine_max 是模组自带的共享词表（译名多由内置包提供）；也可以填本包导出命名空间或任一依赖包已有的命名空间" />
+    <datalist :id="nsListId">
+        <option v-for="(ns, idx) in namespaceOptions" :key="idx" :value="ns" />
+    </datalist>
+    <span style="color:#888;font-size:11px;flex-shrink:0;">.</span>
+    <input type="text" class="mm-input"
+        style="flex:1;font-size:12px;padding:2px 6px;height:auto;min-width:80px;border:1px solid transparent;background:transparent;"
+        v-model="editingName"
+        @focus="onFocus($event)"
+        @blur="onBlur($event)"
+        @change="commit()"
+        :placeholder="placeholder"
+        title="名称段：ASCII 字母、数字、下划线、点、连字符，且不以点开头或结尾" />
+</span>

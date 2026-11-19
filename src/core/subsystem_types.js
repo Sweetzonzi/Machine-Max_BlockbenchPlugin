@@ -145,12 +145,13 @@ var SUBSYSTEM_TYPES = [
             { field: 'control_group_preset',    label: '控制组预设',        editor: 'control_group_selector', required: false, defaultValue: '' },
             { field: 'passenger_num_outputs',   label: '乘客数信号输出',    editor: 'signal_targets',        required: false, defaultValue: { passenger_num: ['local', 'global'] } },
             { field: 'camera_discovery_targets', label: '摄像机发现握手目标', editor: 'signal_targets',      required: false, defaultValue: {} },
+            { field: 'loader_discovery_inputs', label: '装载方发现频道', editor: 'channel_list', required: false, defaultValue: [] },
+            { field: 'interact_inputs',         label: '额外交互输入频道', editor: 'channel_list', required: false, defaultValue: [] },
             { field: 'dismount_locators',       label: '下车定位器（按优先级）', editor: 'locator_list', required: false, defaultValue: [] },
-            { field: 'reload_operator_discovery_inputs', label: '被装填方发现频道', editor: 'channel_list', required: false, defaultValue: [] },
         ],
     },
     {
-        id: 'machine_max:lighting',
+        id: 'machine_max:light',
         displayName: '灯光',
         category: 'utility',
         dynamicFields: [
@@ -210,6 +211,7 @@ var SUBSYSTEM_TYPES = [
         dynamicFields: [
             { field: 'definition',       label: '型号定义',       editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'control_outputs',  label: '控制信号输出',   editor: 'signal_targets',       required: false, defaultValue: { weapon_control: [] } },
+            { field: 'camera_discovery_targets', label: '视点发现握手目标', editor: 'signal_targets', required: false, defaultValue: {} },
             { field: 'first_hud_layout', label: '第一人称 HUD 布局', editor: 'text_input',        required: false, defaultValue: 'machine_max:empty' },
             { field: 'third_hud_layout', label: '第三人称 HUD 布局', editor: 'text_input',        required: false, defaultValue: 'machine_max:empty' },
             { field: 'scope_hud_layout', label: '瞄准镜 HUD 布局',   editor: 'text_input',        required: false, defaultValue: 'machine_max:empty' },
@@ -231,8 +233,8 @@ var SUBSYSTEM_TYPES = [
             { field: 'fire_animation', label: '开火动画名',   editor: 'text_input',          required: false, defaultValue: 'fire' },
             { field: 'ammo_outputs',   label: '弹药反馈输出', editor: 'signal_targets',      required: false, defaultValue: {} },
             { field: 'ammo_discovery_targets', label: '装弹机查询', editor: 'signal_targets', required: false, defaultValue: {} },
-            { field: 'reload_operator_discovery_targets', label: '装填人员查询', editor: 'signal_targets', required: false, defaultValue: {} },
-            { field: 'reload_operator_time_multipliers', label: '装填岗位时间倍率', editor: 'channel_number_map', required: false, defaultValue: {} },
+            { field: 'loader_discovery_targets', label: '装填人员查询', editor: 'signal_targets', required: false, defaultValue: {} },
+            { field: 'loader_time_multipliers', label: '装填岗位时间倍率', editor: 'channel_number_map', required: false, defaultValue: {} },
         ],
     },
     {
@@ -275,8 +277,8 @@ var SUBSYSTEM_TYPES = [
             { field: 'definition',            label: '型号定义',   editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'ammo_discovery_inputs', label: '供弹服务频道', editor: 'channel_list',      required: false, defaultValue: [] },
             { field: 'ammo_discovery_targets', label: '上游弹药架查询', editor: 'signal_targets', required: false, defaultValue: {} },
-            { field: 'reload_operator_discovery_targets', label: '装填人员查询', editor: 'signal_targets', required: false, defaultValue: {} },
-            { field: 'reload_operator_time_multipliers', label: '装填岗位时间倍率', editor: 'channel_number_map', required: false, defaultValue: {} },
+            { field: 'loader_discovery_targets', label: '装填人员查询', editor: 'signal_targets', required: false, defaultValue: {} },
+            { field: 'loader_time_multipliers', label: '装填岗位时间倍率', editor: 'channel_number_map', required: false, defaultValue: {} },
         ],
     },
 ];
@@ -309,6 +311,12 @@ var RETIRED_TYPES = {
         detail: '上游把它拆成了弹药架 machine_max:regen_ammo_rack 与自动装弹机 machine_max:ammo_loader，' +
             '旧的配弹表与发现配置没有等价字段，无法自动换算',
         replacements: ['machine_max:regen_ammo_rack', 'machine_max:ammo_loader'],
+    },
+    'machine_max:lighting': {
+        displayName: '灯光（旧类型名）',
+        detail: '上游把类型 id 从 machine_max:lighting 改名成 machine_max:light，' +
+            '字段不变（definition / locator），可直接把 type 改写成新 id',
+        replacements: ['machine_max:light'],
     },
 };
 

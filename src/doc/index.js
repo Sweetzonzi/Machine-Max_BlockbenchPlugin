@@ -120,6 +120,9 @@ function apply(config, path, definition, opts) {
         existing: existing,
         mode: opts.mode || (existing === undefined ? 'create' : 'replace'),
     });
+    // 信号目标的解析域是整个变体：把兄弟子零件一起交给投影，跨子零件的具名目标才判定得到
+    var siblings = refs.siblingSubParts(config, segments);
+    if (siblings) ctx.siblingSubParts = siblings;
 
     var projected = projection.projectIn(definition, ctx);
     if (!projected.ok) return projected;

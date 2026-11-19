@@ -29,12 +29,25 @@ describe('doc/keys', () => {
         expect(keys.isValidSubPartKey('sub_part.other.main', 'machine_max')).toBe(false);
         expect(keys.isValidSubPartKey('sub_part.machine_max.main.', 'machine_max')).toBe(false);
 
+        // 结构判据只看格式：命名空间不限定为本包
+        expect(keys.isWellFormedSubPartKey('sub_part.machine_max.main')).toBe(true);
+        expect(keys.isWellFormedSubPartKey('sub_part.m1a2_sep.hull')).toBe(true);
+        expect(keys.isWellFormedSubPartKey('sub_part.other.a.b')).toBe(true);
+        expect(keys.isWellFormedSubPartKey('sub_part..main')).toBe(false);
+        expect(keys.isWellFormedSubPartKey('sub_part.machine_max.')).toBe(false);
+        expect(keys.isWellFormedSubPartKey('sub_part.machine_max.底盘')).toBe(false);
+        expect(keys.isWellFormedSubPartKey('other.machine_max.main')).toBe(false);
+
+        expect(keys.validateMapKey('sub_parts', 'sub_part.m1a2_sep.hull', {
+            namespace: 'machine_max',
+        }).ok).toBe(true);
         expect(keys.validateMapKey('connectors', 'connector.machine_max.c', {
             namespace: 'machine_max',
         }).ok).toBe(true);
+        // 跨命名空间只要求格式合法，不再告警
         expect(keys.validateMapKey('connectors', 'connector.other.c', {
             namespace: 'machine_max',
-        }).warning).toBe('non_canonical_key');
+        }).ok).toBe(true);
         expect(keys.validateMapKey('connectors', 'connector.machine_max.连接', {
             namespace: 'machine_max',
         }).code).toBe('invalid_format');
@@ -76,9 +89,12 @@ describe('doc/keys', () => {
         expect(keys.canonicalSubPartKey('default', ns, [], [])).toBe('sub_part.machine_max.main');
         expect(keys.canonicalSubPartKey('main', ns, [], [])).toBe('sub_part.machine_max.main');
         expect(keys.canonicalSubPartKey('sub_part.old.chassis', ns, [], []))
-            .toBe('sub_part.machine_max.chassis');
+            .toBe('sub_part.old.chassis');
         expect(keys.canonicalSubPartKey('sub_part.machine_max.chassis', ns, [], []))
             .toBe('sub_part.machine_max.chassis');
+        // 命名空间由作者选择：结构合法的跨命名空间 key 迁移时原样保留
+        expect(keys.canonicalSubPartKey('sub_part.old.chassis', 'm1a2_sep', [], []))
+            .toBe('sub_part.old.chassis');
         expect(keys.canonicalSubPartKey('sub_part.machine_max.default', ns, [], []))
             .toBe('sub_part.machine_max.default');
     });
@@ -115,6 +131,14 @@ describe('doc/keys', () => {
             power_outputs: node.power_outputs,
         }, { namespace: 'machine_max', path: [] });
         expect(subsystem.ok).toBe(true);
+
+        // 视点发现表（上游 e48a275c）与信号频道同规则
+        const weapon = keys.validateKeys('subsystem', {
+            type: 'machine_max:weapon_controller',
+            camera_discovery_targets: { 'camera sight': ['subsystem.machine_max.gunner_sight'] },
+        }, { namespace: 'machine_max', path: [] });
+        expect(weapon.ok).toBe(false);
+        expect(weapon.errors.some((e) => e.path[e.path.length - 1] === 'camera sight')).toBe(true);
     });
 
     test('validateKeys 递归覆盖全部 map 层', () => {

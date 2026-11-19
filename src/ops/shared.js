@@ -13,6 +13,7 @@
 var doc = require('../doc/index.js');
 var keys = require('../doc/keys.js');
 var ports = require('../doc/ports.js');
+var naming = require('../core/naming.js');
 var { runConfigEdit } = require('../core/undo.js');
 var { createLogger } = require('../utils/logger.js');
 
@@ -53,12 +54,65 @@ function fromDoc(result, fallback) {
     return fail(first ? (first.hint || first.code) : (fallback || '配置操作失败'), errors);
 }
 
+/** 三类名字的中文标签（重名提示用） */
+var NAME_LABELS = {
+    connector: '连接点',
+    interact_box: '交互区',
+    subsystem: '子系统',
+};
+
+/**
+ * Part 级重名检查：子系统 / 连接点 / 交互区的名字在**单变体内唯一**（跨全部子零件）。
+ *
+ * 上游解码期 `VariantAttr#validateUniqueNames` 遇到重名直接抛 `PackContentException`，
+ * 那份零件定义在双端都不出现，所以写入前必须拦住：新增、导入、改名都走这一条。
+ *
+ * @param {object} variant
+ * @param {string} name - 完整键（三类名字共用一套命名空间，跨种类也会撞）
+ * @param {{subPartKey?:string, excludeKey?:string, path?:string[]}} [options]
+ *   `subPartKey` + `excludeKey` 用于「正在编辑的自身」不算冲突
+ * @returns {object|null} 冲突时返回可直接 return 的 OpResult 失败对象
+ */
+function checkPartUniqueName(variant, name, options) {
+    options = options || {};
+    var hit = naming.findNamedEntry(variant, name, {
+        subPartKey: options.subPartKey,
+        excludeKey: options.excludeKey,
+    });
+    if (!hit) return null;
+    var label = NAME_LABELS[hit.kind] || '条目';
+    return fail(label + ' "' + name + '" 与子零件 "' + hit.subPartKey + '" 内的同名条目冲突（名字在零件内唯一）', [makeError(
+        options.path || [],
+        'duplicate_name',
+        '零件内唯一的名字',
+        name,
+        '换一个名字；模组侧按名在 Part 内寻址，重名会让这份零件定义在双端都失效')]);
+}
+
 function configOrNull(config) {
     return (config && typeof config === 'object') ? config : null;
 }
 
+/**
+ * 本包的**导出命名空间**（`config.namespace`，缺失时回落 `machine_max`）。
+ *
+ * 它决定导出目录 `{包文件夹}/{ns}/`、图标资源地址与零件 ID 的翻译键前缀，
+ * **不是**新建实体键名的默认命名空间——那条规则见 `defaultKeyNamespace()`。
+ */
 function namespaceOf(config) {
     return (config && typeof config.namespace === 'string' && config.namespace) || 'machine_max';
+}
+
+/**
+ * 新建实体（子零件 / 连接点 / 交互区 / 子系统）的默认键命名空间。
+ *
+ * 与 `namespaceOf()` 有意分开：上游内容包把跨包共享的结构名字（挂点、轴、轮座、
+ * 大多数子系统与交互区名）都放在 `machine_max` 下，译名由内置包的 lang 提供；
+ * 只有本包专属的机构才用导出命名空间。所以新建一律先落 `machine_max`，作者在
+ * 键名编辑器里可以改成导出命名空间或任一依赖命名空间。
+ */
+function defaultKeyNamespace() {
+    return naming.DEFAULT_NAMESPACE;
 }
 
 function partOf(config, partId) {
@@ -190,6 +244,9 @@ function resolveImportMode(options, info) {
 /** 把 projection.in 的结果落到配置树（整件通道）。 */
 function applyProjection(config, path, definition, ctx, options) {
     options = options || {};
+    // 信号目标按整个变体解析：投影前把兄弟子零件放进 ctx（读不到变体时为 null，退回本子零件）
+    var siblings = doc.refs.siblingSubParts(config, path);
+    if (siblings) ctx = Object.assign({}, ctx, { siblingSubParts: siblings });
     var projected = doc.projection.projectIn(definition, ctx);
     if (!projected.ok) return finishProjection(projected, options.data);
 
@@ -346,6 +403,16 @@ function ensureParentObjects(config, segments) {
 
 /** 校验写路径所在记录的值；只返回写路径前缀下的错误。 */
 function validateWrite(config, segments, value) {
+    // 根字段 namespace 不是任何 record 的字段，走不到下面的字段规格校验，
+    // 但它是目录名（进 resource location），必须在写入前拦住非法值。
+    if (segments.length === 1 && segments[0] === 'namespace') {
+        if (typeof value !== 'string' || !keys.isValidNamespace(value)) {
+            return [makeError(segments, 'invalid_format', '^[a-z0-9_-]+$', value,
+                '命名空间是小写 ASCII 字母/数字/`_`/`-`，不能含点、空格或中文')];
+        }
+        return [];
+    }
+
     var located = locateRecord(config, segments);
     if (!located.node) {
         // set_node 新建 map 条目（如 subsystems.<new>）时，节点还不存在；
@@ -406,6 +473,7 @@ module.exports = {
     makeError: makeError,
     configOrNull: configOrNull,
     namespaceOf: namespaceOf,
+    defaultKeyNamespace: defaultKeyNamespace,
     partOf: partOf,
     variantOf: variantOf,
     subPartOf: subPartOf,
@@ -413,6 +481,7 @@ module.exports = {
     setProp: setProp,
     delProp: delProp,
     validateKey: validateKey,
+    checkPartUniqueName: checkPartUniqueName,
     markersPort: markersPort,
     bonesPort: bonesPort,
     applyProjection: applyProjection,

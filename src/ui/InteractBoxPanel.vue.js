@@ -7,7 +7,8 @@
  * - 骨骼为独立的绑定字段，指向模型中的 Group
  *
  * 交互区定义玩家可点击的交互区域，点击时发送信号到指定目标。
- * 支持交互模式（fast/accurate）和条件逻辑（AND/OR/NAND/NOR/XOR/XNOR）。
+ * 支持交互模式（fast/accurate）与门控表达式（condition，上游 8e9a5263 起
+ * 是 MoLang 脚本，默认 true 表示不门控）。
  */
 var nameUtils = require('../utils/name_utils.js');
 var { SIGNAL_CHANNEL_HINTS } = require('../core/constants.js');
@@ -20,7 +21,6 @@ Vue.component('mm-interact-box-panel', {
         config: { type: Object, required: true },
         elementName: { type: String, default: '' },
         interactBoxName: { type: String, default: '' },
-        namespace: { type: String, default: 'machine_max' },
         parentSubPartKey: { type: String, default: '' },
         /** 当前子零件内的子系统映射，用于信号目标下拉选择 */
         parentSubsystems: { type: Object, default: function() { return {}; } },
@@ -32,17 +32,16 @@ Vue.component('mm-interact-box-panel', {
     data: function () {
         return {
             overwriteExpanded: false,
-            editingName: nameUtils.extractShortName(this.interactBoxName, this.namespace),
             editingBone: this.config.bone || this.elementName || '',
+            /** 门控表达式补全（MoLang 片段：不门控 / 读子系统状态 / 读信号存储） */
+            conditionHints: [
+                'true',
+                "local.subsystem_active('subsystem.machine_max.engine') == 0",
+                "local.get('engine_on') == 0",
+            ],
         };
     },
     watch: {
-        interactBoxName: function (val) {
-            var short = nameUtils.extractShortName(val, this.namespace);
-            if (short !== this.editingName) {
-                this.editingName = short;
-            }
-        },
         'config.bone': function (val) {
             if (val !== this.editingBone) {
                 this.editingBone = val;
@@ -50,11 +49,11 @@ Vue.component('mm-interact-box-panel', {
         },
     },
     computed: {
-        namePrefix: function () {
-            return 'interact.' + this.namespace + '.';
-        },
         boneListId: function () {
             return 'mm-ib-bone-list-' + this._uid;
+        },
+        conditionListId: function () {
+            return 'mm-ib-condition-list-' + this._uid;
         },
         badgeColor: function () { return '#D9A441'; },
         badgeLabel: function () { return '交互区'; },
@@ -81,16 +80,8 @@ Vue.component('mm-interact-box-panel', {
         onFieldChange: function (field, value) {
             this.$emit('field-change', field, value);
         },
-        onNameChange: function (value) {
-            var oldKey = this.interactBoxName;
-            var newKey = nameUtils.buildFullKey('interact', value, this.namespace);
-            if (newKey !== oldKey) {
-                this.$emit('name-change', oldKey, newKey);
-            }
-        },
-        onNameBlur: function (event) {
-            event.target.style.border = '1px solid transparent';
-            event.target.style.background = 'transparent';
+        onNameChange: function (oldKey, newKey) {
+            this.$emit('name-change', oldKey, newKey);
         },
         onBoneChange: function (value) {
             if (value !== (this.config.bone || this.elementName)) {

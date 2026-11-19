@@ -230,8 +230,33 @@ function loadBuiltinPack() {
         '__BUILTIN_CONNECTORS__': JSON.stringify(connectors),
         '__BUILTIN_SUBSYSTEMS__': JSON.stringify(subsystems),
         '__BUILTIN_CONTROL_GROUPS__': JSON.stringify(controlGroups),
+        '__BUILTIN_LANG__': JSON.stringify(loadBuiltinLang(machineMaxDir)),
         _packStats: { materials: Object.keys(materials).length, connectors: Object.keys(connectors).length, subsystems: Object.keys(subsystems).length, controlGroups: Object.keys(controlGroups).length },
     };
+}
+
+/**
+ * 读取内置包的 lang/*.json（`{ zh_cn: {key: value}, en_us: {...} }`）。
+ *
+ * 用途是让 lang 生成器知道哪些 `machine_max` 共享词条已经由内置包提供：
+ * 作者新建的连接点/子系统键默认落这个命名空间，这些词条不该被插件用
+ * `_toDisplayName` 生成的名字覆盖掉。
+ */
+function loadBuiltinLang(machineMaxDir) {
+    const langDir = path.join(machineMaxDir, 'lang');
+    const result = {};
+    if (!fs.existsSync(langDir)) return result;
+    for (const name of fs.readdirSync(langDir)) {
+        if (!name.endsWith('.json')) continue;
+        const locale = name.slice(0, -5);
+        const file = path.join(langDir, name);
+        try {
+            result[locale] = JSON.parse(stripJsonComments(fs.readFileSync(file, 'utf-8')));
+        } catch (e) {
+            console.warn('loadBuiltinLang: 解析失败 ' + file + ': ' + e.message);
+        }
+    }
+    return result;
 }
 
 /**

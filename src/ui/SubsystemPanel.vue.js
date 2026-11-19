@@ -12,16 +12,17 @@
  * channel_list, belt_definition_editor.
  */
 var ssTypes = require('../core/subsystem_types.js');
-var nameUtils = require('../utils/name_utils.js');
-var { SIGNAL_CHANNEL_HINTS, AMMO_SERVICE_CHANNEL_HINTS } = require('../core/constants.js');
+var {
+    SIGNAL_CHANNEL_HINTS, AMMO_SERVICE_CHANNEL_HINTS, CAMERA_DISCOVERY_CHANNEL_HINTS,
+} = require('../core/constants.js');
 var { createLogger } = require('../utils/logger.js');
 var fieldIssues = require('./components/field_issues.js');
 
 var log = createLogger('SubsystemPanel');
 
 /**
- * 组件选项。methods 定义完后先包撤销（wrapMethodMap），再注册到 Vue：
- * Vue.extend 会复制方法表，注册之后再包不会生效。
+ * 组件选项。所有写配置的入口都通过 field-change 上抛给 App → ops.setField，
+ * 本组件不直接改 this.config，因此不需要 wrapMethodMap。
  */
 var MM_SUBSYSTEM_PANEL_OPTIONS = {
     template: typeof TEMPLATE_SUBSYSTEM_PANEL !== 'undefined' ? TEMPLATE_SUBSYSTEM_PANEL : '<p>子系统面板加载中...</p>',
@@ -29,33 +30,18 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
     props: {
         config: { type: Object, required: true },
         subsystemKey: { type: String, default: '' },
-        namespace: { type: String, default: 'machine_max' },
         parentSubPartKey: { type: String, default: '' },
         subsystemDefs: { type: Object, default: function () { return {}; } },
         allLocatorNames: { type: Array, default: function () { return []; } },
         ownedLocatorNames: { type: Array, default: function () { return []; } },
         connectorKeys: { type: Object, default: function () { return {}; } },
         signalTargetOptions: { type: Array, default: function () { return []; } },
+        // 功率目标只在同子零件内解析（上游 findOwnSubsystem），候选比信号目标窄
+        powerTargetOptions: { type: Array, default: function () { return []; } },
         controlGroupPresets: { type: Object, default: function () { return {}; } },
         projectileTypes: { type: Object, default: function () { return {}; } },
     },
-    data: function () {
-        return {
-            editingName: nameUtils.extractShortName(this.subsystemKey, this.namespace),
-        };
-    },
-    watch: {
-        subsystemKey: function (val) {
-            var short = nameUtils.extractShortName(val, this.namespace);
-            if (short !== this.editingName) {
-                this.editingName = short;
-            }
-        },
-    },
     computed: {
-        namePrefix: function () {
-            return 'subsystem.' + this.namespace + '.';
-        },
         typeId: function () {
             return this.config.type || '';
         },
@@ -140,6 +126,10 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
         ammoChannelHints: function () {
             return AMMO_SERVICE_CHANNEL_HINTS;
         },
+        /** 视点发现频道补全列表（座位 / 武器控制器的 camera_discovery_targets） */
+        cameraDiscoveryChannelHints: function () {
+            return CAMERA_DISCOVERY_CHANNEL_HINTS;
+        },
         /** 可用投射物 ID 列表，供配弹下拉与新增配弹的初值使用 */
         projectileIds: function () {
             var all = this.projectileTypes;
@@ -151,16 +141,8 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
         onFieldChange: function (field, value) {
             this.$emit('field-change', this.subsystemKey, field, value);
         },
-        onNameChange: function (value) {
-            var oldKey = this.subsystemKey;
-            var newKey = nameUtils.buildFullKey('subsystem', value, this.namespace);
-            if (newKey !== oldKey) {
-                this.$emit('name-change', oldKey, newKey);
-            }
-        },
-        onNameBlur: function (event) {
-            event.target.style.border = '1px solid transparent';
-            event.target.style.background = 'transparent';
+        onNameChange: function (oldKey, newKey) {
+            this.$emit('name-change', oldKey, newKey);
         },
         onDelete: function () {
             this.$emit('delete-subsystem', { spKey: this.parentSubPartKey, ssKey: this.subsystemKey });
@@ -232,6 +214,16 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
             return {};
         },
         /**
+         * 按字段选频道补全列表：视点发现表用视点自己声明的 discovery_inputs
+         * 频道名，其余信号表用通用频道名。
+         * @param {string} sigField - 信号字段名
+         * @returns {string[]}
+         */
+        channelHintsFor: function (sigField) {
+            if (sigField === 'camera_discovery_targets') return this.cameraDiscoveryChannelHints;
+            return this.channelHints;
+        },
+        /**
          * 信号目标变更回调：由 mm-signal-target-editor 组件 emit，
          * 深拷贝后写入对应字段（保持 Vue 2 响应式）
          * @param {string} sigField - 信号字段名（如 control_outputs）
@@ -249,7 +241,7 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
          * @returns {string[]} 过滤后的可用目标列表
          */
         getFilteredPowerOutputTargets: function (field, currentTarget) {
-            var allTargets = this.signalTargetOptions;
+            var allTargets = this.powerTargetOptions;
             if (!allTargets || allTargets.length === 0) return [];
             var entries = this.getPowerOutputEntries(field);
             var usedTargets = [];
@@ -500,9 +492,6 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
         },
     },
 };
-
-// 所有写配置的入口都通过 field-change 上抛给 App → ops.setField，
-// 本组件不再直接改 this.config，因此不需要 wrapMethodMap。
 
 Vue.component('mm-subsystem-panel', MM_SUBSYSTEM_PANEL_OPTIONS);
 

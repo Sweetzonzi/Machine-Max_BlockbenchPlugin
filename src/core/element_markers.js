@@ -878,7 +878,6 @@ function _cleanMarkerDownstream(projectConfig, partId, variantName, uuid, marker
 function repairMarkerConfigs(projectConfig) {
     var details = [];
     if (!projectConfig || !projectConfig.parts) return { repaired: 0, details: details };
-    var ns = projectConfig.namespace || 'machine_max';
 
     function findEl(uuid) {
         var groups = (typeof Group !== 'undefined' && Group.all) ? Group.all : [];
@@ -932,7 +931,8 @@ function repairMarkerConfigs(projectConfig) {
                         return ownerSp.interact_boxes[k] && ownerSp.interact_boxes[k]._uuid === uuid;
                     });
                     if (!matched) {
-                        var base = generateDefaultName('interact_box', { namespace: ns, boneName: el.name });
+                        // 补建的交互区键默认落共享词汇 machine_max（与本包导出命名空间无关）
+                        var base = generateDefaultName('interact_box', { boneName: el.name });
                         var ibName = ensureUniqueName('interact_box', variant, owner.spKey, base);
                         var ib = createInteractBoxConfig();
                         ib.bone = el.name || '';

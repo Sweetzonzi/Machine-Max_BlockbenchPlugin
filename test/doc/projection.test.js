@@ -54,7 +54,7 @@ describe('doc/projection.in', () => {
         expect(Object.keys(map.variants)).toEqual(['model']);
     });
 
-    test('单子零件简写落到 sub_part.<ns>.main', () => {
+    test('单子零件简写落到 sub_part.machine_max.main（模组简写 codec 硬编码该键）', () => {
         const definition = {
             model: 'machine_max:model/hull',
             textures: { default: 'machine_max:textures/hull' },
@@ -64,10 +64,12 @@ describe('doc/projection.in', () => {
                 start_bone: 'hull',
             },
         };
-        const normalized = projection.normalizeShorthand('variant', definition, {
-            namespace: 'machine_max',
-        });
-        expect(Object.keys(normalized.sub_parts)).toEqual(['sub_part.machine_max.main']);
+        for (const namespace of ['machine_max', 'k17']) {
+            const normalized = projection.normalizeShorthand('variant', definition, {
+                namespace: namespace,
+            });
+            expect(Object.keys(normalized.sub_parts)).toEqual(['sub_part.machine_max.main']);
+        }
     });
 
     test('非规范 key {chassis:{...}} 返回 invalid_format，不被吞成 default', () => {
@@ -213,6 +215,80 @@ describe('doc/projection.in', () => {
         });
         expect(result.ok).toBe(false);
         expect(result.errors.some((e) => e.code === 'unresolved_config_ref')).toBe(true);
+    });
+
+    test('信号目标跨子零件命中：整件投影按整个变体解析', () => {
+        const definition = helpers.createConfig().parts.hull;
+        const variant = definition.variants.default;
+        variant.sub_parts['sub_part.machine_max.gun'] = helpers.createSubPart({
+            start_bone: 'hatch',
+            hit_boxes: {},
+            interact_boxes: {},
+            connectors: {},
+            subsystems: {
+                'subsystem.machine_max.aux_engine': {
+                    type: 'machine_max:engine',
+                    definition: 'machine_max:engine',
+                    power_output: '',
+                    speed_outputs: {},
+                },
+            },
+        });
+        const sp = variant.sub_parts['sub_part.machine_max.main'];
+        sp.subsystems['subsystem.machine_max.engine'].speed_outputs = {
+            engine_speed: ['subsystem.machine_max.aux_engine'],
+        };
+        const result = projection.projectIn(definition, {
+            kind: 'part',
+            namespace: 'machine_max',
+            partId: 'hull',
+            mode: 'create',
+            parentPath: ['parts', 'hull'],
+        });
+        expect(result.errors).toEqual([]);
+        expect(result.ok).toBe(true);
+    });
+
+    test('单子零件投影：siblingSubParts 提供兄弟子零件时跨子零件目标命中', () => {
+        const variant = helpers.createVariant();
+        const gun = helpers.createSubPart({
+            start_bone: 'hatch',
+            hit_boxes: {},
+            interact_boxes: {},
+            connectors: {},
+            subsystems: {
+                'subsystem.machine_max.aux_engine': {
+                    type: 'machine_max:engine',
+                    definition: 'machine_max:engine',
+                    power_output: '',
+                    speed_outputs: {},
+                },
+            },
+        });
+        const definition = variant.sub_parts['sub_part.machine_max.main'];
+        definition.subsystems['subsystem.machine_max.engine'].speed_outputs = {
+            engine_speed: ['subsystem.machine_max.aux_engine'],
+        };
+        const ctx = {
+            kind: 'sub_part',
+            namespace: 'machine_max',
+            partId: 'hull',
+            variantName: 'default',
+            subPartKey: 'sub_part.machine_max.main',
+            mode: 'create',
+            parentPath: ['parts', 'hull', 'variants', 'default',
+                'sub_parts', 'sub_part.machine_max.main'],
+        };
+        // 不传兄弟子零件 → 退回「只有本次节点」，跨子零件目标判成断裂
+        const alone = projection.projectIn(definition, Object.assign({}, ctx));
+        expect(alone.ok).toBe(false);
+        expect(alone.errors.some((e) => e.code === 'unresolved_config_ref')).toBe(true);
+
+        const withSiblings = projection.projectIn(definition, Object.assign({}, ctx, {
+            siblingSubParts: { 'sub_part.machine_max.gun': gun },
+        }));
+        expect(withSiblings.errors).toEqual([]);
+        expect(withSiblings.ok).toBe(true);
     });
 
     test('reset_fields 只算顶层，不递归', () => {
@@ -408,8 +484,8 @@ describe('doc/projection.out / round-trip', () => {
                 fire_animation: 'fire',
                 ammo_outputs: {},
                 ammo_discovery_targets: {},
-                reload_operator_discovery_targets: {},
-                reload_operator_time_multipliers: {},
+                loader_discovery_targets: {},
+                loader_time_multipliers: {},
             },
         };
 

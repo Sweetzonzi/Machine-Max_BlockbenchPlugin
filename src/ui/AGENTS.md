@@ -12,6 +12,7 @@ src/ui/
 ├── SubPartPanel.vue.js     # 子零件属性子组件（289行）
 ├── HitBoxPanel.vue.js      # 碰撞箱属性子组件（118行）
 ├── SignalFlowPanel.vue.js  # 信号流图可视化面板（579行）
+├── KeyNameEditor.vue.js    # 两段式键名编辑（命名空间 + 名称，四面板共用）
 ├── tag_dialog_helper.js    # 标签对话框辅助模块（222行）
 ├── menu.js                 # BarMenu 注册与菜单入口（319行）
 ├── components/             # 共享 Vue 组件 / mixin
@@ -41,7 +42,8 @@ src/ui/
     ├── hit_box_panel.html          # 碰撞箱模板 → TEMPLATE_HIT_BOX_PANEL
     ├── subsystem_panel.html        # 子系统面板 → TEMPLATE_SUBSYSTEM_PANEL
     ├── connector_panel.html        # 连接点面板 → TEMPLATE_CONNECTOR_PANEL
-    └── interact_box_panel.html     # 交互区面板 → TEMPLATE_INTERACT_BOX_PANEL
+    ├── interact_box_panel.html     # 交互区面板 → TEMPLATE_INTERACT_BOX_PANEL
+    └── key_name_editor.html        # 键名编辑控件 → TEMPLATE_KEY_NAME_EDITOR
 ```
 
 ## 查找指引
@@ -51,7 +53,8 @@ src/ui/
 | 修改属性面板布局 | `App.vue.js` + `panels/*.html` | Vue 2 组件树: mm-main-panel → mm-sub-part-panel, mm-hit-box-panel, mm-signal-flow-panel |
 | 修改子零件面板 | `SubPartPanel.vue.js` + `sub_part_panel.html` | 骨骼范围、物理属性、碰撞箱列表 |
 | 修改碰撞箱面板 | `HitBoxPanel.vue.js` + `hit_box_panel.html` | 碰撞箱尺寸、材质覆写 |
-| 修改信号流图面板 | `SignalFlowPanel.vue.js` | SVG 力导向图，数据来自 `lib/signal_graph.js` |
+| 修改信号流图面板 | `SignalFlowPanel.vue.js` | SVG 力导向图，数据来自 `lib/signal_graph.js`。边按字段分四类：信号（灰）/ 控制（绿）/ 动力（橙）/ 转速（蓝），另有**发现**（紫、虚线）——`*_discovery_targets` 是只读握手（上游 `resolveViewpoints` / `resolveTargets` 只按名字查终端），不写信号槽也不下发命令，`_edgeTypeForField` 单列一类 |
+| 修改键名 / 命名空间编辑 | `KeyNameEditor.vue.js` + `panels/key_name_editor.html` | `<mm-key-name-editor type=… :key-value=…>`；命名空间与名称分两段，只 emit `name-change(oldKey, newKey)` |
 | 修改标签对话框 | `tag_dialog_helper.js` | `showAddTagDialog(vm, variant)` — 标签 CRUD + 颜色哈希 |
 | 添加新工具栏动作 | `menu.js` → `registerMachineMaxMenu()` | 菜单是纯对象 `{name, icon, click}` — Blockbench 中无 MenuItem 类 |
 | 接线导出 | `../services/export.js` → `executeExport()` | 串联 6 个生成器 + codec 编码 → 通过 `file_writer.js` 写入；对话框只消费统计结果 |
@@ -61,7 +64,7 @@ src/ui/
 | 新建零件 / 项目管理对话框 | `dialogs/part_dialogs.js` | 工具栏·面板·右键菜单共用；新建零件走 `ops.createPart`，项目管理改路径走 `pack_common.applyPackPath(strict:false)`（同样解析依赖） |
 | 生成图标 | `dialogs/icon_generator_dialog.js` | 设置 → 预览 → 写入；预览只渲染，写入后调 `ops.setPartIcons` |
 | 定义查看对话框 | `components/definition_viewer.js` | `showDefinitionViewer()` — 5 个"查看定义"入口共用；列表 + 来源徽标 + 只读标记 + 统计条 |
-| 信号目标编辑器 | `components/SignalTargetEditor.vue.js` | SubsystemPanel / ConnectorPanel / InteractBoxPanel 复用；频道增删改、目标过滤去重 |
+| 信号目标编辑器 | `components/SignalTargetEditor.vue.js` | SubsystemPanel / ConnectorPanel / InteractBoxPanel 复用；频道增删改、目标过滤去重。候选来自 `utils/signal_target_options.buildSignalTargetOptions(subParts, ns, currentSpKey)`，作用域是**整个变体**（跨子零件候选的 label 追加 ` · <子零件短名>`），交互区不进候选（只发不收）。`power_output` / `power_outputs` 的候选走同文件的 `buildPowerTargetOptions`（只含当前子零件、无 `local`/`global`），由 `SubsystemPanel` 的 `powerTargetOptions` prop 传入 |
 | 终端字段校验标注 | `components/field_issues.js` | App 按 `byItem` / `bySubPart` / `byPartVariant` 切片传 `issue-list`；面板用 `fieldClass(field)` 标红，不显示原因文案 |
 | 定位器选择 | `components/LocatorPicker.vue.js` | 输入框 + datalist 提示 + 自由文本；不存在的值标红/黄但不拦截输入 |
 | 修改面板样式 | `../styles/mm_mode.css` | 所有类以 `mm-` 为前缀；CSS 自定义属性用于主题 |
@@ -81,6 +84,7 @@ src/ui/
 - **字段提交点（撤销）**: 模板不要用 `v-model` 直接绑配置字段（`v-model` 绕过 methods，撤销快照会拿到改完之后的值）。
   改用 `:value` / `:checked` + `@change`，调用 `ops.setField(config, { path, value, coalesce? })`；输入框优先 `@change`（失焦/回车提交）。
 - **面板不直写配置**: `SubsystemPanel` / `ConnectorPanel` 的列表/字典编辑只构造新值并 emit `field-change`，由 App 统一写；不要 `$set(this.config, …)`。
+- **键名编辑统一用 `<mm-key-name-editor>`**: 传 `type` + `:key-value`，只 emit `name-change(oldKey, newKey)`，迁移由 ops 的 `rename*` 完成。命名空间由创作者编辑，可跨包引用 `machine_max` 共享词条，只校验格式；候选表（`machine_max` + 本包 + 各依赖包）来自 `content_pack_manager.namespaceCandidates()`。新建实体的默认命名空间是 `machine_max`（`core/naming.js` 的 `DEFAULT_NAMESPACE`），不要在各面板里自己拼 `type + '.' + namespace`。
 - **计算属性只读**: computed 里不得 `$set` / `$delete` 配置；缺失条目由 `loadConfig.repairMarkerConfigs` 补建，运行时用「创建配置」按钮走 `ops.mark*`。
 - **变更事件订阅一次**: `App.vue.js` mounted 订阅 `mm_config_changed` → 同步 `_uiState.activePartId/activeVariantName` + `refreshOutlinerIcons()` + `markerVersion.v++` + `scheduleSave()`（`persist:false` 时跳过落盘）；`beforeDestroy` 里清理。
 - **落盘**: 字段/结构动作不直接 `saveConfig()`；由事件触发 300ms 防抖。只有 `Blockbench.on('save')`（Ctrl+S）与导出完成保留同步 `saveConfig()`。

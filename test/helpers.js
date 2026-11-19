@@ -50,7 +50,7 @@ function createSubPart(overrides) {
             'interact.machine_max.door': {
                 bone: 'hull',
                 interact_mode: 'fast',
-                condition: 'NOR',
+                condition: 'true',
                 signal_targets: { door: ['local'] },
                 _uuid: '11111111-1111-1111-1111-111111111111',
             },

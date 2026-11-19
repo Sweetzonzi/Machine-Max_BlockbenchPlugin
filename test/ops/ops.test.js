@@ -105,6 +105,21 @@ afterAll(function () {
 });
 
 describe('ops.setField', () => {
+    test('根字段 namespace 只接受合法命名空间', () => {
+        // 它是目录名 / resource location 的一部分，写进非法值会让导出落到坏目录
+        const cfg = helpers.createConfig();
+        for (const bad of ['Bad NS', 'k17.x', '', 42, null]) {
+            const r = ops.setField(cfg, { path: ['namespace'], value: bad });
+            expect(r.ok).toBe(false);
+            expect(r.errors[0].code).toBe('invalid_format');
+        }
+        expect(cfg.namespace).toBe('machine_max');
+
+        const ok = ops.setField(cfg, { path: ['namespace'], value: 'k17' });
+        expect(ok.ok).toBe(true);
+        expect(cfg.namespace).toBe('k17');
+    });
+
     test('合法值写入并返回 before/after；非法枚举不写入', () => {
         const cfg = helpers.createConfig();
         const path = ['parts', 'hull', 'variants', 'default', 'sub_parts',
@@ -300,6 +315,188 @@ describe('ops.markSubPart', () => {
     });
 });
 
+describe('新建实体的默认命名空间：共享词汇 machine_max', () => {
+    // 上游内容包把跨包共享的结构名字放在 machine_max 下（译名由内置包提供），
+    // 新建实体一律先落这个命名空间，与 config.namespace（导出命名空间）无关。
+    function configWithExportNs(ns) {
+        const cfg = helpers.createConfig();
+        cfg.namespace = ns;
+        return cfg;
+    }
+
+    test('markSubPart 不随导出命名空间生成 sub_part.<ns>.main', () => {
+        const cfg = configWithExportNs('k17');
+        cfg.parts.hull.variants.default.sub_parts = {};
+        const r = ops.markSubPart(cfg, {
+            partId: 'hull',
+            variantName: 'default',
+            element: { uuid: '11111111-1111-1111-1111-111111111111', name: 'hull' },
+        });
+        expect(r.ok).toBe(true);
+        expect(r.spKey).toBe('sub_part.machine_max.main');
+        expect(cfg.parts.hull.variants.default.sub_parts['sub_part.k17.main']).toBeUndefined();
+    });
+
+    test('markConnector 默认 connector.machine_max.<骨骼名>', () => {
+        const cfg = configWithExportNs('k17');
+        const sp = cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.connectors = {};
+        const r = ops.markConnector(cfg, {
+            partId: 'hull',
+            variantName: 'default',
+            spKey: 'sub_part.machine_max.main',
+            element: { uuid: '22222222-2222-2222-2222-222222222222', name: 'Hatch' },
+        });
+        expect(r.ok).toBe(true);
+        expect(r.name).toBe('connector.machine_max.hatch');
+        expect(sp.connectors['connector.machine_max.hatch']).toBeTruthy();
+    });
+
+    test('markInteractBox 默认 interact.machine_max.<骨骼名>', () => {
+        const cfg = configWithExportNs('k17');
+        const sp = cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.interact_boxes = {};
+        const r = ops.markInteractBox(cfg, {
+            partId: 'hull',
+            variantName: 'default',
+            spKey: 'sub_part.machine_max.main',
+            element: { uuid: '44444444-4444-4444-4444-444444444444', name: 'Door' },
+        });
+        expect(r.ok).toBe(true);
+        expect(r.name).toBe('interact.machine_max.door');
+        expect(sp.interact_boxes['interact.machine_max.door']).toBeTruthy();
+    });
+
+    test('作者显式给的 key 不被默认命名空间改写', () => {
+        const cfg = configWithExportNs('k17');
+        const r = ops.markConnector(cfg, {
+            partId: 'hull',
+            variantName: 'default',
+            spKey: 'sub_part.machine_max.main',
+            key: 'connector.k17.rws_turret',
+            element: { uuid: '22222222-2222-2222-2222-222222222222', name: 'RwsTurret' },
+        });
+        expect(r.ok).toBe(true);
+        expect(r.name).toBe('connector.k17.rws_turret');
+    });
+});
+
+describe('零件内重名（跨子零件，上游解码即整份拒收）', () => {
+    const GUN = 'sub_part.machine_max.gun';
+
+    function addSibling(cfg, maps) {
+        const variant = cfg.parts.hull.variants.default;
+        variant.sub_parts[GUN] = helpers.createSubPart(Object.assign({
+            start_bone: 'hatch',
+            hit_boxes: {},
+            interact_boxes: {},
+            connectors: {},
+            subsystems: {},
+        }, maps || {}));
+        return variant.sub_parts[GUN];
+    }
+
+    test('renameConnector 撞上别的子零件的同名连接点 → duplicate_name', () => {
+        const cfg = helpers.createConfig();
+        addSibling(cfg, {
+            connectors: {
+                'connector.machine_max.ring': {
+                    locator: 'hatch', definition: 'machine_max:ring', signal_targets: {},
+                    signal_translations: {}, power_target: '', internal: false, overwrite: null,
+                },
+            },
+        });
+        const r = ops.renameConnector(cfg, {
+            partId: 'hull',
+            variantName: 'default',
+            spKey: 'sub_part.machine_max.main',
+            oldKey: 'connector.machine_max.hatch',
+            newKey: 'connector.machine_max.ring',
+        });
+        expect(r.ok).toBe(false);
+        expect(r.errors[0].code).toBe('duplicate_name');
+        expect(r.error).toContain(GUN);
+    });
+
+    test('createSubsystem 撞上别的子零件的同名子系统 → duplicate_name', () => {
+        const cfg = helpers.createConfig();
+        addSibling(cfg, {
+            subsystems: {
+                'subsystem.machine_max.aux_engine': {
+                    type: 'machine_max:engine', definition: 'machine_max:engine',
+                    power_output: '', speed_outputs: {},
+                },
+            },
+        });
+        const r = ops.createSubsystem(cfg, {
+            partId: 'hull',
+            variantName: 'default',
+            spKey: 'sub_part.machine_max.main',
+            typeId: 'machine_max:engine',
+            instanceName: 'subsystem.machine_max.aux_engine',
+        });
+        expect(r.ok).toBe(false);
+        expect(r.errors[0].code).toBe('duplicate_name');
+    });
+
+    test('importSubsystem 撞上别的子零件的同名子系统 → duplicate_name', () => {
+        const cfg = helpers.createConfig();
+        addSibling(cfg, {
+            subsystems: {
+                'subsystem.machine_max.aux_engine': {
+                    type: 'machine_max:engine', definition: 'machine_max:engine',
+                    power_output: '', speed_outputs: {},
+                },
+            },
+        });
+        const r = ops.importSubsystem(cfg, {
+            partId: 'hull',
+            variantName: 'default',
+            spKey: 'sub_part.machine_max.main',
+            instanceName: 'subsystem.machine_max.aux_engine',
+            definition: {
+                type: 'machine_max:engine',
+                definition: 'machine_max:engine',
+                power_output: '',
+                speed_outputs: {},
+            },
+        });
+        expect(r.ok).toBe(false);
+        expect(r.errors[0].code).toBe('duplicate_name');
+    });
+
+    test('markConnector 显式 key 撞上别的子零件 → duplicate_name；同子零件同名是复用', () => {
+        const cfg = helpers.createConfig();
+        addSibling(cfg, {
+            connectors: {
+                'connector.machine_max.ring': {
+                    locator: 'hatch', definition: 'machine_max:ring', signal_targets: {},
+                    signal_translations: {}, power_target: '', internal: false, overwrite: null,
+                },
+            },
+        });
+        const clash = ops.markConnector(cfg, {
+            partId: 'hull',
+            variantName: 'default',
+            spKey: 'sub_part.machine_max.main',
+            key: 'connector.machine_max.ring',
+            element: { uuid: '22222222-2222-2222-2222-222222222222', name: 'Ring' },
+        });
+        expect(clash.ok).toBe(false);
+        expect(clash.errors[0].code).toBe('duplicate_name');
+
+        const reuse = ops.markConnector(cfg, {
+            partId: 'hull',
+            variantName: 'default',
+            spKey: 'sub_part.machine_max.main',
+            key: 'connector.machine_max.hatch',
+            element: { uuid: '22222222-2222-2222-2222-222222222222', name: 'Hatch' },
+        });
+        expect(reuse.ok).toBe(true);
+        expect(reuse.name).toBe('connector.machine_max.hatch');
+    });
+});
+
 describe('ops.import*', () => {
     test('importPart 新建：占位字段 round-trip，reset_fields 为空', () => {
         const cfg = helpers.createConfig();
@@ -423,6 +620,23 @@ describe('ops.rename*', () => {
             .toBe('sub_part.machine_max.chassis');
     });
 
+    test('renameSubPart 支持只改命名空间（跨包引用合法）', () => {
+        const cfg = helpers.createConfig();
+        const r = ops.renameSubPart(cfg, {
+            partId: 'hull',
+            variantName: 'default',
+            oldKey: 'sub_part.machine_max.main',
+            newKey: 'sub_part.m1a2_sep.main',
+        });
+        expect(r.ok).toBe(true);
+        expect(cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'])
+            .toBeUndefined();
+        expect(cfg.parts.hull.variants.default.sub_parts['sub_part.m1a2_sep.main']).toBeTruthy();
+        const markers = cfg.parts.hull.element_markers.default;
+        expect(markers['11111111-1111-1111-1111-111111111111'].config_ref)
+            .toBe('sub_part.m1a2_sep.main');
+    });
+
     test('renameSubPart 要求规范 key', () => {
         const cfg = helpers.createConfig();
         const r = ops.renameSubPart(cfg, {
@@ -514,6 +728,84 @@ describe('collectIssues：DANGLING_SIGNAL_TARGET', () => {
         const cfg = helpers.createConfig();
         const issues = collectIssues(cfg);
         expect(issues.some(function (p) { return p.code === 'dangling_signal_target'; })).toBe(false);
+    });
+
+    test('跨子零件的子系统 / 连接点目标命中，不报错', () => {
+        const cfg = helpers.createConfig();
+        const variant = cfg.parts.hull.variants.default;
+        const sp = variant.sub_parts['sub_part.machine_max.main'];
+        variant.sub_parts['sub_part.machine_max.gun'] = helpers.createSubPart({
+            start_bone: 'hatch',
+            hit_boxes: {},
+            interact_boxes: {},
+            connectors: {
+                'connector.machine_max.ring': {
+                    locator: 'hatch',
+                    definition: 'machine_max:ring',
+                    signal_targets: {},
+                    signal_translations: {},
+                    power_target: '',
+                    internal: false,
+                    overwrite: null,
+                },
+            },
+            subsystems: {
+                'subsystem.machine_max.launcher': {
+                    type: 'machine_max:launcher',
+                    definition: 'machine_max:launcher',
+                    control_outputs: {},
+                },
+            },
+        });
+        sp.subsystems['subsystem.machine_max.engine'].speed_outputs = {
+            engine_speed: ['subsystem.machine_max.launcher', 'connector.machine_max.ring'],
+        };
+        const issues = collectIssues(cfg);
+        expect(issues.some(function (p) { return p.code === 'dangling_signal_target'; })).toBe(false);
+    });
+
+    test('目标写成交互区 → warning interact_box_as_signal_target', () => {
+        const cfg = helpers.createConfig();
+        const sp = cfg.parts.hull.variants.default.sub_parts['sub_part.machine_max.main'];
+        sp.connectors['connector.machine_max.hatch'].signal_targets = {
+            ch: ['interact.machine_max.door'],
+        };
+        const issues = collectIssues(cfg);
+        const found = issues.filter(function (p) {
+            return p.code === 'interact_box_as_signal_target';
+        });
+        expect(found).toHaveLength(1);
+        expect(found[0].severity).toBe('warning');
+        expect(found[0].message).toContain('交互区只发不收');
+        expect(found[0].path.subPartKey).toBe('sub_part.machine_max.main');
+    });
+
+    test('跨子零件重名 → duplicate_name（名字在零件内唯一）', () => {
+        const cfg = helpers.createConfig();
+        const variant = cfg.parts.hull.variants.default;
+        variant.sub_parts['sub_part.machine_max.gun'] = helpers.createSubPart({
+            start_bone: 'hatch',
+            hit_boxes: {},
+            interact_boxes: {},
+            connectors: {
+                'connector.machine_max.hatch': {
+                    locator: 'hatch',
+                    definition: 'machine_max:hatch',
+                    signal_targets: {},
+                    signal_translations: {},
+                    power_target: '',
+                    internal: false,
+                    overwrite: null,
+                },
+            },
+            subsystems: {},
+        });
+        const issues = collectIssues(cfg);
+        const found = issues.filter(function (p) { return p.code === 'duplicate_name'; });
+        expect(found).toHaveLength(1);
+        expect(found[0].severity).toBe('error');
+        expect(found[0].message).toContain('重复');
+        expect(found[0].message).toContain('connector.machine_max.hatch');
     });
 });
 

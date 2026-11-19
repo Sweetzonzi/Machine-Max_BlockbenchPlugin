@@ -37,11 +37,16 @@ var CODES = {
     DUPLICATE_NAME: 'duplicate_name',                     // 连接点/子系统/交互区名在单变体内重复（Part 级按名寻址歧义）
     RESERVED_NAME: 'reserved_name',                       // 使用了信号保留地址（local/global 等）
     DANGLING_SIGNAL_TARGET: 'dangling_signal_target',     // 信号/功率目标指向不存在的节点（含 power_outputs 的 key）
+    INTERACT_BOX_AS_SIGNAL_TARGET: 'interact_box_as_signal_target', // 信号目标写成交互区（交互区只发不收，上游丢弃这一跳）
     MATERIAL_REQUIRED: 'material_required',               // 碰撞箱 material 未配置（空串/null/undefined）
     MATERIAL_REF_MISSING: 'material_ref_missing',         // 碰撞箱 material 引用的材质不存在（machine_max:default 为内置兜底，不查表）
     HIT_BOX_KEY_NOT_UUID: 'hit_box_key_not_uuid',         // hit_boxes 的 key 不是骨骼 UUID（内部树只认 UUID）
     HIT_BOX_MODULE_UNKNOWN: 'hit_box_module_unknown',     // 碰撞箱 module 不是关联子系统类型声明的模块（含该类型没有模块划分）
     HIT_BOX_MODULE_WITHOUT_SUBSYSTEM: 'hit_box_module_without_subsystem', // 碰撞箱填了 module 但没关联子系统
+    INTERACT_BOX_CONDITION_LEGACY_ENUM: 'interact_box_condition_legacy_enum', // 交互区 condition 仍是旧逻辑枚举（上游已改为 MoLang 表达式）
+    VIEWPOINT_DISCOVERY_NOT_VIEWPOINT: 'viewpoint_discovery_not_viewpoint', // 视点发现目标指向的不是 camera / sight（按名解析不报错，但发现结果只留视点）
+    VIEWPOINT_DISCOVERY_DEFAULT_CHANNEL: 'viewpoint_discovery_default_channel', // 视点发现频道写成 camera_sight（视点未声明时的默认值，等于全车所有视点）
+    VIEWPOINT_DISCOVERY_CHANNEL_UNDECLARED: 'viewpoint_discovery_channel_undeclared', // 广播线路的频道没有一台 camera / sight 声明（永远命中不了）
 };
 
 /** scope → byItem 桶名映射（仅对"可归属到某个 subpart 条目"的 scope 有意义） */

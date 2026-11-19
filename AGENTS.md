@@ -69,6 +69,7 @@ plugin.js                      # 插件入口（103行）
   │           ├── ui/HitBoxPanel.vue.js
   │           ├── ui/SignalFlowPanel.vue.js  # 信号流图面板（579行）
   │           │     └── lib/signal_graph.js  # 信号拓扑图数据模型（445行）
+  │           ├── ui/KeyNameEditor.vue.js    # 两段式键名编辑（命名空间 + 名称，四面板共用）
   │           ├── ui/components/field_issues.js # 终端字段校验标注 mixin
   │           ├── ui/tag_dialog_helper.js
   │           └── ui/dialogs/    # 对话框子组件

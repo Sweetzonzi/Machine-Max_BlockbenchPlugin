@@ -70,16 +70,24 @@ function markInteractBox(config, options) {
     if (!element || !element.uuid) return shared.fail('未选中任何元素');
 
     var spKey = options.spKey || ownerFor(config, options.partId, options.variantName, element);
-    var ns = shared.namespaceOf(config);
     var ibName = String(options.key || '').trim();
     if (!ibName) {
-        var baseName = generateDefaultName('interact_box', { namespace: ns, boneName: element.name });
+        // 默认落共享词汇 machine_max，作者可在键名编辑器里改成导出命名空间
+        var baseName = generateDefaultName('interact_box', { boneName: element.name });
         ibName = ensureUniqueName('interact_box', variant, spKey, baseName);
     }
     var keyError = shared.validateKey('interact_boxes', ibName, config,
         ['parts', options.partId, 'variants', options.variantName, 'sub_parts', spKey,
             'interact_boxes', ibName]);
     if (keyError) return shared.fail(keyError.hint, [keyError]);
+    // 名字在零件内唯一（跨子零件）：同子零件的同名条目是「复用」，不算冲突
+    var conflict = shared.checkPartUniqueName(variant, ibName, {
+        subPartKey: spKey,
+        excludeKey: ibName,
+        path: ['parts', options.partId, 'variants', options.variantName, 'sub_parts', spKey,
+            'interact_boxes', ibName],
+    });
+    if (conflict) return conflict;
 
     var mp = shared.markersPort();
     runConfigEdit('标记为交互区', function () {
@@ -115,16 +123,24 @@ function markConnector(config, options) {
 
     var spKey = options.spKey || ownerFor(config, options.partId, options.variantName, element);
     var locName = element.name || '';
-    var ns = shared.namespaceOf(config);
     var connName = String(options.key || '').trim();
     if (!connName) {
-        var baseName = generateDefaultName('connector', { namespace: ns, boneName: locName });
+        // 默认落共享词汇 machine_max（译名多由内置包提供）
+        var baseName = generateDefaultName('connector', { boneName: locName });
         connName = ensureUniqueName('connector', variant, spKey, baseName);
     }
     var keyError = shared.validateKey('connectors', connName, config,
         ['parts', options.partId, 'variants', options.variantName, 'sub_parts', spKey,
             'connectors', connName]);
     if (keyError) return shared.fail(keyError.hint, [keyError]);
+    // 名字在零件内唯一（跨子零件）：同子零件的同名条目是「复用」，不算冲突
+    var conflict = shared.checkPartUniqueName(variant, connName, {
+        subPartKey: spKey,
+        excludeKey: connName,
+        path: ['parts', options.partId, 'variants', options.variantName, 'sub_parts', spKey,
+            'connectors', connName],
+    });
+    if (conflict) return conflict;
 
     var mp = shared.markersPort();
     runConfigEdit('标记为连接点', function () {
@@ -159,6 +175,7 @@ function renameElementKey(config, options, container, scope, label) {
     var spKey = options.spKey;
     var oldKey = options.oldKey || options.key;
     var newKey = String(options.newKey || '').trim();
+    var variant = shared.variantOf(config, partId, variantName);
     var sp = shared.subPartOf(config, partId, variantName, spKey);
     var map = sp && sp[container];
     if (!map || !map[oldKey]) return shared.fail(scope + ' "' + oldKey + '" 不存在');
@@ -170,6 +187,12 @@ function renameElementKey(config, options, container, scope, label) {
         ['parts', partId, 'variants', variantName, 'sub_parts', spKey, mapName, newKey]);
     if (keyError) return shared.fail(keyError.hint, [keyError]);
     if (map[newKey]) return shared.fail(scope + ' "' + newKey + '" 已存在');
+    // 重名的作用域是整个零件：别的子零件已经用了这个名字，上游解码就会整份拒收
+    var conflict = shared.checkPartUniqueName(variant, newKey, {
+        subPartKey: spKey,
+        path: ['parts', partId, 'variants', variantName, 'sub_parts', spKey, mapName, newKey],
+    });
+    if (conflict) return conflict;
 
     var renamed = null;
     var mp = shared.markersPort();
@@ -364,6 +387,8 @@ function addInstance(config, parentPath, kind, key, definition, options) {
         parentPath: parent.concat([kind === 'connector' ? 'connectors'
             : (kind === 'interact_box' ? 'interact_boxes' : 'hit_boxes')]),
         existing: undefined,
+        // 信号目标按整个变体解析（含跨子零件），新条目本身也在表里
+        siblingSubParts: variant.sub_parts,
     };
     var projected = doc.projection.projectIn(base, ctx);
     if (!projected.ok) return shared.finishProjection(projected);
@@ -392,12 +417,9 @@ function addInstance(config, parentPath, kind, key, definition, options) {
         } else {
             var name = key;
             if (!name) {
-                var ns = shared.namespaceOf(config);
+                // 默认落共享词汇 machine_max，与本包导出命名空间无关
                 var boneName = projected.node.bone || projected.node.locator || kind;
-                var baseName = generateDefaultName(kind, {
-                    namespace: ns,
-                    boneName: boneName,
-                });
+                var baseName = generateDefaultName(kind, { boneName: boneName });
                 name = ensureUniqueName(kind, variant, spKey, baseName);
             }
             var mapName = container === 'connectors' ? 'connectors' : 'interact_boxes';

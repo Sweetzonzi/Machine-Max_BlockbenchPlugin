@@ -39,6 +39,7 @@ const fs = require('fs');
 const path = require('path');
 const { createLogger } = require('../utils/logger.js');
 const fileWriter = require('../utils/file_writer.js');
+const contentPack = require('../core/content_pack.js');
 const { assertSafePartIds } = require('./safe_part_ids.js');
 
 /** 模块日志 */
@@ -242,8 +243,10 @@ function executeExport(config, packMeta, exportDir, packFolderName) {
         fs.mkdirSync(packRoot, { recursive: true });
     }
 
-    var ns = config.namespace || 'machine_max';
-    var stats = { parts: 0, connectors: 0, subsystems: 0, materials: 0, langs: 0 };
+    // 命名空间目录：config.namespace（合法时）→ 包内已有目录按 meta.id 选主命名空间
+    // → machine_max。结果也回给调用方显示"写到了 {导出目录}/{包}/{ns}/"。
+    var ns = contentPack.pickExportNamespace(config.contentPackPath, config.namespace);
+    var stats = { parts: 0, connectors: 0, subsystems: 0, materials: 0, langs: 0, namespace: ns, namespaceDir: '' };
     var isFlat = packMeta.flat_export !== false;
 
     function _resolveTargetDir(baseDir, id, flat) {
@@ -270,6 +273,7 @@ function executeExport(config, packMeta, exportDir, packFolderName) {
         'docs',
     ];
     var _nsDir = path.join(packRoot, ns);
+    stats.namespaceDir = _nsDir;
     for (var _ei = 0; _ei < _emptyDirs.length; _ei++) {
         fileWriter.ensureDir(path.join(_nsDir, _emptyDirs[_ei]));
     }

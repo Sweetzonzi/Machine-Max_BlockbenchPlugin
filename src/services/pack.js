@@ -16,8 +16,17 @@ var { createLogger } = require('../utils/logger.js');
 var log = createLogger('PackService');
 
 /** 创建内容包（委托 core/content_pack）。 */
-function createPack(dirPath, meta) {
-    return content_pack.createContentPack(dirPath, meta);
+/**
+ * 创建内容包目录（委托 core/content_pack）。
+ *
+ * @param {string} dirPath - 包根目录（必须不存在 meta.json）
+ * @param {Object} meta - meta.json 内容
+ * @param {{namespace?: string}} [options] - `namespace` 是导出命名空间目录名，
+ *   省略时按 id 后缀推断（见 core/content_pack.defaultExportNamespace）
+ * @returns {{success: boolean, namespace: string, error: string|null}}
+ */
+function createPack(dirPath, meta, options) {
+    return content_pack.createContentPack(dirPath, meta, options);
 }
 
 /** 打开/校验内容包（委托 core/content_pack）。 */

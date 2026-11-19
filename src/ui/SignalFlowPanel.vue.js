@@ -165,6 +165,7 @@ Vue.component('mm-signal-flow-panel', {
                 case 'power': return '#e67e22';
                 case 'speed': return '#3498db';
                 case 'signal': return '#7f8c8d';
+                case 'discovery': return '#9b59b6';
                 case 'control': return '#2ecc71';
                 default: return '#7f8c8d';
             }
@@ -178,6 +179,7 @@ Vue.component('mm-signal-flow-panel', {
                 case 'power': return '动力';
                 case 'speed': return '转速';
                 case 'signal': return '信号';
+                case 'discovery': return '发现';
                 case 'control': return '控制';
                 default: return '连接';
             }

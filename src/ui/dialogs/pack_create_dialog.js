@@ -4,6 +4,7 @@
 
 const path = require('path');
 const packService = require('../../services/pack.js');
+const contentPack = require('../../core/content_pack.js');
 const persistence = require('../../utils/persistence.js');
 const { showToast } = require('../../utils/notify.js');
 const { createLogger } = require('../../utils/logger.js');
@@ -36,6 +37,11 @@ function showCreatePackDialog(config, onSave) {
 
     var ns = config.namespace || 'machine_max';
     var defaultPackId = ns + ':' + (Project && Project.name ? Project.name : 'content_pack');
+    // 导出命名空间默认取 id 冒号后的后缀，并清洗成合法名字（小写字母/数字/_/-）
+    var defaultExportNs = String(defaultPackId.split(':').pop() || 'content_pack')
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, '_')
+        .replace(/^_+|_+$/g, '') || 'content_pack';
 
     try {
         new Dialog({
@@ -48,6 +54,13 @@ function showCreatePackDialog(config, onSave) {
                     label: '内容包 ID',
                     value: defaultPackId,
                     description: '格式: namespace:name，如 machine_max:my_pack。仅限小写字母、数字、_ - . / :',
+                },
+                exportNamespace: {
+                    type: 'text',
+                    label: '导出命名空间',
+                    value: defaultExportNs,
+                    description: '内容包内的目录名，导出写到 {包文件夹}/{导出命名空间}/。与包 ID 是两个概念；' +
+                        '默认取 ID 冒号后的名字，只允许小写字母、数字、下划线或连字符。',
                 },
                 packVersion: {
                     type: 'text',
@@ -102,6 +115,11 @@ function showCreatePackDialog(config, onSave) {
 
                 var packId = formData.packId.trim();
                 var parentDir = formData.packDir.trim();
+                var exportNs = String(formData.exportNamespace || '').trim();
+                if (!contentPack.isValidNamespace(exportNs)) {
+                    showToast('导出命名空间只允许小写字母、数字、下划线或连字符', 'error');
+                    return false;
+                }
                 var folderName = sanitizeFolderName(formData.packName || packId.split(':').pop() || 'content_pack');
                 var packDirPath = path.join(parentDir, folderName);
 
@@ -114,8 +132,8 @@ function showCreatePackDialog(config, onSave) {
                     description: formData.packDescription || '',
                 };
 
-                // ---- 创建内容包 ----
-                var result = packService.createPack(packDirPath, meta);
+                // ---- 创建内容包（导出命名空间在 mkdir 之前校验，不留半个包） ----
+                var result = packService.createPack(packDirPath, meta, { namespace: exportNs });
                 if (!result.success) {
                     showToast('创建失败: ' + (result.error || '未知错误'), 'error');
                     return false;

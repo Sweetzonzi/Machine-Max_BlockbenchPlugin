@@ -17,7 +17,7 @@ const { refreshOutlinerIcons } = require('../mode/icons.js');
 const { showToast } = require('../utils/notify.js');
 const content_pack_manager = require('../core/content_pack_manager.js');
 const nameUtils = require('../utils/name_utils.js');
-const { buildSignalTargetOptions } = require('../utils/signal_target_options.js');
+const { buildSignalTargetOptions, buildPowerTargetOptions } = require('../utils/signal_target_options.js');
 const { collectAllIssues } = require('../services/issues.js');
 const { aggregate, resolveIssueLevel, filterFieldIssues } = require('../core/validation_types.js');
 var { showAddTagDialog, _hashTagColor } = require('./tag_dialog_helper.js');
@@ -41,6 +41,8 @@ require('./components/KeyValueEditor.vue.js');
 require('./components/SignalTargetEditor.vue.js');
 
 require('./components/LocatorPicker.vue.js');
+
+require('./KeyNameEditor.vue.js');
 
 /**
  * 主面板组件选项。
@@ -415,12 +417,21 @@ const MM_MAIN_PANEL_OPTIONS = {
             return sp.connectors;
         },
         /**
-         * 当前子零件内所有目标 key（用于信号目标下拉选择）
+         * 当前变体内所有信号目标 key（用于信号目标下拉选择）
+         * 作用域是整个 Part（同变体全部子零件），跨子零件候选的 label 带子零件名
          * 返回 {value, label}[]，value=完整键，label=[类型]短名
          */
         currentSignalTargetOptions: function () {
             if (!this.isSubsystemSelected || !this.currentVariant) return [];
             return this.signalTargetOptionsFor(this.subsystemSelection.spKey);
+        },
+        /**
+         * 当前子零件内的功率目标候选（power_output / power_outputs 的 key）
+         * 功率引用只在所属子零件内解析，候选因此比信号目标窄
+         */
+        currentPowerTargetOptions: function () {
+            if (!this.isSubsystemSelected || !this.currentVariant) return [];
+            return this.powerTargetOptionsFor(this.subsystemSelection.spKey);
         },
         /**
          * 动态检测碰撞箱所属子零件（沿父链向上遍历）
@@ -559,12 +570,12 @@ const MM_MAIN_PANEL_OPTIONS = {
             }
             var variant = this.currentVariant;
             if (!variant || !variant.sub_parts) {
-                return { _orphan: true, bone: '', interact_mode: 'fast', condition: 'NOR', signal_targets: {} };
+                return { _orphan: true, bone: '', interact_mode: 'fast', condition: 'true', signal_targets: {} };
             }
             var owner = this.interactBoxOwner;
             var spKey = owner ? owner.spKey : null;
             if (!spKey || !variant.sub_parts[spKey]) {
-                return { _orphan: true, bone: '', interact_mode: 'fast', condition: 'NOR', signal_targets: {} };
+                return { _orphan: true, bone: '', interact_mode: 'fast', condition: 'true', signal_targets: {} };
             }
             var sp = variant.sub_parts[spKey];
             if (!sp.interact_boxes) return null;
@@ -627,22 +638,39 @@ const MM_MAIN_PANEL_OPTIONS = {
     },
     methods: {
         /**
-         * 获取指定子零件的信号目标选项列表（唯一实现）
+         * 获取信号目标选项列表（唯一实现）
+         * 作用域是整个变体：给全部子零件里的连接点与子系统（跨子零件候选带子零件名）。
          * 供 currentSignalTargetOptions / connectorParentSignalTargetHints /
          * interactBoxParentSignalTargetHints 三个计算属性复用。
          * 注意：必须放在 methods 而非 computed —— Vue 2 会把 computed 包装成
          * 响应式 getter 属性，带参调用会得到数组而非函数。
-         * @param {string} spKey - 子零件 key
+         * @param {string} spKey - 当前编辑的子零件 key
          * @returns {Array<{value: string, label: string}>} 信号目标选项列表
          */
         signalTargetOptionsFor: function (spKey) {
             void this.markerVersion.v;
-            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) {
+            if (!this.currentVariant || !this.currentVariant.sub_parts) {
                 return [{ value: 'local', label: 'local' }, { value: 'global', label: 'global' }];
             }
             return buildSignalTargetOptions(
-                this.currentVariant.sub_parts[spKey],
-                (this.config && this.config.namespace) || 'machine_max'
+                this.currentVariant.sub_parts,
+                (this.config && this.config.namespace) || 'machine_max',
+                spKey || ''
+            );
+        },
+        /**
+         * 功率目标候选（power_output / power_outputs 的 key）：只含当前子零件
+         * 上游按 (子零件, 名字) 用 findOwnSubsystem 定位，跨子零件的候选会被判断裂。
+         * @param {string} spKey - 当前编辑的子零件 key
+         * @returns {Array<{value: string, label: string}>}
+         */
+        powerTargetOptionsFor: function (spKey) {
+            void this.markerVersion.v;
+            if (!spKey || !this.currentVariant || !this.currentVariant.sub_parts) return [];
+            return buildPowerTargetOptions(
+                this.currentVariant.sub_parts,
+                (this.config && this.config.namespace) || 'machine_max',
+                spKey
             );
         },
         getElementType: function (el) {
