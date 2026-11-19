@@ -1,13 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://machine_max.io/schemas/subsystem/dynamic/lighting_dynamic_attr.json",
+  "$id": "https://machine_max.io/schemas/subsystem/dynamic/light_dynamic_attr.json",
   "title": "照明子系统动态属性",
   "description": "照明子系统实例属性，指定光源型号与模型定位器。",
   "properties": {
     "type": {
       "type": "string",
-      "const": "machine_max:lighting",
-      "description": "子系统类型，必须为'machine_max:lighting'。"
+      "const": "machine_max:light",
+      "description": "子系统类型，必须为'machine_max:light'。"
     },
     "definition": {
       "type": "string",
@@ -22,7 +22,7 @@
   "additionalProperties": false,
   "examples": [
     {
-      "type": "machine_max:lighting",
+      "type": "machine_max:light",
       "definition": "machine_max:headlight_white",
       "locator": "Headlight_L"
     }

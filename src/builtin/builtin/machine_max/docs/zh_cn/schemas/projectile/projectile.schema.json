@@ -213,8 +213,36 @@
     },
     "sounds": {
       "type": "object",
-      "additionalProperties": true,
-      "description": "音效属性 — 开火音效（fire_sounds）、停火尾音（cease_fire_sound）与弹壳音效（shell_sounds），key 为 RPM 阈值字符串，value 为音效事件。整块可省略，缺省使用内置默认值。"
+      "description": "弹种侧音效 — 随「打中了什么」变化的那一层，与发射器型号的 sounds（击发、连射、抛壳）分工，因此同一个弹种挂在哪个炮管上都用同一份命中音。整块可省略；击发、连射与抛壳不写在这里。",
+      "properties": {
+        "fmod": {
+          "type": "object",
+          "description": "命中音的两层 FMOD 事件，共用同一个 bank。两层与「被击中方」叠加，不替代对方：装甲命中时材质的 sounds 照常发声（击穿 hit_pen、未击穿 hit_un_pen），地形命中时方块的 SoundType 命中音照常发声，这里的事件是在同一命中点上再加一层弹头的声音；没配事件或实例起不来（bank 未加载、事件缺失）时只有这一层静默。事件按「打中了什么」选，不按穿没穿甲选：Shells_Hit 每组只有一条 hit_armour，没有能表达「没打穿」的同档事件，因此弹头层只在击穿时出现，未击穿按材质区分。档位（Small、Medium、Big）由作者按弹种写死，没有推导规则——external.caliber 也不是判据，次口径弹写的是弹芯直径。",
+          "properties": {
+            "bank": {
+              "description": "FMOD bank ID；Shells_Hit 在 machine_max:mfx",
+              "type": "string"
+            },
+            "hit_armour": {
+              "type": "string",
+              "pattern": "^event:/.+",
+              "description": "击穿装甲时播放的事件，如 event:/Master_FX/Shells_Hit/Medium/hit_armour。只在击穿时播放，并与材质的 hit_pen 叠加；未击穿只有材质的 hit_un_pen。"
+            },
+            "hit_ground": {
+              "type": "string",
+              "pattern": "^event:/.+",
+              "description": "命中地形时播放的事件，如 event:/Master_FX/Shells_Hit/Medium/hit_ground。命中的方块不是空气就播，与是否穿甲无关，并与方块的 SoundType 命中音叠加。"
+            }
+          },
+          "required": ["bank"],
+          "additionalProperties": false,
+          "anyOf": [
+            { "required": ["hit_armour"] },
+            { "required": ["hit_ground"] }
+          ]
+        }
+      },
+      "additionalProperties": false
     }
   },
   "$defs": {
@@ -271,7 +299,14 @@
           "cookoff": { "penetration": 40.0, "damage": 40.0, "impulse": 18.0 }
         }
       ],
-      "description": "榴弹示例——发射药贡献在根对象，战斗部被诱爆贡献在 warheads 内的 machine_max:blast 上"
+      "sounds": {
+        "fmod": {
+          "bank": "machine_max:mfx",
+          "hit_armour": "event:/Master_FX/Shells_Hit/Big/hit_armour",
+          "hit_ground": "event:/Master_FX/Shells_Hit/Big/hit_ground"
+        }
+      },
+      "description": "榴弹示例——发射药贡献在根对象，战斗部被诱爆贡献在 warheads 内的 machine_max:blast 上；命中音按炮弹大小取 Big 档"
     }
   ]
 }

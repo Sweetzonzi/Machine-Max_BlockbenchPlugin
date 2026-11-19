@@ -82,7 +82,23 @@ surface 使用接触方块状态：雪与覆雪方块为 0.4，冰为 1，泥与
 
 物理线程在物理步完成后发布不可变接触快照。每个 SubPart 持有轮胎、普通接触和轮胎尖叫三个独立声源，空间位置使用各自最近的接触点，多普勒速度使用零件平动速度；轮胎自转仅参与业务参数。静止或断触时将强度及 rpm 置 0，保留实例两 tick 后请求 Studio 停止过渡。部件销毁、载具区块卸载时立即停止实例；听者的 interior 按第一人称且正在控制任一子系统的规则实时维护。生命周期实现见 `CollisionEffectManager.java#ContactSound` 与 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/vehicle/VehicleCore.java#setInLoadedChunk`。
 
-健康履带的轮面由 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/vehicle/track/TrackAudio.java#tick` 管理。断带或解散的成员轮面进入本节的轮胎路径。普通接触面的持续刮擦接线涵盖原版地形和 Create 装置方块，撞击单次音效与 Master FX 接线独立。
+健康履带的轮面由 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/vehicle/track/TrackAudio.java#tick` 管理，接线见本文“履带运行时接线”。断带或解散的成员轮面进入本节的轮胎路径。普通接触面的持续刮擦接线涵盖原版地形和 Create 装置方块，撞击单次音效与 Master FX 接线独立。
+
+### 履带运行时接线
+
+一条履带的两层音由 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/vehicle/track/TrackAudio.java#tick` 在客户端合成，一条履带一组声源，与它有多少个负重轮无关。型号在履带型号 JSON 的 `fmod` 里配置 bank 与事件，两层各自独立：
+
+| 层 | 型号字段 | 事件 | 参数 | 起声条件 |
+| --- | --- | --- | --- | --- |
+| 滚动 | `fmod.roll` | `tracks_light`／`tracks_medium`／`tracks_heavy`／`tracks_muted` | `rpm` | 有成员接地且带速高于 `TrackAudio.ROLL_FLOOR`（0.2 m/s） |
+| 滑移 | `fmod.screech` | `track_screech` | `amount` | 带速与接地成员对地速度之差大于 `TrackAudio.SLIP_FLOOR`（0.5 m/s） |
+
+- `rpm` 与接触音同一个含义：`clamp(主动轮实际转速 / 1200, 0, 1) × 100`。同一辆车在同一带速下，`tracks_*` 与 `tire_noise` 落在同一刻度上。满刻度 1200 r/min 是代码侧的统一基准。
+- `amount` 与 `tire_screech` 同一组常量：`clamp((滑移差 − 0.5) / (8 − 0.5), 0, 1)`，滑移差单位为 m/s。
+- 两层各自回落：写了事件的那一层由 FMOD 发声，实例起不来（bank 未加载、事件缺失、参数写不进去）时该层在同一 tick 回落 OGG 采样并每 20 tick 重试一次；写空的那一层直接走 OGG 采样。同层两路不同时响；型号不写 `fmod` 时，整条履带的音只由 OGG 采样发声。
+- 停住的履带没有滚动音：履带常年压在地面上，`contact` 在停车时同样成立，因此滚动层的 FMOD 另设 0.2 m/s 的起声带速，避免一条常驻的 rpm=0 循环音。
+- 断带、解散、摧毁与部件移除都经 `TrackLink#dispose` → `TrackAudio#stop`，两层的 OGG 实例与 FMOD 实例一起停。断带之后的成员轮面由本文“接触音效运行时接线”的轮胎路径播放。
+- 车内听者由播放器写入 `interior`。两层回落用的 `tire_metal`、`tire_extra_slip` 没有 `_interior` 变体，车内车外是同一份录音。
 
 ### 机枪
 
@@ -96,6 +112,46 @@ surface 使用接触方块状态：雪与覆雪方块为 0.4，冰为 1，泥与
 | 过热或故障 | 对实例将 overheat 设为 1，触发工程定义的散热与故障声 |
 
 `firing` 的 bank 默认值是 1，单发需要显式传入初始值 0。工程师说明中的尾音由参数变化触发。SparkCore 的 `fadeFmodSound` 对应 Studio 停止命令，入口见 `../Spark-Core/src/main/kotlin/cn/solarmoon/spark_core/client/sound/FModSoundPlayer.kt#fadeOut`。
+
+### 发射器开火音运行时接线
+
+发射器型号的 `sounds.fmod` 配置 `bank` 与 `fire`，由 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/subsystem/LauncherSubsystem.java#playFmodFireSound` 在客户端主线程播放。事件的形态决定调用方式，型号侧不需要额外字段：
+
+| 事件形态 | 判据 | 调用方式 |
+| --- | --- | --- |
+| 持续（机枪循环） | 事件能写 `firing` 参数 | 一次连射只起一个实例，首发起 `firing=1`；停火、打空或断发时设为 0，由工程完成尾音 |
+| 单发（主炮） | 事件写不进 `firing` | 每个有发射的 tick 新起一个实例，实例自行结束 |
+
+- 形态探测按 bank 与事件路径缓存在客户端会话内，每个事件至多多付一次失败创建；两条路径都失败时（事件缺失、实例创建失败）不缓存，下一发重试并回落传播音效。
+- 弹壳音 `shell`、停火音 `cease_fire`、空膛音 `dry_fire` 没有对应的 Studio 事件，仍读发射器型号的 `sounds`。它们与开火音分层：FMOD 接手的只是开火这一层。这几个事件名写基础名，车内听者由播放器换成 `<事件名>_interior`；抛壳只有车内录音，因此车外不响。
+- FMOD 没有接手时（未配置 `fmod`、bank 未加载、实例启动失败）开火音回到本型号的 `fire`：单发逐发播放 `"0.0"`，连射按 RPM 档位在 `"0.0"` 与循环音效之间切换并交叉淡入。
+- `overheat` 与 `broken` 没有运行时来源：武器没有过热机制，故障混音属于待接线功能；炮塔被摧毁时直接收声，也不写 `broken`。`turn_speed` 的来源在炮塔驱动上，见本文“炮塔双机运行时接线”。
+- 循环事件的射速由工程固定，不随型号的 `breech.fire_rate` 变化；`fire` 按实际 RPM 调音高与换档的做法在 FMOD 路径上没有对应参数，因此高射速武器应选射速接近的那一个事件。
+- 一个发射管只有一个 `fmod.fire` 事件，同一门炮换弹种不换开火音。这一层与弹种无关：`fire`、`cease_fire`、`shell` 都配置在发射器型号上。弹种的 `sounds` 只承载"随打中的东西变化"的声音——命中已接入（见本文“弹种命中音运行时接线”），飞掠仍未接。
+- 实例在部件移除（`onDetach`）与载具离开已加载区块（`VehicleCore#setInLoadedChunk`）时停止；交回 `firing=0` 的尾音实例超过 100 tick 仍未结束时强制停止。
+
+### 弹种命中音运行时接线
+
+命中音由弹种的 `sounds.fmod` 配置，事件取自 `machine_max:mfx` 里的 `Shells_Hit` 三组，按打中的东西选。它叠在"被击中方"那一层之上：一次命中在同一个点上响两个发声体的声音。
+
+| 层 | 配置 | 触发条件 | 声音 |
+| --- | --- | --- | --- |
+| 弹头 | 弹种的 `sounds.fmod.hit_armour` | 击穿装甲 | 弹的爆音 |
+| 被击中方 | 材质的 `sounds.hit_pen` | 击穿装甲 | 装甲被撕开 |
+| 弹头 | 弹种的 `sounds.fmod.hit_ground` | 命中非空气方块 | 弹着地 |
+| 被击中方 | 方块的 `SoundType.getHitSound()` | 命中非空气方块 | 方块碎屑 |
+
+- **每个档位只有一条 `hit_armour`**：事件参数只有自动的 `Distance` 与播放器维护的 `interior`，没有能翻转"击穿／未击穿"的量。因此弹头层只在击穿时出现，未击穿只有材质的 `hit_un_pen`（钢、复合、反应装甲各不相同）——打穿了是弹的爆音叠装甲被撕开，没打穿是装甲挨了一下。工程将来补出未击穿事件时，加一个同形状的字段即可。
+- **档位由作者按弹种写死**：`Small`、`Medium`、`Big` 之间没有推导规则，口径也不是判据——`machine_max:120mm_m829_apfsds` 的 `external.caliber` 是 26 mm 弹芯，档位仍是 `Big`。第一方内容按弹体大小取档：7.62／7.92／12.7／30 mm 取 `Small`，50／57／100 mm 取 `Medium`，120／125／152 mm 取 `Big`。信号弹 `machine_max:flare_illum` 不配这一层：它不撞装甲，落地的闷响也不属于 `Shells_Hit` 三档中的任何一类。
+- **换弹种换命中音，换炮管不换**：这一层在弹种上，开火音在发射器型号上，两者正交。同一门炮打穿甲弹与榴弹的命中音因此可以不同。
+- **两层互不替代**：弹种这一层没配事件、bank 未加载或实例起不来时只有它静默，被击中方照常发声；反过来也一样。命中不会因为音效配置残缺而变成静音。
+- 播放位置是命中点，速度取零（命中点在世界里静止，多普勒没有意义）；定点 3D 单次事件播完由播放器释放实例。音量类别与被叠的那一层同档——装甲命中 `NEUTRAL`、地形命中 `BLOCKS`，玩家拉音量滑块时行为不变。
+- **不带车内混音**：定点入口没有声源侧的听者判定，命中音按车外混音播放，与同一命中点上的材质音、方块音一致。要车内混音需两层一起改。
+- 身份只传投射物 id：地面命中读命中包本来就有的 `objId`，装甲命中由服务端在**击穿**时随表现条目下发打出这一击的那一发 id（未击穿、或该弹种没配 `hit_armour` 时不下发）。客户端按 id 现查弹种再取事件，弹种注册键、bank 与事件路径都不上线。
+- 同组的 `hit_water` 暂不接入：投射物管线里没有命中水体的判据，也没有对应的客户端表现通道。等水体命中做出来再接，配置形状与 `hit_ground` 相同。
+- 播放走 SparkCore 的定点一次性入口 `SpreadingSoundHelper.tryPlayFmodSound(Level, bank, event, category, params, position, velocity)`，位置与速度在启动时取一次，不需要声源对象。一次性命中不要实现 `ISoundSpreader`——那是持续发声体的契约，播放器会一直持有它并按帧取样。
+
+实现见 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/projectile/ProjectileHitSounds.java`。装甲命中的调用点是 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/vehicle/SubPartHitEffects.java#play`，地形命中在 `src/main/java/io/github/sweetzonzi/machine_max/network/payload/projectile/ProjectilesHitPayload.java#handle`，下发投射物 id 的判定在 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/vehicle/SubPart.java#firedProjectileId`。
 
 ### Master FX
 
@@ -119,7 +175,7 @@ surface 使用接触方块状态：雪与覆雪方块为 0.4，冰为 1，泥与
 | Default_Vehicles/Armament/Turret/*_manual | 手摇炮塔双机，horizontal 对应水平，vertical 对应俯仰。均为 3D 持续 |
 | Default_Vehicles/Armament/Turret/*_hydraulic | 自动炮塔双机，按工程命名为液压型，horizontal 对应水平，vertical 对应俯仰。均为 3D 持续 |
 
-四个炮塔事件各自使用 `turn_speed`、`broken`、`interior` 与自动 `Distance`。手摇／自动通过选择不同事件表达。
+四个炮塔事件各自使用 `turn_speed`、`broken`、`interior` 与自动 `Distance`。手摇／自动通过选择不同事件表达，选哪一个由炮塔型号的 `sounds.fmod` 写死。
 
 ### 换挡与手刹运行时接线
 
@@ -130,6 +186,32 @@ surface 使用接触方块状态：雪与覆雪方块为 0.4，冰为 1，泥与
 两种事件均绑定到所属子系统，在客户端主线程通过 `ISoundSpreader.tryPlayFmodSound` 传入空业务参数表。公共声源的位置、平动速度和实时车内判定由 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/subsystem/AbstractSubsystem.java#getPosition`、`getSpeed` 和 `shouldApplyInteriorEffect` 提供；播放器维护 interior 和自动空间效果。实例播放结束后由 SparkCore 释放。配置了 FMOD 的操作声在资源缺失或播放失败时静音；未配置 FMOD 的定义使用 sounds 中的 OGG 操作音。
 
 变速箱的离合接合／分离音使用 clutch_in／clutch_out 配置的 OGG，与换挡音分别按状态变化触发。脚刹与气刹使用轮驱的 brake_on／brake_off 配置。当前 bank 没有独立的离合、踏板或气刹事件，gears_grind 没有运行时触发判据。
+
+### 引擎启停音运行时接线
+
+引擎的启停音挂在运行边沿上，判据是 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/subsystem/AbstractSubsystem.java#isActive`：组装进度跨过零件定义的工作阈值、子系统失活与摧毁都会翻转它。客户端每 tick 比对一次这个状态（`src/main/java/io/github/sweetzonzi/machine_max/common/mech/subsystem/EngineSubsystem.java#updateEngineRunEdge`），翻转时播放一次：配置了 `sounds.fmod.start`／`stop`、bank 已加载且实例启动成功时用 FMOD 单次事件，否则播放 `sounds.on_activate`／`on_deactivate` 的样本（`EngineSubsystem#playEngineRunSound`）。
+
+- 运行状态按未运行起算，因此引擎第一次以运行状态出现在客户端（载具入世、以及载具进入视野后客户端首次 tick 到它）同样算一次启动，播一次启动音。
+- 玩家侧能观察到的启动边沿是组装进度跨过零件定义的工作阈值；引擎没有独立的点火开关，已装好的车在客户端出现时就是运行状态。
+- 启停样本沿用子系统的声音绑定：位置与平动速度取引擎所在的子零件，播放器维护 interior 与自动空间效果；单次事件播放结束后由 SparkCore 释放实例。
+- 引擎不采用 `BasicSubsystem#onActive`／`onDisabled` 上的那一份启停样本：引擎默认就是 active，两条边沿与运行状态不同时成立，同一档启停会叠成双声。
+- `drive` 与启停音各自独立：bank 没有提供事件时长，工况音在引擎运行期间按自身规则持续播放。
+- 没有配置 `start`／`stop` 也没有配置 `on_activate`／`on_deactivate` 的引擎启停无声，Builtin 的 motorcycle_engine 与 sport_car_engine 属于这一类。
+
+### 炮塔双机运行时接线
+
+炮塔驱动子系统按两条轴各自的角速度发声，与瞄准输入无关：角速度由关节角的一步差分得到，按该轴 `max_speed`（°/s）归一化到 0～1 再做一阶平滑，因此同一套映射对所有炮塔通用，不随型号的转速上限改变。慢速回转也有声、停转即淡出，伺服保持力矩时的微小抖动按静止处理（死区 0.05）。
+
+| 层次 | 配置 | 写入内容 |
+| --- | --- | --- |
+| FMOD | 型号的 `sounds.fmod` 里 `bank` 与两条轴的事件路径 `horizontal`／`vertical` | `turn_speed` 写归一化角速度（0 静止、1 为该轴最大角速度），`interior` 由播放器维护 |
+| OGG 兜底 | 型号的 `sounds.turn`，两条轴共用 | 通道权重按归一化角速度（取平方根，低速也听得到），音高 0.8～1.25 随角速度线性升高 |
+
+- 事件型式由内容包选事件表达：手摇炮塔取 `*_manual`，动力炮塔取 `*_hydraulic`。Builtin 的两个基础型号各分动力与手摇两种，差别在事件与 `max_speed`（手摇 20／8 °/s，动力 90／30 °/s），力矩相同。第一方主炮的方位／俯仰型号取液压那一对；T-90A 与 59 式的高射机枪、Sd.Kfz.234 与 MT-LB 的手摇炮塔取手摇那一对。
+- 某一轴没有配置事件、bank 未加载或实例启动失败时，该轴单独回落到 `sounds.turn`，两条轴互不牵连。FMOD 已在发声的轴把 OGG 通道权重压到 0，不会两路同时响。
+- `sounds.turn` 默认取电机运转音 `machine_max:subsystem.motor.elec_3000`，因此没有配置 `sounds` 的炮塔也有双机声；想换音色只改型号，不改代码。
+- 摧毁即收声：子系统不是工作状态（被摧毁、失活、组装进度未达工作阈值）时停掉两条轴的全部实例。这时伺服不再施加力矩，关节变成自由关节、会被车体带着转，按角速度继续发声等于给一台打坏的机器配运转音。部件移除与载具离开已加载区块走同一个停止入口。
+- 实现见 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/subsystem/TurretDriverSubsystem.java#tickClientSound` 与同类的 `#updateTurnSpeed`、`#getPitch`、`#stopClientSound`。
 
 ## 完整事件目录
 
@@ -404,7 +486,7 @@ bank ID 为 `machine_max:abrams`。
 
 ## 当前接入边界
 
-发动机持续工况由 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/subsystem/EngineSubsystem.java#tickFmodSound` 播放。以下定义同时配置同系列的 drive、start 和 stop，运行时持续工况读取 drive。除 M1A2 使用 `machine_max:abrams` 外，其余使用 `machine_max:basic_vehicle_sounds`。
+发动机持续工况由 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/subsystem/EngineSubsystem.java#tickFmodSound` 播放，启停单次事件由同类的 `#playEngineRunSound` 播放。以下定义同时配置同系列的 drive、start 和 stop，运行时分别取持续工况与启停。除 M1A2 使用 `machine_max:abrams` 外，其余使用 `machine_max:basic_vehicle_sounds`。
 
 | 发动机定义对应对象 | 持续工况事件 |
 | --- | --- |
@@ -416,13 +498,23 @@ bank ID 为 `machine_max:abrams`。
 
 各发动机将自身怠速到红线的区间归一化为 rpm=0～100，load 使用同步的油门开度。K17 与 Sd.Kfz.234 使用通用军用引擎音色。Builtin 的通用定义与各车专用定义分别配置，专用定义由相应车包的零件引用。单缸的 R700、Builtin motorcycle_engine 和 V8 的 Senna GTR、Builtin sport_car_engine 使用其采样或合成工况音；当前 bank 的汽车系列为 2c、4c、6c、dsl。
 
-美系型谱包的发射器属性 sounds.fmod.fire 携带 `event:/Abrams/Armament/main_gun_abrams`、`event:/Abrams/Armament/mg_127_abrams` 或 `event:/Abrams/Armament/mg_762_abrams` 引用，发射器运行时的 FMOD 播放接线待实现。属性入口见 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/subsystem/attr/static_attr/LauncherSubsystemStaticAttr.java#LauncherSoundAttr`。
+美系型谱包的发射器属性 sounds.fmod.fire 携带 `event:/Abrams/Armament/main_gun_abrams`、`event:/Abrams/Armament/mg_127_abrams` 或 `event:/Abrams/Armament/mg_762_abrams` 引用，bank 为 `machine_max:abrams`。开火音已按本文“发射器开火音运行时接线”接入。属性入口见 `src/main/java/io/github/sweetzonzi/machine_max/common/mech/subsystem/attr/static_attr/LauncherSubsystemStaticAttr.java#LauncherSoundAttr`。
+
+苏系与中系型谱包的机枪取 `machine_max:basic_vehicle_sounds` 里的通用机枪事件，不依赖美系包的 bank：12.7mm 的 NSVT 与 54 式高射机枪取 `event:/Default_Vehicles/Armament/Guns/Loop/m2hb`，7.62mm 的 PKTM 与 59 式坦克机枪取 `event:/Default_Vehicles/Armament/Guns/Loop/762fast`。这四个事件都是 3D 持续事件，带 `firing`、`overheat`、`interior` 与自动 `Distance`，与 abrams 里的机枪事件同形，运行时只写 `firing`。
+
+其余发射器没有配置 `sounds.fmod`，开火音走本型号的 `fire`。将来给这些炮接 FMOD 时，单发炮按口径选通用事件 `event:/Default_Vehicles/Armament/Guns/Single/main_gun_{small,medium,large,big,huge}`。
 
 轮胎与普通零件的地形接触已接入 tire_noise，轮胎尖叫已接入 tire_screech，参数与生命周期见本文“接触音效运行时接线”。
 
+履带滚动与滑移已接入：第一方履带型号在 `fmod` 里按型谱选滚动层事件——M1A2、T-90A 与 59 式取 `tracks_heavy`，2S38 取 `tracks_medium`，MT-LB 取 `tracks_light`，Builtin 的 `default` 示例履带取 `tracks_muted`（挂胶／橡胶履带）；六份型号都配了 `track_screech` 作为滑移层。规则见本文“履带运行时接线”。
+
 第一方变速箱和地面车控已配置 FMOD 换挡与手刹单次事件，触发规则见本文“换挡与手刹运行时接线”。
 
-引擎的 sounds.fmod.start／stop、电机的 sounds.fmod.drive、装填的 sounds.fmod.reload 已提供配置入口，运行时触发接线待实现。材料的 sounds.fmod 预留 bank。履带持续运转音、传动打齿、炮塔和 Master FX 的 FMOD 运行时触发接线待实现。
+炮塔双机已接入：第一方主炮的方位／俯仰驱动型号配置了液压那一对事件，T-90A 与 59 式的高射机枪配置了手摇那一对，规则见本文“炮塔双机运行时接线”。Builtin 的基础驱动型号按机构分两对——`basic_azimuth_driver`／`basic_elevation_driver` 是动力型，取液压那一对事件，转速 90／30 °/s；`basic_manual_azimuth_driver`／`basic_manual_elevation_driver` 是手摇型，取手摇那一对事件，转速 20／8 °/s。2S38 与 K17 的高低机引用动力型，Sd.Kfz.234 与 MT-LB 的手摇炮塔引用手摇型。美系车包的 RWS、CITV 与航向机枪塔驱动没有配置 `sounds.fmod`，走 `sounds.turn` 的 OGG 兜底。
+
+Master FX 的 `Shells_Hit` 已接入命中音：第一方 20 个弹种（7.62 mm 起）配置了 `hit_armour` 与 `hit_ground`，档位按弹体大小取，规则见本文“弹种命中音运行时接线”。同组的 `Explode`（`he_small`／`he_big`）与 `Flyby`、`Destruction`、`Effects/deaf` 仍未接运行时触发，爆炸音目前由战斗部的 OGG 表现承担。
+
+电机的 sounds.fmod.drive、装填的 sounds.fmod.reload 已提供配置入口，运行时触发接线待实现。材料的 sounds.fmod 预留 bank。传动打齿待实现。
 
 ## 可复核记录
 

@@ -3,7 +3,7 @@
 /**
  * 本文件由 scripts/gen-field-specs.js 自动生成，不要手工编辑。
  * 数据源：src/builtin/builtin/machine_max/docs/en_us/schemas
- * 上游快照：Machine-Max@b220cde2
+ * 上游快照：Machine-Max@e48a275c
  * 重新生成：node scripts/gen-field-specs.js
  * 漂移检查：node scripts/gen-field-specs.js --check
  */
@@ -12,9 +12,9 @@ const PROVENANCE = {
     "generator_version": 1,
     "source_locale": "en_us",
     "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
-    "source_revision": "b220cde2",
+    "source_revision": "e48a275c",
     "source_files": 80,
-    "source_sha256": "5ef22e64c605525154f93268ac95b9a830d8de8dc53f412dcf9f4268c4eb5eec",
+    "source_sha256": "50d8af5937147f48ab0d1bd98ae47be283685a52fd6b6a03020fe3241e2074d8",
     "generated_from": "machine_max builtin JSON Schema"
 };
 
@@ -647,15 +647,7 @@ const SPECS = {
                 ]
             },
             "condition": {
-                "type": "string",
-                "enum": [
-                    "AND",
-                    "OR",
-                    "NAND",
-                    "NOR",
-                    "XOR",
-                    "XNOR"
-                ]
+                "type": "string"
             }
         },
         "required": [
@@ -876,7 +868,13 @@ const SPECS = {
                         }
                     }
                 },
-                "reload_operator_discovery_inputs": {
+                "loader_discovery_inputs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "interact_inputs": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -1399,12 +1397,12 @@ const SPECS = {
             ],
             "schema": "subsystem/dynamic/turret_driver_dynamic_attr.schema.json"
         },
-        "machine_max:lighting": {
+        "machine_max:light": {
             "fields": {
                 "type": {
                     "type": "string",
                     "enum": [
-                        "machine_max:lighting"
+                        "machine_max:light"
                     ],
                     "required": true,
                     "sideEffect": "rebuild_type_fields"
@@ -1425,7 +1423,7 @@ const SPECS = {
                 "definition",
                 "locator"
             ],
-            "schema": "subsystem/dynamic/lighting_dynamic_attr.schema.json"
+            "schema": "subsystem/dynamic/light_dynamic_attr.schema.json"
         },
         "machine_max:launcher": {
             "fields": {
@@ -1468,7 +1466,7 @@ const SPECS = {
                         }
                     }
                 },
-                "reload_operator_discovery_targets": {
+                "loader_discovery_targets": {
                     "type": "object",
                     "additionalProperties": {
                         "type": "array",
@@ -1477,7 +1475,7 @@ const SPECS = {
                         }
                     }
                 },
-                "reload_operator_time_multipliers": {
+                "loader_time_multipliers": {
                     "type": "object",
                     "additionalProperties": {
                         "type": "number",
@@ -1522,7 +1520,7 @@ const SPECS = {
                         }
                     }
                 },
-                "reload_operator_discovery_targets": {
+                "loader_discovery_targets": {
                     "type": "object",
                     "additionalProperties": {
                         "type": "array",
@@ -1531,7 +1529,7 @@ const SPECS = {
                         }
                     }
                 },
-                "reload_operator_time_multipliers": {
+                "loader_time_multipliers": {
                     "type": "object",
                     "additionalProperties": {
                         "type": "number",
@@ -1583,6 +1581,15 @@ const SPECS = {
                     "references": "resource"
                 },
                 "control_outputs": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "camera_discovery_targets": {
                     "type": "object",
                     "additionalProperties": {
                         "type": "array",

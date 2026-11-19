@@ -51,7 +51,43 @@ const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 //              ammo_discovery_targets，送弹频道 ammo_inputs 由型号侧的 single_round_loading
 //              取代。hit_box.overwrite.sounds 改引用 material_sound_override（多出 fmod.bank）。
 //              实例可编辑字段的增删即上面四项；sounds.fmod 只出现在型号静态属性里。
-const UPSTREAM_REVISION = 'b220cde2';
+//   81cc0478 — 在 HEAD 基础上带了上游未提交的工作树改动：
+//              1) 子系统类型 machine_max:lighting 改名 machine_max:light（schema 文件
+//                 lighting_*_attr → light_*_attr，字段仍是 definition / locator）；
+//              2) 装填人员握手字段去前缀：launcher / ammo_loader 的
+//                 reload_operator_discovery_targets / reload_operator_time_multipliers
+//                 改名为 loader_discovery_targets / loader_time_multipliers，
+//                 seat 的 reload_operator_discovery_inputs 改名 loader_discovery_inputs；
+//              3) seat 新增安装级 interact_inputs（追加的交互输入频道，与型号定义的
+//                 interact_inputs 取并集）；4) control_groups 由 4 增至 7（民用/MTLB 控制组），
+//                 builtin lang 补入新词条。field_specs 的可编辑字段因此少了 3 个旧名、
+//                 多出 3 个新名 + seat.interact_inputs。
+//   8e9a5263 — 上游把这几项一并提交，快照自此与 HEAD 逐文件一致（无工作树差异）：
+//              1) interact_box.condition 由逻辑枚举（AND/OR/NAND/NOR/XOR/XNOR，默认 NOR）
+//                 改成 MoLang 门控表达式（求值 > 0 表示可用，默认 true）——枚举从
+//                 field_specs 里消失，该字段不再是 schema ↔ Codec 的约束差异；
+//              2) 型号静态属性的 sounds 子块统一去掉 _sounds / _sound 后缀：
+//                 ammo_loader / launcher 的 progress_sounds → progress、
+//                 human_progress_sounds → human_progress，engine / motor 的
+//                 working_sounds → working；launcher 另补 sounds.fire / cease_fire / shell
+//                 与 barrel.durability_weight；
+//              3) turret_driver 型号补 sounds.turn（OGG 兜底）与 sounds.fmod
+//                 （horizontal / vertical 两条轴的持续事件），新增手摇型号
+//                 basic_manual_azimuth_driver / basic_manual_elevation_driver；
+//              4) fitting 顶层补 fmod（bank + roll / screech 两层履带音），
+//                 projectile.sounds 的说明改为"占位、暂无消费方"。
+//              field_specs 只认实例可编辑字段，这一批的净变化只有 condition 的枚举消失。
+//   e48a275c — 内容包按 builtin → kit → 车包三层拆分后，座位 / 瞄具 / 爆反 / 控制组条目
+//              收进 machine_max；快照另带两处上游未提交的工作树改动：
+//              1) weapon_controller 新增 camera_discovery_targets（频道 → 目标名，只读
+//                 视点发现，与 control_outputs 分开）——这是本轮唯一影响实例可编辑字段
+//                 的改动：WeaponControllerCodec 加同名字段、面板多一个信号频道编辑器、
+//                 keys.js 的 VALUE_MAPS 把它当频道表校验；
+//              2) projectile.sounds 由占位改为 fmod 命中音（bank / hit_armour /
+//                 hit_ground），属投射物定义，不进 field_specs。
+//              另：builtin lang 补入 100 条子系统与控制组译名，docs/zh_cn/fmod.md 补
+//              「弹种命中音运行时接线」一节。
+const UPSTREAM_REVISION = 'e48a275c';
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;
