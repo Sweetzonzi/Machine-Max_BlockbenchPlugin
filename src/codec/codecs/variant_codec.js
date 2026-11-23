@@ -1,5 +1,5 @@
 // 文件: src/codec/codecs/variant_codec.js
-// 用途: Variant 配置的 Codec 定义 — 4 字段 + sub_parts Either 简写
+// 用途: Variant 配置的 Codec 定义 — 6 字段 + sub_parts Either 简写
 // 所属模块: MachineMax Blockbench 插件
 //
 // Either 简写语义:
@@ -27,9 +27,13 @@ function buildVariantCodec(subPartCodec) {
         // — 多值时编码为完整 map，解码时保持 map
         // — 默认值 '' 表示未设置，encode 时跳过字段 → Java 端 fallback 到 missingno
         textures:   Codec.either(Codec.STRING, Codec.map(Codec.STRING, Codec.STRING)).default(''),
-        // animations: 单个资源路径字符串（对应 Java ResourceLocation）
-        // — 默认值 '' 表示未设置，encode 时跳过字段 → Java 端 fallback 到 machine_max:empty
+        // animations: 动画集资源路径（对应 Java ResourceLocation）
+        // — 缺省 '' 表示沿用模型同名目录，encode 时跳过字段 → Java 端按 model 推导
+        // — 显式 machine_max:empty 表示这一变体没有动画集
         animations: Codec.STRING.default(''),
+        // controllers: 控制器集资源路径（对应 Java ResourceLocation）
+        // — 同样缺省 '' 时按模型同名目录推导；显式值选中的是整套控制器，不是单个控制器名
+        controllers: Codec.STRING.default(''),
         tags:       Codec.STRING.list().default([]),
         sub_parts:  Codec.either(subPartCodec, Codec.map(Codec.STRING, subPartCodec)).default({}),
     });

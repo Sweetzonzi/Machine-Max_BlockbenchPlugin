@@ -1,5 +1,5 @@
 // 文件: src/codec/codecs/subsystem_codec.js
-// 用途: 22 种正式子系统类型的独立 codec + SubsystemDispatchCodec（按 type 字段路由）
+// 用途: 23 种正式子系统类型的独立 codec + SubsystemDispatchCodec（按 type 字段路由）
 // 所属模块: MachineMax Blockbench 插件
 //
 // 字段定义与 src/core/subsystem_types.js 中 dynamicFields 一一对应。
@@ -66,12 +66,16 @@ const SeatCodec = Codec.record({
 
 /**
  * GearboxCodec — 变速箱
- * 字段: definition, power_output, gear_outputs
+ * 字段: definition, power_output, gear_outputs, clutch_outputs
+ *
+ * clutch_outputs 是离合踏板反馈（频道 → 目标名）：离合接合输出 0、断开
+ * （含自动换挡瞬间）输出 1，缺省空表表示不发送。
  */
 const GearboxCodec = Codec.record({
     definition:     Codec.STRING.field(),
     power_output:   Codec.STRING.field(),
     gear_outputs:   Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
+    clutch_outputs: Codec.map(Codec.STRING, Codec.STRING.list()).default({}),
 });
 
 /**
@@ -146,6 +150,21 @@ const MotorbikeControllerCodec = Codec.record({
 const TransmissionCodec = Codec.record({
     definition:     Codec.STRING.field(),
     power_outputs:  Codec.map(Codec.STRING, Codec.FLOAT, { emitEmpty: true }).default({}),   // 频道→减速比（数值）
+});
+
+/**
+ * JointDriverCodec — 动画关节执行器
+ * 字段: definition, connector
+ *
+ * connector 指向本子零件上的一个**高级**连接点（Advanced）：执行器读取该连接点
+ * locator 的动画位姿，按型号定义的 axes 驱动物理关节。上游
+ * JointDriverSubsystemAttr.validate 要求连接点必须存在且是 Advanced，
+ * 否则整份零件定义在双端消失（见 services/validate.js 的
+ * subsystem_connector_not_advanced）。
+ */
+const JointDriverCodec = Codec.record({
+    definition: Codec.STRING.field(),
+    connector:  Codec.STRING.field(),
 });
 
 
@@ -313,6 +332,7 @@ const SUBSYSTEM_CODECS = {
     'machine_max:motor':                MotorCodec,
     'machine_max:gearbox':              GearboxCodec,
     'machine_max:transmission':         TransmissionCodec,
+    'machine_max:joint_driver':         JointDriverCodec,
     'machine_max:car_controller':       CarControllerCodec,
     'machine_max:motorbike_controller': MotorbikeControllerCodec,
     'machine_max:wheel_driver':         WheelDriverCodec,
@@ -373,6 +393,7 @@ if (typeof module !== 'undefined' && module.exports) {
         LightCodec,
         MotorbikeControllerCodec,
         TransmissionCodec,
+        JointDriverCodec,
         CameraCodec,
         TurretDriverCodec,
         WeaponControllerCodec,

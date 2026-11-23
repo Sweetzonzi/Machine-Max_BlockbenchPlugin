@@ -84,7 +84,7 @@
                 :value="config[field.field]"
                 @change="onFieldChange(field.field, $event.target.value)">
                 <option value="">（无）</option>
-                <option v-for="(conn, connKey) in connectorKeys" :key="connKey" :value="connKey">{{ connKey }}</option>
+                <option v-for="opt in connectorOptions" :key="opt.key" :value="opt.key">{{ opt.label }}</option>
             </select>
 
             <!-- 枚举下拉菜单 -->

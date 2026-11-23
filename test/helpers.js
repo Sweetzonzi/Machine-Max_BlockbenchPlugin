@@ -12,6 +12,7 @@ function createVariant(overrides) {
         model: 'machine_max:model/hull',
         textures: { default: 'machine_max:textures/hull' },
         animations: '',
+        controllers: '',
         tags: [],
         sub_parts: {
             'sub_part.machine_max.main': createSubPart(),

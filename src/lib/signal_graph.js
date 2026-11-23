@@ -270,7 +270,7 @@ function _getSignalOutputFields(ss) {
         'control_outputs', 'speed_outputs',
         'throttle_outputs', 'brake_outputs',
         'steering_outputs', 'handbrake_outputs',
-        'gear_outputs', 'move_outputs',
+        'gear_outputs', 'clutch_outputs', 'move_outputs',
         'regular_outputs', 'aim_outputs',
         'passenger_num_outputs',
         'camera_discovery_targets', 'ammo_discovery_targets', 'loader_discovery_targets',

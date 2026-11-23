@@ -168,8 +168,9 @@ describe('schema ↔ Codec 差异登记', () => {
         // 上游 2829863a 把 regen_loader 拆成 regen_ammo_rack / ammo_rack / ammo_loader，
         // 19 - 1 + 3 = 21；ammo_loader 因此重新成为正式类型，不再算 WIP。
         // 上游 b220cde2 起 reactive_armor 正式开放，21 + 1 = 22。
-        expect(Object.keys(SubsystemDispatchCodec.codecs)).toHaveLength(22);
-        expect(ssTypes.getAllTypes()).toHaveLength(22);
+        // 上游 4fcd56e6 起 joint_driver 正式开放，22 + 1 = 23。
+        expect(Object.keys(SubsystemDispatchCodec.codecs)).toHaveLength(23);
+        expect(ssTypes.getAllTypes()).toHaveLength(23);
         for (const type of removed) {
             expect(SubsystemDispatchCodec.codecs[type]).toBeUndefined();
             expect(ssTypes.getTypeMeta(type)).toBeNull();
@@ -230,6 +231,61 @@ describe('schema ↔ Codec 差异登记', () => {
             definition: 'machine_max:basic_weapon_controller',
         }));
         expect(empty).not.toHaveProperty('camera_discovery_targets');
+    });
+
+    test('上游 4fcd56e6：joint_driver / gearbox.clutch_outputs / 变体控制器集可往返', () => {
+        // 动画关节执行器：安装级只有型号与高级连接点
+        const joint = SubsystemDispatchCodec.decode({
+            type: 'machine_max:joint_driver',
+            definition: 'machine_max:rotation_joint_driver',
+            connector: 'connector.machine_max.left_door_hinge',
+        });
+        const jointEncoded = SubsystemDispatchCodec.encode(joint);
+        expect(jointEncoded).toEqual({
+            type: 'machine_max:joint_driver',
+            definition: 'machine_max:rotation_joint_driver',
+            connector: 'connector.machine_max.left_door_hinge',
+        });
+        expect(ssTypes.getDynamicFields('machine_max:joint_driver').map((f) => f.field))
+            .toEqual(['definition', 'connector']);
+
+        // 变速箱离合踏板反馈：缺省空表，非空可往返
+        const gearbox = SubsystemDispatchCodec.decode({
+            type: 'machine_max:gearbox',
+            definition: 'machine_max:light_gearbox',
+            power_output: 'connector.machine_max.gearbox_out',
+        });
+        expect(gearbox.clutch_outputs).toEqual({});
+        expect(SubsystemDispatchCodec.encode(gearbox)).not.toHaveProperty('clutch_outputs');
+
+        const withClutch = SubsystemDispatchCodec.decode({
+            type: 'machine_max:gearbox',
+            definition: 'machine_max:light_gearbox',
+            power_output: 'connector.machine_max.gearbox_out',
+            clutch_outputs: { clutch: ['local', 'global'] },
+        });
+        expect(SubsystemDispatchCodec.encode(withClutch).clutch_outputs)
+            .toEqual({ clutch: ['local', 'global'] });
+
+        // 变体控制器集：缺省 '' 时导出省略，显式值原样保留
+        const plain = VariantCodec.decode({ model: 'machine_max:santana.geo' });
+        expect(plain.controllers).toBe('');
+        expect(VariantCodec.encode(plain)).not.toHaveProperty('controllers');
+
+        const withControllers = VariantCodec.decode({
+            model: 'machine_max:santana.geo',
+            controllers: 'machine_max:santana.geo',
+        });
+        expect(VariantCodec.encode(withControllers).controllers)
+            .toBe('machine_max:santana.geo');
+    });
+
+    test('上游 4fcd56e6：23 种类型与注册表一一对应', () => {
+        expect(Object.keys(SubsystemDispatchCodec.codecs)).toHaveLength(23);
+        expect(SubsystemDispatchCodec.codecs['machine_max:joint_driver']).toBeTruthy();
+        expect(ssTypes.getTypeMeta('machine_max:joint_driver').displayName)
+            .toBe('动画关节执行器');
+        expect(ssTypes.needsConnector('machine_max:joint_driver')).toBe(true);
     });
 
     test('D13：track_controller / track_drive 已补齐', () => {

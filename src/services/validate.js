@@ -184,6 +184,48 @@ function _collectNameConflicts(partId, vName, subParts, problems) {
 }
 
 /**
+ * 子系统绑定的连接点必须是 Advanced。
+ *
+ * 上游 wheel_driver / track_drive / turret_driver / joint_driver 的
+ * `validate()` 都调 `requireAdvancedConnector`：连接点是 Simple 时抛
+ * `PackContentException`，整份零件定义在双端消失。连接点不存在 /
+ * 连接点型号定义不存在已由 dangling_signal_target / definition_ref_missing
+ * 报出，这里只补「存在且型号可解析，但不是 Advanced」这一档。
+ *
+ * @param {string} partId
+ * @param {string} vName
+ * @param {string} spKey
+ * @param {string} ssName
+ * @param {object} ss - 子系统实例
+ * @param {object} subPart - 所属子零件配置
+ * @param {object} connectorDefs - 合并后的连接点定义表
+ * @param {Array} problems
+ */
+function _collectConnectorKindIssue(partId, vName, spKey, ssName, ss, subPart, connectorDefs, problems) {
+    if (!ssTypes.needsConnector(ss.type) || isMissingValue(ss.connector)) return;
+    var conns = _isObject(subPart.connectors) ? subPart.connectors : {};
+    var conn = conns[ss.connector];
+    if (!_isObject(conn) || isMissingValue(conn.definition)) return;
+    var def = connectorDefs[conn.definition];
+    // 实例的 overwrite.type 会覆盖型号定义的类型（上游 getEffectiveAttr）
+    var effectiveType = (_isObject(conn.overwrite) && typeof conn.overwrite.type === 'string'
+        && conn.overwrite.type) ? conn.overwrite.type
+        : (_isObject(def) && typeof def.type === 'string' ? def.type : '');
+    if (!effectiveType) return;
+    if (effectiveType.toLowerCase() === 'advanced') return;
+    var meta = ssTypes.getTypeMeta(ss.type);
+    var where = '零件 "' + partId + '"/' + vName + ' 子零件 "' + spKey + '"';
+    problems.push(_makeProblem(
+        'error', CODES.SUBSYSTEM_CONNECTOR_NOT_ADVANCED,
+        '子系统 "' + ssName + '" 在' + where + '：关联连接点 "' + ss.connector + '" 的型号 "'
+        + conn.definition + '" 是 ' + effectiveType + ' 类型；'
+        + (meta ? meta.displayName : ss.type) + ' 只能绑定高级连接点（Advanced），'
+        + '否则上游解码会拒绝整份零件定义',
+        _mkPath('subsystem', partId, vName, spKey, ssName, null, 'connector')
+    ));
+}
+
+/**
  * 配置引用完整性（docs/13 §5.4 / §4.3）：signal_targets / power_output /
  * power_target / power_outputs 的 key / hit_box.subsystem / connector 等
  * 必须指向真实条目（信号目标是整个 Part 域，其余同子零件）或 local/global。
@@ -667,6 +709,9 @@ function collectIssues(config) {
                             }
                         }
                     }
+
+                    // 驱动的连接点必须是 Advanced（上游 validate 抛错，整份定义消失）
+                    _collectConnectorKindIssue(partId, vName, spKey, ssName, ss, sp, connectorDefs, problems);
                 }
 
                 // 连接点实例 definition 校验

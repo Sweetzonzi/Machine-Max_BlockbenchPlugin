@@ -3,7 +3,7 @@
 /**
  * 本文件由 scripts/gen-field-specs.js 自动生成，不要手工编辑。
  * 数据源：src/builtin/builtin/machine_max/docs/en_us/schemas
- * 上游快照：Machine-Max@e48a275c
+ * 上游快照：Machine-Max@4fcd56e6
  * 重新生成：node scripts/gen-field-specs.js
  * 漂移检查：node scripts/gen-field-specs.js --check
  */
@@ -12,9 +12,9 @@ const PROVENANCE = {
     "generator_version": 1,
     "source_locale": "en_us",
     "source_root": "src/builtin/builtin/machine_max/docs/en_us/schemas",
-    "source_revision": "e48a275c",
-    "source_files": 80,
-    "source_sha256": "50d8af5937147f48ab0d1bd98ae47be283685a52fd6b6a03020fe3241e2074d8",
+    "source_revision": "4fcd56e6",
+    "source_files": 82,
+    "source_sha256": "9d985822fb19a675d74701c78f9118554257359c1e3973545c4c17ec554355a6",
     "generated_from": "machine_max builtin JSON Schema"
 };
 
@@ -97,6 +97,10 @@ const SPECS = {
                 "sideEffect": "ensure_object"
             },
             "animations": {
+                "type": "string",
+                "references": "resource"
+            },
+            "controllers": {
                 "type": "string",
                 "references": "resource"
             }
@@ -1274,6 +1278,15 @@ const SPECS = {
                             "type": "string"
                         }
                     }
+                },
+                "clutch_outputs": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
                 }
             },
             "required": [
@@ -1313,6 +1326,34 @@ const SPECS = {
                 "power_outputs"
             ],
             "schema": "subsystem/dynamic/transmission_dynamic_attr.schema.json"
+        },
+        "machine_max:joint_driver": {
+            "fields": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "machine_max:joint_driver"
+                    ],
+                    "required": true,
+                    "sideEffect": "rebuild_type_fields"
+                },
+                "definition": {
+                    "type": "string",
+                    "required": true,
+                    "references": "resource"
+                },
+                "connector": {
+                    "type": "string",
+                    "required": true,
+                    "references": "connector"
+                }
+            },
+            "required": [
+                "type",
+                "definition",
+                "connector"
+            ],
+            "schema": "subsystem/dynamic/joint_driver_dynamic_attr.schema.json"
         },
         "machine_max:wheel_driver": {
             "fields": {

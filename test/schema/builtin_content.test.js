@@ -27,12 +27,14 @@ function walk(dir) {
 }
 
 describe('builtin 内容包同步', () => {
-    test('61 个子系统定义，含 track_controller / track_drive / reactive_armor', () => {
+    test('62 个子系统定义，含 track_controller / track_drive / joint_driver / reactive_armor', () => {
         const files = walk(SUB);
-        expect(files).toHaveLength(61);
+        expect(files).toHaveLength(62);
         expect(fs.existsSync(path.join(SUB, 'track_controller', 'track_controller_standard.json')))
             .toBe(true);
         expect(fs.existsSync(path.join(SUB, 'track_drive', 'track_drive_heavy.json')))
+            .toBe(true);
+        expect(fs.existsSync(path.join(SUB, 'joint_driver', 'rotation_joint_driver.json')))
             .toBe(true);
         expect(fs.existsSync(path.join(SUB, 'reactive_armor', 'reactive_armor_brick.json')))
             .toBe(true);
@@ -251,5 +253,39 @@ describe('builtin 内容包同步', () => {
         expect(fitting.properties.fmod.required).toEqual(['bank']);
         const defaultFitting = readJsonc(path.join(ROOT, 'fittings', 'default.json'));
         expect(defaultFitting.fmod.roll).toContain('tracks_muted');
+    });
+
+    test('上游 4fcd56e6：变体控制器集 / 变速箱离合反馈 / 动画关节执行器 / 车轮自由滚动', () => {
+        for (const locale of ['en_us', 'zh_cn']) {
+            const schemas = path.join(ROOT, 'docs', locale, 'schemas');
+            // 变体新增 controllers（控制器集），animations 语义改为动画集
+            const variant = readJsonc(path.join(schemas, 'part', 'variant_attr.schema.json'));
+            expect(variant.properties.controllers).toBeTruthy();
+            expect(variant.properties.controllers.description.toLowerCase())
+                .toContain('controller');
+            // 变速箱新增离合踏板反馈
+            const gearbox = readJsonc(path.join(schemas, 'subsystem', 'dynamic',
+                'gearbox_dynamic_attr.schema.json'));
+            expect(gearbox.properties.clutch_outputs.default).toEqual({});
+            // 座位第三人称瞄准俯仰偏置
+            const view = readJsonc(path.join(schemas, 'subsystem', 'static', 'view_attr.schema.json'));
+            expect(view.properties.third_person_pitch_bias.default).toBe(15);
+            // 动画关节执行器的静态轴与动态绑定
+            const jointDynamic = readJsonc(path.join(schemas, 'subsystem', 'dynamic',
+                'joint_driver_dynamic_attr.schema.json'));
+            expect(jointDynamic.properties.connector).toBeTruthy();
+            const jointStatic = readJsonc(path.join(schemas, 'subsystem', 'static',
+                'joint_driver_static_attr.schema.json'));
+            expect(Object.keys(jointStatic.properties.axes.properties))
+                .toEqual(['X', 'Y', 'Z', 'XR', 'YR', 'ZR']);
+            expect(jointStatic.properties.rotation_order.enum).toContain('ZYX');
+        }
+
+        const joint = readJsonc(path.join(SUB, 'joint_driver', 'rotation_joint_driver.json'));
+        expect(joint.type).toBe('machine_max:joint_driver');
+        expect(joint.axes.YR.max_force).toBe(250);
+        // 轮式连接点用「下限高于上限」表达绕 X 轴自由滚动
+        const wheel = readJsonc(path.join(ROOT, 'connectors', 'light_left_wheel.json'));
+        expect(wheel.joint_attrs.xr).toEqual({ lower_limit: 1, upper_limit: -1 });
     });
 });

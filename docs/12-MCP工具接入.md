@@ -542,7 +542,7 @@ machine_max_bb_plugin_validate
 
 `power_output` 必须是同一子零件内的**完整 key**（这里是 `subsystem.machine_max.transmission_main` 或某个 `connector.<ns>.<name>`），否则返回 `unresolved_config_ref`。
 
-**引用作用域**（docs/13 §5.4 / D34）：`signal_targets` 系列（`signal_targets` / `control_outputs` / `speed_outputs` / `gear_outputs` / `ammo_discovery_targets` / `camera_discovery_targets` 等）在整个 Part（同变体全部子零件）内解析，目标可以是任一子零件的子系统或连接点，也可以是 `local` / `global`；写成 `interact.*` 能被解码，但交互区只发不收（`validate` 报 warning `interact_box_as_signal_target`）。其余引用（`power_output` / `power_outputs` 的 key / `power_target` / `hit_box.subsystem` / `subsystem.connector`）只在所属子零件内解析。
+**引用作用域**（docs/13 §5.4 / D34）：`signal_targets` 系列（`signal_targets` / `control_outputs` / `speed_outputs` / `gear_outputs` / `clutch_outputs` / `ammo_discovery_targets` / `camera_discovery_targets` 等）在整个 Part（同变体全部子零件）内解析，目标可以是任一子零件的子系统或连接点，也可以是 `local` / `global`；写成 `interact.*` 能被解码，但交互区只发不收（`validate` 报 warning `interact_box_as_signal_target`）。其余引用（`power_output` / `power_outputs` 的 key / `power_target` / `hit_box.subsystem` / `subsystem.connector`）只在所属子零件内解析。
 
 **例 4：批量把三个子零件的质量砍半**
 

@@ -326,7 +326,7 @@ describe('doc/projection.in', () => {
             parentPath: ['parts', 'hull', 'variants', 'default'],
         });
         expect(result.ok).toBe(true);
-        expect(result.reset_fields).toEqual(['animations']);
+        expect(result.reset_fields).toEqual(['animations', 'controllers']);
     });
 
     test('markerPlan 覆盖 4 类标记并按优先级去重', () => {

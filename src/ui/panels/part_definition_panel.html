@@ -29,6 +29,7 @@
             :all-locator-names="allLocatorNames"
             :owned-locator-names="ownedLocatorNames"
             :connector-keys="currentConnectorKeys"
+            :connector-defs="availableConnectorDefs"
             :signal-target-options="currentSignalTargetOptions"
             :power-target-options="currentPowerTargetOptions"
             :control-group-presets="availableControlGroupPresets"
@@ -87,8 +88,12 @@
                 <input type="text" :value="currentVariant.model" @change="updateVariantField('model', $event.target.value)" class="mm-input" placeholder="machine_max:..." title="几何模型路径，格式 namespace:name.geo，如 machine_max:wine_fox.geo" />
             </div>
             <div class="mm-field">
-                <label title="动画路径。如 machine_max:my_anim。留空则不播放动画">动画</label>
-                <input type="text" :value="currentVariant.animations" @change="updateVariantField('animations', $event.target.value)" class="mm-input" placeholder="machine_max:..." title="动画路径，如 machine_max:wine_fox_anim。留空则不播动画" />
+                <label title="动画集。留空取模型同名：machine_max:my_part.geo 会使用 animations/part/my_part.geo/ 下的全部动画 json；machine_max:empty 表示该变体没有动画集">动画集</label>
+                <input type="text" :value="currentVariant.animations" @change="updateVariantField('animations', $event.target.value)" class="mm-input" placeholder="machine_max:..." title="动画集资源地址，如 machine_max:my_part.geo。留空则取模型同名目录；machine_max:empty 表示没有动画集" />
+            </div>
+            <div class="mm-field">
+                <label title="控制器集。留空取模型同名：machine_max:my_part.geo 会使用 controllers/part/my_part.geo/ 下的整套控制器；显式值选中的是一整套控制器，不是文件名或单个控制器名">控制器集</label>
+                <input type="text" :value="currentVariant.controllers" @change="updateVariantField('controllers', $event.target.value)" class="mm-input" placeholder="machine_max:..." title="控制器集资源地址，如 machine_max:my_part.geo。留空则取模型同名目录；machine_max:empty 表示没有控制器集" />
             </div>
             <div class="mm-field">
                 <label title="为每个涂装名指定贴图路径。default 为默认涂装">贴图</label>

@@ -62,6 +62,7 @@ var SUBSYSTEM_TYPES = [
             { field: 'definition',    label: '型号定义',     editor: 'definition_selector', required: true,  defaultValue: '' },
             { field: 'power_output',  label: '功率输出目标', editor: 'power_target',        required: true,  defaultValue: '' },
             { field: 'gear_outputs',  label: '挡位信号输出', editor: 'signal_targets',       required: false, defaultValue: { gear: ['local', 'global'] } },
+            { field: 'clutch_outputs', label: '离合信号输出', editor: 'signal_targets',      required: false, defaultValue: {} },
         ],
     },
     {
@@ -124,6 +125,16 @@ var SUBSYSTEM_TYPES = [
         ],
     },
     // ===== utility 分类 =====
+    {
+        id: 'machine_max:joint_driver',
+        displayName: '动画关节执行器',
+        category: 'utility',
+        // 型号定义里的 axes / rotation_order 决定驱动哪些轴；安装级只挑型号与高级连接点
+        dynamicFields: [
+            { field: 'definition', label: '型号定义',   editor: 'definition_selector', required: true, defaultValue: '' },
+            { field: 'connector',  label: '关联连接点', editor: 'connector_selector',  required: true, defaultValue: '' },
+        ],
+    },
     {
         id: 'machine_max:wheel_driver',
         displayName: '轮胎驱动器',

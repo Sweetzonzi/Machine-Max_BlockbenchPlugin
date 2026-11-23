@@ -41,6 +41,7 @@ var MAP_KEY_KIND = {
     power_outputs: 'powerOutputKey',
     ammo_discovery_targets: 'channelKey',
     camera_discovery_targets: 'channelKey',
+    clutch_outputs: 'channelKey',
     overwrite: 'objectField',
 };
 
@@ -414,7 +415,7 @@ var VALUE_MAPS = {
     interact_box: ['signal_targets'],
     connector: ['signal_targets', 'signal_translations'],
     subsystem: ['signal_targets', 'signal_translations', 'power_outputs', 'ammo_discovery_targets',
-        'camera_discovery_targets'],
+        'camera_discovery_targets', 'clutch_outputs'],
 };
 
 function childKindForMap(map) {

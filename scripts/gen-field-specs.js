@@ -87,7 +87,25 @@ const OUTPUT = path.join(REPO_ROOT, OUTPUT_REL);
 //                 hit_ground），属投射物定义，不进 field_specs。
 //              另：builtin lang 补入 100 条子系统与控制组译名，docs/zh_cn/fmod.md 补
 //              「弹种命中音运行时接线」一节。
-const UPSTREAM_REVISION = 'e48a275c';
+//   4fcd56e6 — 快照追平后的一批上游改动（本轮适配的基线）：
+//              1) 新增正式子系统 machine_max:joint_driver（动画关节执行器）：动态属性
+//                 definition + connector（指向同子零件的高级连接点），静态属性
+//                 rotation_order / axes（X/Y/Z/XR/YR/ZR 各带 max_force、max_speed）/
+//                 sounds；上游 JointDriverSubsystemAttr.validate 复用
+//                 requireAdvancedConnector，Simple 连接点会让整份零件定义解码失败——
+//                 field_specs 因此多出这一整个类型；
+//              2) variant 新增 controllers（控制器集，缺省取 model 同名目录），
+//                 animations 的语义同步改成「动画集」；
+//              3) gearbox 新增 clutch_outputs（离合踏板反馈，频道 → 目标名，默认不发）；
+//              4) seat 静态属性 view 新增 third_person_pitch_bias，motorbike_controller
+//                 的 control_inputs 默认值补 crew_driver_regular / crew_commander_regular
+//                 ——两者都是型号定义侧，不进 field_specs；
+//              5) 快照另带两处上游未提交的工作树改动：12 个轮式连接点补 xr 自由滚动轴
+//                 （下限高于上限表示绕 X 轴自由滚动）、builtin lang 补入 16 条车轮 /
+//                 车门 / 后备箱等交互与子系统译名。连接点与 lang 都不进 field_specs；
+//              6) HUD 文档与 documents/ 模板、huds/aui_weapon_live.json 随上游更新，
+//                 属随包内容。
+const UPSTREAM_REVISION = '4fcd56e6';
 
 // 递归 $ref 允许展开的层数；condition 的 and/or/not 是自引用，超过后按 any 处理。
 const MAX_REF_DEPTH = 8;

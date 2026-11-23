@@ -1,6 +1,9 @@
 'use strict';
 
-const { describe, test, expect } = require('bun:test');
+const { describe, test, expect, afterAll } = require('bun:test');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const {
     matchesField,
     filterFieldIssues,
@@ -8,6 +11,7 @@ const {
 } = require('../../src/core/validation_types.js');
 const helpers = require('../helpers.js');
 const { collectIssues } = require('../../src/services/validate.js');
+const cpm = require('../../src/core/content_pack_manager.js');
 
 function problem(field, severity) {
     return {
@@ -139,6 +143,80 @@ describe('collectIssues：已退役 / 未知的子系统类型', () => {
             ammo_discovery_targets: {},
         }));
         expect(findTypeIssue(issues)).toBeUndefined();
+    });
+});
+
+describe('collectIssues：驱动连接点必须是 Advanced', () => {
+    const SP_KEY = 'sub_part.machine_max.main';
+    const TMP_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'mm-advanced-'));
+
+    /** 建一个只含连接点与关节执行器型号的最小内容包 */
+    function makePack() {
+        const root = path.join(TMP_ROOT, 'pack');
+        const write = (rel, data) => {
+            const file = path.join(root, 'machine_max', rel);
+            fs.mkdirSync(path.dirname(file), { recursive: true });
+            fs.writeFileSync(file, JSON.stringify(data), 'utf-8');
+        };
+        fs.mkdirSync(root, { recursive: true });
+        fs.writeFileSync(path.join(root, 'meta.json'),
+            JSON.stringify({ id: 'machine_max:advanced_test', version: '1.0' }), 'utf-8');
+        write('connectors/hinge_simple.json', { type: 'Simple', direction: 'yp' });
+        write('connectors/hinge_advanced.json', { type: 'Advanced', direction: 'yp' });
+        write('subsystems/joint_driver/rotation.json', {
+            type: 'machine_max:joint_driver',
+            axes: { YR: { max_force: 250, max_speed: 180 } },
+        });
+        return root;
+    }
+
+    function configWith(connectorDefId) {
+        const cfg = helpers.createConfig({ contentPackPath: makePack() });
+        const sp = cfg.parts.hull.variants.default.sub_parts[SP_KEY];
+        sp.connectors['connector.machine_max.hinge'] = {
+            locator: 'hinge',
+            definition: connectorDefId,
+            signal_targets: {},
+            signal_translations: {},
+            power_target: '',
+            internal: false,
+            overwrite: null,
+        };
+        sp.subsystems['subsystem.machine_max.door_driver'] = {
+            type: 'machine_max:joint_driver',
+            definition: 'machine_max:rotation',
+            connector: 'connector.machine_max.hinge',
+        };
+        cpm.invalidateCache();
+        return cfg;
+    }
+
+    function issuesOfCode(cfg) {
+        return collectIssues(cfg).filter(function (p) {
+            return p.code === 'subsystem_connector_not_advanced';
+        });
+    }
+
+    test('Simple 连接点报 error，指向 connector 字段', () => {
+        const issues = issuesOfCode(configWith('machine_max:hinge_simple'));
+        expect(issues).toHaveLength(1);
+        expect(issues[0].severity).toBe('error');
+        expect(issues[0].message).toContain('hinge_simple');
+        expect(issues[0].path.scope).toBe('subsystem');
+        expect(issues[0].path.itemKey).toBe('subsystem.machine_max.door_driver');
+        expect(issues[0].path.field).toBe('connector');
+    });
+
+    test('Advanced 连接点不报', () => {
+        expect(issuesOfCode(configWith('machine_max:hinge_advanced'))).toHaveLength(0);
+    });
+
+    afterAll(() => {
+        try {
+            fs.rmSync(TMP_ROOT, { recursive: true, force: true });
+        } catch (e) {
+            // 忽略临时目录清理失败
+        }
     });
 });
 

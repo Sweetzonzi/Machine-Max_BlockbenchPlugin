@@ -35,6 +35,7 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
         allLocatorNames: { type: Array, default: function () { return []; } },
         ownedLocatorNames: { type: Array, default: function () { return []; } },
         connectorKeys: { type: Object, default: function () { return {}; } },
+        connectorDefs: { type: Object, default: function () { return {}; } },
         signalTargetOptions: { type: Array, default: function () { return []; } },
         // 功率目标只在同子零件内解析（上游 findOwnSubsystem），候选比信号目标窄
         powerTargetOptions: { type: Array, default: function () { return []; } },
@@ -95,6 +96,37 @@ var MM_SUBSYSTEM_PANEL_OPTIONS = {
         },
         filteredSubsystemDefsCount: function () {
             return Object.keys(this.filteredSubsystemDefs).length;
+        },
+        /**
+         * 连接点候选：需要连接点的类型（轮/履带/炮塔/关节驱动）只能绑 Advanced。
+         * Simple 连接点从候选中隐藏（当前已选中的那条仍保留，并标注原因，
+         * 避免下拉框显示空白、作者不知道错在哪）。
+         * 连接点型号定义缺失时无法判断类型，照常全部列出。
+         * @returns {{key: string, label: string, simple: boolean}[]}
+         */
+        connectorOptions: function () {
+            var keys = this.connectorKeys || {};
+            var defs = this.connectorDefs || {};
+            var current = this.config.connector;
+            var out = [];
+            var names = Object.keys(keys);
+            for (var i = 0; i < names.length; i++) {
+                var key = names[i];
+                var conn = keys[key] || {};
+                var def = conn.definition ? defs[conn.definition] : null;
+                // 实例 overwrite.type 会覆盖型号定义类型（上游 getEffectiveAttr）
+                var effectiveType = (conn.overwrite && typeof conn.overwrite.type === 'string'
+                    && conn.overwrite.type) ? conn.overwrite.type
+                    : (def && typeof def.type === 'string' ? def.type : '');
+                var simple = !!effectiveType && effectiveType.toLowerCase() === 'simple';
+                if (simple && key !== current) continue;
+                out.push({
+                    key: key,
+                    label: simple ? key + '（Simple — 需要 Advanced）' : key,
+                    simple: simple,
+                });
+            }
+            return out;
         },
         /** 所有可用的控制组预设（排除空字符串键） */
         availableControlGroupPresets: function () {

@@ -17,14 +17,15 @@ describe('field_specs.generated.js', () => {
         expect(actual).toBe(expected);
     });
 
-    test('覆盖上游 22 种 subsystem 类型', () => {
-        expect(Object.keys(generated.SPECS.subsystem).length).toBe(22);
+    test('覆盖上游 23 种 subsystem 类型', () => {
+        expect(Object.keys(generated.SPECS.subsystem).length).toBe(23);
         expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:reactive_armor');
         expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:track_controller');
         expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:track_drive');
         expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:regen_ammo_rack');
         expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:ammo_rack');
         expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:ammo_loader');
+        expect(Object.keys(generated.SPECS.subsystem)).toContain('machine_max:joint_driver');
         expect(Object.keys(generated.SPECS.subsystem)).not.toContain('machine_max:regen_loader');
     });
 
@@ -52,6 +53,15 @@ describe('field_specs.generated.js', () => {
             .additionalProperties.items.references).toBe('signal');
         expect(generated.SPECS.subsystem['machine_max:launcher'].fields.locator.references).toBe('locator');
         expect(generated.SPECS.subsystem['machine_max:engine'].fields.power_output.references).toBe('signal');
+
+        // 上游 4fcd56e6：变体动画集 / 控制器集、变速箱离合反馈、动画关节执行器
+        expect(generated.SPECS.variant.fields.animations.references).toBe('resource');
+        expect(generated.SPECS.variant.fields.controllers.references).toBe('resource');
+        expect(generated.SPECS.subsystem['machine_max:gearbox']
+            .fields.clutch_outputs.additionalProperties.items.type).toBe('string');
+        const jointDriver = generated.SPECS.subsystem['machine_max:joint_driver'];
+        expect(jointDriver.required).toEqual(['type', 'definition', 'connector']);
+        expect(jointDriver.fields.connector.references).toBe('connector');
     });
 
     test('overwrite 结构与 nullable 按 schema / 上游 Optional', () => {
@@ -110,9 +120,9 @@ describe('field_specs.generated.js', () => {
             .toBe('rebuild_type_fields');
     });
 
-    test('provenance 记录 80 个 schema 与源 hash', () => {
+    test('provenance 记录 82 个 schema 与源 hash', () => {
         expect(generated.PROVENANCE.source_revision).toBe(UPSTREAM_REVISION);
-        expect(generated.PROVENANCE.source_files).toBe(80);
+        expect(generated.PROVENANCE.source_files).toBe(82);
         expect(generated.PROVENANCE.source_sha256).toMatch(/^[0-9a-f]{64}$/);
         expect(generated.PROVENANCE.source_root)
             .toBe('src/builtin/builtin/machine_max/docs/en_us/schemas');
